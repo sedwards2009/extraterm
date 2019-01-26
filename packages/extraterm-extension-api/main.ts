@@ -206,7 +206,7 @@ export interface TextViewer extends ViewerBase {
 export type Viewer = FrameViewer | TerminalOutputViewer | TextViewer;
 
 export interface CustomizedCommand {
-  title: string;
+  title?: string;
   checked?: boolean;
 }
 

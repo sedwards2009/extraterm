@@ -12,6 +12,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
 
   private _log: Logger;
   private _commandToFunctionMap = new Map<string, (args: any) => any>();
+  private _commandToCustomizerFunctionMap = new Map<string, () => ExtensionApi.CustomizedCommand>();
   private _knownCommands = new Set<string>();
 
   constructor(private _extensionManager: ExtensionManager, private _extensionName: string, commands: ExtensionCommandContribution[]) {
@@ -28,10 +29,17 @@ export class CommandsRegistry implements ExtensionApi.Commands {
       return;
     }
     this._commandToFunctionMap.set(name, commandFunc);
+    if (customizer != null) {
+      this._commandToCustomizerFunctionMap.set(name, customizer);
+    }
   }
 
   getCommandFunction(name: string): (args: any) => any {
     return this._commandToFunctionMap.get(name);
+  }
+
+  getFunctionCustomizer(name: string): () => ExtensionApi.CustomizedCommand {
+    return this._commandToCustomizerFunctionMap.get(name) || null;
   }
 
   executeCommand<T>(name: string, args: any): Promise<T> {

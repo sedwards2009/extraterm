@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -58,6 +58,7 @@ export interface ExtensionCommandContribution {
   commandPalette?: boolean;
   contextMenu?: boolean;
   icon?: string;
+  checked?: boolean;
 }
 
 export interface ExtensionViewerContribution {

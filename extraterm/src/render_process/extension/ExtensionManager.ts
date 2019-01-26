@@ -224,11 +224,17 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     const whenPredicate = options.when ? this._createWhenPredicate(context) : truePredicate;
 
     const entries: ExtensionCommandContribution[] = [];
-    for (const metadata of this._extensionMetadata) {
-      for (const command of metadata.contributes.commands) {
+    for (const activeExtension  of this._activeExtensions) {
+      for (const command of activeExtension.metadata.contributes.commands) {
         if (commandPredicate(command) && commandPalettePredicate(command) && contextMenuPredicate(command) &&
             categoryPredicate(command) && whenPredicate(command)) {
-          entries.push(command);
+
+          const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(command.command);
+          if (customizer != null) {
+            entries.push( {...command, ...customizer() });
+          } else {
+            entries.push(command);
+          }
         }
       }
     }
