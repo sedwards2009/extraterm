@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event} from 'extraterm-extension-api';
+import { Event, CustomizedCommand} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
@@ -353,7 +353,8 @@ function startUpExtensions() {
 
 function registerCommands(extensionManager: ExtensionManager): void {
   const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
-  commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToogleDeveloperTools);
+  commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToogleDeveloperTools,
+                            customizeToogleDeveloperTools);
   commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
   commands.registerCommand("extraterm:application.openCommandPalette", commandOpenCommandPalette);
 
@@ -365,8 +366,14 @@ function registerCommands(extensionManager: ExtensionManager): void {
 
 function commandToogleDeveloperTools(): void {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-  developerToolMenu.checked = ! developerToolMenu.checked;
   WebIpc.devToolsRequest(developerToolMenu.checked);
+}
+
+function customizeToogleDeveloperTools(): CustomizedCommand {
+  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
+  return {
+    checked: developerToolMenu.checked
+  };
 }
 
 function commandReloadThemeContents(): void {
