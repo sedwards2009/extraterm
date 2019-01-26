@@ -262,15 +262,20 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   }
 
   private _sortCompareFunc(a: ExtensionCommandContribution, b: ExtensionCommandContribution): number {
-    if (a.category === b.category) {
-      if (a.title === b.title) {
-        return 0;
-      }
-      return a.title < b.title ? -1 : 1;
-    }
     const aIndex = allCategories.indexOf(a.category);
     const bIndex = allCategories.indexOf(b.category);
-    return aIndex < bIndex ? -1 : 1;
+    if (aIndex !== bIndex) {
+      return aIndex < bIndex ? -1 : 1;
+    }
+
+    if (a.order !== b.order) {
+      return a.order < b.order ? -1 : 1;
+    }
+
+    if (a.title !== b.title) {
+      return a.title < b.title ? -1 : 1;
+    }
+    return 0;
   }
 
   executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any {

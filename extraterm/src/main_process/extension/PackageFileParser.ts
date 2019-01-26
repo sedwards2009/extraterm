@@ -38,6 +38,22 @@ function assertJsonStringField(packageJson: any, fieldName: string, defaultValue
   return value;
 }
 
+function assertJsonNumberField(packageJson: any, fieldName: string, defaultValue: number=1000000): number {
+  const value = packageJson[fieldName];
+  if (value == null) {
+    if (defaultValue !== undefined) {
+      return defaultValue;
+    }
+    throw `Field '${fieldName}' is missing.`;
+  }
+
+  if (typeof value !== "number") {
+    throw `Field '${fieldName}' is not a number.`;
+  }
+  
+  return value;
+}
+
 const categoryList: Category[] = [
   "global",
   "application",
@@ -246,6 +262,7 @@ function parseCommandConstributionJson(packageJson: any): ExtensionCommandContri
       title: assertJsonStringField(packageJson, "title"),
       when: assertJsonStringField(packageJson, "when", ""),
       category: assertJsonCategoryField(packageJson, "category"),
+      order: assertJsonNumberField(packageJson, "order", 100000),
       commandPalette: assertJsonBooleanField(packageJson, "commandPalette", true),
       contextMenu: assertJsonBooleanField(packageJson, "contextMenu", false),
       icon: assertJsonStringField(packageJson, "icon", ""),

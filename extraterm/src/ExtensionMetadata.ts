@@ -54,6 +54,7 @@ export interface ExtensionCommandContribution {
   title: string;
   when?: string;
   category?: Category;
+  order?: number;
   commandPalette?: boolean;
   contextMenu?: boolean;
   icon?: string;
