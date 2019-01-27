@@ -106,7 +106,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       this._proxyFactory, this._commonExtensionWindowState);
     if (metadata.main != null) {
       module = this._loadExtensionModule(metadata);
-      if (module != null) {
+      if (module == null) {
         return;
       }
 
