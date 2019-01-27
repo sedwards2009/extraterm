@@ -8,10 +8,6 @@ import { Logger } from 'extraterm-extension-api';
 import { getLogger, log } from 'extraterm-logging';
 import { dispatchContextMenuRequest } from './command/CommandUtils';
 
-
-export const EVENT_NEW_SESSION_REQUEST = "EVENT_NEW_SESSION_REQUEST";
-
-
 @WebComponent({tag: "et-new-terminal-button"})
 export class NewTerminalContextArea extends HTMLElement {
 

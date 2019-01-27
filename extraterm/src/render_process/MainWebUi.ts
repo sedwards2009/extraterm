@@ -36,7 +36,7 @@ import { PtyIpcBridge } from './PtyIpcBridge';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
 import { ConfigDatabase, SESSION_CONFIG } from '../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { NewTerminalContextArea, EVENT_NEW_SESSION_REQUEST } from './NewTerminalContextArea';
+import { NewTerminalContextArea } from './NewTerminalContextArea';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -68,27 +68,8 @@ const CLASS_SPACE = "CLASS_SPACE";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
 const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 
-const KEYBINDINGS_MAIN_UI = "main-ui";
-const PALETTE_GROUP = "mainwebui";
-const COMMAND_FOCUS_TAB_LEFT = "focusTabLeft";
-const COMMAND_FOCUS_TAB_RIGHT = "focusTabRight";
-const COMMAND_FOCUS_PANE_LEFT = "focusPaneLeft";
-const COMMAND_FOCUS_PANE_RIGHT = "focusPaneRight";
-const COMMAND_FOCUS_PANE_ABOVE = "focusPaneAbove";
-const COMMAND_FOCUS_PANE_BELOW = "focusPaneBelow";
-const COMMAND_MOVE_TAB_LEFT = "moveTabLeft";
-const COMMAND_MOVE_TAB_RIGHT = "moveTabRight";
-const COMMAND_MOVE_TAB_UP = "moveTabUp";
-const COMMAND_MOVE_TAB_DOWN = "moveTabDown";
-const COMMAND_NEW_TERMINAL = "newTerminal";
-const COMMAND_CLOSE_TAB = "closeTab";
-const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
-const COMMAND_VERTICAL_SPLIT = "verticalSplit";
-const COMMAND_CLOSE_PANE = "closePane";
-
 /**
  * Top level UI component for a normal terminal window
- *
  */
 @WebComponent({tag: "extraterm-mainwebui"})
 export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
@@ -188,7 +169,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
     mainContainer.addEventListener(EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
     mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
-    mainContainer.addEventListener(EVENT_NEW_SESSION_REQUEST, (ev: CustomEvent) => this._handleNewSessionRequest(ev));
   }
 
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
@@ -444,21 +424,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.EXTRAICONS,
       ThemeTypes.CssFile.MAIN_UI];
   }
-
-  destroy(): void {
-  }
-  
-  // ----------------------------------------------------------------------
-  //
-  //   #######                      
-  //      #      ##   #####   ####  
-  //      #     #  #  #    # #      
-  //      #    #    # #####   ####  
-  //      #    ###### #    #      # 
-  //      #    #    # #    # #    # 
-  //      #    #    # #####   ####  
-  //
-  // ----------------------------------------------------------------------
 
   private _addTab(tabWidget: TabWidget, tabContentElement: Element): Tab {
     const newId = this._tabIdCounter;
@@ -888,18 +853,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //    #####                                                     
-  //   #     # #      # #####  #####   ####    ##   #####  #####  
-  //   #       #      # #    # #    # #    #  #  #  #    # #    # 
-  //   #       #      # #    # #####  #    # #    # #    # #    # 
-  //   #       #      # #####  #    # #    # ###### #####  #    # 
-  //   #     # #      # #      #    # #    # #    # #   #  #    # 
-  //    #####  ###### # #      #####   ####  #    # #    # #####  
-  //
-  //-----------------------------------------------------------------------
-
   /**
    * Copys the selection in the focussed terminal to the clipboard.
    */
@@ -1051,18 +1004,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   private _setupPtyIpc(): void {
     this._ptyIpcBridge = new PtyIpcBridge();
-  }
-  
-  // FIXME probably obsolete.
-  private _handleNewSessionRequest(ev: CustomEvent): void {
-    // for (const el of ev.path) {
-    //   if (el instanceof TabWidget) {
-    //     const elements = this._splitLayout.getTabContentsByTabWidget(el);
-    //     const tabElement = elements[el.getSelectedIndex()];
-    //     const options = { tabElement, sessionUuid: ev.detail.sessionUuid };
-    //     this.executeCommand(COMMAND_NEW_TERMINAL, options);
-    //   }
-    // }
   }
 }
 
