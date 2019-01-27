@@ -365,18 +365,34 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     for (const target of composedPath) {
       if (target instanceof EtTerminal) {
         newState.activeTerminal = target;
-      } else if (target instanceof TerminalViewer || target instanceof TextViewer) {
+      }
+      if (target instanceof TerminalViewer || target instanceof TextViewer) {
         newState.activeTextEditor = target;
-      } else if (target instanceof ViewerElement) {
+      }
+      if (target instanceof ViewerElement) {
         if (newState.activeViewerElement == null || newState.activeViewerElement instanceof EmbeddedViewer) {
           newState.activeViewerElement = target;
         }
-      } else if (target instanceof TabWidget) {
+      }
+      if (target instanceof TabWidget) {
         newState.activeTabsWidget = target;
       }
     }
 
     return newState;
+  }
+
+  refocus(state: CommonExtensionWindowState): void {
+    if (state.activeViewerElement != null) {
+      state.activeViewerElement.focus();
+      return;
+    }
+
+    if (state.activeTerminal != null) {
+      state.activeTerminal.focus();
+      return;
+    }
+
   }
 }
 

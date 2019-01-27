@@ -46,6 +46,7 @@ export interface ExtensionManager {
   updateExtensionWindowStateFromEvent(ev: Event): void;
   copyExtensionWindowState(): CommonExtensionWindowState;
   getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState;
+  refocus(state: CommonExtensionWindowState): void;
 }
 
 export interface AcceptsExtensionManager {

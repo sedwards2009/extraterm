@@ -44,14 +44,16 @@
         "category": "terminal",
         "order": 1200,
         "icon": "fa fa-i-cursor",
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.enterNormalMode",
         "title": "Exit cursor mode",
         "category": "terminalCursorMode",
         "order": 1200,
-        "when": "isCursorMode"
+        "when": "isCursorMode",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.scrollPageUp",
@@ -75,7 +77,8 @@
         "category": "terminal",
         "order": 1400,
         "icon": "fas fa-step-backward fa-rotate-90",
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.goToNextFrame",
@@ -83,7 +86,8 @@
         "category": "terminal",
         "order": 1401,
         "icon": "fas fa-step-forward fa-rotate-90",
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.copyToClipboard",
@@ -91,7 +95,8 @@
         "category": "terminal",
         "order": 1500,
         "icon": "far fa-copy",
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.pasteFromClipboard",
@@ -99,7 +104,8 @@
         "category": "terminal",
         "order": 1501,
         "icon": "fa fa-clipboard",
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.openLastFrame",
@@ -122,21 +128,24 @@
         "title": "Increase font size",
         "category": "terminal",
         "order": 1700,
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.decreaseFontSize",
         "title": "Decrease font size",
         "category": "terminal",
         "order": 1701,
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.resetFontSize",
         "title": "Reset font size",
         "category": "terminal",
         "order": 1702,
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.clearScrollback",
@@ -144,7 +153,8 @@
         "category": "terminal",
         "order": 1800,
         "icon": "fa fa-eraser",
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:terminal.resetVT",
@@ -152,7 +162,8 @@
         "category": "terminal",
         "order": 1801,
         "icon": "fa fa-sync",
-        "when": "terminalFocus"
+        "when": "terminalFocus",
+        "contextMenu": true
       },
       {
         "command": "extraterm:window.newTerminal",

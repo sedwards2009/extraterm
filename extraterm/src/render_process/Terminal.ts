@@ -169,7 +169,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     commands.registerCommand("extraterm:terminal.increaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
     commands.registerCommand("extraterm:terminal.decreaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
     commands.registerCommand("extraterm:terminal.resetFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
-    // commands.registerCommand("", (args: any) => extensionManager.getActiveTerminal().commandFind());
   }
   
   constructor() {
@@ -208,18 +207,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       
       this.updateThemeCss();
 
-      this._terminalCanvas.addEventListener('mousedown', (ev: MouseEvent): void => {
-        if (ev.target === this._terminalCanvas) {
-          ev.preventDefault();
-          ev.stopPropagation();
-          this._terminalCanvas.focus();
-          if (ev.buttons & 2) { // Right Mouse Button
-            this._handleContextMenu(ev.clientX, ev.clientY);
-          }
-        }
-      });
-      
-      this._terminalCanvas.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDown(ev));
+      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDownCapture(ev), true);
+      this._terminalCanvas.addEventListener("contextmenu", (ev) => this._handleContextMenu(ev));
       
       this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
@@ -646,12 +636,28 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._refocus();
     }
   }
-  
+
   private _handleMouseDown(ev: MouseEvent): void {
+    if (ev.target === this._terminalCanvas) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this._terminalCanvas.focus();
+    }
+  }
+
+  private _handleMouseDownCapture(ev: MouseEvent): void {
     if (ev.buttons === 4) { // Middle mouse button
       ev.stopPropagation();
       ev.preventDefault();
       this._pasteFromClipboard();
+    }
+  }
+
+  private _handleContextMenu(ev: MouseEvent): void {
+    if (this._terminalViewer !== null) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      dispatchContextMenuRequest(this._terminalViewer, ev.x, ev.y);
     }
   }
 
@@ -729,12 +735,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         this._inputStreamFilters = this._inputStreamFilters.filter(f => f !== filter);
       }
     };
-  }
-
-  private _handleContextMenu(x: number, y: number): void {
-    if (this._terminalViewer !== null) {
-      dispatchContextMenuRequest(this._terminalViewer, x, y);
-    }
   }
 
   commandEnterCursorMode(): void {

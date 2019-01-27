@@ -46,7 +46,7 @@ export class ApplicationContextMenu {
       const oldMenuEntries = this._menuEntries;
       const oldContextWindowState = this._contextWindowState;
 
-      this._contextWindowState.activeTerminal.focus();
+      this.extensionManager.refocus(this._contextWindowState);
 
       // We do this to avoid holding refs to objects after the context menu has closed. (-> GC). The delay
       // is needed because a 'selected' event may need the list immediately after this 'close' event.
@@ -67,7 +67,6 @@ export class ApplicationContextMenu {
     doLater( () => {
       const entries = this.extensionManager.queryCommandsWithExtensionWindowState({
         contextMenu: true,
-        categories: ["window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
         when: true
       }, this._contextWindowState);
 
@@ -82,7 +81,6 @@ export class ApplicationContextMenu {
         this._menuEntries = null;
         return;
       }
-      
       this._contextMenuElement.innerHTML = this._formatMenuHtml(this._menuEntries);
       this._contextMenuElement.open(ev.detail.x, ev.detail.y);
     });
@@ -90,13 +88,13 @@ export class ApplicationContextMenu {
 
   private _formatMenuHtml(menuEntries: CommandAndShortcut[]): string {
     const htmlParts: string[] = [];
-    let lastGroup = "";
+    let lastCategory = "";
     let index = 0;
     for (const command of menuEntries) {
-      if (command.category !== lastGroup && lastGroup !== "") {
+      if (command.category !== lastCategory && lastCategory !== "") {
         htmlParts.push(`<${DividerMenuItem.TAG_NAME}></${DividerMenuItem.TAG_NAME}>`);
       }
-      lastGroup = command.category;
+      lastCategory = command.category;
       htmlParts.push(this._commandAndShortcutToHtml("index_" + index, command));
       index++;
     }
