@@ -303,33 +303,46 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   }
 
   executeCommand(command: string, args?: any): any {
-    const parts = command.split(":");
+    let commandName = command;
+    let argsString: string = null;
+
+    const qIndex = command.indexOf("?");
+    if (qIndex !== -1) {
+      commandName = command.slice(0, qIndex);
+      argsString = command.slice(qIndex+1);
+    }
+
+    const parts = commandName.split(":");
     if (parts.length !== 2) {
       this._log.warn(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
       return null;
     }
+    
     let extensionName = parts[0];
     if (extensionName === "extraterm") {
       extensionName = "internal-commands";
     }
 
-    // FIXME parse out any args.
     if (args === undefined) {
-      args = {};
+      if (argsString != null) {
+        args = JSON.parse(decodeURIComponent(argsString));
+      } else {
+        args = {};
+      }
     }
 
     for (const ext of this._activeExtensions) {
       if (ext.metadata.name === extensionName) {
-        const commandFunc = ext.contextImpl.commands.getCommandFunction(command);
+        const commandFunc = ext.contextImpl.commands.getCommandFunction(commandName);
         if (commandFunc == null) {
-          this._log.warn(`Unable to find command '${command}' in extension '${extensionName}'.`);
+          this._log.warn(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
           return null;
         }
-        return this._runCommandFunc(command, commandFunc, args);
+        return this._runCommandFunc(commandName, commandFunc, args);
       }
     }
 
-    this._log.warn(`Unable to find extension with name '${extensionName}' for command '${command}'.`);
+    this._log.warn(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
     return null;
   }
 

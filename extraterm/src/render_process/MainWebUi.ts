@@ -938,7 +938,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _commandNewTerminal(args: any): void {
-    let sessionUuid = (<any>args).sessionUuid;
+    let sessionUuid = args.sessionUuid;
     if (sessionUuid == null) {
       sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
     }
