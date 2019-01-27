@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, CustomizedCommand} from 'extraterm-extension-api';
+import { Event, CustomizedCommand, SessionConfiguration} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
@@ -45,6 +45,8 @@ import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
 import { registerCommands as TextCommandsRegisterCommands } from "./viewers/TextCommands";
+import { DisposableHolder } from '../utils/DisposableUtils';
+import { ExtensionCommandContribution } from '../ExtensionMetadata';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -83,12 +85,12 @@ export function startUp(closeSplash: () => void): void {
   // Get the Config working.
   configDatabase = new ConfigDatabaseImpl();
   keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
-  const themePromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
+  const configPromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
   
   // Get the config and theme info in and then continue starting up.
-  const allPromise = Promise.all<void>( [themePromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
+  const allPromise = Promise.all<void>( [configPromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
   allPromise.then(loadFontFaces).then( () => {
 
     const doc = window.document;
@@ -97,6 +99,7 @@ export function startUp(closeSplash: () => void): void {
     startUpExtensions();
     startUpMainWebUi();
     registerCommands(extensionManager);
+    startUpSessions(configDatabase, extensionManager);
 
     closeSplash();
 
@@ -362,6 +365,41 @@ function registerCommands(extensionManager: ExtensionManager): void {
   TextCommandsRegisterCommands(extensionManager);
 
   extensionManager.getExtensionContextByName("internal-commands").debugRegisteredCommands();
+}
+
+function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: ExtensionManager): void {
+  const disposables = new DisposableHolder();
+
+  const createSessionCommands = (sessionConfigs: SessionConfiguration[]): void => {
+    const extensionContext = extensionManager.getExtensionContextByName("internal-commands");
+
+    for (const session of sessionConfigs) {
+      const args = {
+        sessionUuid: session.uuid
+      };
+      const contrib: ExtensionCommandContribution = {
+        command: "extraterm:window.newTerminal?" + encodeURIComponent(JSON.stringify(args)),
+        title: "New Terminal: " + session.name,
+        category: "window",
+        order: 1000,
+        when: "",
+        icon: "fa fa-plus",
+        contextMenu: true,
+        commandPalette: true
+      };
+      disposables.add(extensionContext.registerCommandContribution(contrib));
+    }
+  };
+
+  configDatabase.onChange(event => {
+    if (event.key === SESSION_CONFIG) {
+      disposables.dispose();
+      createSessionCommands(event.newConfig);
+    }
+  });
+
+  const sessionConfig = <SessionConfiguration[]> configDatabase.getConfig(SESSION_CONFIG);
+  createSessionCommands(sessionConfig);
 }
 
 function commandToogleDeveloperTools(): void {

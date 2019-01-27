@@ -34,6 +34,15 @@ export class CommandsRegistry implements ExtensionApi.Commands {
     }
   }
 
+  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable {
+    this._knownCommands.add(contribution.command);
+    return {
+      dispose: (): void => {
+        this._knownCommands.delete(contribution.command);
+      }
+    };
+  }
+
   getCommandFunction(name: string): (args: any) => any {
     return this._commandToFunctionMap.get(name);
   }

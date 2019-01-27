@@ -87,6 +87,7 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
   proxyFactory: ProxyFactory;
 
   findViewerElementTagByMimeType(mimeType: string): string;
+  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
   debugRegisteredCommands(): void;
 }
 

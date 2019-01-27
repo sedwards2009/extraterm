@@ -436,4 +436,16 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
       }
     }
   }
+
+  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable {
+    this.extensionMetadata.contributes.commands.push(contribution);
+    const commandDisposable = this.commands.registerCommandContribution(contribution);
+    return {
+      dispose: () => {
+        commandDisposable.dispose();
+        const index = this.extensionMetadata.contributes.commands.indexOf(contribution);
+        this.extensionMetadata.contributes.commands.splice(index, 1);
+      }
+    };
+  }
 }
