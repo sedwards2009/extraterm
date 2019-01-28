@@ -172,7 +172,8 @@
         "order": 1000,
         "when": "",
         "icon": "fa fa-plus",
-        "contextMenu": true
+        "contextMenu": true,
+        "emptyPaneMenu": true
       },
       {
         "command": "extraterm:window.closeTab",
@@ -231,7 +232,8 @@
         "order": 1400,
         "icon": "extraicon-#xea08",
         "when": "",
-        "contextMenu": true
+        "contextMenu": true,
+        "emptyPaneMenu": true
       },      
       {
         "command": "extraterm:window.verticalSplit",
@@ -240,7 +242,8 @@
         "order": 1401,
         "icon": "fa fa-columns",
         "when": "",
-        "contextMenu": true
+        "contextMenu": true,
+        "emptyPaneMenu": true
       },
       {
         "command": "extraterm:window.closePane",
@@ -249,7 +252,8 @@
         "order": 1402,
         "icon": "far fa-window-close",
         "when": "",
-        "contextMenu": true
+        "contextMenu": true,
+        "emptyPaneMenu": true
       },
       {
         "command": "extraterm:window.moveTabLeft",

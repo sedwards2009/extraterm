@@ -209,6 +209,18 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       contextMenuPredicate = command => command.contextMenu === contextMenu;
     }
 
+    let emptyPaneMenuPredicate = truePredicate;
+    if (options.emptyPaneMenu != null) {
+      const emptyPaneMenu = options.emptyPaneMenu;
+      emptyPaneMenuPredicate = command => command.emptyPaneMenu === emptyPaneMenu;
+    }
+
+    let newTerminalMenuPredicate = truePredicate;
+    if (options.newTerminalMenu != null) {
+      const newTerminalMenu = options.newTerminalMenu;
+      newTerminalMenuPredicate = command => command.newTerminalMenu === newTerminalMenu;
+    }
+
     let categoryPredicate = truePredicate;
     if (options.categories != null) {
       const categories = options.categories;
@@ -227,6 +239,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     for (const activeExtension  of this._activeExtensions) {
       for (const command of activeExtension.metadata.contributes.commands) {
         if (commandPredicate(command) && commandPalettePredicate(command) && contextMenuPredicate(command) &&
+            emptyPaneMenuPredicate(command) && newTerminalMenuPredicate(command) &&
             categoryPredicate(command) && whenPredicate(command)) {
 
           const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(command.command);

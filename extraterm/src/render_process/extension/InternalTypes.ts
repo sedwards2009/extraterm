@@ -18,6 +18,8 @@ export interface CommandQueryOptions {
   categories?: Category[];
   commandPalette?: boolean;
   contextMenu?: boolean;
+  emptyPaneMenu?: boolean;
+  newTerminalMenu?: boolean;
   when?: boolean;
   commands?: string[];
 }

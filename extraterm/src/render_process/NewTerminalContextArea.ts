@@ -6,7 +6,7 @@
 import { WebComponent } from 'extraterm-web-component-decorators';
 import { Logger } from 'extraterm-extension-api';
 import { getLogger, log } from 'extraterm-logging';
-import { dispatchContextMenuRequest } from './command/CommandUtils';
+import { dispatchContextMenuRequest, ContextMenuType } from './command/CommandUtils';
 
 @WebComponent({tag: "et-new-terminal-button"})
 export class NewTerminalContextArea extends HTMLElement {
@@ -24,6 +24,6 @@ export class NewTerminalContextArea extends HTMLElement {
   private _handleContextMenuCapture(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
-    dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
+    dispatchContextMenuRequest(this, ev.clientX, ev.clientY, ContextMenuType.NEW_TERMINAL_TAB);
   }
 }

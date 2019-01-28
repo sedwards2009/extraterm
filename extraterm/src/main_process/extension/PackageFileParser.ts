@@ -265,6 +265,8 @@ function parseCommandConstributionJson(packageJson: any): ExtensionCommandContri
       order: assertJsonNumberField(packageJson, "order", 100000),
       commandPalette: assertJsonBooleanField(packageJson, "commandPalette", true),
       contextMenu: assertJsonBooleanField(packageJson, "contextMenu", false),
+      emptyPaneMenu: assertJsonBooleanField(packageJson, "emptyPaneMenu", false),
+      newTerminalMenu: assertJsonBooleanField(packageJson, "newTerminalMenu", false),
       icon: assertJsonStringField(packageJson, "icon", ""),
     };
   } catch (ex) {

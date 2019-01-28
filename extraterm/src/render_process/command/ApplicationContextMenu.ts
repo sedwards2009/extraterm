@@ -11,13 +11,14 @@ import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from "../DomUtils";
 import { doLater } from "../../utils/DoLater";
-import { ExtensionManager } from "../extension/InternalTypes";
+import { ExtensionManager, CommandQueryOptions } from "../extension/InternalTypes";
 import { MenuItem } from "../gui/MenuItem";
 import { DividerMenuItem } from "../gui/DividerMenuItem";
 import { CheckboxMenuItem } from "../gui/CheckboxMenuItem";
 import { CommandAndShortcut } from "./CommandPalette";
 import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
+import { ContextMenuType } from "./CommandUtils";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
@@ -65,15 +66,30 @@ export class ApplicationContextMenu {
     this._contextWindowState = this.extensionManager.getExtensionWindowStateFromEvent(ev);
 
     doLater( () => {
-      const entries = this.extensionManager.queryCommandsWithExtensionWindowState({
+      const menuType = <ContextMenuType> ev.detail.menuType;
+      const options: CommandQueryOptions = {
         contextMenu: true,
         when: true
-      }, this._contextWindowState);
+      };
+
+      let showShortcuts = true;
+      switch(menuType) {
+        case ContextMenuType.NORMAL:
+          options.contextMenu = true;
+          break;
+
+        case ContextMenuType.NEW_TERMINAL_TAB:
+          options.newTerminalMenu = true;
+          showShortcuts = false;
+          break;
+      }
+
+      const entries = this.extensionManager.queryCommandsWithExtensionWindowState(options, this._contextWindowState);
 
       const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
       this._menuEntries = entries.map((entry): CommandAndShortcut => {
         const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
-        const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+        const shortcut = (showShortcuts && shortcuts.length !== 0) ? shortcuts[0].formatHumanReadable() : "";
         return { id: entry.command + "_" + entry.category, shortcut, ...entry };
       });
 

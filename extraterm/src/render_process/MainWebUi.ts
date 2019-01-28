@@ -37,6 +37,7 @@ import { ExtensionManager, injectExtensionManager } from './extension/InternalTy
 import { ConfigDatabase, SESSION_CONFIG } from '../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { NewTerminalContextArea } from './NewTerminalContextArea';
+import { CommandAndShortcut } from './command/CommandPalette';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -90,7 +91,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _ptyIpcBridge: PtyIpcBridge = null;
   private _tabIdCounter = 0;
   private _configManager: ConfigDatabase = null;
-  private _keyBindingManager: KeybindingsManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _lastFocus: Element = null;
@@ -130,7 +131,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
   
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
-    this._keyBindingManager = keyBindingManager;
+    this._keybindingsManager = keyBindingManager;
   }
 
   setExtensionManager(extensionManager: ExtensionManager): void {
@@ -318,18 +319,27 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
 
-// FIXME
-      // this._insertCommandKeybindings(commandList);
+      const entries = this._extensionManager.queryCommands({
+        emptyPaneMenu: true,
+        categories: ["application", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
+        when: true
+      });
 
-// FIXME
-      // emptyPaneMenu.setEntries(commandList);
+      const termKeybindingsMapping = this._keybindingsManager.getKeybindingsMapping();
+      const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
+        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
+        const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+        return { id: entry.command + "_" + entry.category, shortcut, ...entry };
+      });
+
+      emptyPaneMenu.setEntries(entriesAndShortcuts);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
-        // emptyPaneMenu.setFilter("");
-        // for (const entry of commandList) {
-        //   if (entry.id === ev.detail.selected) {
-        //     this.executeCommand(ev.detail.selected, entry.commandArguments);
-        //   }
-        // }
+        emptyPaneMenu.setFilter("");
+        for (const entry of entriesAndShortcuts) {
+          if (entry.id === ev.detail.selected) {
+            this._extensionManager. executeCommand(entry.command);
+          }
+        }
       });
       return emptyPaneMenu;
     });
@@ -487,7 +497,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setBulkFileBroker(this._fileBroker);
     config.injectConfigDatabase(newTerminal, this._configManager);
-    injectKeybindingsManager(newTerminal, this._keyBindingManager);
+    injectKeybindingsManager(newTerminal, this._keybindingsManager);
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
@@ -551,7 +561,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
-    injectKeybindingsManager(viewerTab, this._keyBindingManager);
+    injectKeybindingsManager(viewerTab, this._keybindingsManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
     
@@ -633,7 +643,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDatabase(settingsTabElement, this._configManager);
-      injectKeybindingsManager(settingsTabElement, this._keyBindingManager);
+      injectKeybindingsManager(settingsTabElement, this._keybindingsManager);
       injectExtensionManager(settingsTabElement, this._extensionManager);
 
       settingsTabElement.setThemes(this._themes);
@@ -652,7 +662,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       config.injectConfigDatabase(viewerElement, this._configManager);
-      injectKeybindingsManager(viewerElement, this._keyBindingManager);
+      injectKeybindingsManager(viewerElement, this._keybindingsManager);
       this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }

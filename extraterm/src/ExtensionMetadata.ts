@@ -59,6 +59,8 @@ export interface ExtensionCommandContribution {
   contextMenu?: boolean;
   icon?: string;
   checked?: boolean;
+  emptyPaneMenu?: boolean;
+  newTerminalMenu?: boolean;
 }
 
 export interface ExtensionViewerContribution {
