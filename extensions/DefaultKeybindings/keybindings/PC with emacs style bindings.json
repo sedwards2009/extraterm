@@ -57,8 +57,7 @@
     ],
     "extraterm:terminal.pasteFromClipboard": [
       "Shift-Insert",
-      "Ctrl-Shift-V",
-      "Ctrl-v"
+      "Ctrl-Shift-V"
     ],
     "extraterm:terminal.deleteLastFrame": [
       "Ctrl-Shift-W"
