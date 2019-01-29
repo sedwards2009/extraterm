@@ -7,8 +7,9 @@ import { Event } from 'extraterm-extension-api';
 
 import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
 import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
-import { KeybindingsFile } from '../../keybindings/KeybindingsFile';
+import { KeybindingsFile, KeybindingsFileBinding } from '../../keybindings/KeybindingsFile';
 import { Logger, getLogger } from 'extraterm-logging';
+import { Category } from '../../ExtensionMetadata';
 
 export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
 
@@ -26,7 +27,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
    * @return the command string or `null` if the event doesn't have a matching
    *         key binding.
    */
-  mapEventToCommands(ev: MinimalKeyboardEvent): string[] {
+  mapEventToCommands(ev: MinimalKeyboardEvent): KeybindingsFileBinding[] {
     if ( ! this.isEnabled()) {
       return [];
     }
@@ -62,18 +63,24 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
   }
   // this._log.debug(`altKey: ${ev.altKey}, ctrlKey: ${ev.ctrlKey}, metaKey: ${ev.metaKey}, shiftKey: ${ev.shiftKey}, key: ${ev.key}, keyCode: ${ev.keyCode}`);
 
-  /**
-   * Maps a command name to readable key binding names.
-   * 
-   * @param  command the command to map
-   * @return the list of associated key binding names.
-   */
-  mapCommandToReadableKeyStrokes(command: string): string[] {
-    const keyStrokes = this._commandToKeyStrokesMapping.get(command);
-    if (keyStrokes == null) {
-      return [];
+  mapCommandToReadableKeyStrokes(command: string, category?: Category): string[] {
+    if (category == null) {
+      return [
+        ...this.mapCommandToReadableKeyStrokes(command, "global"),
+        ...this.mapCommandToReadableKeyStrokes(command, "application"),
+        ...this.mapCommandToReadableKeyStrokes(command, "window"),
+        ...this.mapCommandToReadableKeyStrokes(command, "textEditing"),
+        ...this.mapCommandToReadableKeyStrokes(command, "terminal"),
+        ...this.mapCommandToReadableKeyStrokes(command, "terminalCursorMode"),
+        ...this.mapCommandToReadableKeyStrokes(command, "viewer")
+      ];
+    } else {
+      const keyStrokes = this.getKeyStrokesForCommandAndCategory(command, category);
+      if (keyStrokes == null) {
+        return [];
+      }
+      return keyStrokes.map(ks => ks.formatHumanReadable());
     }
-    return keyStrokes.map(ks => ks.formatHumanReadable());
   }
 }
 

@@ -14,28 +14,108 @@ SourceMapSupport.install();
 
 const keyBindingsMap: KeybindingsFile = {
   name: "Test file",
-  bindings: {
-    "open": ["Ctrl-o"],
-    "togglemode": ["Ctrl-Space"],
-    "zoom": ["Ctrl-Plus"],
-    "all": ["Alt-Shift-Cmd-A"],
-    "makespace": ["space"],
-    "smeg": ["alt - shift - S"],
-    "closewindow": ["W-ctrl-shift"],
-    "sleep": ["shift-shift-shift-Z"],
-    "pageup": ["PageUp"],
-    "gohome": ["home"],
-    "dedent": ["Alt-Tab"],
-    "otherpane": ["Ctrl-Tab"],
-    "finish": ["End"],
-    "up": ["Up"],
-    "down": ["Down"],
-    "rename": ["F2"],
-    "select-left": ["Alt-Left"],
-    "break": ["Ctrl-c"],
-    "bigbreak": ["Ctrl-Shift-C"],
-    "moveTabRight": ["Ctrl-Alt-."],
-  }
+  bindings: [
+    {
+      command: "open",
+      category: "window",
+      keys: ["Ctrl-o"]
+    },
+    {
+      command: "togglemode",
+      category: "window",
+      keys: ["Ctrl-Space"]
+    },
+    {
+      command: "zoom",
+      category: "window",
+      keys: ["Ctrl-Plus"]
+    },
+    {
+      command: "all",
+      category: "window",
+      keys: ["Alt-Shift-Cmd-A"]
+    },
+    {
+      command: "makespace",
+      category: "window",
+      keys: ["space"]
+    },
+    {
+      command: "smeg",
+      category: "window",
+      keys: ["alt - shift - S"]
+    },
+    {
+      command: "closewindow",
+      category: "window",
+      keys: ["W-ctrl-shift"]
+    },
+    {
+      command: "sleep",
+      category: "window",
+      keys: ["shift-shift-shift-Z"]
+    },
+    {
+      command: "pageup",
+      category: "window",
+      keys: ["PageUp"]
+    },
+    {
+      command: "gohome",
+      category: "window",
+      keys: ["home"]
+    },
+    {
+      command: "dedent",
+      category: "window",
+      keys: ["Alt-Tab"]
+    },
+    {
+      command: "otherpane",
+      category: "window",
+      keys: ["Ctrl-Tab"]
+    },
+    {
+      command: "finish",
+      category: "window",
+      keys: ["End"]
+    },
+    {
+      command: "up",
+      category: "window",
+      keys: ["Up"]
+    },
+    {
+      command: "down",
+      category: "window",
+      keys: ["Down"]
+    },
+    {
+      command: "rename",
+      category: "window",
+      keys: ["F2"]
+    },
+    {
+      command: "select-left",
+      category: "window",
+      keys: ["Alt-Left"]
+    },
+    {
+      command: "break",
+      category: "window",
+      keys: ["Ctrl-c"]
+    },
+    {
+      command: "bigbreak",
+      category: "window",
+      keys: ["Ctrl-Shift-C"]
+    },
+    {
+      command: "moveTabRight",
+      category: "window",
+      keys: ["Ctrl-Alt-."]
+    }
+  ]
 };
 
 test("context", () => {

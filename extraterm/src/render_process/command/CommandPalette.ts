@@ -63,7 +63,7 @@ export class CommandPalette {
   
       const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
-        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
+        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommandAndCategory(entry.command, entry.category);
         const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
         return { id: entry.command + "_" + entry.category, shortcut, ...entry };
       });

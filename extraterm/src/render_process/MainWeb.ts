@@ -254,7 +254,10 @@ _log.debug(`handleKeyCapture() commands '${commands}'`);
 
   extensionManager.updateExtensionWindowStateFromEvent(ev);
 
-  const filteredCommands = extensionManager.queryCommands({ commands, when: true });
+  const filteredCommands = extensionManager.queryCommands({
+    commands: commands.map(c=>c.command),
+    when: true
+  });
   if (filteredCommands.length !== 0) {
 _log.debug(`filtered Commands is ${filteredCommands.map(fc => fc.command).join(", ")}`);
 

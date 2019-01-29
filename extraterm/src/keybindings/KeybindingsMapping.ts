@@ -5,7 +5,8 @@
  */
 import * as _ from 'lodash';
 import { Logger, getLogger, log } from "extraterm-logging";
-import { KeybindingsFile } from './KeybindingsFile';
+import { KeybindingsFile, KeybindingsFileBinding } from './KeybindingsFile';
+import { Category } from '../ExtensionMetadata';
 
 export interface KeyStrokeOptions {
   altKey: boolean;
@@ -180,8 +181,8 @@ export function eventKeyNameToConfigKeyName(eventKeyName: string): string {
 export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
 
   readonly keyStrokeList: KS[] = [];
-  protected _keyStrokeHashToCommandsMapping = new Map<string, string[]>();
-  protected _commandToKeyStrokesMapping = new Map<string, KS[]>();
+  protected _keyStrokeHashToCommandsMapping = new Map<string, KeybindingsFileBinding[]>();
+  private _categoryMaps = new Map<Category, Map<string, KS[]>>();
   private _log: Logger = null;
   private _platform: string;
   private _enabled = true;
@@ -197,9 +198,9 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
     this._buildIndex(keybindingsFile.bindings);
   }
 
-  private _buildIndex(bindings: {[key: string]: string[]}): void {
-    for (const key in bindings) {
-      const shortcutList = bindings[key];
+  private _buildIndex(bindingsList: KeybindingsFileBinding[]): void {
+    for (const keybinding of bindingsList) {
+      const shortcutList = keybinding.keys;
 
       const ksList = shortcutList.map(this._parseConfigKeyStrokeString);
 
@@ -209,7 +210,7 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
 
       const ksHashList = ksList.map(ks => ks.hashString());
 
-      this._commandToKeyStrokesMapping.set(key, ksList);
+      this._setKeyStrokesForCommandAndCategory(keybinding.command, keybinding.category, ksList);
 
       for (const ksHash of ksHashList) {
         let list = this._keyStrokeHashToCommandsMapping.get(ksHash);
@@ -217,9 +218,17 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
           list = [];
           this._keyStrokeHashToCommandsMapping.set(ksHash, list);
         }
-        list.push(key);
+        list.push(keybinding);
       }
     }
+  }
+
+  private _setKeyStrokesForCommandAndCategory(command: string, category: Category, keyStrokes: KS[]): void {
+    if ( ! this._categoryMaps.has(category)) {
+      this._categoryMaps.set(category, new Map());
+    }
+    const commandMap = this._categoryMaps.get(category);
+    commandMap.set(command, keyStrokes);
   }
 
   isEnabled(): boolean {
@@ -250,8 +259,10 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
     return _.isEqual(myBindings, otherBindings);
   }
 
-  getKeyStrokesForCommand(command: string): KS[] {
-    const result = this._commandToKeyStrokesMapping.get(command);
-    return result || [];
+  getKeyStrokesForCommandAndCategory(command: string, category: Category): KS[] {
+    if ( ! this._categoryMaps.has(category)) {
+      return [];
+    }
+    return this._categoryMaps.get(category).get(command) || [];
   }
 }

@@ -3,12 +3,15 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Category } from "../ExtensionMetadata";
 
-export interface KeybindingsFileBindings {
-  [key: string]: string[];
+export interface KeybindingsFileBinding {
+  command: string;
+  category: Category;
+  keys: string[];
 }
 
 export interface KeybindingsFile {
   name: string;
-  bindings: KeybindingsFileBindings;
+  bindings: KeybindingsFileBinding[];
 }
