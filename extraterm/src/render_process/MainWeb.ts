@@ -739,7 +739,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
 }
 
 class KeybindingsManagerImpl implements KeybindingsManager {
-  private _keybindingsContexts: TermKeybindingsMapping = null;
+  private _keybindingsMapping: TermKeybindingsMapping = null;
   private _log: Logger;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
@@ -751,19 +751,19 @@ class KeybindingsManagerImpl implements KeybindingsManager {
   }
 
   getKeybindingsMapping(): TermKeybindingsMapping {
-    return this._keybindingsContexts;
+    return this._keybindingsMapping;
   }
   
   setKeybindingsMapping(newKeybindingContexts: TermKeybindingsMapping): void {
-    this._keybindingsContexts = newKeybindingContexts;
-    this._keybindingsContexts.setEnabled(this._enabled);
+    this._keybindingsMapping = newKeybindingContexts;
+    this._keybindingsMapping.setEnabled(this._enabled);
     this._onChangeEventEmitter.fire(undefined);
   }
 
   setEnabled(enabled: boolean): void {
     this._enabled = enabled;
-    if (this._keybindingsContexts != null) {
-      this._keybindingsContexts.setEnabled(this._enabled);
+    if (this._keybindingsMapping != null) {
+      this._keybindingsMapping.setEnabled(this._enabled);
     }
 
     WebIpc.enableGlobalKeybindings(enabled);

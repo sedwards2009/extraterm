@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
-import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
+import { KeybindingsFile, KeybindingsFileBinding } from '../../../keybindings/KeybindingsFile';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
 import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -99,9 +99,9 @@ interface CommandKeybindingPair {
             <div class="keycap">
               <span>{{conflictKeyHumanReadable}}</span>
             </div>
-            conflicts with command "{{commandHumanName(conflictCommand)}}".
-            <button title="Replace" class="btn btn-default" v-on:click="onReplaceConflict">Replace</button>
-            <button title="Cancel" class="btn btn-default" v-on:click="onCancelConflict">Cancel</button>
+            conflicts with command "{{conflictCommandName}}".
+            <button title="Replace" class="inline" v-on:click="onReplaceConflict">Replace</button>
+            <button title="Cancel" class="inline" v-on:click="onCancelConflict">Cancel</button>
           </template>
         </td>
       </tr>
@@ -122,6 +122,7 @@ export class KeybindingsCategory extends Vue {
   selectedCommand = "";
   conflictKey = "";
   conflictCommand = "";
+  conflictCommandName = "";
 
   get allCommands(): ExtensionCommandContribution[] {
     if (this.extensionManager == null) {
@@ -168,9 +169,10 @@ export class KeybindingsCategory extends Vue {
       result.set(command.command, []);
     }
 
-    for (const commandName of Object.keys(this.keybindings.bindings)) {
-      const shortcuts = this.keybindings.bindings[commandName];
-      result.set(commandName, shortcuts.map(TermKeyStroke.parseConfigString));
+    for (const command of this.keybindings.bindings) {
+      if (command.category === this.category) {
+        result.set(command.command, command.keys.map(TermKeyStroke.parseConfigString));
+      }
     }
     return result;
   }
@@ -187,27 +189,20 @@ export class KeybindingsCategory extends Vue {
     return Emulator.isKeySupported(<Platform> process.platform, keybinding);
   }
 
-  deleteKey(keybinding: TermKeyStroke): void {
-    const commandConfig = this._findCommandByKeybinding(keybinding);
-    if (commandConfig != null) {
-      const list = this.keybindings.bindings[commandConfig.command];
-      Vue.delete(list, commandConfig.index);
-    }
-  }
+  deleteKey(keyStroke: TermKeyStroke): void {
+    for (const keybinding of this.keybindings.bindings) {
+      if (keybinding.category === this.category) {
+        const shortcuts = keybinding.keys;
 
-  private _findCommandByKeybinding(keybinding: TermKeyStroke): CommandKeybindingPair {
-    for (const commandContrib of this.allCommands) {
-      const shortcuts = this.keybindings.bindings[commandContrib.command];
-      if (shortcuts != null) {
         for (let i=0; i<shortcuts.length; i++) {
-          const currentKeybinding = TermKeyStroke.parseConfigString(shortcuts[i]);
-          if (currentKeybinding.equals(keybinding)) {
-            return { command: commandContrib.command, keybindingString: shortcuts[i], index: i };
+          const currentKeyStroke = TermKeyStroke.parseConfigString(shortcuts[i]);
+          if (currentKeyStroke.equals(keyStroke)) {
+            Vue.delete(shortcuts, i);
+            return;           
           }
         }
       }
     }
-    return null;
   }
 
   addKey(command: string): void {
@@ -216,27 +211,75 @@ export class KeybindingsCategory extends Vue {
     this.$emit(EVENT_START_KEY_INPUT);
   }
 
-  onKeyInputSelected(keybindingString: string): void {
-    const newKeybinding = TermKeyStroke.parseConfigString(keybindingString);
+  private _findKeybindingByKeyStroke(keyStrokeStroke: string): KeybindingsFileBinding {
+    const keyStroke = TermKeyStroke.parseConfigString(keyStrokeStroke);
 
-    const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
-    if (existingCommandConfig == null) {
-      let newShortcuts: string[] = null;
-      if (this.keybindings.bindings[this.selectedCommand] == null) {
-        newShortcuts = [keybindingString];
-      } else {
-        newShortcuts = [...this.keybindings.bindings[this.selectedCommand], keybindingString];
+    for (const keybinding of this.keybindings.bindings) {
+      if (keybinding.category === this.category) {
+        const shortcuts = keybinding.keys;
+        if (this._findKeyStrokeInKeys(keyStroke, shortcuts) !== -1) {
+          return keybinding;
+        }
       }
-      Vue.set(this.keybindings.bindings, this.selectedCommand, newShortcuts);
+    }
+    return null;
+  }
+
+  private _findKeyStrokeInKeys(keyStroke: TermKeyStroke, shortcuts: string[]): number {
+    for (let i=0; i<shortcuts.length; i++) {
+      const currentKeyStroke = TermKeyStroke.parseConfigString(shortcuts[i]);
+      if (currentKeyStroke.equals(keyStroke)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private _findKeybindingByCommand(command: string): KeybindingsFileBinding {
+    for (const keybinding of this.keybindings.bindings) {
+      if (keybinding.category === this.category && keybinding.command === command) {
+        return keybinding;
+      }
+    }
+    return null;
+  }
+
+  onKeyInputSelected(keyStrokeString: string): void {
+    const conflictingKeybinding = this._findKeybindingByKeyStroke(keyStrokeString);
+    if (conflictingKeybinding == null) {
+      this._addKeyStrokeToCommandNoConflict(this.selectedCommand, keyStrokeString);
       this.inputState = "read";
     } else {
-      this.conflictKey = keybindingString;
-      this.conflictCommand = existingCommandConfig.command;
+      this.conflictKey = keyStrokeString;
+      this.conflictCommand = conflictingKeybinding.command;
+
+      this.conflictCommandName = "";
+      for (const commandContrib of this.allCommands) {
+        if (commandContrib.command === conflictingKeybinding.command) {
+          this.conflictCommandName = commandContrib.title;
+        }
+      }
+
       this.inputState = "conflict";
     }
 
     this.$emit(EVENT_END_KEY_INPUT);
   }
+
+  private _addKeyStrokeToCommandNoConflict(command: string, keyStrokeString: string): void {
+    const existingKeybinding = this._findKeybindingByCommand(command);
+    if (existingKeybinding == null) {
+      const newKeybinding = {
+        command,
+        category: this.category,
+        keys: [keyStrokeString]
+      };
+      Vue.set(this.keybindings, "bindings", [...this.keybindings.bindings, newKeybinding]);
+    } else {
+      const newKeyStrokes = [...existingKeybinding.keys, keyStrokeString];
+      Vue.set(existingKeybinding, "keys", newKeyStrokes);
+    }
+  }      
 
   onKeyInputCancelled(): void {
     this.inputState = "read";
@@ -248,14 +291,8 @@ export class KeybindingsCategory extends Vue {
   }
 
   onReplaceConflict(): void {
-    const newKeybinding = TermKeyStroke.parseConfigString(this.conflictKey);
-    const existingCommandConfig = this._findCommandByKeybinding(newKeybinding);
-
-    const shortcutsList = this.keybindings.bindings[existingCommandConfig.command];
-    Vue.delete(shortcutsList, existingCommandConfig.index);
-    
-    const newShortcuts = [...shortcutsList, this.conflictKey];
-    Vue.set(this.keybindings.bindings, existingCommandConfig.command, newShortcuts);
+    this.deleteKey(TermKeyStroke.parseConfigString(this.conflictKey));
+    this._addKeyStrokeToCommandNoConflict(this.selectedCommand, this.conflictKey);
 
     this.selectedCommand = "";
     this.conflictKey = "";

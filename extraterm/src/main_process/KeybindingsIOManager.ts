@@ -94,13 +94,13 @@ export class KeybindingsIOManager {
     const info = this._getInfoByName(name);
     const fullPath = path.join(info.path, info.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
-    let keyBindingsJSON = JSON.parse(keyBindingJsonString);
+    let keyBindingsJSON: KeybindingsFile = JSON.parse(keyBindingJsonString);
 
     if (keyBindingsJSON == null) {
-      keyBindingsJSON = {};
+      keyBindingsJSON = { name: "", bindings: [] };
     }
     if (keyBindingsJSON.bindings == null) {
-      keyBindingsJSON.bindings = {};
+      keyBindingsJSON.bindings = [];
     }
     return keyBindingsJSON;
   }
@@ -135,7 +135,7 @@ export class KeybindingsIOManager {
 
     const destPath = path.join(info.path, info.filename);
     try {
-      fs.writeFileSync(destPath, JSON.stringify(data));
+      fs.writeFileSync(destPath, JSON.stringify(data, null, "  "));
     } catch(err) {
       this._log.warn(`Unable to update '${destPath}'. Error: ${err.message}`);
       return false;

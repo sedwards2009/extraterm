@@ -168,7 +168,7 @@ describe.each([
 ])("", (input, output: string) => {
   test(`mapEventToCommand() -> ${output}"`, () => {  
     const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
-    expect(editorKeybindings.mapEventToCommands(input)).toEqual([output]);
+    expect(editorKeybindings.mapEventToCommands(input)[0].command).toEqual(output);
   });
 });
 
