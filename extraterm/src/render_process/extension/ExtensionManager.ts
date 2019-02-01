@@ -53,10 +53,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _extensionUiUtils: ExtensionUiUtils = null;
   private _proxyFactory: ProxyFactory = null;
   private _commonExtensionWindowState: CommonExtensionWindowState = {
+    activeTabContent: null,
     activeTerminal: null,
+    focusTerminal: null,
     activeTextEditor: null,
+    focusTextEditor: null,
     activeTabsWidget: null,
     activeViewerElement: null,
+    focusViewerElement: null,
   };
 
   constructor() {
@@ -77,9 +81,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   getExtensionContextByName(name: string): InternalExtensionContext {
     for (const ext of this._activeExtensions) {
-
 this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.name}`);
-
       if (ext.metadata.name === name) {
         return ext.contextImpl;
       }
@@ -178,10 +180,10 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return results;
   }
 
-  setActiveTerminal(terminal: EtTerminal): void {
-    this._commonExtensionWindowState.activeTerminal = terminal;
+  getActiveTab(): HTMLElement {
+    return this._commonExtensionWindowState.activeTabContent;
   }
-  
+
   getActiveTerminal(): EtTerminal {
     return this._commonExtensionWindowState.activeTerminal;
   }
@@ -370,7 +372,24 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
   updateExtensionWindowStateFromEvent(ev: Event): void {
     const newState = this.getExtensionWindowStateFromEvent(ev);
-    this._setExtensionWindowState(newState);
+    this._mergeExtensionWindowState(newState);
+  }
+
+  private _mergeExtensionWindowState(newState: CommonExtensionWindowState): void {
+    const state = this._commonExtensionWindowState;
+
+    state.activeTabContent = newState.activeTabContent;
+
+    state.activeTerminal = newState.focusTerminal || state.activeTerminal;
+    state.focusTerminal = newState.focusTerminal;
+
+    state.activeTextEditor = newState.focusTextEditor || state.activeTextEditor;
+    state.focusTextEditor = newState.focusTextEditor;
+
+    state.activeTabsWidget = newState.activeTabsWidget;
+
+    state.activeViewerElement = newState.focusViewerElement || state.activeViewerElement;
+    state.focusViewerElement = newState.focusViewerElement;  
   }
 
   private _setExtensionWindowState(newState: CommonExtensionWindowState): void {
@@ -381,10 +400,14 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
   getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState {
     const newState: CommonExtensionWindowState = {
+      activeTabContent: null,
       activeTerminal: null,
+      focusTerminal: null,
       activeTextEditor: null,
+      focusTextEditor: null,
       activeTabsWidget: null,
       activeViewerElement: null,
+      focusViewerElement: null,
     };
 
     const composedPath = ev.composedPath();
@@ -403,8 +426,13 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       if (target instanceof TabWidget) {
         newState.activeTabsWidget = target;
       }
+      if (target.parentElement != null && target.parentElement.parentElement instanceof TabWidget) {
+        newState.activeTabContent = <HTMLElement> target;
+      }
     }
-
+    newState.focusTerminal = newState.activeTerminal;
+    newState.focusTextEditor = newState.activeTextEditor;
+    newState.focusViewerElement = newState.activeViewerElement;
     return newState;
   }
 
@@ -418,7 +446,6 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       state.activeTerminal.focus();
       return;
     }
-
   }
 }
 

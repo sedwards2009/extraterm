@@ -11,8 +11,12 @@ import { ViewerElement } from '../viewers/ViewerElement';
 // This is a way of passing through all of the state which is common across all extension contexts.
 
 export interface CommonExtensionWindowState {
+  activeTabContent: HTMLElement;
   activeTerminal: EtTerminal;
+  focusTerminal: EtTerminal;
   activeTextEditor: TextEditor;
+  focusTextEditor: TextEditor;
   activeTabsWidget: TabWidget;
   activeViewerElement: ViewerElement;
+  focusViewerElement: ViewerElement;
 }

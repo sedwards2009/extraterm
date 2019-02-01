@@ -35,7 +35,7 @@ export interface ExtensionManager {
 
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
-  setActiveTerminal(terminal: EtTerminal): void;
+  getActiveTab(): HTMLElement;
   getActiveTerminal(): EtTerminal;
   getActiveTextEditor(): TextEditor;
     

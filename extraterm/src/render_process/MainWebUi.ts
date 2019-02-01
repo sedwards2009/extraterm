@@ -337,7 +337,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
         emptyPaneMenu.setFilter("");
         for (const entry of entriesAndShortcuts) {
           if (entry.id === ev.detail.selected) {
-            this._extensionManager. executeCommand(entry.command);
+            this._extensionManager.executeCommand(entry.command);
           }
         }
       });
@@ -534,7 +534,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _setUpNewTerminalEventHandlers(newTerminal: EtTerminal): void {
     newTerminal.addEventListener('focus', (ev: FocusEvent) => {
       this._lastFocus = newTerminal;
-      this._extensionManager.setActiveTerminal(newTerminal);
     });
 
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
@@ -943,8 +942,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
   }
 
-  private _getActiveTabElement(): Element {
-    return this._extensionManager.getActiveTerminal();
+  private _getActiveTabElement(): HTMLElement {
+    return this._extensionManager.getActiveTab();
   }
 
   private _commandNewTerminal(args: any): void {
