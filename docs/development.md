@@ -34,10 +34,12 @@ Extraterm uses [yarn](http://yarnpkg.com/) for package management. It is easiest
 
 * Clone the repository from github to your local machine.
 * Make sure that you are using node version 8.9.3. :warning: This is important. Using the same node version as the version of Electron simplifies installation of the one native node module that Extraterm depends on (pty.js). You can fetch it from https://nodejs.org/dist/v8.9.3/
-* Install the modules: `yarn install` (pty.js will not install on cygwin, but that is ok and expected.)
+* Install the modules: `yarn install` (pty.js will not install on cygwin, but that is ok and expected.) If you have trouble on Linux due to `font-manager` then read [this](https://github.com/foliojs/font-manager#installation).
 * Fix up the binary modules to work inside Electron: `yarn run electron-rebuild`
 * Build it: `yarn run build`
 * Run it: `yarn run run`
+
+If 
 
 
 # Code Layout
