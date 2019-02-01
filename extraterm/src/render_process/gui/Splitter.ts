@@ -290,6 +290,15 @@ export class Splitter extends TemplatedElementBase {
     this._stopDrag();
   }
 
+  /**
+   * Immediately perform any pending layout updates.
+   * 
+   * If this is not called then updates are performed at the next microtask via the mutation observer.
+   */
+  update(): void {
+    this._handleMutations(this._mutationObserver.takeRecords());
+  }
+
   private _handleMutations(mutations: MutationRecord[]): void {
     this._paneSizes = this._paneSizes.update(DomUtils.toArray(this.children));
 
