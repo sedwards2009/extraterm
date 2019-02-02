@@ -7,7 +7,7 @@
 import "jest";
 import { BooleanExpressionEvaluator } from "../main";
 
-describe.each([
+const testCases: [string, boolean][] = [
   ["Atrue", true],
   ["Bfalse", false],
   ["Atrue && Btrue", true],
@@ -23,15 +23,28 @@ describe.each([
   ["(Atrue || Bfalse) && Ctrue", true],
   ["Atrue && ! Bfalse", true],
   ["! Bfalse || Ctrue", true],
-])("Evaluate", (input: string, output: boolean) => {
+];
 
+const testValues = {
+  Atrue: true, Afalse: false,
+  Btrue: true, Bfalse: false,
+  Ctrue: true, Cfalse: false
+};
+
+describe.each(testCases)("Evaluate", (input: string, output: boolean) => {
   test(`${input} => ${output}`, () => {
-    const bee = new BooleanExpressionEvaluator({
-            Atrue: true, Afalse: false,
-            Btrue: true, Bfalse: false,
-            Ctrue: true, Cfalse: false
-          });
+    const bee = new BooleanExpressionEvaluator(testValues);
     const result = bee.evaluate(input);
     expect(result).toBe(output);
   });
+});
+
+test("Multiple", () => {
+  const bee = new BooleanExpressionEvaluator(testValues);
+  for (let i=0; i<5; i++) {
+    for (const testCase of testCases) {
+      const result = bee.evaluate(testCase[0]);
+      expect(result).toBe(testCase[1]);
+    }
+  }
 });

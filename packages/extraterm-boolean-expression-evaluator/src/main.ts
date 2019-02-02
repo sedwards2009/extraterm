@@ -7,13 +7,20 @@ import { parser, AST } from "extraterm-boolean-expression-parser";
 
 
 export class BooleanExpressionEvaluator {
-  constructor(private _values: object) {
 
+  private _resultCache = new Map<string, boolean>();
+
+  constructor(private _values: object) {
   }
 
   evaluate(input: string): boolean {
+    if (this._resultCache.has(input)) {
+      return this._resultCache.get(input);
+    }
     const ast = parser.parse(input);
-    return this._evaluateTree(ast);
+    const result = this._evaluateTree(ast);
+    this._resultCache.set(input, result);
+    return result;
   }
 
   private _evaluateTree(ast: AST): boolean {
