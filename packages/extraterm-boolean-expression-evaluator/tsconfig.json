@@ -9,7 +9,7 @@
         "removeComments": false,
         "sourceMap": true,
         "noLib": false,
-        "outDir": ".",
+        "outDir": "dist",
         "rootDir": "src",
         "jsx": "react",
         "experimentalDecorators": true,
@@ -22,7 +22,6 @@
         "./src/test/*.ts"
     ],
     "exclude": [
-        "./*.ts",
-        "./test/*.ts"
+        "./dist/**/*.ts"
     ]
 }
