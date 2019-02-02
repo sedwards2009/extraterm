@@ -19,6 +19,8 @@ node_modules/
 !extraterm/src/main_process/pty/PtyConnectorFactory.js
 !extraterm/src/dirname.js
 !extraterm/resources/extra_icons/build.js
+!packages/extraterm-boolean-expression-parser/src/*.js
+!packages/extraterm-boolean-expression-parser/src/test/*.js
 
 packages/extraterm-extension-api/main.d.ts
 packages/extraterm-web-component-decorators/Decorators.d.ts
