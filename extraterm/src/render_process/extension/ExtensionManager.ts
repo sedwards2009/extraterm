@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import * as ExtensionApi from 'extraterm-extension-api';
 import * as Ace from 'ace-ts';
+import { BooleanExpressionEvaluator } from 'extraterm-boolean-expression-evaluator';
 
 import { Logger, getLogger, log } from "extraterm-logging";
 import { EtTerminal } from '../Terminal';
@@ -33,6 +34,17 @@ interface ActiveExtension {
   contextImpl: InternalExtensionContext;
   publicApi: any;
   module: any;
+}
+
+interface WhenVariables {
+  true: boolean;
+  false: boolean;
+  terminalFocus: boolean;
+  isCursorMode: boolean;
+  isNormalMode: boolean;
+  textEditorFocus: boolean;
+  isTextEditing: boolean;
+  viewerFocus: boolean;
 }
 
 const allCategories: Category[] = [
@@ -257,31 +269,50 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return entries;
   }
 
-  private _createWhenPredicate(context: CommonExtensionWindowState): (ecc: ExtensionCommandContribution) => boolean {
-    const positiveFlags = new Set<WhenTerm>();
-    const state = this._commonExtensionWindowState;
-    if (state.activeTerminal != null) {
-      positiveFlags.add("terminalFocus");
-      if (state.activeTerminal.getMode() === Mode.CURSOR) {
-        positiveFlags.add("isCursorMode");
-      } else {
-        positiveFlags.add("isNormalMode");
-      }
-    }
-
-    if (state.activeTextEditor != null) {
-      positiveFlags.add("textEditorFocus");
-      if (this._commonExtensionWindowState.activeTextEditor.getEditable()) {
-        positiveFlags.add("isTextEditing");
-      }
-    }
-
+  private _createWhenPredicate(state: CommonExtensionWindowState): (ecc: ExtensionCommandContribution) => boolean {
+    const variables = this._createWhenVariables(state);
+this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
+    const bee = new BooleanExpressionEvaluator(variables);
     return (ecc: ExtensionCommandContribution): boolean => {
       if (ecc.when === "") {
         return true;
       }
-      return positiveFlags.has(<any> ecc.when);
+      return bee.evaluate(ecc.when);
     };
+  }
+
+  private _createWhenVariables(state: CommonExtensionWindowState): WhenVariables {
+    const whenVariables: WhenVariables = {
+      true: true,
+      false: false,
+      terminalFocus: false,
+      isCursorMode: false,
+      isNormalMode: false,
+      textEditorFocus: false,
+      isTextEditing: false,
+      viewerFocus: false,
+    };
+
+    if (state.activeTerminal != null) {
+      whenVariables.terminalFocus = true;
+      if (state.activeTerminal.getMode() === Mode.CURSOR) {
+        whenVariables.isCursorMode = true;
+      } else {
+        whenVariables.isNormalMode = true;
+      }
+    } else {
+      if (state.activeViewerElement) {
+        whenVariables.viewerFocus = true;
+      }
+    }
+
+    if (state.activeTextEditor != null) {
+      whenVariables.textEditorFocus = true;
+      if (this._commonExtensionWindowState.activeTextEditor.getEditable()) {
+        whenVariables.isTextEditing = true;
+      }
+    }
+    return whenVariables;
   }
 
   private _sortCommandsInPlace(entries: ExtensionCommandContribution[]): void {
@@ -378,9 +409,12 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   private _mergeExtensionWindowState(newState: CommonExtensionWindowState): void {
     const state = this._commonExtensionWindowState;
 
-    state.activeTabContent = newState.activeTabContent;
-
-    state.activeTerminal = newState.focusTerminal || state.activeTerminal;
+    if (state.activeTabContent === newState.activeTabContent) {
+      state.activeTerminal = newState.focusTerminal || state.activeTerminal;
+    } else {
+      state.activeTerminal = null;
+    }
+    
     state.focusTerminal = newState.focusTerminal;
 
     state.activeTextEditor = newState.focusTextEditor || state.activeTextEditor;
@@ -390,6 +424,8 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
     state.activeViewerElement = newState.focusViewerElement || state.activeViewerElement;
     state.focusViewerElement = newState.focusViewerElement;  
+
+    state.activeTabContent = newState.activeTabContent;
   }
 
   private _setExtensionWindowState(newState: CommonExtensionWindowState): void {

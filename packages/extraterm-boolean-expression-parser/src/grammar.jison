@@ -27,7 +27,7 @@
 
 expressions
     : e EOF
-        {console.log("Result: ", $1); return $1;}
+        { return $1; }
     ;
 
 e
