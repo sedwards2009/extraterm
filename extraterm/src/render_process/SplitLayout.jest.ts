@@ -151,6 +151,10 @@ class FakeSplitter extends FakeElement {
       height:  + this._height
     };
   }
+  
+  update() {
+
+  }
 }
 
 let tabWidgetCounter = 0;
