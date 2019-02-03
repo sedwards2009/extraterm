@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -12,7 +12,6 @@ import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import {AcceptsKeybindingsManager, KeybindingsManager} from './keybindings/KeyBindingsManager';
 import {ResizeCanary} from './ResizeCanary';
 import {ScrollBar} from'./gui/ScrollBar';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
@@ -24,6 +23,7 @@ import { RefreshLevel, Mode, VisualState } from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as WebIpc from './WebIpc';
 import { AcceptsConfigDatabase, ConfigDatabase } from '../Config';
+import { ExtensionManager } from './extension/InternalTypes';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
@@ -34,15 +34,7 @@ const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_CSS_VARS = "ID_CSS_VARS";
-const KEYBINDINGS_VIEWER_TAB = "viewer-tab";
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
-
-const PALETTE_GROUP = "viewertab";
-const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
-const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
-const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
-const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
-const COMMAND_FONT_SIZE_RESET = "resetFontSize";
 
 const MINIMUM_FONT_SIZE = -3;
 const MAXIMUM_FONT_SIZE = 4;
@@ -54,8 +46,7 @@ const SCROLL_STEP = 1;
  */
 @WebComponent({tag: "et-viewer-tab"})
 export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
-    AcceptsKeybindingsManager, SupportsClipboardPaste.SupportsClipboardPaste,
-    SupportsDialogStack.SupportsDialogStack {
+    SupportsClipboardPaste.SupportsClipboardPaste, SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-VIEWER-TAB";
 
@@ -65,7 +56,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   private _title = "New Tab";
   private _tag: string = null;
 
-  private _keyBindingManager: KeybindingsManager = null;
   private _configDatabase: ConfigDatabase = null;
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
@@ -75,6 +65,23 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   private _dialogStack: HTMLElement[] = [];
   private _copyToClipboardLater: DebouncedDoLater = null;
 
+  static registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+
+    commands.registerCommand("extraterm:viewerTab.copyToClipboard", (args: any) => {
+      const activeTab = extensionManager.getActiveTab();
+      if (activeTab instanceof EtViewerTab) {
+        activeTab.copyToClipboard();
+      }
+    });
+    commands.registerCommand("extraterm:viewerTab.pasteFromClipboard", (args: any) => {
+      const activeTab = extensionManager.getActiveTab();
+      if (activeTab instanceof EtViewerTab) {
+        activeTab._pasteFromClipboard();
+      }
+    });
+  }
+  
   constructor() {
     super();
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
@@ -241,10 +248,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     return Mode.CURSOR;
   }
   
-  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
-    this._keyBindingManager = keyBindingManager;
-  }
-
   getFontAdjust(): number {
     return this._fontSizeAdjustment;
   }

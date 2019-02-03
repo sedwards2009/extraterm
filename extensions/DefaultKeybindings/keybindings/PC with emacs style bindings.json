@@ -507,6 +507,36 @@
       ]
     },
     {
+      "command": "extraterm:terminal.copyToClipboard",
+      "category": "textEditing",
+      "keys": [
+        "Ctrl-c"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.pasteFromClipboard",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Insert",
+        "Ctrl-v"
+      ]
+    },
+    {
+      "command": "extraterm:viewrTab.copyToClipboard",
+      "category": "viewer",
+      "keys": [
+        "Ctrl-c"
+      ]
+    },
+    {
+      "command": "extraterm:viewrTab.pasteFromClipboard",
+      "category": "viewer",
+      "keys": [
+        "Shift-Insert",
+        "Ctrl-v"
+      ]
+    },
+    {
       "command": "extraterm:application.openCommandPalette",
       "category": "window",
       "keys": [

@@ -104,7 +104,7 @@
         "category": "terminal",
         "order": 1501,
         "icon": "fa fa-clipboard",
-        "when": "terminalFocus",
+        "when": "terminalFocus && isNormalMode",
         "contextMenu": true
       },
       {
@@ -315,18 +315,17 @@
         "icon": "far fa-lightbulb",
         "when": ""
       },
-
       {
         "command": "extraterm:textEditor.addCursorAbove",
         "title": "Add cursor above",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.addCursorBelow",
         "title": "Add cursor below",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.backSlashesToForward",
@@ -356,7 +355,7 @@
         "command": "extraterm:textEditor.cursorColumn",
         "title": "Column cursors",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.del",
@@ -380,73 +379,73 @@
         "command": "extraterm:textEditor.goLineDown",
         "title": "Move cursor down one line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.goLineUp",
         "title": "Move cursor up one line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoFileEnd",
         "title": "Go to end of document",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoFileStart",
         "title": "Go to start of document",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoLeft",
         "title": "Move cursor left",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoLineEnd",
         "title": "Move cursor to line end",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoLineStart",
         "title": "Move cursor to line start",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoPageDown",
         "title": "Move cursor one page down",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoPageUp",
         "title": "Move cursor one page up",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoRight",
         "title": "Move cursor right",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoWordLeft",
         "title": "Move cursor one word left",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.gotoWordRight",
         "title": "Move cursor one word right",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.indent",
@@ -470,7 +469,7 @@
         "command": "extraterm:textEditor.redo",
         "title": "Redo",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.removeLines",
@@ -494,85 +493,85 @@
         "command": "extraterm:textEditor.scrollDown",
         "title": "Scroll text down one line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.scrollUp",
         "title": "Scroll text up one line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectDown",
         "title": "Select down one line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectLeft",
         "title": "Select one character left",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectLineEnd",
         "title": "Select to end of line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectLineStart",
         "title": "Select to start of line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectMoreAfter",
         "title": "Add next match to selection",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectPageDown",
         "title": "Select page down",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectPageUp",
         "title": "Select page up",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectRight",
         "title": "Select one character right",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectUp",
         "title": "Select up one line",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectWordLeft",
         "title": "Select word left",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.selectWordRight",
         "title": "Select word right",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.singleSelection",
         "title": "Single selection",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.splitIntoLines",
@@ -584,19 +583,47 @@
         "command": "extraterm:textEditor.undo",
         "title": "Undo",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.undoSelection",
         "title": "Undo selection",
         "category": "textEditing",
-        "when": "isTextEditing"
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:textEditor.unescapeShellChars",
         "title": "Unescape special shell characters in selection",
         "category": "textEditing",
         "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:terminal.copyToClipboard",
+        "title": "Copy to Clipboard",
+        "category": "textEditing",
+        "icon": "far fa-copy",
+        "when": "terminalFocus && textEditorFocus"
+      },
+      {
+        "command": "extraterm:terminal.pasteFromClipboard",
+        "title": "Paste from Clipboard",
+        "category": "textEditing",
+        "icon": "fa fa-clipboard",
+        "when": "terminalFocus && isTextEditing"
+      },
+      {
+        "command": "extraterm:viewerTab.copyToClipboard",
+        "title": "Copy to Clipboard",
+        "category": "viewer",
+        "icon": "far fa-copy",
+        "when": "viewerFocus && isTextEditing"
+      },
+      {
+        "command": "extraterm:viewerTab.pasteFromClipboard",
+        "title": "Paste from Clipboard",
+        "category": "viewer",
+        "icon": "fa fa-clipboard",
+        "when": "viewerFocus && isTextEditing"
       },
       {
         "command": "extraterm:global.globalMaximize",

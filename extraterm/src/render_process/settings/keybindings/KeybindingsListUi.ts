@@ -18,7 +18,7 @@ const categoryNames = {
   "textEditing": "Text Editor",
   "terminal": "Terminal",
   "terminalCursorMode": "Terminal: Cursor Mode",
-  "viewer": "Viewers"
+  "viewer": "Viewer Tabs"
 };
 
 

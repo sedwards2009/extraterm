@@ -47,6 +47,7 @@ import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
 import { registerCommands as TextCommandsRegisterCommands } from "./viewers/TextCommands";
 import { DisposableHolder } from '../utils/DisposableUtils';
 import { ExtensionCommandContribution } from '../ExtensionMetadata';
+import { EtViewerTab } from './ViewerTab';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -366,6 +367,7 @@ function registerCommands(extensionManager: ExtensionManager): void {
 
   EtTerminal.registerCommands(extensionManager);
   TextCommandsRegisterCommands(extensionManager);
+  EtViewerTab.registerCommands(extensionManager);
 
   extensionManager.getExtensionContextByName("internal-commands").debugRegisteredCommands();
 }
