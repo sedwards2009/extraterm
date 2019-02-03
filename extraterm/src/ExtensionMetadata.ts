@@ -40,14 +40,16 @@ export type Category = "global" |
                         "terminalCursorMode" |
                         "viewer";
 
-export type WhenTerm = "terminalFocus" |
-                        "viewerFocus" |
-                        "viewerType" |
-                        "textEditorFocus" |
-                        "isCursorMode" |
-                        "isNormalMode" |
-                        "isTextEditing";
-
+export interface WhenVariables {
+  true: boolean;
+  false: boolean;
+  terminalFocus: boolean;
+  isCursorMode: boolean;
+  isNormalMode: boolean;
+  textEditorFocus: boolean;
+  isTextEditing: boolean;
+  viewerFocus: boolean;
+}
 
 export interface ExtensionCommandContribution {
   command: string;

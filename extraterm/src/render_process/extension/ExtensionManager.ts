@@ -17,7 +17,7 @@ import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalW
   isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
-import { ExtensionMetadata, ExtensionCommandContribution, WhenTerm, Category } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { CommandsRegistry } from './CommandsRegistry';
 import { CommonExtensionWindowState } from './CommonExtensionState';
@@ -34,17 +34,6 @@ interface ActiveExtension {
   contextImpl: InternalExtensionContext;
   publicApi: any;
   module: any;
-}
-
-interface WhenVariables {
-  true: boolean;
-  false: boolean;
-  terminalFocus: boolean;
-  isCursorMode: boolean;
-  isNormalMode: boolean;
-  textEditorFocus: boolean;
-  isTextEditing: boolean;
-  viewerFocus: boolean;
 }
 
 const allCategories: Category[] = [
@@ -242,9 +231,23 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     }
 
     let commandPredicate = truePredicate;
-    if (options.commands != null) {
-      const commands = options.commands;
-      commandPredicate = command => commands.indexOf(command.command) !== -1;
+    if (options.commandsWithCategories != null) {
+      const commandsWithCategories = options.commandsWithCategories;
+
+      const index = new Map<Category, string[]>();
+      for (const commandWithCategory of commandsWithCategories) {
+        if ( ! index.has(commandWithCategory.category)) {
+          index.set(commandWithCategory.category, []);
+        }
+        index.get(commandWithCategory.category).push(commandWithCategory.command);
+      }
+
+      commandPredicate = command => {
+        if ( ! index.has(command.category)) {
+          return false;
+        }
+        return index.get(command.category).indexOf(command.command) !== -1;
+      };
     }
 
     const whenPredicate = options.when ? this._createWhenPredicate(context) : truePredicate;
@@ -293,23 +296,25 @@ this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
       viewerFocus: false,
     };
 
-    if (state.activeTerminal != null) {
+    if (state.focusTerminal != null) {
       whenVariables.terminalFocus = true;
-      if (state.activeTerminal.getMode() === Mode.CURSOR) {
+      if (state.focusTerminal.getMode() === Mode.CURSOR) {
         whenVariables.isCursorMode = true;
       } else {
         whenVariables.isNormalMode = true;
       }
     } else {
-      if (state.activeViewerElement) {
+      if (state.focusViewerElement) {
         whenVariables.viewerFocus = true;
       }
     }
 
-    if (state.activeTextEditor != null) {
-      whenVariables.textEditorFocus = true;
-      if (this._commonExtensionWindowState.activeTextEditor.getEditable()) {
-        whenVariables.isTextEditing = true;
+    if (state.focusTextEditor != null) {
+      if ( ! (whenVariables.terminalFocus && whenVariables.isNormalMode)) {
+        whenVariables.textEditorFocus = true;
+        if (state.focusTextEditor.getEditable()) {
+          whenVariables.isTextEditing = true;
+        }
       }
     }
     return whenVariables;
@@ -411,20 +416,20 @@ this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
 
     if (state.activeTabContent === newState.activeTabContent) {
       state.activeTerminal = newState.focusTerminal || state.activeTerminal;
+      state.activeTextEditor = newState.focusTextEditor || state.activeTextEditor;
+      state.activeViewerElement = newState.focusViewerElement || state.activeViewerElement;
     } else {
-      state.activeTerminal = null;
+      state.activeTerminal = newState.focusTerminal;
+      state.focusTerminal = newState.focusTerminal;
+
+      state.activeTextEditor = newState.focusTextEditor;
+      state.focusTextEditor = newState.focusTextEditor;
+
+      state.activeViewerElement = newState.focusViewerElement;
+      state.focusViewerElement = newState.focusViewerElement;
     }
     
-    state.focusTerminal = newState.focusTerminal;
-
-    state.activeTextEditor = newState.focusTextEditor || state.activeTextEditor;
-    state.focusTextEditor = newState.focusTextEditor;
-
     state.activeTabsWidget = newState.activeTabsWidget;
-
-    state.activeViewerElement = newState.focusViewerElement || state.activeViewerElement;
-    state.focusViewerElement = newState.focusViewerElement;  
-
     state.activeTabContent = newState.activeTabContent;
   }
 

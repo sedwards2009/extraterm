@@ -44,7 +44,7 @@
         "category": "terminal",
         "order": 1200,
         "icon": "fa fa-i-cursor",
-        "when": "terminalFocus",
+        "when": "terminalFocus && isNormalMode",
         "contextMenu": true
       },
       {
@@ -52,7 +52,7 @@
         "title": "Exit cursor mode",
         "category": "terminalCursorMode",
         "order": 1200,
-        "when": "isCursorMode",
+        "when": "terminalFocus && isCursorMode",
         "contextMenu": true
       },
       {
