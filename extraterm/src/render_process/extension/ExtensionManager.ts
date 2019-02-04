@@ -193,6 +193,10 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return this._commonExtensionWindowState.activeTextEditor;
   }
 
+  getActiveTabContent(): HTMLElement {
+    return this._commonExtensionWindowState.activeTabContent;
+  }
+
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
     return this.queryCommandsWithExtensionWindowState(options, this._commonExtensionWindowState);
   }

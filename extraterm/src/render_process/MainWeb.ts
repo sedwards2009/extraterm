@@ -48,6 +48,7 @@ import { registerCommands as TextCommandsRegisterCommands } from "./viewers/Text
 import { DisposableHolder } from '../utils/DisposableUtils';
 import { ExtensionCommandContribution } from '../ExtensionMetadata';
 import { EtViewerTab } from './ViewerTab';
+import { isSupportsDialogStack } from './SupportsDialogStack';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -426,10 +427,10 @@ function commandReloadThemeContents(): void {
 }
 
 function commandOpenCommandPalette(): void {
-  if (extensionManager.getActiveTerminal() == null) {
-    return;
+  const tab = extensionManager.getActiveTabContent();
+  if (isSupportsDialogStack(tab)) {
+    commandPalette.open(tab, tab);
   }
-  commandPalette.open(extensionManager.getActiveTerminal(), extensionManager.getActiveTerminal());
 }
 
 function setupOSXEmptyMenus(): void {

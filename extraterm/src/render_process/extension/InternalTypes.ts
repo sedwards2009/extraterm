@@ -35,10 +35,12 @@ export interface ExtensionManager {
 
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
+
   getActiveTab(): HTMLElement;
   getActiveTerminal(): EtTerminal;
+  getActiveTabContent(): HTMLElement;
   getActiveTextEditor(): TextEditor;
-    
+
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
   
