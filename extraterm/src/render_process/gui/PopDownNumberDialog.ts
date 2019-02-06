@@ -48,7 +48,8 @@ export class PopDownNumberDialog extends TemplatedElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ...this._extraCssFiles];
+    const extraCssFiles = this._extraCssFiles == null ? [] : this._extraCssFiles;
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ...extraCssFiles];
   }
 
   getValue(): number {
