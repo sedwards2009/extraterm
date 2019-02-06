@@ -34,7 +34,7 @@ import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import { EtViewerTab } from './ViewerTab';
 import { PtyIpcBridge } from './PtyIpcBridge';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
-import { ConfigDatabase, SESSION_CONFIG } from '../Config';
+import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from '../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { NewTerminalContextArea } from './NewTerminalContextArea';
 import { CommandAndShortcut } from './command/CommandPalette';
@@ -561,6 +561,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
     injectKeybindingsManager(viewerTab, this._keybindingsManager);
+    injectConfigDatabase(viewerTab, this._configManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
     
