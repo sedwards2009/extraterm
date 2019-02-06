@@ -236,13 +236,10 @@ export interface Commands {
 }
 
 export interface Window {
-
   activeTerminal: Terminal;
-  
+  activeViewer: Viewer;
   getTerminals(): Terminal[];
-
   onDidCreateTerminal: Event<Terminal>;
-
   // onWillDestroyTerminal: Event<Terminal>;
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;

@@ -32,6 +32,10 @@ export class WindowProxy implements InternalWindow {
   get activeTerminal(): ExtensionApi.Terminal {
     return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
+  
+  get activeViewer(): ExtensionApi.Viewer {
+    return this._internalExtensionContext.proxyFactory.getViewerProxy(this._commonExtensionState.activeViewerElement);
+  }
 
   getTerminals(): ExtensionApi.Terminal[] {
     return []; // FIXME

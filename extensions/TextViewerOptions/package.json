@@ -10,5 +10,30 @@
   "scripts": {
     "build": "tsc"
   },
-  "dependencies": {}
+  "contributes": {
+    "commands": [
+      {
+        "command": "text-viewer-options:setSyntaxHighlighting",
+        "title": "Syntax: ",
+        "category": "viewer",
+        "when": "textEditorFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "text-viewer-options:setTabWidth",
+        "title": "Tab size: ",
+        "category": "viewer",
+        "when": "textEditorFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "text-viewer-options:showLineNumbers",
+        "title": "Line Numbers",
+        "category": "viewer",
+        "icon": "fa fa-list-ol",
+        "when": "textEditorFocus",
+        "contextMenu": true
+      }
+    ]
+  }
 }
