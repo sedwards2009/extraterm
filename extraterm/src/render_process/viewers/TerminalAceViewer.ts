@@ -255,7 +255,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
-      containerDiv.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
+      containerDiv.addEventListener('contextmenu', ev => this._handleContextMenu(ev));
 
       const aceElement = this._aceEditor.renderer.scroller;
       aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
@@ -914,7 +914,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
   }
 
-  private _handleContextMenuCapture(ev: MouseEvent): void {
+  private _handleContextMenu(ev: MouseEvent): void {
     // Prevent Ace from seeing this event and messing with the hidden textarea and the focus.
     ev.stopImmediatePropagation();
     ev.preventDefault();

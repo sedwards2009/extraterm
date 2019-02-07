@@ -189,9 +189,9 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     });
 
     // Filter the keyboard events before they reach Ace.
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
-    containerDiv.addEventListener('keyup', this._handleContainerKeyUpCapture.bind(this), true);
-    containerDiv.addEventListener('contextmenu', this._handleContextMenuCapture.bind(this), true);
+    containerDiv.addEventListener('keydown', (ev) => this._handleContainerKeyDown(ev));
+    containerDiv.addEventListener('keyup', (ev) => this._handleContainerKeyUpCapture(ev), true);
+    containerDiv.addEventListener('contextmenu', (ev) => this._handleContextMenu(ev));
 
     this._updateCssVars(); 
     this._applyVisualState(this._visualState);
@@ -699,7 +699,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     // }
   }
 
-  private _handleContextMenuCapture(ev: MouseEvent): void {
+  private _handleContextMenu(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
     dispatchContextMenuRequest(this, ev.clientX, ev.clientY);

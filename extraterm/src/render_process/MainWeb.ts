@@ -229,6 +229,7 @@ function startUpMainWebUi(): void {
   });
 
   mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
+    extensionManager.updateExtensionWindowStateFromEvent(ev);
     applicationContextMenu.open(ev);
   });
 
