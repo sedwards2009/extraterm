@@ -32,7 +32,7 @@ export class PopDownNumberDialog extends TemplatedElementBase {
     dialog.titlePrimary = this.titlePrimary;
     dialog.titleSecondary = this.titleSecondary;
     dialog.addEventListener(PopDownDialog.EVENT_CLOSE_REQUEST, () => {
-      dialog.close();
+      this._okId(null);
     });
 
     const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
