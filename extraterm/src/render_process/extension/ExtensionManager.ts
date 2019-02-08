@@ -62,6 +62,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     activeTabsWidget: null,
     activeViewerElement: null,
     focusViewerElement: null,
+    isInputFieldFocus: false,
   };
 
   constructor() {
@@ -195,6 +196,10 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
   getActiveTabContent(): HTMLElement {
     return this._commonExtensionWindowState.activeTabContent;
+  }
+
+  isInputFieldFocus(): boolean {
+    return this._commonExtensionWindowState.isInputFieldFocus;
   }
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
@@ -435,6 +440,7 @@ this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
     
     state.activeTabsWidget = newState.activeTabsWidget;
     state.activeTabContent = newState.activeTabContent;
+    state.isInputFieldFocus = newState.isInputFieldFocus;
   }
 
   private _setExtensionWindowState(newState: CommonExtensionWindowState): void {
@@ -453,6 +459,7 @@ this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
       activeTabsWidget: null,
       activeViewerElement: null,
       focusViewerElement: null,
+      isInputFieldFocus: false
     };
 
     const composedPath = ev.composedPath();
@@ -473,6 +480,9 @@ this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
       }
       if (target.parentElement != null && target.parentElement.parentElement instanceof TabWidget) {
         newState.activeTabContent = <HTMLElement> target;
+      }
+      if (target instanceof HTMLInputElement) {
+        newState.isInputFieldFocus = true;
       }
     }
     newState.focusTerminal = newState.activeTerminal;

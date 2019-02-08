@@ -19,4 +19,5 @@ export interface CommonExtensionWindowState {
   activeTabsWidget: TabWidget;
   activeViewerElement: ViewerElement;
   focusViewerElement: ViewerElement;
+  isInputFieldFocus: boolean;
 }

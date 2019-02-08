@@ -46,7 +46,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
 import { registerCommands as TextCommandsRegisterCommands } from "./viewers/TextCommands";
 import { DisposableHolder } from '../utils/DisposableUtils';
-import { ExtensionCommandContribution } from '../ExtensionMetadata';
+import { ExtensionCommandContribution, Category } from '../ExtensionMetadata';
 import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
 
@@ -257,8 +257,12 @@ _log.debug(`handleKeyCapture() commands '${commands}'`);
 
   extensionManager.updateExtensionWindowStateFromEvent(ev);
 
+  const categories: Category[] = extensionManager.isInputFieldFocus()
+                                  ? ["application", "window"]
+                                  : null;
   const filteredCommands = extensionManager.queryCommands({
     commandsWithCategories: commands.map(c => ({command: c.command, category: c.category })),
+    categories: categories,
     when: true
   });
   if (filteredCommands.length !== 0) {

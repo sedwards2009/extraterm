@@ -40,6 +40,7 @@ export interface ExtensionManager {
   getActiveTerminal(): EtTerminal;
   getActiveTabContent(): HTMLElement;
   getActiveTextEditor(): TextEditor;
+  isInputFieldFocus(): boolean;
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
