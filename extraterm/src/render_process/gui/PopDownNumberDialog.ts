@@ -49,7 +49,8 @@ export class PopDownNumberDialog extends TemplatedElementBase {
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     const extraCssFiles = this._extraCssFiles == null ? [] : this._extraCssFiles;
-    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ...extraCssFiles];
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME,
+            ThemeTypes.CssFile.GUI_POP_DOWN_NUMBER_DIALOG, ...extraCssFiles];
   }
 
   getValue(): number {

@@ -24,6 +24,7 @@ import * as VirtualScrollArea from './VirtualScrollArea';
 import * as WebIpc from './WebIpc';
 import { AcceptsConfigDatabase, ConfigDatabase } from '../Config';
 import { ExtensionManager } from './extension/InternalTypes';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
@@ -306,13 +307,13 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       template = window.document.createElement('template');
       template.id = ID;
 
-      template.innerHTML = `
+      template.innerHTML = trimBetweenTags(`
         <style id="${ThemeableElementBase.ID_THEME}"></style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
           <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
-        </div>`;
+        </div>`);
       window.document.body.appendChild(template);
     }
 
