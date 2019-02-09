@@ -10,6 +10,6 @@ import { getWslProxySessionEditorClass } from './WslProxySessionEditor';
 
 export function activate(context: ExtensionContext): any {
   context.logger.info("ProxySessionEditorExtension activate");
-  context.workspace.registerSessionEditor("cygwin", getCygwinProxySessionEditorClass(context));
-  context.workspace.registerSessionEditor("wsl", getWslProxySessionEditorClass(context));
+  context.window.registerSessionEditor("cygwin", getCygwinProxySessionEditorClass(context));
+  context.window.registerSessionEditor("wsl", getWslProxySessionEditorClass(context));
 }

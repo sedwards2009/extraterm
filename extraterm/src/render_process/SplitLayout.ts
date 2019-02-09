@@ -71,21 +71,13 @@ let tabIdCounter = 0;
 export class SplitLayout {
 
   private _log: Logger = getLogger("SplitLayout");
-
   private _rootContainer: Element = null;
-
   private _tabContainerFactory: TabContentContainerElementFactory = null;
-
   private _emptySplitFactory: ElementFactory = null;
-
   private _topLeftElement: Element = null;
-
   private _topRightElement: Element = null;
-
   private _leftSpaceDefaultElementFactory: ElementFactory = null;
-
   private _rightSpaceDefaultElementFactory: ElementFactory = null;
-
   private _rootInfoNode: RootInfoNode = null;
 
   constructor() {
@@ -681,6 +673,7 @@ export class SplitLayout {
     }
 
     DomUtils.setElementChildren(infoNode.splitter, targetChildrenList);
+    infoNode.splitter.update();
   }
 
   private _computeNewPositionForVerticalSplits(oldPosition: RelativePosition, index: number, length: number): RelativePosition {

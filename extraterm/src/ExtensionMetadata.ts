@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,10 +7,10 @@
 export interface ExtensionMetadata {
   name: string;
   path: string;
-  main: string;
+  main?: string;
   version?: string;
   description?: string;
-  contributions: ExtensionContributions;
+  contributes: ExtensionContributes;
   includePlatform?: ExtensionPlatform[];
   excludePlatform?: ExtensionPlatform[];
 }
@@ -20,15 +20,49 @@ export interface ExtensionPlatform {
   arch?: string;
 }
 
-export interface ExtensionContributions {
+export interface ExtensionContributes {
+  commands: ExtensionCommandContribution[];
   keybindings: ExtensionKeybindingsContribution[];
-  sessionBackend: ExtensionSessionBackendContribution[];
-  sessionEditor: ExtensionSessionEditorContribution[];
-  syntaxTheme: ExtensionSyntaxThemeContribution[];
-  syntaxThemeProvider: ExtensionSyntaxThemeProviderContribution[];
-  terminalTheme: ExtensionTerminalThemeContribution[];
-  terminalThemeProvider: ExtensionTerminalThemeProviderContribution[];
-  viewer: ExtensionViewerContribution[];
+  sessionBackends: ExtensionSessionBackendContribution[];
+  sessionEditors: ExtensionSessionEditorContribution[];
+  syntaxThemes: ExtensionSyntaxThemeContribution[];
+  syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
+  terminalThemes: ExtensionTerminalThemeContribution[];
+  terminalThemeProviders: ExtensionTerminalThemeProviderContribution[];
+  viewers: ExtensionViewerContribution[];
+}
+
+export type Category = "global" |
+                        "application" |
+                        "window" |
+                        "textEditing" |
+                        "terminal" |
+                        "terminalCursorMode" |
+                        "viewer";
+
+export interface WhenVariables {
+  true: boolean;
+  false: boolean;
+  terminalFocus: boolean;
+  isCursorMode: boolean;
+  isNormalMode: boolean;
+  textEditorFocus: boolean;
+  isTextEditing: boolean;
+  viewerFocus: boolean;
+}
+
+export interface ExtensionCommandContribution {
+  command: string;
+  title: string;
+  when?: string;
+  category?: Category;
+  order?: number;
+  commandPalette?: boolean;
+  contextMenu?: boolean;
+  icon?: string;
+  checked?: boolean;
+  emptyPaneMenu?: boolean;
+  newTerminalMenu?: boolean;
 }
 
 export interface ExtensionViewerContribution {

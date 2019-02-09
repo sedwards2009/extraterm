@@ -2,7 +2,7 @@
   "name": "default-keybindings",
   "description": "Extraterm Default Keybindings",
   "version": "1.0.0",
-  "contributions": {
+  "contributes": {
     "keybindings": [
       {
         "path": "keybindings"

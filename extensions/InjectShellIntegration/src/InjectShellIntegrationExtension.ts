@@ -1,57 +1,34 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Command, ExtensionContext, Logger, Terminal } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal } from 'extraterm-extension-api';
 import {BashScriptBuilder, FishScriptBuilder, ScriptCommand, ZshScriptBuilder} from './ScriptBuilders';
-
 
 let log: Logger = null;
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  context.workspace.registerCommandsOnTerminal(terminalCommandLister, terminalCommandExecutor);
-}
 
-const COMMAND_INJECT_BASH_INTEGRATION = "injectBashIntegration";
-const COMMAND_INJECT_FISH_INTEGRATION = "injectFishIntegration";
-const COMMAND_INJECT_ZSH_INTEGRATION = "injectZshIntegration";
+  const commands = context.commands;
+  commands.registerCommand("inject-shell-integration:injectBashIntegration", () => {
+    const terminal = context.window.activeTerminal;
+    const scriptCommands = new BashScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
+    executeScriptCommands(terminal, scriptCommands);    
+  });
 
-function terminalCommandLister(terminal: Terminal): Command[] {
-  return [{
-    id: COMMAND_INJECT_BASH_INTEGRATION,
-    label: "Inject Bash Shell Integration"
-  },
-  {
-    id: COMMAND_INJECT_FISH_INTEGRATION,
-    label: "Inject Fish Shell Integration"
-  },
-  {
-    id: COMMAND_INJECT_ZSH_INTEGRATION,
-    label: "Inject Zsh Shell Integration"
-  }];
-}
+  commands.registerCommand("inject-shell-integration:injectFishIntegration", () => {
+    const terminal = context.window.activeTerminal;
+    const scriptCommands = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
+    executeScriptCommands(terminal, scriptCommands);    
+  });
 
-async function terminalCommandExecutor(terminal: Terminal, commandId: string, commandArguments?: object): Promise<any> {
-  const scriptCommands = getScriptCommands(terminal, commandId);
-  executeScriptCommands(terminal, scriptCommands);
-}
-
-function getScriptCommands(terminal: Terminal, commandId: string): ScriptCommand[] {
-  switch(commandId) {
-    case COMMAND_INJECT_BASH_INTEGRATION:
-      return new BashScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-
-    case COMMAND_INJECT_FISH_INTEGRATION:
-      return new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-
-    case COMMAND_INJECT_ZSH_INTEGRATION:
-      return new ZshScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-
-    default:
-      return [];
-  }
+  commands.registerCommand("inject-shell-integration:injectZshIntegration", () => {
+    const terminal = context.window.activeTerminal;
+    const scriptCommands = new ZshScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
+    executeScriptCommands(terminal, scriptCommands);    
+  });
 }
 
 async function executeScriptCommands(terminal: Terminal, scriptCommands: ScriptCommand[]): Promise<void> {

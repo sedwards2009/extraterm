@@ -10,10 +10,11 @@ import * as _ from 'lodash';
 import { trimBetweenTags} from 'extraterm-trim-between-tags';
 import { KeybindingsInfo } from '../../../Config';
 import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
-import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './ContextUi';
+import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { KeybindingsList } from './KeybindingsListUi';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
+import { ExtensionManager } from '../../extension/InternalTypes';
 
 export const EVENT_DELETE = "delete";
 export const EVENT_DUPLICATE = "duplicate";
@@ -23,7 +24,7 @@ export const EVENT_RENAME = "rename";
 @Component(
   {
     components: {
-      "keybindings-contexts-list": KeybindingsList,
+      "keybindings-category-list": KeybindingsList,
       "keybindings-key-input": KeybindingsKeyInput,
     },
     template: trimBetweenTags(`
@@ -92,14 +93,15 @@ export const EVENT_RENAME = "rename";
         v-on:click="onRecordKey"><i class="fas fa-keyboard"></i>&nbsp;Record key</button>
   </div>
 
-  <keybindings-contexts-list
+  <keybindings-category-list
     v-if="keybindings !== null"
     :keybindings="keybindings"
     :readOnly="isSelectedKeybindingsReadOnly"
     :searchText="searchText"
+    :extensionManager="extensionManager"
     v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
     v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
-  </keybindings-contexts-list>
+  </keybindings-category-list>
 </div>
 `)
 })
@@ -116,7 +118,16 @@ export class KeybindingsSettingsUi extends Vue {
   searchText: string = "";
 
   recordingKey: boolean = false;
+  private _extensionManager: ExtensionManager = null;
 
+  setExtensionManager(extensionManager: ExtensionManager): void {
+    this._extensionManager = extensionManager;
+    this.$forceUpdate();
+  }
+
+  get extensionManager(): ExtensionManager {
+    return this._extensionManager;
+  }
 
   get isSelectedKeybindingsReadOnly(): boolean {
     const info = this._selectedKeybindingsInfo();

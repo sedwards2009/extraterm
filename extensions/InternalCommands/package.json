@@ -1,0 +1,654 @@
+{
+  "name": "internal-commands",
+  "description": "Command definitions for all internal commands",
+  "version": "1.0.0",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extraterm:application.openCommandPalette",
+        "title": "Command Palette",
+        "category": "window",
+        "icon": "fas fa-toolbox",
+        "when": "",
+        "order": 900,
+        "contextMenu": true,
+        "commandPalette": false
+      },
+      {
+        "command": "extraterm:typeSelection",
+        "title": "Type selection",
+        "category": "terminal",
+        "order": 1000,
+        "icon": "fa fa-terminal",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:typeSelectionAndCr",
+        "title": "Type Selection & execute",
+        "category": "terminal",
+        "order": 1001,
+        "icon": "fa fa-terminal",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectAll",
+        "title": "Select all",
+        "category": "textEditing",
+        "order": 1100,
+        "when": "textEditorFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.enterCursorMode",
+        "title": "Enter cursor mode",
+        "category": "terminal",
+        "order": 1200,
+        "icon": "fa fa-i-cursor",
+        "when": "terminalFocus && isNormalMode",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.enterNormalMode",
+        "title": "Exit cursor mode",
+        "category": "terminalCursorMode",
+        "order": 1200,
+        "when": "terminalFocus && isCursorMode",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.scrollPageUp",
+        "title": "Scroll page up",
+        "category": "terminal",
+        "order": 1300,
+        "icon": "fa fa-angle-double-up",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.scrollPageDown",
+        "title": "Scroll page down",
+        "category": "terminal",
+        "order": 1301,
+        "icon": "fa fa-angle-double-down",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.goToPreviousFrame",
+        "title": "Go to previous frame",
+        "category": "terminal",
+        "order": 1400,
+        "icon": "fas fa-step-backward fa-rotate-90",
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.goToNextFrame",
+        "title": "Go to next frame",
+        "category": "terminal",
+        "order": 1401,
+        "icon": "fas fa-step-forward fa-rotate-90",
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.copyToClipboard",
+        "title": "Copy to Clipboard",
+        "category": "terminal",
+        "order": 1500,
+        "icon": "far fa-copy",
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.pasteFromClipboard",
+        "title": "Paste from Clipboard",
+        "category": "terminal",
+        "order": 1501,
+        "icon": "fa fa-clipboard",
+        "when": "terminalFocus && isNormalMode",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.openLastFrame",
+        "title": "Open Last Frame",
+        "category": "terminal",
+        "order": 1600,
+        "icon": "fa fa-external-link-alt",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.deleteLastFrame",
+        "title": "Delete the last frame",
+        "category": "terminal",
+        "order": 1601,
+        "icon": "fa fa-times-circle",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "extraterm:terminal.increaseFontSize",
+        "title": "Increase font size",
+        "category": "terminal",
+        "order": 1700,
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.decreaseFontSize",
+        "title": "Decrease font size",
+        "category": "terminal",
+        "order": 1701,
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.resetFontSize",
+        "title": "Reset font size",
+        "category": "terminal",
+        "order": 1702,
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.clearScrollback",
+        "title": "Clear Scrollback",
+        "category": "terminal",
+        "order": 1800,
+        "icon": "fa fa-eraser",
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:terminal.resetVT",
+        "title": "Reset VT",
+        "category": "terminal",
+        "order": 1801,
+        "icon": "fa fa-sync",
+        "when": "terminalFocus",
+        "contextMenu": true
+      },
+      {
+        "command": "extraterm:window.newTerminal",
+        "title": "New Terminal",
+        "category": "window",
+        "order": 1000,
+        "when": "",
+        "icon": "fa fa-plus",
+        "contextMenu": true,
+        "emptyPaneMenu": true
+      },
+      {
+        "command": "extraterm:window.closeTab",
+        "title": "Close tab",
+        "category": "window",
+        "order": 1100,
+        "icon": "fa fa-times",
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusTabLeft",
+        "title": "Focus Tab left",
+        "category": "window",
+        "order": 1200,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusTabRight",
+        "title": "Focus Tab Right",
+        "category": "window",
+        "order": 1201,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneLeft",
+        "title": "Focus Pane Left",
+        "category": "window",
+        "order": 1300,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneRight",
+        "title": "Focus Pane Right",
+        "category": "window",
+        "order": 1301,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneAbove",
+        "title": "Focus Pane Above",
+        "category": "window",
+        "order": 1302,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.focusPaneBelow",
+        "title": "Focus Pane Below",
+        "category": "window",
+        "order": 1303,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.horizontalSplit",
+        "title": "Horizontal Split",
+        "category": "window",
+        "order": 1400,
+        "icon": "extraicon-#xea08",
+        "when": "",
+        "contextMenu": true,
+        "emptyPaneMenu": true
+      },      
+      {
+        "command": "extraterm:window.verticalSplit",
+        "title": "Vertical Split",
+        "category": "window",
+        "order": 1401,
+        "icon": "fa fa-columns",
+        "when": "",
+        "contextMenu": true,
+        "emptyPaneMenu": true
+      },
+      {
+        "command": "extraterm:window.closePane",
+        "title": "Close Pane",
+        "category": "window",
+        "order": 1402,
+        "icon": "far fa-window-close",
+        "when": "",
+        "contextMenu": true,
+        "emptyPaneMenu": true
+      },
+      {
+        "command": "extraterm:window.moveTabLeft",
+        "title": "Move Tab Left",
+        "category": "window",
+        "order": 1500,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.moveTabRight",
+        "title": "Move Tab Right",
+        "category": "window",
+        "order": 1501,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.moveTabUp",
+        "title": "Move Tab Up",
+        "category": "window",
+        "order": 1502,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.moveTabDown",
+        "title": "Move Tab Down",
+        "category": "window",
+        "order": 1503,
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.openSettings",
+        "title": "Settings",
+        "category": "application",
+        "order": 2000,
+        "icon": "fa fa-wrench",
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.reloadCss",
+        "title": "Reload Theme",
+        "category": "application",
+        "order": 3000,
+        "icon": "fa fa-sync",
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.toggleDeveloperTools",
+        "title": "Toogle Developer Tools",
+        "category": "application",
+        "order": 3001,
+        "icon": "fa fa-cogs",
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.openAbout",
+        "title": "About",
+        "category": "application",
+        "order": 4000,
+        "icon": "far fa-lightbulb",
+        "when": ""
+      },
+      {
+        "command": "extraterm:textEditor.addCursorAbove",
+        "title": "Add cursor above",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.addCursorBelow",
+        "title": "Add cursor below",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.backSlashesToForward",
+        "title": "Convert backslashes to forward slashes in selection",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.backspace",
+        "title": "Delete character before cursor",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.blockIndent",
+        "title": "Indent more",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.blockOutdent",
+        "title": "Indent less",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.cursorColumn",
+        "title": "Column cursors",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.del",
+        "title": "Delete character after cursor",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.escapeShellChars",
+        "title": "Escape special shell characters in selection",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.forwardSlashesToBack",
+        "title": "Convert forward slashes to backslashes in selection",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.goLineDown",
+        "title": "Move cursor down one line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.goLineUp",
+        "title": "Move cursor up one line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoFileEnd",
+        "title": "Go to end of document",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoFileStart",
+        "title": "Go to start of document",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoLeft",
+        "title": "Move cursor left",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoLineEnd",
+        "title": "Move cursor to line end",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoLineStart",
+        "title": "Move cursor to line start",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoPageDown",
+        "title": "Move cursor one page down",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoPageUp",
+        "title": "Move cursor one page up",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoRight",
+        "title": "Move cursor right",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoWordLeft",
+        "title": "Move cursor one word left",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.gotoWordRight",
+        "title": "Move cursor one word right",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.indent",
+        "title": "Insert tab",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.outdent",
+        "title": "Indent less",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.overwrite",
+        "title": "Toggle overwrite/insert mode",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.redo",
+        "title": "Redo",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.removeLines",
+        "title": "Delete line",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.removeWordLeft",
+        "title": "Delete word before cursor",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.removeWordRight",
+        "title": "Delete word after cursor",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.scrollDown",
+        "title": "Scroll text down one line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.scrollUp",
+        "title": "Scroll text up one line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectDown",
+        "title": "Select down one line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectLeft",
+        "title": "Select one character left",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectLineEnd",
+        "title": "Select to end of line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectLineStart",
+        "title": "Select to start of line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectMoreAfter",
+        "title": "Add next match to selection",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectPageDown",
+        "title": "Select page down",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectPageUp",
+        "title": "Select page up",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectRight",
+        "title": "Select one character right",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectUp",
+        "title": "Select up one line",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectWordLeft",
+        "title": "Select word left",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.selectWordRight",
+        "title": "Select word right",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.singleSelection",
+        "title": "Single selection",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.splitIntoLines",
+        "title": "Add cursors to end of each selected line",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:textEditor.undo",
+        "title": "Undo",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.undoSelection",
+        "title": "Undo selection",
+        "category": "textEditing",
+        "when": "textEditorFocus"
+      },
+      {
+        "command": "extraterm:textEditor.unescapeShellChars",
+        "title": "Unescape special shell characters in selection",
+        "category": "textEditing",
+        "when": "isTextEditing"
+      },
+      {
+        "command": "extraterm:terminal.copyToClipboard",
+        "title": "Copy to Clipboard",
+        "category": "textEditing",
+        "icon": "far fa-copy",
+        "when": "terminalFocus && textEditorFocus"
+      },
+      {
+        "command": "extraterm:terminal.pasteFromClipboard",
+        "title": "Paste from Clipboard",
+        "category": "textEditing",
+        "icon": "fa fa-clipboard",
+        "when": "terminalFocus && isTextEditing"
+      },
+      {
+        "command": "extraterm:viewerTab.copyToClipboard",
+        "title": "Copy to Clipboard",
+        "category": "viewer",
+        "icon": "far fa-copy",
+        "when": "viewerFocus && isTextEditing"
+      },
+      {
+        "command": "extraterm:viewerTab.pasteFromClipboard",
+        "title": "Paste from Clipboard",
+        "category": "viewer",
+        "icon": "fa fa-clipboard",
+        "when": "viewerFocus && isTextEditing"
+      },
+      {
+        "command": "extraterm:global.globalMaximize",
+        "title": "Maximize window",
+        "category": "global",
+        "when": ""
+      },
+      {
+        "command": "extraterm:global.globalShow",
+        "title": "Show and focus window",
+        "category": "global",
+        "when": ""
+      },
+      {
+        "command": "extraterm:global.globalHide",
+        "title": "Hide window",
+        "category": "global",
+        "when": ""
+      },
+      {
+        "command": "extraterm:global.globalToggleShowHide",
+        "title": "Toogle show/hide window",
+        "category": "global",
+        "when": ""
+      }
+    ]
+  }
+}

@@ -21,8 +21,8 @@
       "os": "win32"
     }
   ],
-  "contributions": {
-    "sessionBackend": [
+  "contributes": {
+    "sessionBackends": [
       {
         "name": "Cygwin",
         "type": "cygwin"

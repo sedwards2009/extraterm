@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event} from 'extraterm-extension-api';
+import { Event, CustomizedCommand, SessionConfiguration} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
@@ -14,8 +14,7 @@ import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
-import { EVENT_COMMAND_PALETTE_REQUEST, EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
-import { BoundCommand, Commandable, CommandExecutor } from './command/CommandTypes';
+import { EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
@@ -42,19 +41,20 @@ import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
-import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, KeybindingsContexts } from './keybindings/KeyBindingsManager';
+import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, TermKeybindingsMapping } from './keybindings/KeyBindingsManager';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
+import { registerCommands as TextCommandsRegisterCommands } from "./viewers/TextCommands";
+import { DisposableHolder } from '../utils/DisposableUtils';
+import { ExtensionCommandContribution, Category } from '../ExtensionMetadata';
+import { EtViewerTab } from './ViewerTab';
+import { isSupportsDialogStack } from './SupportsDialogStack';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
 SourceMapSupport.install();
 
-const PALETTE_GROUP = "mainweb";
-const MENU_ITEM_SETTINGS = 'settings';
 const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
-const MENU_ITEM_ABOUT = 'about';
-const MENU_ITEM_RELOAD_CSS = 'reload_css';
 const ID_MAIN_MENU = "ID_MAIN_MENU";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
@@ -67,7 +67,7 @@ const _log = getLogger("mainweb");
  * starting up the main component and handling the window directly.
  */
 
-let keyBindingManager: KeybindingsManager = null;
+let keybindingsManager: KeybindingsManager = null;
 let themes: ThemeInfo[];
 let mainWebUi: MainWebUi = null;
 let configDatabase: ConfigDatabaseImpl = null;
@@ -86,13 +86,13 @@ export function startUp(closeSplash: () => void): void {
 
   // Get the Config working.
   configDatabase = new ConfigDatabaseImpl();
-  keyBindingManager = new KeybindingsManagerImpl();  // depends on the config.
-  const themePromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
+  keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
+  const configPromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
     return handleConfigMessage(msg);
   });
   
   // Get the config and theme info in and then continue starting up.
-  const allPromise = Promise.all<void>( [themePromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
+  const allPromise = Promise.all<void>( [configPromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
   allPromise.then(loadFontFaces).then( () => {
 
     const doc = window.document;
@@ -100,6 +100,8 @@ export function startUp(closeSplash: () => void): void {
 
     startUpExtensions();
     startUpMainWebUi();
+    registerCommands(extensionManager);
+    startUpSessions(configDatabase, extensionManager);
 
     closeSplash();
 
@@ -115,7 +117,7 @@ export function startUp(closeSplash: () => void): void {
     if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
       mainWebUi.newTerminalTab(null, configDatabase.getConfig(SESSION_CONFIG)[0].uuid);
     } else {
-      mainWebUi.openSettingsTab("session");
+      mainWebUi.commandOpenSettingsTab("session");
       Electron.remote.dialog.showErrorBox("No session types available",
         "Extraterm doesn't have any session types configured.");
     }
@@ -169,7 +171,7 @@ function loadFontFaces(): Promise<FontFace[]> {
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   injectConfigDatabase(mainWebUi, configDatabase);
-  injectKeybindingsManager(mainWebUi, keyBindingManager);
+  injectKeybindingsManager(mainWebUi, keybindingsManager);
   mainWebUi.setExtensionManager(extensionManager);
 
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
@@ -226,13 +228,58 @@ function startUpMainWebUi(): void {
     window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
   });
 
-  mainWebUi.addEventListener(EVENT_COMMAND_PALETTE_REQUEST, (ev: CustomEvent) => {
-    commandPalette.handleCommandPaletteRequest(ev);
+  mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
+    extensionManager.updateExtensionWindowStateFromEvent(ev);
+    applicationContextMenu.open(ev);
   });
 
-  mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
-    applicationContextMenu.handleContextMenuRequest(ev);
+  window.addEventListener("keydown", handleKeyDownCapture, true);
+  window.addEventListener("keypress", handleKeyPressCapture, true);
+  window.addEventListener("focus", handleFocusCapture, true);
+  // ^ It would be nice to just have these on mainWebUi too, but bug
+  // https://github.com/whatwg/dom/issues/685 prevents event capture on shadow DOM hosts from working as expected and
+  // arriving in the right order wrt to things deeper in the tree. The fix arrives in Chrome 71.
+}
+
+function handleKeyDownCapture(ev: KeyboardEvent): void {
+  _log.debug(`handleKeyDownCapture() event: `, ev);  
+  handleKeyCapture(ev);
+}
+
+function handleKeyPressCapture(ev: KeyboardEvent): void {
+  _log.debug(`handleKeyPressCapture() event: `, ev);  
+  handleKeyCapture(ev);
+}
+
+function handleKeyCapture(ev: KeyboardEvent): void {
+  const commands = keybindingsManager.getKeybindingsMapping().mapEventToCommands(ev);
+_log.debug(`handleKeyCapture() commands '${commands}'`);  
+
+  extensionManager.updateExtensionWindowStateFromEvent(ev);
+
+  const categories: Category[] = extensionManager.isInputFieldFocus()
+                                  ? ["application", "window"]
+                                  : null;
+  const filteredCommands = extensionManager.queryCommands({
+    commandsWithCategories: commands.map(c => ({command: c.command, category: c.category })),
+    categories: categories,
+    when: true
   });
+  if (filteredCommands.length !== 0) {
+_log.debug(`filtered Commands is ${filteredCommands.map(fc => fc.command).join(", ")}`);
+
+    if (filteredCommands.length !== 1) {
+      _log.warn(`Commands ${filteredCommands.map(fc => fc.command).join(", ")} have conflicting keybindings.`);
+    }
+
+    extensionManager.executeCommand(filteredCommands[0].command);
+    ev.stopPropagation();
+    ev.preventDefault();
+  }
+}
+
+function handleFocusCapture(ev: FocusEvent): void {
+  extensionManager.updateExtensionWindowStateFromEvent(ev);
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";
@@ -262,20 +309,19 @@ function setUpWindowControls(): void {
   });
 }
 
-
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
-        <${MenuItem.TAG_NAME} icon="extraicon extraicon-pocketknife" name="${MENU_ITEM_SETTINGS}">Settings</${MenuItem.TAG_NAME}>
-        <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" name="developer_tools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="far fa-lightbulb" name="${MENU_ITEM_ABOUT}">About</${MenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="extraicon extraicon-pocketknife" data-command="extraterm:window.openSettings">Settings</${MenuItem.TAG_NAME}>
+        <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" data-command="extraterm:window.toggleDeveloperTools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
+        <${MenuItem.TAG_NAME} icon="far fa-lightbulb" data-command="extraterm:window.openAbout">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
   `));
   window.document.body.appendChild(contextMenuFragment)
 
   const mainMenu = window.document.getElementById(ID_MAIN_MENU);
   mainMenu.addEventListener('selected', (ev: CustomEvent) => {
-    executeMenuCommand(ev.detail.name);
+    extensionManager.executeCommand((<HTMLElement> ev.detail.menuItem).getAttribute("data-command"));
   });
 
   const menuButton = document.getElementById(ID_MENU_BUTTON);
@@ -318,41 +364,78 @@ function startUpExtensions() {
   extensionManager.startUp();
 }
 
-function executeMenuCommand(command: string): boolean {
-  if (command === MENU_ITEM_DEVELOPER_TOOLS) {
-    // Unflip what the user did to the state of the developer tools check box for a moment.
-    // Let executeCommand() toggle the checkbox itself. 
-    const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-    developerToolMenu.checked = ! developerToolMenu.checked;
-  }
+function registerCommands(extensionManager: ExtensionManager): void {
+  const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+  commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToogleDeveloperTools,
+                            customizeToogleDeveloperTools);
+  commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
+  commands.registerCommand("extraterm:application.openCommandPalette", commandOpenCommandPalette);
 
-  return executeCommand(command);
+  EtTerminal.registerCommands(extensionManager);
+  TextCommandsRegisterCommands(extensionManager);
+  EtViewerTab.registerCommands(extensionManager);
+
+  extensionManager.getExtensionContextByName("internal-commands").debugRegisteredCommands();
 }
 
-function executeCommand(commandId: string, options?: object): boolean {
-  switch(commandId) {
-    case MENU_ITEM_SETTINGS:
-      mainWebUi.openSettingsTab();
-      break;
-      
-    case MENU_ITEM_DEVELOPER_TOOLS:
-      const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-      developerToolMenu.checked = ! developerToolMenu.checked;
-      WebIpc.devToolsRequest(developerToolMenu.checked);
-      break;
+function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: ExtensionManager): void {
+  const disposables = new DisposableHolder();
 
-    case MENU_ITEM_ABOUT:
-      mainWebUi.openAboutTab();
-      break;
-      
-    case MENU_ITEM_RELOAD_CSS:
-      reloadThemeContents();
-      break;
+  const createSessionCommands = (sessionConfigs: SessionConfiguration[]): void => {
+    const extensionContext = extensionManager.getExtensionContextByName("internal-commands");
 
-    default:
-      return false;
+    for (const session of sessionConfigs) {
+      const args = {
+        sessionUuid: session.uuid
+      };
+      const contrib: ExtensionCommandContribution = {
+        command: "extraterm:window.newTerminal?" + encodeURIComponent(JSON.stringify(args)),
+        title: "New Terminal: " + session.name,
+        category: "window",
+        order: 1000,
+        when: "",
+        icon: "fa fa-plus",
+        contextMenu: true,
+        commandPalette: true,
+        emptyPaneMenu: true,
+        newTerminalMenu: true
+      };
+      disposables.add(extensionContext.registerCommandContribution(contrib));
+    }
+  };
+
+  configDatabase.onChange(event => {
+    if (event.key === SESSION_CONFIG) {
+      disposables.dispose();
+      createSessionCommands(event.newConfig);
+    }
+  });
+
+  const sessionConfig = <SessionConfiguration[]> configDatabase.getConfig(SESSION_CONFIG);
+  createSessionCommands(sessionConfig);
+}
+
+function commandToogleDeveloperTools(): void {
+  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
+  WebIpc.devToolsRequest(developerToolMenu.checked);
+}
+
+function customizeToogleDeveloperTools(): CustomizedCommand {
+  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
+  return {
+    checked: developerToolMenu.checked
+  };
+}
+
+function commandReloadThemeContents(): void {
+  reloadThemeContents();
+}
+
+function commandOpenCommandPalette(): void {
+  const tab = extensionManager.getActiveTabContent();
+  if (isSupportsDialogStack(tab)) {
+    commandPalette.open(tab, tab);
   }
-  return true;  
 }
 
 function setupOSXEmptyMenus(): void {
@@ -371,7 +454,7 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
       {
         label: 'About Extraterm',
         click(item, focusedWindow) {
-          mainWebUi.openAboutTab();
+          extensionManager.executeCommand("extraterm:window.openAbout");
         },
       },
       {
@@ -380,7 +463,7 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
       {
         label: 'Preferences...',
         click(item, focusedWindow) {
-          mainWebUi.openSettingsTab();
+          extensionManager.executeCommand("extraterm:window.openSettings");
         },
       },
       {
@@ -458,11 +541,9 @@ async function setupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-  const keyBindingContexts = loadKeybindingsFromObject(newSystemConfig.keybindingsContexts,
-    process.platform);
-
-  if (! keyBindingContexts.equals(keyBindingManager.getKeybindingsContexts())) {
-    keyBindingManager.setKeybindingsContexts(keyBindingContexts);
+  const keybindingsFile = loadKeybindingsFromObject(newSystemConfig.keybindingsFile, process.platform);
+  if (! keybindingsFile.equals(keybindingsManager.getKeybindingsMapping())) {
+    keybindingsManager.setKeybindingsMapping(keybindingsFile);
   }
 
   if (oldSystemConfig === null ||
@@ -574,28 +655,11 @@ function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor:
 }
 
 function startUpCommandPalette(): void {
-  commandPalette = new CommandPalette(extensionManager, keyBindingManager,
-                                      { executeCommand, getCommands: getCommandPaletteEntries });
+  commandPalette = new CommandPalette(extensionManager, keybindingsManager);
 }
 
 function startUpApplicationContextMenu(): void {
-  applicationContextMenu = new ApplicationContextMenu(extensionManager,
-                                                      { executeCommand, getCommands: getCommandPaletteEntries });
-}
-
-function getCommandPaletteEntries(commandableStack: Commandable[]): BoundCommand[] {
-  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-  const devToolsOpen = developerToolMenu.checked;
-  const commandExecutor: CommandExecutor = {executeCommand};
-
-  const defaults = { group: PALETTE_GROUP, commandExecutor };
-  const commandList: BoundCommand[] = [
-    { ...defaults, id: MENU_ITEM_SETTINGS,  icon: "fa fa-wrench", label: "Settings" },
-    { ...defaults, id: MENU_ITEM_DEVELOPER_TOOLS, icon: "fa fa-cogs", checked: devToolsOpen, label: "Developer Tools" },
-    { ...defaults, id: MENU_ITEM_RELOAD_CSS, icon: "fa fa-sync", label: "Reload Theme" },
-    { ...defaults, id: MENU_ITEM_ABOUT, icon: "far fa-lightbulb", label: "About" },
-  ];
-  return commandList;
+  applicationContextMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
 }
 
 class ConfigDatabaseImpl implements ConfigDatabase {
@@ -683,7 +747,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
 }
 
 class KeybindingsManagerImpl implements KeybindingsManager {
-  private _keybindingsContexts: KeybindingsContexts = null;
+  private _keybindingsMapping: TermKeybindingsMapping = null;
   private _log: Logger;
   private _onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
@@ -694,20 +758,20 @@ class KeybindingsManagerImpl implements KeybindingsManager {
     this.onChange = this._onChangeEventEmitter.event;
   }
 
-  getKeybindingsContexts(): KeybindingsContexts {
-    return this._keybindingsContexts;
+  getKeybindingsMapping(): TermKeybindingsMapping {
+    return this._keybindingsMapping;
   }
   
-  setKeybindingsContexts(newKeybindingContexts: KeybindingsContexts): void {
-    this._keybindingsContexts = newKeybindingContexts;
-    this._keybindingsContexts.setEnabled(this._enabled);
+  setKeybindingsMapping(newKeybindingContexts: TermKeybindingsMapping): void {
+    this._keybindingsMapping = newKeybindingContexts;
+    this._keybindingsMapping.setEnabled(this._enabled);
     this._onChangeEventEmitter.fire(undefined);
   }
 
   setEnabled(enabled: boolean): void {
     this._enabled = enabled;
-    if (this._keybindingsContexts != null) {
-      this._keybindingsContexts.setEnabled(this._enabled);
+    if (this._keybindingsMapping != null) {
+      this._keybindingsMapping.setEnabled(this._enabled);
     }
 
     WebIpc.enableGlobalKeybindings(enabled);

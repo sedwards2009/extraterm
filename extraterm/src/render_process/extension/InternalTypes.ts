@@ -3,19 +3,30 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {EtTerminal} from '../Terminal';
-import {TextViewer} from'../viewers/TextAceViewer';
-import {ViewerElement} from '../viewers/ViewerElement';
+import { EtTerminal } from '../Terminal';
+import { TextViewer } from'../viewers/TextAceViewer';
+import { ViewerElement } from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
-import { ExtensionMetadata, ExtensionPlatform } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
-import { BoundCommand } from '../command/CommandTypes';
+import { CommandsRegistry } from './CommandsRegistry';
+import { TextEditor } from '../viewers/TextEditorType';
+import { CommonExtensionWindowState } from './CommonExtensionState';
+
+export interface CommandQueryOptions {
+  categories?: Category[];
+  commandPalette?: boolean;
+  contextMenu?: boolean;
+  emptyPaneMenu?: boolean;
+  newTerminalMenu?: boolean;
+  when?: boolean;
+  commandsWithCategories?: {command: string, category: Category}[];
+}
 
 export interface ExtensionManager {
   startUp(): void;
-  getWorkspaceTerminalCommands(terminal: EtTerminal): BoundCommand[];
-  getWorkspaceTextViewerCommands(textViewer: TextViewer): BoundCommand[];
+  getExtensionContextByName(name: string): InternalExtensionContext;
 
   findViewerElementTagByMimeType(mimeType: string): string;
 
@@ -24,6 +35,23 @@ export interface ExtensionManager {
 
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
+
+  getActiveTab(): HTMLElement;
+  getActiveTerminal(): EtTerminal;
+  getActiveTabContent(): HTMLElement;
+  getActiveTextEditor(): TextEditor;
+  isInputFieldFocus(): boolean;
+
+  queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
+  queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
+  
+  executeCommand(command: string, args?: any): any;
+  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
+
+  updateExtensionWindowStateFromEvent(ev: Event): void;
+  copyExtensionWindowState(): CommonExtensionWindowState;
+  getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState;
+  refocus(state: CommonExtensionWindowState): void;
 }
 
 export interface AcceptsExtensionManager {
@@ -51,28 +79,29 @@ export interface ExtensionUiUtils {
   showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 }
 
-export interface InternalWorkspace extends ExtensionApi.Workspace {
-  getTerminalCommands(extensionName: string, terminal: ExtensionApi.Terminal): BoundCommand[];
-  getTextViewerCommands(extensionName: string, terminal: ExtensionApi.TextViewer): BoundCommand[];
+export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
+  commands: CommandsRegistry;
   extensionUiUtils: ExtensionUiUtils;
   extensionMetadata: ExtensionMetadata;
-  internalWorkspace: InternalWorkspace;
+  internalWindow: InternalWindow;
   proxyFactory: ProxyFactory;
 
   findViewerElementTagByMimeType(mimeType: string): string;
+  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
+  debugRegisteredCommands(): void;
 }
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
-  return metadata.contributions.sessionBackend.length !== 0 ||
-    metadata.contributions.syntaxThemeProvider.length !== 0 ||
-    metadata.contributions.syntaxTheme.length !== 0 ||
-    metadata.contributions.terminalThemeProvider.length !== 0 ||
-    metadata.contributions.terminalTheme.length !== 0;
+  return metadata.contributes.sessionBackends.length !== 0 ||
+    metadata.contributes.syntaxThemeProviders.length !== 0 ||
+    metadata.contributes.syntaxThemes.length !== 0 ||
+    metadata.contributes.terminalThemeProviders.length !== 0 ||
+    metadata.contributes.terminalThemes.length !== 0;
 }
 
 export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {

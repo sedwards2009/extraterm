@@ -32,7 +32,7 @@ export class PopDownNumberDialog extends TemplatedElementBase {
     dialog.titlePrimary = this.titlePrimary;
     dialog.titleSecondary = this.titleSecondary;
     dialog.addEventListener(PopDownDialog.EVENT_CLOSE_REQUEST, () => {
-      dialog.close();
+      this._okId(null);
     });
 
     const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
@@ -48,7 +48,9 @@ export class PopDownNumberDialog extends TemplatedElementBase {
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ...this._extraCssFiles];
+    const extraCssFiles = this._extraCssFiles == null ? [] : this._extraCssFiles;
+    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME,
+            ThemeTypes.CssFile.GUI_POP_DOWN_NUMBER_DIALOG, ...extraCssFiles];
   }
 
   getValue(): number {

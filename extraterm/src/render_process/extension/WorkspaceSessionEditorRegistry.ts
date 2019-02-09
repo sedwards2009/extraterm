@@ -24,7 +24,7 @@ export class WorkspaceSessionEditorRegistry {
 
   registerSessionEditor(type: string, sessionEditorClass: ExtensionApi.ExtensionSessionEditorBaseConstructor): void {
     let sessionEditorMetadata: ExtensionSessionEditorContribution = null;
-    for (const semd of this._internalExtensionContext.extensionMetadata.contributions.sessionEditor) {
+    for (const semd of this._internalExtensionContext.extensionMetadata.contributes.sessionEditors) {
       if (semd.type === type) {
         sessionEditorMetadata = semd;
         break;

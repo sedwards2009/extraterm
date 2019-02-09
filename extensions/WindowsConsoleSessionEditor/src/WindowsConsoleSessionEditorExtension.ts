@@ -23,7 +23,7 @@ export function activate(context: ExtensionContext): any {
   
   log.info("WindowsConsoleSessionEditorExtension activate");
   
-  class WindowsConsoleSessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
+  class WindowsConsoleSessionEditor extends context.window.extensionSessionEditorBaseConstructor {
     private _ui: WindowsConsoleSessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
 
@@ -137,5 +137,5 @@ export function activate(context: ExtensionContext): any {
     }
   }
 
-  context.workspace.registerSessionEditor("windows-console", WindowsConsoleSessionEditor);
+  context.window.registerSessionEditor("windows-console", WindowsConsoleSessionEditor);
 }

@@ -1,0 +1,1 @@
+A boolean expression parser which outputs an AST. The details of the output is descrived in `parser.d.ts`. It accepts alphabetic symbol/variables and some C/JS style operators, like &&, ||, ! and brackets for grouping, with precedence.

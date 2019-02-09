@@ -28,8 +28,7 @@ import {ImageViewer} from './viewers/ImageViewer';
 import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
-import { Commandable, BoundCommand } from './command/CommandTypes';
-import { COMMAND_OPEN_COMMAND_PALETTE, COMMAND_OPEN_CONTEXT_MENU } from './command/CommandUtils';
+import { dispatchContextMenuRequest } from './command/CommandUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';
@@ -59,28 +58,6 @@ const ID = "EtTerminalTemplate";
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
 const ID_CONTAINER = "ID_CONTAINER";
-
-const KEYBINDINGS_DEFAULT_MODE = "terminal-default-mode";
-const KEYBINDINGS_CURSOR_MODE = "terminal-cursor-mode";
-
-const PALETTE_GROUP = "terminal";
-const COMMAND_ENTER_CURSOR_MODE = "enterCursorMode";
-const COMMAND_ENTER_NORMAL_MODE = "enterNormalMode";
-const COMMAND_SCROLL_PAGE_UP = "scrollPageUp";
-const COMMAND_SCROLL_PAGE_DOWN = "scrollPageDown";
-const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
-const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
-const COMMAND_DELETE_LAST_FRAME = "deleteLastFrame";
-const COMMAND_OPEN_LAST_FRAME = "openLastFrame";
-const COMMAND_RESET_VT = "resetVT";
-const COMMAND_CLEAR_SCROLLBACK = "clearScrollback";
-const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
-const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
-const COMMAND_FONT_SIZE_RESET = "resetFontSize";
-const COMMAND_GO_TO_PREVIOUS_FRAME = "goToPreviousFrame";
-const COMMAND_GO_TO_NEXT_FRAME = "goToNextFrame";
-const COMMAND_FIND = "find";
-
 
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -115,7 +92,7 @@ type InputStreamFilter = (input: string) => string;
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 @WebComponent({tag: "et-terminal"})
-export class EtTerminal extends ThemeableElementBase implements Commandable, AcceptsKeybindingsManager,
+export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindingsManager,
   AcceptsConfigDatabase, Disposable, SupportsClipboardPaste.SupportsClipboardPaste,
   SupportsDialogStack.SupportsDialogStack {
   
@@ -175,6 +152,25 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
   private _copyToClipboardLater: DebouncedDoLater = null;
   private _findPanel: FindPanel = null;
 
+  static registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    commands.registerCommand("extraterm:terminal.enterCursorMode", (args: any) => extensionManager.getActiveTerminal().commandEnterCursorMode());
+    commands.registerCommand("extraterm:terminal.enterNormalMode", (args: any) => extensionManager.getActiveTerminal().commandExitCursorMode());
+    commands.registerCommand("extraterm:terminal.scrollPageUp", (args: any) => extensionManager.getActiveTerminal().commandScrollPageUp());
+    commands.registerCommand("extraterm:terminal.scrollPageDown", (args: any) => extensionManager.getActiveTerminal().commandScrollPageDown());
+    commands.registerCommand("extraterm:terminal.goToPreviousFrame", (args: any) => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
+    commands.registerCommand("extraterm:terminal.goToNextFrame", (args: any) => extensionManager.getActiveTerminal().commandGoToNextFrame());
+    commands.registerCommand("extraterm:terminal.copyToClipboard", (args: any) => extensionManager.getActiveTerminal().commandCopyToClipboard());
+    commands.registerCommand("extraterm:terminal.pasteFromClipboard", (args: any) => extensionManager.getActiveTerminal().commandPasteFromClipboard());
+    commands.registerCommand("extraterm:terminal.deleteLastFrame", (args: any) => extensionManager.getActiveTerminal().commandDeleteLastFrame());
+    commands.registerCommand("extraterm:terminal.openLastFrame", (args: any) => extensionManager.getActiveTerminal().commandOpenLastFrame());
+    commands.registerCommand("extraterm:terminal.resetVT", (args: any) => extensionManager.getActiveTerminal().commandResetVT());
+    commands.registerCommand("extraterm:terminal.clearScrollback", (args: any) => extensionManager.getActiveTerminal().commandClearScrollback());
+    commands.registerCommand("extraterm:terminal.increaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
+    commands.registerCommand("extraterm:terminal.decreaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
+    commands.registerCommand("extraterm:terminal.resetFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
+  }
+  
   constructor() {
     super();
     this._log = getLogger(EtTerminal.TAG_NAME, this);
@@ -201,9 +197,6 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
 
       this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
 
-      this._terminalCanvas.addKeyboardEventListener("keypress", (ev) => this._handleKeyPressCapture(ev), true);
-      this._terminalCanvas.addKeyboardEventListener('keydown', (ev) => this._handleKeyDownCapture(ev), true);
-
       this._terminalCanvas.connectedCallback();
 
       // Set up the emulator
@@ -214,18 +207,9 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       
       this.updateThemeCss();
 
-      this._terminalCanvas.addEventListener('mousedown', (ev: MouseEvent): void => {
-        if (ev.target === this._terminalCanvas) {
-          ev.preventDefault();
-          ev.stopPropagation();
-          this._terminalCanvas.focus();
-          if (ev.buttons & 2) { // Right Mouse Button
-            this._handleContextMenu(ev.clientX, ev.clientY);
-          }
-        }
-      });
-      
-      this._terminalCanvas.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDown(ev));
+      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDownCapture(ev), true);
+      this._terminalCanvas.addEventListener("contextmenu", (ev) => this._handleContextMenu(ev));
       
       this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
@@ -652,12 +636,28 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
       this._refocus();
     }
   }
-  
+
   private _handleMouseDown(ev: MouseEvent): void {
+    if (ev.target === this._terminalCanvas) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      this._terminalCanvas.focus();
+    }
+  }
+
+  private _handleMouseDownCapture(ev: MouseEvent): void {
     if (ev.buttons === 4) { // Middle mouse button
       ev.stopPropagation();
       ev.preventDefault();
       this._pasteFromClipboard();
+    }
+  }
+
+  private _handleContextMenu(ev: MouseEvent): void {
+    if (this._terminalViewer !== null) {
+      ev.stopPropagation();
+      ev.preventDefault();
+      dispatchContextMenuRequest(this._terminalViewer, ev.x, ev.y);
     }
   }
 
@@ -703,7 +703,11 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
   }
-  
+
+  getMode(): Mode {
+    return this._mode;
+  }
+
   private _enterCursorMode(): void {
     this._terminalCanvas.setModeAndVisualState(Mode.CURSOR, VisualState.AUTO);
     this._mode = Mode.CURSOR;
@@ -733,154 +737,68 @@ export class EtTerminal extends ThemeableElementBase implements Commandable, Acc
     };
   }
 
-  private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
-    }
-    
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
-    const command = keyBindings.mapEventToCommand(ev);
-    if (this._executeCommand(command)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
+  commandEnterCursorMode(): void {
+    this._enterCursorMode();
   }
 
-  private _handleKeyPressCapture(ev :KeyboardEvent): void {
-    if (this._terminalViewer === null || this._keyBindingManager === null ||
-        this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
-    }
-    
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
-    const command = keyBindings.mapEventToCommand(ev);
-    if (command != null) {
-      // We merely have to detech the key press as belonging to one of our shortcuts and then prevent
-      // it from reaching the layers below such as the terminal viewer and term emulation.
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
-  }
-
-  private _handleContextMenu(x: number, y: number): void {
-    if (this._terminalViewer !== null) {
-      this._terminalViewer.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x, y});
-    }
-  }
-
-  getCommands(commandableStack): BoundCommand[] {
-    const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
-    const commands: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
-
-      this._mode === Mode.DEFAULT
-        ? { ...defaults, id: COMMAND_ENTER_CURSOR_MODE, icon: "fa fa-i-cursor", label: "Enter cursor mode" }
-        : { ...defaults, id: COMMAND_ENTER_NORMAL_MODE, label: "Exit cursor mode" },
-    
-      { ...defaults, id: COMMAND_FIND, icon: "fas fa-search", label: "Find", contextMenu: true },
-      { ...defaults, id: COMMAND_SCROLL_PAGE_UP, icon: "fa fa-angle-double-up", label: "Scroll Page Up", contextMenu: false },
-      { ...defaults, id: COMMAND_SCROLL_PAGE_DOWN, icon: "fa fa-angle-double-down", label: "Scroll Page Down", contextMenu: false },
-      { ...defaults, id: COMMAND_GO_TO_PREVIOUS_FRAME, label: "Go to Previous Frame", icon: "fas fa-step-backward fa-rotate-90" },
-      { ...defaults, id: COMMAND_GO_TO_NEXT_FRAME, label: "Go to Next Frame", icon: "fas fa-step-forward fa-rotate-90" },
-      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, icon: "far fa-copy", label: "Copy to Clipboard" },
-      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, icon: "fa fa-clipboard", label: "Paste from Clipboard" },
-      { ...defaults, id: COMMAND_OPEN_LAST_FRAME, icon: "fa fa-external-link-alt", label: "Open Last Frame", contextMenu: false },
-      { ...defaults, id: COMMAND_DELETE_LAST_FRAME, icon: "fa fa-times-circle", label: "Delete Last Frame", contextMenu: false },
-      { ...defaults, id: COMMAND_FONT_SIZE_INCREASE, label: "Increase Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_DECREASE, label: "Decrease Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_RESET, label: "Reset Font Size" },
-      { ...defaults, id: COMMAND_CLEAR_SCROLLBACK, icon: "fa fa-eraser", label: "Clear Scrollback" },
-      { ...defaults, id: COMMAND_RESET_VT, icon: "fa fa-sync", label: "Reset VT" },
-    ];
-    
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(this._mode === Mode.DEFAULT
-        ? KEYBINDINGS_DEFAULT_MODE : KEYBINDINGS_CURSOR_MODE);
-    if (keyBindings !== null) {
-      commands.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-        commandEntry.shortcut = shortcut === null ? "" : shortcut;
-      });
-    }    
-    return commands;
-  }
-
-  executeCommand(commandId: string): void {
-    this._executeCommand(commandId);
+  commandExitCursorMode(): void {
+    this._exitCursorMode();
   }
   
-  private _executeCommand(command: string): boolean {
-    switch (command) {
-      case COMMAND_ENTER_CURSOR_MODE:
-        this._enterCursorMode();
-        break;
+  commandScrollPageUp(): void {
+    this._terminalCanvas.scrollPageUp();
+  }
+    
+  commandScrollPageDown(): void {
+    this._terminalCanvas.scrollPageDown();
+  }
 
-      case COMMAND_ENTER_NORMAL_MODE:
-        this._exitCursorMode();
-        break;
-        
-      case COMMAND_SCROLL_PAGE_UP:
-        this._terminalCanvas.scrollPageUp();
-        break;
-          
-      case COMMAND_SCROLL_PAGE_DOWN:
-        this._terminalCanvas.scrollPageDown();
-        break;
+  commandGoToPreviousFrame(): void {
+    this._terminalCanvas.goToPreviousFrame();
+  }
 
-      case COMMAND_GO_TO_PREVIOUS_FRAME:
-        this._terminalCanvas.goToPreviousFrame();
-        break;
+  commandGoToNextFrame(): void {
+    this._terminalCanvas.goToNextFrame();
+  }
 
-      case COMMAND_GO_TO_NEXT_FRAME:
-        this._terminalCanvas.goToNextFrame();
-        break;
+  commandCopyToClipboard(): void {
+    this.copyToClipboard();
+  }
 
-      case COMMAND_COPY_TO_CLIPBOARD:
-        this.copyToClipboard();
-        break;
+  commandPasteFromClipboard(): void {
+    this._pasteFromClipboard();
+  }
 
-      case COMMAND_PASTE_FROM_CLIPBOARD:
-        this._pasteFromClipboard();
-        break;
+  commandDeleteLastFrame(): void {
+    this._deleteLastEmbeddedViewer();
+  }
 
-      case COMMAND_DELETE_LAST_FRAME:
-        this._deleteLastEmbeddedViewer();
-        break;
+  commandOpenLastFrame(): void {
+    this._popOutLastEmbeddedViewer();
+  }
 
-      case COMMAND_OPEN_LAST_FRAME:
-        this._popOutLastEmbeddedViewer();
-        break;
+  commandResetVT(): void {
+    this._emulator.reset();
+  }
 
-      case COMMAND_RESET_VT:
-        this._emulator.reset();
-        break;
+  commandClearScrollback(): void {
+    this._terminalCanvas.enforceScrollbackSize(0, 0);
+  }
 
-      case COMMAND_CLEAR_SCROLLBACK:
-        this._terminalCanvas.enforceScrollbackSize(0, 0);
-        break;
+  commandFontSizeIncrease(): void {
+    this._terminalCanvas.setFontSizeAdjustment(1);
+  }
 
-      case COMMAND_FONT_SIZE_INCREASE:
-        this._terminalCanvas.setFontSizeAdjustment(1);
-        break;
+  commandFontSizeDecrease(): void {
+  this._terminalCanvas.setFontSizeAdjustment(-1);
+  }
 
-      case COMMAND_FONT_SIZE_DECREASE:
-      this._terminalCanvas.setFontSizeAdjustment(-1);
-        break;
+  commandFontSizeReset(): void {
+    this._terminalCanvas.resetFontSize();
+  }
 
-      case COMMAND_FONT_SIZE_RESET:
-        this._terminalCanvas.resetFontSize();
-        break;
-
-      case COMMAND_FIND:
-        this._openFindPanel();
-        break;
-
-      default:
-        return false;
-    }
-    return true;
+  commandFind(): void {
+    this._openFindPanel();
   }
 
   /**

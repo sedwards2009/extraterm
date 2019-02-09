@@ -5,16 +5,19 @@
  */
 import { Event } from 'extraterm-extension-api';
 
-import { Logger, getLogger, log } from "extraterm-logging";
 import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
-import * as SetUtils from '../../utils/SetUtils';
 import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
-
-const NAME = "name";
+import { KeybindingsFile, KeybindingsFileBinding } from '../../keybindings/KeybindingsFile';
+import { Logger, getLogger } from 'extraterm-logging';
+import { Category } from '../../ExtensionMetadata';
 
 export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
-  constructor(mappingName: string, allMappingsJson: Object, platform: string) {
-    super(TermKeyStroke.parseConfigString, mappingName, allMappingsJson, platform);
+
+  private _term_log: Logger = null;
+
+  constructor(keybindingsFile: KeybindingsFile, platform: string) {
+    super(TermKeyStroke.parseConfigString, keybindingsFile, platform);
+    this._term_log = getLogger("TermKeybindingsMapping", this);
   }
 
   /**
@@ -24,9 +27,9 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
    * @return the command string or `null` if the event doesn't have a matching
    *         key binding.
    */
-  mapEventToCommand(ev: MinimalKeyboardEvent): string {
+  mapEventToCommands(ev: MinimalKeyboardEvent): KeybindingsFileBinding[] {
     if ( ! this.isEnabled()) {
-      return null;
+      return [];
     }
 
     let key = "";
@@ -46,36 +49,38 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
       }
     }
 
+    const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
     for (let keybinding of this.keyStrokeList) {
-      // Note: We don't compare Shift. It is assumed to be automatically handled by the
-      // case of the key sent, except in the case where a special key is used.
-      const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
       if (keybinding.configKeyLowercase === lowerKey &&
           keybinding.altKey === ev.altKey &&
           keybinding.ctrlKey === ev.ctrlKey &&
           keybinding.shiftKey === ev.shiftKey &&
           keybinding.metaKey === ev.metaKey) {
-        return this._keyStrokeToCommandMapping.get(keybinding);
+        return this._keyStrokeHashToCommandsMapping.get(keybinding.hashString());
       }
     }
-    return null;
+    return [];
   }
   // this._log.debug(`altKey: ${ev.altKey}, ctrlKey: ${ev.ctrlKey}, metaKey: ${ev.metaKey}, shiftKey: ${ev.shiftKey}, key: ${ev.key}, keyCode: ${ev.keyCode}`);
 
-  /**
-   * Maps a command name to a readable key binding name.
-   * 
-   * @param  command the command to map
-   * @return the matching key stroke string if there is one preset, otherwise
-   *         null
-   */
-  mapCommandToReadableKeyStroke(command: string): string {
-    for (let keybinding of this.keyStrokeList) {
-      if (this._keyStrokeToCommandMapping.get(keybinding) === command) {
-        return keybinding.formatHumanReadable();
+  mapCommandToReadableKeyStrokes(command: string, category?: Category): string[] {
+    if (category == null) {
+      return [
+        ...this.mapCommandToReadableKeyStrokes(command, "global"),
+        ...this.mapCommandToReadableKeyStrokes(command, "application"),
+        ...this.mapCommandToReadableKeyStrokes(command, "window"),
+        ...this.mapCommandToReadableKeyStrokes(command, "textEditing"),
+        ...this.mapCommandToReadableKeyStrokes(command, "terminal"),
+        ...this.mapCommandToReadableKeyStrokes(command, "terminalCursorMode"),
+        ...this.mapCommandToReadableKeyStrokes(command, "viewer")
+      ];
+    } else {
+      const keyStrokes = this.getKeyStrokesForCommandAndCategory(command, category);
+      if (keyStrokes == null) {
+        return [];
       }
+      return keyStrokes.map(ks => ks.formatHumanReadable());
     }
-    return null;
   }
 }
 
@@ -99,73 +104,6 @@ export class TermKeyStroke extends KeyStroke implements TermMinimalKeyboardEvent
   }
 }
 
-
-/**
- * Container for mapping context names to KeybindingMapper objects.
- */
-export class KeybindingsContexts {
-  private _log: Logger = null;
-  private _contexts = new Map<string, TermKeybindingsMapping>();
-  public contextNames: string[] = [];
-  private _enabled = true;
-
-  constructor(obj: object, platform: string) {
-    this._log = getLogger("KeybindingContexts", this);
-    for (let key in obj) {
-      if (key !== NAME) {
-        const mapper = new TermKeybindingsMapping(key, obj, platform);
-        this.contextNames.push(key);
-        this._contexts.set(key, mapper);
-      }
-    }
-  }
-
-  setEnabled(enabled: boolean): void {
-    this._enabled = enabled;
-  }
-
-  equals(other: KeybindingsContexts): boolean {
-    if (other == null) {
-      return false;
-    }
-    if (this === other) {
-      return true;
-    }
-
-    if ( ! SetUtils.equals(new Set(this._contexts.keys()), new Set(other._contexts.keys()))) {
-      return false;
-    }
-
-    const contexts = this._contexts;
-    const otherContexts = other._contexts;
-
-    for (const key of contexts.keys()) {
-      const value1 = contexts.get(key);
-      const value2 = otherContexts.get(key);
-      if (value1 !== value2 && ! value1.equals(value2)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Looks up the KeybindingMapping for a context by name.
-   *
-   * @parmam contextName the string name of the context to look up
-   * @return the `KeybindingMapping` object for the context or `null` if the
-   *         context is unknown
-   */
-  context(contextName: string): TermKeybindingsMapping {
-    const mapping = this._contexts.get(contextName) || null;
-    if (mapping != null) {
-      mapping.setEnabled(this._enabled);
-    }
-    return mapping;
-  }
-}
-
 /**
  * Loads key bindings in from a JSON style object.
  *
@@ -173,8 +111,8 @@ export class KeybindingsContexts {
  *            being objects mapping key binding strings to command strings
  * @return the object which maps context names to `KeybindingMapping` objects
  */
-export function loadKeybindingsFromObject(obj: object, platform: string): KeybindingsContexts {
-  return new KeybindingsContexts(obj, platform);
+export function loadKeybindingsFromObject(obj: KeybindingsFile, platform: string): TermKeybindingsMapping {
+  return new TermKeybindingsMapping(obj, platform);
 }
 
 export interface KeybindingsManager {
@@ -183,9 +121,9 @@ export interface KeybindingsManager {
    *
    * @return the KeybindingContexts object or Null if one is not available.
    */
-  getKeybindingsContexts(): KeybindingsContexts;
+  getKeybindingsMapping(): TermKeybindingsMapping;
   
-  setKeybindingsContexts(newKeybindingsContexts: KeybindingsContexts): void;
+  setKeybindingsMapping(newKeybindingsContexts: TermKeybindingsMapping): void;
 
   /**
    * Register a listener to hear when the key bindings change.

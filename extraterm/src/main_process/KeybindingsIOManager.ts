@@ -14,8 +14,6 @@ import { KeybindingsFile } from '../keybindings/KeybindingsFile';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from 'extraterm-extension-api';
 
-const humanText = require('../render_process/keybindings/keybindingstext.json');
-
 
 export class KeybindingsIOManager {
 
@@ -48,7 +46,7 @@ export class KeybindingsIOManager {
   private _getKeybindingsExtensionPaths(): string [] {
     const paths: string[] = [];
     for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
-      for (const st of extension.contributions.keybindings) {
+      for (const st of extension.contributes.keybindings) {
         paths.push(path.join(extension.path, st.path));
       }
     }
@@ -92,23 +90,18 @@ export class KeybindingsIOManager {
     return null;
   }
 
-  readKeybindingsJson(name: string): KeybindingsFile {
+  readKeybindingsFileByName(name: string): KeybindingsFile {
     const info = this._getInfoByName(name);
     const fullPath = path.join(info.path, info.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
-    let keyBindingsJSON = JSON.parse(keyBindingJsonString);
+    let keyBindingsJSON: KeybindingsFile = JSON.parse(keyBindingJsonString);
 
     if (keyBindingsJSON == null) {
-      keyBindingsJSON = {};
+      keyBindingsJSON = { name: "", bindings: [] };
     }
-
-    // Eensure that an object exists for every context.
-    for (const key of Object.keys(humanText.contexts)) {
-      if (keyBindingsJSON[key] == null) {
-        keyBindingsJSON[key] = {};
-      }
+    if (keyBindingsJSON.bindings == null) {
+      keyBindingsJSON.bindings = [];
     }
-
     return keyBindingsJSON;
   }
 
@@ -142,7 +135,7 @@ export class KeybindingsIOManager {
 
     const destPath = path.join(info.path, info.filename);
     try {
-      fs.writeFileSync(destPath, JSON.stringify(data));
+      fs.writeFileSync(destPath, JSON.stringify(data, null, "  "));
     } catch(err) {
       this._log.warn(`Unable to update '${destPath}'. Error: ${err.message}`);
       return false;

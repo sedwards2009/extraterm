@@ -1,135 +1,565 @@
 {
   "name": "Mac OS X bindings",
-  "main-ui": {
-    "Cmd-ArrowLeft": "selectTabLeft",
-    "Cmd-ArrowRight": "selectTabRight",
-    "Cmd-t": "newTerminal",
-    "Shift-Cmd-W": "closeTab",
-    "Cmd-Shift-<": "selectPaneLeft",
-    "Cmd-Shift->": "selectPaneRight",
-    "Cmd-Shift-:": "selectPaneAbove",
-    "Cmd-Shift-?": "selectPaneBelow",
-    "Cmd-Alt-,": "moveTabLeft",
-    "Cmd-Alt-.": "moveTabRight",
-    "Cmd-Alt-;": "moveTabUp",
-    "Cmd-Alt-/": "moveTabDown"
-  },
-  "terminal-default-mode": {
-    "Alt-Space": "enterCursorMode",
-    "Shift-PageUp": "scrollPageUp",
-    "Shift-PageDown": "scrollPageDown",
-    "Cmd-Shift-PageUp": "goToPreviousFrame",
-    "Cmd-Shift-PageDown": "goToNextFrame",
-    "Cmd-c": "copyToClipboard",
-    "Cmd-v": "pasteFromClipboard",
-    "Cmd-w": "deleteLastFrame",
-    "Cmd-o": "openLastFrame",
-    "Cmd-Shift-Plus": "increaseFontSize",
-    "Cmd-Minus": "decreaseFontSize",
-    "Cmd-=": "resetFontSize"
-  },
-  "terminal-cursor-mode": {
-    "Alt-Space": "enterNormalMode",
-    "Cmd-Shift-PageUp": "goToPreviousFrame",
-    "Cmd-Shift-PageDown": "goToNextFrame",
-    "Cmd-c": "copyToClipboard",
-    "Cmd-v": "pasteFromClipboard",
-    "Cmd-Shift-Plus": "increaseFontSize",
-    "Cmd-Minus": "decreaseFontSize",
-    "Cmd-=": "resetFontSize"
-  },
-  "editor": {
-    "Left": "gotoLeft",
-    "Right": "gotoRight",
-    "Up": "goLineUp",
-    "Down": "goLineDown",
-    "End": "gotoLineEnd",
-    "Home": "gotoLineStart",
-    "PageUp": "gotoPageUp",
-    "PageDown": "gotoPageDown",
-    "Delete": "del",
-    "Backspace": "backspace",
-    "Shift-Backspace": "backspace",
-    "Shift-Up": "selectUp",
-    "Shift-Down": "selectDown",
-    "Shift-Home": "selectLineStart",
-    "Shift-End": "selectLineEnd",    
-    "Shift-Left": "selectLeft",
-    "Shift-Right": "selectRight",
-    "Shift-PageUp": "selectPageUp",
-    "Shift-PageDown": "selectPageDown",
-    "Cmd-Shift-Left": "selectWordLeft",
-    "Cmd-Shift-Right": "selectWordRight",
-    "Ctrl-Shift-Up": "addCursorAbove",
-    "Alt-Shift-Up": "addCursorAbove",
-    "Ctrl-Shift-Down": "addCursorBelow",
-    "Alt-Shift-Down": "addCursorBelow",
-    "Alt-Shift-I": "splitIntoLines",
-    "Ctrl-F2": "findAll",
-    "Ctrl-d": "selectMoreAfter",
-    "Tab": "indent",
-    "Shift-Tab": "outdent",
-    "Insert": "overwrite",
-    "Cmd-a": "selectAll",
-    "Cmd-d": "removeLines",
-    "Cmd-z": "undo",
-    "Shift-Cmd-Z": "redo",
-    "Esc": "singleSelection",
-    "Cmd-y": "redo",
-    "Cmd-Home": "gotoFileStart",
-    "Cmd-End": "gotoFileEnd",
-    "Cmd-Up": "scrollUp",
-    "Cmd-Down": "scrollDown",
-    "Alt-Left": "gotoWordLeft",
-    "Alt-Right": "gotoWordRight",
-    "Alt-Backspace": "removeWordLeft",
-    "Ctrl-Alt-Backspace": "removeWordRight",
-    "Alt-Delete": "removeWordRight",
-    "Cmd-[": "blockOutdent",
-    "Cmd-]": "blockIndent",
-    "Cmd-U": "undoSelection",
-    "Shift-Cmd-U": "redoSelection",
-    "Cmd-Shift-|": "cursorColumn",
-    "Cmd-/": "backSlashesToForward",
-    "Cmd-\\": "forwardSlashesToBack",
-    "Cmd-'": "escapeShellChars",
-    "Cmd-Shift-\"": "unescapeShellChars",
-    "Cmd-Left": "goLineLeft",
-    "Cmd-Right": "goLineRight",
-    "Cmd-Backspace": "delWrappedLineLeft",
-    "Cmd-Delete": "delWrappedLineRight"
-  },  
-  "terminal-viewer-default-mode": {
-    "Cmd-Enter": "typeSelection",
-    "Cmd-Shift-Enter": "typeSelectionAndCr",
-    "Cmd-Shift-P": "openCommandPalette"
-  },
-  "terminal-viewer-cursor-mode": {
-    "Cmd-Enter": "typeSelection",
-    "Cmd-Shift-Enter": "typeSelectionAndCr",
-    "Cmd-Shift-P": "openCommandPalette",
-    "fallthrough": "editor"
-  },
-  "text-viewer": {
-    "Cmd-Enter": "typeSelection",
-    "Cmd-Shift-Enter": "typeSelectionAndCr",
-    "Cmd-Shift-P": "openCommandPalette",
-    "fallthrough": "editor"
-  },
-  "image-viewer": {
-    "Up": "goUp",
-    "Down": "goDown"
-  },
-  "viewer-tab": {
-    "Cmd-Shift-C": "copyToClipboard",
-    "Cmd-c": "copyToClipboard",
-    "Cmd-v": "pasteFromClipboard",
-    "Cmd-Shift-V": "pasteFromClipboard",
-    "Ctrl-Shift-Plus": "increaseFontSize",
-    "Ctrl-Minus": "decreaseFontSize",
-    "Ctrl-=": "resetFontSize"
-  },
-  "settings-tab": {
-    "Cmd-Shift-P": "openCommandPalette"
-  }
+  "bindings": [
+    {
+      "command": "extraterm:window.focusTabLeft",
+      "category": "window",
+      "keys": [
+        "Cmd-ArrowLeft"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusTabRight",
+      "category": "window",
+      "keys": [
+        "Cmd-ArrowRight"
+      ]
+    },
+    {
+      "command": "extraterm:window.newTerminal",
+      "category": "window",
+      "keys": [
+        "Cmd-t"
+      ]
+    },
+    {
+      "command": "extraterm:window.closeTab",
+      "category": "window",
+      "keys": [
+        "Shift-Cmd-W"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusPaneLeft",
+      "category": "window",
+      "keys": [
+        "Cmd-Shift-<"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusPaneRight",
+      "category": "window",
+      "keys": [
+        "Cmd-Shift->"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusPaneAbove",
+      "category": "window",
+      "keys": [
+        "Cmd-Shift-:"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusPaneBelow",
+      "category": "window",
+      "keys": [
+        "Cmd-Shift-?"
+      ]
+    },
+    {
+      "command": "extraterm:window.moveTabLeft",
+      "category": "window",
+      "keys": [
+        "Cmd-Alt-,"
+      ]
+    },
+    {
+      "command": "extraterm:window.moveTabRight",
+      "category": "window",
+      "keys": [
+        "Cmd-Alt-."
+      ]
+    },
+    {
+      "command": "extraterm:window.moveTabUp",
+      "category": "window",
+      "keys": [
+        "Cmd-Alt-;"
+      ]
+    },
+    {
+      "command": "extraterm:window.moveTabDown",
+      "category": "window",
+      "keys": [
+        "Cmd-Alt-/"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.enterCursorMode",
+      "category": "terminal",
+      "keys": [
+        "Alt-Space"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.scrollPageUp",
+      "category": "terminal",
+      "keys": [
+        "Shift-PageUp"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.scrollPageDown",
+      "category": "terminal",
+      "keys": [
+        "Shift-PageDown"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.goToPreviousFrame",
+      "category": "terminal",
+      "keys": [
+        "Cmd-Shift-PageUp"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.goToNextFrame",
+      "category": "terminal",
+      "keys": [
+        "Cmd-Shift-PageDown"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.copyToClipboard",
+      "category": "terminal",
+      "keys": [
+        "Cmd-c",
+        "Cmd-Shift-C"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.pasteFromClipboard",
+      "category": "terminal",
+      "keys": [
+        "Cmd-v",
+        "Cmd-Shift-V"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.deleteLastFrame",
+      "category": "terminal",
+      "keys": [
+        "Cmd-w"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.openLastFrame",
+      "category": "terminal",
+      "keys": [
+        "Cmd-o"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.increaseFontSize",
+      "category": "terminal",
+      "keys": [
+        "Cmd-Shift-Plus",
+        "Ctrl-Shift-Plus"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.decreaseFontSize",
+      "category": "terminal",
+      "keys": [
+        "Cmd-Minus",
+        "Ctrl-Minus"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.resetFontSize",
+      "category": "terminal",
+      "keys": [
+        "Cmd-=",
+        "Ctrl-="
+      ]
+    },
+    {
+      "command": "extraterm:terminal.enterNormalMode",
+      "category": "terminalCursorMode",
+      "keys": [
+        "Alt-Space"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoLeft",
+      "category": "textEditing",
+      "keys": [
+        "Left"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoRight",
+      "category": "textEditing",
+      "keys": [
+        "Right"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.goLineUp",
+      "category": "textEditing",
+      "keys": [
+        "Up"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.goLineDown",
+      "category": "textEditing",
+      "keys": [
+        "Down"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoLineEnd",
+      "category": "textEditing",
+      "keys": [
+        "End"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoLineStart",
+      "category": "textEditing",
+      "keys": [
+        "Home"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoPageUp",
+      "category": "textEditing",
+      "keys": [
+        "PageUp"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoPageDown",
+      "category": "textEditing",
+      "keys": [
+        "PageDown"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.del",
+      "category": "textEditing",
+      "keys": [
+        "Delete"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.backspace",
+      "category": "textEditing",
+      "keys": [
+        "Backspace",
+        "Shift-Backspace"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectUp",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Up"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectDown",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Down"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectLineStart",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Home"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectLineEnd",
+      "category": "textEditing",
+      "keys": [
+        "Shift-End"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectLeft",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Left"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectRight",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Right"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectPageUp",
+      "category": "textEditing",
+      "keys": [
+        "Shift-PageUp"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectPageDown",
+      "category": "textEditing",
+      "keys": [
+        "Shift-PageDown"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectWordLeft",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-Shift-Left"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectWordRight",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-Shift-Right"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.addCursorAbove",
+      "category": "textEditing",
+      "keys": [
+        "Ctrl-Shift-Up",
+        "Alt-Shift-Up"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.addCursorBelow",
+      "category": "textEditing",
+      "keys": [
+        "Ctrl-Shift-Down",
+        "Alt-Shift-Down"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.splitIntoLines",
+      "category": "textEditing",
+      "keys": [
+        "Alt-Shift-I"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectMoreAfter",
+      "category": "textEditing",
+      "keys": [
+        "Ctrl-d"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.indent",
+      "category": "textEditing",
+      "keys": [
+        "Tab"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.outdent",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Tab"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.overwrite",
+      "category": "textEditing",
+      "keys": [
+        "Insert"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.selectAll",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-a"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.removeLines",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-d"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.undo",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-z"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.redo",
+      "category": "textEditing",
+      "keys": [
+        "Shift-Cmd-Z",
+        "Cmd-y"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.singleSelection",
+      "category": "textEditing",
+      "keys": [
+        "Esc"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoFileStart",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-Home"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoFileEnd",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-End"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.scrollUp",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-Up"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.scrollDown",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-Down"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoWordLeft",
+      "category": "textEditing",
+      "keys": [
+        "Alt-Left"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.gotoWordRight",
+      "category": "textEditing",
+      "keys": [
+        "Alt-Right"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.removeWordLeft",
+      "category": "textEditing",
+      "keys": [
+        "Alt-Backspace"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.removeWordRight",
+      "category": "textEditing",
+      "keys": [
+        "Ctrl-Alt-Backspace",
+        "Alt-Delete"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.blockOutdent",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-["
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.blockIndent",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-]"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.undoSelection",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-U"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.cursorColumn",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-Shift-|"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.backSlashesToForward",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-/"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.forwardSlashesToBack",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-\\"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.escapeShellChars",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-'"
+      ]
+    },
+    {
+      "command": "extraterm:textEditor.unescapeShellChars",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-Shift-\""
+      ]
+    },
+    {
+      "command": "extraterm:terminal.copyToClipboard",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-c",
+        "Cmd-Shift-C"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.pasteFromClipboard",
+      "category": "textEditing",
+      "keys": [
+        "Cmd-v",
+        "Cmd-Shift-V"
+      ]
+    },
+    {
+      "command": "extraterm:viewerTab.copyToClipboard",
+      "category": "viewer",
+      "keys": [
+        "Cmd-c",
+        "Cmd-Shift-C"
+      ]
+    },
+    {
+      "command": "extraterm:viewerTab.pasteFromClipboard",
+      "category": "viewer",
+      "keys": [
+        "Cmd-v",
+        "Cmd-Shift-V"
+      ]
+    },
+    {
+      "command": "extraterm:application.openCommandPalette",
+      "category": "window",
+      "keys": [
+        "Cmd-Shift-P"
+      ]
+    }
+  ]
 }

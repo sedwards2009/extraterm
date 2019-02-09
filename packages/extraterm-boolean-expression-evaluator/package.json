@@ -1,0 +1,27 @@
+{
+  "name": "extraterm-boolean-expression-evaluator",
+  "version": "1.0.0",
+  "description": "Evaluator boolean expressions",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "dependencies": {
+    "extraterm-boolean-expression-parser": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^23.3.10",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5",
+    "typescript": "3.1.6"
+  },
+  "scripts": {
+    "run": "false",
+    "build": "tsc",
+    "test": "yarn run build && jest"
+  }
+}

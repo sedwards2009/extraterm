@@ -205,76 +205,42 @@ export interface TextViewer extends ViewerBase {
 
 export type Viewer = FrameViewer | TerminalOutputViewer | TextViewer;
 
-
-/**
- * Defines a command for display in the Command Palette.
- */
-export interface Command {
-  /**
-   * Identifier for this command. This ID is used internally and should only
-   * consist of alphanumeric characters ([A-Z0-9]+). It must be unique
-   * to this extension and stable between calls.
-   */
-  id: string;
-
-  /**
-   * Optional identifier used to grouping related commands in the command
-   * palette.
-   * 
-   * Commands with the same group name are visually separated from the
-   * surrounding commands.
-   */
-  group?: string;
-
-  icon?: string;
-
-  /**
-   * Label for this command. This string is shown in the Command Palette to
-   * the user.
-   */
-  label: string;
-
-  /**
-   * If this is set then a checkbox will be displayed in front of the menu
-   * item. Setting this to true or false controls whether it is
-   * checked/selected.
-   */
+export interface CustomizedCommand {
+  title?: string;
   checked?: boolean;
-
-   /**
-    * Optional object which will be passed to the command executor when this
-    * command is run.
-    */
-  commandArguments?: object;
-
-  /**
-   * Set this to true if the command should appear in context menus.
-   * Defaults to false, don't show.
-   */
-  contextMenu?: boolean;
-
-  /**
-   * Set this to true if the command should appear in the Command Palette.
-   * Default to true, show.
-   */
-  commandPalette?: boolean;
 }
 
+export interface Commands {
+  /**
+   * Register the function to handle a command.
+   * 
+   * @param name the name of the command as specified in the `package.json` contributes/commands section.
+   * @param commandFunc the function to execute when the command is selected.
+   * @param customizer an optional function to customize the title or state of the command.
+   */
+  registerCommand(name: string, commandFunc: (args: any) => any, customizer?: () => (CustomizedCommand | null)): void;
 
-export interface Workspace {
+  /**
+   * Execute a command by name.
+   * 
+   * @param name the full name of the command.
+   * @param args arguments for the command.
+   * @returns an optional return value.
+   */
+  executeCommand<T>(name: string, args: any): Promise<T> | null;
 
+  /**
+   * Get a list of all available commands.
+   */
+  getCommands(): string[];
+}
+
+export interface Window {
+  activeTerminal: Terminal;
+  activeViewer: Viewer;
   getTerminals(): Terminal[];
-
   onDidCreateTerminal: Event<Terminal>;
-
   // onWillDestroyTerminal: Event<Terminal>;
-  registerCommandsOnTerminal(
-    commandLister: (terminal: Terminal) => Command[],
-    commandExecutor: (terminal: Terminal, commandId: string, commandArguments?: object) => void): Disposable;
-
-  registerCommandsOnTextViewer(
-    commandLister: (textViewer: TextViewer) => Command[],
-    commandExecutor: (textViewer: TextViewer, commandId: string, commandArguments?: object) => void): Disposable;
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
   registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor): void;
@@ -705,30 +671,33 @@ export interface Backend {
  * convenience class and objects.
  */
 export interface ExtensionContext {
+
+  readonly commands: Commands;
+
   /**
    * Extension APIs which can be used from a front-end render process.
    */
-  workspace: Workspace;
+  readonly window: Window;
 
   /**
    * Access to Extraterm's own Ace module.
    */
-  aceModule: typeof Ace;
+  readonly aceModule: typeof Ace;
 
   /**
    * True if this process is the backend process. False if it is a render process.
    */
-  isBackendProcess: boolean;
+  readonly isBackendProcess: boolean;
 
   /**
    * Extension APIs which may only be used from the backend process.
    */
-  backend: Backend;
+  readonly backend: Backend;
 
   /**
    * Logger object which the extension can use.
    */
-  logger: Logger;
+  readonly logger: Logger;
 }
 
 

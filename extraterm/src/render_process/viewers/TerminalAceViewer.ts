@@ -6,13 +6,9 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import {BulkFileHandle, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import { COMMAND_OPEN_COMMAND_PALETTE, dispatchCommandPaletteRequest, COMMAND_OPEN_CONTEXT_MENU, dispatchContextMenuRequest} from '../command/CommandUtils';
-import { Commandable, BoundCommand } from '../command/CommandTypes';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
 import * as DomUtils from '../DomUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import * as GeneralEvents from '../GeneralEvents';
-import * as keybindingmanager from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
@@ -25,11 +21,10 @@ import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { Disposable } from 'extraterm-extension-api';
-
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
-
-type KeybindingsManager = keybindingmanager.KeybindingsManager;
+import { TextEditor } from './TextEditorType';
+import { dispatchContextMenuRequest } from '../command/CommandUtils';
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -39,14 +34,6 @@ const CLASS_HIDE_CURSOR = "hide-cursor";
 const CLASS_FOCUSED = "terminal-focused";
 const CLASS_UNFOCUSED = "terminal-unfocused";
 const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
-
-const KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE = "terminal-viewer-default-mode";
-const KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE = "terminal-viewer-cursor-mode";
-
-const PALETTE_GROUP = "terminalviewer";
-const COMMAND_TYPE_AND_CR_SELECTION = "typeSelectionAndCr";
-const COMMAND_TYPE_SELECTION = "typeSelection";
-const COMMAND_SELECT_ALL = "selectAll";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
@@ -68,8 +55,8 @@ function getCssText(): string {
 
 
 @WebComponent({tag: "et-terminal-ace-viewer"})
-export class TerminalViewer extends ViewerElement implements Commandable, keybindingmanager.AcceptsKeybindingsManager,
-    SupportsClipboardPaste.SupportsClipboardPaste, Disposable {
+export class TerminalViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
+    TextEditor, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
@@ -85,7 +72,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   }
 
   private _log: Logger;
-  private _keybindingsManager: KeybindingsManager = null;
   private _emulator: Term.Emulator = null;
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
@@ -269,8 +255,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
-      containerDiv.addEventListener('keypress', ev => this._handleContainerKeyPressCapture(ev), true);
-      containerDiv.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
+      containerDiv.addEventListener('contextmenu', ev => this._handleContextMenu(ev));
 
       const aceElement = this._aceEditor.renderer.scroller;
       aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
@@ -313,22 +298,6 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
       });  
     }
     this._aceEditor.commands.addCommands(commandsWithoutKeys);
-  }
-
-  //-----------------------------------------------------------------------
-  //
-  // ######                                
-  // #     # #    # #####  #      #  ####  
-  // #     # #    # #    # #      # #    # 
-  // ######  #    # #####  #      # #      
-  // #       #    # #    # #      # #      
-  // #       #    # #    # #      # #    # 
-  // #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
-
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._keybindingsManager = newKeybindingsManager;
   }
 
   setCommandLine(commandLine: string): void {
@@ -405,9 +374,8 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   isEmpty(): boolean {
     return this._isEmpty;
   }
-    
-  setEmulator(emulator: Term.Emulator): void {
-    
+
+  setEmulator(emulator: Term.Emulator): void {    
     if (this._emulator !== null) {
       // Disconnect the last emulator.
       this._emulator.removeRenderEventListener(this._renderEventListener);
@@ -445,7 +413,7 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
   
   getEditable(): boolean {
     return this._editable;
-  }  
+  }
 
   private _applyMode(): void {
     switch (this._mode) {
@@ -927,68 +895,16 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
   
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
-
-  private _handleContainerKeyPressCapture(ev: KeyboardEvent): void {
-    if (this._keybindingsManager == null || this._keybindingsManager.getKeybindingsContexts() == null) {
+  executeAceCommand(command: string): void {
+    const aceCommand = this._aceEditor.commands.getCommandByName(command);
+    if (aceCommand == null) {
+      this._log.warn(`executeAceCommand() couldn't find Ace command '${command}'.`);
       return;
     }
-
-    const context = this._mode === Mode.DEFAULT ?
-                      KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
-                      KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
-    if (keyBindings !== null) {
-      const command = keyBindings.mapEventToCommand(ev);
-      if (command != null) {
-        ev.stopPropagation();
-        return;
-      }
-    }
+    this._aceEditor.commands.exec(aceCommand, this._aceEditor);
   }
   
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
-    let command: string = null;
-    if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null) {
-      const context = this._mode === Mode.DEFAULT ?
-                        KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
-                        KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-      const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
-      if (keyBindings !== null) {
-        command = keyBindings.mapEventToCommand(ev);
-        if (command != null && this._executeCommand(command)) {
-          ev.stopPropagation();
-          ev.preventDefault();
-          return;
-        } else {
-          if (this._mode === Mode.CURSOR) {
-            if (command == null) {
-              return;
-            }
-            const aceCommand = this._aceEditor.commands.getCommandByName(command);
-            if (aceCommand != null) {
-              this._aceEditor.commands.exec(aceCommand, this._aceEditor);
-              ev.stopPropagation();
-              ev.preventDefault();
-              return;
-            } else {
-              this._log.warn(`Unable to find command '${command}'.`);
-            }
-          }
-        }
-      }
-    }
-    
     if (this._mode === Mode.DEFAULT) {
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
         ev.stopPropagation();
@@ -998,79 +914,11 @@ export class TerminalViewer extends ViewerElement implements Commandable, keybin
     }
   }
 
-  private _handleContextMenuCapture(ev: MouseEvent): void {
+  private _handleContextMenu(ev: MouseEvent): void {
     // Prevent Ace from seeing this event and messing with the hidden textarea and the focus.
     ev.stopImmediatePropagation();
     ev.preventDefault();
-    this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x: ev.clientX, y: ev.clientY});
-  }
-
-  getCommands(commandableStack: Commandable[]): BoundCommand[] {
-    const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
-    const commandList: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false },
-      { ...defaults, id: COMMAND_TYPE_SELECTION, icon: "fa fa-terminal", label: "Type Selection" },
-      { ...defaults, id: COMMAND_TYPE_AND_CR_SELECTION, icon: "fa fa-terminal", label: "Type Selection & Execute" },
-      { ...defaults, id: COMMAND_SELECT_ALL, label: "Select All" },
-    ];
-    
-    const context = this._mode === Mode.DEFAULT ?
-                      KEYBINDINGS_TERMINAL_VIEWER_DEFAULT_MODE :
-                      KEYBINDINGS_TERMINAL_VIEWER_CURSOR_MODE;
-    const keyBindings = this._keybindingsManager.getKeybindingsContexts().context(context);
-    if (keyBindings !== null) {
-      commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-        commandEntry.shortcut = shortcut === null ? "" : shortcut;
-      });
-    }
-    
-    return commandList;
-  }
-  
-  executeCommand(commandId: string, commandArguments?: any): void {
-    this._executeCommand(commandId, commandArguments);
-  }
-  
-  private _executeCommand(command: string, commandArguments?: any): boolean {
-    switch (command) {
-      case COMMAND_TYPE_AND_CR_SELECTION:
-      case COMMAND_TYPE_SELECTION:
-        const session = this._aceEditSession;
-        const allRanges = this._aceEditor.getSelection().getAllRanges();
-        const text = allRanges.map(range => session.getTextRange(range)).join("\n");
-        if (text !== "") {
-          if (command === COMMAND_TYPE_AND_CR_SELECTION) {
-            // Exit selection mode.
-            const setModeDetail: GeneralEvents.SetModeEventDetail = { mode: Mode.DEFAULT };
-            const setModeEvent = new CustomEvent(GeneralEvents.EVENT_SET_MODE, { detail: setModeDetail });
-            setModeEvent.initCustomEvent(GeneralEvents.EVENT_SET_MODE, true, true, setModeDetail);
-            this.dispatchEvent(setModeEvent);
-          }              
-          const typeTextDetail: GeneralEvents.TypeTextEventDetail =
-                                  { text: text + (command === COMMAND_TYPE_AND_CR_SELECTION ? "\n" : "") };
-          const typeTextEvent = new CustomEvent(GeneralEvents.EVENT_TYPE_TEXT, { detail: typeTextDetail });
-          typeTextEvent.initCustomEvent(GeneralEvents.EVENT_TYPE_TEXT, true, true, typeTextDetail);
-          this.dispatchEvent(typeTextEvent);
-        }            
-        break;
-        
-      case COMMAND_OPEN_COMMAND_PALETTE:
-        dispatchCommandPaletteRequest(this);
-        break;
-
-      case COMMAND_OPEN_CONTEXT_MENU:
-        dispatchContextMenuRequest(this, commandArguments.x, commandArguments.y);
-        break;
-
-      case COMMAND_SELECT_ALL:
-        this._aceEditor.selectAll();
-        break;
-
-      default:
-        return false;
-    }
-    return true;
+    dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
   
   //-----------------------------------------------------------------------

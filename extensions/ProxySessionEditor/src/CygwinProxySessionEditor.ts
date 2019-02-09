@@ -29,7 +29,7 @@ export function getCygwinProxySessionEditorClass(context: ExtensionContext): any
   log.info("ProxySessionEditorExtension activate");
   let cygwinInstallationDir = "";
 
-  class ProxySessionEditor extends context.workspace.extensionSessionEditorBaseConstructor {
+  class ProxySessionEditor extends context.window.extensionSessionEditorBaseConstructor {
     private _ui: CygwinProxySessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
 

@@ -90,7 +90,8 @@ interface MenuItem {
     <template v-if="firstShowComplete || selectedTab == 'keybindings'">
       <et-key-bindings-settings v-show="selectedTab == 'keybindings'"
         v-bind:configDatabase.prop="getConfigDatabase()"
-        v-bind:keybindingsManager.prop="getKeybindingsManager()">
+        v-bind:keybindingsManager.prop="getKeybindingsManager()"
+        v-bind:extensionManager.prop="getExtensionManager()">
       </et-key-bindings-settings>
     </template>
   </div>
@@ -155,6 +156,7 @@ export class SettingsUi extends Vue {
   
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
+    this.$forceUpdate();
   }
 
   getExtensionManager(): ExtensionManager {

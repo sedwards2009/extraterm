@@ -11,7 +11,6 @@ import { log } from "extraterm-logging";
 
 import { AboutTab } from './AboutTab';
 import { BulkFileBroker } from './bulk_file_handling/BulkFileBroker';
-import { Commandable, BoundCommand } from './command/CommandTypes';
 import * as config from '../Config';
 import * as DisposableUtils from '../utils/DisposableUtils';
 import * as DomUtils from './DomUtils';
@@ -35,9 +34,10 @@ import * as ViewerElementTypes from './viewers/ViewerElementTypes';
 import { EtViewerTab } from './ViewerTab';
 import { PtyIpcBridge } from './PtyIpcBridge';
 import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
-import { ConfigDatabase, SESSION_CONFIG } from '../Config';
+import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from '../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { NewTerminalContextArea, EVENT_NEW_SESSION_REQUEST } from './NewTerminalContextArea';
+import { NewTerminalContextArea } from './NewTerminalContextArea';
+import { CommandAndShortcut } from './command/CommandPalette';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -69,31 +69,12 @@ const CLASS_SPACE = "CLASS_SPACE";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
 const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 
-const KEYBINDINGS_MAIN_UI = "main-ui";
-const PALETTE_GROUP = "mainwebui";
-const COMMAND_SELECT_TAB_LEFT = "selectTabLeft";
-const COMMAND_SELECT_TAB_RIGHT = "selectTabRight";
-const COMMAND_SELECT_PANE_LEFT = "selectPaneLeft";
-const COMMAND_SELECT_PANE_RIGHT = "selectPaneRight";
-const COMMAND_SELECT_PANE_ABOVE = "selectPaneAbove";
-const COMMAND_SELECT_PANE_BELOW = "selectPaneBelow";
-const COMMAND_MOVE_TAB_LEFT = "moveTabLeft";
-const COMMAND_MOVE_TAB_RIGHT = "moveTabRight";
-const COMMAND_MOVE_TAB_UP = "moveTabUp";
-const COMMAND_MOVE_TAB_DOWN = "moveTabDown";
-const COMMAND_NEW_TERMINAL = "newTerminal";
-const COMMAND_CLOSE_TAB = "closeTab";
-const COMMAND_HORIZONTAL_SPLIT = "horizontalSplit";
-const COMMAND_VERTICAL_SPLIT = "verticalSplit";
-const COMMAND_CLOSE_PANE = "closePane";
-
 /**
  * Top level UI component for a normal terminal window
- *
  */
 @WebComponent({tag: "extraterm-mainwebui"})
 export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
-    config.AcceptsConfigDatabase, Commandable {
+    config.AcceptsConfigDatabase {
   
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
@@ -110,7 +91,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _ptyIpcBridge: PtyIpcBridge = null;
   private _tabIdCounter = 0;
   private _configManager: ConfigDatabase = null;
-  private _keyBindingManager: KeybindingsManager = null;
+  private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _lastFocus: Element = null;
@@ -150,11 +131,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
   
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
-    this._keyBindingManager = keyBindingManager;
+    this._keybindingsManager = keyBindingManager;
   }
 
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
+    this._registerCommands(extensionManager);
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
@@ -188,7 +170,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
     mainContainer.addEventListener(EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
     mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
-    mainContainer.addEventListener(EVENT_NEW_SESSION_REQUEST, (ev: CustomEvent) => this._handleNewSessionRequest(ev));
   }
 
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
@@ -324,14 +305,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setTabContainerFactory( (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element => {
       const divContainer = document.createElement("DIV");
       divContainer.classList.add(CLASS_TAB_CONTENT);
-      divContainer.addEventListener('keydown', this._handleKeyDownCapture.bind(this, tabContent), true);
       return divContainer;
     });
 
     this._splitLayout.setRightSpaceDefaultElementFactory( (): Element => {
       const tempDiv = document.createElement("DIV");
       tempDiv.innerHTML = this._newTabRestAreaHtml();
-      (<NewTerminalContextArea> tempDiv.querySelector("#" + ID_NEW_TERMINAL_CONTEXT_AREA)).setConfigDatabase(this._configManager);
       return tempDiv.children.item(0);
     });
     this._splitLayout.setTopLeftElement(this._leftControls());
@@ -340,42 +319,25 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setEmptySplitElementFactory( () => {
       const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
 
-      const sessionCommandList: BoundCommand[] = [];
-      const sessions = this._configManager.getConfig(SESSION_CONFIG);
-      for (let i=0; i<sessions.length; i++) {
-        const sessionConfig = sessions[i];
-        const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;
-        sessionCommandList.push({
-          id: commandId,
-          group: PALETTE_GROUP,
-          icon: "fa fa-plus",
-          label: "New Terminal: " + sessionConfig.name,
-          commandExecutor: null,
-          commandArguments: {sessionUuid: sessionConfig.uuid}
-        });
-      }
+      const entries = this._extensionManager.queryCommands({
+        emptyPaneMenu: true,
+        categories: ["application", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
+        when: true
+      });
 
-      const commandList: BoundCommand[] = [
-        ...sessionCommandList,
-        { id: COMMAND_HORIZONTAL_SPLIT, group: PALETTE_GROUP, icon: "extraicon-#xea08", label: "Horizontal Split", commandExecutor: null },
-        { id: COMMAND_VERTICAL_SPLIT, group: PALETTE_GROUP, icon: "fa fa-columns", label: "Vertical Split", commandExecutor: null },
-        { id: COMMAND_CLOSE_PANE, group: PALETTE_GROUP, label: "Close Pane", commandExecutor: null }
-      ];
-      this._insertCommandKeybindings(commandList);
+      const termKeybindingsMapping = this._keybindingsManager.getKeybindingsMapping();
+      const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
+        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommandAndCategory(entry.command, entry.category);
+        const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+        return { id: entry.command + "_" + entry.category, shortcut, ...entry };
+      });
 
-      for (const entry of commandList) {
-        if (entry.commandArguments == null) {
-          entry.commandArguments = {};
-        }
-        entry.commandArguments["tabElement"] = emptyPaneMenu;
-      }
-
-      emptyPaneMenu.setEntries(commandList);
+      emptyPaneMenu.setEntries(entriesAndShortcuts);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
         emptyPaneMenu.setFilter("");
-        for (const entry of commandList) {
+        for (const entry of entriesAndShortcuts) {
           if (entry.id === ev.detail.selected) {
-            this.executeCommand(ev.detail.selected, entry.commandArguments);
+            this._extensionManager.executeCommand(entry.command);
           }
         }
       });
@@ -403,7 +365,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _menuControls(): Element {
     const tempDiv = document.createElement("DIV");
     tempDiv.innerHTML = this._newTabRestAreaHtml(`<slot id="${ID_REST_SLOT}"></slot>`);
-    (<NewTerminalContextArea> tempDiv.querySelector("#" + ID_NEW_TERMINAL_CONTEXT_AREA)).setConfigDatabase(this._configManager);
     return tempDiv.children.item(0);
   }
 
@@ -474,21 +435,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       ThemeTypes.CssFile.MAIN_UI];
   }
 
-  destroy(): void {
-  }
-  
-  // ----------------------------------------------------------------------
-  //
-  //   #######                      
-  //      #      ##   #####   ####  
-  //      #     #  #  #    # #      
-  //      #    #    # #####   ####  
-  //      #    ###### #    #      # 
-  //      #    #    # #    # #    # 
-  //      #    #    # #####   ####  
-  //
-  // ----------------------------------------------------------------------
-
   private _addTab(tabWidget: TabWidget, tabContentElement: Element): Tab {
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
@@ -551,7 +497,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setBulkFileBroker(this._fileBroker);
     config.injectConfigDatabase(newTerminal, this._configManager);
-    injectKeybindingsManager(newTerminal, this._keyBindingManager);
+    injectKeybindingsManager(newTerminal, this._keybindingsManager);
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
 
@@ -614,7 +560,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
-    injectKeybindingsManager(viewerTab, this._keyBindingManager);
+    injectKeybindingsManager(viewerTab, this._keybindingsManager);
+    injectConfigDatabase(viewerTab, this._configManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
     
@@ -689,14 +636,14 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
-  openSettingsTab(tabName: string=null): void {
+  commandOpenSettingsTab(tabName: string=null): void {
     const settingsTab = this._getSettingsTab();
     if (settingsTab != null) {
       this._switchToTab(settingsTab);
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDatabase(settingsTabElement, this._configManager);
-      injectKeybindingsManager(settingsTabElement, this._keyBindingManager);
+      injectKeybindingsManager(settingsTabElement, this._keybindingsManager);
       injectExtensionManager(settingsTabElement, this._extensionManager);
 
       settingsTabElement.setThemes(this._themes);
@@ -708,14 +655,14 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
   
-  openAboutTab(): void {
+  commandOpenAboutTab(): void {
     const aboutTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
       this._switchToTab(aboutTabs[0]);
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       config.injectConfigDatabase(viewerElement, this._configManager);
-      injectKeybindingsManager(viewerElement, this._keyBindingManager);
+      injectKeybindingsManager(viewerElement, this._keybindingsManager);
       this._openViewerTab(this._firstTabWidget(), viewerElement);
       this._switchToTab(viewerElement);
     }
@@ -773,27 +720,23 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._focusTabContent(contents[i]);
   }
 
-  focusPane(): void {
-    // FIXME
+  private _focusPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
   }
 
-  private _selectPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
+  private _focusPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
   }
 
-  private _selectPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+  private _focusPaneAbove(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
   }
 
-  private _selectPaneAbove(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+  private _focusPaneBelow(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
+    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
   }
 
-  private _selectPaneBelow(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._selectPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
-  }
-
-  private _selectPaneInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget):
+  private _focusPaneInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget):
       { tabWidget: TabWidget, tabContent: Element} {
 
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
@@ -890,13 +833,13 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _closeSplit(tabContentElement: Element): void {
     let focusInfo: {tabWidget: TabWidget, tabContent: Element} = null;
     if (tabContentElement instanceof EmptyPaneMenu) {
-      focusInfo = this._selectPaneLeft(tabContentElement);
+      focusInfo = this._focusPaneLeft(tabContentElement);
       if (focusInfo.tabWidget == null) {
-        focusInfo = this._selectPaneRight(tabContentElement);
+        focusInfo = this._focusPaneRight(tabContentElement);
         if (focusInfo.tabWidget == null) {
-          focusInfo = this._selectPaneAbove(tabContentElement);
+          focusInfo = this._focusPaneAbove(tabContentElement);
           if (focusInfo.tabWidget == null) {
-            focusInfo = this._selectPaneBelow(tabContentElement);
+            focusInfo = this._focusPaneBelow(tabContentElement);
           }
         }
       }
@@ -919,18 +862,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       }
     }
   }
-
-  //-----------------------------------------------------------------------
-  //
-  //    #####                                                     
-  //   #     # #      # #####  #####   ####    ##   #####  #####  
-  //   #       #      # #    # #    # #    #  #  #  #    # #    # 
-  //   #       #      # #    # #####  #    # #    # #    # #    # 
-  //   #       #      # #####  #    # #    # ###### #####  #    # 
-  //   #     # #      # #      #    # #    # #    # #   #  #    # 
-  //    #####  ###### # #      #####   ####  #    # #    # #####  
-  //
-  //-----------------------------------------------------------------------
 
   /**
    * Copys the selection in the focussed terminal to the clipboard.
@@ -991,221 +922,98 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return null;
   }
 
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
+  private _registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    commands.registerCommand("extraterm:window.newTerminal", (args: any) => this._commandNewTerminal(args));
+    commands.registerCommand("extraterm:window.focusTabLeft", (args: any) => this._commandFocusTabLeft());
+    commands.registerCommand("extraterm:window.focusTabRight", (args: any) => this._commandFocusTabRight());
+    commands.registerCommand("extraterm:window.focusPaneLeft", (args: any) => this._commandFocusPaneLeft());
+    commands.registerCommand("extraterm:window.focusPaneRight", (args: any) => this._commandFocusPaneRight());
+    commands.registerCommand("extraterm:window.focusPaneAbove", (args: any) => this._commandFocusPaneAbove());
+    commands.registerCommand("extraterm:window.focusPaneBelow", (args: any) => this._commandFocusPaneBelow());
+    commands.registerCommand("extraterm:window.closeTab", (args: any) => this._commandCloseTab());
+    commands.registerCommand("extraterm:window.horizontalSplit", (args: any) => this._commandHorizontalSplit());
+    commands.registerCommand("extraterm:window.verticalSplit", (args: any) => this._commandVerticalSplit());
+    commands.registerCommand("extraterm:window.closePane", (args: any) => this._commandClosePane());
+    commands.registerCommand("extraterm:window.moveTabLeft", (args: any) => this._commandMoveTabLeft());
+    commands.registerCommand("extraterm:window.moveTabRight", (args: any) => this._commandMoveTabRight());
+    commands.registerCommand("extraterm:window.moveTabUp", (args: any) => this._commandMoveTabUp());
+    commands.registerCommand("extraterm:window.moveTabDown", (args: any) => this._commandMoveTabDown());
+    commands.registerCommand("extraterm:window.openAbout", (args: any) => this.commandOpenAboutTab());
+    commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
+  }
 
-  private _handleKeyDownCapture(tabContentElement: Element, ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
+  private _getActiveTabElement(): HTMLElement {
+    return this._extensionManager.getActiveTab();
+  }
+
+  private _commandNewTerminal(args: any): void {
+    let sessionUuid = args.sessionUuid;
+    if (sessionUuid == null) {
+      sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
     }
+
+    this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(this._getActiveTabElement()), sessionUuid));
+  }
+
+  private _commandFocusTabLeft(): void {
+    this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), -1);
+  }
     
-    const bindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
-    if (bindings === null) {
-      return;
-    }
-    
-    const command = bindings.mapEventToCommand(ev);
-    if (this.executeCommand(command, {tabElement: tabContentElement})) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
+  private _commandFocusTabRight(): void {
+    this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), 1);
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //    #####                                               ######                                          
-  //   #     #  ####  #    # #    #   ##   #    # #####     #     #   ##   #      ###### ##### ##### ###### 
-  //   #       #    # ##  ## ##  ##  #  #  ##   # #    #    #     #  #  #  #      #        #     #   #      
-  //   #       #    # # ## # # ## # #    # # #  # #    #    ######  #    # #      #####    #     #   #####  
-  //   #       #    # #    # #    # ###### #  # # #    #    #       ###### #      #        #     #   #      
-  //   #     # #    # #    # #    # #    # #   ## #    #    #       #    # #      #        #     #   #      
-  //    #####   ####  #    # #    # #    # #    # #####     #       #    # ###### ######   #     #   ###### 
-  //
-  //-----------------------------------------------------------------------
-
-  getCommands(commandableStack: Commandable[]): BoundCommand[] {
-    const thisIndex = commandableStack.indexOf(this);
-    const tabContentElement = commandableStack[thisIndex-1];
-
-    if (tabContentElement instanceof NewTerminalContextArea) {
-      return [];
-    }
-
-    if (tabContentElement instanceof Element) {
-      return this._commandPaletteEntriesWithTarget(tabContentElement, this._tabWidgetFromElement(tabContentElement));
-    } else {
-      this._log.severe("commandableStack[thisIndex-1] wasn't an Element");
-      return [];
-    }
+  private _commandFocusPaneLeft(): void {
+    this._focusPaneLeft(this._getActiveTabElement());
   }
 
-  private _commandPaletteEntriesWithTarget(tabContentElement: Element, tabWidget: TabWidget): BoundCommand[] {
-
-    const commandExecutor = this;
-    const commandArguments = {tabElement: tabContentElement};
-
-    const sessionCommandList: BoundCommand[] = [];
-    const sessions = this._configManager.getConfig(SESSION_CONFIG);
-    for (let i = 0; i < sessions.length; i++) {
-      const sessionConfig  = sessions[i];
-      const commandId = i === 0 ? COMMAND_NEW_TERMINAL : COMMAND_NEW_TERMINAL + ":" + sessionConfig.uuid;
-      sessionCommandList.push({
-        id: commandId,
-        group: PALETTE_GROUP,
-        icon: "fa fa-plus",
-        label: "New Terminal: " + sessionConfig.name,
-        commandExecutor,
-        commandArguments: {tabElement: tabContentElement, sessionUuid: sessionConfig.uuid}
-      });
-    }
-
-    const defaults = { group: PALETTE_GROUP, commandExecutor, commandArguments };
-    const commandList: BoundCommand[] = [
-      ...sessionCommandList,
-      { ...defaults, id: COMMAND_CLOSE_TAB, icon: "fa fa-times", label: "Close Tab" },
-      { ...defaults, id: COMMAND_SELECT_TAB_LEFT, label: "Select Previous Tab" },
-      { ...defaults, id: COMMAND_SELECT_TAB_RIGHT, label: "Select Next Tab" },
-      { ...defaults, id: COMMAND_SELECT_PANE_LEFT, label: " Select pane left" },
-      { ...defaults, id: COMMAND_SELECT_PANE_RIGHT, label: " Select pane right" },
-      { ...defaults, id: COMMAND_SELECT_PANE_ABOVE, label: " Select pane above" },
-      { ...defaults, id: COMMAND_SELECT_PANE_BELOW, label: " Select pane below" },
-      { ...defaults, id: COMMAND_HORIZONTAL_SPLIT, icon: "extraicon-#xea08", label: "Horizontal Split", contextMenu:true },
-      { ...defaults, id: COMMAND_VERTICAL_SPLIT, icon: "fa fa-columns", label: "Vertical Split", contextMenu:true },
-      { ...defaults, id: COMMAND_MOVE_TAB_LEFT, label: "Move Tab Left" },
-      { ...defaults, id: COMMAND_MOVE_TAB_RIGHT, label: "Move Tab Right" },
-      { ...defaults, id: COMMAND_MOVE_TAB_UP, label: "Move Tab Up" },
-      { ...defaults, id: COMMAND_MOVE_TAB_DOWN, label: "Move Tab Down" },
-    ];
-// FIXME
-    if (tabWidget != null && tabWidget.parentElement instanceof Splitter ||
-        tabContentElement instanceof EmptyPaneMenu) {
-      commandList.push( { ...defaults, id: COMMAND_CLOSE_PANE, label: "Close Pane", contextMenu: true } );
-    }
-
-    this._insertCommandKeybindings(commandList);
-    return commandList;
+  private _commandFocusPaneRight(): void {
+    this._focusPaneRight(this._getActiveTabElement());
   }
 
-  private _insertCommandKeybindings(commandList: BoundCommand[]): void {
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_MAIN_UI);
-    if (keyBindings !== null) {
-      commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-        commandEntry.shortcut = shortcut === null ? "" : shortcut;
-      });
-    }    
+  private _commandFocusPaneAbove(): void {
+    this._focusPaneAbove(this._getActiveTabElement());
   }
-  
-  executeCommand(commandId: string, options?: object): boolean {
-    if (options == null) {
-      return false;
-    }
-    const tabElement = <Element> options["tabElement"];
-    if (tabElement == null) {
-      return false;
-    }
 
-    if (commandId == null) {
-      return false;
-    }
-    
-    const parts = commandId.split(":");
-    const command = parts[0];
+  private _commandFocusPaneBelow(): void {
+    this._focusPaneBelow(this._getActiveTabElement());
+  }
 
-    switch (command) {
-      case COMMAND_SELECT_TAB_LEFT:
-        this._shiftTab(this._tabWidgetFromElement(tabElement), -1);
-        break;
-        
-      case COMMAND_SELECT_TAB_RIGHT:
-        this._shiftTab(this._tabWidgetFromElement(tabElement), 1);
-        break;
+  private _commandCloseTab(): void {
+    this.closeTab(this._getActiveTabElement());
+  }
 
-      case COMMAND_SELECT_PANE_LEFT:
-        this._selectPaneLeft(tabElement);
-        break;
+  private _commandHorizontalSplit(): void {
+    this._horizontalSplit(this._getActiveTabElement());
+  }
 
-      case COMMAND_SELECT_PANE_RIGHT:
-        this._selectPaneRight(tabElement);
-        break;
+  private _commandVerticalSplit(): void {
+    this._verticalSplit(this._getActiveTabElement());
+  }
 
-      case COMMAND_SELECT_PANE_ABOVE:
-        this._selectPaneAbove(tabElement);
-        break;
+  private _commandClosePane(): void {
+    this._closeSplit(this._getActiveTabElement());
+  }
 
-      case COMMAND_SELECT_PANE_BELOW:
-        this._selectPaneBelow(tabElement);
-        break;
+  private _commandMoveTabLeft(): void {
+    this._moveTabElementLeft(this._getActiveTabElement());
+  }
 
-      case COMMAND_NEW_TERMINAL:
-        let sessionUuid = (<any>options).sessionUuid;
-        if (sessionUuid == null) {
-          sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
-        }
+  private _commandMoveTabRight(): void {
+    this._moveTabElementRight(this._getActiveTabElement());
+  }
 
-        this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(tabElement), sessionUuid));
-        break;
-        
-      case COMMAND_CLOSE_TAB:
-        this.closeTab(tabElement);
-        break;
+  private _commandMoveTabUp(): void {
+    this._moveTabElementUp(this._getActiveTabElement());
+  }
 
-      case COMMAND_HORIZONTAL_SPLIT:
-        this._horizontalSplit(tabElement);
-        break;
-
-      case COMMAND_VERTICAL_SPLIT:
-        this._verticalSplit(tabElement);
-        break;
-
-      case COMMAND_CLOSE_PANE:
-        this._closeSplit(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_LEFT:
-        this._moveTabElementLeft(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_RIGHT:
-        this._moveTabElementRight(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_UP:
-        this._moveTabElementUp(tabElement);
-        break;
-
-      case COMMAND_MOVE_TAB_DOWN:
-        this._moveTabElementDown(tabElement);
-        break;
-
-      default:
-        return false;
-    }
-    return true;
+  private _commandMoveTabDown(): void {
+    this._moveTabElementDown(this._getActiveTabElement());
   }
 
   private _setupPtyIpc(): void {
     this._ptyIpcBridge = new PtyIpcBridge();
-  }
-  
-  private _handleNewSessionRequest(ev: CustomEvent): void {
-    for (const el of ev.path) {
-      if (el instanceof TabWidget) {
-        const elements = this._splitLayout.getTabContentsByTabWidget(el);
-        const tabElement = elements[el.getSelectedIndex()];
-        const options = { tabElement, sessionUuid: ev.detail.sessionUuid };
-        this.executeCommand(COMMAND_NEW_TERMINAL, options);
-      }
-    }
   }
 }
 

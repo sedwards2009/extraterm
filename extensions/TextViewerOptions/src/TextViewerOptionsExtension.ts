@@ -1,60 +1,49 @@
-
 /*
- * Copyright 2017-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ExtensionContext, Command, TextViewer} from 'extraterm-extension-api';
+import {ExtensionContext, TextViewer, CustomizedCommand, Viewer} from 'extraterm-extension-api';
 
 let extensionContext: ExtensionContext = null;
 
 export function activate(context: ExtensionContext): any {
   extensionContext = context;
-  context.workspace.registerCommandsOnTextViewer(textViewerCommandLister, textViewerCommandExecutor);
-}
 
-const COMMAND_SET_SYNTAX_HIGHLIGHTING = "setSyntaxHighlighting";
-const COMMAND_SET_TAB_WIDTH = "setTabWidth";
-const COMMAND_SHOW_LINE_NUMBERS = "showLineNumbers";
+  const ifTextViewer = function<R>(func: (textViewer: TextViewer) => R): () => R {
+    return (): R | null => {
+      const viewer = context.window.activeViewer;
+      if (viewer == null) {
+        return null;
+      }
+      if (viewer.viewerType !== "text") {
+        return null;
+      }
+      return func(viewer);
+    };
+  };
 
+  const commands = context.commands;
+  commands.registerCommand("text-viewer-options:setSyntaxHighlighting",
+    ifTextViewer(syntaxHighlightingCommandExecutor),
+    ifTextViewer(getSetSyntaxHighlightingTitle));
 
-function textViewerCommandLister(textViewer: TextViewer): Command[] {
-  return [{
-    id: COMMAND_SET_SYNTAX_HIGHLIGHTING,
-    label: "Syntax: " + getMimeTypeName(textViewer),
-    contextMenu: true,
-  },
-  {
-    id: COMMAND_SET_TAB_WIDTH,
-    label: "Tab Size: " + textViewer.getTabSize(),
-    contextMenu: true,
-  },
-  {
-    id: COMMAND_SHOW_LINE_NUMBERS,
-    label: "Line Numbers",
-    icon: "fa fa-list-ol",
-    checked: textViewer.getShowLineNumbers(),
-    contextMenu: true,
-  }];
-}
+  commands.registerCommand("text-viewer-options:setTabWidth",
+    ifTextViewer(tabCommand),
+    ifTextViewer(getTabCommandTitle));
 
-async function textViewerCommandExecutor(textViewer: TextViewer, commandId: string, commandArguments?: object): Promise<any> {
-  switch(commandId) {
-    case COMMAND_SET_TAB_WIDTH:
-      return tabCommand(textViewer);
-
-    case COMMAND_SET_SYNTAX_HIGHLIGHTING:
-      return syntaxHighlightingCommandExecutor(textViewer);
-
-    case COMMAND_SHOW_LINE_NUMBERS:
-      return toggleLineNumbers(textViewer);
-
-    default:
-      break;
-  }
+  commands.registerCommand("text-viewer-options:showLineNumbers",
+    ifTextViewer(toggleLineNumbers),
+    ifTextViewer(getToggleLineNumbersTitle));
 }
 
 //-------------------------------------------------------------------------
+
+function getSetSyntaxHighlightingTitle(textViewer: TextViewer): CustomizedCommand {
+  return {
+    title: "Syntax: " + getMimeTypeName(textViewer)
+  };
+}
 
 function getMimeTypeName(textViewer: TextViewer): string {
   const mimeType = textViewer.getMimeType();
@@ -99,6 +88,12 @@ function sortArrayBy(items: any[], keyFunc: (item: any) => string): void {
 
 //-------------------------------------------------------------------------
 
+function getTabCommandTitle(textViewer: TextViewer): CustomizedCommand {
+  return {
+    title: "Tab Size: " + textViewer.getTabSize(),
+  };
+}
+
 async function tabCommand(textViewer: TextViewer): Promise<any> {
   const selectedTabSize = await textViewer.getTab().showNumberInput({
     title: "Tab Size",
@@ -112,6 +107,11 @@ async function tabCommand(textViewer: TextViewer): Promise<any> {
 }
 
 //-------------------------------------------------------------------------
+function getToggleLineNumbersTitle(textViewer: TextViewer): CustomizedCommand {
+  return {
+    checked: textViewer.getShowLineNumbers()
+  };
+}
 
 async function toggleLineNumbers(textViewer: TextViewer): Promise<any> {
   textViewer.setShowLineNumbers( ! textViewer.getShowLineNumbers());

@@ -361,7 +361,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _getSyntaxThemeExtensionPaths(): string [] {
     const paths: string[] = [];
     for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
-      for (const st of extension.contributions.syntaxTheme) {
+      for (const st of extension.contributes.syntaxThemes) {
         paths.push(path.join(extension.path, st.path));
       }
     }
@@ -371,7 +371,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _getTerminalThemeExtensionPaths(): string [] {
     const paths: string[] = [];
     for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
-      for (const st of extension.contributions.terminalTheme) {
+      for (const st of extension.contributes.terminalThemes) {
         paths.push(path.join(extension.path, st.path));
       }
     }
@@ -858,7 +858,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     };
 
     for (const extensionMetadata of this._mainExtensionManager.getExtensionMetadata()) {
-      for (const viewerMetadata of extensionMetadata.contributions.viewer) {
+      for (const viewerMetadata of extensionMetadata.contributes.viewers) {
         const nextResult = await this._renderExtensionCss(cssDirectoryStack, globalVariables, extensionMetadata,
           viewerMetadata.css);
 

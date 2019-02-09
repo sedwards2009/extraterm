@@ -297,6 +297,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   setModeAndVisualState(mode: Mode, visualState: VisualState): void {
+    this._mode = mode;
     for (const element of this.getViewerElements()) {
       element.setMode(mode);
       element.setVisualState(visualState);
@@ -310,7 +311,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   focus(): void {
     super.focus({preventScroll: true});
-    if (this._terminalViewer !== null) {
+    if (this._terminalViewer !== null && this._mode === Mode.DEFAULT) {
       DomUtils.focusWithoutScroll(this._terminalViewer);
     }
   }

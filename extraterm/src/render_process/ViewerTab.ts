@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,14 +7,11 @@
 import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import { COMMAND_OPEN_COMMAND_PALETTE } from './command/CommandUtils';
-import { isCommandable, Commandable, BoundCommand} from './command/CommandTypes';
 import {doLater, DebouncedDoLater} from '../utils/DoLater';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import {AcceptsKeybindingsManager, KeybindingsManager} from './keybindings/KeyBindingsManager';
 import {ResizeCanary} from './ResizeCanary';
 import {ScrollBar} from'./gui/ScrollBar';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
@@ -26,6 +23,8 @@ import { RefreshLevel, Mode, VisualState } from './viewers/ViewerElementTypes';
 import * as VirtualScrollArea from './VirtualScrollArea';
 import * as WebIpc from './WebIpc';
 import { AcceptsConfigDatabase, ConfigDatabase } from '../Config';
+import { ExtensionManager } from './extension/InternalTypes';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
@@ -36,15 +35,7 @@ const ID_SCROLL_AREA = "ID_SCROLL_AREA";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 const ID_CONTAINER = "ID_CONTAINER";
 const ID_CSS_VARS = "ID_CSS_VARS";
-const KEYBINDINGS_VIEWER_TAB = "viewer-tab";
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
-
-const PALETTE_GROUP = "viewertab";
-const COMMAND_COPY_TO_CLIPBOARD = "copyToClipboard";
-const COMMAND_PASTE_FROM_CLIPBOARD = "pasteFromClipboard";
-const COMMAND_FONT_SIZE_INCREASE = "increaseFontSize";
-const COMMAND_FONT_SIZE_DECREASE = "decreaseFontSize";
-const COMMAND_FONT_SIZE_RESET = "resetFontSize";
 
 const MINIMUM_FONT_SIZE = -3;
 const MAXIMUM_FONT_SIZE = 4;
@@ -55,9 +46,8 @@ const SCROLL_STEP = 1;
  * A viewer tab which can contain any ViewerElement.
  */
 @WebComponent({tag: "et-viewer-tab"})
-export class EtViewerTab extends ViewerElement implements Commandable, AcceptsConfigDatabase,
-    AcceptsKeybindingsManager, SupportsClipboardPaste.SupportsClipboardPaste,
-    SupportsDialogStack.SupportsDialogStack {
+export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
+    SupportsClipboardPaste.SupportsClipboardPaste, SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-VIEWER-TAB";
 
@@ -67,7 +57,6 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
   private _title = "New Tab";
   private _tag: string = null;
 
-  private _keyBindingManager: KeybindingsManager = null;
   private _configDatabase: ConfigDatabase = null;
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
@@ -77,6 +66,23 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
   private _dialogStack: HTMLElement[] = [];
   private _copyToClipboardLater: DebouncedDoLater = null;
 
+  static registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+
+    commands.registerCommand("extraterm:viewerTab.copyToClipboard", (args: any) => {
+      const activeTab = extensionManager.getActiveTab();
+      if (activeTab instanceof EtViewerTab) {
+        activeTab.copyToClipboard();
+      }
+    });
+    commands.registerCommand("extraterm:viewerTab.pasteFromClipboard", (args: any) => {
+      const activeTab = extensionManager.getActiveTab();
+      if (activeTab instanceof EtViewerTab) {
+        activeTab._pasteFromClipboard();
+      }
+    });
+  }
+  
   constructor() {
     super();
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
@@ -120,26 +126,11 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
     this._virtualScrollArea.setScrollbar(scrollbar);
 
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-    scrollerArea.addEventListener('mousedown', (ev: MouseEvent): void => {
-      if (ev.target === scrollerArea) {
-        ev.preventDefault();
-        ev.stopPropagation();
-        this.focus();
-        if (ev.buttons & 2) { // Right Mouse Button
-          const viewerElement = this._getViewerElement();
-          if (viewerElement !== null && isCommandable(viewerElement)) {
-            viewerElement.executeCommand(COMMAND_OPEN_COMMAND_PALETTE);
-          }
-        }
-      }
-    });
-    
     scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
       this._virtualScrollArea.scrollTo(scrollbar.getPosition());
     });
 
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
-    scrollerArea.addEventListener('keydown', this._handleKeyDownCapture.bind(this), true);
 
     scrollerArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
@@ -258,10 +249,6 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
     return Mode.CURSOR;
   }
   
-  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
-    this._keyBindingManager = keyBindingManager;
-  }
-
   getFontAdjust(): number {
     return this._fontSizeAdjustment;
   }
@@ -320,13 +307,13 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
       template = window.document.createElement('template');
       template.id = ID;
 
-      template.innerHTML = `
+      template.innerHTML = trimBetweenTags(`
         <style id="${ThemeableElementBase.ID_THEME}"></style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
           <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
-        </div>`;
+        </div>`);
       window.document.body.appendChild(template);
     }
 
@@ -456,97 +443,6 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
   private _resetFontSize(): void {
     this._adjustFontSize(-this._fontSizeAdjustment);
   }
-  
-  // ----------------------------------------------------------------------
-  //
-  //   #    #                                                 
-  //   #   #  ###### #   # #####   ####    ##   #####  #####  
-  //   #  #   #       # #  #    # #    #  #  #  #    # #    # 
-  //   ###    #####    #   #####  #    # #    # #    # #    # 
-  //   #  #   #        #   #    # #    # ###### #####  #    # 
-  //   #   #  #        #   #    # #    # #    # #   #  #    # 
-  //   #    # ######   #   #####   ####  #    # #    # #####  
-  //                                                        
-  // ----------------------------------------------------------------------
-
-  private _handleKeyDownCapture(ev: KeyboardEvent): void {
-    if (this._keyBindingManager === null || this._keyBindingManager.getKeybindingsContexts() === null) {
-      return;
-    }
-
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
-    const command = keyBindings.mapEventToCommand(ev);
-    if (this._executeCommand(command)) {
-      ev.stopPropagation();
-      ev.preventDefault();
-    }
-  }
-
-  getCommands(commandableStack: Commandable[]): BoundCommand[] {
-    const defaults = { group: PALETTE_GROUP, commandExecutor: this, contextMenu: true };
-    const commandList: BoundCommand[] = [
-      { ...defaults, id: COMMAND_OPEN_COMMAND_PALETTE, icon: "fas fa-toolbox", label: "Command Palette", commandPalette: false},
-      { ...defaults, id: COMMAND_COPY_TO_CLIPBOARD, icon: "far fa-copy", label: "Copy to Clipboard" },
-      { ...defaults, id: COMMAND_PASTE_FROM_CLIPBOARD, icon: "fa fa-clipboard", label: "Paste from Clipboard" },
-      { ...defaults, id: COMMAND_FONT_SIZE_INCREASE, label: "Increase Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_DECREASE, label: "Decrease Font Size" },
-      { ...defaults, id: COMMAND_FONT_SIZE_RESET, label: "Reset Font Size" },
-    ];
-
-    const keyBindings = this._keyBindingManager.getKeybindingsContexts().context(KEYBINDINGS_VIEWER_TAB);
-    if (keyBindings !== null) {
-      commandList.forEach( (commandEntry) => {
-        const shortcut = keyBindings.mapCommandToReadableKeyStroke(commandEntry.id)
-        commandEntry.shortcut = shortcut === null ? "" : shortcut;
-      });
-    }    
-    return commandList;
-  }
-
-
-  executeCommand(commandId: string): void {
-    this._executeCommand(commandId);
-  }
-  
-  private _executeCommand(command: string): boolean {
-    switch (command) {
-      case COMMAND_COPY_TO_CLIPBOARD:
-        this.copyToClipboard();
-        break;
-
-      case COMMAND_PASTE_FROM_CLIPBOARD:
-        this._pasteFromClipboard();
-        break;
-
-      case COMMAND_FONT_SIZE_INCREASE:
-        this._adjustFontSize(1);
-        break;
-
-      case COMMAND_FONT_SIZE_DECREASE:
-        this._adjustFontSize(-1);
-        break;
-
-      case COMMAND_FONT_SIZE_RESET:
-        this._resetFontSize();
-        break;
-
-      default:
-        return false;
-    }
-    return true;
-  }
-
-  // ********************************************************************
-  //
-  //   #     #                 
-  //   ##   ## #  ####   ####  
-  //   # # # # # #      #    # 
-  //   #  #  # #  ####  #      
-  //   #     # #      # #      
-  //   #     # # #    # #    # 
-  //   #     # #  ####   ####  
-  //
-  // ********************************************************************
 
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     if (ev.detail.originMouse) {
@@ -601,18 +497,5 @@ export class EtViewerTab extends ViewerElement implements Commandable, AcceptsCo
    */
   private _pasteFromClipboard(): void {
     WebIpc.clipboardReadRequest();
-  }
-  
-  /**
-   * Find a command frame by ID.
-   */
-  private _findFrame(frameId: string): EmbeddedViewer {
-    if (/[^0-9]/.test(frameId)) {
-      return null;
-    }
-    
-    const scrollArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    const matches = scrollArea.querySelectorAll(EmbeddedViewer.TAG_NAME + "[tag='" + frameId + "']");
-    return matches.length === 0 ? null : <EmbeddedViewer>matches[0];
   }
 }

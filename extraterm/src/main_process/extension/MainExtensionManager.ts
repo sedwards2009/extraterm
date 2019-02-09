@@ -118,7 +118,7 @@ export class MainExtensionManager {
       return result;
     } catch(ex) {
       this._log.warn(`An error occurred while processing '${packageJsonPath}': ` + ex);
-      return null;   
+      return null;
     }
   }
 
@@ -132,16 +132,24 @@ export class MainExtensionManager {
 
   private _startExtension(metadata: ExtensionMetadata): void {
     this._log.info(`Starting extension '${metadata.name}' in the main process.`);
-    const module = this._loadExtensionModule(metadata);
-    if (module != null) {
+
+    let module = null;
+    let publicApi = null;
+    const contextImpl = new ExtensionContextImpl(metadata);
+    if (metadata.main != null) {
+      module = this._loadExtensionModule(metadata);
+      if (module == null) {
+        return;
+      }
       try {
-        const contextImpl = new ExtensionContextImpl(metadata);
-        const publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-        this._activeExtensions.push({metadata, publicApi, contextImpl, module});
+        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
       } catch(ex) {
         this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
+        return;
       }
     }
+
+    this._activeExtensions.push({metadata, publicApi, contextImpl, module});
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {
@@ -158,6 +166,10 @@ export class MainExtensionManager {
 }
 
 class ExtensionContextImpl implements ExtensionContext {
+  get commands(): never {
+    this.logger.warn("'ExtensionContext.commands' is only available from a window process, not the main process.");
+    throw Error("'ExtensionContext.commands' is only available from a window process, not the main process.");
+  }
   logger: ExtensionApi.Logger = null;
   isBackendProcess = true;
   backend: BackendImpl = null;
@@ -167,14 +179,14 @@ class ExtensionContextImpl implements ExtensionContext {
     this.backend = new BackendImpl(this.__extensionMetadata);
   }
   
-  get workspace(): never {
-    this.logger.warn("'ExtensionContext.workspace' is not available from a render process.");
-    throw Error("'ExtensionContext.workspace' is not available from a render process.");    
+  get window(): never {
+    this.logger.warn("'ExtensionContext.window' is only available from a window process, not the main process.");
+    throw Error("'ExtensionContext.window' is only available from a window process, not the main process.");    
   }
 
   get aceModule(): never {
-    this.logger.warn("'ExtensionContext.aceModule' is not available from a render process.");
-    throw Error("'ExtensionContext.aceModule' is not available from a render process.");    
+    this.logger.warn("'ExtensionContext.aceModule' is only available from a window process, not the main process.");
+    throw Error("'ExtensionContext.aceModule' is only available from a window process, not the main process.");
   }
 }
 
@@ -189,7 +201,7 @@ class BackendImpl implements Backend {
   }
 
   registerSessionBackend(name: string, backend: SessionBackend): void {
-    for (const backendMeta of this.__extensionMetadata.contributions.sessionBackend) {
+    for (const backendMeta of this.__extensionMetadata.contributes.sessionBackends) {
       if (backendMeta.name === name) {
         this.__BackendImpl__sessionBackends.push({
           metadata: this.__extensionMetadata,
@@ -207,7 +219,7 @@ class BackendImpl implements Backend {
   }
 
   registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void {
-    for (const backendMeta of this.__extensionMetadata.contributions.syntaxThemeProvider) {
+    for (const backendMeta of this.__extensionMetadata.contributes.syntaxThemeProviders) {
       if (backendMeta.name === name) {
         this.__BackendImpl__syntaxThemeProviders.push({
           metadata: this.__extensionMetadata,
@@ -224,7 +236,7 @@ class BackendImpl implements Backend {
   }
 
   registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void {
-    for (const backendMeta of this.__extensionMetadata.contributions.terminalThemeProvider) {
+    for (const backendMeta of this.__extensionMetadata.contributes.terminalThemeProviders) {
       if (backendMeta.name === name) {
         this.__BackendImpl__terminalThemeProviders.push({
           metadata: this.__extensionMetadata,
