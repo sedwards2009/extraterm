@@ -26,6 +26,9 @@ export interface CommandQueryOptions {
 
 export interface ExtensionManager {
   startUp(): void;
+
+  extensionUiUtils: ExtensionUiUtils;
+  
   getExtensionContextByName(name: string): InternalExtensionContext;
 
   findViewerElementTagByMimeType(mimeType: string): string;
@@ -85,8 +88,8 @@ export interface InternalWindow extends ExtensionApi.Window {
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
+  extensionManager: ExtensionManager;
   commands: CommandsRegistry;
-  extensionUiUtils: ExtensionUiUtils;
   extensionMetadata: ExtensionMetadata;
   internalWindow: InternalWindow;
   proxyFactory: ProxyFactory;

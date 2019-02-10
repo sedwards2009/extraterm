@@ -51,8 +51,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
   private _extensionMetadata: ExtensionMetadata[] = [];
   private _activeExtensions: ActiveExtension[] = [];
-  private _extensionUiUtils: ExtensionUiUtils = null;
-  private _proxyFactory: ProxyFactory = null;
+
+  extensionUiUtils: ExtensionUiUtils = null;
+
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
     activeTerminal: null,
@@ -67,8 +68,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
-    this._extensionUiUtils = new ExtensionUiUtilsImpl();
-    this._proxyFactory = new ProxyFactoryImpl(this._extensionUiUtils);
+    this.extensionUiUtils = new ExtensionUiUtilsImpl();
   }
 
   startUp(): void {
@@ -106,8 +106,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
     let module = null;
     let publicApi = null;
-    const contextImpl = new InternalExtensionContextImpl(this, this._extensionUiUtils, metadata,
-      this._proxyFactory, this._commonExtensionWindowState);
+    const contextImpl = new InternalExtensionContextImpl(this, metadata, this._commonExtensionWindowState);
     if (metadata.main != null) {
       module = this._loadExtensionModule(metadata);
       if (module == null) {
@@ -515,14 +514,14 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   logger: ExtensionApi.Logger = null;
   isBackendProcess = false;
 
-  constructor(private _extensionManager: ExtensionManager, public extensionUiUtils: ExtensionUiUtils,
-              public extensionMetadata: ExtensionMetadata, public proxyFactory: ProxyFactory,
+  proxyFactory: ProxyFactory = null;
+
+  constructor(public extensionManager: ExtensionManager, public extensionMetadata: ExtensionMetadata,
               commonExtensionState: CommonExtensionWindowState) {
 
     this._log = getLogger("InternalExtensionContextImpl", this);
-
-    this.commands = new CommandsRegistry(this._extensionManager, extensionMetadata.name,
-                                         extensionMetadata.contributes.commands);
+    this.proxyFactory = new ProxyFactoryImpl(this);
+    this.commands = new CommandsRegistry(this, extensionMetadata.name, extensionMetadata.contributes.commands);
     this.window = new WindowProxy(this, commonExtensionState);
     this.internalWindow = this.window;
     this.logger = getLogger(extensionMetadata.name);

@@ -76,8 +76,15 @@ export interface Terminal {
    * Get the name of the Extraterm terminal integration cookie.
    */
   getExtratermCookieName(): string;
+
+  createTerminalBorderWidget(name: string): TerminalBorderWidget;
+
 }
 
+export interface TerminalBorderWidget {
+  getContainerElement(): HTMLElement;
+  close(): void;
+}
 
 export interface NumberInputOptions {
   /**
