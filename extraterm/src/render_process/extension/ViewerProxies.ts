@@ -70,6 +70,18 @@ export class TerminalOutputProxy extends ViewerProxy implements ExtensionApi.Ter
   isLive(): boolean {
     return this._terminalViewer.getEmulator() != null;
   }
+
+  find(needle: string): void {
+    this._terminalViewer.find(needle);
+  }
+
+  findNext(needle: string): void {
+    this._terminalViewer.findNext(needle);
+  }
+
+  findPrevious(needle: string): void {
+    this._terminalViewer.findPrevious(needle);
+  }
 }
 
 

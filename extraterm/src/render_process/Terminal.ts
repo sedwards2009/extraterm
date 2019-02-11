@@ -48,7 +48,6 @@ import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { FindPanel, TempFindPanelViewer_FIXME } from "./FindPanel";
 
 const log = LogDecorator;
 
@@ -797,10 +796,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._terminalCanvas.resetFontSize();
   }
 
-  commandFind(): void {
-    this._openFindPanel();
-  }
-
   /**
    * Handle when the embedded term.js enters start of application mode.
    * 
@@ -1308,44 +1303,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     });
   }
 
-  private _appendElementToBorder(element: HTMLElement, borderSide: BorderSide): void {
+  appendElementToBorder(element: HTMLElement, borderSide: BorderSide): void {
     element.slot = borderSide;
     this._containerElement.appendChild(element);
   }
 
-  private _removeElementFromBorder(element: HTMLElement): void {
+  removeElementFromBorder(element: HTMLElement): void {
     this._containerElement.removeChild(element);
   }
-
-  private _openFindPanel(): void {
-    if (this._findPanel == null) {
-      this._findPanel = <FindPanel> document.createElement(FindPanel.TAG_NAME);
-
-//----    
-      const fakeTerminal = {
-        getViewers: (): TempFindPanelViewer_FIXME[] => {
-          const result: TempFindPanelViewer_FIXME[] = [];
-          for (const v of this.getViewerElements()) {
-            if (v instanceof TerminalViewer) {
-              result.push(v);
-            }
-          }
-          return result;
-        }
-      };
-//----    
-
-      this._findPanel.setTerminal(fakeTerminal);
-      this._findPanel.addEventListener("close", () => {
-        this._removeElementFromBorder(this._findPanel);
-        this._findPanel = null;
-      });
-
-      this._appendElementToBorder(this._findPanel, "south");
-    }
-    this._findPanel.focus();
-  }
-
 }
 
 // interface ApplicationModeHandler {

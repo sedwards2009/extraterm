@@ -77,8 +77,7 @@ export interface Terminal {
    */
   getExtratermCookieName(): string;
 
-  createTerminalBorderWidget(name: string): TerminalBorderWidget;
-
+  openTerminalBorderWidget(name: string): any;
 }
 
 export interface TerminalBorderWidget {
@@ -162,6 +161,9 @@ export interface TerminalOutputViewer extends ViewerBase {
    * @return true if this output viewer is connected to a live PTY and emulator.
    */
   isLive(): boolean;
+  find(needle: string): void;
+  findNext(needle: string): void;
+  findPrevious(needle: string): void;
 }
 
 
@@ -242,6 +244,10 @@ export interface Commands {
   getCommands(): string[];
 }
 
+export interface TerminalBorderWidgetFactory {
+  (terminal: Terminal, widget: TerminalBorderWidget): any;
+}
+
 export interface Window {
   activeTerminal: Terminal;
   activeViewer: Viewer;
@@ -254,6 +260,8 @@ export interface Window {
 
   extensionSessionEditorBaseConstructor: ExtensionSessionEditorBaseConstructor;
   registerSessionEditor(type: string, sessionEditorClass: ExtensionSessionEditorBaseConstructor): void;
+
+  registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void;
 }
 
 

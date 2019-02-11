@@ -5,26 +5,29 @@
  */
 import * as ExtensionApi from 'extraterm-extension-api';
 
-import {DisposableItemList} from '../../utils/DisposableUtils';
-import {EtTerminal, EXTRATERM_COOKIE_ENV} from '../Terminal';
-import {ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory} from './InternalTypes';
-import {Logger, getLogger} from "extraterm-logging";
+import { DisposableItemList } from '../../utils/DisposableUtils';
+import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
+import { InternalExtensionContext, InternalWindow } from './InternalTypes';
+import { Logger, getLogger } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
 import { EtViewerTab } from '../ViewerTab';
 import { CommonExtensionWindowState } from './CommonExtensionState';
+import { WidgetProxy } from './WidgetProxy';
+import { ExtensionTerminalBorderContribution } from '../../ExtensionMetadata';
 
 export class WindowProxy implements InternalWindow {
 
   private _log: Logger = null;
   private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
+  private _terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _commonExtensionState: CommonExtensionWindowState) {
     this._log = getLogger("WorkspaceProxy", this);
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
-    
+    this._terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
     this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;    
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
@@ -67,6 +70,23 @@ export class WindowProxy implements InternalWindow {
   getSessionEditorTagForType(sessionType: string): string {
     return this._windowSessionEditorRegistry.getSessionEditorTagForType(sessionType);
   }
+
+  registerTerminalBorderWidget(name: string, factory: ExtensionApi.TerminalBorderWidgetFactory): void {
+    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidget;
+    for (const data of borderWidgetMeta) {
+      if (data.name === name) {
+        this._terminalBorderWidgetFactoryMap.set(name, factory);
+      }
+    }
+
+    this._internalExtensionContext.logger.warn(
+      `Unknown terminal border widget '${name}' given to registerTerminalBorderWidget().`);
+  }  
+
+  getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory {
+    return this._terminalBorderWidgetFactoryMap.get(name);
+  }
+
 }
 
 
@@ -109,6 +129,8 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   
   viewerType: 'terminal-output';
 
+  private _terminalBorderWidgets = new Map<string, {proxyWidget: WidgetProxy, extensionWidget: unknown}>();
+
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
   }
 
@@ -132,7 +154,55 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     return EXTRATERM_COOKIE_ENV;
   }
 
-  createTerminalBorderWidget(name: string): ExtensionApi.TerminalBorderWidget {
+  openTerminalBorderWidget(name: string): any {
+    if (this._terminalBorderWidgets.has(name)) {
+      const { proxyWidget, extensionWidget } = this._terminalBorderWidgets.get(name);
+      const data = this._findTerminalBorderWidgetMetadata(name);
+      this._terminal.appendElementToBorder(proxyWidget, data.border);
+      return extensionWidget;
+    }
+
+    const factory = this._internalExtensionContext.internalWindow.getTerminalBorderWidgetFactory(name);
+    if (factory == null) {
+      this._internalExtensionContext.logger.warn(
+        `Unknown terminal border widget '${name}' given to createTerminalBorderWidget().`);  
+      return null;
+    }
+
+    const data = this._findTerminalBorderWidgetMetadata(name);
+    const proxyWidget = <WidgetProxy> document.createElement(WidgetProxy.TAG_NAME);
+    proxyWidget._setExtensionContext(this._internalExtensionContext);
+    proxyWidget._setExtensionCss(data.css);
+
+    this._terminal.appendElementToBorder(proxyWidget, data.border);
+    // FIXME resource tracking.
+
+    const extensionWidget = new TerminalBorderWidgetImpl(proxyWidget, () => {
+      this._terminal.removeElementFromBorder(proxyWidget);
+    });
+    return factory(this, extensionWidget);
+  }
+
+  private _findTerminalBorderWidgetMetadata(name: string): ExtensionTerminalBorderContribution {
+    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidget;
+    for (const data of borderWidgetMeta) {
+      if (data.name === name) {
+        return data;
+      }
+    }
     return null;
+  }
+}
+
+class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget {
+  constructor(private _widgetProxy: WidgetProxy, private _close: () => void) {
+  }
+
+  getContainerElement(): HTMLElement {
+    return this._widgetProxy.getContainerElement();
+  }
+
+  close(): void {
+    this._close();
   }
 }

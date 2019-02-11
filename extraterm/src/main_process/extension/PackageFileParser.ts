@@ -192,6 +192,7 @@ class PackageParser {
       "sessionBackends",
       "syntaxThemes",
       "syntaxThemeProviders",
+      "terminalBorderWidget",
       "terminalThemes",
       "terminalThemeProviders"
     ];

@@ -1,0 +1,40 @@
+{
+  "name": "find",
+  "description": "Find in text",
+  "version": "1.0.0",
+  "main": "dist/FindExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "extraterm-trim-between-tags": "1.0.0",
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "3.1.6"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "find:find",
+        "title": "Find",
+        "category": "terminal",
+        "icon": "fas fa-search",
+        "when": "terminalFocus",
+        "contextMenu": true
+      }
+    ],
+
+    "terminalBorderWidget": [
+      {
+        "name": "find",
+        "css": {
+          "fontAwesome": true
+        }
+      }
+    ]
+  }
+}

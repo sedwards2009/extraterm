@@ -85,6 +85,7 @@ export interface ExtensionUiUtils {
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
+  getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
