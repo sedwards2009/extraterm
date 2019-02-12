@@ -129,7 +129,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   
   viewerType: 'terminal-output';
 
-  private _terminalBorderWidgets = new Map<string, {proxyWidget: WidgetProxy, extensionWidget: unknown}>();
+  private _terminalBorderWidgets = new Map<string, {htmlWidgetProxy: WidgetProxy, factoryResult: unknown}>();
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
   }
@@ -156,10 +156,10 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 
   openTerminalBorderWidget(name: string): any {
     if (this._terminalBorderWidgets.has(name)) {
-      const { proxyWidget, extensionWidget } = this._terminalBorderWidgets.get(name);
+      const { htmlWidgetProxy, factoryResult } = this._terminalBorderWidgets.get(name);
       const data = this._findTerminalBorderWidgetMetadata(name);
-      this._terminal.appendElementToBorder(proxyWidget, data.border);
-      return extensionWidget;
+      this._terminal.appendElementToBorder(htmlWidgetProxy, data.border);
+      return factoryResult;
     }
 
     const factory = this._internalExtensionContext.internalWindow.getTerminalBorderWidgetFactory(name);
@@ -170,17 +170,18 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     }
 
     const data = this._findTerminalBorderWidgetMetadata(name);
-    const proxyWidget = <WidgetProxy> document.createElement(WidgetProxy.TAG_NAME);
-    proxyWidget._setExtensionContext(this._internalExtensionContext);
-    proxyWidget._setExtensionCss(data.css);
+    const htmlWidgetProxy = <WidgetProxy> document.createElement(WidgetProxy.TAG_NAME);
+    htmlWidgetProxy._setExtensionContext(this._internalExtensionContext);
+    htmlWidgetProxy._setExtensionCss(data.css);
 
-    this._terminal.appendElementToBorder(proxyWidget, data.border);
-    // FIXME resource tracking.
-
-    const extensionWidget = new TerminalBorderWidgetImpl(proxyWidget, () => {
-      this._terminal.removeElementFromBorder(proxyWidget);
+    this._terminal.appendElementToBorder(htmlWidgetProxy, data.border);
+    const extensionWidget = new TerminalBorderWidgetImpl(htmlWidgetProxy, () => {
+      this._terminal.removeElementFromBorder(htmlWidgetProxy);
+      this._terminal.focus();
     });
-    return factory(this, extensionWidget);
+    const factoryResult = factory(this, extensionWidget);
+    this._terminalBorderWidgets.set(name, { htmlWidgetProxy, factoryResult });
+    return factoryResult;
   }
 
   private _findTerminalBorderWidgetMetadata(name: string): ExtensionTerminalBorderContribution {
