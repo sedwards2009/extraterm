@@ -149,7 +149,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _dialogStack: HTMLElement[] = [];
 
   private _copyToClipboardLater: DebouncedDoLater = null;
-  private _findPanel: FindPanel = null;
 
   static registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
