@@ -1,6 +1,7 @@
 /**
  * Copyright (c) 2012-2015, Christopher Jeffrey (MIT License)
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 
 import * as path from 'path';
@@ -56,7 +57,7 @@ export abstract class Terminal implements ITerminal {
   }
 
   /** See net.Socket.end */
-  public end(data: string): void{
+  public end(data: string): void {
     this._socket.end(data);
   }
 
@@ -125,19 +126,6 @@ export abstract class Terminal implements ITerminal {
   public abstract get process(): string;
   public abstract get master(): Socket;
   public abstract get slave(): Socket;
-
-  // TODO: Should this be in the API?
-  public redraw(): void {
-    let cols = this._cols;
-    let rows = this._rows;
-
-    // We could just send SIGWINCH, but most programs will  ignore it if the
-    // size hasn't actually changed.
-
-    this.resize(cols + 1, rows + 1);
-
-    setTimeout(() => this.resize(cols, rows), 30);
-  }
 
   protected _close(): void {
     this._socket.writable = false;

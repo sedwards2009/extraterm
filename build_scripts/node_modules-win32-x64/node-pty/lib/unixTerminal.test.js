@@ -1,6 +1,7 @@
 "use strict";
 /**
  * Copyright (c) 2017, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var unixTerminal_1 = require("./unixTerminal");
@@ -38,7 +39,7 @@ if (process.platform !== 'win32') {
             });
             it('should return a Buffer when encoding is null', function (done) {
                 var term = new unixTerminal_1.UnixTerminal('/bin/bash', ['-c', "cat \"" + FIXTURES_PATH + "\""], {
-                    encoding: null,
+                    encoding: null
                 });
                 term.on('data', function (data) {
                     assert.equal(typeof data, 'object');

@@ -1,11 +1,11 @@
 /**
  * Copyright (c) 2013-2015, Christopher Jeffrey, Peter Sunde (MIT License)
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 
 #include <nan.h>
 #include <Shlwapi.h> // PathCombine
-#include <winpty.h>
 
 #include "path_util.h"
 

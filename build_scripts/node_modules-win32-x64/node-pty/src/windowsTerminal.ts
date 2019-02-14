@@ -1,11 +1,10 @@
 /**
  * Copyright (c) 2012-2015, Christopher Jeffrey, Peter Sunde (MIT License)
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 
-import * as path from 'path';
 import { Socket } from 'net';
-import { inherits } from 'util';
 import { Terminal, DEFAULT_COLS, DEFAULT_ROWS } from './terminal';
 import { WindowsPtyAgent } from './windowsPtyAgent';
 import { IPtyForkOptions, IPtyOpenOptions } from './interfaces';
@@ -47,7 +46,7 @@ export class WindowsTerminal extends Terminal {
     this._deferreds = [];
 
     // Create new termal.
-    this._agent = new WindowsPtyAgent(file, args, parsedEnv, cwd, cols, rows, false);
+    this._agent = new WindowsPtyAgent(file, args, parsedEnv, cwd, cols, rows, false, opt.experimentalUseConpty);
     this._socket = this._agent.outSocket;
 
     // Not available until `ready` event emitted.
@@ -61,7 +60,7 @@ export class WindowsTerminal extends Terminal {
 
       // These events needs to be forwarded.
       ['connect', 'data', 'end', 'timeout', 'drain'].forEach(event => {
-        this._socket.on(event, data => {
+        this._socket.on(event, () => {
 
           // Wait until the first data event is fired then we can run deferreds.
           if (!this._isReady && event === 'data') {
@@ -107,7 +106,7 @@ export class WindowsTerminal extends Terminal {
 
       // Cleanup after the socket is closed.
       this._socket.on('close', () => {
-        this.emit('exit', this._agent.getExitCode());
+        this.emit('exit', this._agent.exitCode);
         this._close();
       });
 
