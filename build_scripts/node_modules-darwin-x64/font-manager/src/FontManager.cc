@@ -79,6 +79,7 @@ struct AsyncRequest {
 void asyncCallback(uv_work_t *work) {
   Nan::HandleScope scope;
   AsyncRequest *req = (AsyncRequest *) work->data;
+  Nan::AsyncResource async("asyncCallback");
   Local<Value> info[1];
 
   if (req->results) {
@@ -89,7 +90,7 @@ void asyncCallback(uv_work_t *work) {
     info[0] = Nan::Null();
   }
 
-  req->callback->Call(1, info);
+  req->callback->Call(1, info, &async);
   delete req;
 }
 

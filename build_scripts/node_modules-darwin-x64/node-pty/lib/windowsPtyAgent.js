@@ -2,31 +2,59 @@
 /**
  * Copyright (c) 2012-2015, Christopher Jeffrey, Peter Sunde (MIT License)
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+var os = require("os");
 var path = require("path");
 var net_1 = require("net");
-var pty = require(path.join('..', 'build', 'Release', 'pty.node'));
+var utils_1 = require("./utils");
+var child_process_1 = require("child_process");
+var conptyNative;
+var winptyNative;
 /**
- * Agent. Internal class.
- *
- * Everytime a new pseudo terminal is created it is contained
- * within agent.exe. When this process is started there are two
- * available named pipes (control and data socket).
+ * The amount of time to wait for additional data after the conpty shell process has exited before
+ * shutting down the socket. The timer will be reset if a new data event comes in after the timer
+ * has started.
+ */
+var FLUSH_DATA_INTERVAL = 20;
+/**
+ * This agent sits between the WindowsTerminal class and provides a common interface for both conpty
+ * and winpty.
  */
 var WindowsPtyAgent = /** @class */ (function () {
-    function WindowsPtyAgent(file, args, env, cwd, cols, rows, debug) {
+    function WindowsPtyAgent(file, args, env, cwd, cols, rows, debug, _useConpty) {
         var _this = this;
+        this._useConpty = _useConpty;
+        if (this._useConpty === undefined || this._useConpty === true) {
+            this._useConpty = this._getWindowsBuildNumber() >= 18309;
+        }
+        if (this._useConpty) {
+            if (!conptyNative) {
+                conptyNative = utils_1.loadNative('conpty');
+            }
+        }
+        else {
+            if (!winptyNative) {
+                winptyNative = utils_1.loadNative('pty');
+            }
+        }
+        this._ptyNative = this._useConpty ? conptyNative : winptyNative;
         // Sanitize input variable.
         cwd = path.resolve(cwd);
         // Compose command line
         var commandLine = argsToCommandLine(file, args);
         // Open pty session.
-        var term = pty.startProcess(file, commandLine, env, cwd, cols, rows, debug);
-        // Terminal pid.
-        this._pid = term.pid;
-        this._innerPid = term.innerPid;
-        this._innerPidHandle = term.innerPidHandle;
+        var term;
+        if (this._useConpty) {
+            term = this._ptyNative.startProcess(file, cols, rows, debug, this._generatePipeName());
+        }
+        else {
+            term = this._ptyNative.startProcess(file, commandLine, env, cwd, cols, rows, debug);
+            this._pid = term.pid;
+            this._innerPid = term.innerPid;
+            this._innerPidHandle = term.innerPidHandle;
+        }
         // Not available on windows.
         this._fd = term.fd;
         // Generated incremental number that has no real purpose besides  using it
@@ -44,6 +72,10 @@ var WindowsPtyAgent = /** @class */ (function () {
         this._inSocket.setEncoding('utf8');
         this._inSocket.connect(term.conin);
         // TODO: Wait for ready event?
+        if (this._useConpty) {
+            var connect = this._ptyNative.connect(this._pty, commandLine, cwd, env, this._$onProcessExit.bind(this));
+            this._innerPid = connect.pid;
+        }
     }
     Object.defineProperty(WindowsPtyAgent.prototype, "inSocket", {
         get: function () { return this._inSocket; },
@@ -71,32 +103,113 @@ var WindowsPtyAgent = /** @class */ (function () {
         configurable: true
     });
     WindowsPtyAgent.prototype.resize = function (cols, rows) {
-        pty.resize(this._pid, cols, rows);
+        if (this._useConpty) {
+            if (this._exitCode !== undefined) {
+                throw new Error('Cannot resize a pty that has already exited');
+            }
+            this._ptyNative.resize(this._pty, cols, rows);
+            return;
+        }
+        this._ptyNative.resize(this._pid, cols, rows);
     };
     WindowsPtyAgent.prototype.kill = function () {
+        var _this = this;
         this._inSocket.readable = false;
         this._inSocket.writable = false;
         this._outSocket.readable = false;
         this._outSocket.writable = false;
-        var processList = pty.getProcessList(this._pid);
         // Tell the agent to kill the pty, this releases handles to the process
-        pty.kill(this._pid, this._innerPidHandle);
-        // Since pty.kill will kill most processes by itself and process IDs can be
-        // reused as soon as all handles to them are dropped, we want to immediately
-        // kill the entire console process list. If we do not force kill all
-        // processes here, node servers in particular seem to become detached and
-        // remain running (see Microsoft/vscode#26807).
-        processList.forEach(function (pid) {
-            try {
-                process.kill(pid);
-            }
-            catch (e) {
-                // Ignore if process cannot be found (kill ESRCH error)
-            }
+        if (this._useConpty) {
+            this._getConsoleProcessList().then(function (consoleProcessList) {
+                consoleProcessList.forEach(function (pid) {
+                    try {
+                        process.kill(pid);
+                    }
+                    catch (e) {
+                        // Ignore if process cannot be found (kill ESRCH error)
+                    }
+                });
+                _this._ptyNative.kill(_this._pty);
+            });
+        }
+        else {
+            this._ptyNative.kill(this._pid, this._innerPidHandle);
+            // Since pty.kill closes the handle it will kill most processes by itself
+            // and process IDs can be reused as soon as all handles to them are
+            // dropped, we want to immediately kill the entire console process list.
+            // If we do not force kill all processes here, node servers in particular
+            // seem to become detached and remain running (see
+            // Microsoft/vscode#26807).
+            var processList = this._ptyNative.getProcessList(this._pid);
+            processList.forEach(function (pid) {
+                try {
+                    process.kill(pid);
+                }
+                catch (e) {
+                    // Ignore if process cannot be found (kill ESRCH error)
+                }
+            });
+        }
+    };
+    WindowsPtyAgent.prototype._getConsoleProcessList = function () {
+        var _this = this;
+        return new Promise(function (resolve) {
+            var agent = child_process_1.fork(path.join(__dirname, 'conpty_console_list_agent'), [_this._innerPid.toString()]);
+            agent.on('message', function (message) {
+                clearTimeout(timeout);
+                resolve(message.consoleProcessList);
+            });
+            var timeout = setTimeout(function () {
+                // Something went wrong, just send back the shell PID
+                console.error('Could not fetch console process list');
+                agent.kill();
+                resolve([_this._innerPid]);
+            }, 5000);
         });
     };
-    WindowsPtyAgent.prototype.getExitCode = function () {
-        return pty.getExitCode(this._innerPidHandle);
+    Object.defineProperty(WindowsPtyAgent.prototype, "exitCode", {
+        get: function () {
+            if (this._useConpty) {
+                return this._exitCode;
+            }
+            return this._ptyNative.getExitCode(this._innerPidHandle);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    WindowsPtyAgent.prototype._getWindowsBuildNumber = function () {
+        var osVersion = (/(\d+)\.(\d+)\.(\d+)/g).exec(os.release());
+        var buildNumber = 0;
+        if (osVersion && osVersion.length === 4) {
+            buildNumber = parseInt(osVersion[3]);
+        }
+        return buildNumber;
+    };
+    WindowsPtyAgent.prototype._generatePipeName = function () {
+        return "conpty-" + Math.random() * 10000000;
+    };
+    /**
+     * Triggered from the native side when a contpy process exits.
+     */
+    WindowsPtyAgent.prototype._$onProcessExit = function (exitCode) {
+        var _this = this;
+        this._exitCode = exitCode;
+        this._flushDataAndCleanUp();
+        this._outSocket.on('data', function () { return _this._flushDataAndCleanUp(); });
+    };
+    WindowsPtyAgent.prototype._flushDataAndCleanUp = function () {
+        var _this = this;
+        if (this._closeTimeout) {
+            clearTimeout(this._closeTimeout);
+        }
+        this._closeTimeout = setTimeout(function () { return _this._cleanUpProcess(); }, FLUSH_DATA_INTERVAL);
+    };
+    WindowsPtyAgent.prototype._cleanUpProcess = function () {
+        this._inSocket.readable = false;
+        this._inSocket.writable = false;
+        this._outSocket.readable = false;
+        this._outSocket.writable = false;
+        this._outSocket.destroy();
     };
     return WindowsPtyAgent;
 }());
@@ -119,9 +232,14 @@ function argsToCommandLine(file, args) {
             result += ' ';
         }
         var arg = argv[argIndex];
-        var quote = arg.indexOf(' ') !== -1 ||
-            arg.indexOf('\t') !== -1 ||
-            arg === '';
+        // if it is empty or it contains whitespace and is not already quoted
+        var hasLopsidedEnclosingQuote = xOr((arg[0] !== '"'), (arg[arg.length - 1] !== '"'));
+        var hasNoEnclosingQuotes = ((arg[0] !== '"') && (arg[arg.length - 1] !== '"'));
+        var quote = arg === '' ||
+            (arg.indexOf(' ') !== -1 ||
+                arg.indexOf('\t') !== -1) &&
+                ((arg.length > 1) &&
+                    (hasLopsidedEnclosingQuote || hasNoEnclosingQuotes));
         if (quote) {
             result += '\"';
         }
@@ -162,5 +280,8 @@ function repeatText(text, count) {
         result += text;
     }
     return result;
+}
+function xOr(arg1, arg2) {
+    return ((arg1 && !arg2) || (!arg1 && arg2));
 }
 //# sourceMappingURL=windowsPtyAgent.js.map
