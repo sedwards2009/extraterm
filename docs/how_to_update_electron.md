@@ -12,10 +12,10 @@ Updating Electron itself
 
 * Install the version of node which matches the version used by the version of Electron you are moving to. `node -v` should show the new version number. Note that you may have to reinstall any globally installed node based utilities such as `yarn` and `wsrun`.
 * Bump the version of Electron in `package.json`. Consider bumping the version of `electron-rebuild` and `electron-packager` too.
-* Update the version specified for electron in the "electron-rebuild" script in `package.json`.
+* Update the version specified for electron in the "electron-rebuild" script definition inside the root `package.json`.
 * Delete the `node_modules` directory.
 * `yarn install`
-* (Linux, OSX) `yarn run electron-rebuild` -- This rebuilds any native module against the new Electron version and makes it ready for local development. Note the Electron version i nthe `-v` option!
+* (Linux, OSX) `yarn run electron-rebuild` -- This rebuilds any native module against the new Electron version and makes it ready for local development. If this fails then you may have to update any references to `node-abi` in the `package.json` files to a later version to force in an up to date version.
 * (Windows) `build_scripts\rebuild_mods_windows.bat` -- This is the same as above, but for Windows.
 * Commit the changed `package.json` to git.
 
