@@ -16,7 +16,7 @@ Updating Electron itself
 * Delete the `node_modules` directory.
 * `yarn install`
 * (Linux, OSX) `yarn run electron-rebuild` -- This rebuilds any native module against the new Electron version and makes it ready for local development. If this fails then you may have to update any references to `node-abi` in the `package.json` files to a later version to force in an up to date version.
-* (Windows) `build_scripts\rebuild_mods_windows.bat` -- This is the same as above, but for Windows.
+* (Windows) `build_scripts\rebuild_mods_windows.bat` -- This is the same as above, but for Windows. You will have to update the Electron version inside this `.bat` file.
 * Commit the changed `package.json` to git.
 
 
@@ -43,7 +43,7 @@ Outside the Extraterm source tree, find some space and do:
 * `git checkout v4.9.0` -- this should match the desired version of node-sass
 * `git submodule update --init --recursive`
 * `npm install`
-* `./node_modules/node-gyp/bin/node-gyp.js rebuild --target=4.0.4 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- The `--target` option should match the new Electron version!
+* `node ./node_modules/node-gyp/bin/node-gyp.js rebuild --target=4.0.4 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- The `--target` option should match the new Electron version!
 
 Now that it has been built it needs to be moved to the right location in the source tree.
 
