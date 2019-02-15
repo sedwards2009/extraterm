@@ -549,6 +549,7 @@ export interface TerminalTheme {
   cursorForegroundColor?: string;
   cursorBackgroundColor?: string;
   selectionBackgroundColor?: string;
+  findHighlightBackgroundColor?: string;
 
   [colorIndex: number]: string;
   // selectionunfocused-background-color: #404040;

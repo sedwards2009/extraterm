@@ -36,6 +36,7 @@ import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig } 
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 import { SyntaxTheme, TerminalTheme } from 'extraterm-extension-api';
+import { Color as UtilColor } from '../render_process/gui/Util';
 
 const THEME_CONFIG = "theme.json";
 
@@ -588,6 +589,13 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _getTerminalThemeVariablesFromInfo(terminalThemeInfo: ThemeInfo): GlobalVariableMap {
     const contents = this._getTerminalThemeContentsFromInfo(terminalThemeInfo);
     const completeTheme = this._mergeTerminalThemeDefaults(contents, DEFAULT_TERMINAL_THEME);
+    
+    if (completeTheme.findHighlightBackgroundColor == null) {
+      // Mix up a find highlight color.
+      const backgroundColor = new UtilColor(completeTheme.backgroundColor);
+      const selectionBackgroundColor = new UtilColor(completeTheme.selectionBackgroundColor);
+      completeTheme.findHighlightBackgroundColor = backgroundColor.mix(selectionBackgroundColor).toHexString();
+    }
     return this._convertTerminalThemeToVariables(completeTheme);
   }
 
@@ -611,7 +619,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
       "backgroundColor",
       "cursorForegroundColor",
       "cursorBackgroundColor",
-      "selectionBackgroundColor"];
+      "selectionBackgroundColor",
+      "findHighlightBackgroundColor"];
     for (let i=0; i<256; i++) {
       keys.push("" + i);
     }
@@ -632,7 +641,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
     result.set("terminal-cursor-foreground-color", {hex: terminalTheme.cursorForegroundColor});
     result.set("terminal-cursor-background-color", {hex: terminalTheme.cursorBackgroundColor});
     result.set("terminal-selection-background-color", {hex: terminalTheme.selectionBackgroundColor});
-  
+    result.set("terminal-find-highlight-background-color", {hex: terminalTheme.findHighlightBackgroundColor});
+
     for (let i = 0; i < 256; i++) {
       result.set("terminal-color-" + i, {hex: terminalTheme[i]});
     }

@@ -189,6 +189,16 @@ export class Color {
   opacity(newOpacity: number): Color {
     return new Color(this._red, this._green, this._blue, newOpacity);
   }
+
+  mix(otherColor: Color, fraction=0.5): Color {
+    const rightFraction = fraction;
+
+    const red = Math.min(255, Math.round(fraction * this._red + rightFraction * otherColor._red));
+    const green = Math.min(255, Math.round(fraction * this._green + rightFraction * otherColor._green));
+    const blue = Math.min(255, Math.round(fraction * this._blue + rightFraction * otherColor._blue));
+    const opacity = Math.min(255, Math.round(fraction* this._opacity + rightFraction * otherColor._opacity));
+    return new Color(red, green, blue, opacity);
+  }
 }
 
 /**
