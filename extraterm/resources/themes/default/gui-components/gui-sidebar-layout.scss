@@ -20,6 +20,10 @@
     margin: $panel-body-padding;
     display: block;
   }
+
+  &.empty > * {
+    margin: 0;
+  }
 }
 
 #ID_NORTH_CONTAINER {

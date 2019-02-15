@@ -2,6 +2,7 @@
 /**
  * Copyright (c) 2012-2015, Christopher Jeffrey (MIT License)
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 var events_1 = require("events");
@@ -89,16 +90,6 @@ var Terminal = /** @class */ (function () {
     };
     Terminal.prototype.once = function (eventName, listener) {
         this._socket.once(eventName, listener);
-    };
-    // TODO: Should this be in the API?
-    Terminal.prototype.redraw = function () {
-        var _this = this;
-        var cols = this._cols;
-        var rows = this._rows;
-        // We could just send SIGWINCH, but most programs will  ignore it if the
-        // size hasn't actually changed.
-        this.resize(cols + 1, rows + 1);
-        setTimeout(function () { return _this.resize(cols, rows); }, 30);
     };
     Terminal.prototype._close = function () {
         this._socket.writable = false;

@@ -10,7 +10,7 @@ const packager = require('electron-packager');
 const getRepoInfo = require('git-repo-info');
 
 const log = console.log.bind(console);
-const MODULE_VERSON = 53; // This version number also appears in thememanager.ts
+const MODULE_VERSON = 69; // This version number also appears in thememanager.ts
 
 function main() {
   "use strict";

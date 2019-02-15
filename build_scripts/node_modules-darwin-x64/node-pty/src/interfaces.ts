@@ -1,10 +1,13 @@
 /**
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 
 import * as net from 'net';
 
-export type ProcessEnv = {[key: string]: string};
+export interface IProcessEnv {
+  [key: string]: string;
+}
 
 export interface ITerminal {
   /**
@@ -109,10 +112,11 @@ export interface IPtyForkOptions {
   cols?: number;
   rows?: number;
   cwd?: string;
-  env?: ProcessEnv;
+  env?: IProcessEnv;
   uid?: number;
   gid?: number;
   encoding?: string;
+  experimentalUseConpty?: boolean | undefined;
 }
 
 export interface IPtyOpenOptions {

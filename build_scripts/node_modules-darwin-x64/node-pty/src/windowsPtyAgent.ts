@@ -1,31 +1,42 @@
 /**
  * Copyright (c) 2012-2015, Christopher Jeffrey, Peter Sunde (MIT License)
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 
+import * as os from 'os';
 import * as path from 'path';
 import { Socket } from 'net';
 import { ArgvOrCommandLine } from './types';
+import { loadNative } from './utils';
+import { fork } from 'child_process';
 
-const pty = require(path.join('..', 'build', 'Release', 'pty.node'));
+let conptyNative: IConptyNative;
+let winptyNative: IWinptyNative;
 
 /**
- * Agent. Internal class.
- *
- * Everytime a new pseudo terminal is created it is contained
- * within agent.exe. When this process is started there are two
- * available named pipes (control and data socket).
+ * The amount of time to wait for additional data after the conpty shell process has exited before
+ * shutting down the socket. The timer will be reset if a new data event comes in after the timer
+ * has started.
  */
+const FLUSH_DATA_INTERVAL = 20;
 
+/**
+ * This agent sits between the WindowsTerminal class and provides a common interface for both conpty
+ * and winpty.
+ */
 export class WindowsPtyAgent {
   private _inSocket: Socket;
   private _outSocket: Socket;
   private _pid: number;
   private _innerPid: number;
   private _innerPidHandle: number;
+  private _closeTimeout: NodeJS.Timer;
+  private _exitCode: number | undefined;
 
   private _fd: any;
   private _pty: number;
+  private _ptyNative: IConptyNative | IWinptyNative;
 
   public get inSocket(): Socket { return this._inSocket; }
   public get outSocket(): Socket { return this._outSocket; }
@@ -40,8 +51,23 @@ export class WindowsPtyAgent {
     cwd: string,
     cols: number,
     rows: number,
-    debug: boolean
+    debug: boolean,
+    private _useConpty: boolean | undefined
   ) {
+    if (this._useConpty === undefined || this._useConpty === true) {
+      this._useConpty = this._getWindowsBuildNumber() >= 18309;
+    }
+    if (this._useConpty) {
+      if (!conptyNative) {
+        conptyNative = loadNative('conpty');
+      }
+    } else {
+      if (!winptyNative) {
+        winptyNative = loadNative('pty');
+      }
+    }
+    this._ptyNative = this._useConpty ? conptyNative : winptyNative;
+
     // Sanitize input variable.
     cwd = path.resolve(cwd);
 
@@ -49,12 +75,15 @@ export class WindowsPtyAgent {
     const commandLine = argsToCommandLine(file, args);
 
     // Open pty session.
-    const term = pty.startProcess(file, commandLine, env, cwd, cols, rows, debug);
-
-    // Terminal pid.
-    this._pid = term.pid;
-    this._innerPid = term.innerPid;
-    this._innerPidHandle = term.innerPidHandle;
+    let term: IConptyProcess | IWinptyProcess;
+    if (this._useConpty) {
+      term = (this._ptyNative as IConptyNative).startProcess(file, cols, rows, debug, this._generatePipeName());
+    } else {
+      term = (this._ptyNative as IWinptyNative).startProcess(file, commandLine, env, cwd, cols, rows, debug);
+      this._pid = (term as IWinptyProcess).pid;
+      this._innerPid = (term as IWinptyProcess).innerPid;
+      this._innerPidHandle = (term as IWinptyProcess).innerPidHandle;
+    }
 
     // Not available on windows.
     this._fd = term.fd;
@@ -77,10 +106,22 @@ export class WindowsPtyAgent {
     this._inSocket.setEncoding('utf8');
     this._inSocket.connect(term.conin);
     // TODO: Wait for ready event?
+
+    if (this._useConpty) {
+      const connect = (this._ptyNative as IConptyNative).connect(this._pty, commandLine, cwd, env, this._$onProcessExit.bind(this));
+      this._innerPid = connect.pid;
+    }
   }
 
   public resize(cols: number, rows: number): void {
-    pty.resize(this._pid, cols, rows);
+    if (this._useConpty) {
+      if (this._exitCode !== undefined) {
+        throw new Error('Cannot resize a pty that has already exited');
+      }
+      this._ptyNative.resize(this._pty, cols, rows);
+      return;
+    }
+    this._ptyNative.resize(this._pid, cols, rows);
   }
 
   public kill(): void {
@@ -88,25 +129,95 @@ export class WindowsPtyAgent {
     this._inSocket.writable = false;
     this._outSocket.readable = false;
     this._outSocket.writable = false;
-    const processList: number[] = pty.getProcessList(this._pid);
     // Tell the agent to kill the pty, this releases handles to the process
-    pty.kill(this._pid, this._innerPidHandle);
-    // Since pty.kill will kill most processes by itself and process IDs can be
-    // reused as soon as all handles to them are dropped, we want to immediately
-    // kill the entire console process list. If we do not force kill all
-    // processes here, node servers in particular seem to become detached and
-    // remain running (see Microsoft/vscode#26807).
-    processList.forEach(pid => {
-      try {
-        process.kill(pid);
-      } catch (e) {
-        // Ignore if process cannot be found (kill ESRCH error)
-      }
+    if (this._useConpty) {
+      this._getConsoleProcessList().then(consoleProcessList => {
+        consoleProcessList.forEach((pid: number) => {
+          try {
+            process.kill(pid);
+          } catch (e) {
+            // Ignore if process cannot be found (kill ESRCH error)
+          }
+        });
+        (this._ptyNative as IConptyNative).kill(this._pty);
+      });
+    } else {
+      (this._ptyNative as IWinptyNative).kill(this._pid, this._innerPidHandle);
+      // Since pty.kill closes the handle it will kill most processes by itself
+      // and process IDs can be reused as soon as all handles to them are
+      // dropped, we want to immediately kill the entire console process list.
+      // If we do not force kill all processes here, node servers in particular
+      // seem to become detached and remain running (see
+      // Microsoft/vscode#26807).
+      const processList: number[] = (this._ptyNative as IWinptyNative).getProcessList(this._pid);
+      processList.forEach(pid => {
+        try {
+          process.kill(pid);
+        } catch (e) {
+          // Ignore if process cannot be found (kill ESRCH error)
+        }
+      });
+    }
+  }
+
+  private _getConsoleProcessList(): Promise<number[]> {
+    return new Promise<number[]>(resolve => {
+      const agent = fork(path.join(__dirname, 'conpty_console_list_agent'), [ this._innerPid.toString() ]);
+      agent.on('message', message => {
+        clearTimeout(timeout);
+        resolve(message.consoleProcessList);
+      });
+      const timeout = setTimeout(() => {
+        // Something went wrong, just send back the shell PID
+        console.error('Could not fetch console process list');
+        agent.kill();
+        resolve([ this._innerPid ]);
+      }, 5000);
     });
   }
 
-  public getExitCode(): number {
-    return pty.getExitCode(this._innerPidHandle);
+  public get exitCode(): number {
+    if (this._useConpty) {
+      return this._exitCode;
+    }
+    return (this._ptyNative as IWinptyNative).getExitCode(this._innerPidHandle);
+  }
+
+  private _getWindowsBuildNumber(): number {
+    const osVersion = (/(\d+)\.(\d+)\.(\d+)/g).exec(os.release());
+    let buildNumber: number = 0;
+    if (osVersion && osVersion.length === 4) {
+      buildNumber = parseInt(osVersion[3]);
+    }
+    return buildNumber;
+  }
+
+  private _generatePipeName(): string {
+    return `conpty-${Math.random() * 10000000}`;
+  }
+
+  /**
+   * Triggered from the native side when a contpy process exits.
+   */
+  private _$onProcessExit(exitCode: number): void {
+    this._exitCode = exitCode;
+    this._flushDataAndCleanUp();
+    this._outSocket.on('data', () => this._flushDataAndCleanUp());
+  }
+
+  private _flushDataAndCleanUp(): void {
+    if (this._closeTimeout) {
+      clearTimeout(this._closeTimeout);
+    }
+    this._closeTimeout = setTimeout(() => this._cleanUpProcess(), FLUSH_DATA_INTERVAL);
+  }
+
+  private _cleanUpProcess(): void {
+    this._inSocket.readable = false;
+    this._inSocket.writable = false;
+    this._outSocket.readable = false;
+    this._outSocket.writable = false;
+    this._outSocket.destroy();
   }
 }
 
@@ -128,10 +239,15 @@ export function argsToCommandLine(file: string, args: ArgvOrCommandLine): string
       result += ' ';
     }
     const arg = argv[argIndex];
+    // if it is empty or it contains whitespace and is not already quoted
+    const hasLopsidedEnclosingQuote = xOr((arg[0] !== '"'), (arg[arg.length - 1] !== '"'));
+    const hasNoEnclosingQuotes = ((arg[0] !== '"') && (arg[arg.length - 1] !== '"'));
     const quote =
-      arg.indexOf(' ') !== -1 ||
-      arg.indexOf('\t') !== -1 ||
-      arg === '';
+      arg === '' ||
+      (arg.indexOf(' ') !== -1 ||
+      arg.indexOf('\t') !== -1) &&
+      ((arg.length > 1) &&
+      (hasLopsidedEnclosingQuote || hasNoEnclosingQuotes));
     if (quote) {
       result += '\"';
     }
@@ -170,4 +286,8 @@ function repeatText(text: string, count: number): string {
     result += text;
   }
   return result;
+}
+
+function xOr(arg1: boolean, arg2: boolean): boolean {
+  return ((arg1 && !arg2) || (!arg1 && arg2));
 }

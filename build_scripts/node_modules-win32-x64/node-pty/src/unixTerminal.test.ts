@@ -1,5 +1,6 @@
 /**
  * Copyright (c) 2017, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 
 import { UnixTerminal } from './unixTerminal';
@@ -40,7 +41,7 @@ if (process.platform !== 'win32') {
       });
       it('should return a Buffer when encoding is null', (done) => {
         const term = new UnixTerminal('/bin/bash', [ '-c', `cat "${FIXTURES_PATH}"` ], {
-          encoding: null,
+          encoding: null
         });
         term.on('data', (data) => {
           assert.equal(typeof data, 'object');

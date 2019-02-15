@@ -2,11 +2,15 @@
 /**
  * Copyright (c) 2012-2015, Christopher Jeffrey, Peter Sunde (MIT License)
  * Copyright (c) 2016, Daniel Imms (MIT License).
+ * Copyright (c) 2018, Microsoft Corporation (MIT License).
  */
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
         extendStatics(d, b);
         function __() { this.constructor = d; }
@@ -42,7 +46,7 @@ var WindowsTerminal = /** @class */ (function (_super) {
         // Functions that need to run after `ready` event is emitted.
         _this._deferreds = [];
         // Create new termal.
-        _this._agent = new windowsPtyAgent_1.WindowsPtyAgent(file, args, parsedEnv, cwd, cols, rows, false);
+        _this._agent = new windowsPtyAgent_1.WindowsPtyAgent(file, args, parsedEnv, cwd, cols, rows, false, opt.experimentalUseConpty);
         _this._socket = _this._agent.outSocket;
         // Not available until `ready` event emitted.
         _this._pid = _this._agent.innerPid;
@@ -53,7 +57,7 @@ var WindowsTerminal = /** @class */ (function (_super) {
         _this._socket.on('ready_datapipe', function () {
             // These events needs to be forwarded.
             ['connect', 'data', 'end', 'timeout', 'drain'].forEach(function (event) {
-                _this._socket.on(event, function (data) {
+                _this._socket.on(event, function () {
                     // Wait until the first data event is fired then we can run deferreds.
                     if (!_this._isReady && event === 'data') {
                         // Terminal is now ready and we can avoid having to defer method
@@ -91,7 +95,7 @@ var WindowsTerminal = /** @class */ (function (_super) {
             });
             // Cleanup after the socket is closed.
             _this._socket.on('close', function () {
-                _this.emit('exit', _this._agent.getExitCode());
+                _this.emit('exit', _this._agent.exitCode);
                 _this._close();
             });
         });
