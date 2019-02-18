@@ -71,16 +71,24 @@ export class TerminalOutputProxy extends ViewerProxy implements ExtensionApi.Ter
     return this._terminalViewer.getEmulator() != null;
   }
 
-  find(needle: string): void {
-    this._terminalViewer.find(needle);
+  find(needle: string, options?: ExtensionApi.FindOptions): boolean {
+    return this._terminalViewer.find(needle, options);
   }
 
-  findNext(needle: string): void {
-    this._terminalViewer.findNext(needle);
+  findNext(needle: string): boolean {
+    return this._terminalViewer.findNext(needle);
   }
 
-  findPrevious(needle: string): void {
-    this._terminalViewer.findPrevious(needle);
+  findPrevious(needle: string): boolean {
+    return this._terminalViewer.findPrevious(needle);
+  }
+
+  hasSelection(): boolean {
+    return this._terminalViewer.hasSelection();
+  }
+
+  highlight(re: RegExp): void {
+    this._terminalViewer.highlight(re);
   }
 }
 

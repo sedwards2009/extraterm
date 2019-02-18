@@ -150,6 +150,16 @@ export interface FrameViewer extends ViewerBase {
   getContents(): Viewer;
 }
 
+export enum FindStartPosition {
+  CURSOR,
+  DOCUMENT_START,
+  DOCUMENT_END,
+}
+
+export interface FindOptions {
+    backwards?: boolean;
+    startPosition?: FindStartPosition;
+}
 
 export interface TerminalOutputViewer extends ViewerBase {
 
@@ -161,9 +171,11 @@ export interface TerminalOutputViewer extends ViewerBase {
    * @return true if this output viewer is connected to a live PTY and emulator.
    */
   isLive(): boolean;
-  find(needle: string): void;
-  findNext(needle: string): void;
-  findPrevious(needle: string): void;
+  find(needle: string, options?: FindOptions): boolean;
+  findNext(needle: string): boolean;
+  findPrevious(needle: string): boolean;
+  hasSelection(): boolean;
+  highlight(needle: RegExp): void;
 }
 
 

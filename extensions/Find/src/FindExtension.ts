@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition } from 'extraterm-extension-api';
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -35,13 +35,13 @@ class FindWidget {
       this._find();
     });
     this._ui.$on("findNext", () => {
-      this._findNext();
+      this._findBackwards();
     });
     this._ui.$on("findPrevious", () => {
-      this._findPrevious();
+      this._findForewards();
     });
     this._ui.$on("close", () => {
-      this._widget.close();
+      this._close();
     });
 
     const component = this._ui.$mount();
@@ -52,27 +52,89 @@ class FindWidget {
     this._ui.focus();
   }
 
+  private _close(): void {
+    const termViewers = this._getTerminalOutputViewer();
+    for (const viewer of termViewers) {
+      viewer.highlight(null);
+    }
+
+    this._widget.close();
+  }
+
   private _find(): void {
-    // FIXME
-    for (const viewer of this._terminal.getViewers()) {
-      if (viewer.viewerType === "terminal-output") {
-        viewer.find(this._ui.needle);
+    const termViewers = this._getTerminalOutputViewer();
+    for (const viewer of termViewers) {
+      viewer.highlight(new RegExp(this._ui.needle, "g"));
+    }
+
+    for (let i=termViewers.length-1; i> 0; i--) {
+      if (termViewers[i].find(this._ui.needle, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
+        break;
       }
     }
   }
 
-  private _findNext(): void {
+  private _getTerminalOutputViewer(): TerminalOutputViewer[] {
+    const termViewers: TerminalOutputViewer[] = [];
     for (const viewer of this._terminal.getViewers()) {
       if (viewer.viewerType === "terminal-output") {
-        viewer.findNext(this._ui.needle);
+        termViewers.push(viewer);
+      } else if (viewer.viewerType === "frame") {
+        const contents = viewer.getContents();
+        if (contents != null && contents.viewerType === "terminal-output") {
+          termViewers.push(contents);
+        }
+      }
+    }
+    return termViewers;
+  }
+
+  private _findForewards(): void {
+    const termViewers = this._getTerminalOutputViewer();
+
+    for (const viewer of termViewers) {
+      viewer.highlight(new RegExp(this._ui.needle, "g"));
+    }
+
+    let i = termViewers.findIndex(v => v.hasSelection());
+    if (i === -1) {
+      this._find();
+      return;
+    }
+
+    if (termViewers[i].findNext(this._ui.needle)) {
+      return;
+    }
+    i++;
+
+    for ( ; i<termViewers.length; i++) {
+      if (termViewers[i].find(this._ui.needle, { startPosition: FindStartPosition.DOCUMENT_START })) {
+        return;
       }
     }
   }
 
-  private _findPrevious(): void {
-    for (const viewer of this._terminal.getViewers()) {
-      if (viewer.viewerType === "terminal-output") {
-        viewer.findPrevious(this._ui.needle);
+  private _findBackwards(): void {
+    const termViewers = this._getTerminalOutputViewer();
+
+    for (const viewer of termViewers) {
+      viewer.highlight(new RegExp(this._ui.needle, "g"));
+    }
+
+    let i = termViewers.findIndex(v => v.hasSelection());
+    if (i === -1) {
+      this._find();
+      return;
+    }
+
+    if (termViewers[i].findPrevious(this._ui.needle)) {
+      return;
+    }
+    i--;
+
+    for ( ; i > 0; i--) {
+      if (termViewers[i].find(this._ui.needle, { startPosition: FindStartPosition.DOCUMENT_END, backwards: true })) {
+        return;
       }
     }
   }   

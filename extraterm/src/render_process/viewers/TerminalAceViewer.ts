@@ -3,7 +3,7 @@
  */
 
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {BulkFileHandle, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition} from 'extraterm-extension-api';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
@@ -25,6 +25,7 @@ import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRende
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
+import { SearchOptions } from 'ace-ts/build/SearchOptions';
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -344,6 +345,14 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     return this._aceEditor.isFocused();
   }
 
+  hasSelection(): boolean {
+    const selection = this._aceEditor.getSelection();
+    if (selection == null) {
+      return false;
+    }
+    return ! selection.isEmpty();
+  }
+
   setVisualState(newVisualState: VisualState): void {
     if (newVisualState !== this._visualState) {
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
@@ -428,17 +437,50 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
   }
 
-  find(needle: string): void {
-    this._aceEditor.find(needle);
+  find(needle: string, options?: FindOptions): boolean {
+    return this._aceEditor.find(needle, this._findOptionsToSearchOptions(options)) != null;
   }
 
-  findNext(needle: string): void {
-    this._aceEditor.findNext(needle);
+  private _findOptionsToSearchOptions(findOptions?: FindOptions): SearchOptions {
+    if (findOptions == null) {
+      return {};
+    }
+
+    const searchOptions: SearchOptions = {};
+    if (findOptions.backwards !== undefined) {
+      searchOptions.backwards = findOptions.backwards;
+    }
+    switch (findOptions.startPosition) {
+      case FindStartPosition.CURSOR:
+        break;
+
+      case FindStartPosition.DOCUMENT_START:
+        searchOptions.start = { start: {row: 0, column: 0}, end: {row: 0, column: 0}};
+        break;
+
+      case FindStartPosition.DOCUMENT_END: {
+        const doc = this._aceEditor.getSession().doc;
+        const row = doc.getLength() - 1;
+        const column = doc.getLine(row).length;
+        searchOptions.start = { start: {row, column}, end: {row, column}};
+        }
+        break;
+    }
+
+    return searchOptions;
   }
 
-  findPrevious(needle: string): void {
-    this._aceEditor.findPrevious(needle);
+  findNext(needle: string): boolean {
+    return this._aceEditor.findNext(needle) != null;
+  }
+
+  findPrevious(needle: string): boolean {
+    return this._aceEditor.findPrevious(needle) != null;
   } 
+
+  highlight(re: RegExp): void {
+    this._aceEditor.highlight(re);
+  }
 
   /**
    * Gets the height of this element.
