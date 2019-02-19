@@ -221,6 +221,12 @@ export interface TextViewer extends ViewerBase {
    * Return true if long lines are set to be wrapped.
    */
   getWrapLines(): boolean;
+
+  find(needle: string | RegExp, options?: FindOptions): boolean;
+  findNext(needle: string | RegExp): boolean;
+  findPrevious(needle: string | RegExp): boolean;
+  hasSelection(): boolean;
+  highlight(needle: string |  RegExp): void;
 }
 
 

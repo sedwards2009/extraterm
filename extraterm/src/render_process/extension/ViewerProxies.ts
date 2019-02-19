@@ -150,4 +150,24 @@ export class TextViewerProxy extends ViewerProxy implements ExtensionApi.TextVie
   setWrapLines(wrap: boolean): void {
     this._textViewer.setWrapLines(wrap);
   }
+
+  find(needle: string, options?: ExtensionApi.FindOptions): boolean {
+    return this._textViewer.find(needle, options);
+  }
+
+  findNext(needle: string): boolean {
+    return this._textViewer.findNext(needle);
+  }
+
+  findPrevious(needle: string): boolean {
+    return this._textViewer.findPrevious(needle);
+  }
+
+  hasSelection(): boolean {
+    return this._textViewer.hasSelection();
+  }
+
+  highlight(re: RegExp): void {
+    this._textViewer.highlight(re);
+  }
 }

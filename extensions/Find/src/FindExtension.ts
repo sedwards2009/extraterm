@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition, TextViewer } from 'extraterm-extension-api';
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -60,7 +60,7 @@ class FindWidget {
   }
 
   private _close(): void {
-    const termViewers = this._getTerminalOutputViewer();
+    const termViewers = this._getViewers();
     for (const viewer of termViewers) {
       viewer.highlight(null);
     }
@@ -81,7 +81,7 @@ class FindWidget {
   }
 
   private _find(): void {
-    const termViewers = this._getTerminalOutputViewer();
+    const termViewers = this._getViewers();
     for (const viewer of termViewers) {
       viewer.highlight(this._needleRegExp("g"));
     }
@@ -94,14 +94,14 @@ class FindWidget {
     }
   }
 
-  private _getTerminalOutputViewer(): TerminalOutputViewer[] {
-    const termViewers: TerminalOutputViewer[] = [];
+  private _getViewers(): (TerminalOutputViewer | TextViewer)[] {
+    const termViewers: (TerminalOutputViewer | TextViewer)[] = [];
     for (const viewer of this._terminal.getViewers()) {
       if (viewer.viewerType === "terminal-output") {
         termViewers.push(viewer);
       } else if (viewer.viewerType === "frame") {
         const contents = viewer.getContents();
-        if (contents != null && contents.viewerType === "terminal-output") {
+        if (contents != null && (contents.viewerType === "terminal-output" || contents.viewerType === "text")) {
           termViewers.push(contents);
         }
       }
@@ -110,7 +110,7 @@ class FindWidget {
   }
 
   private _findForewards(): void {
-    const termViewers = this._getTerminalOutputViewer();
+    const termViewers = this._getViewers();
 
     const highlightRegExp = this._needleRegExp("g");
     for (const viewer of termViewers) {
@@ -137,7 +137,7 @@ class FindWidget {
   }
 
   private _findBackwards(): void {
-    const termViewers = this._getTerminalOutputViewer();
+    const termViewers = this._getViewers();
 
     const highlightRegExp = this._needleRegExp("g");
     for (const viewer of termViewers) {
