@@ -7,6 +7,7 @@ import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutpu
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+const escapeStringRegexp = require('escape-string-regexp');
 
 let log: Logger = null;
 
@@ -43,6 +44,12 @@ class FindWidget {
     this._ui.$on("close", () => {
       this._close();
     });
+    this._ui.$on("regularExpressionChange", () => {
+      this._find();
+    });
+    this._ui.$on("caseSensitiveChange", () => {
+      this._find();
+    });
 
     const component = this._ui.$mount();
     this._widget.getContainerElement().appendChild(component.$el);
@@ -61,14 +68,27 @@ class FindWidget {
     this._widget.close();
   }
 
+  private _needleRegExp(extraFlags=""): RegExp {
+    let flags = extraFlags;
+    if ( ! this._ui.caseSensitive) {
+      flags = flags + "i";
+    }
+    if (this._ui.regularExpression) {
+      return new RegExp(this._ui.needle, flags);
+    } else {
+      return new RegExp(escapeStringRegexp(this._ui.needle), flags);
+    }
+  }
+
   private _find(): void {
     const termViewers = this._getTerminalOutputViewer();
     for (const viewer of termViewers) {
-      viewer.highlight(new RegExp(this._ui.needle, "g"));
+      viewer.highlight(this._needleRegExp("g"));
     }
+    const needleRegExp = this._needleRegExp();
 
     for (let i=termViewers.length-1; i> 0; i--) {
-      if (termViewers[i].find(this._ui.needle, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
+      if (termViewers[i].find(needleRegExp, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
         break;
       }
     }
@@ -92,8 +112,9 @@ class FindWidget {
   private _findForewards(): void {
     const termViewers = this._getTerminalOutputViewer();
 
+    const highlightRegExp = this._needleRegExp("g");
     for (const viewer of termViewers) {
-      viewer.highlight(new RegExp(this._ui.needle, "g"));
+      viewer.highlight(highlightRegExp);
     }
 
     let i = termViewers.findIndex(v => v.hasSelection());
@@ -102,13 +123,14 @@ class FindWidget {
       return;
     }
 
-    if (termViewers[i].findNext(this._ui.needle)) {
+    const needleRegExp = this._needleRegExp();
+    if (termViewers[i].findNext(needleRegExp)) {
       return;
     }
     i++;
 
     for ( ; i<termViewers.length; i++) {
-      if (termViewers[i].find(this._ui.needle, { startPosition: FindStartPosition.DOCUMENT_START })) {
+      if (termViewers[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_START })) {
         return;
       }
     }
@@ -117,8 +139,9 @@ class FindWidget {
   private _findBackwards(): void {
     const termViewers = this._getTerminalOutputViewer();
 
+    const highlightRegExp = this._needleRegExp("g");
     for (const viewer of termViewers) {
-      viewer.highlight(new RegExp(this._ui.needle, "g"));
+      viewer.highlight(highlightRegExp);
     }
 
     let i = termViewers.findIndex(v => v.hasSelection());
@@ -127,13 +150,14 @@ class FindWidget {
       return;
     }
 
-    if (termViewers[i].findPrevious(this._ui.needle)) {
+    const needleRegExp = this._needleRegExp();
+    if (termViewers[i].findPrevious(needleRegExp)) {
       return;
     }
     i--;
 
     for ( ; i > 0; i--) {
-      if (termViewers[i].find(this._ui.needle, { startPosition: FindStartPosition.DOCUMENT_END, backwards: true })) {
+      if (termViewers[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_END, backwards: true })) {
         return;
       }
     }
@@ -151,18 +175,28 @@ class FindWidget {
           v-on:keydown.capture="onNeedleKeyDown"
           v-on:keypress.capture="onNeedleKeyPress"
           />
-        <button v-on:click="$emit('findNext')" class="inline"><i class="fas fa-arrow-up"></i> Find Next</button>
-        <button v-on:click="$emit('findPrevious')" class="inline"><i class="fas fa-arrow-down"></i> Find Previous</button>
+        <span class="group">
+          <button v-on:click="$emit('findNext')" class="inline"><i class="fas fa-arrow-up"></i></button>
+          <button v-on:click="$emit('findPrevious')" class="inline"><i class="fas fa-arrow-down"></i></button>
+        </span>
+        <span class="group">
+          <button v-on:click="onRegularExpressionClick" v-bind:class="{ inline: true, selected: this.regularExpression }" title="Search as regular expression">.*</button>
+          <button v-on:click="onCaseSensitive" v-bind:class="{ inline: true, selected: this.caseSensitive }" title="Case sensitive">aA</button>
+        </span>
         <span class="expand"></span>
         <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
       </div>`)
   })
 class FindPanelUI extends Vue {
   needle: string;
+  caseSensitive: boolean;
+  regularExpression: boolean;
 
   constructor() {
     super();
     this.needle = "";
+    this.caseSensitive = false;
+    this.regularExpression = false;
   }
 
   focus(): void {
@@ -180,5 +214,15 @@ class FindPanelUI extends Vue {
     if (event.key === "Enter") {
       this.$emit("findNext");
     }
+  }
+
+  onRegularExpressionClick(): void {
+    this.regularExpression = ! this.regularExpression;
+    this.$emit("regularExpressionChange");
+  }
+
+  onCaseSensitive(): void {
+    this.caseSensitive = ! this.caseSensitive;
+    this.$emit("caseSensitiveChange");
   }
 }

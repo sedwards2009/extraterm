@@ -171,11 +171,11 @@ export interface TerminalOutputViewer extends ViewerBase {
    * @return true if this output viewer is connected to a live PTY and emulator.
    */
   isLive(): boolean;
-  find(needle: string, options?: FindOptions): boolean;
-  findNext(needle: string): boolean;
-  findPrevious(needle: string): boolean;
+  find(needle: string | RegExp, options?: FindOptions): boolean;
+  findNext(needle: string | RegExp): boolean;
+  findPrevious(needle: string | RegExp): boolean;
   hasSelection(): boolean;
-  highlight(needle: RegExp): void;
+  highlight(needle: string |  RegExp): void;
 }
 
 
