@@ -15,7 +15,6 @@ import * as child_process from 'child_process';
 import { Command } from 'commander';
 import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
 import { BulkFileState } from 'extraterm-extension-api';
-import * as FontManager from 'font-manager';
 import fontInfo = require('fontinfo');
 import * as fs from 'fs';
 import * as _ from 'lodash';
@@ -37,6 +36,7 @@ import { KeybindingsIOManager } from './KeybindingsIOManager';
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupUserConfig, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
 import { GlobalKeybindingsManager } from './GlobalKeybindings';
 import { doLater } from '../utils/DoLater';
+import { getAvailableFontsSync } from './FontList';
 
 const LOG_FINE = false;
 
@@ -511,7 +511,7 @@ function setupOSX(): void {
 }
 
 function getFonts(): FontInfo[] {
-  const allAvailableFonts = FontManager.getAvailableFontsSync();
+  const allAvailableFonts = getAvailableFontsSync();
   const usableFonts = allAvailableFonts.filter(fontInfo => {
     const path = fontInfo.path.toLowerCase();
     if ( ! path.endsWith(".ttf") && ! path.endsWith(".otf") && ! path.endsWith(".dfont")) {

@@ -6,7 +6,7 @@
 const shelljs = require('shelljs');
 const fs = require('fs');
 
-const MODULE_LIST = ["electron", "electron-rebuild", "font-manager", "node-pty"];
+const MODULE_LIST = ["electron", "electron-rebuild", "node-pty"];
 
 // This is mostly to keep the linter happy.
 const test = shelljs.test;

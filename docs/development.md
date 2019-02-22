@@ -18,7 +18,8 @@ Extraterm is built on the following technologies:
 * [Electron](http://electron.atom.io/) - A platform for running desktop applications made using web technologies.
 * [TypeScript](http://www.typescriptlang.org) - superset of JavaScript which adds static typing.
 * [term.js](https://github.com/chjj/term.js) - Terminal emulator component, pulled into the Extraterm code base and heavily modified.
-* [ptyw.js](https://github.com/iiegor/ptyw.js) - PTY support for node.js.
+* [node-pty](https://github.com/Microsoft/node-pty) - PTY support for node.js.
+* [Ace editor](https://ace.c9.io/) - A fork of the Ace editor is using inside Extraterm. It has mostly been converted to TypeScript and modified to suit Extraterm. The fork is [here](https://github.com/sedwards2009/ace-ts).
 * … plus many other smaller libraries.
 
 Thanks go out to the people and organisations responsible for the great software and tools I've been able to build on.
@@ -32,14 +33,20 @@ Note: Run these commands from a terminal which *isn't* Extraterm < v0.30.0. (An 
 
 Extraterm uses [yarn](http://yarnpkg.com/) for package management. It is easiest to have it available in your path or just globally. Ensure you have a recent version (1.12 or later).
 
+Extraterm also uses a couple of native code based modules. To successfully install these you first need to have a suitable compiler installed:
+
+* **Linux** - A recent GCC C/C++ compiler is enough. If you are on Debian based Linux distribution then installing the `build-essential` package will pull in the right build tools.
+* **macOS** - Make sure you have the Xcode compilers installed.
+* **Windows** - Microsoft's C/C++ compilers need to be installed. The easiest solution is to go to [windows-build-tools](https://github.com/felixrieseberg/windows-build-tools) and follow the directions there to easily download and install the needed tools.
+
+Once the requirements above are in place, execute these steps:
+
 * Clone the repository from github to your local machine.
-* Make sure that you are using node version 8.9.3. :warning: This is important. Using the same node version as the version of Electron simplifies installation of the one native node module that Extraterm depends on (pty.js). You can fetch it from https://nodejs.org/dist/v8.9.3/
-* Install the modules: `yarn install` (pty.js will not install on cygwin, but that is ok and expected.) If you have trouble on Linux due to `font-manager` then read [this](https://github.com/foliojs/font-manager#installation).
+* Use node version 10.15.1.
+* Install the modules: `yarn install`.
 * Fix up the binary modules to work inside Electron: `yarn run electron-rebuild`
 * Build it: `yarn run build`
 * Run it: `yarn run run`
-
-If 
 
 
 # Code Layout
