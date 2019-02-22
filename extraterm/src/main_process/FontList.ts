@@ -28,8 +28,9 @@ let fonts: FontDescriptor[] = null;
 
 export function getAvailableFontsSync(): FontDescriptor[] {
   if (fonts == null) {
+    const exeName = process.platform === "win32" ? "list-fonts-json.exe" : "list-fonts-json";
     const listFontsJsonExe = path.join(SourceDir.path,
-      `../resources/list-fonts-json-binary/${process.platform}-${process.arch}/list-fonts-json`);
+      `../resources/list-fonts-json-binary/${process.platform}-${process.arch}/${exeName}`);
 
     const fontJson = child_process.execFileSync(listFontsJsonExe, []);
     fonts = <FontDescriptor[]> JSON.parse(fontJson);
