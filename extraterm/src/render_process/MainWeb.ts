@@ -115,7 +115,7 @@ export function startUp(closeSplash: () => void): void {
     }
 
     if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
-      mainWebUi.newTerminalTab(null, configDatabase.getConfig(SESSION_CONFIG)[0].uuid);
+      mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
     } else {
       mainWebUi.commandOpenSettingsTab("session");
       Electron.remote.dialog.showErrorBox("No session types available",

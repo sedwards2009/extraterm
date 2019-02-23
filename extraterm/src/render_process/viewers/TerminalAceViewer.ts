@@ -3,7 +3,7 @@
  */
 
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {BulkFileHandle, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition} from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition } from 'extraterm-extension-api';
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
@@ -20,7 +20,6 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
-import { Disposable } from 'extraterm-extension-api';
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
 import { TextEditor } from './TextEditorType';

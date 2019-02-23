@@ -4,17 +4,19 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from 'extraterm-extension-api';
+import { EventEmitter } from 'extraterm-event-emitter';
 
-import { DisposableItemList } from '../../utils/DisposableUtils';
 import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
 import { InternalExtensionContext, InternalWindow } from './InternalTypes';
-import { Logger, getLogger } from "extraterm-logging";
+import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
 import { EtViewerTab } from '../ViewerTab';
 import { CommonExtensionWindowState } from './CommonExtensionState';
 import { WidgetProxy } from './WidgetProxy';
 import { ExtensionTerminalBorderContribution } from '../../ExtensionMetadata';
+import { Viewer } from 'extraterm-extension-api';
+import { ViewerElement } from '../viewers/ViewerElement';
 
 export class WindowProxy implements InternalWindow {
 
@@ -23,8 +25,12 @@ export class WindowProxy implements InternalWindow {
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
   private _terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
 
+  private _onDidCreateTerminalEventEmitter = new EventEmitter<ExtensionApi.Terminal>();
+  onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
+
   constructor(private _internalExtensionContext: InternalExtensionContext, private _commonExtensionState: CommonExtensionWindowState) {
     this._log = getLogger("WorkspaceProxy", this);
+    this.onDidCreateTerminal = this._onDidCreateTerminalEventEmitter.event;
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
     this._terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
@@ -32,6 +38,22 @@ export class WindowProxy implements InternalWindow {
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
 
+  newTerminalCreated(newTerminal): void {
+    if (this._onDidCreateTerminalEventEmitter.hasListeners()) {
+      const terminal = this._internalExtensionContext.proxyFactory.getTerminalProxy(newTerminal);
+      this._onDidCreateTerminalEventEmitter.fire(terminal);
+    }
+  }
+
+  terminalAppendedViewer(terminal: EtTerminal, viewer: ViewerElement): void {
+    if (this._internalExtensionContext.proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this._internalExtensionContext.proxyFactory.getTerminalProxy(terminal);
+      if (proxy._onDidAppendViewerEventEmitter.hasListeners()) {
+        proxy._onDidAppendViewerEventEmitter.fire(this._internalExtensionContext.proxyFactory.getViewerProxy(viewer));
+      }
+    }
+  }
+  
   get activeTerminal(): ExtensionApi.Terminal {
     return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
@@ -44,11 +66,6 @@ export class WindowProxy implements InternalWindow {
     return []; // FIXME
     // return this._internalExtensionContext.extensionBridge.workspaceGetTerminals()
     //   .map(terminal => this._internalExtensionContext.getTerminalProxy(terminal));
-  }
-
-  private _onDidCreateTerminalListenerList = new DisposableItemList<(e: ExtensionApi.Terminal) => any>();
-  onDidCreateTerminal(listener: (e: ExtensionApi.Terminal) => any): ExtensionApi.Disposable {
-    return this._onDidCreateTerminalListenerList.add(listener);
   }
 
   extensionViewerBaseConstructor: ExtensionApi.ExtensionViewerBaseConstructor;
@@ -130,8 +147,11 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   viewerType: 'terminal-output';
 
   private _terminalBorderWidgets = new Map<string, {htmlWidgetProxy: WidgetProxy, factoryResult: unknown}>();
+  _onDidAppendViewerEventEmitter = new EventEmitter<Viewer>();
+  onDidAppendViewer: ExtensionApi.Event<Viewer>;
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
+    this.onDidAppendViewer = this._onDidAppendViewerEventEmitter.event;
   }
 
   getTab(): ExtensionApi.Tab {

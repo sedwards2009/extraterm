@@ -292,6 +292,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
           if (this._configManager.getConfig(SESSION_CONFIG).length !== 0) {
             const  newTerminal = this.newTerminalTab(<TabWidget> el, this._configManager.getConfig(SESSION_CONFIG)[0].uuid);
             this._switchToTab(newTerminal);
+            this._extensionManager.newTerminalCreated(newTerminal);
           }
         }
       } 
@@ -488,8 +489,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       this._focusTabContent(el);
     }
   }
-  
-  newTerminalTab(tabWidget: TabWidget, sessionUuid: string): EtTerminal {
+
+  private newTerminalTab(tabWidget: TabWidget, sessionUuid: string): EtTerminal {
     if (tabWidget == null) {
       tabWidget = this._splitLayout.firstTabWidget();
     }
@@ -924,7 +925,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   private _registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
-    commands.registerCommand("extraterm:window.newTerminal", (args: any) => this._commandNewTerminal(args));
+    commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.focusTabLeft", (args: any) => this._commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", (args: any) => this._commandFocusTabRight());
     commands.registerCommand("extraterm:window.focusPaneLeft", (args: any) => this._commandFocusPaneLeft());
@@ -947,13 +948,15 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return this._extensionManager.getActiveTab();
   }
 
-  private _commandNewTerminal(args: any): void {
+  commandNewTerminal(args: any): void {
     let sessionUuid = args.sessionUuid;
     if (sessionUuid == null) {
       sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
     }
 
-    this._switchToTab(this.newTerminalTab(this._tabWidgetFromElement(this._getActiveTabElement()), sessionUuid));
+    const newTerminal = this.newTerminalTab(this._tabWidgetFromElement(this._getActiveTabElement()), sessionUuid);
+    this._switchToTab(newTerminal);
+    this._extensionManager.newTerminalCreated(newTerminal);
   }
 
   private _commandFocusTabLeft(): void {

@@ -501,6 +501,18 @@ this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
       return;
     }
   }
+
+  newTerminalCreated(newTerminal: EtTerminal): void {
+    newTerminal.addEventListener(EtTerminal.EVENT_APPENDED_VIEWER, (ev: CustomEvent) => {
+      for (let extension of this._activeExtensions) {
+        extension.contextImpl.internalWindow.terminalAppendedViewer(newTerminal, ev.detail.viewer);
+      }
+    });
+
+    for (let extension of this._activeExtensions) {
+      extension.contextImpl.internalWindow.newTerminalCreated(newTerminal);
+    }
+  }
 }
 
 

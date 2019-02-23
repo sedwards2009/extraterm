@@ -55,6 +55,8 @@ export interface ExtensionManager {
   copyExtensionWindowState(): CommonExtensionWindowState;
   getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState;
   refocus(state: CommonExtensionWindowState): void;
+
+  newTerminalCreated(newTerminal: EtTerminal): void;
 }
 
 export interface AcceptsExtensionManager {
@@ -73,7 +75,10 @@ export function isAcceptsExtensionManager(instance: any): instance is AcceptsExt
 
 export interface ProxyFactory {
   getTabProxy(tabLike: EtTerminal | EtViewerTab): ExtensionApi.Tab;
+
   getTerminalProxy(terminal: EtTerminal): ExtensionApi.Terminal;
+  hasTerminalProxy(terminal: EtTerminal): boolean;
+
   getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer;
 }
 
@@ -86,6 +91,9 @@ export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
+
+  newTerminalCreated(newTerminal: EtTerminal): void;
+  terminalAppendedViewer(newTerminal: EtTerminal, viewer: ViewerElement): void;
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {

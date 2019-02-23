@@ -5,7 +5,7 @@
  */
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from 'extraterm-extension-api';
-import {ProxyFactory, InternalExtensionContext} from './InternalTypes';
+import { InternalExtensionContext } from './InternalTypes';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {EtTerminal} from '../Terminal';
 import {EmbeddedViewer} from '../viewers/EmbeddedViewer';

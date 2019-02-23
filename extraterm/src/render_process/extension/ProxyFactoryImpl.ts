@@ -55,6 +55,10 @@ export class ProxyFactoryImpl implements ProxyFactory {
     return this._terminalProxyMap.get(terminal);
   }
 
+  hasTerminalProxy(terminal: EtTerminal): boolean {
+    return this._terminalProxyMap.has(terminal);
+  }
+
   getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer {
     if (viewer == null) {
       return null;

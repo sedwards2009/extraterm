@@ -43,6 +43,16 @@ export class EventEmitter<T> implements Disposable {
   fire(t: T): void {
     this._listeners.forEach(listener => listener(t));
   }
+
+  /**
+   * Returns true if this event emitter has at least on listener subscribed to it.
+   * 
+   * @return true if this event emitter has at least on listener subscribed to it.
+   */
+
+  hasListeners(): boolean {
+    return this._listeners.length !== 0;
+  }
 }
 
 /**

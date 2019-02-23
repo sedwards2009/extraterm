@@ -78,6 +78,9 @@ export interface Terminal {
   getExtratermCookieName(): string;
 
   openTerminalBorderWidget(name: string): any;
+
+  onDidAppendViewer: Event<Viewer>;
+
 }
 
 export interface TerminalBorderWidget {
