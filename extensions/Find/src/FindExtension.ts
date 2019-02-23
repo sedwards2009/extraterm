@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition, TextViewer } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition, TextViewer, Viewer } from 'extraterm-extension-api';
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -53,6 +53,9 @@ class FindWidget {
 
     const component = this._ui.$mount();
     this._widget.getContainerElement().appendChild(component.$el);
+    this._terminal.onDidAppendViewer((viewer: Viewer) => {
+      this._handleViewerAppended(viewer);
+    });
   }
 
   focus(): void {
@@ -97,16 +100,31 @@ class FindWidget {
   private _getViewers(): (TerminalOutputViewer | TextViewer)[] {
     const termViewers: (TerminalOutputViewer | TextViewer)[] = [];
     for (const viewer of this._terminal.getViewers()) {
-      if (viewer.viewerType === "terminal-output") {
-        termViewers.push(viewer);
-      } else if (viewer.viewerType === "frame") {
-        const contents = viewer.getContents();
-        if (contents != null && (contents.viewerType === "terminal-output" || contents.viewerType === "text")) {
-          termViewers.push(contents);
-        }
+      const v = this._unpackViewer(viewer);
+      if (v != null) {
+        termViewers.push(v);
       }
     }
     return termViewers;
+  }
+
+  private _unpackViewer(viewer: Viewer): TerminalOutputViewer | TextViewer {
+    if (viewer.viewerType === "terminal-output") {
+      return viewer;
+    } else if (viewer.viewerType === "frame") {
+      const contents = viewer.getContents();
+      if (contents != null && (contents.viewerType === "terminal-output" || contents.viewerType === "text")) {
+        return contents;
+      }
+    }
+    return null;
+  }
+
+  private _handleViewerAppended(viewer: Viewer): void {
+    const v = this._unpackViewer(viewer);
+    if (v != null) {
+      v.highlight(this._needleRegExp("g"));
+    }
   }
 
   private _findForewards(): void {
