@@ -76,8 +76,17 @@ export interface Terminal {
    * Get the name of the Extraterm terminal integration cookie.
    */
   getExtratermCookieName(): string;
+
+  openTerminalBorderWidget(name: string): any;
+
+  onDidAppendViewer: Event<Viewer>;
+
 }
 
+export interface TerminalBorderWidget {
+  getContainerElement(): HTMLElement;
+  close(): void;
+}
 
 export interface NumberInputOptions {
   /**
@@ -144,6 +153,16 @@ export interface FrameViewer extends ViewerBase {
   getContents(): Viewer;
 }
 
+export enum FindStartPosition {
+  CURSOR,
+  DOCUMENT_START,
+  DOCUMENT_END,
+}
+
+export interface FindOptions {
+    backwards?: boolean;
+    startPosition?: FindStartPosition;
+}
 
 export interface TerminalOutputViewer extends ViewerBase {
 
@@ -155,6 +174,11 @@ export interface TerminalOutputViewer extends ViewerBase {
    * @return true if this output viewer is connected to a live PTY and emulator.
    */
   isLive(): boolean;
+  find(needle: string | RegExp, options?: FindOptions): boolean;
+  findNext(needle: string | RegExp): boolean;
+  findPrevious(needle: string | RegExp): boolean;
+  hasSelection(): boolean;
+  highlight(needle: string |  RegExp): void;
 }
 
 
@@ -200,6 +224,12 @@ export interface TextViewer extends ViewerBase {
    * Return true if long lines are set to be wrapped.
    */
   getWrapLines(): boolean;
+
+  find(needle: string | RegExp, options?: FindOptions): boolean;
+  findNext(needle: string | RegExp): boolean;
+  findPrevious(needle: string | RegExp): boolean;
+  hasSelection(): boolean;
+  highlight(needle: string |  RegExp): void;
 }
 
 
@@ -235,6 +265,10 @@ export interface Commands {
   getCommands(): string[];
 }
 
+export interface TerminalBorderWidgetFactory {
+  (terminal: Terminal, widget: TerminalBorderWidget): any;
+}
+
 export interface Window {
   activeTerminal: Terminal;
   activeViewer: Viewer;
@@ -247,6 +281,8 @@ export interface Window {
 
   extensionSessionEditorBaseConstructor: ExtensionSessionEditorBaseConstructor;
   registerSessionEditor(type: string, sessionEditorClass: ExtensionSessionEditorBaseConstructor): void;
+
+  registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void;
 }
 
 
@@ -534,6 +570,7 @@ export interface TerminalTheme {
   cursorForegroundColor?: string;
   cursorBackgroundColor?: string;
   selectionBackgroundColor?: string;
+  findHighlightBackgroundColor?: string;
 
   [colorIndex: number]: string;
   // selectionunfocused-background-color: #404040;

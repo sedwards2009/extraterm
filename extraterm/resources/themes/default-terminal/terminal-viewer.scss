@@ -345,6 +345,8 @@
   -moz-box-sizing: border-box;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
+
+  background-color: $terminal-find-highlight-background-color;
 }
 
 .ace_line .ace_fold {

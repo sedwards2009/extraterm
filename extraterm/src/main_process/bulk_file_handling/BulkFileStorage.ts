@@ -25,6 +25,7 @@ export type BufferSizeEvent = {identifier: BulkFileIdentifier, totalBufferSize: 
 export type CloseEvent = {identifier: BulkFileIdentifier, success: boolean};
 
 const MAXIMUM_UPLOAD_BUFFER_SIZE_BYTES = 10 * 1024 * 1024;
+const CIPHER_ALGORITHM = "AES-256-CBC";
 
 
 /**
@@ -220,7 +221,7 @@ export class BulkFile {
 
     this._wrFile = new WriterReaderFile(filePath);
     this._wrFile.getWritableStream().on('drain', this._handleDrain.bind(this));
-    const aesCipher = crypto.createCipheriv("aes256", this._cryptoKey, this._cryptoIV);
+    const aesCipher = crypto.createCipheriv(CIPHER_ALGORITHM, this._cryptoKey, this._cryptoIV);
     this._writeStream = aesCipher;
     aesCipher.pipe(this._wrFile.getWritableStream());
     this.onClose = this._onCloseEventEmitter.event;
@@ -298,7 +299,7 @@ export class BulkFile {
   }
 
   createReadableStream(): NodeJS.ReadableStream & Disposable {
-    const aesDecipher = crypto.createDecipheriv("aes256", this._cryptoKey, this._cryptoIV);
+    const aesDecipher = crypto.createDecipheriv(CIPHER_ALGORITHM, this._cryptoKey, this._cryptoIV);
 
     try {    
       const fileReadStream = this._wrFile.createReadableStream();

@@ -7,6 +7,10 @@
 import * as crypto from 'crypto';
 import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
+import { log as LogDecorator, Logger, getLogger } from "extraterm-logging";
+import * as TermApi from 'term-api';
+import { DeepReadonly } from 'extraterm-readonly-toolbox';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
 import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
@@ -14,7 +18,6 @@ import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
 import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
 import {DownloadViewer} from './viewers/DownloadViewer';
 import {Pty} from '../pty/Pty';
-
 import {ViewerElement} from './viewers/ViewerElement';
 import { SupportsMimeTypes, Mode, VisualState } from './viewers/ViewerElementTypes';
 import {ThemeableElementBase} from './ThemeableElementBase';
@@ -29,12 +32,9 @@ import {TipViewer} from './viewers/TipViewer';
 import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
 import { dispatchContextMenuRequest } from './command/CommandUtils';
-import {Logger, getLogger} from "extraterm-logging";
-import { log as LogDecorator} from "extraterm-logging";
 import * as DomUtils from './DomUtils';
 import {doLater, DebouncedDoLater} from '../utils/DoLater';
 import * as Term from './emulator/Term';
-import * as TermApi from 'term-api';
 import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
@@ -46,9 +46,6 @@ import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigD
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
-import { DeepReadonly } from 'extraterm-readonly-toolbox';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { FindPanel, TempFindPanelViewer_FIXME } from "./FindPanel";
 
 const log = LogDecorator;
 
@@ -99,7 +96,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   static TAG_NAME = "ET-TERMINAL";
   static EVENT_TITLE = "title";
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
-  
+  static EVENT_APPENDED_VIEWER = "terminal-appended-viewer";
+
   private _log: Logger;
   private _pty: Pty = null;
 
@@ -150,7 +148,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _dialogStack: HTMLElement[] = [];
 
   private _copyToClipboardLater: DebouncedDoLater = null;
-  private _findPanel: FindPanel = null;
 
   static registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
@@ -508,10 +505,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         }
     }
 
-    this._appendMimeViewer(TipViewer.MIME_TYPE, null);
     config.tipTimestamp = Date.now();
     config.tipCounter = config.tipCounter + 1;
     this._configDatabase.setConfig(GENERAL_CONFIG, config);
+
+    this._appendMimeViewer(TipViewer.MIME_TYPE, null);
   }
   
   private _handleFocus(event: FocusEvent): void {
@@ -577,6 +575,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
                                       : VisualState.UNFOCUSED);
 
     this._emulator.refreshScreen();
+
+    this._emitDidAppendViewer(terminalViewer);
   }
 
   /**
@@ -624,13 +624,16 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       }
     }
     this._terminalCanvas.appendViewerElement(el);
-      
+    this._emitDidAppendViewer(el);
+
     if (currentTerminalViewer !== null) {
       this._terminalCanvas.appendViewerElement(currentTerminalViewer);
       this._terminalCanvas.setTerminalViewer(currentTerminalViewer);
       if (currentTerminalViewerHadFocus) {
         this._terminalCanvas.focus();
       }
+      this._emitDidAppendViewer(currentTerminalViewer);
+
     } else {
       this._appendNewTerminalViewer();
       this._refocus();
@@ -795,10 +798,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   commandFontSizeReset(): void {
     this._terminalCanvas.resetFontSize();
-  }
-
-  commandFind(): void {
-    this._openFindPanel();
   }
 
   /**
@@ -1135,7 +1134,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         outputTerminalViewer.setTerminalLines(moveText);
       }
       outputTerminalViewer.setEditable(true);
-
+      this._emitDidAppendViewer(newViewerElement);
+      
       this._appendNewTerminalViewer();
       this._refocus();
       const activeTerminalViewer = this._terminalViewer;
@@ -1263,8 +1263,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         const config = this._configDatabase.getConfig(GENERAL_CONFIG);
         this._terminalCanvas.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
+      this._emitDidAppendViewer(mimeViewerElement);
     }
     return mimeViewerElement;
+  }
+
+  private _emitDidAppendViewer(viewer: ViewerElement): void {
+    const event = new CustomEvent(EtTerminal.EVENT_APPENDED_VIEWER, { detail: { viewer } });
+    this.dispatchEvent(event);    
   }
 
   private _createMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
@@ -1308,44 +1314,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     });
   }
 
-  private _appendElementToBorder(element: HTMLElement, borderSide: BorderSide): void {
+  appendElementToBorder(element: HTMLElement, borderSide: BorderSide): void {
     element.slot = borderSide;
     this._containerElement.appendChild(element);
   }
 
-  private _removeElementFromBorder(element: HTMLElement): void {
+  removeElementFromBorder(element: HTMLElement): void {
     this._containerElement.removeChild(element);
   }
-
-  private _openFindPanel(): void {
-    if (this._findPanel == null) {
-      this._findPanel = <FindPanel> document.createElement(FindPanel.TAG_NAME);
-
-//----    
-      const fakeTerminal = {
-        getViewers: (): TempFindPanelViewer_FIXME[] => {
-          const result: TempFindPanelViewer_FIXME[] = [];
-          for (const v of this.getViewerElements()) {
-            if (v instanceof TerminalViewer) {
-              result.push(v);
-            }
-          }
-          return result;
-        }
-      };
-//----    
-
-      this._findPanel.setTerminal(fakeTerminal);
-      this._findPanel.addEventListener("close", () => {
-        this._removeElementFromBorder(this._findPanel);
-        this._findPanel = null;
-      });
-
-      this._appendElementToBorder(this._findPanel, "south");
-    }
-    this._findPanel.focus();
-  }
-
 }
 
 // interface ApplicationModeHandler {

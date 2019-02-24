@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution, ExtensionCommandContribution, Category, WhenVariables } from "../../ExtensionMetadata";
+import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution, ExtensionCommandContribution, Category, WhenVariables, ExtensionTerminalBorderContribution, BorderDirection } from "../../ExtensionMetadata";
 import { getLogger, Logger } from "extraterm-logging";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
 
@@ -173,6 +173,7 @@ class PackageParser {
         sessionEditors: [],
         syntaxThemes: [],
         syntaxThemeProviders: [],
+        terminalBorderWidget: [],
         terminalThemes: [],
         terminalThemeProviders: [],
         viewers: [],
@@ -191,6 +192,7 @@ class PackageParser {
       "sessionBackends",
       "syntaxThemes",
       "syntaxThemeProviders",
+      "terminalBorderWidget",
       "terminalThemes",
       "terminalThemeProviders"
     ];
@@ -209,6 +211,7 @@ class PackageParser {
       sessionEditors: this.parseSessionEditorContributionsListJson(contributes),
       syntaxThemes: this.parseSyntaxThemeContributionsListJson(contributes),
       syntaxThemeProviders: this.parseSyntaxThemeProviderContributionsListJson(contributes),
+      terminalBorderWidget: this.parseTerminalBorderWidgetContributionsListJson(contributes),
       terminalThemes: this.parseTerminalThemeContributionsListJson(contributes),
       terminalThemeProviders: this.parseTerminalThemeProviderContributionsListJson(contributes),
       viewers: this.parseViewerContributionsListJson(contributes),
@@ -421,6 +424,47 @@ class PackageParser {
     } catch (ex) {
       throw `Failed to process a syntax theme provider contribution: ${ex}`;
     }
+  }
+
+  private parseTerminalBorderWidgetContributionsListJson(packageJson: any): ExtensionTerminalBorderContribution[] {
+    const value = packageJson["terminalBorderWidget"];
+    if (value == null) {
+      return [];
+    }
+    if ( ! Array.isArray(value)) {
+      throw `Field 'terminalBorderWidget' in the 'contributes' object is not an array.`;
+    }
+
+    const result: ExtensionTerminalBorderContribution[] = [];
+    for (const item of value) {
+      result.push(this.parseTerminalBorderWidgetContributionsJson(item));
+    }
+    return result;
+  }
+
+  private parseTerminalBorderWidgetContributionsJson(packageJson: any): ExtensionTerminalBorderContribution {
+    try {
+      return {
+        name: this.assertJsonStringField(packageJson, "name"),
+        border: this.assertJsonBorderDirectionField(packageJson, "border"),
+        css: this.parseCss(packageJson)
+      };
+    } catch (ex) {
+      throw `Failed to process a session editor contribution: ${ex}`;
+    }
+  }
+
+  private assertJsonBorderDirectionField(packageJson: any, fieldName: string): BorderDirection {
+    const value = packageJson[fieldName];
+    if (value == null) {
+      return "south";
+    }
+
+    const borderDirections: BorderDirection[] = ["north", "south", "east", "west"];
+    if (borderDirections.indexOf(value) === -1) {
+      throw `Field '${fieldName}' is not one of ${borderDirections.join(", ")}.`;
+    }
+    return value;
   }
 
   private parseTerminalThemeContributionsListJson(packageJson: any): ExtensionTerminalThemeContribution[] {

@@ -6,7 +6,7 @@
 import * as ExtensionApi from 'extraterm-extension-api';
 import { Logger, getLogger, log } from 'extraterm-logging';
 import { ExtensionCommandContribution } from '../../ExtensionMetadata';
-import { ExtensionManager } from './InternalTypes';
+import { InternalExtensionContext } from './InternalTypes';
 
 export class CommandsRegistry implements ExtensionApi.Commands {
 
@@ -15,7 +15,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   private _commandToCustomizerFunctionMap = new Map<string, () => ExtensionApi.CustomizedCommand>();
   private _knownCommands = new Set<string>();
 
-  constructor(private _extensionManager: ExtensionManager, private _extensionName: string, commands: ExtensionCommandContribution[]) {
+  constructor(private _internalExtensionContext: InternalExtensionContext, private _extensionName: string, commands: ExtensionCommandContribution[]) {
     this._log = getLogger("CommandsRegistry", this);
 
     for (const command of commands) {
@@ -52,7 +52,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   }
 
   executeCommand<T>(name: string, args: any): Promise<T> {
-    return this._extensionManager.executeCommand(name, args);
+    return this._internalExtensionContext.extensionManager.executeCommand(name, args);
   }
 
   getCommands(): string[] {

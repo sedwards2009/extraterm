@@ -560,6 +560,13 @@
       "keys": [
         "Cmd-Shift-P"
       ]
+    },
+    {
+      "command": "find:find",
+      "category": "terminal",
+      "keys": [
+        "Cmd-F"
+      ]
     }
   ]
 }

@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 "use strict";
-import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, ViewerMetadata, FindOptions, FindStartPosition } from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Renderer, Position, UndoManager } from "ace-ts";
@@ -24,6 +24,7 @@ import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise'
 import { RefreshLevel } from '../viewers/ViewerElementTypes';
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
+import { SearchOptions } from 'ace-ts/build/SearchOptions';
 
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;
@@ -188,9 +189,6 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       }
     });
 
-    // Filter the keyboard events before they reach Ace.
-    containerDiv.addEventListener('keydown', (ev) => this._handleContainerKeyDown(ev));
-    containerDiv.addEventListener('keyup', (ev) => this._handleContainerKeyUpCapture(ev), true);
     containerDiv.addEventListener('contextmenu', (ev) => this._handleContextMenu(ev));
 
     this._updateCssVars(); 
@@ -277,7 +275,15 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
   hasFocus(): boolean {
     return this._aceEditor.isFocused();
   }
-  
+
+  hasSelection(): boolean {
+    const selection = this._aceEditor.getSelection();
+    if (selection == null) {
+      return false;
+    }
+    return ! selection.isEmpty();
+  }
+
   setVisualState(newVisualState: VisualState): void {
     if (newVisualState !== this._visualState) {
       if (DomUtils.getShadowRoot(this) !== null) {
@@ -434,6 +440,51 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
   getEditable(): boolean {
     return this._editable;
   }  
+
+  find(needle: string, options?: FindOptions): boolean {
+    return this._aceEditor.find(needle, this._findOptionsToSearchOptions(options)) != null;
+  }
+
+  private _findOptionsToSearchOptions(findOptions?: FindOptions): SearchOptions {
+    if (findOptions == null) {
+      return {};
+    }
+
+    const searchOptions: SearchOptions = {};
+    if (findOptions.backwards !== undefined) {
+      searchOptions.backwards = findOptions.backwards;
+    }
+    switch (findOptions.startPosition) {
+      case FindStartPosition.CURSOR:
+        break;
+
+      case FindStartPosition.DOCUMENT_START:
+        searchOptions.start = { start: {row: 0, column: 0}, end: {row: 0, column: 0}};
+        break;
+
+      case FindStartPosition.DOCUMENT_END: {
+        const doc = this._aceEditor.getSession().doc;
+        const row = doc.getLength() - 1;
+        const column = doc.getLine(row).length;
+        searchOptions.start = { start: {row, column}, end: {row, column}};
+        }
+        break;
+    }
+
+    return searchOptions;
+  }
+
+  findNext(needle: string): boolean {
+    return this._aceEditor.findNext(needle) != null;
+  }
+
+  findPrevious(needle: string): boolean {
+    return this._aceEditor.findPrevious(needle) != null;
+  } 
+
+  highlight(re: RegExp): void {
+    this._aceEditor.highlight(re);
+  }
 
   /**
    * Gets the height of this element.
@@ -686,36 +737,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     }
   }
   
-  private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    // if (this._mode !== ViewerElementTypes.Mode.DEFAULT) {
-    //   ev.stopPropagation();
-    // }
-  }
-
-  private _handleContainerKeyUpCapture(ev: KeyboardEvent): void {
-    // if (this._mode === ViewerElementTypes.Mode.DEFAULT) {
-    //   ev.stopPropagation();
-    //   ev.preventDefault();
-    // }
-  }
-
   private _handleContextMenu(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
     dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
-
-  //-----------------------------------------------------------------------
-  //
-  // #######                        #                                            
-  // #        ####  #    # #####    #        ####    ##   #####  # #    #  ####  
-  // #       #    # ##   #   #      #       #    #  #  #  #    # # ##   # #    # 
-  // #####   #    # # #  #   #      #       #    # #    # #    # # # #  # #      
-  // #       #    # #  # #   #      #       #    # ###### #    # # #  # # #  ### 
-  // #       #    # #   ##   #      #       #    # #    # #    # # #   ## #    # 
-  // #        ####  #    #   #      #######  ####  #    # #####  # #    #  ####  
-  //
-  //-----------------------------------------------------------------------
 
   private _initFontLoading(): void {
     this._mainStyleLoaded = false;
