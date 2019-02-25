@@ -37,14 +37,15 @@ Extraterm also uses a couple of native code based modules. To successfully insta
 
 * **Linux** - A recent GCC C/C++ compiler is enough. If you are on Debian based Linux distribution then installing the `build-essential` package will pull in the right build tools.
 * **macOS** - Make sure you have the Xcode compilers installed.
-* **Windows** - Microsoft's C/C++ compilers need to be installed. The easiest solution is to go to [windows-build-tools](https://github.com/felixrieseberg/windows-build-tools) and follow the directions there to easily download and install the needed tools.
+* **Windows** - Microsoft's C/C++ compilers need to be installed. The easiest solution is to go to [windows-build-tools](https://github.com/felixrieseberg/windows-build-tools) and follow the directions there to easily download and install the needed tools. Also the [Windows SDK](https://developer.microsoft.com/en-us/windows/downloads/windows-10-sdk) needs to be installed. It can be downloaded from the link or if you are using [Chocolately](http://chocolatey.org/) to install software then this command will install it: `choco install windows-sdk-10-version-1803-all`
+
 
 Once the requirements above are in place, execute these steps:
 
 * Clone the repository from github to your local machine.
 * Use node version 10.15.1.
 * Install the modules: `yarn install`.
-* Fix up the binary modules to work inside Electron: `yarn run electron-rebuild`
+* Fix up the binary modules to work inside Electron: `yarn run electron-rebuild` or if you are on Windows `yarn run electron-rebuild-win32`
 * Build it: `yarn run build`
 * Run it: `yarn run run`
 

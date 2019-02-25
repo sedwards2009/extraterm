@@ -14,6 +14,7 @@
     "run-release": "electron extraterm/src/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 4.0.4",
+    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o node-pty -f -v 4.0.4",
     "package": "node build_scripts/build_packages.js",
     "package-linux-zip-only": "node build_scripts/build_packages.js --linux-zip-only"
   },
