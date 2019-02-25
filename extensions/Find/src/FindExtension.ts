@@ -56,19 +56,18 @@ class FindWidget {
     this._terminal.onDidAppendViewer((viewer: Viewer) => {
       this._handleViewerAppended(viewer);
     });
+
+    this._widget.onDidClose(() => {
+      this._handleClose();
+    });
+
+    this._widget.onDidOpen(() => {
+      this._applyHighlight();
+    });
   }
 
   focus(): void {
     this._ui.focus();
-  }
-
-  private _close(): void {
-    const termViewers = this._getViewers();
-    for (const viewer of termViewers) {
-      viewer.highlight(null);
-    }
-
-    this._widget.close();
   }
 
   private _needleRegExp(extraFlags=""): RegExp {
@@ -84,16 +83,29 @@ class FindWidget {
   }
 
   private _find(): void {
+    this._applyHighlight();
+
     const termViewers = this._getViewers();
-    for (const viewer of termViewers) {
-      viewer.highlight(this._needleRegExp("g"));
-    }
     const needleRegExp = this._needleRegExp();
 
     for (let i=termViewers.length-1; i> 0; i--) {
       if (termViewers[i].find(needleRegExp, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
         break;
       }
+    }
+  }
+
+  private _applyHighlight(): void {
+    const termViewers = this._getViewers();
+    for (const viewer of termViewers) {
+      viewer.highlight(this._needleRegExp("g"));
+    }
+  }
+
+  private _removeHighlight(): void {
+    const termViewers = this._getViewers();
+    for (const viewer of termViewers) {
+      viewer.highlight(null);
     }
   }
 
@@ -121,20 +133,18 @@ class FindWidget {
   }
 
   private _handleViewerAppended(viewer: Viewer): void {
-    const v = this._unpackViewer(viewer);
-    if (v != null) {
-      v.highlight(this._needleRegExp("g"));
+    if (this._widget.isOpen()) {
+      const v = this._unpackViewer(viewer);
+      if (v != null) {
+        v.highlight(this._needleRegExp("g"));
+      }
     }
   }
 
   private _findForewards(): void {
+    this._applyHighlight();
+
     const termViewers = this._getViewers();
-
-    const highlightRegExp = this._needleRegExp("g");
-    for (const viewer of termViewers) {
-      viewer.highlight(highlightRegExp);
-    }
-
     let i = termViewers.findIndex(v => v.hasSelection());
     if (i === -1) {
       this._find();
@@ -155,13 +165,9 @@ class FindWidget {
   }
 
   private _findBackwards(): void {
+    this._applyHighlight();
+
     const termViewers = this._getViewers();
-
-    const highlightRegExp = this._needleRegExp("g");
-    for (const viewer of termViewers) {
-      viewer.highlight(highlightRegExp);
-    }
-
     let i = termViewers.findIndex(v => v.hasSelection());
     if (i === -1) {
       this._find();
@@ -179,7 +185,16 @@ class FindWidget {
         return;
       }
     }
-  }   
+  }
+
+  private _handleClose(): void {
+    this._removeHighlight();
+  }
+
+  private _close(): void {
+    this._widget.close();
+  }
+
 }
 
 @Component(
