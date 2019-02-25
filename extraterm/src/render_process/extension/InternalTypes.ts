@@ -13,6 +13,7 @@ import { SupportsDialogStack } from '../SupportsDialogStack';
 import { CommandsRegistry } from './CommandsRegistry';
 import { TextEditor } from '../viewers/TextEditorType';
 import { CommonExtensionWindowState } from './CommonExtensionState';
+import { EventEmitter } from 'extraterm-event-emitter';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -106,6 +107,11 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
   findViewerElementTagByMimeType(mimeType: string): string;
   registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
   debugRegisteredCommands(): void;
+}
+
+export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorderWidget {
+  _handleOpen(): void;
+  _handleClose(): void;
 }
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {

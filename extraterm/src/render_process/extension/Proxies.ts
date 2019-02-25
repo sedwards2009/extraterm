@@ -7,7 +7,7 @@ import * as ExtensionApi from 'extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 
 import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
-import { InternalExtensionContext, InternalWindow } from './InternalTypes';
+import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget } from './InternalTypes';
 import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
@@ -142,11 +142,17 @@ export class ViewerTabProxy implements ExtensionApi.Tab {
   }
 }
 
+interface TerminalBorderWidgetInfo {
+  htmlWidgetProxy: WidgetProxy;
+  terminalBorderWidget: InternalTerminalBorderWidget;
+  factoryResult: unknown;
+}
+
 export class TerminalProxy implements ExtensionApi.Terminal {
   
   viewerType: 'terminal-output';
 
-  private _terminalBorderWidgets = new Map<string, {htmlWidgetProxy: WidgetProxy, factoryResult: unknown}>();
+  private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
   _onDidAppendViewerEventEmitter = new EventEmitter<Viewer>();
   onDidAppendViewer: ExtensionApi.Event<Viewer>;
 
@@ -176,9 +182,10 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 
   openTerminalBorderWidget(name: string): any {
     if (this._terminalBorderWidgets.has(name)) {
-      const { htmlWidgetProxy, factoryResult } = this._terminalBorderWidgets.get(name);
+      const { htmlWidgetProxy, terminalBorderWidget, factoryResult } = this._terminalBorderWidgets.get(name);
       const data = this._findTerminalBorderWidgetMetadata(name);
       this._terminal.appendElementToBorder(htmlWidgetProxy, data.border);
+      terminalBorderWidget._handleOpen();
       return factoryResult;
     }
 
@@ -195,12 +202,14 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     htmlWidgetProxy._setExtensionCss(data.css);
 
     this._terminal.appendElementToBorder(htmlWidgetProxy, data.border);
-    const extensionWidget = new TerminalBorderWidgetImpl(htmlWidgetProxy, () => {
+    const terminalBorderWidget = new TerminalBorderWidgetImpl(htmlWidgetProxy, () => {
       this._terminal.removeElementFromBorder(htmlWidgetProxy);
+      terminalBorderWidget._handleClose();
       this._terminal.focus();
     });
-    const factoryResult = factory(this, extensionWidget);
-    this._terminalBorderWidgets.set(name, { htmlWidgetProxy, factoryResult });
+    const factoryResult = factory(this, terminalBorderWidget);
+    this._terminalBorderWidgets.set(name, { htmlWidgetProxy, terminalBorderWidget, factoryResult });
+    terminalBorderWidget._handleOpen();
     return factoryResult;
   }
 
@@ -215,12 +224,35 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 }
 
-class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget {
+class TerminalBorderWidgetImpl implements InternalTerminalBorderWidget {
+  
+  private _open = false;
+  private _onDidOpenEventEmitter = new EventEmitter<void>();
+  onDidOpen: ExtensionApi.Event<void>;
+  private _onDidCloseEventEmitter = new EventEmitter<void>();
+  onDidClose: ExtensionApi.Event<void>;
+
   constructor(private _widgetProxy: WidgetProxy, private _close: () => void) {
+    this.onDidOpen = this._onDidOpenEventEmitter.event;
+    this.onDidClose = this._onDidCloseEventEmitter.event;
   }
 
   getContainerElement(): HTMLElement {
     return this._widgetProxy.getContainerElement();
+  }
+
+  isOpen(): boolean {
+    return this._open;
+  }
+
+  _handleOpen(): void {
+    this._open = true;
+    this._onDidOpenEventEmitter.fire(undefined);
+  }
+
+  _handleClose(): void {
+    this._open = false;
+    this._onDidCloseEventEmitter.fire(undefined);
   }
 
   close(): void {

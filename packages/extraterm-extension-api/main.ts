@@ -86,6 +86,10 @@ export interface Terminal {
 export interface TerminalBorderWidget {
   getContainerElement(): HTMLElement;
   close(): void;
+  isOpen(): boolean;
+  
+  onDidOpen: Event<void>;
+  onDidClose: Event<void>;
 }
 
 export interface NumberInputOptions {
