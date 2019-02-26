@@ -36,7 +36,6 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "electron": "4.0.4",
     "node-abi": "2.7.1"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
@@ -44,6 +43,7 @@
     "node-pty": "0.8.1"
   },
   "devDependencies": {
+    "electron": "4.0.4",
     "electron-packager": "13.0.1",
     "electron-rebuild": "1.8.4",
     "git-repo-info": "^1.4.1",
