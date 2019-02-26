@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -12,7 +12,7 @@ const getRepoInfo = require('git-repo-info');
 const log = console.log.bind(console);
 const MODULE_VERSON = 69; // This version number also appears in thememanager.ts
 
-function main() {
+async function main() {
   "use strict";
   
   if ( ! test('-f', './package.json')) {
@@ -174,80 +174,72 @@ function main() {
 
   }
 
-  function makePackage(arch, platform) {
+  async function makePackage(arch, platform) {
     log("");
-    return new Promise(function(resolve, reject) {
       
-      // Clean up the output dirs and files first.
-      const versionedOutputDir = packageData.name + "-" + packageData.version + "-" + platform + "-" + arch;
-      if (test('-d', versionedOutputDir)) {
-        rm('-rf', versionedOutputDir);
-      }
-      
-      const outputZip = path.join(BUILD_TMP_DIR, versionedOutputDir + ".zip");
+    // Clean up the output dirs and files first.
+    const versionedOutputDir = packageData.name + "-" + packageData.version + "-" + platform + "-" + arch;
+    if (test('-d', versionedOutputDir)) {
+      rm('-rf', versionedOutputDir);
+    }
+    
+    const outputZip = path.join(BUILD_TMP_DIR, versionedOutputDir + ".zip");
 
-      const packagerOptions = {
-        arch: arch,
-        dir: ".",
-        platform: platform,
-        version: electronVersion,
-        ignore: ignoreFunc,
-        name: platform === "darwin" ? "Extraterm" : "extraterm",
-        overwrite: true,
-        out: BUILD_TMP_DIR,
-        packageManager: "yarn",
-        afterPrune: [
-          (buildPath, electronVersion, platform, arch, callback) => {
-            replaceDirs(path.join(buildPath, "node_modules"), path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`));
-            callback();
-          }
-        ]
+    const packagerOptions = {
+      arch: arch,
+      dir: ".",
+      platform: platform,
+      version: electronVersion,
+      ignore: ignoreFunc,
+      name: platform === "darwin" ? "Extraterm" : "extraterm",
+      overwrite: true,
+      out: BUILD_TMP_DIR,
+      prune: false
+    };
+    if (platform === "win32") {
+      packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.ico";
+      packagerOptions.win32metadata = {
+        FileDescription: "Extraterm",
+        ProductName: "Extraterm",
+        LegalCopyright: "(C) 2018 Simon Edwards"
       };
-      if (platform === "win32") {
-        packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.ico";
-        packagerOptions.win32metadata = {
-          FileDescription: "Extraterm",
-          ProductName: "Extraterm",
-          LegalCopyright: "(C) 2018 Simon Edwards"
-        };
-      } else if (platform === "darwin") {
-        packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.icns";
-      }
+    } else if (platform === "darwin") {
+      packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.icns";
+    }
 
-      packager(packagerOptions, function done(err, appPath) {
-        if (err !== null) {
-          log(err);
-          reject();
-        } else {
-          // Rename the output dir to a one with a version number in it.
-          mv(appPath[0], path.join(BUILD_TMP_DIR, versionedOutputDir));
-          
-          const thisCD = pwd();
-          cd(BUILD_TMP_DIR);
+    const appPath = await packager(packagerOptions);
 
-          hoistSubprojectsModules(versionedOutputDir, platform);
-          pruneNodeModules(versionedOutputDir, platform);
+    const dirsDest = path.join(BUILD_TMP_DIR, `extraterm-${platform}-${arch}`, "node_modules");
+    const dirsSource = path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`);
+    log(`copy ${dirsSource} => ${dirsDest}`);
+    replaceDirs(dirsDest,dirsSource);
 
-          // Prune any unneeded node-sass binaries.
-          pruneNodeSass(versionedOutputDir, arch, platform);
+    // Rename the output dir to a one with a version number in it.
+    mv(appPath[0], path.join(BUILD_TMP_DIR, versionedOutputDir));
+    
+    const thisCD = pwd();
+    cd(BUILD_TMP_DIR);
 
-          pruneEmojiOne(versionedOutputDir, platform);
+    hoistSubprojectsModules(versionedOutputDir, platform);
+    pruneNodeModules(versionedOutputDir, platform);
 
-          // Zip it up.
-          log("Zipping up the package");
+    // Prune any unneeded node-sass binaries.
+    pruneNodeSass(versionedOutputDir, arch, platform);
 
-          mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
-          cp("extraterm/README.md", versionedOutputDir);
-          cp("extraterm/LICENSE.txt", versionedOutputDir);
-          
-          exec(`zip -y -r ${outputZip} ${versionedOutputDir}`);
-          cd(thisCD);
-          
-          log("App bundle written to " + versionedOutputDir);
-          resolve();
-        }
-      });
-    });
+    pruneEmojiOne(versionedOutputDir, platform);
+
+    // Zip it up.
+    log("Zipping up the package");
+
+    mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
+    cp("extraterm/README.md", versionedOutputDir);
+    cp("extraterm/LICENSE.txt", versionedOutputDir);
+    
+    exec(`zip -y -r ${outputZip} ${versionedOutputDir}`);
+    cd(thisCD);
+    
+    log("App bundle written to " + versionedOutputDir);
+    return true;
   }
   
   function replaceDirs(targetDir, replacementsDir) {
@@ -382,18 +374,32 @@ SectionEnd
 `;
     fs.writeFileSync(path.join(BUILD_TMP_DIR, "installer.nsi"), installerScript, {encoding: "utf-8"});
 
-    exec(`docker run -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
+    exec(`docker run --rm -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
   }
 
   if (linuxZipOnly) {
-    makePackage("x64", "linux");
+    await makePackage("x64", "linux");
+    log("Done");
   } else {
-    makePackage("x64", "win32")
-      .then(() => makePackage("x64", "linux"))
-      .then(() => makePackage("x64", "darwin"))
-      .then(makeDmg)
-      .then(makeNsis)
-      .then(() => { log("Done"); } );
+    if (! await makePackage("x64", "win32")) {
+      return;
+    }
+    if (! await makePackage("x64", "linux")) {
+      return;
+    }
+
+    if (! await makePackage("x64", "darwin")) {
+      return;
+    }
+
+    if (! await makeDmg()) {
+      return;
+    }
+
+    if (! await makeNsis()) {
+      return;
+    }
+    log("Done");
   }
 }
 
