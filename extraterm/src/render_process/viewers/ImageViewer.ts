@@ -15,11 +15,10 @@ import {ViewerElement} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
-import { VisualState, Mode, CursorMoveDetail, CursorEdgeDetail, Edge } from './ViewerElementTypes';
+import { VisualState, Mode, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
-import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
-import { ResizeNotifier } from '../../../../packages/extraterm-resize-notifier/main';
+import { ResizeNotifier } from 'extraterm-resize-notifier';
 
 const ID = "EtImageViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -28,11 +27,6 @@ const ID_IMAGE = "ID_IMAGE";
 const CLASS_FORCE_FOCUSED = "force-focused";
 const CLASS_FORCE_UNFOCUSED = "force-unfocused";
 const CLASS_FOCUS_AUTO = "focus-auto";
-const SCROLL_STEP = 128;
-
-const KEYBINDINGS_SELECTION_MODE = "image-viewer";
-const COMMAND_GO_UP = "goUp";
-const COMMAND_GO_DOWN = "goDown";
 
 const DEBUG_SIZE = false;
 
@@ -104,7 +98,6 @@ export class ImageViewer extends ViewerElement {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     this.style.height = "0px";
     
-    containerDiv.addEventListener('keydown', this._handleContainerKeyDown.bind(this));
     containerDiv.addEventListener('focus', (ev) => {
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       this._cursorTop = containerDiv.scrollTop;
@@ -345,58 +338,6 @@ export class ImageViewer extends ViewerElement {
     } else {
       return super.dispatchEvent(ev);
     }
-  }
-  
-  private _handleContainerKeyDown(ev: KeyboardEvent): void {
-    // if (this._keybindingsManager !== null && this._keybindingsManager.getKeybindingsContexts() !== null &&
-    //     this._mode === Mode.CURSOR) {
-          
-    //   const keyBindings = this._keybindingsManager.getKeybindingsContexts();
-    //   if (keyBindings !== null) {
-        
-    //     const command = keyBindings.mapEventToCommand(ev);
-    //     if (command !== null) {
-    //       ev.preventDefault();
-    //       ev.stopPropagation();
-          
-    //       switch (command) {        
-    //         case COMMAND_GO_UP:
-    //           // Cursor up
-    //           if (this._cursorTop !== 0) {
-    //             const newTop = Math.max(this._cursorTop - SCROLL_STEP, 0);
-    //             this._cursorTop = newTop;
-    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-    //             this.dispatchEvent(event);
-
-    //           } else {
-    //             const detail: CursorEdgeDetail = { edge: Edge.TOP, ch: 0 };
-    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-    //             this.dispatchEvent(event);
-    //           }
-    //           break;
-            
-    //         case COMMAND_GO_DOWN:
-    //           // Cursor down          
-    //           if (this._cursorTop + this._height < this._imageHeight) {
-    //             const newTop = Math.min(this._imageHeight - this._height, this._cursorTop + SCROLL_STEP);
-    //             this._cursorTop = newTop;
-    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
-    //             this.dispatchEvent(event);
-
-    //           } else {
-    //             const detail: CursorEdgeDetail = { edge: Edge.BOTTOM, ch: 0 };
-    //             const event = new CustomEvent(ViewerElement.EVENT_CURSOR_EDGE, { bubbles: true, detail: detail });
-    //             this.dispatchEvent(event);
-    //           }
-    //           break;
-              
-    //         default:
-    //           break;
-    //       }
-    //       return;
-    //     }
-    //   }
-    // }    
   }
 
   private _adjustHeight(newHeight: number): void {
