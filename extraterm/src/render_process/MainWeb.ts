@@ -242,19 +242,15 @@ function startUpMainWebUi(): void {
 }
 
 function handleKeyDownCapture(ev: KeyboardEvent): void {
-  _log.debug(`handleKeyDownCapture() event: `, ev);  
   handleKeyCapture(ev);
 }
 
 function handleKeyPressCapture(ev: KeyboardEvent): void {
-  _log.debug(`handleKeyPressCapture() event: `, ev);  
   handleKeyCapture(ev);
 }
 
 function handleKeyCapture(ev: KeyboardEvent): void {
   const commands = keybindingsManager.getKeybindingsMapping().mapEventToCommands(ev);
-_log.debug(`handleKeyCapture() commands '${commands}'`);  
-
   extensionManager.updateExtensionWindowStateFromEvent(ev);
 
   const categories: Category[] = extensionManager.isInputFieldFocus()
@@ -266,8 +262,6 @@ _log.debug(`handleKeyCapture() commands '${commands}'`);
     when: true
   });
   if (filteredCommands.length !== 0) {
-_log.debug(`filtered Commands is ${filteredCommands.map(fc => fc.command).join(", ")}`);
-
     if (filteredCommands.length !== 1) {
       _log.warn(`Commands ${filteredCommands.map(fc => fc.command).join(", ")} have conflicting keybindings.`);
     }

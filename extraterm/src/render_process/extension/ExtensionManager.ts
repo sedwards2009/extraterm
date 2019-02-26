@@ -282,7 +282,6 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
   private _createWhenPredicate(state: CommonExtensionWindowState): (ecc: ExtensionCommandContribution) => boolean {
     const variables = this._createWhenVariables(state);
-this._log.debug("WhenVariables: ", JSON.stringify(variables, null, "  "));
     const bee = new BooleanExpressionEvaluator(variables);
     return (ecc: ExtensionCommandContribution): boolean => {
       if (ecc.when === "") {
