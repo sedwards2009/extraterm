@@ -7,11 +7,11 @@
     "build": "tsc"
   },
   "dependencies": {
-    "lodash": "^4.0.0",
+    "lodash": "^4.17.11",
     "extraterm-event-emitter": "1.0.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.0.0",
+    "@types/lodash": "^4.14.121",
     "@types/node": "7.0.5",
     "extraterm-extension-api": "0.1.0",
     "typescript": "3.1.6"
