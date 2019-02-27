@@ -30,6 +30,11 @@ export class SimpleViewerElement extends ViewerElement {
     this._setupDOM();
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._handleResize();
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI];
   }
@@ -44,16 +49,20 @@ export class SimpleViewerElement extends ViewerElement {
     this._containerElement = document.createElement("div");
     SimpleViewerElement._resizeNotifier.observe(this._containerElement,
       (target: Element, contentRect: DOMRectReadOnly) => {
-        if ( ! this.isConnected) {
-          return;
-        }  
-        const rect = this._containerElement.getBoundingClientRect();
-        this._containerHeight = rect.height;
-        emitResizeEvent(this);
+        this._handleResize();
       });
     this.shadowRoot.appendChild(this._containerElement);
 
     this.updateThemeCss();
+  }
+
+  private _handleResize(): void {
+    if ( ! this.isConnected) {
+      return;
+    }  
+    const rect = this._containerElement.getBoundingClientRect();
+    this._containerHeight = rect.height;
+    emitResizeEvent(this);
   }
 
   /**

@@ -86,41 +86,44 @@ export class ImageViewer extends ViewerElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) !== null) {
+    if (DomUtils.getShadowRoot(this) != null) {
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+      const clone = this.createClone();
+      shadow.appendChild(clone);
+      this.updateThemeCss();
+      
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      this.style.height = "0px";
+      
+      containerDiv.addEventListener('focus', (ev) => {
+        const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+        this._cursorTop = containerDiv.scrollTop;
+      } );
+      
+      const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
+      imgElement.addEventListener('load', () => this._handleImageLoad());
+      ImageViewer._resizeNotifier.observe(imgElement, (target: Element, contentRect: DOMRectReadOnly) => {
+        this._handleResize();
+      });
+
+      this._applyVisualState(this._visualState);
+
+      if (this._bulkFileHandle !== null) {
+        this._setImageUrl(this._bulkFileHandle.getUrl());
+      }
+      
+      this._adjustHeight(this._height);
+    }
+    this._handleResize();
+  }
+
+  private _handleResize(): void {
+    if ( ! this.isConnected) {
       return;
     }
-    
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
-    
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    this.style.height = "0px";
-    
-    containerDiv.addEventListener('focus', (ev) => {
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      this._cursorTop = containerDiv.scrollTop;
-    } );
-    
-    const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
-    imgElement.addEventListener('load', () => this._handleImageLoad());
-    ImageViewer._resizeNotifier.observe(imgElement, (target: Element, contentRect: DOMRectReadOnly) => {
-      if ( ! this.isConnected) {
-        return;
-      }
-      emitResizeEvent(this);
-    });
-
-    this._applyVisualState(this._visualState);
-
-    if (this._bulkFileHandle !== null) {
-      this._setImageUrl(this._bulkFileHandle.getUrl());
-    }
-    
-    this._adjustHeight(this._height);
+    emitResizeEvent(this);
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.IMAGE_VIEWER];
   }

@@ -94,6 +94,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
     this._elementAttached = true;
     if (this._initialized) {
+      this.refresh(RefreshLevel.COMPLETE);
       this._updateScrollableSpacing();
       return;
     }
@@ -116,10 +117,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     DomUtils.preventScroll(this._scrollContainer);
 
     TerminalCanvas._resizeNotifier.observe(this._scrollContainer, (target: Element, contentRect: DOMRectReadOnly) => {
-      if ( ! this.isConnected) {
-        return;
-      }      
-      this.refresh(RefreshLevel.COMPLETE);
+      this._handleResize();
     });
 
     DomUtils.addCustomEventResender(this._scrollContainer, EVENT_DRAG_STARTED, this);
@@ -166,7 +164,14 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     this._setupFontResizeDetector();
     this._scheduleResize();
   }
-  
+
+  private _handleResize(): void {
+    if ( ! this.isConnected) {
+      return;
+    }      
+    this.refresh(RefreshLevel.COMPLETE);
+  }
+
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {

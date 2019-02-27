@@ -96,64 +96,58 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
   
   connectedCallback(): void {
     super.connectedCallback();
-    this._tipIndex = this._configManager.getConfig(GENERAL_CONFIG).tipCounter % this._getTipCount();
     
-    if (DomUtils.getShadowRoot(this) !== null) {
-      return;
+    if (DomUtils.getShadowRoot(this) == null) {
+      this._tipIndex = this._configManager.getConfig(GENERAL_CONFIG).tipCounter % this._getTipCount();
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+      const clone = this.createClone();
+      shadow.appendChild(clone);
+      this.updateThemeCss();
+      
+      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+      TipViewer._resizeNotifier.observe(containerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+        this._handleResize();
+      });
+
+      // Intercept link clicks and open them in an external browser.
+      containerDiv.addEventListener('click', (ev: MouseEvent) => {
+        const source = <HTMLElement> ev.target;
+        if (source.tagName === "A") {
+          ev.preventDefault();
+          shell.openExternal((<HTMLAnchorElement> source).href);
+        }
+      });
+      
+      containerDiv.addEventListener('focus', (ev: FocusEvent) => {
+        if (ev.target instanceof HTMLSelectElement) {
+          ev.stopPropagation();
+          return;
+        }
+      }, true);
+
+      this._setTipHTML(this._getTipHTML(this._tipIndex));
+      
+      const nextButton = DomUtils.getShadowId(this, ID_NEXT_BUTTON);
+      nextButton.addEventListener('click', () => {
+        this._tipIndex = (this._tipIndex + 1) % this._getTipCount();
+        this._setTipHTML(this._getTipHTML(this._tipIndex));
+      });
+      
+      const previousButton = DomUtils.getShadowId(this, ID_PREVIOUS_BUTTON);
+      previousButton.addEventListener('click', () => {
+        this._tipIndex = (this._tipIndex + this._getTipCount() - 1) % this._getTipCount();
+        this._setTipHTML(this._getTipHTML(this._tipIndex));
+      });
+      
+      const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
+      showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
+      showTipsSelect.addEventListener('change', () => {
+        const newConfig = this._configManager.getConfigCopy(GENERAL_CONFIG);
+        newConfig.showTips = <ShowTipsStrEnum> showTipsSelect.value;
+        this._configManager.setConfig(GENERAL_CONFIG, newConfig);
+      });
     }
-    
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this.createClone();
-    shadow.appendChild(clone);
-    this.updateThemeCss();
-    
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    TipViewer._resizeNotifier.observe(containerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
-      if ( ! this.isConnected) {
-        return;
-      }
-      const rect = containerDiv.getBoundingClientRect();
-      this._height = rect.height;
-      emitResizeEvent(this);
-    });
-
-    // Intercept link clicks and open them in an external browser.
-    containerDiv.addEventListener('click', (ev: MouseEvent) => {
-      const source = <HTMLElement> ev.target;
-      if (source.tagName === "A") {
-        ev.preventDefault();
-        shell.openExternal((<HTMLAnchorElement> source).href);
-      }
-    });
-    
-    containerDiv.addEventListener('focus', (ev: FocusEvent) => {
-      if (ev.target instanceof HTMLSelectElement) {
-        ev.stopPropagation();
-        return;
-      }
-    }, true);
-
-    this._setTipHTML(this._getTipHTML(this._tipIndex));
-    
-    const nextButton = DomUtils.getShadowId(this, ID_NEXT_BUTTON);
-    nextButton.addEventListener('click', () => {
-      this._tipIndex = (this._tipIndex + 1) % this._getTipCount();
-      this._setTipHTML(this._getTipHTML(this._tipIndex));
-    });
-    
-    const previousButton = DomUtils.getShadowId(this, ID_PREVIOUS_BUTTON);
-    previousButton.addEventListener('click', () => {
-      this._tipIndex = (this._tipIndex + this._getTipCount() - 1) % this._getTipCount();
-      this._setTipHTML(this._getTipHTML(this._tipIndex));
-    });
-    
-    const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-    showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
-    showTipsSelect.addEventListener('change', () => {
-      const newConfig = this._configManager.getConfigCopy(GENERAL_CONFIG);
-      newConfig.showTips = <ShowTipsStrEnum> showTipsSelect.value;
-      this._configManager.setConfig(GENERAL_CONFIG, newConfig);
-    });
+    this._handleResize();
   }
   
   disconnectedCallback(): void {
@@ -166,6 +160,20 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GENERAL_GUI];
+  }
+
+  private _handleResize(): void {
+    if ( ! this.isConnected) {
+      return;
+    }
+
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    const rect = containerDiv.getBoundingClientRect();
+    if (rect.height === this._height) {
+      return;
+    }
+    this._height = rect.height;
+    emitResizeEvent(this);
   }
 
   setConfigDatabase(newConfigManager: ConfigDatabase): void {

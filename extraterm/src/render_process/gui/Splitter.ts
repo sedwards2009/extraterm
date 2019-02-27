@@ -60,10 +60,7 @@ export class Splitter extends TemplatedElementBase {
     const topDiv = this._elementById(ID_TOP);
     topDiv.classList.add(CLASS_NORMAL);
     Splitter._resizeNotifier.observe(topDiv, (target: Element, contentRect: DOMRectReadOnly) => {
-      if ( ! this.isConnected) {
-        return;
-      }
-      this._refresh(RefreshLevel.COMPLETE);
+      this._handleResize();
     });
     topDiv.addEventListener('mousedown', this._handleMouseDown.bind(this));
     topDiv.addEventListener('mouseup', this._handleMouseUp.bind(this));
@@ -85,6 +82,18 @@ export class Splitter extends TemplatedElementBase {
     this._mutationObserver.observe(this, { childList: true });
 
     this.updateThemeCss();
+  }
+
+  private _handleResize(): void {
+    if ( ! this.isConnected) {
+      return;
+    }
+    this._refresh(RefreshLevel.COMPLETE);
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._handleResize();
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

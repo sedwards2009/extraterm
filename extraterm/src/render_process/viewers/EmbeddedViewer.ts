@@ -158,13 +158,17 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     EmbeddedViewer._resizeNotifier.observe(headerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
-      if ( ! this.isConnected) {
-        return;
-      }
-      VirtualScrollArea.emitResizeEvent(this);
+      this._handleResize();
     });
   }
-  
+
+  private _handleResize(): void {
+    if ( ! this.isConnected) {
+      return;
+    }
+    VirtualScrollArea.emitResizeEvent(this);
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
 
@@ -175,6 +179,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
         this._connectSetupDone = true;
     }
+    this._handleResize();
   }
 
   getMetadata(): ViewerMetadata {
