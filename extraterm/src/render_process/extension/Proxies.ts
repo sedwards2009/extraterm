@@ -93,6 +93,7 @@ export class WindowProxy implements InternalWindow {
     for (const data of borderWidgetMeta) {
       if (data.name === name) {
         this._terminalBorderWidgetFactoryMap.set(name, factory);
+        return;
       }
     }
 
