@@ -21,7 +21,7 @@
     "build-test": "tsc && webpack --config webpack.test.config.js"
   },
   "dependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.9.0/ace-ts-v0.9.0.tgz",
+    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.10.0/ace-ts-v0.10.0.tgz",
     "extraterm-event-emitter": "1.0.0",
     "term-api": "1.0.0"
   }

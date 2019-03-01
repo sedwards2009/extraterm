@@ -437,7 +437,12 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   find(needle: string, options?: FindOptions): boolean {
-    return this._aceEditor.find(needle, this._findOptionsToSearchOptions(options)) != null;
+    const result = this._aceEditor.find(needle, this._findOptionsToSearchOptions(options))
+    if (result) {
+      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+      this.dispatchEvent(event);
+    }
+    return result != null;
   }
 
   private _findOptionsToSearchOptions(findOptions?: FindOptions): SearchOptions {
@@ -445,7 +450,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       return {};
     }
 
-    const searchOptions: SearchOptions = {};
+    const searchOptions: SearchOptions = {preventScroll: true};
     if (findOptions.backwards !== undefined) {
       searchOptions.backwards = findOptions.backwards;
     }
@@ -470,11 +475,21 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   findNext(needle: string): boolean {
-    return this._aceEditor.findNext(needle) != null;
+    const result = this._aceEditor.findNext(needle) != null;
+    if (result != null) {
+      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+      this.dispatchEvent(event);
+    }
+    return result != null;
   }
 
   findPrevious(needle: string): boolean {
-    return this._aceEditor.findPrevious(needle) != null;
+    const result = this._aceEditor.findPrevious(needle) != null;
+    if (result != null) {
+      const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
+      this.dispatchEvent(event);
+    }
+    return result != null;
   } 
 
   highlight(re: RegExp): void {
