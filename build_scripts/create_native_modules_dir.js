@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -17,7 +17,6 @@ const mv = shelljs.mv;
 const rm = shelljs.rm;
 const echo = shelljs.echo;
 const pwd = shelljs.pwd;
-const find = shelljs.find;
 
 const path = require('path');
 
@@ -83,27 +82,36 @@ Exiting.
   const currentDir = pwd();
   cd(BUILD_DIR);
   
-  exec("npm init -f");
-  
+  const defaultPackage = `{
+    "name": "build_native",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "scripts": {
+      "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v ${getPackageVersion(packageDatas, "electron")}",
+      "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o node-pty -f -v ${getPackageVersion(packageDatas, "electron")}"
+    }
+  }`;
+
+  fs.writeFileSync("package.json", defaultPackage, "utf-8");
+
   pkgList.forEach( (pkg) => {    
-    exec("npm install --save " + pkg + "@" + getPackageVersion(packageDatas, pkg));
+    exec("yarn add " + pkg + "@" + getPackageVersion(packageDatas, pkg));
   });
 
   if (process.platform === 'win32') {
-    exec("npm config set msvs_version 2015");
-    exec(path.join(__dirname, "rebuild_mods_windows.bat"));
+    exec("yarn run electron-rebuild-win32");
   } else {
-    exec("node node_modules/electron-rebuild/lib/src/cli.js -s -f -v " + getPackageVersion(packageDatas, "electron") +
-      " -t prod,optional,dev");
+    exec("yarn run electron-rebuild");
   }
 
-  exec("npm uninstall electron-rebuild");
-  exec("npm uninstall electron");
-  exec("npm prune");
+  exec("yarn remove electron-rebuild");
+  exec("yarn remove electron");
 
   cd(currentDir);
   mv(path.join(BUILD_DIR, "node_modules"), target);
-  
+  rm(path.join(target, ".yarn-integrity"));
+
   echo(`Done. ${target} has been updated. You can add it back in with git.`);
 }
 main();
