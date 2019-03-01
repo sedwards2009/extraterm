@@ -6,13 +6,14 @@
 const shelljs = require('shelljs');
 const fs = require('fs');
 
-const MODULE_LIST = ["electron", "electron-rebuild", "node-pty"];
+const MODULE_LIST = ["node-pty"];
 
 // This is mostly to keep the linter happy.
 const test = shelljs.test;
 const mkdir = shelljs.mkdir;
 const exec = shelljs.exec;
 const cd = shelljs.cd;
+const ls = shelljs.ls;
 const mv = shelljs.mv;
 const rm = shelljs.rm;
 const echo = shelljs.echo;
@@ -53,7 +54,7 @@ function platformModuleDir() {
 
 function main() {
   "use strict";
-  
+
   const target = platformModuleDir();
   if (test('-d', target)) {
     echo(`
@@ -79,7 +80,7 @@ Exiting.
   }
   mkdir(BUILD_DIR);
   
-  const currentDir = pwd();
+  const scriptDir = pwd();
   cd(BUILD_DIR);
   
   const defaultPackage = `{
@@ -95,9 +96,14 @@ Exiting.
 
   fs.writeFileSync("package.json", defaultPackage, "utf-8");
 
-  pkgList.forEach( (pkg) => {    
+  pkgList.forEach( (pkg) => {
     exec("yarn add " + pkg + "@" + getPackageVersion(packageDatas, pkg));
   });
+  const actualModules = ls("node_modules").filter(item => test("-d", path.join("node_modules", item)));
+
+  for (const pkg of ["electron", "electron-rebuild"]) {
+    exec("yarn add " + pkg + "@" + getPackageVersion(packageDatas, pkg) + " --dev");
+  }
 
   if (process.platform === 'win32') {
     exec("yarn run electron-rebuild-win32");
@@ -105,12 +111,11 @@ Exiting.
     exec("yarn run electron-rebuild");
   }
 
-  exec("yarn remove electron-rebuild");
-  exec("yarn remove electron");
-
-  cd(currentDir);
-  mv(path.join(BUILD_DIR, "node_modules"), target);
-  rm(path.join(target, ".yarn-integrity"));
+  cd(scriptDir);
+  mkdir(target);
+  for (const moduleDir of actualModules) {
+    mv(path.join(BUILD_DIR, "node_modules", moduleDir), target);
+  }
 
   echo(`Done. ${target} has been updated. You can add it back in with git.`);
 }
