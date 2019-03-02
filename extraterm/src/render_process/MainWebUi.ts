@@ -335,10 +335,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
       emptyPaneMenu.setEntries(entriesAndShortcuts);
       emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
+
+        const windowState = this._extensionManager.getExtensionWindowStateFromEvent(ev);
         emptyPaneMenu.setFilter("");
         for (const entry of entriesAndShortcuts) {
           if (entry.id === ev.detail.selected) {
-            this._extensionManager.executeCommand(entry.command);
+            this._extensionManager.executeCommandWithExtensionWindowState(windowState, entry.command);
           }
         }
       });
