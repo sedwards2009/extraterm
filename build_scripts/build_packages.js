@@ -209,14 +209,13 @@ async function main() {
 
     const appPath = await packager(packagerOptions);
 
-    const dirsDest = path.join(BUILD_TMP_DIR, `extraterm-${platform}-${arch}`, "node_modules");
-    const dirsSource = path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`);
-    log(`copy ${dirsSource} => ${dirsDest}`);
-    replaceDirs(dirsDest,dirsSource);
-
     // Rename the output dir to a one with a version number in it.
     mv(appPath[0], path.join(BUILD_TMP_DIR, versionedOutputDir));
-    
+
+    const dirsDest = path.join(BUILD_TMP_DIR, versionedOutputDir, "resources/app/node_modules");
+    const dirsSource = path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`);
+    replaceDirs(dirsDest, dirsSource);
+
     const thisCD = pwd();
     cd(BUILD_TMP_DIR);
 
