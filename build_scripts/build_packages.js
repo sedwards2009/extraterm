@@ -278,6 +278,7 @@ async function main() {
     ln("-s", "/Applications", path.join(darwinPath, "Applications"));
 
     exec(`docker run --rm -v "${BUILD_TMP_DIR}:/files" sporsh/create-dmg Extraterm /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
+    return true;
   }
 
   function makeNsis() {
@@ -375,6 +376,7 @@ SectionEnd
     fs.writeFileSync(path.join(BUILD_TMP_DIR, "installer.nsi"), installerScript, {encoding: "utf-8"});
 
     exec(`docker run --rm -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
+    return true;
   }
 
   if (linuxZipOnly) {
@@ -384,6 +386,7 @@ SectionEnd
     if (! await makePackage("x64", "win32")) {
       return;
     }
+    
     if (! await makePackage("x64", "linux")) {
       return;
     }
@@ -392,11 +395,11 @@ SectionEnd
       return;
     }
 
-    if (! await makeDmg()) {
+    if (! makeDmg()) {
       return;
     }
 
-    if (! await makeNsis()) {
+    if (! makeNsis()) {
       return;
     }
     log("Done");
