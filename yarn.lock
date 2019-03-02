@@ -229,10 +229,10 @@ abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
 
-"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.9.0/ace-ts-v0.9.0.tgz":
-  version "0.9.0"
-  uid ce6234e798c8d5262276a05a6ea5328aa9c397b4
-  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.9.0/ace-ts-v0.9.0.tgz#ce6234e798c8d5262276a05a6ea5328aa9c397b4"
+"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.10.0/ace-ts-v0.10.0.tgz":
+  version "0.10.0"
+  uid "349eda0524ee01c04a708fa578452d2ca051ce6e"
+  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.10.0/ace-ts-v0.10.0.tgz#349eda0524ee01c04a708fa578452d2ca051ce6e"
 
 acorn-dynamic-import@^2.0.0:
   version "2.0.2"
