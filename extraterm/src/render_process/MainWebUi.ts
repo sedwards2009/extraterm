@@ -950,13 +950,17 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return this._extensionManager.getActiveTab();
   }
 
+  private _getActiveTabWidget(): TabWidget {
+    return this._extensionManager.getActiveTabWidget();
+  }
+
   commandNewTerminal(args: any): void {
     let sessionUuid = args.sessionUuid;
     if (sessionUuid == null) {
       sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
     }
 
-    const newTerminal = this.newTerminalTab(this._tabWidgetFromElement(this._getActiveTabElement()), sessionUuid);
+    const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionUuid);
     this._switchToTab(newTerminal);
     this._extensionManager.newTerminalCreated(newTerminal);
   }

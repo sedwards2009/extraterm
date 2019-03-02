@@ -40,14 +40,14 @@ export class ContextMenu extends TemplatedElementBase {
       ev.stopPropagation();
       ev.preventDefault();
       if (ev.button === 0) {
-        this.close();
+        this._dismiss();
       }
     });
     
     cover.addEventListener('contextmenu', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
-      this.close();
+      this._dismiss();
     }, true);
     
     const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
@@ -114,7 +114,7 @@ export class ContextMenu extends TemplatedElementBase {
 
   private handleKeyDown(ev: KeyboardEvent) {
     if (ev.key === "Escape") {
-      this.close();
+      this._dismiss();
       ev.preventDefault();
       ev.stopPropagation();
       return;
@@ -260,18 +260,18 @@ export class ContextMenu extends TemplatedElementBase {
     container.focus();
   }
 
-  close(): void {
-    let event = new CustomEvent('before-close', { detail: null });
+  private _dismiss(): void {
+    this.close();  
+    const event = new CustomEvent("dismissed", { });
     this.dispatchEvent(event);
+  }
 
+  close(): void {
     const cover = <HTMLDivElement>this._elementById(ID_COVER);
     cover.className = CLASS_COVER_CLOSED;
 
     const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
     container.classList.remove(CLASS_CONTAINER_OPEN);
     container.classList.add(CLASS_CONTAINER_CLOSED);
-
-    event = new CustomEvent('close', { detail: null });
-    this.dispatchEvent(event);
   }
 }

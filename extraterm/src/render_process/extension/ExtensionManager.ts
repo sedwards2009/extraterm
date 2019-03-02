@@ -197,6 +197,10 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return this._commonExtensionWindowState.activeTabContent;
   }
 
+  getActiveTabWidget(): TabWidget {
+    return this._commonExtensionWindowState.activeTabsWidget;
+  }
+
   isInputFieldFocus(): boolean {
     return this._commonExtensionWindowState.isInputFieldFocus;
   }

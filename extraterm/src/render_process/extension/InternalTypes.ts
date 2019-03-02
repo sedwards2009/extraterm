@@ -14,6 +14,7 @@ import { CommandsRegistry } from './CommandsRegistry';
 import { TextEditor } from '../viewers/TextEditorType';
 import { CommonExtensionWindowState } from './CommonExtensionState';
 import { EventEmitter } from 'extraterm-event-emitter';
+import { TabWidget } from '../gui/TabWidget';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -43,6 +44,7 @@ export interface ExtensionManager {
   getActiveTab(): HTMLElement;
   getActiveTerminal(): EtTerminal;
   getActiveTabContent(): HTMLElement;
+  getActiveTabWidget(): TabWidget;
   getActiveTextEditor(): TextEditor;
   isInputFieldFocus(): boolean;
 

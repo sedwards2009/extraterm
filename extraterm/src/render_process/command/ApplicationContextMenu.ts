@@ -41,24 +41,16 @@ export class ApplicationContextMenu {
 
     this._contextMenuElement.addEventListener("selected", (ev: CustomEvent) => {
       this._executeMenuCommand(ev.detail.name);
-    });
-
-    this._contextMenuElement.addEventListener("close", () => {
-      const oldMenuEntries = this._menuEntries;
-      const oldContextWindowState = this._contextWindowState;
 
       this.extensionManager.refocus(this._contextWindowState);
+      this._menuEntries = null;
+      this._contextWindowState = null;
+    });
 
-      // We do this to avoid holding refs to objects after the context menu has closed. (-> GC). The delay
-      // is needed because a 'selected' event may need the list immediately after this 'close' event.
-      doLater( () => {
-        if (oldMenuEntries === this._menuEntries) {
-          this._menuEntries = null;
-        }
-        if (oldContextWindowState === this._contextWindowState) {
-          this._contextWindowState = null;
-        }
-      });
+    this._contextMenuElement.addEventListener("dismissed", (ev: CustomEvent) => {
+      this.extensionManager.refocus(this._contextWindowState);
+      this._menuEntries = null;
+      this._contextWindowState = null;
     });
   }
 
@@ -134,8 +126,9 @@ export class ApplicationContextMenu {
 
     const index = Number.parseInt(id.substr("index_".length), 10);
     const entry = this._menuEntries[index];
+    const contextWindowState = this._contextWindowState;
     doLater( () => {
-      this.extensionManager.executeCommandWithExtensionWindowState(this._contextWindowState, entry.command);
+      this.extensionManager.executeCommandWithExtensionWindowState(contextWindowState, entry.command);
     });
   }
 }
