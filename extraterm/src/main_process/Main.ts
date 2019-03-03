@@ -104,6 +104,7 @@ function main(): void {
   setupThemeManager();
 
   const userStoredConfig = setupUserConfig(themeManager, configDatabase, keybindingsIOManager, getFonts());
+  titleBarStyle = userStoredConfig.titleBarStyle;
   packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
   const systemConfig = systemConfiguration(userStoredConfig, null);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
