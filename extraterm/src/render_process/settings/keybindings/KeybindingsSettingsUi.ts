@@ -14,7 +14,7 @@ import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategor
 import { KeybindingsList } from './KeybindingsListUi';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
-import { ExtensionManager } from '../../extension/InternalTypes';
+import { ExtensionCommandContribution } from '../../../ExtensionMetadata';
 
 export const EVENT_DELETE = "delete";
 export const EVENT_DUPLICATE = "duplicate";
@@ -98,7 +98,7 @@ export const EVENT_RENAME = "rename";
     :keybindings="keybindings"
     :readOnly="isSelectedKeybindingsReadOnly"
     :searchText="searchText"
-    :extensionManager="extensionManager"
+    :commandsByCategory="commandsByCategory"
     v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
     v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
   </keybindings-category-list>
@@ -110,7 +110,7 @@ export class KeybindingsSettingsUi extends Vue {
 
   keybindings: KeybindingsFile = null;
   selectedKeybindings: string = "";
-
+  commandsByCategory: { [index: string]: ExtensionCommandContribution[] } = {};
   editingTitle = false;
   titleKeybindingsInfo: KeybindingsInfo = null;
   selectedTitle: string = ""
@@ -118,16 +118,6 @@ export class KeybindingsSettingsUi extends Vue {
   searchText: string = "";
 
   recordingKey: boolean = false;
-  private _extensionManager: ExtensionManager = null;
-
-  setExtensionManager(extensionManager: ExtensionManager): void {
-    this._extensionManager = extensionManager;
-    this.$forceUpdate();
-  }
-
-  get extensionManager(): ExtensionManager {
-    return this._extensionManager;
-  }
 
   get isSelectedKeybindingsReadOnly(): boolean {
     const info = this._selectedKeybindingsInfo();

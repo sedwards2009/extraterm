@@ -9,7 +9,7 @@ import { KeybindingsCategory, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from 
 import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ExtensionManager } from '../../extension/InternalTypes';
-import { Category } from '../../../ExtensionMetadata';
+import { Category, ExtensionCommandContribution } from '../../../ExtensionMetadata';
 
 const categoryNames = {
   "global": "Global",
@@ -28,10 +28,10 @@ const categoryNames = {
       "keybindings-category": KeybindingsCategory
     },
     props: {
-      extensionManager: Object, // ExtensionManager;
       keybindings: Object,      // KeybindingsFile,
       readOnly: Boolean,
-      searchText: String
+      searchText: String,
+      commandsByCategory: Object,
     },
     template: trimBetweenTags(`
     <div>
@@ -43,7 +43,7 @@ const categoryNames = {
         :keybindings="keybindings"
         :readOnly="readOnly"
         :searchText="searchText"
-        :extensionManager="extensionManager"
+        :commands="commandsByCategory[category]"
         v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
         v-on:${EVENT_END_KEY_INPUT}="$emit('${EVENT_END_KEY_INPUT}')">
       </keybindings-category>
@@ -53,7 +53,7 @@ const categoryNames = {
 export class KeybindingsList extends Vue {
   // Props
   keybindings: KeybindingsFile;
-  extensionManager: ExtensionManager;
+  commandsByCategory: { [index: string]: ExtensionCommandContribution[] };
   readOnly: boolean;
   searchText: string;
 

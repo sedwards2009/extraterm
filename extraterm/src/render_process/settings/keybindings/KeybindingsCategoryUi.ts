@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -10,21 +10,12 @@ import { KeybindingsFile, KeybindingsFileBinding } from '../../../keybindings/Ke
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
 import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { ExtensionManager } from '../../extension/InternalTypes';
 import { Category, ExtensionCommandContribution } from '../../../ExtensionMetadata';
 
 export const EVENT_START_KEY_INPUT = "start-key-input";
 export const EVENT_END_KEY_INPUT = "end-key-input";
 
 type KeybindingsKeyInputState = "read" | "edit" | "conflict";
-
-
-interface CommandKeybindingPair {
-  command: string;
-  keybindingString: string;
-  index: number;
-};
-
 
 @Component({
   components: {
@@ -34,7 +25,7 @@ interface CommandKeybindingPair {
     category: String,
     categoryName: String,
     keybindings: Object,      // KeybindingsFile,
-    extensionManager: Object, // ExtensionManager
+    commands: Object,         // ExtensionCommandContribution[]
     readOnly: Boolean,
     searchText: String,
   },
@@ -47,9 +38,9 @@ interface CommandKeybindingPair {
   template: trimBetweenTags(`
 <div>
   <h3>{{categoryName}}
-    <span v-if="allCommands.length !== commands.length" class="badge">{{commands.length}} / {{allCommands.length}}</span>
+    <span v-if="commands.length !== filteredCommands.length" class="badge">{{filteredCommands.length}} / {{commands.length}}</span>
   </h3>
-  <table v-if="commands.length !== 0" v-bind:class="{'width-100pc': true, 'table-hover': !readOnly}">
+  <table v-if="filteredCommands.length !== 0" v-bind:class="{'width-100pc': true, 'table-hover': !readOnly}">
     <thead>
       <tr>
         <th width="50%">Command</th>
@@ -57,7 +48,7 @@ interface CommandKeybindingPair {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="command in commands" :key="command.command" class="command-row">
+      <tr v-for="command in filteredCommands" :key="command.command" class="command-row">
         <td :title="command">{{command.title}}</td>
         <td class="keybindings-key-colomn">
           <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command.command)">
@@ -116,7 +107,7 @@ export class KeybindingsCategory extends Vue {
   keybindings: KeybindingsFile;
   readOnly: boolean;
   searchText: string;
-  extensionManager: ExtensionManager;
+  commands: ExtensionCommandContribution[];
 
   inputState: KeybindingsKeyInputState = "read";
   selectedCommand = "";
@@ -124,16 +115,8 @@ export class KeybindingsCategory extends Vue {
   conflictCommand = "";
   conflictCommandName = "";
 
-  get allCommands(): ExtensionCommandContribution[] {
-    if (this.extensionManager == null) {
-      return [];
-    }
-    const result = this.extensionManager.queryCommands({categories: [this.category]});
-    return result;
-  }
-
-  get commands(): ExtensionCommandContribution[] {
-    const commands = this.allCommands;
+  get filteredCommands(): ExtensionCommandContribution[] {
+    const commands = this.commands;
 
     if (this.searchText.trim() !== "") {
       const searchString = this.searchText.toLowerCase().trim();
@@ -165,7 +148,7 @@ export class KeybindingsCategory extends Vue {
 
   get commandToKeybindingsMapping(): Map<string, TermKeyStroke[]> {
     const result = new Map<string, TermKeyStroke[]>();
-    for (const command of this.allCommands) {
+    for (const command of this.commands) {
       result.set(command.command, []);
     }
 
@@ -254,7 +237,7 @@ export class KeybindingsCategory extends Vue {
       this.conflictCommand = conflictingKeybinding.command;
 
       this.conflictCommandName = "";
-      for (const commandContrib of this.allCommands) {
+      for (const commandContrib of this.commands) {
         if (commandContrib.command === conflictingKeybinding.command) {
           this.conflictCommandName = commandContrib.title;
         }

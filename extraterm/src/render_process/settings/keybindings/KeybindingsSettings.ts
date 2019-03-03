@@ -14,6 +14,7 @@ import * as ThemeTypes from '../../../theme/Theme';
 import { KeybindingsManager } from '../../keybindings/KeyBindingsManager';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { ExtensionManager } from '../../extension/InternalTypes';
+import { ExtensionCommandContribution } from '../../../ExtensionMetadata';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 
@@ -126,9 +127,23 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
   set extensionManager(extensionManager: ExtensionManager) {
     this._extensionManager = extensionManager;
-    this._getUi().setExtensionManager(extensionManager);
+    this._getUi().commandsByCategory = this._buildCommandsByCategory(this._extensionManager);
   }
-  
+
+  private _buildCommandsByCategory(extensionManager: ExtensionManager):
+      { [index: string]: ExtensionCommandContribution[] } {
+
+    const allCommands = extensionManager.queryCommands({ });
+    const commandsByCategory: { [index: string]: ExtensionCommandContribution[] } = {};
+    for (const contrib of allCommands) {
+      if (commandsByCategory[contrib.category] == null) {
+        commandsByCategory[contrib.category] = [];
+      }
+      commandsByCategory[contrib.category].push(contrib);
+    }
+    return commandsByCategory;
+  }
+
   get extensionManager(): ExtensionManager {
     return this._extensionManager;
   }
