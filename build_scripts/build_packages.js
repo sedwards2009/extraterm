@@ -211,8 +211,11 @@ async function main() {
 
     // Rename the output dir to a one with a version number in it.
     mv(appPath[0], path.join(BUILD_TMP_DIR, versionedOutputDir));
-
-    const dirsDest = path.join(BUILD_TMP_DIR, versionedOutputDir, "resources/app/node_modules");
+    
+    const subPath = platform === "darwin"
+                      ? "Extraterm.app/Contents/Resources/app/node_modules"
+                      : "resources/app/node_modules";
+    const dirsDest = path.join(BUILD_TMP_DIR, versionedOutputDir, subPath);
     const dirsSource = path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`);
     replaceDirs(dirsDest, dirsSource);
 
