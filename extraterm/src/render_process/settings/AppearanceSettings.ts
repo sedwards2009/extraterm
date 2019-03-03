@@ -30,13 +30,13 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
     this._log = getLogger(APPEARANCE_SETTINGS_TAG, this);
     this._getUi().$on("openUserTerminalThemesDir", () => {
-      shell.showItemInFolder(this._userTerminalThemeDirectory);
+      shell.openItem(this._userTerminalThemeDirectory);
     });
     this._getUi().$on("rescanUserTerminalThemesDir", () => {
       WebIpc.rescanThemes();
     });
     this._getUi().$on("openUserSyntaxThemesDir", () => {
-      shell.showItemInFolder(this._userSyntaxThemeDirectory);
+      shell.openItem(this._userSyntaxThemeDirectory);
     });
     this._getUi().$on("rescanUserSyntaxThemesDir", () => {
       WebIpc.rescanThemes();
@@ -48,8 +48,8 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
       const ui = this._getUi();
       const systemConfig = <SystemConfig> config;
 
-      this._userTerminalThemeDirectory = path.join(systemConfig.userTerminalThemeDirectory, "force_the_directory_open");
-      this._userSyntaxThemeDirectory = path.join(systemConfig.userSyntaxThemeDirectory, "force_the_directory_open");
+      this._userTerminalThemeDirectory = systemConfig.userTerminalThemeDirectory;
+      this._userSyntaxThemeDirectory = systemConfig.userSyntaxThemeDirectory;
       ui.currentTitleBarStyle = systemConfig.titleBarStyle;
       const newFontOptions = [...systemConfig.availableFonts];
       newFontOptions.sort( (a,b) => {
