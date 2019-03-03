@@ -168,6 +168,7 @@ function electronReady(parsedArgs: Command): void {
   setupIpc();
   setupTrayIcon();
   setupGlobalKeybindingsManager();
+  setUpMenu();
   openWindow(parsedArgs);
 }
 
@@ -317,6 +318,10 @@ function setupGlobalKeybindingsManager(): void {
   globalKeybindingsManager.onToggleShowHideWindow(toggleAllWindows);
   globalKeybindingsManager.onShowWindow(restoreAllWindows);
   globalKeybindingsManager.onHideWindow(minimizeAllWindows);
+}
+
+function setUpMenu(): void {
+  Menu.setApplicationMenu(null);
 }
 
 function openWindow(parsedArgs: Command): void {

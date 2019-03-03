@@ -77,10 +77,8 @@ let applicationContextMenu: ApplicationContextMenu = null;
 
 
 export function startUp(closeSplash: () => void): void {
-  if (process.platform === "darwin") {
-    setupOSXEmptyMenus();
-  }
-  
+  ElectronMenu.setApplicationMenu(null);
+
   startUpTheming();
   startUpWebIpc();
 
@@ -109,10 +107,7 @@ export function startUp(closeSplash: () => void): void {
     startUpCommandPalette();
     startUpApplicationContextMenu();
     startUpWindowEvents();
-
-    if (process.platform === "darwin") {
-      setupOSXMenus(mainWebUi);
-    }
+    startUpMenus();
 
     if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
       mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
@@ -432,16 +427,13 @@ function commandOpenCommandPalette(): void {
   }
 }
 
-function setupOSXEmptyMenus(): void {
-  const template: Electron.MenuItemConstructorOptions[] = [{
-    label: "Extraterm",
-  }];
-  
-  const emptyTopMenu = ElectronMenu.buildFromTemplate(template);
-  ElectronMenu.setApplicationMenu(emptyTopMenu);  
+function startUpMenus(): void {
+  if (process.platform === "darwin") {
+    setupOSXMenus();
+  }
 }
 
-function setupOSXMenus(mainWebUi: MainWebUi): void {
+function setupOSXMenus(): void {
   const template: Electron.MenuItemConstructorOptions[] = [{
     label: "Extraterm",
     submenu: [
@@ -474,7 +466,6 @@ function setupOSXMenus(mainWebUi: MainWebUi): void {
   }];
   
   const topMenu = ElectronMenu.buildFromTemplate(template);
-  
   ElectronMenu.setApplicationMenu(topMenu);
 }
 
