@@ -10,13 +10,8 @@ pool:
   vmImage: 'Ubuntu-16.04'
 
 steps:
-- script: yarn --version
-  displayName: 'Yarn version'
+- script: yarn install
+  displayName: 'Yarn install'
 
-- script: node --version
-  displayName: 'Node version'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+- script: yarn run package
+  displayName: 'Build package'
