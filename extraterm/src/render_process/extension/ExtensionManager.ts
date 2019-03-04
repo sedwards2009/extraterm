@@ -75,7 +75,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   constructor() {
     this._log = getLogger("ExtensionManager", this);
     this.onCommandsChanged = this._onCommandsChangedEventEmitter.event;
-    this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire());
+    this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire(undefined));
     this.extensionUiUtils = new ExtensionUiUtilsImpl();
   }
 
