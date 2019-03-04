@@ -25,7 +25,7 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
     category: String,
     categoryName: String,
     keybindings: Object,      // KeybindingsFile,
-    commands: Object,         // ExtensionCommandContribution[]
+    commands: Array,          // ExtensionCommandContribution[]
     readOnly: Boolean,
     searchText: String,
   },

@@ -60,6 +60,9 @@ export interface ExtensionManager {
   refocus(state: CommonExtensionWindowState): void;
 
   newTerminalCreated(newTerminal: EtTerminal): void;
+
+  onCommandsChanged: ExtensionApi.Event<void>;
+  commandRegistrationChanged(): void;
 }
 
 export interface AcceptsExtensionManager {

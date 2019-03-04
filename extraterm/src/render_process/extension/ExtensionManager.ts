@@ -27,6 +27,8 @@ import { TerminalViewer } from '../viewers/TerminalAceViewer';
 import { ViewerElement } from '../viewers/ViewerElement';
 import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
 import { TabWidget } from '../gui/TabWidget';
+import { EventEmitter } from '../../utils/EventEmitter';
+import { DebouncedDoLater } from '../../utils/DoLater';
 
 
 interface ActiveExtension {
@@ -66,8 +68,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
     isInputFieldFocus: false,
   };
 
+  private _onCommandsChangedEventEmitter = new EventEmitter<void>();
+  onCommandsChanged: ExtensionApi.Event<void>;
+  private _commandsChangedLater: DebouncedDoLater = null;
+
   constructor() {
     this._log = getLogger("ExtensionManager", this);
+    this.onCommandsChanged = this._onCommandsChangedEventEmitter.event;
+    this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire());
     this.extensionUiUtils = new ExtensionUiUtilsImpl();
   }
 
@@ -516,6 +524,10 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       extension.contextImpl.internalWindow.newTerminalCreated(newTerminal);
     }
   }
+
+  commandRegistrationChanged(): void {
+    this._commandsChangedLater.trigger();
+  }
 }
 
 
@@ -562,8 +574,10 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable {
     this.extensionMetadata.contributes.commands.push(contribution);
     const commandDisposable = this.commands.registerCommandContribution(contribution);
+    this.extensionManager.commandRegistrationChanged();
     return {
       dispose: () => {
+        this.extensionManager.commandRegistrationChanged();
         commandDisposable.dispose();
         const index = this.extensionMetadata.contributes.commands.indexOf(contribution);
         this.extensionMetadata.contributes.commands.splice(index, 1);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
 import { WebComponent } from 'extraterm-web-component-decorators';
@@ -15,6 +15,7 @@ import { KeybindingsManager } from '../../keybindings/KeyBindingsManager';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { ExtensionManager } from '../../extension/InternalTypes';
 import { ExtensionCommandContribution } from '../../../ExtensionMetadata';
+import { Disposable } from 'extraterm-extension-api';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 
@@ -24,6 +25,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _autoSelect: string = null;
   private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
+  private _commandChangedDisposable: Disposable = null;
 
   constructor() {
     super(KeybindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
@@ -127,6 +129,15 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
   set extensionManager(extensionManager: ExtensionManager) {
     this._extensionManager = extensionManager;
+
+    if (this._commandChangedDisposable != null) {
+      this._commandChangedDisposable.dispose()
+      this._commandChangedDisposable = null;
+    }
+
+    this._commandChangedDisposable = this._extensionManager.onCommandsChanged(() => {
+      this._getUi().commandsByCategory = this._buildCommandsByCategory(this._extensionManager);
+    });
     this._getUi().commandsByCategory = this._buildCommandsByCategory(this._extensionManager);
   }
 
