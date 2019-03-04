@@ -2180,6 +2180,32 @@ export class Emulator implements EmulatorApi {
   };
   
   static isKeySupported(platform: Platform, ev: MinimalKeyboardEvent): boolean {
+
+    if (ev.shiftKey) {
+      const value = this._translateKey(platform, ev, false, false);
+      if (value == null) {
+        return false;
+      }
+
+      const shiftFreeEv: MinimalKeyboardEvent = {
+        shiftKey: false,
+        altKey: ev.altKey,
+        ctrlKey: ev.ctrlKey,
+        isComposing: ev.isComposing,
+        key: ev.key,
+        metaKey: ev.metaKey,
+      };
+
+      const newValue = this._translateKey(platform, shiftFreeEv, false, false);
+      if (newValue == null) {
+        return true;
+      }
+
+      // If the shifted and non-shifted version of this event give the same code, then we
+      // consider then shifted version to not really be supported. It is just duplicate.
+      return newValue !== value;
+    }
+
     return this._translateKey(platform, ev, false, false) != null;
   }
 

@@ -56,7 +56,7 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
             <div class="keycap">
               <span>{{keybinding.formatHumanReadable()}}</span>
             </div>
-
+            &nbsp;
             <i
                 v-if="termConflict(keybinding)"
                 title="This may override the terminal emulation"
