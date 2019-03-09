@@ -210,7 +210,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       
       this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
-        this.send(detail.text);
+        this.sendToPty(detail.text);
       });
 
       this._showTip();
@@ -399,7 +399,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
    * Send data to the pty and process connected to the terminal.
    * @param text the data to send.
    */
-  send(text: string): void {
+  sendToPty(text: string): void {
     this._pty.write(text);
   }
     
@@ -684,7 +684,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
 
     if (filteredData !== "") {
-      this.send(filteredData);
+      this.sendToPty(filteredData);
     }
   }
   
@@ -1158,6 +1158,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   pasteText(text: string): void {
+    if (text == null || text === "") {
+      return;
+    }
+
     if (this._mode === Mode.CURSOR) {
       for (const viewerElement of this._terminalCanvas.getViewerElements()) {
         if (viewerElement.hasFocus()) {
@@ -1169,7 +1173,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       }
 
     } else {
-      this.send(text);  // Send it to the PTY.
+      // An Enter key for the terminal is \r, but line endings in text can be either CRLF or LF. Thus, conversion.
+      const terminalText = text.replace(/[\r][\n]/g, "\r").replace(/[\n]/g, "\r");
+      this.sendToPty(terminalText);
     }
   }
 
@@ -1195,7 +1201,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
     const bulkFileHandle = this._frameFinder(frameId);
     if (bulkFileHandle === null) {
-      this.send("#error\n");
+      this.sendToPty("#error\n");
       return;
     }
 

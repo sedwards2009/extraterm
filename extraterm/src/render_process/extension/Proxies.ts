@@ -166,7 +166,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   type(text: string): void {
-    this._terminal.send(text);
+    this._terminal.sendToPty(text);
   }
 
   getViewers(): ExtensionApi.Viewer[] {
