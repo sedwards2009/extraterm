@@ -23,7 +23,6 @@ async function main() {
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
 
-  // Create the commands zip
   const commandsDir = packageData.name + "-commands-" + packageData.version;
   echo("Creating " + commandsDir);
   cp("-r", "extraterm/src/commands", path.join(BUILD_TMP_DIR, commandsDir));
