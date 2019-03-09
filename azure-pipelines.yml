@@ -1,17 +1,14 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
 
 trigger:
-- none
+- packaging_pipeline
 
-pool:
-  vmImage: 'Ubuntu-16.04'
-
-steps:
-- script: yarn install
-  displayName: 'Yarn install'
-
-- script: yarn run package
-  displayName: 'Build package'
+jobs:
+  - job: commands_zip
+    displayName: "Build commands.zip"
+    pool:
+      vmImage: 'Ubuntu-16.04'
+    steps:
+    - script: yarn install
+      displayName: 'Yarn install'
+    - script: yarn run package-commands-zip
+      displayName: 'Run yarn package-commands-zip'
