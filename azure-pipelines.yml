@@ -14,5 +14,5 @@ jobs:
       displayName: 'Run yarn package-commands-zip'
     - task: PublishPipelineArtifact@0
       inputs:
-        artifactName: '*.zip'
-        targetPath: 'build_tmp/'
+        artifactName: 'output'
+        targetPath: 'build_tmp/*.zip'
