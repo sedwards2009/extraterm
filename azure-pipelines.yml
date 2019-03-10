@@ -17,7 +17,7 @@ jobs:
         sourceFolder: '$(Build.SourcesDirectory)'
         contents: 'build_tmp/*.zip'
         targetFolder: $(Build.ArtifactStagingDirectory)
-    - task: PublishBuildArtifacts@1
-      inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        artifactName: '*.zip'
+    # - task: PublishBuildArtifacts@1
+    #   inputs:
+    #     pathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    #     artifactName: '*.zip'
