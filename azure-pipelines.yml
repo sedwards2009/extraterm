@@ -20,4 +20,4 @@ jobs:
     - task: PublishBuildArtifacts@1
       inputs:
         pathtoPublish: '$(Build.ArtifactStagingDirectory)'
-        artifactName: *.zip
+        artifactName: '*.zip'
