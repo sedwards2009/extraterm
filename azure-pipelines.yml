@@ -12,7 +12,12 @@ jobs:
       displayName: 'Yarn install'
     - script: yarn run package-commands-zip
       displayName: 'Run yarn package-commands-zip'
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: 'build_tmp/*.zip'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
     - task: PublishPipelineArtifact@0
       inputs:
         artifactName: 'output'
-        targetPath: 'build_tmp/*.zip'
+        targetPath: '$(Build.ArtifactStagingDirectory)'
