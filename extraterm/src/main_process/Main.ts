@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -22,7 +22,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent } from '../Config';
+import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent, SingleWindowConfiguration } from '../Config';
 import {FileLogWriter, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
@@ -37,6 +37,7 @@ import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThe
 import { GlobalKeybindingsManager } from './GlobalKeybindings';
 import { doLater } from '../utils/DoLater';
 import { getAvailableFontsSync } from './FontList';
+import { bestOverlap } from './RectangleMatch';
 
 const LOG_FINE = false;
 
@@ -163,7 +164,6 @@ function electronReady(parsedArgs: Command): void {
   if ( ! setupScale(parsedArgs)) {
     return;
   }
-  
   setupBulkFileStorage();
   setupIpc();
   setupTrayIcon();
@@ -264,6 +264,7 @@ function maximizeAllWindows(): void {
     window.show();
     window.maximize();
 // FIXME electron upgrade needed to make this work    
+
     // if (process.platform !== "linux") {
     //   window.moveTop();
     // }
@@ -285,14 +286,14 @@ function restoreAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
     const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
 
+    const bounds = generalConfig.windowConfiguration[0];
     if (process.platform === "linux") {
       // On Linux, if a window is the width or height of the screen then
       // Electron (2.0.13) resizes them (!) to be smaller for some annoying
       // reason. This is a hack to make sure that windows are restored with
       // the correct dimensions.
-      const bounds = generalConfig.windowConfiguration[0];
       window.setBounds(bounds);
-        window.setMinimumSize(bounds.width, bounds.height);
+      window.setMinimumSize(bounds.width, bounds.height);
       if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
         window.show();
       }
@@ -305,6 +306,12 @@ function restoreAllWindows(): void {
 
       // Windows and macOS
       if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
+        if (bounds.isMaximized === true) {
+          const nearestScreen = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
+          window.setSize(nearestScreen.workAreaSize.width, nearestScreen.workAreaSize.height); 
+        }
+        checkWindowBoundsLater(mainWindow, bounds);
+
         window.show();
       }
       window.restore();
@@ -368,7 +375,6 @@ function openWindow(parsedArgs: Command): void {
   } else if (process.platform === "linux") {
     options.icon = path.join(__dirname, PNG_ICON_PATH);
   }
-
   mainWindow = new BrowserWindow(options);
 
   if ((<any>parsedArgs).devTools) {
@@ -378,19 +384,18 @@ function openWindow(parsedArgs: Command): void {
   mainWindow.setMenu(null);
 
   // Emitted when the window is closed.
-
   const mainWindowWebContentsId = mainWindow.webContents.id;
   mainWindow.on("closed", () => {
     cleanUpPtyWindow(mainWindowWebContentsId);
     mainWindow = null;
   });
   
-  mainWindow.on("resize", () => {
-    saveWindowDimensions(0, mainWindow.getBounds());
-  });
-  mainWindow.on("move", () => {
-    saveWindowDimensions(0, mainWindow.getBounds());
-  });
+  mainWindow.on("close", saveAllWindowDimensions);
+  mainWindow.on("resize", saveAllWindowDimensions);
+  mainWindow.on("maximize", saveAllWindowDimensions);
+  mainWindow.on("unmaximize", saveAllWindowDimensions);
+
+  checkWindowBoundsLater(mainWindow, dimensions);
 
   const params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
     "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
@@ -407,13 +412,102 @@ function openWindow(parsedArgs: Command): void {
   });
 }
 
-function saveWindowDimensions(windowId: number, rect: Electron.Rectangle): void {
-  const newGeneralConfig = configDatabase.getConfigCopy(GENERAL_CONFIG);
+function checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWindowConfiguration): void {
+  doLater(() => {
+    const windowBounds = window.getNormalBounds();
+
+    // Figure out which Screen this window is meant to be on.
+    const windowDisplay = matchWindowToDisplay(window);
+    const newDimensions: Electron.Rectangle = { ...windowBounds };
+
+    let updateNeeded = false;
+
+    if (desiredConfig.isMaximized === true) {
+      if (windowBounds.x !== windowDisplay.workArea.x ||
+          windowBounds.y !== windowDisplay.workArea.y ||
+          windowBounds.width !== windowDisplay.workArea.width ||
+          windowBounds.height !== windowDisplay.workArea.height) {
+
+        window.maximize();
+      }
+    } else {
+      if (newDimensions.width < desiredConfig.width) {
+        newDimensions.width = desiredConfig.width;
+        updateNeeded = true;
+      }
+      if (newDimensions.height < desiredConfig.height) {
+        newDimensions.height = desiredConfig.height;
+        updateNeeded = true;
+      }
+
+      // Clamp the width/height to fit on the display.
+      if (newDimensions.width > windowDisplay.workArea.width) {
+        newDimensions.width = windowDisplay.workArea.width;
+        updateNeeded = true;
+      }
+      if (newDimensions.height > windowDisplay.workArea.height) {
+        newDimensions.height = windowDisplay.workArea.height;
+        updateNeeded = true;
+      }
+
+      // Slide the window to avoid being half off the display.
+      if (newDimensions.x < windowDisplay.workArea.x) {
+        newDimensions.x = windowDisplay.workArea.x;
+        updateNeeded = true;
+      }
+      if (newDimensions.y < windowDisplay.workArea.y) {
+        newDimensions.y = windowDisplay.workArea.y;
+        updateNeeded = true;
+      }
+
+      const displayRightEdgeX = windowDisplay.workArea.width + windowDisplay.workArea.x;
+      if (newDimensions.width + newDimensions.x > displayRightEdgeX) {
+        newDimensions.x = displayRightEdgeX - newDimensions.width;
+        updateNeeded = true;
+      }
+
+      const displayBottomEdgeY = windowDisplay.workArea.height + windowDisplay.workArea.y;
+      if (newDimensions.height + newDimensions.y > displayBottomEdgeY) {
+        newDimensions.y = displayBottomEdgeY - newDimensions.height;
+        updateNeeded = true;
+      }
+
+      if (updateNeeded) {
+        // Enforce minimum and sane width/height values.
+        newDimensions.height = Math.max(100, newDimensions.height);
+        newDimensions.width = Math.max(100, newDimensions.width);
+      }
+    }
+
+    if (updateNeeded) {
+      mainWindow.setBounds(newDimensions);
+    }
+  });
+}
+
+function matchWindowToDisplay(window: BrowserWindow): Electron.Display {
+  const displays = screen.getAllDisplays();
+  const displayAreas = displays.map(d => d.workArea);
+
+  const matchIndex = bestOverlap(window.getNormalBounds(), displayAreas);
+  if (matchIndex === -1) {
+    return screen.getPrimaryDisplay();
+  }
+  return displays[matchIndex];
+}
+
+function saveAllWindowDimensions(): void {
+  const windowId = 0; 
+  const rect = mainWindow.getNormalBounds();
+  const isMaximized = mainWindow.isMaximized();
+
+  const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
   if (newGeneralConfig.windowConfiguration == null) {
     newGeneralConfig.windowConfiguration = {};
   }
   newGeneralConfig.windowConfiguration[windowId] = {
+    isMaximized,
     x: rect.x,
     y: rect.y,
     width: rect.width,
@@ -422,8 +516,8 @@ function saveWindowDimensions(windowId: number, rect: Electron.Rectangle): void 
   configDatabase.setConfig(GENERAL_CONFIG, newGeneralConfig);
 }
 
-function getWindowDimensionsFromConfig(windowId: number): Electron.Rectangle {
-  const generalConfig = configDatabase.getConfig(GENERAL_CONFIG);
+function getWindowDimensionsFromConfig(windowId: number): SingleWindowConfiguration {
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   if (generalConfig.windowConfiguration == null) {
     return null;
   }
@@ -431,12 +525,7 @@ function getWindowDimensionsFromConfig(windowId: number): Electron.Rectangle {
   if (singleWindowConfig == null) {
     return null;
   }
-  return {
-    x: singleWindowConfig.x,
-    y: singleWindowConfig.y,
-    width: Math.max(singleWindowConfig.width, 50),
-    height: Math.max(singleWindowConfig.height, 50)
-  };
+  return singleWindowConfig;
 }
 
 function setupLogging(): void {
