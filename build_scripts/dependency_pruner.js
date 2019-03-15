@@ -215,7 +215,7 @@ function pruneBrokenBinLinks(projectDirectory) {
     return;
   }
 
-  const binPath = path.join(projectDirectory, "node_modules", ".bin");
+  const binPath = path.join(nodeModulesPath, ".bin");
   if (fs.existsSync(binPath)) {
     for (const binEntry of ls("-l", binPath)) {
       if (binEntry.isSymbolicLink()) {
@@ -228,6 +228,10 @@ function pruneBrokenBinLinks(projectDirectory) {
         }
       }
     }
+  }
+
+  for (const moduleDir of ls(nodeModulesPath)) {
+    pruneBrokenBinLinks(path.join(nodeModulesPath, moduleDir));
   }
 }
 
