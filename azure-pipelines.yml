@@ -8,16 +8,36 @@ jobs:
     pool:
       vmImage: 'Ubuntu-16.04'
     steps:
-    - script: yarn install
-      displayName: 'Yarn install'
-    - script: yarn run package-commands-zip
-      displayName: 'Run yarn package-commands-zip'
-    - task: CopyFiles@2
-      inputs:
-        sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-        contents: '*.zip'
-        targetFolder: '$(Build.ArtifactStagingDirectory)'
-    - task: PublishPipelineArtifact@0
-      inputs:
-        artifactName: 'build output'
-        targetPath: '$(Build.ArtifactStagingDirectory)'
+      - script: yarn install
+        displayName: 'Yarn install'
+      - script: yarn run package-commands-zip
+        displayName: 'Run yarn package-commands-zip'
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.zip'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: 'commands build output'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
+
+  - job: package_linux
+    displayName: "Build Linux packages/zips"
+    pool:
+      vmImage: 'Ubuntu-16.04'
+    steps:
+      - script: yarn install
+      - script: yarn run electron-rebuild
+      - script: yarn run build
+      - script: yarn run package-linux
+        displayName: "Remove dev dependencies"
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.zip'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: 'Linux build output'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
