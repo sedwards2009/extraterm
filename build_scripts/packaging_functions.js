@@ -171,12 +171,11 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   cd(outputDir);
 
   hoistSubprojectsModules(versionedOutputDir, platform);
-  dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, targetAppRootPath));
   pruneNodeModules(versionedOutputDir, platform);
+  dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, targetAppRootPath));
 
   // Prune any unneeded node-sass binaries.
   pruneNodeSass(versionedOutputDir, arch, platform);
-
   pruneEmojiOne(versionedOutputDir, platform);
 
   // Zip it up.

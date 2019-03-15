@@ -44,6 +44,12 @@ function pruneDevDependencies(sourceRootPath, targetPath) {
     }
   }
 
+  for (const p of [".", ...pkg.workspaces.packages]) {
+    for (const nodeModulesPath of ls('-d', path.join(targetPath, p))) {
+      pruneBrokenBinLinks(nodeModulesPath);
+    }
+  }
+
   echo("");
   echo(`    Total modules in yar.lock:      ${keepPrune.keep.length + keepPrune.prune.length}`);
   echo(`    Modules identified for keeping: ${keepPrune.keep.length}`);
@@ -199,6 +205,30 @@ function pruneNodeModulesDir(pruneDepNameMap /* Map<string, Dependency[]> */, pr
     }
   }
   return pruneCount;
+}
+
+function pruneBrokenBinLinks(projectDirectory) {
+  echo(`Scanning ${projectDirectory} for broken bin/ links to prune.`);
+
+  const nodeModulesPath = path.join(projectDirectory, "node_modules");
+  if ( ! fs.existsSync(nodeModulesPath)) {
+    return;
+  }
+
+  const binPath = path.join(projectDirectory, "node_modules", ".bin");
+  if (fs.existsSync(binPath)) {
+    for (const binEntry of ls("-l", binPath)) {
+      if (binEntry.isSymbolicLink()) {
+        const linkPath = path.join(binPath, binEntry.name);
+        const linkTarget = fs.readlinkSync(linkPath);
+        const linkTargetPath = path.join(binPath, linkTarget);
+        if ( ! fs.existsSync(linkTargetPath)) {
+          echo(`Pruning broken symlink link ${linkPath}`);
+          rm(linkPath);
+        }
+      }
+    }
+  }
 }
 
 function checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir) {
