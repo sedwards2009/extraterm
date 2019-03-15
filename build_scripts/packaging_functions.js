@@ -5,6 +5,7 @@
  */
 require('shelljs/global');
 const path = require('path');
+const fs = require('fs');
 const packager = require('electron-packager');
 const dependencyPruner = require('./dependency_pruner');
 const log = console.log.bind(console);
@@ -74,6 +75,10 @@ function hoistSubprojectsModules(versionedOutputDir, platform) {
     const destDir = path.join(modulesDir, item);
     echo(`Moving ${item} in to ${destDir}`);
     mv(path.join(packagesDir, item), destDir);
+    const binDirPath = path.join(destDir, "node_modules", ".bin");
+    if (fs.existsSync(binDirPath)) {
+      rm('-rf', binDirPath);
+    }
   }
 }
 
