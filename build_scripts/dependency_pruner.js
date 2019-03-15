@@ -27,7 +27,7 @@ function pruneDevDependencies(sourceRootPath, targetPath) {
   echo("");
 
   const keepPrune = computeKeepAndPrunePackages(sourceRootPath);
-  dumpKeepPrune(keepPrune);
+  // dumpKeepPrune(keepPrune);
   const pruneDepNameMap = new Map();  // Map<string, Dependency[]>
   for (const dep of keepPrune.prune) {
     if (pruneDepNameMap.get(dep.package) == null) {
@@ -37,12 +37,18 @@ function pruneDevDependencies(sourceRootPath, targetPath) {
   }
 
   const pkg = readPackageJson(path.join(sourceRootPath, "package.json"));
-
+  let pruneCount = 0;
   for (const p of [".", ...pkg.workspaces.packages]) {
     for (const nodeModulesPath of ls('-d', path.join(targetPath, p))) {
-       pruneNodeModulesDir(pruneDepNameMap, nodeModulesPath);
+       pruneCount += pruneNodeModulesDir(pruneDepNameMap, nodeModulesPath);
     }
   }
+
+  echo("");
+  echo(`    Total modules in yar.lock:      ${keepPrune.keep.length + keepPrune.prune.length}`);
+  echo(`    Modules identified for keeping: ${keepPrune.keep.length}`);
+  echo(`    Modules identified for pruning: ${keepPrune.prune.length}`);
+  echo(`    Module directories deleted:     ${pruneCount}`);
 }
 
 exports.pruneDevDependencies = pruneDevDependencies;
@@ -172,21 +178,27 @@ function dumpKeepPrune(keepPrune) {
 
 function pruneNodeModulesDir(pruneDepNameMap /* Map<string, Dependency[]> */, projectDirectory) {
   echo(`Scanning ${projectDirectory} for modules to prune.`);
+  let pruneCount = 0;
 
   const nodeModulesPath = path.join(projectDirectory, "node_modules");
   if ( ! fs.existsSync(nodeModulesPath)) {
-    return;
+    return pruneCount;
   }
 
   for (const depDir of ls(nodeModulesPath)) {
     if (depDir.slice(0, 1) === "@") {
       for (const subDir of ls(path.join(nodeModulesPath, depDir))) {
-        checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir + "/" + subDir);
+        if (checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir + "/" + subDir)) {
+          pruneCount++;
+        }
       }
     } else {
-      checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir);
+      if (checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir)) {
+        pruneCount++;
+      }
     }
   }
+  return pruneCount;
 }
 
 function checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir) {
@@ -199,8 +211,9 @@ function checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir) {
       if (pkg.version === dep.version) {
         echo(`Pruning module directory ${depDirPath}`);
         rm('-rf', depDirPath);
-        break;
+        return true;
       }
     }
   }
+  return false;
 }
