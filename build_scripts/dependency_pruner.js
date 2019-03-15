@@ -9,6 +9,44 @@ const fs = require('fs');
 const path = require('path');
 const lockfile = require('@yarnpkg/lockfile');
 
+/**
+ * Prune away yarn development dependencies
+ * 
+ * Prunes development dependencies from a node project with help from
+ * yarn's lock file.
+ * 
+ * @param sourceRootPath Path to the source code root directory which contains
+ *                       the root package.json file and the yarn.lock file.
+ * @param targetPath     Path to the target directory which contains the built
+ *                       project whose dependencies need to be pruned.
+ */
+function pruneDevDependencies(sourceRootPath, targetPath) {
+  echo("");
+  echo("Pruning Yarn dev dependencies");
+  echo("=============================");
+  echo("");
+
+  const keepPrune = computeKeepAndPrunePackages(sourceRootPath);
+  dumpKeepPrune(keepPrune);
+  const pruneDepNameMap = new Map();  // Map<string, Dependency[]>
+  for (const dep of keepPrune.prune) {
+    if (pruneDepNameMap.get(dep.package) == null) {
+      pruneDepNameMap.set(dep.package, [])
+    }
+    pruneDepNameMap.get(dep.package).push(dep);
+  }
+
+  const pkg = readPackageJson(path.join(sourceRootPath, "package.json"));
+
+  for (const p of [".", ...pkg.workspaces.packages]) {
+    for (const nodeModulesPath of ls('-d', path.join(targetPath, p))) {
+       pruneNodeModulesDir(pruneDepNameMap, nodeModulesPath);
+    }
+  }
+}
+
+exports.pruneDevDependencies = pruneDevDependencies;
+
 function readYarnLock(sourceRootPath) {
   let file = fs.readFileSync(path.join(sourceRootPath, 'yarn.lock'), 'utf8');
   let json = lockfile.parse(file);
@@ -62,7 +100,7 @@ function markUsedDependency(yarnLock, useCount, dependency) {
 
   const yarnDep = yarnLock.object[depString];
   if (yarnDep == null) {
-    echo(`--> Couldn't find ${depString} in yarn.lock to mark. Skipping.`);
+    echo(`Warning: Couldn't find ${depString} in yarn.lock to mark. Skipping.`);
   } else {
 
     const usedDepString = `${dependency.package}@${yarnDep.version}`;
@@ -140,46 +178,29 @@ function pruneNodeModulesDir(pruneDepNameMap /* Map<string, Dependency[]> */, pr
     return;
   }
 
-  for (const depDir of ls(path.join(projectDirectory, "node_modules") + "/")) {
-    if (pruneDepNameMap.has("" + depDir)) {
-      const depDirPath = path.join(projectDirectory, "node_modules", depDir);
-      const pkg = readPackageJson(path.join(depDirPath, "package.json"));
+  for (const depDir of ls(nodeModulesPath)) {
+    if (depDir.slice(0, 1) === "@") {
+      for (const subDir of ls(path.join(nodeModulesPath, depDir))) {
+        checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir + "/" + subDir);
+      }
+    } else {
+      checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir);
+    }
+  }
+}
 
-      const deps = pruneDepNameMap.get(depDir);
-      for (const dep of deps) {
-        if (pkg.version === dep.version) {
-          echo(`Pruning module directory ${depDirPath}`);
-          rm('-rf', depDirPath);
-          break;
-        }
+function checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir) {
+  if (pruneDepNameMap.has("" + depDir)) {
+    const depDirPath = path.join(projectDirectory, "node_modules", depDir);
+    const pkg = readPackageJson(path.join(depDirPath, "package.json"));
+
+    const deps = pruneDepNameMap.get(depDir);
+    for (const dep of deps) {
+      if (pkg.version === dep.version) {
+        echo(`Pruning module directory ${depDirPath}`);
+        rm('-rf', depDirPath);
+        break;
       }
     }
   }
 }
-
-function pruneDevDependencies(sourceRootPath, targetPath) {
-  const keepPrune = computeKeepAndPrunePackages(sourceRootPath);
-  
-  // dumpKeepPrune(keepPrune);
-
-  const pruneDepNameMap = new Map();  // Map<string, Dependency[]>
-  for (const dep of keepPrune.prune) {
-    if (pruneDepNameMap.get(dep.package) == null) {
-      pruneDepNameMap.set(dep.package, [])
-    }
-    pruneDepNameMap.get(dep.package).push(dep);
-  }
-
-  const pkg = readPackageJson(path.join(sourceRootPath, "package.json"));
-
-  for (const p of [".", ...pkg.workspaces.packages]) {
-    for (const nodeModulesPath of ls('-d', path.join(targetPath, p))) {
-       pruneNodeModulesDir(pruneDepNameMap, nodeModulesPath);
-    }
-  }
-}
-
-// dumpKeepPrune(computeKeepAndPrunePackages());
-//pruneNonProductionDepencencies(".", "build_tmp/extraterm-0.41.0-linux-x64/resources/app");
-
-exports.pruneDevDependencies = pruneDevDependencies;
