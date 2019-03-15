@@ -90,10 +90,8 @@ function pruneNodeModules(versionedOutputDir, platform) {
 function pruneSpecificNodeModules() {
   [
     "node-sass/src",
-    "node-sass/node_modules/nan",
+    "node-sass/node_modules/node-gyp",
     "node-sass/vendor",
-    "node-gyp",
-    "ajv",
     "globule",
     "vue/src",
     "vue/dist/vue.esm.browser.js",
@@ -103,7 +101,6 @@ function pruneSpecificNodeModules() {
     "vue/dist/vue.runtime.esm.js",
     "vue/dist/vue.runtime.js",
     "vue/dist/vue.runtime.min.js",
-    "font-manager/src",
     ".bin"
   ].forEach( (subpath) => {
     const fullPath = path.join("node_modules", subpath);
@@ -115,7 +112,7 @@ function pruneSpecificNodeModules() {
     } else if (test('-f', fullPath)) {
         rm(fullPath);
     } else {
-      echo("----------- Unable to find path "+ fullPath);
+      echo("Warning: Unable to find path "+ fullPath);
     }
   });
 
@@ -186,8 +183,8 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   log("Zipping up the package");
 
   mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
-  cp("extraterm/README.md", versionedOutputDir);
-  cp("extraterm/LICENSE.txt", versionedOutputDir);
+  cp(path.join(SRC_DIR, "README.md"), versionedOutputDir);
+  cp(path.join(SRC_DIR, "LICENSE.txt"), versionedOutputDir);
   
   exec(`zip -y -r ${outputZip} ${versionedOutputDir}`);
   cd(thisCD);
