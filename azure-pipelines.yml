@@ -28,10 +28,14 @@ jobs:
       vmImage: 'Ubuntu-16.04'
     steps:
       - script: yarn install
+        displayName: "yarn install"
       - script: yarn run electron-rebuild
+        displayName: "yarn run electron-rebuild"
       - script: yarn run build
+        displayName: "yarn run build"
       - script: yarn run package-linux
-        displayName: "Remove dev dependencies"
+        displayName: "yarn run package-linux"
+      - script: ls -alp $(Build.SourcesDirectory)/build_tmp
       - task: CopyFiles@2
         inputs:
           sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
