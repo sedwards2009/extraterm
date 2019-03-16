@@ -35,6 +35,13 @@ async function main() {
     outputDir: BUILD_TMP_DIR,
     replaceModuleDirs: false
   });
+
+  await packaging_functions.makeNsis({
+      version: packageData.version,
+      outputDir: BUILD_TMP_DIR,
+      useDocker: false
+  });
+  
   echo("");
   echo("Done.");
 }

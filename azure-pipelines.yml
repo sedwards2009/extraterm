@@ -50,13 +50,19 @@ jobs:
     pool:
       vmImage: 'vs2017-win2016'
     steps:
+      - script: choco install nsis -y
+        displayName: "install nsis"
+      - script: choco install zip -y
+        displayName: "install zip"
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: yarn run electron-rebuild
         displayName: "yarn run electron-rebuild-win32"
       - script: yarn run build
         displayName: "yarn run build"
-      - script: yarn run package-windows
+      - script: |
+          PATH=C:\Program Files (x86)\NSIS\;%PATH%
+          yarn run package-windows
         displayName: "yarn run package-windows"
       - task: CopyFiles@2
         inputs:
