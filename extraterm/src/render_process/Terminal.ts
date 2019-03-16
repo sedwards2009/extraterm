@@ -166,6 +166,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     commands.registerCommand("extraterm:terminal.increaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
     commands.registerCommand("extraterm:terminal.decreaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
     commands.registerCommand("extraterm:terminal.resetFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
+    commands.registerCommand("extraterm:terminal.typeSelection", (args: any) => extensionManager.getActiveTerminal().commandTypeSelection());
+    commands.registerCommand("extraterm:terminal.typeSelectionAndCr", (args: any) => extensionManager.getActiveTerminal().commandTypeSelectionAndCr());
   }
   
   constructor() {
@@ -717,6 +719,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
   
   private _exitCursorMode(): void {
+    if (this._mode == Mode.DEFAULT) {
+      return;
+    }
     this._terminalCanvas.setModeAndVisualState(Mode.DEFAULT, VisualState.FOCUSED);
     this._mode = Mode.DEFAULT;
     this._refocus();
@@ -798,6 +803,21 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   commandFontSizeReset(): void {
     this._terminalCanvas.resetFontSize();
+  }
+
+  commandTypeSelection(): void {
+    const text = this._terminalCanvas.getSelectionText();
+    if (text !== null) {
+      this.sendToPty(text);
+    }
+  }
+
+  commandTypeSelectionAndCr(): void {
+    const text = this._terminalCanvas.getSelectionText();
+    if (text !== null) {
+      this.sendToPty(text + "\r");
+    }
+    this.commandExitCursorMode();
   }
 
   /**
