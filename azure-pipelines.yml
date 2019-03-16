@@ -35,7 +35,6 @@ jobs:
         displayName: "yarn run build"
       - script: yarn run package-linux
         displayName: "yarn run package-linux"
-      - script: ls -alp $(Build.SourcesDirectory)/build_tmp
       - task: CopyFiles@2
         inputs:
           sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
@@ -44,4 +43,27 @@ jobs:
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'Linux build output'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
+
+  - job: package_windows
+    displayName: "Build Windows packages/zips"
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+      - script: yarn install --frozen-lockfile
+        displayName: "yarn install"
+      - script: yarn run electron-rebuild
+        displayName: "yarn run electron-rebuild-win32"
+      - script: yarn run build
+        displayName: "yarn run build"
+      - script: yarn run package-windows
+        displayName: "yarn run package-windows"
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.zip'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: 'Windows build output'
           targetPath: '$(Build.ArtifactStagingDirectory)'
