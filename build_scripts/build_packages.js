@@ -11,6 +11,7 @@ const getRepoInfo = require('git-repo-info');
 const packagingFunctions = require('./packaging_functions');
 const makePackage = packagingFunctions.makePackage;
 const makeNsis = packagingFunctions.makeNsis;
+const makeDmg = packagingFunctions.makeDmg;
 
 const log = console.log.bind(console);
 
@@ -67,31 +68,6 @@ async function main() {
 
   const electronVersion = packageData.devDependencies['electron'];
 
-  function makeDmg() {
-    echo("");
-    echo("---------------------------------------------------");
-    echo("Building dmg file for macOS");
-    echo("---------------------------------------------------");
-
-    const darwinPath = path.join(BUILD_TMP_DIR, `extraterm-${packageData.version}-darwin-x64`);
-    for (const f of ls(darwinPath)) {
-      if ( ! f.endsWith(".app")) {
-        echo(`Deleting ${f}`);
-        rm(path.join(darwinPath, f));
-      }
-    }
-
-    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
-    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
-    mkdir(path.join(darwinPath,".background"));
-    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
-
-    ln("-s", "/Applications", path.join(darwinPath, "Applications"));
-
-    exec(`docker run --rm -v "${BUILD_TMP_DIR}:/files" sporsh/create-dmg Extraterm /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
-    return true;
-  }
-  
   if (linuxZipOnly) {
     await makePackage( {
       arch: "x64",
@@ -136,15 +112,19 @@ async function main() {
       return;
     }
 
-    if (! makeDmg()) {
+    if (! makeDmg({
+          version,
+          outputDir: BUILD_TMP_DIR,
+          useDocker: true
+        })) {
       return;
     }
 
     if (! makeNsis({
-      version,
-      outputDir: BUILD_TMP_DIR,
-      useDocker: true
-    })) {
+          version,
+          outputDir: BUILD_TMP_DIR,
+          useDocker: true
+        })) {
       return;
     }
     log("Done");
