@@ -69,6 +69,11 @@ jobs:
           sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
           contents: '*.zip'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.exe'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'Windows build output'
