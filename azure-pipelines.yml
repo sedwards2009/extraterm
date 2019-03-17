@@ -23,7 +23,7 @@ jobs:
           targetPath: '$(Build.ArtifactStagingDirectory)'
 
   - job: package_linux
-    displayName: "Build Linux packages/zips"
+    displayName: "Build Linux packages"
     pool:
       vmImage: 'Ubuntu-16.04'
     steps:
@@ -46,7 +46,7 @@ jobs:
           targetPath: '$(Build.ArtifactStagingDirectory)'
 
   - job: package_windows
-    displayName: "Build Windows packages/zips"
+    displayName: "Build Windows packages"
     pool:
       vmImage: 'vs2017-win2016'
     steps:
@@ -77,4 +77,32 @@ jobs:
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'Windows build output'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
+
+  - job: package_macos
+    displayName: "Build macOS packages"
+    pool:
+      vmImage: 'macOS-10.13'
+    steps:
+      - script: yarn install --frozen-lockfile
+        displayName: "yarn install"
+      - script: yarn run electron-rebuild
+        displayName: "yarn run electron-rebuild"
+      - script: yarn run build
+        displayName: "yarn run build"
+      - script: yarn run package-macos
+        displayName: "yarn run package-macos"
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.zip'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.dmg'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: 'macOS build output'
           targetPath: '$(Build.ArtifactStagingDirectory)'
