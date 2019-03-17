@@ -3,81 +3,77 @@ trigger:
 - packaging_pipeline
 
 jobs:
-  # - job: commands_zip
-  #   displayName: "Build commands.zip"
-  #   pool:
-  #     vmImage: 'Ubuntu-16.04'
-  #   steps:
-  #     - script: yarn install --frozen-lockfile
-  #       displayName: 'Yarn install'
-  #     - script: yarn run package-commands-zip
-  #       displayName: 'Run yarn package-commands-zip'
-  #     - task: CopyFiles@2
-  #       inputs:
-  #         sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-  #         contents: '*.zip'
-  #         targetFolder: '$(Build.ArtifactStagingDirectory)'
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: 'commands build output'
-  #         targetPath: '$(Build.ArtifactStagingDirectory)'
+  - job: commands_zip
+    displayName: "Build commands.zip"
+    pool:
+      vmImage: 'Ubuntu-16.04'
+    steps:
+      - script: yarn install --frozen-lockfile
+        displayName: 'Yarn install'
+      - script: yarn run package-commands-zip
+        displayName: 'Run yarn package-commands-zip'
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.zip'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: 'commands build output'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
 
-  # - job: package_linux
-  #   displayName: "Build Linux packages"
-  #   pool:
-  #     vmImage: 'Ubuntu-16.04'
-  #   steps:
-  #     - script: yarn install --frozen-lockfile
-  #       displayName: "yarn install"
-  #     - script: yarn run electron-rebuild
-  #       displayName: "yarn run electron-rebuild"
-  #     - script: yarn run build
-  #       displayName: "yarn run build"
-  #     - script: yarn run package-linux
-  #       displayName: "yarn run package-linux"
-  #     - task: CopyFiles@2
-  #       inputs:
-  #         sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-  #         contents: '*.zip'
-  #         targetFolder: '$(Build.ArtifactStagingDirectory)'
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: 'Linux build output'
-  #         targetPath: '$(Build.ArtifactStagingDirectory)'
+  - job: package_linux
+    displayName: "Build Linux packages"
+    pool:
+      vmImage: 'Ubuntu-16.04'
+    steps:
+      - script: yarn install --frozen-lockfile
+        displayName: "yarn install"
+      - script: yarn run electron-rebuild
+        displayName: "yarn run electron-rebuild"
+      - script: yarn run build
+        displayName: "yarn run build"
+      - script: yarn run package-linux
+        displayName: "yarn run package-linux"
+      - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: 'Linux build output'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
 
-  # - job: package_windows
-  #   displayName: "Build Windows packages"
-  #   pool:
-  #     vmImage: 'vs2017-win2016'
-  #   steps:
-  #     - script: choco install nsis -y
-  #       displayName: "install nsis"
-  #     - script: choco install zip -y
-  #       displayName: "install zip"
-  #     - script: yarn install --frozen-lockfile
-  #       displayName: "yarn install"
-  #     - script: yarn run electron-rebuild
-  #       displayName: "yarn run electron-rebuild-win32"
-  #     - script: yarn run build
-  #       displayName: "yarn run build"
-  #     - script: |
-  #         PATH=C:\Program Files (x86)\NSIS\;%PATH%
-  #         yarn run package-windows
-  #       displayName: "yarn run package-windows"
-  #     - task: CopyFiles@2
-  #       inputs:
-  #         sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-  #         contents: '*.zip'
-  #         targetFolder: '$(Build.ArtifactStagingDirectory)'
-  #     - task: CopyFiles@2
-  #       inputs:
-  #         sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-  #         contents: '*.exe'
-  #         targetFolder: '$(Build.ArtifactStagingDirectory)'
-  #     - task: PublishPipelineArtifact@0
-  #       inputs:
-  #         artifactName: 'Windows build output'
-  #         targetPath: '$(Build.ArtifactStagingDirectory)'
+  - job: package_windows
+    displayName: "Build Windows packages"
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+      - script: choco install nsis -y
+        displayName: "install nsis"
+      - script: choco install zip -y
+        displayName: "install zip"
+      - script: yarn install --frozen-lockfile
+        displayName: "yarn install"
+      - script: yarn run electron-rebuild
+        displayName: "yarn run electron-rebuild-win32"
+      - script: yarn run build
+        displayName: "yarn run build"
+      - script: |
+          PATH=C:\Program Files (x86)\NSIS\;%PATH%
+          yarn run package-windows
+        displayName: "yarn run package-windows"
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.zip'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: CopyFiles@2
+        inputs:
+          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          contents: '*.exe'
+          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - task: PublishPipelineArtifact@0
+        inputs:
+          artifactName: 'Windows build output'
+          targetPath: '$(Build.ArtifactStagingDirectory)'
 
   - job: package_macos
     displayName: "Build macOS packages"
@@ -98,17 +94,6 @@ jobs:
       - script: |
           cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
           cp $(Build.SourcesDirectory)/build_tmp/*.dmg $(Build.ArtifactStagingDirectory)
-          ls $(Build.ArtifactStagingDirectory)
-      # - task: CopyFiles@2
-      #   inputs:
-      #     sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-      #     contents: '*.zip'
-      #     targetFolder: '$(Build.ArtifactStagingDirectory)'
-      # - task: CopyFiles@2
-      #   inputs:
-      #     sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-      #     contents: '*.dmg'
-      #     targetFolder: '$(Build.ArtifactStagingDirectory)'
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'macOS build output'
