@@ -95,9 +95,10 @@ jobs:
         displayName: "yarn run build"
       - script: yarn run package-macos
         displayName: "yarn run package-macos"
-      - script: find . -type l
-      - script: cp '$(Build.SourcesDirectory)/build_tmp/*.zip' '$(Build.ArtifactStagingDirectory)'
-      - script: ls '$(Build.ArtifactStagingDirectory)'
+      - script: |
+          cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
+          cp $(Build.SourcesDirectory)/build_tmp/*.dmg $(Build.ArtifactStagingDirectory)
+          ls $(Build.ArtifactStagingDirectory)
       # - task: CopyFiles@2
       #   inputs:
       #     sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
