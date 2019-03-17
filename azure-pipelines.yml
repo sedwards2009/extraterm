@@ -96,16 +96,18 @@ jobs:
       - script: yarn run package-macos
         displayName: "yarn run package-macos"
       - script: find . -type l
-      - task: CopyFiles@2
-        inputs:
-          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-          contents: '*.zip'
-          targetFolder: '$(Build.ArtifactStagingDirectory)'
-      - task: CopyFiles@2
-        inputs:
-          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
-          contents: '*.dmg'
-          targetFolder: '$(Build.ArtifactStagingDirectory)'
+      - script: cp '$(Build.SourcesDirectory)/build_tmp/*.zip' '$(Build.ArtifactStagingDirectory)'
+      - script: ls '$(Build.ArtifactStagingDirectory)'
+      # - task: CopyFiles@2
+      #   inputs:
+      #     sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+      #     contents: '*.zip'
+      #     targetFolder: '$(Build.ArtifactStagingDirectory)'
+      # - task: CopyFiles@2
+      #   inputs:
+      #     sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+      #     contents: '*.dmg'
+      #     targetFolder: '$(Build.ArtifactStagingDirectory)'
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'macOS build output'
