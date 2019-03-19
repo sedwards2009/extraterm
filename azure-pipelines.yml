@@ -10,7 +10,7 @@ jobs:
     steps:
       - script: yarn install --frozen-lockfile
         displayName: 'Yarn install'
-      - script: yarn run package-commands-zip
+      - script: yarn run package-commands-zip --version=$(git describe --tags)
         displayName: 'Run yarn package-commands-zip'
       - task: CopyFiles@2
         inputs:
