@@ -73,10 +73,11 @@ export interface WindowConfiguration {
 }
 
 export interface SingleWindowConfiguration {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  readonly isMaximized?: boolean;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 export interface SystemConfig {

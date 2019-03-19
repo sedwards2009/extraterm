@@ -439,7 +439,6 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
 
     const filename = getConfigurationFilename();
     const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
-    this._log.debug(formattedConfig);
     fs.writeFileSync(filename, formattedConfig);
   }
 }

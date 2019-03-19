@@ -166,6 +166,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     commands.registerCommand("extraterm:terminal.increaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
     commands.registerCommand("extraterm:terminal.decreaseFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
     commands.registerCommand("extraterm:terminal.resetFontSize", (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
+    commands.registerCommand("extraterm:terminal.typeSelection", (args: any) => extensionManager.getActiveTerminal().commandTypeSelection());
+    commands.registerCommand("extraterm:terminal.typeSelectionAndCr", (args: any) => extensionManager.getActiveTerminal().commandTypeSelectionAndCr());
   }
   
   constructor() {
@@ -210,7 +212,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       
       this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
-        this.send(detail.text);
+        this.sendToPty(detail.text);
       });
 
       this._showTip();
@@ -399,7 +401,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
    * Send data to the pty and process connected to the terminal.
    * @param text the data to send.
    */
-  send(text: string): void {
+  sendToPty(text: string): void {
     this._pty.write(text);
   }
     
@@ -684,7 +686,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
 
     if (filteredData !== "") {
-      this.send(filteredData);
+      this.sendToPty(filteredData);
     }
   }
   
@@ -717,6 +719,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
   
   private _exitCursorMode(): void {
+    if (this._mode == Mode.DEFAULT) {
+      return;
+    }
     this._terminalCanvas.setModeAndVisualState(Mode.DEFAULT, VisualState.FOCUSED);
     this._mode = Mode.DEFAULT;
     this._refocus();
@@ -798,6 +803,21 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   commandFontSizeReset(): void {
     this._terminalCanvas.resetFontSize();
+  }
+
+  commandTypeSelection(): void {
+    const text = this._terminalCanvas.getSelectionText();
+    if (text !== null) {
+      this.sendToPty(text);
+    }
+  }
+
+  commandTypeSelectionAndCr(): void {
+    const text = this._terminalCanvas.getSelectionText();
+    if (text !== null) {
+      this.sendToPty(text + "\r");
+    }
+    this.commandExitCursorMode();
   }
 
   /**
@@ -1158,6 +1178,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   pasteText(text: string): void {
+    if (text == null || text === "") {
+      return;
+    }
+
     if (this._mode === Mode.CURSOR) {
       for (const viewerElement of this._terminalCanvas.getViewerElements()) {
         if (viewerElement.hasFocus()) {
@@ -1169,7 +1193,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       }
 
     } else {
-      this.send(text);  // Send it to the PTY.
+      // An Enter key for the terminal is \r, but line endings in text can be either CRLF or LF. Thus, conversion.
+      const terminalText = text.replace(/[\r][\n]/g, "\r").replace(/[\n]/g, "\r");
+      this.sendToPty(terminalText);
     }
   }
 
@@ -1195,7 +1221,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
     const bulkFileHandle = this._frameFinder(frameId);
     if (bulkFileHandle === null) {
-      this.send("#error\n");
+      this.sendToPty("#error\n");
       return;
     }
 

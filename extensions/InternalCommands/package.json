@@ -15,7 +15,7 @@
         "commandPalette": false
       },
       {
-        "command": "extraterm:typeSelection",
+        "command": "extraterm:terminal.typeSelection",
         "title": "Type selection",
         "category": "terminal",
         "order": 1000,
@@ -23,7 +23,7 @@
         "when": "terminalFocus"
       },
       {
-        "command": "extraterm:typeSelectionAndCr",
+        "command": "extraterm:terminal.typeSelectionAndCr",
         "title": "Type Selection & execute",
         "category": "terminal",
         "order": 1001,

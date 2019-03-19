@@ -562,6 +562,20 @@
       ]
     },
     {
+      "command": "extraterm:terminal.typeSelection",
+      "category": "terminal",
+      "keys": [
+        "Cmd-Enter"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.typeSelectionAndCr",
+      "category": "terminal",
+      "keys": [
+        "Cmd-Shift-Enter"
+      ]
+    },
+    {
       "command": "find:find",
       "category": "terminal",
       "keys": [

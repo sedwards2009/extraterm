@@ -555,6 +555,20 @@
       ]
     },
     {
+      "command": "extraterm:terminal.typeSelection",
+      "category": "terminal",
+      "keys": [
+        "Ctrl-Enter"
+      ]
+    },
+    {
+      "command": "extraterm:terminal.typeSelectionAndCr",
+      "category": "terminal",
+      "keys": [
+        "Ctrl-Shift-Enter"
+      ]
+    },
+    {
       "command": "find:find",
       "category": "terminal",
       "keys": [
