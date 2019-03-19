@@ -37,12 +37,12 @@ $TEAR_BORDER_HEIGHT: 2px;
  
 #ID_CONTAINER {
   contain: content;
-  width: calc(100% - #{$TERMINAL_MARGIN_LEFT + $BLOCK_BORDER_LEFT - $TERMINAL_MARGIN_RIGHT + $BLOCK_BORDER_RIGHT});
+  width: calc(100% - #{$TERMINAL_MARGIN_LEFT + $border-width + $TERMINAL_MARGIN_RIGHT + $border-width});
   height: 100%;
   box-sizing: border-box;
    
-  margin-left: $TERMINAL_MARGIN_LEFT - $BLOCK_BORDER_LEFT;
-  margin-right: $TERMINAL_MARGIN_RIGHT - $BLOCK_BORDER_RIGHT;
+  margin-left: $TERMINAL_MARGIN_LEFT - $border-width;
+  margin-right: $TERMINAL_MARGIN_RIGHT - $border-width;
      
   position: relative;
 }
