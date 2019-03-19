@@ -89,7 +89,7 @@ jobs:
         displayName: "yarn run electron-rebuild"
       - script: yarn run build
         displayName: "yarn run build"
-      - script: yarn run package-macos
+      - script: yarn run package-macos --version=$(git describe --tags)
         displayName: "yarn run package-macos"
       - script: |
           cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
