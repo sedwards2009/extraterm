@@ -58,7 +58,10 @@ jobs:
         displayName: "yarn run build"
       - script: |
           PATH=C:\Program Files (x86)\NSIS\;%PATH%
-          yarn run package-windows
+          git describe --tags > APP_VERSION.txt
+          set /p APP_VERSION= < APP_VERSION.txt
+          del APP_VERSION.txt
+          yarn run package-windows --version=%APP_VERSION%
         displayName: "yarn run package-windows"
       - task: CopyFiles@2
         inputs:
