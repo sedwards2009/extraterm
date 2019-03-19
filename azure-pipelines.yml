@@ -33,7 +33,7 @@ jobs:
         displayName: "yarn run electron-rebuild"
       - script: yarn run build
         displayName: "yarn run build"
-      - script: yarn run package-linux
+      - script: yarn run package-linux --version=$(git describe --tags)
         displayName: "yarn run package-linux"
       - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
       - task: PublishPipelineArtifact@0

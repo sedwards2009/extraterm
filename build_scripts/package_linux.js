@@ -7,10 +7,16 @@
 require('shelljs/global');
 const fs = require('fs');
 const path = require('path');
+const command = require('commander');
+
 
 const packaging_functions = require('./packaging_functions');
 
 async function main() {
+  const parsedArgs = new command.Command("extraterm");
+  parsedArgs.option('--version [app version]', 'Application version to use', null)
+    .parse(process.argv);
+
   if ( ! test('-f', './package.json')) {
     echo("This script was called from the wrong directory.");
     return;
@@ -27,11 +33,16 @@ async function main() {
 
   const electronVersion = packageData.devDependencies['electron'];
 
+  let version = parsedArgs.version == null ? packageData.version : parsedArgs.version;
+  if (version[0] === "v") {
+    version = version.slice(1);
+  }
+
   await packaging_functions.makePackage({
     arch: "x64",
     platform: "linux",
     electronVersion,
-    version: packageData.version,
+    version,
     outputDir: BUILD_TMP_DIR,
     replaceModuleDirs: false
   });
