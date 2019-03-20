@@ -47,7 +47,7 @@ async function main() {
   });
 
   await packaging_functions.makeDmg({
-      version: packageData.version,
+      version,
       outputDir: BUILD_TMP_DIR,
       useDocker: false
   });
