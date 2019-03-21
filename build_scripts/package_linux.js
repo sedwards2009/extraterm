@@ -5,10 +5,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 require('shelljs/global');
+const sh = require('shelljs');
 const fs = require('fs');
 const path = require('path');
 const command = require('commander');
 
+sh.config.fatal = true;
 
 const packaging_functions = require('./packaging_functions');
 

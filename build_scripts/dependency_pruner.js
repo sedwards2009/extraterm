@@ -39,13 +39,25 @@ function pruneDevDependencies(sourceRootPath, targetPath) {
   const pkg = readPackageJson(path.join(sourceRootPath, "package.json"));
   let pruneCount = 0;
   for (const p of [".", ...pkg.workspaces.packages]) {
-    for (const nodeModulesPath of ls('-d', path.join(targetPath, p))) {
+    let nodeModulesPathList = [];
+    try {
+      nodeModulesPathList = ls('-d', path.join(targetPath, p))
+    } catch(ex) {
+    }
+
+    for (const nodeModulesPath of nodeModulesPathList) {
        pruneCount += pruneNodeModulesDir(pruneDepNameMap, nodeModulesPath);
     }
   }
 
   for (const p of [".", ...pkg.workspaces.packages]) {
-    for (const nodeModulesPath of ls('-d', path.join(targetPath, p))) {
+    let nodeModulesPathList = [];
+    try {
+      nodeModulesPathList = ls('-d', path.join(targetPath, p))
+    } catch(ex) {
+    }
+
+    for (const nodeModulesPath of nodeModulesPathList) {
       pruneBrokenBinLinks(nodeModulesPath);
     }
   }

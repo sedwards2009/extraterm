@@ -176,8 +176,8 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   cd(outputDir);
 
   hoistSubprojectsModules(versionedOutputDir, platform);
-  pruneNodeModules(versionedOutputDir, platform);
   dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, targetAppRootPath));
+  pruneNodeModules(versionedOutputDir, platform);
 
   // Prune any unneeded node-sass binaries.
   pruneNodeSass(versionedOutputDir, arch, platform);
