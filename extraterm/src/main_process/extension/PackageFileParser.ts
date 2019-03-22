@@ -7,8 +7,6 @@ import * as path from 'path';
 import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution, ExtensionCommandContribution, Category, WhenVariables, ExtensionTerminalBorderContribution, BorderDirection } from "../../ExtensionMetadata";
 import { getLogger, Logger } from "extraterm-logging";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
-
-// const jsonParse = require("json-to-ast");
 import { JsonNode, JsonObject } from "json-to-ast";
 import jsonParse = require("json-to-ast");
 
@@ -42,6 +40,23 @@ function getJsonProperty(json: JsonObject, name: string): JsonNode {
     }
   }
   return undefined;
+}
+
+function parseObjectListJson<T>(packageJson: JsonNode, fieldName: string, objectParser: (node: JsonNode) => T): T[] {
+  const jsonObject = assertIsJsonObject(packageJson);
+  const value = getJsonProperty(jsonObject, fieldName);
+  if (value == null) {
+    return [];
+  }
+
+  if (value.type === "Array") {
+    const result: T[] = [];
+    for (const item of value.children) {
+      result.push(objectParser(item));
+    }
+    return result;
+  }
+  return throwJsonError(`Field '${fieldName}' is not an array.`, value);
 }
 
 const categoryList: Category[] = [
@@ -257,34 +272,17 @@ class PackageParser {
     }
 
     return {
-      commands: this.parseCommandContributionsListJson(contributes),
-      keybindings: this.parseKeybindingsContributionsListJson(contributes),
-      sessionBackends: this.parseSessionBackendContributionsListJson(contributes),
-      sessionEditors: this.parseSessionEditorContributionsListJson(contributes),
-      syntaxThemes: this.parseSyntaxThemeContributionsListJson(contributes),
-      syntaxThemeProviders: this.parseSyntaxThemeProviderContributionsListJson(contributes),
-      terminalBorderWidget: this.parseTerminalBorderWidgetContributionsListJson(contributes),
-      terminalThemes: this.parseTerminalThemeContributionsListJson(contributes),
-      terminalThemeProviders: this.parseTerminalThemeProviderContributionsListJson(contributes),
-      viewers: this.parseViewerContributionsListJson(contributes),
+      commands: parseObjectListJson(contributes, "commands", node => this.parseCommandContributionJson(node)),
+      keybindings: parseObjectListJson(contributes, "keybindings", node => this.parseKeybindingsContributionsJson(node)),
+      sessionBackends: parseObjectListJson(contributes, "sessionBackends", node => this.parseSessionBackendConstributionJson(node)),
+      sessionEditors: parseObjectListJson(contributes, "sessionEditors", node => this.parseSessionEditorConstributionJson(node)),
+      syntaxThemes: parseObjectListJson(contributes, "syntaxThemes", node => this.parseSyntaxThemeContributionsJson(node)),
+      syntaxThemeProviders: parseObjectListJson(contributes, "syntaxThemeProviders", node => this.parseSyntaxThemeProviderContributionsJson(node)),
+      terminalBorderWidget: parseObjectListJson(contributes, "terminalBorderWidget", node => this.parseTerminalBorderWidgetContributionsJson(node)),
+      terminalThemes: parseObjectListJson(contributes, "terminalThemes", node => this.parseTerminalThemeContributionsJson(node)),
+      terminalThemeProviders: parseObjectListJson(contributes, "terminalThemeProviders", node => this.parseTerminalThemeProviderContributionsJson(node)),
+      viewers: parseObjectListJson(contributes, "viewers", node => this.parseViewerConstributionJson(node)),
     };
-  }
-
-  private parseViewerContributionsListJson(packageJson: JsonNode): ExtensionViewerContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "viewers");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionViewerContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseViewerConstributionJson(item));
-      }
-      return result;
-    }
-    return throwJsonError(`Field 'viewers' is not an array.`, value);
   }
 
   private parseViewerConstributionJson(packageJson: JsonNode): ExtensionViewerContribution {
@@ -313,25 +311,7 @@ class PackageParser {
     };
   }
 
-  private parseCommandContributionsListJson(packageJson: JsonNode): ExtensionCommandContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "commands");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionCommandContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseCommandConstributionJson(item));
-      }
-      return result;
-    }
-
-    return throwJsonError(`Field 'commands' in the 'contributes' object is not an array.`, value);
-  }
-
-  private parseCommandConstributionJson(packageJson: JsonNode): ExtensionCommandContribution {
+  private parseCommandContributionJson(packageJson: JsonNode): ExtensionCommandContribution {
     return {
       command: this.getJsonStringField(packageJson, "command"),
       title: this.getJsonStringField(packageJson, "title"),
@@ -362,47 +342,12 @@ class PackageParser {
     return value;
   }
 
-  private parseSessionEditorContributionsListJson(packageJson: JsonNode): ExtensionSessionEditorContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "sessionEditors");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionSessionEditorContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseSessionEditorConstributionJson(item));
-      }
-      return result;
-    }
-    return throwJsonError(`Field 'sessionEditors' in the 'contributes' object is not an array.`, value);
-  }
-
   private parseSessionEditorConstributionJson(packageJson: JsonNode): ExtensionSessionEditorContribution {
     return {
       name: this.getJsonStringField(packageJson, "name"),
       type: this.getJsonStringField(packageJson, "type"),
       css: this.parseCss(packageJson)
     };
-  }
-
-  private parseSessionBackendContributionsListJson(packageJson: JsonNode): ExtensionSessionBackendContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "sessionBackends");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionSessionBackendContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseSessionBackendConstributionJson(item));
-      }
-      return result;
-    }
-
-    return throwJsonError(`Field 'sessionBackends' in the 'contributes' object is not an array.`, value);
   }
 
   private parseSessionBackendConstributionJson(packageJson: JsonNode): ExtensionSessionBackendContribution {
@@ -412,44 +357,10 @@ class PackageParser {
     };
   }
 
-  private parseSyntaxThemeContributionsListJson(packageJson: JsonNode): ExtensionSyntaxThemeContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "syntaxThemes");
-    if (value == null) {
-      return [];
-    }
-    if (value.type === "Array") {
-      const result: ExtensionSyntaxThemeContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseSyntaxThemeContributionsJson(item));
-      }
-      return result;
-    }
-
-    return throwJsonError(`Field 'syntaxThemes' in the 'contributes' object is not an array.`, value);
-  }
-
   private parseSyntaxThemeContributionsJson(packageJson: JsonNode): ExtensionSyntaxThemeContribution {
     return {
       path: this.getJsonStringField(packageJson, "path")
     };
-  }
-
-  private parseSyntaxThemeProviderContributionsListJson(packageJson: JsonNode): ExtensionSyntaxThemeProviderContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "syntaxThemeProviders");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionSyntaxThemeProviderContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseSyntaxThemeProviderContributionsJson(item));
-      }
-      return result;
-    }
-    return throwJsonError(`Field 'syntaxThemeProviders' in the 'contributes' object is not an array.`, value);
   }
 
   private parseSyntaxThemeProviderContributionsJson(packageJson: JsonNode): ExtensionSyntaxThemeProviderContribution {
@@ -457,24 +368,6 @@ class PackageParser {
       name: this.getJsonStringField(packageJson, "name"),
       humanFormatNames: this.getJsonStringArrayField(packageJson, "humanFormatNames", [])
     };
-  }
-
-  private parseTerminalBorderWidgetContributionsListJson(packageJson: JsonNode): ExtensionTerminalBorderContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "terminalBorderWidget");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionTerminalBorderContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseTerminalBorderWidgetContributionsJson(item));
-      }
-      return result;
-    }
-
-    return throwJsonError(`Field 'terminalBorderWidget' in the 'contributes' object is not an array.`, value);
   }
 
   private parseTerminalBorderWidgetContributionsJson(packageJson: JsonNode): ExtensionTerminalBorderContribution {
@@ -503,45 +396,10 @@ class PackageParser {
     return throwJsonError(`Field '${fieldName}' is not a string.`, value);
   }
 
-  private parseTerminalThemeContributionsListJson(packageJson: JsonNode): ExtensionTerminalThemeContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "terminalThemes");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionTerminalThemeContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseTerminalThemeContributionsJson(item));
-      }
-      return result;
-    }
-
-    return throwJsonError(`Field 'terminalTheme' in the 'contributes' object is not an array.`, value);
-  }
-
   private parseTerminalThemeContributionsJson(packageJson: JsonNode): ExtensionTerminalThemeContribution {
     return {
       path: this.getJsonStringField(packageJson, "path")
     };
-  }
-
-  private parseTerminalThemeProviderContributionsListJson(packageJson: JsonNode): ExtensionTerminalThemeProviderContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "terminalThemeProviders");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionTerminalThemeProviderContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseTerminalThemeProviderContributionsJson(item));
-      }
-      return result;
-    }
-    return throwJsonError(`Field 'terminalThemeProviders' in the 'contributes' object is not an array.`, value);
   }
 
   private parseTerminalThemeProviderContributionsJson(packageJson: JsonNode): ExtensionTerminalThemeProviderContribution {
@@ -549,24 +407,6 @@ class PackageParser {
       name: this.getJsonStringField(packageJson, "name"),
       humanFormatNames: this.getJsonStringArrayField(packageJson, "humanFormatNames", [])
     };
-  }
-
-  private parseKeybindingsContributionsListJson(packageJson: JsonNode): ExtensionKeybindingsContribution[] {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "keybindings");
-    if (value == null) {
-      return [];
-    }
-
-    if (value.type === "Array") {
-      const result: ExtensionKeybindingsContribution[] = [];
-      for (const item of value.children) {
-        result.push(this.parseKeybindingsContributionsJson(item));
-      }
-      return result;
-    }
-
-    return throwJsonError(`Field 'keybindings' in the 'contributes' object is not an array.`, value);
   }
 
   private parseKeybindingsContributionsJson(packageJson: JsonNode): ExtensionKeybindingsContribution {
