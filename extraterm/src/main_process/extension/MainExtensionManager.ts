@@ -10,7 +10,7 @@ import * as path from 'path';
 
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
-import { parsePackageJson } from './PackageFileParser';
+import { parsePackageJsonString } from './PackageFileParser';
 import { ExtensionContext, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from 'extraterm-extension-api';
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
@@ -113,8 +113,7 @@ export class MainExtensionManager {
     const packageJsonPath = path.join(extensionPath, "package.json");
     const packageJsonString = fs.readFileSync(packageJsonPath, "UTF8");
     try {
-      const packageJson = JSON.parse(packageJsonString);
-      const result = parsePackageJson(packageJson, extensionPath);
+      const result = parsePackageJsonString(packageJsonString, extensionPath);
       return result;
     } catch(ex) {
       this._log.warn(`An error occurred while processing '${packageJsonPath}': ` + ex);

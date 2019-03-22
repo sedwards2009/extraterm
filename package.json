@@ -48,7 +48,7 @@
     "electron-rebuild": "1.8.4",
     "git-repo-info": "^1.4.1",
     "jest": "^23.6.0",
-    "shelljs": "0.8.2",
+    "shelljs": "0.8.3",
     "wsrun": "3.6.2"
   }
 }

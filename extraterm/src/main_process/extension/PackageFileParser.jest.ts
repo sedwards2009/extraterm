@@ -4,12 +4,15 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import { parsePackageJson } from './PackageFileParser';
+import { parsePackageJsonString } from './PackageFileParser';
+import * as path from 'path';
+import * as fs from 'fs';
+import * as sh from "shelljs";
 
 test("metadata", () => {
-  const parsed = parsePackageJson({
+  const parsed = parsePackageJsonString(JSON.stringify({
     name: "Foo", version: "1.0.0", description: "Foobar"
-  }, "");
+  }), "");
   expect(parsed.name).toBe("Foo");
   expect(parsed.version).toBe("1.0.0");
   expect(parsed.description).toBe("Foobar");
@@ -17,14 +20,14 @@ test("metadata", () => {
 });
 
 test("contributes", () => {
-  const parsed = parsePackageJson({
+  const parsed = parsePackageJsonString(JSON.stringify({
     name: "Foo",
     version: "1.0.0",
     description: "Foobar",
     contributes: {
       viewers: [{name: "SmegViewer", mimeTypes: ["foo/bar"]}]
     }
-  }, "");
+  }), "");
 
   expect(parsed.name).toBe("Foo");
   expect(parsed.version).toBe("1.0.0");
@@ -35,8 +38,59 @@ test("contributes", () => {
   expect(parsed.contributes.viewers[0].mimeTypes[0]).toBe("foo/bar");
 });
 
+test("viewers", () => {
+  const parsed = parsePackageJsonString(JSON.stringify(
+{
+  "name": "audio-viewer",
+  "description": "Audio viewer",
+  "version": "1.0.0",
+  "main": "src/AudioViewerExtension.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "3.1.6"
+  },
+  "contributes": {
+    "viewers": [
+      {
+        "name": "AudioViewer",
+        "mimeTypes": [
+          "audio/vorbis",
+          "audio/mpeg"
+        ],
+        "css": {
+          "directory": "resources/sass",
+          "cssFile": [
+            "audio-viewer.scss"
+          ],
+          "fontAwesome": true
+        }
+      }
+    ]
+  }
+}
+), "");
+  expect(parsed.name).toBe("audio-viewer");
+  expect(parsed.version).toBe("1.0.0");
+  expect(parsed.main).toBe("src/AudioViewerExtension.js");
+  expect(parsed.contributes.viewers.length).toBe(1);
+  expect(parsed.contributes.viewers[0].name).toBe("AudioViewer");
+  expect(parsed.contributes.viewers[0].mimeTypes.length).toBe(2);
+  expect(parsed.contributes.viewers[0].css.directory).toBe("resources/sass");
+  expect(parsed.contributes.viewers[0].css.cssFile.length).toBe(1);
+  expect(parsed.contributes.viewers[0].css.cssFile[0]).toBe("audio-viewer.scss");
+  expect(parsed.contributes.viewers[0].css.fontAwesome).toBe(true);
+});
+
 test("platform", () => {
-  const parsed = parsePackageJson({
+  const parsed = parsePackageJsonString(JSON.stringify({
     name: "Foo",
     version: "1.0.0",
     description: "Foobar",
@@ -54,7 +108,7 @@ test("platform", () => {
         arch: "mips"
       }
     ]
-  }, "");
+  }), "");
 
   expect(parsed.includePlatform.length).toBe(1);
   expect(parsed.includePlatform[0].os).toBe("linux");
@@ -65,3 +119,32 @@ test("platform", () => {
   expect(parsed.excludePlatform[1].arch).toBe("mips");
 });
 
+test("syntax themes", () => {
+  const parsed = parsePackageJsonString(JSON.stringify({
+    "name": "community-syntax-themes",
+    "description": "Popular syntax themes from the community",
+    "version": "1.0.0",
+    "contributes": {
+      "syntaxThemes": [
+        {
+          "path": "theme"
+        }
+      ]
+    }
+  }), "");
+
+  expect(parsed.name).toBe("community-syntax-themes");
+  expect(parsed.contributes.syntaxThemes.length).toBe(1);
+  expect(parsed.contributes.syntaxThemes[0].path).toBe("theme");
+});
+
+const extensionsPath = path.join(__filename, "..", "..", "..", "..", "..", "extensions");
+describe.each(
+  sh.ls(extensionsPath)
+)("Parse extensions package.json files", (input) => {
+
+  test(`parse "${input}"`, () => {
+    const packageJsonString = fs.readFileSync(path.join(extensionsPath, input, "package.json"), "UTF8");
+    parsePackageJsonString(packageJsonString, input);
+  });
+});

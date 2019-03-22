@@ -3,15 +3,45 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as path from 'path';
 import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution, ExtensionCommandContribution, Category, WhenVariables, ExtensionTerminalBorderContribution, BorderDirection } from "../../ExtensionMetadata";
 import { getLogger, Logger } from "extraterm-logging";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
 
+// const jsonParse = require("json-to-ast");
+import { JsonNode, JsonObject } from "json-to-ast";
+import jsonParse = require("json-to-ast");
+
 const FONT_AWESOME_DEFAULT = false;
 
 
-export function parsePackageJson(packageJson: any, extensionPath: string): ExtensionMetadata {
-  return (new PackageParser(extensionPath)).parse(packageJson);
+export function parsePackageJsonString(packageJsonString: string, extensionPath: string): ExtensionMetadata {
+  return (new PackageParser(extensionPath)).parse(packageJsonString);
+}
+
+class JsonError {
+  constructor(public readonly msg: string, public readonly node: JsonNode) {
+  }
+}
+
+function throwJsonError(msg: string, node: JsonNode): never {
+  throw new JsonError(msg, node);
+}
+
+function assertIsJsonObject(json: JsonNode): JsonObject {
+  if (json.type === "Object") {
+    return json;
+  }
+  return throwJsonError("Expected an object.", json);
+}
+
+function getJsonProperty(json: JsonObject, name: string): JsonNode {
+  for (const prop of json.children) {
+    if (name === prop.key.value) {
+      return prop.value;
+    }
+  }
+  return undefined;
 }
 
 const categoryList: Category[] = [
@@ -44,127 +74,151 @@ class PackageParser {
     this._bee = new BooleanExpressionEvaluator(variables);
   }
 
-  parse(packageJson: any): ExtensionMetadata {
-    const result: ExtensionMetadata = {
-      name: this.assertJsonStringField(packageJson, "name"),
-      path: this._extensionPath,
-      main: this.assertJsonStringField(packageJson, "main", null),
-      version: this.assertJsonStringField(packageJson, "version"),
-      includePlatform: this.parsePlatformsJson(packageJson, "includePlatform"),
-      excludePlatform: this.parsePlatformsJson(packageJson, "excludePlatform"),
-      description: this.assertJsonStringField(packageJson, "description"),
-      contributes: this.parseContributesJson(packageJson)
-    };
-    return result;
+  parse(packageJsonString: string): ExtensionMetadata {
+    try {
+      const packageJson = jsonParse(packageJsonString, {loc: true});
+
+      const result: ExtensionMetadata = {
+        name: this.getJsonStringField(packageJson, "name"),
+        path: this._extensionPath,
+        main: this.getJsonStringField(packageJson, "main", null),
+        version: this.getJsonStringField(packageJson, "version"),
+        includePlatform: this.parsePlatformsJson(packageJson, "includePlatform"),
+        excludePlatform: this.parsePlatformsJson(packageJson, "excludePlatform"),
+        description: this.getJsonStringField(packageJson, "description"),
+        contributes: this.parseContributesJson(packageJson)
+      };
+      return result;
+    } catch(ex) {
+      if (ex instanceof JsonError) {
+        const loc = ex.node.loc;
+        throw `${ex.msg}\n${path.join(this._extensionPath, "package.json")} line: ${loc.start.line} column: ${loc.start.column}`;
+      } else {
+        throw ex;
+      }
+    }
   }
 
-  private assertJsonStringField(packageJson: any, fieldName: string, defaultValue: string=undefined): string {
-    const value = packageJson[fieldName];
+  private getJsonStringField(packageJson: JsonNode, fieldName: string, defaultValue: string=undefined): string {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, fieldName);
     if (value == null) {
       if (defaultValue !== undefined) {
         return defaultValue;
       }
-      throw `Field '${fieldName}' is missing.`;
+      return throwJsonError(`Field '${fieldName}' is missing.`, jsonObject);
     }
 
-    if (typeof value !== "string") {
-      throw `Field '${fieldName}' is not a string.`;
+    if (value.type === "Literal") {
+      if(typeof value.value === "string") {
+        return value.value;
+      }
     }
-    return value;
+    return throwJsonError(`Field '${fieldName}' is not a string.`, value);
   }
 
-  private assertJsonNumberField(packageJson: any, fieldName: string, defaultValue: number=1000000): number {
-    const value = packageJson[fieldName];
+  private getJsonNumberField(packageJson: JsonNode, fieldName: string, defaultValue: number=1000000): number {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, fieldName);
     if (value == null) {
       if (defaultValue !== undefined) {
         return defaultValue;
       }
-      throw `Field '${fieldName}' is missing.`;
+      return throwJsonError(`Field '${fieldName}' is missing.`, jsonObject);
     }
 
-    if (typeof value !== "number") {
-      throw `Field '${fieldName}' is not a number.`;
-    }
-    
-    return value;
+    if (value.type === "Literal") {
+      if (typeof value.value === "number") {
+        return value.value;
+      }
+    }    
+    return throwJsonError(`Field '${fieldName}' is not a number.`, value);
   }
 
-  private assertJsonCategoryField(packageJson: any, fieldName: string): Category {
-    const value = packageJson[fieldName];
+  private getJsonCategoryField(packageJson: JsonNode, fieldName: string): Category {
+    const value = this.getJsonStringField(packageJson, fieldName, null);
     if (value == null) {
       return "window";
     }
 
-    if (categoryList.indexOf(value) === -1) {
-      throw `Field '${fieldName}' is not one of ${categoryList.join(", ")}.`;
+    if ((<string[]>categoryList).indexOf(value) === -1) {
+      return throwJsonError(`Field '${fieldName}' is not one of ${categoryList.join(", ")}.`,
+        getJsonProperty(<JsonObject>packageJson, fieldName));
     }
-    return value;
+    return <Category> value;
   }
 
-  private assertJsonBooleanField(packageJson: any, fieldName: string, defaultValue: boolean): boolean {
-    const value = packageJson[fieldName];
-    if (value == null) {
-      return defaultValue;
-    }
-
-    if (typeof value !== "boolean") {
-      throw `Field '${fieldName}' is not a boolean.`;
-    }
-    return value;
-  }
-
-  private assertJsonStringArrayField(packageJson: any, fieldName: string, defaultValue: string[]=undefined): string[] {
-    const value = packageJson[fieldName];
+  private getJsonBooleanField(packageJson: JsonNode, fieldName: string, defaultValue: boolean): boolean {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, fieldName);
     if (value == null) {
       if (defaultValue !== undefined) {
         return defaultValue;
       }
-      throw `Field '${fieldName}' is missing.`;
+      return throwJsonError(`Field '${fieldName}' is missing.`, jsonObject);
     }
 
-    if ( ! Array.isArray(value)) {
-      throw `Field '${fieldName}' is not an array.`;
-    }
-
-    for (let i=0; i < value.length; i++) {
-      if (typeof value[i] !== "string") {
-        throw `Item ${i+1} of field '${fieldName}' is not a string.`;
+    if (value.type === "Literal") {
+      if (typeof value.value === "boolean") {
+        return value.value;
       }
-    }
-
-    return value;
+    }    
+    return throwJsonError(`Field '${fieldName}' is not a boolean.`, value);
   }
 
-  private parsePlatformsJson(packageJson: any, fieldName: string): ExtensionPlatform[] {
-    const value = packageJson[fieldName];
+  private getJsonStringArrayField(packageJson: JsonNode, fieldName: string, defaultValue: string[]=undefined): string[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, fieldName);
+    if (value == null) {
+      if (defaultValue !== undefined) {
+        return defaultValue;
+      }
+      return throwJsonError(`Field '${fieldName}' is missing.`, packageJson);
+    }
+
+    if (value.type === "Array") {
+      const result: string[] = [];
+      for (let i=0; i < value.children.length; i++) {
+        const kid = value.children[i];
+        if (kid.type !== "Literal" || typeof kid.value !== "string") {
+          return throwJsonError(`Item of field '${fieldName}' is not a string.`, kid);
+        }
+        result.push(kid.value);
+      }
+      return result;
+    }
+
+    return throwJsonError(`Field '${fieldName}' is not an array.`, value);
+  }
+
+  private parsePlatformsJson(packageJson: JsonNode, fieldName: string): ExtensionPlatform[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, fieldName);
     if (value == null) {
       return [];
     }
 
-    if ( ! Array.isArray(value)) {
-      throw `Field '${fieldName}' is not an array.`;
-    }
+    if (value.type === "Array") {
+      const result = [];
+      for (let i=0; i < value.children.length; i++) {
+        result.push(this.parsePlatformJson(value.children[i]));
+      }
+      return result;
+    }    
 
-    const result = [];
-    for (let i=0; i < value.length; i++) {
-      result.push(this.parsePlatformJson(value[i]))
-    }
-    return result;
+    return throwJsonError(`Field '${fieldName}' is not an array.`, value);
   }
 
-  private parsePlatformJson(packageJson: any): ExtensionPlatform {
-    try {
-      return {
-        os: this.assertJsonStringField(packageJson, "os", null),
-        arch: this.assertJsonStringField(packageJson, "arch", null)
-      };
-    } catch (ex) {
-      throw `Failed to process a platform specification: ${ex}`;
-    }
+  private parsePlatformJson(packageJson: JsonNode): ExtensionPlatform {
+    return {
+      os: this.getJsonStringField(packageJson, "os", null),
+      arch: this.getJsonStringField(packageJson, "arch", null)
+    };
   }
 
-  private parseContributesJson(packageJson: any): ExtensionContributes {
-    const contributes = packageJson["contributes"];
+  private parseContributesJson(packageJson: JsonNode): ExtensionContributes {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const contributes = getJsonProperty(jsonObject, "contributes");
     if (contributes == null) {
       return {
         commands: [],
@@ -180,8 +234,8 @@ class PackageParser {
       };
     }
 
-    if (typeof contributes !== "object") {
-      throw `'contributes' field is not an object.`;
+    if (contributes.type !== "Object") {
+      return throwJsonError(`'contributes' field is not an object.`, contributes);
     }
 
     const knownContributions: (keyof ExtensionContributes)[] = [
@@ -196,11 +250,9 @@ class PackageParser {
       "terminalThemes",
       "terminalThemeProviders"
     ];
-    for (const key in contributes) {
-      if (contributes.hasOwnProperty(key)) {
-        if (knownContributions.indexOf(<any> key) === -1) {
-          throw `'contributes' contains an unknown property '${key}'`;
-        }
+    for (const key of contributes.children) {
+      if (knownContributions.indexOf(<any> key.key.value) === -1) {
+        return throwJsonError(`'contributes' contains an unknown property '${key}'`, contributes);
       }
     }
 
@@ -218,36 +270,34 @@ class PackageParser {
     };
   }
 
-  private parseViewerContributionsListJson(packageJson: any): ExtensionViewerContribution[] {
-    const value = packageJson["viewers"];
+  private parseViewerContributionsListJson(packageJson: JsonNode): ExtensionViewerContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "viewers");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'viewers' of in the 'contributes' object is not an array.`;
-    }
 
-    const result: ExtensionViewerContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseViewerConstributionJson(item));
+    if (value.type === "Array") {
+      const result: ExtensionViewerContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseViewerConstributionJson(item));
+      }
+      return result;
     }
-    return result;
+    return throwJsonError(`Field 'viewers' is not an array.`, value);
   }
 
-  private parseViewerConstributionJson(packageJson: any): ExtensionViewerContribution {
-    try {
-      return {
-        name: this.assertJsonStringField(packageJson, "name"),
-        mimeTypes: this.assertJsonStringArrayField(packageJson, "mimeTypes"),
-        css: this.parseCss(packageJson)
-      };
-    } catch (ex) {
-      throw `Failed to process a viewer contribution: ${ex}`;
-    }
+  private parseViewerConstributionJson(packageJson: JsonNode): ExtensionViewerContribution {
+    return {
+      name: this.getJsonStringField(packageJson, "name"),
+      mimeTypes: this.getJsonStringArrayField(packageJson, "mimeTypes"),
+      css: this.parseCss(packageJson)
+    };
   }
 
-  private  parseCss(packageJson: any): ExtensionCss {
-    const value = packageJson["css"];
+  private  parseCss(packageJson: JsonNode): ExtensionCss {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "css");
     if (value == null) {
       return {
         directory: null,
@@ -256,54 +306,48 @@ class PackageParser {
       };
     }
 
-    try {
-      return {
-        directory: this.assertJsonStringField(value, "directory", "."),
-        cssFile: this.assertJsonStringArrayField(value, "cssFile", []),
-        fontAwesome: this.assertJsonBooleanField(value, "fontAwesome", FONT_AWESOME_DEFAULT)
-      };
-    } catch (ex) {
-      throw `Failed to process a CSS field: ${ex}`;
-    }
+    return {
+      directory: this.getJsonStringField(value, "directory", "."),
+      cssFile: this.getJsonStringArrayField(value, "cssFile", []),
+      fontAwesome: this.getJsonBooleanField(value, "fontAwesome", FONT_AWESOME_DEFAULT)
+    };
   }
 
-  private parseCommandContributionsListJson(packageJson: any): ExtensionCommandContribution[] {
-    const value = packageJson["commands"];
+  private parseCommandContributionsListJson(packageJson: JsonNode): ExtensionCommandContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "commands");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'commands' in the 'contributes' object is not an array.`;
+
+    if (value.type === "Array") {
+      const result: ExtensionCommandContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseCommandConstributionJson(item));
+      }
+      return result;
     }
 
-    const result: ExtensionCommandContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseCommandConstributionJson(item));
-    }
-    return result;
+    return throwJsonError(`Field 'commands' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseCommandConstributionJson(packageJson: any): ExtensionCommandContribution {
-    try {
-      return {
-        command: this.assertJsonStringField(packageJson, "command"),
-        title: this.assertJsonStringField(packageJson, "title"),
-        when: this.assertJsonWhenField(packageJson, "when", ""),
-        category: this.assertJsonCategoryField(packageJson, "category"),
-        order: this.assertJsonNumberField(packageJson, "order", 100000),
-        commandPalette: this.assertJsonBooleanField(packageJson, "commandPalette", true),
-        contextMenu: this.assertJsonBooleanField(packageJson, "contextMenu", false),
-        emptyPaneMenu: this.assertJsonBooleanField(packageJson, "emptyPaneMenu", false),
-        newTerminalMenu: this.assertJsonBooleanField(packageJson, "newTerminalMenu", false),
-        icon: this.assertJsonStringField(packageJson, "icon", ""),
-      };
-    } catch (ex) {
-      throw `Failed to process a command contribution: ${ex}`;
-    }
+  private parseCommandConstributionJson(packageJson: JsonNode): ExtensionCommandContribution {
+    return {
+      command: this.getJsonStringField(packageJson, "command"),
+      title: this.getJsonStringField(packageJson, "title"),
+      when: this.getJsonWhenField(packageJson, "when", ""),
+      category: this.getJsonCategoryField(packageJson, "category"),
+      order: this.getJsonNumberField(packageJson, "order", 100000),
+      commandPalette: this.getJsonBooleanField(packageJson, "commandPalette", true),
+      contextMenu: this.getJsonBooleanField(packageJson, "contextMenu", false),
+      emptyPaneMenu: this.getJsonBooleanField(packageJson, "emptyPaneMenu", false),
+      newTerminalMenu: this.getJsonBooleanField(packageJson, "newTerminalMenu", false),
+      icon: this.getJsonStringField(packageJson, "icon", ""),
+    };
   }
 
-  private assertJsonWhenField(packageJson: any, fieldName: string, defaultValue: string=undefined): string {
-    const value = this.assertJsonStringField(packageJson, fieldName, defaultValue);
+  private getJsonWhenField(packageJson: JsonNode, fieldName: string, defaultValue: string=undefined): string {
+    const value = this.getJsonStringField(packageJson, fieldName, defaultValue);
 
     if (value.trim() === "") {
       return "true";
@@ -318,231 +362,216 @@ class PackageParser {
     return value;
   }
 
-  private parseSessionEditorContributionsListJson(packageJson: any): ExtensionSessionEditorContribution[] {
-    const value = packageJson["sessionEditors"];
+  private parseSessionEditorContributionsListJson(packageJson: JsonNode): ExtensionSessionEditorContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "sessionEditors");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'sessionEditors' in the 'contributes' object is not an array.`;
-    }
 
-    const result: ExtensionSessionEditorContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseSessionEditorConstributionJson(item));
+    if (value.type === "Array") {
+      const result: ExtensionSessionEditorContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseSessionEditorConstributionJson(item));
+      }
+      return result;
     }
-    return result;
+    return throwJsonError(`Field 'sessionEditors' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseSessionEditorConstributionJson(packageJson: any): ExtensionSessionEditorContribution {
-    try {
-      return {
-        name: this.assertJsonStringField(packageJson, "name"),
-        type: this.assertJsonStringField(packageJson, "type"),
-        css: this.parseCss(packageJson)
-      };
-    } catch (ex) {
-      throw `Failed to process a session editor contribution: ${ex}`;
-    }
+  private parseSessionEditorConstributionJson(packageJson: JsonNode): ExtensionSessionEditorContribution {
+    return {
+      name: this.getJsonStringField(packageJson, "name"),
+      type: this.getJsonStringField(packageJson, "type"),
+      css: this.parseCss(packageJson)
+    };
   }
 
-  private parseSessionBackendContributionsListJson(packageJson: any): ExtensionSessionBackendContribution[] {
-    const value = packageJson["sessionBackends"];
+  private parseSessionBackendContributionsListJson(packageJson: JsonNode): ExtensionSessionBackendContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "sessionBackends");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'sessionBackends' in the 'contributes' object is not an array.`;
+
+    if (value.type === "Array") {
+      const result: ExtensionSessionBackendContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseSessionBackendConstributionJson(item));
+      }
+      return result;
     }
 
-    const result: ExtensionSessionBackendContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseSessionBackendConstributionJson(item));
-    }
-    return result;
+    return throwJsonError(`Field 'sessionBackends' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseSessionBackendConstributionJson(packageJson: any): ExtensionSessionBackendContribution {
-    try {
-      return {
-        name: this.assertJsonStringField(packageJson, "name"),
-        type: this.assertJsonStringField(packageJson, "type")
-      };
-    } catch (ex) {
-      throw `Failed to process a session backend contribution: ${ex}`;
-    }
+  private parseSessionBackendConstributionJson(packageJson: JsonNode): ExtensionSessionBackendContribution {
+    return {
+      name: this.getJsonStringField(packageJson, "name"),
+      type: this.getJsonStringField(packageJson, "type")
+    };
   }
 
-  private parseSyntaxThemeContributionsListJson(packageJson: any): ExtensionSyntaxThemeContribution[] {
-    const value = packageJson["syntaxThemes"];
+  private parseSyntaxThemeContributionsListJson(packageJson: JsonNode): ExtensionSyntaxThemeContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "syntaxThemes");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'syntaxThemes' in the 'contributes' object is not an array.`;
+    if (value.type === "Array") {
+      const result: ExtensionSyntaxThemeContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseSyntaxThemeContributionsJson(item));
+      }
+      return result;
     }
 
-    const result: ExtensionSyntaxThemeContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseSyntaxThemeContributionsJson(item));
-    }
-    return result;
+    return throwJsonError(`Field 'syntaxThemes' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseSyntaxThemeContributionsJson(packageJson: any): ExtensionSyntaxThemeContribution {
-    try {
-      return {
-        path: this.assertJsonStringField(packageJson, "path")
-      };
-    } catch (ex) {
-      throw `Failed to process a syntax theme contribution: ${ex}`;
-    }
+  private parseSyntaxThemeContributionsJson(packageJson: JsonNode): ExtensionSyntaxThemeContribution {
+    return {
+      path: this.getJsonStringField(packageJson, "path")
+    };
   }
 
-  private parseSyntaxThemeProviderContributionsListJson(packageJson: any): ExtensionSyntaxThemeProviderContribution[] {
-    const value = packageJson["syntaxThemeProviders"];
+  private parseSyntaxThemeProviderContributionsListJson(packageJson: JsonNode): ExtensionSyntaxThemeProviderContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "syntaxThemeProviders");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'syntaxThemeProviders' in the 'contributes' object is not an array.`;
-    }
 
-    const result: ExtensionSyntaxThemeProviderContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseSyntaxThemeProviderContributionsJson(item));
+    if (value.type === "Array") {
+      const result: ExtensionSyntaxThemeProviderContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseSyntaxThemeProviderContributionsJson(item));
+      }
+      return result;
     }
-    return result;
+    return throwJsonError(`Field 'syntaxThemeProviders' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseSyntaxThemeProviderContributionsJson(packageJson: any): ExtensionSyntaxThemeProviderContribution {
-    try {
-      return {
-        name: this.assertJsonStringField(packageJson, "name"),
-        humanFormatNames: this.assertJsonStringArrayField(packageJson, "humanFormatNames", [])
-      };
-    } catch (ex) {
-      throw `Failed to process a syntax theme provider contribution: ${ex}`;
-    }
+  private parseSyntaxThemeProviderContributionsJson(packageJson: JsonNode): ExtensionSyntaxThemeProviderContribution {
+    return {
+      name: this.getJsonStringField(packageJson, "name"),
+      humanFormatNames: this.getJsonStringArrayField(packageJson, "humanFormatNames", [])
+    };
   }
 
-  private parseTerminalBorderWidgetContributionsListJson(packageJson: any): ExtensionTerminalBorderContribution[] {
-    const value = packageJson["terminalBorderWidget"];
+  private parseTerminalBorderWidgetContributionsListJson(packageJson: JsonNode): ExtensionTerminalBorderContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "terminalBorderWidget");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'terminalBorderWidget' in the 'contributes' object is not an array.`;
+
+    if (value.type === "Array") {
+      const result: ExtensionTerminalBorderContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseTerminalBorderWidgetContributionsJson(item));
+      }
+      return result;
     }
 
-    const result: ExtensionTerminalBorderContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseTerminalBorderWidgetContributionsJson(item));
-    }
-    return result;
+    return throwJsonError(`Field 'terminalBorderWidget' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseTerminalBorderWidgetContributionsJson(packageJson: any): ExtensionTerminalBorderContribution {
-    try {
-      return {
-        name: this.assertJsonStringField(packageJson, "name"),
-        border: this.assertJsonBorderDirectionField(packageJson, "border"),
-        css: this.parseCss(packageJson)
-      };
-    } catch (ex) {
-      throw `Failed to process a session editor contribution: ${ex}`;
-    }
+  private parseTerminalBorderWidgetContributionsJson(packageJson: JsonNode): ExtensionTerminalBorderContribution {
+    return {
+      name: this.getJsonStringField(packageJson, "name"),
+      border: this.getJsonBorderDirectionField(packageJson, "border"),
+      css: this.parseCss(packageJson)
+    };
   }
 
-  private assertJsonBorderDirectionField(packageJson: any, fieldName: string): BorderDirection {
-    const value = packageJson[fieldName];
+  private getJsonBorderDirectionField(packageJson: JsonNode, fieldName: string): BorderDirection {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, fieldName);
     if (value == null) {
       return "south";
     }
 
-    const borderDirections: BorderDirection[] = ["north", "south", "east", "west"];
-    if (borderDirections.indexOf(value) === -1) {
-      throw `Field '${fieldName}' is not one of ${borderDirections.join(", ")}.`;
+    if (value.type === "Literal" && typeof value.value === "string") {
+      const borderDirections: BorderDirection[] = ["north", "south", "east", "west"];
+      if (borderDirections.indexOf(<BorderDirection> value.value) === -1) {
+        return throwJsonError(`Field '${fieldName}' is not one of ${borderDirections.join(", ")}.`, value);
+      }
+      return <BorderDirection> value.value;
     }
-    return value;
+
+    return throwJsonError(`Field '${fieldName}' is not a string.`, value);
   }
 
-  private parseTerminalThemeContributionsListJson(packageJson: any): ExtensionTerminalThemeContribution[] {
-    const value = packageJson["terminalThemes"];
+  private parseTerminalThemeContributionsListJson(packageJson: JsonNode): ExtensionTerminalThemeContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "terminalThemes");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'terminalTheme' in the 'contributes' object is not an array.`;
+
+    if (value.type === "Array") {
+      const result: ExtensionTerminalThemeContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseTerminalThemeContributionsJson(item));
+      }
+      return result;
     }
 
-    const result: ExtensionTerminalThemeContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseTerminalThemeContributionsJson(item));
-    }
-    return result;
+    return throwJsonError(`Field 'terminalTheme' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseTerminalThemeContributionsJson(packageJson: any): ExtensionTerminalThemeContribution {
-    try {
-      return {
-        path: this.assertJsonStringField(packageJson, "path")
-      };
-    } catch (ex) {
-      throw `Failed to process a terminal theme contribution: ${ex}`;
-    }
+  private parseTerminalThemeContributionsJson(packageJson: JsonNode): ExtensionTerminalThemeContribution {
+    return {
+      path: this.getJsonStringField(packageJson, "path")
+    };
   }
 
-  private parseTerminalThemeProviderContributionsListJson(packageJson: any): ExtensionTerminalThemeProviderContribution[] {
-    const value = packageJson["terminalThemeProviders"];
+  private parseTerminalThemeProviderContributionsListJson(packageJson: JsonNode): ExtensionTerminalThemeProviderContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "terminalThemeProviders");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'terminalThemeProviders' in the 'contributes' object is not an array.`;
-    }
 
-    const result: ExtensionTerminalThemeProviderContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseTerminalThemeProviderContributionsJson(item));
+    if (value.type === "Array") {
+      const result: ExtensionTerminalThemeProviderContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseTerminalThemeProviderContributionsJson(item));
+      }
+      return result;
     }
-    return result;
+    return throwJsonError(`Field 'terminalThemeProviders' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseTerminalThemeProviderContributionsJson(packageJson: any): ExtensionTerminalThemeProviderContribution {
-    try {
-      return {
-        name: this.assertJsonStringField(packageJson, "name"),
-        humanFormatNames: this.assertJsonStringArrayField(packageJson, "humanFormatNames", [])
-      };
-    } catch (ex) {
-      throw `Failed to process a terminal theme provider contribution: ${ex}`;
-    }
+  private parseTerminalThemeProviderContributionsJson(packageJson: JsonNode): ExtensionTerminalThemeProviderContribution {
+    return {
+      name: this.getJsonStringField(packageJson, "name"),
+      humanFormatNames: this.getJsonStringArrayField(packageJson, "humanFormatNames", [])
+    };
   }
 
-  private parseKeybindingsContributionsListJson(packageJson: any): ExtensionKeybindingsContribution[] {
-    const value = packageJson["keybindings"];
+  private parseKeybindingsContributionsListJson(packageJson: JsonNode): ExtensionKeybindingsContribution[] {
+    const jsonObject = assertIsJsonObject(packageJson);
+    const value = getJsonProperty(jsonObject, "keybindings");
     if (value == null) {
       return [];
     }
-    if ( ! Array.isArray(value)) {
-      throw `Field 'keybindings' in the 'contributes' object is not an array.`;
+
+    if (value.type === "Array") {
+      const result: ExtensionKeybindingsContribution[] = [];
+      for (const item of value.children) {
+        result.push(this.parseKeybindingsContributionsJson(item));
+      }
+      return result;
     }
 
-    const result: ExtensionKeybindingsContribution[] = [];
-    for (const item of value) {
-      result.push(this.parseKeybindingsContributionsJson(item));
-    }
-    return result;
+    return throwJsonError(`Field 'keybindings' in the 'contributes' object is not an array.`, value);
   }
 
-  private parseKeybindingsContributionsJson(packageJson: any): ExtensionKeybindingsContribution {
-    try {
-      return {
-        path: this.assertJsonStringField(packageJson, "path")
-      };
-    } catch (ex) {
-      throw `Failed to process a syntax theme contribution: ${ex}`;
-    }
+  private parseKeybindingsContributionsJson(packageJson: JsonNode): ExtensionKeybindingsContribution {
+    return {
+      path: this.getJsonStringField(packageJson, "path")
+    };
   }
 }
