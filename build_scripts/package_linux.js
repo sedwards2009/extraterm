@@ -54,4 +54,5 @@ async function main() {
 
 main().catch(ex => {
   console.log(ex);
+  process.exit(1);
 });

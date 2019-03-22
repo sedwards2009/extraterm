@@ -52,7 +52,7 @@ function pruneNodeSass(versionedOutputDir, arch, platform) {
 
 function pruneEmojiOne(versionedOutputDir, platform) {
   if (platform !== "linux") {
-    const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/emojione-android.ttf");
+    const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/fonts/emojione-android.ttf");
     rm(emojiOnePath);
   }
 }
