@@ -6,19 +6,11 @@
 
 // Type definitions for json-to-ast https://github.com/vtrushin/json-to-ast
 
-// declare var json_to_ast: json_to_ast.parse;
-// export = json_to_ast;
 export = parse;
 
 declare function parse(jsonString: string, settings?: parse.Settings): parse.JsonNode;
 
-// export default function parse(jsonString: string, settings?: json_to_ast.Settings): json_to_ast.JsonNode;
-
 declare namespace parse {
-
-  // interface parse {
-  //   (jsonString: string, settings?: json_to_ast.Settings): json_to_ast.JsonNode;
-  // }
   
   export interface Settings {
     loc?: boolean;
