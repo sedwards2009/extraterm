@@ -5,7 +5,8 @@
  */
 
 import * as crypto from 'crypto';
-import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment } from 'extraterm-extension-api';
+import { EventEmitter } from 'extraterm-event-emitter';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { log as LogDecorator, Logger, getLogger } from "extraterm-logging";
 import * as TermApi from 'term-api';
@@ -97,6 +98,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   static EVENT_TITLE = "title";
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   static EVENT_APPENDED_VIEWER = "terminal-appended-viewer";
+
+  environment = new TerminalEnvironmentImpl();
 
   private _log: Logger;
   private _pty: Pty = null;
@@ -701,12 +704,19 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
     if (this._pty != null) {
       this._pty.resize(newColumns, newRows);
+
+      this.environment.setList([
+        { key: TerminalEnvironment.TERM_ROWS, value: "" + newRows},
+        { key: TerminalEnvironment.TERM_COLUMNS, value: "" + newColumns},
+      ]);
     }
   }
   
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
     this.dispatchEvent(event);    
+
+    this.environment.set(TerminalEnvironment.TERM_TITLE, title);
   }
 
   getMode(): Mode {
@@ -1356,3 +1366,54 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 //   handleData(data: string): TermApi.ApplicationModeResponse;
 //   handleEnd(): void;
 // }
+
+class TerminalEnvironmentImpl implements TerminalEnvironment {
+
+  private _map = new Map<string, string>();
+
+  onChange: Event<string[]>;
+  _onChangeEventEmitter = new EventEmitter<string[]>();
+
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
+  }
+
+  get(key: string): string {
+    return this._map.get(key);
+  }
+  
+  has(key: string): boolean {
+    return this._map.has(key);
+  }
+
+  set(key: string, value: string): void {
+    const oldValue = this._map.get(key);
+    if (oldValue !== value) {
+      this._map.set(key, value);
+      this._onChangeEventEmitter.fire([key]);
+    }
+  }
+
+  setList(list: {key: string, value: string}[]): void {
+    const changeList = [];
+    for (const pair of list) {
+      const oldValue = this._map.get(pair.key);
+      if (oldValue !== pair.value) {
+        this._map.set(pair.key, pair.value);
+        changeList.push(pair.key);
+      }
+    }
+
+    if (changeList.length !== 0) {
+      this._onChangeEventEmitter.fire(changeList);
+    }
+  }
+
+  [Symbol.iterator](): IterableIterator<[string, string]> {
+    return this._map.entries();
+  }
+
+  entries(): IterableIterator<[string, string]> {
+    return this._map.entries();
+  }
+}

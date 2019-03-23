@@ -100,6 +100,7 @@ export interface InternalWindow extends ExtensionApi.Window {
 
   newTerminalCreated(newTerminal: EtTerminal): void;
   terminalAppendedViewer(newTerminal: EtTerminal, viewer: ViewerElement): void;
+  terminalEnvironmentChanged(terminal: EtTerminal, changeList: string[]): void;
 }
 
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {

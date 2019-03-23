@@ -53,7 +53,16 @@ export class WindowProxy implements InternalWindow {
       }
     }
   }
-  
+
+  terminalEnvironmentChanged(terminal: EtTerminal, changeList: string[]): void {
+    if (this._internalExtensionContext.proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this._internalExtensionContext.proxyFactory.getTerminalProxy(terminal);
+      if (proxy.environment._onChangeEventEmitter.hasListeners()) {
+        proxy.environment._onChangeEventEmitter.fire(changeList);
+      }
+    }
+  }
+
   get activeTerminal(): ExtensionApi.Terminal {
     return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
@@ -149,6 +158,39 @@ interface TerminalBorderWidgetInfo {
   factoryResult: unknown;
 }
 
+class ProxyTerminalEnvironment implements ExtensionApi.TerminalEnvironment {
+  onChange: ExtensionApi.Event<string[]>;
+  _onChangeEventEmitter = new EventEmitter<string[]>();
+
+  constructor(private _terminal: EtTerminal) {
+    this.onChange = this._onChangeEventEmitter.event;
+  }
+
+  get(key: string): string {
+    return this._terminal.environment.get(key);
+  }
+
+  has(key: string): boolean {
+    return this._terminal.environment.has(key);
+  }
+
+  set(key: string, value: string): void {
+    this._terminal.environment.set(key, value);
+  }
+
+  setList(list: {key: string, value: string}[]): void {
+    this._terminal.environment.setList(list);
+  }
+
+  [Symbol.iterator](): IterableIterator<[string, string]> {
+    return this.entries();
+  }
+
+  entries(): IterableIterator<[string, string]> {
+    return this._terminal.environment.entries();
+  }
+}
+
 export class TerminalProxy implements ExtensionApi.Terminal {
   
   viewerType: 'terminal-output';
@@ -157,8 +199,11 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   _onDidAppendViewerEventEmitter = new EventEmitter<Viewer>();
   onDidAppendViewer: ExtensionApi.Event<Viewer>;
 
+  environment: ProxyTerminalEnvironment;
+
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
     this.onDidAppendViewer = this._onDidAppendViewerEventEmitter.event;
+    this.environment = new ProxyTerminalEnvironment(this._terminal);
   }
 
   getTab(): ExtensionApi.Tab {

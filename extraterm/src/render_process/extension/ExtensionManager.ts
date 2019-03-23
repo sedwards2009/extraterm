@@ -520,6 +520,12 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       }
     });
 
+    newTerminal.environment.onChange((changeList: string[]) => {
+      for (let extension of this._activeExtensions) {
+        extension.contextImpl.internalWindow.terminalEnvironmentChanged(newTerminal, changeList);
+      }
+    });
+
     for (let extension of this._activeExtensions) {
       extension.contextImpl.internalWindow.newTerminalCreated(newTerminal);
     }

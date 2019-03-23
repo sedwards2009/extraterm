@@ -46,6 +46,23 @@ export interface Tab {
   showListPicker(options: ListPickerOptions): Promise<number | undefined>;
 }
 
+export const TerminalEnvironment = {
+  TERM_TITLE: "term:title",
+  TERM_ROWS: "term:rows",
+  TERM_COLUMNS: "term:columns",
+};
+
+export interface TerminalEnvironment {
+  get(key: string): string;
+  has(key: string): boolean;
+  set(key: string, value: string): void;
+  setList(list: {key: string, value: string}[]): void;
+
+  [Symbol.iterator](): IterableIterator<[string, string]>;
+  entries(): IterableIterator<[string, string]>;
+  
+  onChange: Event<string[]>;
+}
 
 export interface Terminal {
   /**
@@ -81,6 +98,7 @@ export interface Terminal {
 
   onDidAppendViewer: Event<Viewer>;
 
+  environment: TerminalEnvironment;
 }
 
 export interface TerminalBorderWidget {
