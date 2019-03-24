@@ -50,6 +50,9 @@ export const TerminalEnvironment = {
   TERM_TITLE: "term:title",
   TERM_ROWS: "term:rows",
   TERM_COLUMNS: "term:columns",
+  COMMAND_CURRENT: "extraterm:current_command",
+  COMMAND_LAST: "extraterm:last_commmand",
+  COMMAND_EXIT_CODE: "extraterm:exit_code",
 };
 
 export interface TerminalEnvironment {

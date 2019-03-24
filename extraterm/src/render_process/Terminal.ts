@@ -986,7 +986,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         toolTip: null
       };
       el.setDefaultMetadata(defaultMetadata);
-
+      
       this._appendViewerElement(el);
     } else {
 
@@ -998,6 +998,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
     this._lastCommandLine = cleancommand;
+
+    this.environment.setList([
+      { key: TerminalEnvironment.COMMAND_CURRENT, value: cleancommand },
+      { key: TerminalEnvironment.COMMAND_EXIT_CODE, value: "" },
+    ]);
   }
   
   private _moveCursorToFreshLine(): void {
@@ -1074,7 +1079,18 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   
   private _handleApplicationModeBracketEnd(): void {
     this._terminalCanvas.enforceScrollbackLengthAfter( () => {
-      this._closeLastEmbeddedViewer(this._htmlData);
+      const returnCode = this._htmlData;
+      this._closeLastEmbeddedViewer(returnCode);
+
+      const lastCommand = this.environment.get(TerminalEnvironment.COMMAND_CURRENT);
+      const newVars = [
+        { key: TerminalEnvironment.COMMAND_EXIT_CODE, value: "" },
+        { key: TerminalEnvironment.COMMAND_CURRENT, value: "" },
+      ];
+      if (lastCommand != null) {
+        newVars.push( { key: TerminalEnvironment.COMMAND_LAST, value: lastCommand });
+      }
+      this.environment.setList(newVars);
     });
   }
 
