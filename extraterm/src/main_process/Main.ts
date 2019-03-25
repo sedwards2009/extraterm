@@ -422,7 +422,7 @@ function checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWind
 
     let updateNeeded = false;
 
-    if (desiredConfig.isMaximized === true) {
+    if (desiredConfig != null && desiredConfig.isMaximized === true) {
       if (windowBounds.x !== windowDisplay.workArea.x ||
           windowBounds.y !== windowDisplay.workArea.y ||
           windowBounds.width !== windowDisplay.workArea.width ||
@@ -431,13 +431,16 @@ function checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWind
         window.maximize();
       }
     } else {
-      if (newDimensions.width < desiredConfig.width) {
-        newDimensions.width = desiredConfig.width;
-        updateNeeded = true;
-      }
-      if (newDimensions.height < desiredConfig.height) {
-        newDimensions.height = desiredConfig.height;
-        updateNeeded = true;
+
+      if (desiredConfig != null) {
+        if (newDimensions.width < desiredConfig.width) {
+          newDimensions.width = desiredConfig.width;
+          updateNeeded = true;
+        }
+        if (newDimensions.height < desiredConfig.height) {
+          newDimensions.height = desiredConfig.height;
+          updateNeeded = true;
+        }
       }
 
       // Clamp the width/height to fit on the display.
