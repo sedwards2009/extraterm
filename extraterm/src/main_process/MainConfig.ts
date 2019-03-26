@@ -300,7 +300,11 @@ function readConfigurationFile(): UserStoredConfig {
   if (fs.existsSync(filename)) {
     _log.info("Reading user configuration from " + filename);
     const configJson = fs.readFileSync(filename, {encoding: "utf8"});
-    config = <UserStoredConfig>JSON.parse(configJson);
+    try {
+      config = <UserStoredConfig>JSON.parse(configJson);
+    } catch(ex) {
+      _log.warn("Unable to read " + filename, ex);
+    }
   } else {
     _log.info("Couldn't find user configuration file at " + filename);
   }
