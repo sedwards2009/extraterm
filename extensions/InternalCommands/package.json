@@ -10,9 +10,7 @@
         "category": "window",
         "icon": "fas fa-toolbox",
         "when": "",
-        "order": 900,
-        "contextMenu": true,
-        "commandPalette": false
+        "order": 900
       },
       {
         "command": "extraterm:terminal.typeSelection",
@@ -35,8 +33,7 @@
         "title": "Select all",
         "category": "textEditing",
         "order": 1100,
-        "when": "textEditorFocus",
-        "contextMenu": true
+        "when": "textEditorFocus"
       },
       {
         "command": "extraterm:terminal.enterCursorMode",
@@ -44,16 +41,14 @@
         "category": "terminal",
         "order": 1200,
         "icon": "fa fa-i-cursor",
-        "when": "terminalFocus && isNormalMode",
-        "contextMenu": true
+        "when": "terminalFocus && isNormalMode"
       },
       {
         "command": "extraterm:terminal.enterNormalMode",
         "title": "Exit cursor mode",
         "category": "terminalCursorMode",
         "order": 1200,
-        "when": "terminalFocus && isCursorMode",
-        "contextMenu": true
+        "when": "terminalFocus && isCursorMode"
       },
       {
         "command": "extraterm:terminal.scrollPageUp",
@@ -77,8 +72,7 @@
         "category": "terminal",
         "order": 1400,
         "icon": "fas fa-step-backward fa-rotate-90",
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.goToNextFrame",
@@ -86,8 +80,7 @@
         "category": "terminal",
         "order": 1401,
         "icon": "fas fa-step-forward fa-rotate-90",
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.copyToClipboard",
@@ -95,8 +88,7 @@
         "category": "terminal",
         "order": 1500,
         "icon": "far fa-copy",
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.pasteFromClipboard",
@@ -104,8 +96,7 @@
         "category": "terminal",
         "order": 1501,
         "icon": "fa fa-clipboard",
-        "when": "terminalFocus && isNormalMode",
-        "contextMenu": true
+        "when": "terminalFocus && isNormalMode"
       },
       {
         "command": "extraterm:terminal.openLastFrame",
@@ -128,24 +119,21 @@
         "title": "Increase font size",
         "category": "terminal",
         "order": 1700,
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.decreaseFontSize",
         "title": "Decrease font size",
         "category": "terminal",
         "order": 1701,
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.resetFontSize",
         "title": "Reset font size",
         "category": "terminal",
         "order": 1702,
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.clearScrollback",
@@ -153,8 +141,7 @@
         "category": "terminal",
         "order": 1800,
         "icon": "fa fa-eraser",
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.resetVT",
@@ -162,8 +149,7 @@
         "category": "terminal",
         "order": 1801,
         "icon": "fa fa-sync",
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:window.newTerminal",
@@ -171,9 +157,7 @@
         "category": "window",
         "order": 1000,
         "when": "",
-        "icon": "fa fa-plus",
-        "contextMenu": true,
-        "emptyPaneMenu": true
+        "icon": "fa fa-plus"
       },
       {
         "command": "extraterm:window.closeTab",
@@ -231,9 +215,7 @@
         "category": "window",
         "order": 1400,
         "icon": "extraicon-#xea08",
-        "when": "",
-        "contextMenu": true,
-        "emptyPaneMenu": true
+        "when": ""
       },      
       {
         "command": "extraterm:window.verticalSplit",
@@ -241,9 +223,7 @@
         "category": "window",
         "order": 1401,
         "icon": "fa fa-columns",
-        "when": "",
-        "contextMenu": true,
-        "emptyPaneMenu": true
+        "when": ""
       },
       {
         "command": "extraterm:window.closePane",
@@ -251,9 +231,7 @@
         "category": "window",
         "order": 1402,
         "icon": "far fa-window-close",
-        "when": "",
-        "contextMenu": true,
-        "emptyPaneMenu": true
+        "when": ""
       },
       {
         "command": "extraterm:window.moveTabLeft",
@@ -649,6 +627,102 @@
         "category": "global",
         "when": ""
       }
-    ]
+    ],
+    "menus": {
+      "contextMenu": [
+        {
+          "command": "extraterm:application.openCommandPalette",
+          "show": true
+        },
+        {
+          "command": "extraterm:textEditor.selectAll",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.enterCursorMode",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.enterNormalMode",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.goToPreviousFrame",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.goToNextFrame",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.copyToClipboard",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.pasteFromClipboard",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.increaseFontSize",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.decreaseFontSize",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.resetFontSize",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.clearScrollback",
+          "show": true
+        },
+        {
+          "command": "extraterm:terminal.resetVT",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.newTerminal",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.horizontalSplit",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.verticalSplit",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.closePane",
+          "show": true
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "extraterm:application.openCommandPalette",
+          "show": false
+        }
+      ],
+      "emptyPane": [
+        {
+          "command": "extraterm:window.newTerminal",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.horizontalSplit",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.verticalSplit",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.closePane",
+          "show": true
+        }
+      ]
+    }
   }
 }

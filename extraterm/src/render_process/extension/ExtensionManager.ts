@@ -17,7 +17,7 @@ import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalW
   isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
-import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { CommandsRegistry } from './CommandsRegistry';
 import { CommonExtensionWindowState } from './CommonExtensionState';
@@ -36,6 +36,15 @@ interface ActiveExtension {
   contextImpl: InternalExtensionContext;
   publicApi: any;
   module: any;
+  commandMenuIndex: Map<string, CommandMenuEntry>;
+}
+
+interface CommandMenuEntry {
+  commandContribution: ExtensionCommandContribution;
+  contextMenu: boolean;
+  commandPalette: boolean;
+  emptyPane: boolean;
+  newTerminal: boolean;
 }
 
 const allCategories: Category[] = [
@@ -128,7 +137,9 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
         return;
       }      
     }
-    this._activeExtensions.push({metadata, publicApi, contextImpl, module});
+
+    const commandMenuIndex = this._buildCommandMenuIndex(metadata);
+    this._activeExtensions.push({metadata, publicApi, contextImpl, module, commandMenuIndex});
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {
@@ -140,6 +151,41 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       this._log.warn(`Unable to load ${mainJsPath}. ${ex}`);
       return null;
     }
+  }
+
+  private _buildCommandMenuIndex(metadata: ExtensionMetadata): Map<string, CommandMenuEntry> {
+    const index = new Map<string, CommandMenuEntry>();
+
+    for (const commandContribution of metadata.contributes.commands) {
+      index.set(commandContribution.command, {
+        commandContribution,
+        commandPalette: true,
+        contextMenu: false,
+        emptyPane: false,
+        newTerminal: false,
+      });
+    }
+
+    const menuKeys: (keyof ExtensionMenusContribution & keyof CommandMenuEntry)[] = [
+      "commandPalette",
+      "contextMenu",
+      "emptyPane",
+      "newTerminal",
+    ];
+
+    for (const menuKey of menuKeys) {
+      for (const menuEntry of metadata.contributes.menus[menuKey]) {
+        const entry = index.get(menuEntry.command);
+        if (entry != null) {
+          entry[menuKey] = menuEntry.show;
+        } else {
+          this._log.warn(`Extension '${metadata.name}' has a menu contribution of type ` +
+            `'${menuKey}' for unknown command '${menuEntry.command}'.`);
+        }
+      }
+    }
+
+    return index;
   }
 
   getAllSessionTypes(): { name: string, type: string }[] {
@@ -218,12 +264,12 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   }
 
   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[] {
-    const truePredicate = (command: ExtensionCommandContribution): boolean => true;
+    const truePredicate = (command: CommandMenuEntry): boolean => true;
 
     let commandPalettePredicate = truePredicate;
     if (options.commandPalette != null) {
       const commandPalette = options.commandPalette;
-      commandPalettePredicate = command => command.commandPalette === commandPalette;
+      commandPalettePredicate = commandEntry => commandEntry.commandPalette === commandPalette;
     }
 
     let contextMenuPredicate = truePredicate;
@@ -235,19 +281,19 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     let emptyPaneMenuPredicate = truePredicate;
     if (options.emptyPaneMenu != null) {
       const emptyPaneMenu = options.emptyPaneMenu;
-      emptyPaneMenuPredicate = command => command.emptyPaneMenu === emptyPaneMenu;
+      emptyPaneMenuPredicate = commandEntry => commandEntry.emptyPane === emptyPaneMenu;
     }
 
     let newTerminalMenuPredicate = truePredicate;
     if (options.newTerminalMenu != null) {
       const newTerminalMenu = options.newTerminalMenu;
-      newTerminalMenuPredicate = command => command.newTerminalMenu === newTerminalMenu;
+      newTerminalMenuPredicate = commandEntry => commandEntry.newTerminal === newTerminalMenu;
     }
 
     let categoryPredicate = truePredicate;
     if (options.categories != null) {
       const categories = options.categories;
-      categoryPredicate = command => categories.indexOf(command.category) !== -1;
+      categoryPredicate = commandEntry => categories.indexOf(commandEntry.commandContribution.category) !== -1;
     }
 
     let commandPredicate = truePredicate;
@@ -262,11 +308,12 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
         index.get(commandWithCategory.category).push(commandWithCategory.command);
       }
 
-      commandPredicate = command => {
-        if ( ! index.has(command.category)) {
+      commandPredicate = commandEntry => {
+        if ( ! index.has(commandEntry.commandContribution.category)) {
           return false;
         }
-        return index.get(command.category).indexOf(command.command) !== -1;
+        return index.get(commandEntry.commandContribution.category)
+          .indexOf(commandEntry.commandContribution.command) !== -1;
       };
     }
 
@@ -274,16 +321,17 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
     const entries: ExtensionCommandContribution[] = [];
     for (const activeExtension  of this._activeExtensions) {
-      for (const command of activeExtension.metadata.contributes.commands) {
-        if (commandPredicate(command) && commandPalettePredicate(command) && contextMenuPredicate(command) &&
-            emptyPaneMenuPredicate(command) && newTerminalMenuPredicate(command) &&
-            categoryPredicate(command) && whenPredicate(command)) {
+      for (const [command, commandEntry] of activeExtension.commandMenuIndex) {
+        if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) && contextMenuPredicate(commandEntry) &&
+            emptyPaneMenuPredicate(commandEntry) && newTerminalMenuPredicate(commandEntry) &&
+            categoryPredicate(commandEntry) && whenPredicate(commandEntry)) {
 
-          const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(command.command);
+          const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
+                              commandEntry.commandContribution.command);
           if (customizer != null) {
-            entries.push( {...command, ...customizer() });
+            entries.push( {...commandEntry.commandContribution, ...customizer() });
           } else {
-            entries.push(command);
+            entries.push(commandEntry.commandContribution);
           }
         }
       }
@@ -292,14 +340,14 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     return entries;
   }
 
-  private _createWhenPredicate(state: CommonExtensionWindowState): (ecc: ExtensionCommandContribution) => boolean {
+  private _createWhenPredicate(state: CommonExtensionWindowState): (ecc: CommandMenuEntry) => boolean {
     const variables = this._createWhenVariables(state);
     const bee = new BooleanExpressionEvaluator(variables);
-    return (ecc: ExtensionCommandContribution): boolean => {
-      if (ecc.when === "") {
+    return (ecc: CommandMenuEntry): boolean => {
+      if (ecc.commandContribution.when === "") {
         return true;
       }
-      return bee.evaluate(ecc.when);
+      return bee.evaluate(ecc.commandContribution.when);
     };
   }
 

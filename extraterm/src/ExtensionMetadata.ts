@@ -23,6 +23,7 @@ export interface ExtensionPlatform {
 export interface ExtensionContributes {
   commands: ExtensionCommandContribution[];
   keybindings: ExtensionKeybindingsContribution[];
+  menus: ExtensionMenusContribution;
   sessionBackends: ExtensionSessionBackendContribution[];
   sessionEditors: ExtensionSessionEditorContribution[];
   syntaxThemes: ExtensionSyntaxThemeContribution[];
@@ -58,12 +59,8 @@ export interface ExtensionCommandContribution {
   when?: string;
   category?: Category;
   order?: number;
-  commandPalette?: boolean;
-  contextMenu?: boolean;
   icon?: string;
   checked?: boolean;
-  emptyPaneMenu?: boolean;
-  newTerminalMenu?: boolean;
 }
 
 export interface ExtensionViewerContribution {
@@ -139,4 +136,16 @@ export interface ExtensionTerminalThemeContribution {
 
 export interface ExtensionKeybindingsContribution {
   path: string;
+}
+
+export interface ExtensionMenusContribution {
+  contextMenu: ExtensionMenu[];
+  commandPalette: ExtensionMenu[];
+  emptyPane: ExtensionMenu[];
+  newTerminal: ExtensionMenu[];
+}
+
+export interface ExtensionMenu {
+  command: string;
+  show: boolean;
 }

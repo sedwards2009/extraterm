@@ -24,8 +24,7 @@
         "title": "Find",
         "category": "terminal",
         "icon": "fas fa-search",
-        "when": "terminalFocus",
-        "contextMenu": true
+        "when": "terminalFocus"
       }
     ],
     "terminalBorderWidget": [
@@ -35,6 +34,14 @@
           "fontAwesome": true
         }
       }
-    ]
+    ],
+    "menus": {
+      "contextMenu": [
+        {
+          "command": "find:find",
+          "show": true
+        }
+      ]
+    }
   }
 }

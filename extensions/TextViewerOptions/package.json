@@ -16,24 +16,37 @@
         "command": "text-viewer-options:setSyntaxHighlighting",
         "title": "Syntax: ",
         "category": "viewer",
-        "when": "textEditorFocus",
-        "contextMenu": true
+        "when": "textEditorFocus"
       },
       {
         "command": "text-viewer-options:setTabWidth",
         "title": "Tab size: ",
         "category": "viewer",
-        "when": "textEditorFocus",
-        "contextMenu": true
+        "when": "textEditorFocus"
       },
       {
         "command": "text-viewer-options:showLineNumbers",
         "title": "Line Numbers",
         "category": "viewer",
         "icon": "fa fa-list-ol",
-        "when": "textEditorFocus",
-        "contextMenu": true
+        "when": "textEditorFocus"
       }
-    ]
+    ],
+    "menus": {
+      "contextMenu": [
+        {
+          "command": "text-viewer-options:setSyntaxHighlighting",
+          "show": true
+        },
+        {
+          "command": "text-viewer-options:setTabWidth",
+          "show": true
+        },
+        {
+          "command": "text-viewer-options:showLineNumbers",
+          "show": true
+        }
+      ]
+    }
   }
 }

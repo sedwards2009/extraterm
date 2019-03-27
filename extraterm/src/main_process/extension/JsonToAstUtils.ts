@@ -21,6 +21,16 @@ export function assertIsJsonObject(json: JsonNode): JsonObject {
   return throwJsonError("Expected an object.", json);
 }
 
+export function assertKnownJsonObjectKeys(jsonNode: JsonNode, knownKeys: string[]): void {
+  const jsonObject = assertIsJsonObject(jsonNode);
+  for (const key of jsonObject.children) {
+    if (knownKeys.indexOf(<any> key.key.value) === -1) {
+      const formattedKeys = knownKeys.join("', '");
+      return throwJsonError(`Unknown property '${key.key.value}'. Expected one of '${formattedKeys}'.`, key);
+    }
+  }
+}
+
 export function getJsonProperty(json: JsonObject, name: string): JsonNode {
   for (const prop of json.children) {
     if (name === prop.key.value) {

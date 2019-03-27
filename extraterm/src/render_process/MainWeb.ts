@@ -384,10 +384,10 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
         order: 1000,
         when: "",
         icon: "fa fa-plus",
-        contextMenu: true,
-        commandPalette: true,
-        emptyPaneMenu: true,
-        newTerminalMenu: true
+        // contextMenu: true,
+        // commandPalette: true,
+        // emptyPaneMenu: true,
+        // newTerminalMenu: true
       };
       disposables.add(extensionContext.registerCommandContribution(contrib));
     }
