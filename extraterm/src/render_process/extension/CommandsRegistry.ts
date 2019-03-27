@@ -5,26 +5,72 @@
  */
 import * as ExtensionApi from 'extraterm-extension-api';
 import { Logger, getLogger, log } from 'extraterm-logging';
-import { ExtensionCommandContribution } from '../../ExtensionMetadata';
+import { ExtensionCommandContribution, ExtensionMenusContribution } from '../../ExtensionMetadata';
 import { InternalExtensionContext } from './InternalTypes';
+
+export interface CommandMenuEntry {
+  commandContribution: ExtensionCommandContribution;
+  contextMenu: boolean;
+  commandPalette: boolean;
+  emptyPane: boolean;
+  newTerminal: boolean;
+}
 
 export class CommandsRegistry implements ExtensionApi.Commands {
 
   private _log: Logger;
   private _commandToFunctionMap = new Map<string, (args: any) => any>();
   private _commandToCustomizerFunctionMap = new Map<string, () => ExtensionApi.CustomizedCommand>();
-  private _knownCommands = new Set<string>();
+  _commandIndex: Map<string, CommandMenuEntry> = null;
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _extensionName: string, commands: ExtensionCommandContribution[]) {
+  constructor(
+      private _internalExtensionContext: InternalExtensionContext,
+      private _extensionName: string,
+      commands: ExtensionCommandContribution[],
+      menus: ExtensionMenusContribution) {
+
     this._log = getLogger("CommandsRegistry", this);
 
-    for (const command of commands) {
-      this._knownCommands.add(command.command);
+    this._commandIndex = this._buildCommandMenuIndex(commands, menus);
+  }
+
+  private _buildCommandMenuIndex(commands: ExtensionCommandContribution[], menus: ExtensionMenusContribution): Map<string, CommandMenuEntry> {
+    const index = new Map<string, CommandMenuEntry>();
+
+    for (const commandContribution of commands) {
+      index.set(commandContribution.command, {
+        commandContribution,
+        commandPalette: true,
+        contextMenu: false,
+        emptyPane: false,
+        newTerminal: false,
+      });
     }
+
+    const menuKeys: (keyof ExtensionMenusContribution & keyof CommandMenuEntry)[] = [
+      "commandPalette",
+      "contextMenu",
+      "emptyPane",
+      "newTerminal",
+    ];
+
+    for (const menuKey of menuKeys) {
+      for (const menuEntry of menus[menuKey]) {
+        const entry = index.get(menuEntry.command);
+        if (entry != null) {
+          entry[menuKey] = menuEntry.show;
+        } else {
+          this._log.warn(`Extension '${this._extensionName}' has a menu contribution of type ` +
+            `'${menuKey}' for unknown command '${menuEntry.command}'.`);
+        }
+      }
+    }
+
+    return index;
   }
 
   registerCommand(name: string, commandFunc: (args: any) => any, customizer?: () => ExtensionApi.CustomizedCommand): void {
-    if ( ! this._knownCommands.has(name)) {
+    if ( ! this._commandIndex.has(name)) {
       this._log.warn(`registerCommand() attempted on unknown command '${name}' from extension '${this._extensionName}'.`);
       return;
     }
@@ -34,11 +80,17 @@ export class CommandsRegistry implements ExtensionApi.Commands {
     }
   }
 
-  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable {
-    this._knownCommands.add(contribution.command);
+  registerCommandContribution(commandContribution: ExtensionCommandContribution): ExtensionApi.Disposable {
+    this._commandIndex.set(commandContribution.command, {
+      commandContribution,
+      commandPalette: true,
+      contextMenu: false,
+      emptyPane: false,
+      newTerminal: false,
+    });
     return {
       dispose: (): void => {
-        this._knownCommands.delete(contribution.command);
+        this._commandIndex.delete(commandContribution.command);
       }
     };
   }
@@ -56,6 +108,6 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   }
 
   getCommands(): string[] {
-    return [...this._knownCommands];
+    return [...this._commandIndex.keys()];
   }
 }

@@ -19,7 +19,7 @@ import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
-import { CommandsRegistry } from './CommandsRegistry';
+import { CommandsRegistry, CommandMenuEntry } from './CommandsRegistry';
 import { CommonExtensionWindowState } from './CommonExtensionState';
 import { Mode } from '../viewers/ViewerElementTypes';
 import { TextEditor } from '../viewers/TextEditorType';
@@ -36,15 +36,6 @@ interface ActiveExtension {
   contextImpl: InternalExtensionContext;
   publicApi: any;
   module: any;
-  commandMenuIndex: Map<string, CommandMenuEntry>;
-}
-
-interface CommandMenuEntry {
-  commandContribution: ExtensionCommandContribution;
-  contextMenu: boolean;
-  commandPalette: boolean;
-  emptyPane: boolean;
-  newTerminal: boolean;
 }
 
 const allCategories: Category[] = [
@@ -138,8 +129,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       }      
     }
 
-    const commandMenuIndex = this._buildCommandMenuIndex(metadata);
-    this._activeExtensions.push({metadata, publicApi, contextImpl, module, commandMenuIndex});
+    this._activeExtensions.push({metadata, publicApi, contextImpl, module});
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {
@@ -151,41 +141,6 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       this._log.warn(`Unable to load ${mainJsPath}. ${ex}`);
       return null;
     }
-  }
-
-  private _buildCommandMenuIndex(metadata: ExtensionMetadata): Map<string, CommandMenuEntry> {
-    const index = new Map<string, CommandMenuEntry>();
-
-    for (const commandContribution of metadata.contributes.commands) {
-      index.set(commandContribution.command, {
-        commandContribution,
-        commandPalette: true,
-        contextMenu: false,
-        emptyPane: false,
-        newTerminal: false,
-      });
-    }
-
-    const menuKeys: (keyof ExtensionMenusContribution & keyof CommandMenuEntry)[] = [
-      "commandPalette",
-      "contextMenu",
-      "emptyPane",
-      "newTerminal",
-    ];
-
-    for (const menuKey of menuKeys) {
-      for (const menuEntry of metadata.contributes.menus[menuKey]) {
-        const entry = index.get(menuEntry.command);
-        if (entry != null) {
-          entry[menuKey] = menuEntry.show;
-        } else {
-          this._log.warn(`Extension '${metadata.name}' has a menu contribution of type ` +
-            `'${menuKey}' for unknown command '${menuEntry.command}'.`);
-        }
-      }
-    }
-
-    return index;
   }
 
   getAllSessionTypes(): { name: string, type: string }[] {
@@ -321,7 +276,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
     const entries: ExtensionCommandContribution[] = [];
     for (const activeExtension  of this._activeExtensions) {
-      for (const [command, commandEntry] of activeExtension.commandMenuIndex) {
+      for (const [command, commandEntry] of activeExtension.contextImpl.commands._commandIndex) {
         if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) && contextMenuPredicate(commandEntry) &&
             emptyPaneMenuPredicate(commandEntry) && newTerminalMenuPredicate(commandEntry) &&
             categoryPredicate(commandEntry) && whenPredicate(commandEntry)) {
@@ -602,7 +557,8 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
 
     this._log = getLogger("InternalExtensionContextImpl", this);
     this.proxyFactory = new ProxyFactoryImpl(this);
-    this.commands = new CommandsRegistry(this, extensionMetadata.name, extensionMetadata.contributes.commands);
+    this.commands = new CommandsRegistry(this, extensionMetadata.name,
+                                          extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
     this.window = new WindowProxy(this, commonExtensionState);
     this.internalWindow = this.window;
     this.logger = getLogger(extensionMetadata.name);
