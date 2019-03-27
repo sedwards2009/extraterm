@@ -1623,7 +1623,7 @@ export class Emulator implements EmulatorApi {
       //   break;
 
       default:
-        this.error('Unknown CSI code: %s (%i).', ch, "" + ch.charCodeAt(0));
+        this.error('Unknown CSI code: %s (%s).', ch, "" + ch.charCodeAt(0));
         break;
     }
 
