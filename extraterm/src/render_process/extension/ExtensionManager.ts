@@ -594,4 +594,12 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
       }
     };
   }
+
+  setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void {
+    const entry = this.commands._commandIndex.get(command);
+    if (entry == null) {
+      return;
+    }
+    entry[menuType] = on;
+  }
 }

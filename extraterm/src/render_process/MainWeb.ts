@@ -377,19 +377,21 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
       const args = {
         sessionUuid: session.uuid
       };
+      const command = "extraterm:window.newTerminal?" + encodeURIComponent(JSON.stringify(args));
       const contrib: ExtensionCommandContribution = {
-        command: "extraterm:window.newTerminal?" + encodeURIComponent(JSON.stringify(args)),
+        command,
         title: "New Terminal: " + session.name,
         category: "window",
         order: 1000,
         when: "",
         icon: "fa fa-plus",
-        // contextMenu: true,
-        // commandPalette: true,
-        // emptyPaneMenu: true,
-        // newTerminalMenu: true
       };
       disposables.add(extensionContext.registerCommandContribution(contrib));
+
+      extensionContext.setCommandMenu(command, "contextMenu", true);
+      extensionContext.setCommandMenu(command, "commandPalette", true);
+      extensionContext.setCommandMenu(command, "emptyPane", true);
+      extensionContext.setCommandMenu(command, "newTerminal", true);
     }
   };
 

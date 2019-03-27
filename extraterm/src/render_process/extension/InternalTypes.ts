@@ -7,7 +7,7 @@ import { EtTerminal } from '../Terminal';
 import { TextViewer } from'../viewers/TextAceViewer';
 import { ViewerElement } from '../viewers/ViewerElement';
 import * as ExtensionApi from 'extraterm-extension-api';
-import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';
 import { CommandsRegistry } from './CommandsRegistry';
@@ -112,6 +112,7 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
 
   findViewerElementTagByMimeType(mimeType: string): string;
   registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
+  setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean);
   debugRegisteredCommands(): void;
 }
 
