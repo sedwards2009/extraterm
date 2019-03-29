@@ -129,6 +129,7 @@ class PackageParser {
           commandPalette: [],
           emptyPane: [],
           newTerminal: [],
+          terminalTab: [],
         },
         sessionBackends: [],
         sessionEditors: [],
@@ -244,6 +245,7 @@ class PackageParser {
         commandPalette: [],
         emptyPane: [],
         newTerminal: [],
+        terminalTab: [],
       };
     }
 
@@ -252,6 +254,7 @@ class PackageParser {
       "commandPalette",
       "emptyPane",
       "newTerminal",
+      "terminalTab",
     ];
     assertKnownJsonObjectKeys(menus, knownKeys);
 
@@ -261,6 +264,7 @@ class PackageParser {
       commandPalette: this.parseMenuContribution(menusObject, "commandPalette"),
       emptyPane: this.parseMenuContribution(menusObject, "emptyPane"),
       newTerminal: this.parseMenuContribution(menusObject, "newTerminal"),
+      terminalTab: this.parseMenuContribution(menusObject, "terminalTab"),
     };
   }
 

@@ -18,7 +18,7 @@ import { CheckboxMenuItem } from "../gui/CheckboxMenuItem";
 import { CommandAndShortcut } from "./CommandPalette";
 import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
-import { ContextMenuType } from "./CommandUtils";
+import { ContextMenuType, ContextMenuRequestEventDetail } from "./CommandUtils";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
@@ -57,10 +57,16 @@ export class ApplicationContextMenu {
   open(ev: CustomEvent): void {
     this._contextWindowState = this.extensionManager.getExtensionWindowStateFromEvent(ev);
 
+    const detail: ContextMenuRequestEventDetail = ev.detail;
+    if (detail.extensionContextOverride != null) {
+      for (const key in detail.extensionContextOverride) {
+        this._contextWindowState[key] = detail.extensionContextOverride[key];
+      }
+    }
+
     doLater( () => {
       const menuType = <ContextMenuType> ev.detail.menuType;
       const options: CommandQueryOptions = {
-        contextMenu: true,
         when: true
       };
 
@@ -72,6 +78,11 @@ export class ApplicationContextMenu {
 
         case ContextMenuType.NEW_TERMINAL_TAB:
           options.newTerminalMenu = true;
+          showShortcuts = false;
+          break;
+
+        case ContextMenuType.TERMINAL_TAB:
+          options.terminalTitleMenu = true;
           showShortcuts = false;
           break;
       }

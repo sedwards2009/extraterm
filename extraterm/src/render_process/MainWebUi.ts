@@ -38,6 +38,7 @@ import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from '../Config'
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { NewTerminalContextArea } from './NewTerminalContextArea';
 import { CommandAndShortcut } from './command/CommandPalette';
+import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -445,23 +446,36 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     newTab.setAttribute('id', "tab_id_" + newId);
     newTab.tabIndex = -1;
     newTab.innerHTML = trimBetweenTags(`
-      <div class="${CLASS_TAB_HEADER_CONTAINER}">
+      <div class="${CLASS_TAB_HEADER_CONTAINER}" id="tab_id_${newId}">
         <div class="${CLASS_TAB_HEADER_ICON}"></div>
         <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
         <div class="${CLASS_TAB_HEADER_TAG}"></div>
         <div class="${CLASS_TAB_HEADER_CLOSE}">
-          <button id="close_tag_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>
+          <button id="close_tab_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>
         </div>
       </div>`);
 
     this._splitLayout.appendTab(tabWidget, newTab, tabContentElement);
     this._splitLayout.update();
 
-    const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tag_id_" + newId);
+    const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tab_id_" + newId);
     closeTabButton.addEventListener('click', (ev: MouseEvent): void => {
       this.closeTab(tabContentElement);
     });
-  
+
+    const tabHeader = DomUtils.getShadowRoot(this).getElementById("tab_id_" + newId);
+    tabHeader.addEventListener('contextmenu', ev => {
+this._log.debug("tab RMB");
+      ev.stopImmediatePropagation();
+      ev.preventDefault();
+
+      const override: ExtensionContextOverride = {};
+      if (tabContentElement instanceof EtTerminal) {
+        override.activeTerminal = tabContentElement;
+      }
+
+      dispatchContextMenuRequest(this, ev.clientX, ev.clientY, ContextMenuType.TERMINAL_TAB, override);
+    }, true);
     return newTab;
   }
 

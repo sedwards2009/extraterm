@@ -245,6 +245,12 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       newTerminalMenuPredicate = commandEntry => commandEntry.newTerminal === newTerminalMenu;
     }
 
+    let terminalTabMenuPredicate = truePredicate;
+    if (options.terminalTitleMenu != null) {
+      const terminalTabMenu = options.terminalTitleMenu;
+      terminalTabMenuPredicate = commandEntry => commandEntry.terminalTab === terminalTabMenu;
+    }
+
     let categoryPredicate = truePredicate;
     if (options.categories != null) {
       const categories = options.categories;
@@ -277,8 +283,9 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     const entries: ExtensionCommandContribution[] = [];
     for (const activeExtension  of this._activeExtensions) {
       for (const [command, commandEntry] of activeExtension.contextImpl.commands._commandIndex) {
-        if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) && contextMenuPredicate(commandEntry) &&
-            emptyPaneMenuPredicate(commandEntry) && newTerminalMenuPredicate(commandEntry) &&
+        if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) &&
+            contextMenuPredicate(commandEntry) && emptyPaneMenuPredicate(commandEntry) &&
+            newTerminalMenuPredicate(commandEntry) && terminalTabMenuPredicate(commandEntry) &&
             categoryPredicate(commandEntry) && whenPredicate(commandEntry)) {
 
           const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(

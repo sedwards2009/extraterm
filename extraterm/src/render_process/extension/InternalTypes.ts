@@ -22,6 +22,7 @@ export interface CommandQueryOptions {
   contextMenu?: boolean;
   emptyPaneMenu?: boolean;
   newTerminalMenu?: boolean;
+  terminalTitleMenu?: boolean;
   when?: boolean;
   commandsWithCategories?: {command: string, category: Category}[];
 }

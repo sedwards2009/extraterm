@@ -143,6 +143,7 @@ export interface ExtensionMenusContribution {
   commandPalette: ExtensionMenu[];
   emptyPane: ExtensionMenu[];
   newTerminal: ExtensionMenu[];
+  terminalTab: ExtensionMenu[];
 }
 
 export interface ExtensionMenu {
