@@ -355,8 +355,8 @@ function startUpExtensions() {
 
 function registerCommands(extensionManager: ExtensionManager): void {
   const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
-  commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToogleDeveloperTools,
-                            customizeToogleDeveloperTools);
+  commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToggleDeveloperTools,
+                            customizeToggleDeveloperTools);
   commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
   commands.registerCommand("extraterm:application.openCommandPalette", commandOpenCommandPalette);
 
@@ -404,12 +404,12 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
   createSessionCommands(sessionConfig);
 }
 
-function commandToogleDeveloperTools(): void {
+function commandToggleDeveloperTools(): void {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   WebIpc.devToolsRequest(developerToolMenu.checked);
 }
 
-function customizeToogleDeveloperTools(): CustomizedCommand {
+function customizeToggleDeveloperTools(): CustomizedCommand {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   return {
     checked: developerToolMenu.checked

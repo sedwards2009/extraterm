@@ -301,7 +301,7 @@
       },
       {
         "command": "extraterm:window.toggleDeveloperTools",
-        "title": "Toogle Developer Tools",
+        "title": "Toggle Developer Tools",
         "category": "application",
         "order": 3001,
         "icon": "fa fa-cogs",
@@ -645,7 +645,7 @@
       },
       {
         "command": "extraterm:global.globalToggleShowHide",
-        "title": "Toogle show/hide window",
+        "title": "Toggle show/hide window",
         "category": "global",
         "when": ""
       }
