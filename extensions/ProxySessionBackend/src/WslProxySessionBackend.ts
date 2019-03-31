@@ -107,9 +107,22 @@ class WslProxyPtyConnector extends ProxyPtyConnector {
   }
 
   protected _spawnServer(): child_process.ChildProcess {
-    let serverPath = path.join(SourceDir.path, "python/ptyserver2.py");
-    serverPath = "/mnt/" + serverPath.replace(/\\/g, "/").replace("C:", "c");
+    // Clever way of mapping a Windows side dir to its WSL/Linux side equivalent.
+    const cdResult = child_process.spawnSync("wsl.exe", ["pwd"],
+      {cwd: path.join(SourceDir.path, "python"), shell: true, encoding: "utf8"});
 
+    if (cdResult.status !== 0) {
+      _log.warn("'wsl.exe pwd' returned status code ${cdResult.status} and stdout '${cdResult.stdout}'.");
+      // FIXME throw new Exception();
+    }
+
+    const wslPath = cdResult.stdout.trim();
+    if (wslPath.split("\n").length !== 1) {
+      _log.warn("'wsl.exe pwd' gave unexpected output. stdout '${cdResult.stdout}'.");
+      // FIXME throw new Exception();
+    }
+
+    const serverPath = wslPath + "/ptyserver2.py";
     _log.debug(`serverPath: ${serverPath}`);
     return child_process.spawn("wsl.exe", ["PYTHONIOENCODING=utf-8:ignore", "python3", serverPath], {});
   }
