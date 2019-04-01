@@ -236,10 +236,6 @@ export function CreateDataUrl(buffer: Buffer, mimeType: string): string {
   return "data:" + mimeType + ";base64," + base64Data;
 }
 
-export function getEventDeepPath(ev: Event): Node[] {
-  return ev.composedPath();
-}
-
 /**
  * Set the input focus on an element and prevent any scrolling for occuring.
  *
