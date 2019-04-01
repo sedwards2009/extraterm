@@ -223,6 +223,12 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   private _handleChildFocus(ev: FocusEvent): void {
+    const composedPath = ev.composedPath();
+    if (composedPath[0] instanceof HTMLSelectElement) {
+      // Don't steal the focus away from SELECT elements, otherwise they can't be used.
+      return;
+    }
+
     // This needs to be done later otherwise it tickles a bug in
     // Chrome/Blink and prevents drag and drop from working.
     // https://bugs.chromium.org/p/chromium/issues/detail?id=726248
