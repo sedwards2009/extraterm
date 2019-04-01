@@ -33,6 +33,8 @@ jobs:
         displayName: "yarn run electron-rebuild"
       - script: yarn run build
         displayName: "yarn run build"
+      - script: yarn run test
+        displayName: "yarn run test"
       - script: yarn run package-linux --version=$(git describe --tags)
         displayName: "yarn run package-linux"
       - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
@@ -56,6 +58,8 @@ jobs:
         displayName: "yarn run electron-rebuild-win32"
       - script: yarn run build
         displayName: "yarn run build"
+      - script: yarn run test
+        displayName: "yarn run test"
       - script: |
           PATH=C:\Program Files (x86)\NSIS\;%PATH%
           git describe --tags > APP_VERSION.txt
@@ -92,6 +96,8 @@ jobs:
         displayName: "yarn run electron-rebuild"
       - script: yarn run build
         displayName: "yarn run build"
+      - script: yarn run test
+        displayName: "yarn run test"
       - script: yarn run package-macos --version=$(git describe --tags)
         displayName: "yarn run package-macos"
       - script: |

@@ -13,14 +13,15 @@
     "run": "electron extraterm/src/main_process/Main.js --dev-tools",
     "run-release": "electron extraterm/src/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 4.0.4",
+    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o node-pty -f -v 4.0.4",
+    "package": "node build_scripts/build_packages.js",
     "package-commands-zip": "node build_scripts/package_commands_zip.js",
     "package-linux": "node build_scripts/package_linux.js",
     "package-macos": "node build_scripts/package_macos.js",
     "package-windows": "node build_scripts/package_windows.js",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 4.0.4",
-    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o node-pty -f -v 4.0.4",
-    "package": "node build_scripts/build_packages.js",
-    "package-linux-zip-only": "node build_scripts/build_packages.js --linux-zip-only"
+    "package-linux-zip-only": "node build_scripts/build_packages.js --linux-zip-only",
+    "test": "wsrun --concurrency 2 --exclude-missing --stages test"
   },
   "jshintConfig": {
     "esversion": 6
