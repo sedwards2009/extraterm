@@ -4,8 +4,6 @@
 @import "general-gui/pxToRem";
 @import "general-gui/variables";
 
-$tab-border-color: lighten($base-border-color, 10%);
-
 $tab-background-color-active: $background-color;
 
 $tab-radius: pxToRem(3px);

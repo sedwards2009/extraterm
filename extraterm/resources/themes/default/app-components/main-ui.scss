@@ -88,8 +88,12 @@ $tab-background-color-active: $background-color;
     flex-grow: 0;
   }
 
-  & > #ID_NEW_TERMINAL_CONTEXT_AREA > .CLASS_NEW_TAB_BUTTON {
-    align-self: center;
+  & > #ID_NEW_TERMINAL_CONTEXT_AREA {
+    display: flex;
+    
+    & > .CLASS_NEW_TAB_BUTTON {
+      align-self: center;
+    }
   }
 }
 
