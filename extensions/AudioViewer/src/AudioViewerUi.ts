@@ -5,10 +5,11 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
     <div id="top_container" :title="formattedTooltip">
       <audio ref="player" :src="url"
         v-on:durationchange="onDurationChange"
@@ -20,12 +21,12 @@ import Vue from 'vue';
         {{title}}
       </div>
       <div id="toolbar">
-        <div class="btn-group">
-          <button v-on:click="onPlayPauseClick" class="btn btn-default">
+        <div class="group">
+          <button v-on:click="onPlayPauseClick" class="inline">
             <i v-if="!playing" class="fa fa-play"></i>
             <i v-if="playing" class="fa fa-pause"></i>
           </button>
-          <button v-on:click="onStopClick" class="btn btn-default">
+          <button v-on:click="onStopClick" class="inline">
             <i class="fa fa-stop"></i>
           </button>
         </div>
@@ -43,7 +44,7 @@ import Vue from 'vue';
           :transferred="availableSizeBytes">
         </et-compact-file-transfer-progress>
       </div>
-    </div>`
+    </div>`)
 })
 export class AudioViewerUi extends Vue {
   title = "-";

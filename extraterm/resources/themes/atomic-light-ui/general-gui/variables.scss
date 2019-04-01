@@ -210,3 +210,5 @@ $overlay-border-color: $background-highlight-color;
 $tab-bar-background-color: #d8d8d8;
 $tab-height: pxToRem(26px);
 $group-text-bg-color: lighten(#000, 93.5%);
+
+$tab-border-color: lighten($base-border-color, 10%);
