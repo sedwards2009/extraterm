@@ -206,7 +206,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       
       this.updateThemeCss();
 
-      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDown(ev));
       this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDownCapture(ev), true);
       this._terminalCanvas.addEventListener("contextmenu", (ev) => this._handleContextMenu(ev));
       
@@ -639,14 +638,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     } else {
       this._appendNewTerminalViewer();
       this._refocus();
-    }
-  }
-
-  private _handleMouseDown(ev: MouseEvent): void {
-    if (ev.target === this._terminalCanvas) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      this._terminalCanvas.focus();
     }
   }
 
