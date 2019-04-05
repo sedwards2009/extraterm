@@ -41,6 +41,8 @@ import { bestOverlap } from './RectangleMatch';
 
 const LOG_FINE = false;
 
+const LOCK_DPI = true;
+
 SourceMapSupport.install();
 
 // crashReporter.start(); // Report crashes
@@ -546,6 +548,11 @@ function setupLogging(): void {
 }
 
 function setScaleFactor(originalFactorArg?: string): {restartNeeded: boolean, currentScaleFactor: number, originalScaleFactor: number} {
+
+  if ( ! LOCK_DPI) {
+    return {restartNeeded: false, currentScaleFactor: 1.0, originalScaleFactor: 1.0 };
+  }
+
   _log.info("args", process.argv);
   const primaryDisplay = screen.getPrimaryDisplay();
   _log.info("Display scale factor is ", primaryDisplay.scaleFactor);
