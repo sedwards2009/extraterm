@@ -291,8 +291,7 @@ function restoreAllWindows(): void {
       // Windows and macOS
       if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
         if (bounds.isMaximized === true) {
-          const nearestScreen = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
-          window.setSize(nearestScreen.workAreaSize.width, nearestScreen.workAreaSize.height); 
+          window.maximize();
         }
         checkWindowBoundsLater(mainWindow, bounds);
 
