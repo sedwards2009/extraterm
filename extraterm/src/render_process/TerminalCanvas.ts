@@ -304,12 +304,8 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   private _rootFontSize(): number {
     const generalConfig = this._configDatabase.getConfig("general");
-    const systemConfig = this._configDatabase.getConfig("system");
-    
-    const dpiScaleFactor = systemConfig.originalScaleFactor / systemConfig.currentScaleFactor;
     const unitHeightPx = 12;
-
-    const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent * dpiScaleFactor / 100), 5);
+    const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent / 100), 5);
     return rootFontSize;
   }
 
