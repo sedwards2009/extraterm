@@ -63,7 +63,7 @@ Show file
 
 [metadata size] = The length of the JSON metadata string.
 
-[data] = "D:" [up to 3 kiobytes of base 64 data (=4*1024 chars in encoded form)] ":" [sha256 hash] CR
+[data] = "D:" [up to 3 kilobytes of base 64 data (=4*1024 chars in encoded form)] ":" [sha256 hash] CR
 
 [end]= "E::" [sha256 hash] CR
 
