@@ -531,8 +531,11 @@ async function setupConfiguration(): Promise<void> {
     keybindingsManager.setKeybindingsMapping(keybindingsFile);
   }
 
-  if (oldSystemConfig === null || oldGeneralConfig.uiScalePercent !== newGeneralConfig.uiScalePercent) {
-    setRootFontScaleFactor(newGeneralConfig.uiScalePercent);
+  if (oldSystemConfig === null ||
+      oldSystemConfig.originalScaleFactor !== newSystemConfig.originalScaleFactor ||
+      oldSystemConfig.currentScaleFactor !== newSystemConfig.currentScaleFactor ||
+      oldGeneralConfig.uiScalePercent !== newGeneralConfig.uiScalePercent) {
+    setRootFontScaleFactor(newSystemConfig.originalScaleFactor, newSystemConfig.currentScaleFactor, newGeneralConfig.uiScalePercent);
   }
 
   if (oldGeneralConfig === null || oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize ||
@@ -541,9 +544,11 @@ async function setupConfiguration(): Promise<void> {
     const matchingFonts = newSystemConfig.availableFonts.filter(
       (font) => font.postscriptName === newGeneralConfig.terminalFont);
 
-    const fontSizePx = Math.max(5, Math.round(newGeneralConfig.terminalFontSize));
+    const scaleFactor = newSystemConfig.originalScaleFactor / newSystemConfig.currentScaleFactor;
+    const fontSizePx = Math.max(5, Math.round(newGeneralConfig.terminalFontSize * scaleFactor));
     setCssVars(newGeneralConfig.terminalFont, matchingFonts[0].path, fontSizePx);
   }
+
 
   if (oldGeneralConfig == null) {
     oldGeneralConfig = newGeneralConfig;
@@ -625,11 +630,12 @@ function setCssVars(fontName: string, fontPath: string, terminalFontSizePx: numb
     `;
 }
 
-function setRootFontScaleFactor(uiScalePercent: number): void {
+function setRootFontScaleFactor(originalScaleFactor: number, currentScaleFactor: number, uiScalePercent: number): void {
+  const dpiScaleFactor = originalScaleFactor / currentScaleFactor;
   const unitHeightPx = 12;
 
-  const rootFontSize = Math.max(Math.floor(unitHeightPx * uiScalePercent / 100), 5) + "px";
-  _log.debug("uiScalePercent: ", uiScalePercent, " = rootFontSize: ",rootFontSize);
+  const rootFontSize = Math.max(Math.floor(unitHeightPx * uiScalePercent * dpiScaleFactor / 100), 5) + "px";
+  _log.debug("dpiScaleFactor:", dpiScaleFactor, "* uiScalePercent: ", uiScalePercent, " = rootFontSize: ",rootFontSize);
   window.document.documentElement.style.fontSize = rootFontSize;
 }
 
