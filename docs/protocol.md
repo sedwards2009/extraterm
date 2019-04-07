@@ -67,7 +67,7 @@ Show file
 
 [end]= "E::" [sha256 hash] CR
 
-The main body of data needs some explanation. It is basically lines of text. Each line is a 'chunk'. It is multiple 'data' chunks which are then terminated by a single 'end' chunk. Each data chunk holds up to 3KiB of file data which is then encoded as base64 giving max 4096 characters of data. The after the last chunk of data an 'end' chunk must be sent to indicate successful and complete transmission.
+The main body of data needs some explanation. It is basically lines of text. Each line is a 'chunk'. It is multiple 'data' chunks which are then terminated by a single 'end' chunk. Each data chunk holds up to 3KiB of file data which is then encoded as base64 giving max 4096 characters of data. Then after the last chunk of data an 'end' chunk must be sent to indicate successful and complete transmission.
 
 If the transmission needs to be gracefully aborted then an abort chunk can be sent:
 
