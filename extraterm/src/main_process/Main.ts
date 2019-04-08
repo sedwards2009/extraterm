@@ -41,7 +41,7 @@ import { bestOverlap } from './RectangleMatch';
 
 const LOG_FINE = false;
 
-const LOCK_DPI = true;
+const LOCK_DPI = false;
 
 SourceMapSupport.install();
 
