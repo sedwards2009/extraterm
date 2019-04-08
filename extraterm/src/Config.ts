@@ -88,8 +88,6 @@ export interface SystemConfig {
   
   availableFonts: FontInfo[];
   titleBarStyle: TitleBarStyle;
-  currentScaleFactor: number;
-  originalScaleFactor: number;
 
   userTerminalThemeDirectory: string;
   userSyntaxThemeDirectory: string;
