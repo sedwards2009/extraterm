@@ -6,11 +6,14 @@
 require('shelljs/global');
 const fs = require('fs');
 const path = require('path');
-const packager = require('electron-packager');
 const getRepoInfo = require('git-repo-info');
 
+const packagingFunctions = require('./packaging_functions');
+const makePackage = packagingFunctions.makePackage;
+const makeNsis = packagingFunctions.makeNsis;
+const makeDmg = packagingFunctions.makeDmg;
+
 const log = console.log.bind(console);
-const MODULE_VERSON = 69; // This version number also appears in thememanager.ts
 
 async function main() {
   "use strict";
@@ -53,9 +56,11 @@ async function main() {
   echo("Removing development dependencies");
   exec("yarn install --production=true");
 
+  const version = packageData.version;
+
   // Create the commands zip
   echo("Creating commands.zip");
-  const commandsDir = packageData.name + "-commands-" + packageData.version;
+  const commandsDir = packageData.name + "-commands-" + version;
   cp("-r", "extraterm/src/commands", path.join(BUILD_TMP_DIR, commandsDir));
   cd(BUILD_TMP_DIR);
   exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
@@ -63,345 +68,63 @@ async function main() {
 
   const electronVersion = packageData.devDependencies['electron'];
 
-  const ignoreRegExp = [
-    /^\/build_scripts\b/,
-    /^\/extraterm-web-component-decorators\b/,
-    /^\/extraterm-extension-api\b/,
-    /^\/test\b/,
-    /^\/build_tmp\b/,
-    /^\/src\/typedocs\b/,
-    /\.ts$/,
-    /\.js\.map$/,
-    /^\/\.git\//,
-    /^\/docs\b/,
-    /^\/resources\/extra_icons\b/,
-    /^\/src\/test\b/,
-    /^\/src\/testfiles\b/
-  ];
-
-  const ignoreFunc = function ignoreFunc(filePath) {
-    const result = ignoreRegExp.some( (exp) => exp.test(filePath));
-    return result;
-  };
-
-  function appDir(platform) {
-    return platform === "darwin" ? "Extraterm.app/Contents/Resources/app" : "resources/app";
-  }
-
-  function pruneNodeSass(versionedOutputDir, arch, platform) {
-    const gutsDir = appDir(platform);
-    const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor");
-
-    rm('-rf', nodeSassVendorDir);
-    
-    const nodeSassBinaryDir = path.join(versionedOutputDir, gutsDir, "src/node-sass-binary");
-    ["darwin-x64", "linux-ia32", "linux-x64", "win32-x64"].forEach( (name) => {
-      if (name !== platform + "-" + arch) {
-        rm('-rf', path.join(nodeSassBinaryDir, name + "-" + MODULE_VERSON));
-      }
-    });
-  }
-
-  function pruneEmojiOne(versionedOutputDir, platform) {
-    if (platform !== "linux") {
-      const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/emojione-android.ttf");
-      rm(emojiOnePath);
-    }
-  }
-
-  function hoistSubprojectsModules(versionedOutputDir, platform) {
-    const modulesDir = path.join(versionedOutputDir, appDir(platform), "node_modules");
-
-    // Delete the symlinks.
-    for (const item of ls(modulesDir)) {
-      const itemPath = path.join(modulesDir, item);
-      if (test('-L', itemPath)) {
-        echo(`Deleting symlink ${item} in ${modulesDir}`);
-        rm(itemPath);
-      }
-    }
-
-    // Move the 'packages' subprojects up into this node_modules dir.
-    const packagesDir = path.join(versionedOutputDir, appDir(platform), "packages");
-    for (const item of ls(packagesDir)) {
-      const destDir = path.join(modulesDir, item);
-      echo(`Moving ${item} in to ${destDir}`);
-      mv(path.join(packagesDir, item), destDir);
-    }
-  }
-
-  function pruneNodeModules(versionedOutputDir, platform) {
-    const prevDir = pwd();
-    
-    cd(path.join(versionedOutputDir, appDir(platform)));
-    exec("modclean -n default:safe -r");
-    pruneSpecificNodeModules();
-
-    cd(prevDir);
-  }
-
-  function pruneSpecificNodeModules() {
-    [
-      "node-sass/src",
-      "node-sass/node_modules/nan",
-      "node-sass/vendor",
-      "node-gyp",
-      "ajv",
-      "globule",
-      "vue/src",
-      "vue/dist/vue.esm.browser.js",
-      "vue/dist/vue.esm.js",
-      "vue/dist/vue.js",
-      "vue/dist/vue.min.js",
-      "vue/dist/vue.runtime.esm.js",
-      "vue/dist/vue.runtime.js",
-      "vue/dist/vue.runtime.min.js",
-      "font-manager/src",
-      ".bin"
-    ].forEach( (subpath) => {
-      const fullPath = path.join("node_modules", subpath);
-
-      echo("Deleting " + fullPath);
-
-      if (test('-d', fullPath)) {
-        rm('-rf', fullPath);
-      } else if (test('-f', fullPath)) {
-          rm(fullPath);
-      } else {
-        echo("----------- Unable to find path "+ fullPath);
-      }
-    });
-
-  }
-
-  async function makePackage(arch, platform) {
-    log("");
-      
-    // Clean up the output dirs and files first.
-    const versionedOutputDir = packageData.name + "-" + packageData.version + "-" + platform + "-" + arch;
-    if (test('-d', versionedOutputDir)) {
-      rm('-rf', versionedOutputDir);
-    }
-    
-    const outputZip = path.join(BUILD_TMP_DIR, versionedOutputDir + ".zip");
-
-    const packagerOptions = {
-      arch: arch,
-      dir: ".",
-      platform: platform,
-      version: electronVersion,
-      ignore: ignoreFunc,
-      name: platform === "darwin" ? "Extraterm" : "extraterm",
-      overwrite: true,
-      out: BUILD_TMP_DIR,
-      prune: false
-    };
-    if (platform === "win32") {
-      packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.ico";
-      packagerOptions.win32metadata = {
-        FileDescription: "Extraterm",
-        ProductName: "Extraterm",
-        LegalCopyright: "(C) 2018 Simon Edwards"
-      };
-    } else if (platform === "darwin") {
-      packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.icns";
-    }
-
-    const appPath = await packager(packagerOptions);
-
-    // Rename the output dir to a one with a version number in it.
-    mv(appPath[0], path.join(BUILD_TMP_DIR, versionedOutputDir));
-    
-    const subPath = platform === "darwin"
-                      ? "Extraterm.app/Contents/Resources/app/node_modules"
-                      : "resources/app/node_modules";
-    const dirsDest = path.join(BUILD_TMP_DIR, versionedOutputDir, subPath);
-    const dirsSource = path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`);
-    replaceDirs(dirsDest, dirsSource);
-
-    const thisCD = pwd();
-    cd(BUILD_TMP_DIR);
-
-    hoistSubprojectsModules(versionedOutputDir, platform);
-    pruneNodeModules(versionedOutputDir, platform);
-
-    // Prune any unneeded node-sass binaries.
-    pruneNodeSass(versionedOutputDir, arch, platform);
-
-    pruneEmojiOne(versionedOutputDir, platform);
-
-    // Zip it up.
-    log("Zipping up the package");
-
-    mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
-    cp("extraterm/README.md", versionedOutputDir);
-    cp("extraterm/LICENSE.txt", versionedOutputDir);
-    
-    exec(`zip -y -r ${outputZip} ${versionedOutputDir}`);
-    cd(thisCD);
-    
-    log("App bundle written to " + versionedOutputDir);
-    return true;
-  }
-  
-  function replaceDirs(targetDir, replacementsDir) {
-    const prevDir = pwd();
-    cd(ROOT_SRC_DIR);
-    const replacements = ls(replacementsDir);
-    replacements.forEach( (rDir) => {
-      const targetSubDir = path.join(targetDir, rDir);
-      if (test('-d', targetSubDir)) {
-        rm('-r', targetSubDir);
-      }
-      cp('-r', path.join(replacementsDir, rDir), targetSubDir);
-    });  
-    cd(prevDir);
-  }
-
-  function makeDmg() {
-    echo("");
-    echo("---------------------------------------------------");
-    echo("Building dmg file for macOS");
-    echo("---------------------------------------------------");
-
-    const darwinPath = path.join(BUILD_TMP_DIR, `extraterm-${packageData.version}-darwin-x64`);
-    for (const f of ls(darwinPath)) {
-      if ( ! f.endsWith(".app")) {
-        echo(`Deleting ${f}`);
-        rm(path.join(darwinPath, f));
-      }
-    }
-
-    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
-    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
-    mkdir(path.join(darwinPath,".background"));
-    cp(path.join(ROOT_SRC_DIR, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
-
-    ln("-s", "/Applications", path.join(darwinPath, "Applications"));
-
-    exec(`docker run --rm -v "${BUILD_TMP_DIR}:/files" sporsh/create-dmg Extraterm /files/extraterm-${packageData.version}-darwin-x64/ /files/extraterm_${packageData.version}.dmg`);
-    return true;
-  }
-
-  function makeNsis() {
-    echo("");
-    echo("---------------------------------------------------");
-    echo("Building NSIS based installer for Windows");
-    echo("---------------------------------------------------");
-
-    const windowsBuildDirName = `extraterm-${packageData.version}-win32-x64`;
-    const versionSplit = packageData.version.split(".");
-    const majorVersion = versionSplit[0];
-    const minorVersion = versionSplit[1];
-    const patchVersion = versionSplit[2];
-
-    const installerScript = `
-!include "MUI2.nsh"
-!include "FileFunc.nsh"
-
-!define APPNAME "Extraterm"
-!define DESCRIPTION "Terminal emulator"
-!define COMPANYNAME "extraterm.org"
-!define VERSIONMAJOR ${majorVersion}
-!define VERSIONMINOR ${minorVersion}
-!define VERSIONBUILD ${patchVersion}
-
-!define MUI_ABORTWARNING # This will warn the user if they exit from the installer.
-!define MUI_INSTFILESPAGE_COLORS "3db54a 000000"
-!define MUI_ICON "${windowsBuildDirName}\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico"
-
-!insertmacro MUI_PAGE_WELCOME # Welcome to the installer page.
-!insertmacro MUI_PAGE_DIRECTORY # In which folder install page.
-!insertmacro MUI_PAGE_INSTFILES # Installing page.
-!insertmacro MUI_PAGE_FINISH # Finished installation page.
-
-!insertmacro MUI_UNPAGE_CONFIRM
-!insertmacro MUI_UNPAGE_INSTFILES
-
-!insertmacro MUI_LANGUAGE "English"
-
-Name "Extraterm"
-BrandingText " "
-OutFile "extraterm-setup-${packageData.version}.exe"
-InstallDir "$PROGRAMFILES64\\Extraterm"
-InstallDirRegKey HKLM "Software\\Extraterm" "InstallLocation"
-
-ShowInstDetails show # This will always show the installation details.
-
-Section "Extraterm"
-  SetOutPath $INSTDIR
-  File /r "${windowsBuildDirName}\\*"
-
-  WriteUninstaller "$INSTDIR\\Uninstall.exe"
-
-  createShortCut "$SMPROGRAMS\\Extraterm.lnk" "$INSTDIR\\extraterm.exe" "" "$INSTDIR\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico"
-
-  WriteRegStr HKLM "Software\\Extraterm" "InstallLocation" "$\\"$INSTDIR$\\""
-  WriteRegStr HKLM "Software\\Extraterm" "Version" "${packageData.version}"
-
-  # Registry information for add/remove programs
-	WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "DisplayName" "\${APPNAME} - \${DESCRIPTION}"
-	WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "UninstallString" "$\\"$INSTDIR\\uninstall.exe$\\""
-	WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "QuietUninstallString" "$\\"$INSTDIR\\uninstall.exe$\\" /S"
-	WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "InstallLocation" "$\\"$INSTDIR$\\""
-	WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "DisplayIcon" "$\\"$INSTDIR\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico$\\""
-	WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "Publisher" "\${COMPANYNAME}"
-	
-	WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "DisplayVersion" "\${VERSIONMAJOR}.\${VERSIONMINOR}.\${VERSIONBUILD}"
-	WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "VersionMajor" \${VERSIONMAJOR}
-	WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "VersionMinor" \${VERSIONMINOR}
-	# There is no option for modifying or repairing the install
-	WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "NoModify" 1
-	WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "NoRepair" 1
-	# Set the INSTALLSIZE constant (!defined at the top of this script) so Add/Remove Programs can accurately report the size
-  
-  # Record the installation size
-  \${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
-  IntFmt $0 "0x%08X" $0
-  WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "EstimatedSize" "\$0"
-
-SectionEnd
-
-
-Section "Uninstall"
-  # Remove Start Menu launcher
-	Delete "$SMPROGRAMS\\Extraterm.lnk"
-
-  Delete "$INSTDIR\\*.*"
-  Delete "$INSTDIR\\Uninstall.exe"
-  RMDir /r "$INSTDIR"
-
-  DeleteRegKey HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}"
-  DeleteRegKey HKLM "Software\\Extraterm"
-SectionEnd  
-`;
-    fs.writeFileSync(path.join(BUILD_TMP_DIR, "installer.nsi"), installerScript, {encoding: "utf-8"});
-
-    exec(`docker run --rm -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
-    return true;
-  }
-
   if (linuxZipOnly) {
-    await makePackage("x64", "linux");
+    await makePackage( {
+      arch: "x64",
+      platform: "linux",
+      electronVersion,
+      version,
+      outputDir: BUILD_TMP_DIR,
+      replaceModuleDirs: true
+    });
     log("Done");
   } else {
-    if (! await makePackage("x64", "win32")) {
+    if (! await makePackage( {
+          arch: "x64",
+          platform: "win32",
+          electronVersion,
+          version,
+          outputDir: BUILD_TMP_DIR,
+          replaceModuleDirs: true
+        })) {
       return;
     }
     
-    if (! await makePackage("x64", "linux")) {
+    if (! await makePackage( {
+          arch: "x64",
+          platform: "linux",
+          electronVersion,
+          version,
+          outputDir: BUILD_TMP_DIR,
+          replaceModuleDirs: true
+        })) {
       return;
     }
 
-    if (! await makePackage("x64", "darwin")) {
+    if (! await makePackage( {
+          arch: "x64",
+          platform: "darwin",
+          electronVersion,
+          version,
+          outputDir: BUILD_TMP_DIR,
+          replaceModuleDirs: true
+        })) {
       return;
     }
 
-    if (! makeDmg()) {
+    if (! makeDmg({
+          version,
+          outputDir: BUILD_TMP_DIR,
+          useDocker: true
+        })) {
       return;
     }
 
-    if (! makeNsis()) {
+    if (! makeNsis({
+          version,
+          outputDir: BUILD_TMP_DIR,
+          useDocker: true
+        })) {
       return;
     }
     log("Done");
