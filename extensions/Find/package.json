@@ -7,13 +7,13 @@
     "build": "tsc"
   },
   "dependencies": {
+    "escape-string-regexp": "^1.0.5",
     "extraterm-trim-between-tags": "1.0.0",
     "vue": "2.5.9",
     "vue-class-component": "6.1.0"
   },
   "devDependencies": {
     "@types/node": "7.0.5",
-    "escape-string-regexp": "^1.0.5",
     "extraterm-extension-api": "0.1.0",
     "typescript": "3.1.6"
   },
