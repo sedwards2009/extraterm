@@ -4,6 +4,8 @@
 
 Main website: [extraterm.org](http://extraterm.org)
 
+[![Build Status](https://dev.azure.com/simon0627/extraterm/_apis/build/status/sedwards2009.extraterm?branchName=master)](https://dev.azure.com/simon0627/extraterm/_build/latest?definitionId=1&branchName=master)
+
 # About
 
 Extraterm is an open source project to build a terminal emulator and expand it with new features to support modern workflows and do more than just act like a glorified teletype.
@@ -52,6 +54,8 @@ See the more detailed [features list](http://extraterm.org/features.html).
 :warning: Extraterm is in development and roughly 'beta' in quality. It is generally stable, but don't be too surprised if you encounter a few bugs. Use at your own risk. :warning:
 
 With that out of the way, the primary author does use it as their main terminal emulator on a daily basis. The basics are in place and it will run most common terminal applications such as vi, emacs and joe without problems and even more demanding applications such as midnight commander.
+
+Nightly builds of the `master` branch can be [downloaded here](https://storage.googleapis.com/extraterm_builds/index.html).
 
 # Further Information
 
