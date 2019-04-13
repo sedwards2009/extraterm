@@ -113,6 +113,10 @@ export interface TerminalBorderWidget {
   onDidClose: Event<void>;
 }
 
+export interface TabTitleWidget {
+  getContainerElement(): HTMLElement;
+}
+
 export interface NumberInputOptions {
   /**
    * The title of the input box.
@@ -294,6 +298,10 @@ export interface TerminalBorderWidgetFactory {
   (terminal: Terminal, widget: TerminalBorderWidget): any;
 }
 
+export interface TabTitleWidgetFactory {
+  (terminal: Terminal, widget: TabTitleWidget): any;
+}
+
 export interface Window {
   activeTerminal: Terminal;
   activeViewer: Viewer;
@@ -307,6 +315,7 @@ export interface Window {
   extensionSessionEditorBaseConstructor: ExtensionSessionEditorBaseConstructor;
   registerSessionEditor(type: string, sessionEditorClass: ExtensionSessionEditorBaseConstructor): void;
 
+  registerTabTitleWidget(name: string, factory: TabTitleWidgetFactory): void;
   registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void;
 }
 

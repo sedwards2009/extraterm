@@ -27,7 +27,7 @@
         "when": "terminalFocus"
       }
     ],
-    "terminalBorderWidget": [
+    "terminalBorderWidgets": [
       {
         "name": "find",
         "css": {

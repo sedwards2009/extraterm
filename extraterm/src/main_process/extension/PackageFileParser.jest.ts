@@ -148,3 +148,24 @@ describe.each(
     parsePackageJsonString(packageJsonString, input);
   });
 });
+
+test("tab title widgets", () => {
+  const parsed = parsePackageJsonString(JSON.stringify(
+{
+  "name": "tab-title",
+  "description": "",
+  "version": "1.0.0",
+  "contributes": {
+    "tabTitleWidgets": [
+      {
+        "name": "title",
+        "css": {
+          "fontAwesome": true
+        }
+      }
+    ],
+  }
+}), "");
+  expect(parsed.contributes.tabTitleWidgets.length).toBe(1);
+  expect(parsed.contributes.tabTitleWidgets[0].name).toBe("title");
+});

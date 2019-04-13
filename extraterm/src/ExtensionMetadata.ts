@@ -28,7 +28,8 @@ export interface ExtensionContributes {
   sessionEditors: ExtensionSessionEditorContribution[];
   syntaxThemes: ExtensionSyntaxThemeContribution[];
   syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
-  terminalBorderWidget: ExtensionTerminalBorderContribution[];
+  tabTitleWidgets: ExtensionTabTitlesWidgetContribution[];
+  terminalBorderWidgets: ExtensionTerminalBorderContribution[];
   terminalThemes: ExtensionTerminalThemeContribution[];
   terminalThemeProviders: ExtensionTerminalThemeProviderContribution[];
   viewers: ExtensionViewerContribution[];
@@ -114,6 +115,11 @@ export interface ExtensionSyntaxThemeContribution {
 }
 
 export type BorderDirection = "north" | "south" | "east" | "west";
+
+export interface ExtensionTabTitlesWidgetContribution {
+  name: string;
+  css: ExtensionCss;
+}
 
 export interface ExtensionTerminalBorderContribution {
   name: string;

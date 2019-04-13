@@ -14,7 +14,7 @@ import { EtTerminal } from '../Terminal';
 import { TextViewer } from'../viewers/TextAceViewer';
 import { ProxyFactoryImpl } from './ProxyFactoryImpl';
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory,
-  isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions } from './InternalTypes';
+  isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions, InternalTabTitleWidget } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution } from '../../ExtensionMetadata';
@@ -29,6 +29,7 @@ import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
 import { TabWidget } from '../gui/TabWidget';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { DebouncedDoLater } from '../../utils/DoLater';
+import { WidgetProxy } from './WidgetProxy';
 
 
 interface ActiveExtension {
@@ -541,6 +542,14 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
     }
   }
 
+  createNewTerminalTabTitleWidgets(newTerminal: EtTerminal): HTMLElement[] {
+    let result: HTMLElement[] = [];
+    for (let extension of this._activeExtensions) {
+      result = [...result, ...extension.contextImpl. _createTabTitleWidgets(newTerminal)];
+    }
+    return result;
+  }
+
   commandRegistrationChanged(): void {
     this._commandsChangedLater.trigger();
   }
@@ -558,6 +567,8 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   isBackendProcess = false;
 
   proxyFactory: ProxyFactory = null;
+
+  private _tabTitleWidgetFactoryMap = new Map<string, ExtensionApi.TabTitleWidgetFactory>();
 
   constructor(public extensionManager: ExtensionManager, public extensionMetadata: ExtensionMetadata,
               commonExtensionState: CommonExtensionWindowState) {
@@ -608,5 +619,47 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
       return;
     }
     entry[menuType] = on;
+  }
+
+  registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
+    const tabTitleWidgetMeta = this.extensionMetadata.contributes.tabTitleWidgets;
+    for (const data of tabTitleWidgetMeta) {
+      if (data.name === name) {
+        this._tabTitleWidgetFactoryMap.set(name, factory);
+        return;
+      }
+    }
+
+    this.logger.warn(
+      `Unknown tab title widget '${name}' given to registerTabTitleWidget().`);
+  }
+
+  _createTabTitleWidgets(terminal: EtTerminal): HTMLElement[] {
+    const tabTitleWidgetsContrib = this.extensionMetadata.contributes.tabTitleWidgets;
+    const result: HTMLElement[] = [];
+    for (const contrib of tabTitleWidgetsContrib) {
+      const factory = this._tabTitleWidgetFactoryMap.get(contrib.name);
+      if (factory != null) {
+        const htmlWidgetProxy = <WidgetProxy> document.createElement(WidgetProxy.TAG_NAME);
+        htmlWidgetProxy._setExtensionContext(this);
+        htmlWidgetProxy._setExtensionCss(contrib.css);
+
+        const tabTitleWidget = new TabTitleWidgetImpl(htmlWidgetProxy);
+        const factoryResult = factory(this.proxyFactory.getTerminalProxy(terminal), tabTitleWidget);
+// FIXME record this stuff somewhere, and also may be clean it up.
+        result.push(htmlWidgetProxy);
+      }
+    }
+    return result;
+  }
+}
+
+class TabTitleWidgetImpl implements InternalTabTitleWidget {
+
+  constructor(private _widgetProxy: WidgetProxy) {
+  }
+
+  getContainerElement(): HTMLElement {
+    return this._widgetProxy.getContainerElement();
   }
 }

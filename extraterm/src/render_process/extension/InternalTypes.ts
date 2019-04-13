@@ -64,6 +64,8 @@ export interface ExtensionManager {
 
   onCommandsChanged: ExtensionApi.Event<void>;
   commandRegistrationChanged(): void;
+
+  createNewTerminalTabTitleWidgets(terminal: EtTerminal);
 }
 
 export interface AcceptsExtensionManager {
@@ -104,6 +106,13 @@ export interface InternalWindow extends ExtensionApi.Window {
   terminalEnvironmentChanged(terminal: EtTerminal, changeList: string[]): void;
 }
 
+/**
+ * Holds internal accounting needed to support an Extension.
+ * 
+ * It also provides methods for the core application to interact with an
+ * Extension and all the different things it may have registered and
+ * provided.
+ */
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
   extensionManager: ExtensionManager;
   commands: CommandsRegistry;
@@ -115,11 +124,18 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext 
   registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
   setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean);
   debugRegisteredCommands(): void;
+
+  registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void;
+  _createTabTitleWidgets(terminal: EtTerminal): HTMLElement[];
 }
 
 export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorderWidget {
   _handleOpen(): void;
   _handleClose(): void;
+}
+
+export interface InternalTabTitleWidget extends ExtensionApi.TabTitleWidget {
+
 }
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {

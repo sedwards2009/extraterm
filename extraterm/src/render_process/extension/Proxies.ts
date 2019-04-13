@@ -7,7 +7,7 @@ import * as ExtensionApi from 'extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 
 import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
-import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget } from './InternalTypes';
+import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget, InternalTabTitleWidget } from './InternalTypes';
 import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
@@ -21,6 +21,7 @@ import { ViewerElement } from '../viewers/ViewerElement';
 export class WindowProxy implements InternalWindow {
 
   private _log: Logger = null;
+
   private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
   private _terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
@@ -33,7 +34,6 @@ export class WindowProxy implements InternalWindow {
     this.onDidCreateTerminal = this._onDidCreateTerminalEventEmitter.event;
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
-    this._terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
     this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;    
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
@@ -97,8 +97,12 @@ export class WindowProxy implements InternalWindow {
     return this._windowSessionEditorRegistry.getSessionEditorTagForType(sessionType);
   }
 
+  registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
+    this._internalExtensionContext.registerTabTitleWidget(name, factory);
+  }
+
   registerTerminalBorderWidget(name: string, factory: ExtensionApi.TerminalBorderWidgetFactory): void {
-    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidget;
+    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidgets;
     for (const data of borderWidgetMeta) {
       if (data.name === name) {
         this._terminalBorderWidgetFactoryMap.set(name, factory);
@@ -158,6 +162,12 @@ interface TerminalBorderWidgetInfo {
   factoryResult: unknown;
 }
 
+interface TabTitleWidgetInfo {
+  htmlWidgetProxy: WidgetProxy;
+  tabTitleWidget: InternalTabTitleWidget;
+  factoryResult: unknown;
+}
+
 class ProxyTerminalEnvironment implements ExtensionApi.TerminalEnvironment {
   onChange: ExtensionApi.Event<string[]>;
   _onChangeEventEmitter = new EventEmitter<string[]>();
@@ -196,6 +206,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   viewerType: 'terminal-output';
 
   private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
+  private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>();
   _onDidAppendViewerEventEmitter = new EventEmitter<Viewer>();
   onDidAppendViewer: ExtensionApi.Event<Viewer>;
 
@@ -260,7 +271,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   private _findTerminalBorderWidgetMetadata(name: string): ExtensionTerminalBorderContribution {
-    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidget;
+    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidgets;
     for (const data of borderWidgetMeta) {
       if (data.name === name) {
         return data;

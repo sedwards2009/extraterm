@@ -150,6 +150,15 @@ DIV.tab_header_tag {
   flex: 0 0 auto;
 }
 
+DIV.tab_title_extensions {
+  display: flex;
+  flex: 1 1 auto;
+  overflow: hidden;
+
+  margin-left: pxToRem(8px);
+  margin-right: pxToRem(8px);
+}
+
 DIV.tab_header_close {
   flex: 0 0 auto;
   align-self: center;

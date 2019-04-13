@@ -440,16 +440,23 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _addTab(tabWidget: TabWidget, tabContentElement: Element): Tab {
+    const isTerminal = tabContentElement instanceof EtTerminal;
+
     const newId = this._tabIdCounter;
     this._tabIdCounter++;
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
     newTab.setAttribute('id', "tab_id_" + newId);
     newTab.tabIndex = -1;
+
+    const contentsHtml = isTerminal ? 
+      `<div id="tab_title_extensions_${newId}" class="tab_title_extensions"></div>` :
+      `<div class="${CLASS_TAB_HEADER_ICON}"></div>
+      <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
+      <div class="${CLASS_TAB_HEADER_TAG}"></div>`;
+
     newTab.innerHTML = trimBetweenTags(`
       <div class="${CLASS_TAB_HEADER_CONTAINER}" id="tab_id_${newId}">
-        <div class="${CLASS_TAB_HEADER_ICON}"></div>
-        <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
-        <div class="${CLASS_TAB_HEADER_TAG}"></div>
+        ${contentsHtml}
         <div class="${CLASS_TAB_HEADER_CLOSE}">
           <button id="close_tab_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>
         </div>
@@ -476,11 +483,20 @@ this._log.debug("tab RMB");
 
       dispatchContextMenuRequest(this, ev.clientX, ev.clientY, ContextMenuType.TERMINAL_TAB, override);
     }, true);
+
+    if (isTerminal) {
+      const extensionsDiv = <HTMLDivElement> DomUtils.getShadowRoot(this).getElementById("tab_title_extensions_" + newId);
+      this._addTabTitleWidgets(extensionsDiv, <EtTerminal> tabContentElement);
+    }    
+
     return newTab;
   }
 
-  private _tabFromElement(el: Element): Tab {
-    return this._splitLayout.getTabByTabContent(el);
+  private _addTabTitleWidgets(extensionsDiv: HTMLDivElement, terminal: EtTerminal): void {
+    const widgets = this._extensionManager.createNewTerminalTabTitleWidgets(terminal);
+    for (const widget of widgets) {
+      extensionsDiv.appendChild(widget);
+    }
   }
 
   private _tabWidgetFromElement(el: Element): TabWidget {
@@ -604,19 +620,18 @@ this._log.debug("tab RMB");
   }
   
   private _updateTabTitle(el: HTMLElement): void {
+    if (el instanceof EtTerminal) {
+      return;
+    }
+
     const tab = this._splitLayout.getTabByTabContent(el);
      
     let title = "";
     let htmlTitle = "";
     let icon = null;
     let tag = "";
-
-    if (el instanceof EtTerminal) {
-      title = el.getTerminalTitle();
-      htmlTitle = he.escape(title);
-      icon = "fa fa-keyboard";
-
-    } else if (el instanceof EtViewerTab) {
+    
+    if (el instanceof EtViewerTab) {
       title = el.getMetadata().title;
       htmlTitle = he.escape(title);
       icon = el.getMetadata().icon;

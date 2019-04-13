@@ -30,6 +30,10 @@ export class WidgetProxy extends ThemeableElementBase  {
 
   connectedCallback(): void {
     super.connectedCallback();
+    this._setup();
+  }
+
+  private _setup(): void {
     if ( ! this._doneSetup) {
       this._doneSetup = true;
       this._setupDOM();
@@ -53,6 +57,7 @@ export class WidgetProxy extends ThemeableElementBase  {
    * Get the node where the element's DOM nodes should be placed.
    */
   getContainerElement(): HTMLElement {
+    this._setup();
     return this._containerDivElement;
   }
 
