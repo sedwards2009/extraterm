@@ -86,7 +86,7 @@ export class ImageViewer extends ViewerElement {
 
   connectedCallback(): void {
     super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) != null) {
+    if (DomUtils.getShadowRoot(this) == null) {
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this.createClone();
       shadow.appendChild(clone);
