@@ -161,28 +161,12 @@ function setupThemeManager(): void {
 }
 
 function electronReady(parsedArgs: Command): void {
-  if ( ! setupScale(parsedArgs)) {
-    return;
-  }
   setupBulkFileStorage();
   setupIpc();
   setupTrayIcon();
   setupGlobalKeybindingsManager();
   setUpMenu();
   openWindow(parsedArgs);
-}
-
-function setupScale(parsedArgs: Command): boolean {
-  const deviceScaleFactor = <any>parsedArgs.extratermDeviceScaleFactor;
-  const {restartNeeded, originalScaleFactor, currentScaleFactor} = setScaleFactor(deviceScaleFactor);
-  if (restartNeeded) {
-    return false;
-  }
-  const systemConfig = configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  systemConfig.currentScaleFactor = currentScaleFactor;
-  systemConfig.originalScaleFactor = originalScaleFactor;
-  configDatabase.setConfig(SYSTEM_CONFIG, systemConfig);
-  return true;
 }
 
 function setupBulkFileStorage(): void {
@@ -307,8 +291,7 @@ function restoreAllWindows(): void {
       // Windows and macOS
       if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
         if (bounds.isMaximized === true) {
-          const nearestScreen = screen.getDisplayNearestPoint({ x: bounds.x, y: bounds.y });
-          window.setSize(nearestScreen.workAreaSize.width, nearestScreen.workAreaSize.height); 
+          window.maximize();
         }
         checkWindowBoundsLater(mainWindow, bounds);
 
@@ -545,41 +528,6 @@ function setupLogging(): void {
   _log.info("Recording logs to ", logFilePath);
 }
 
-function setScaleFactor(originalFactorArg?: string): {restartNeeded: boolean, currentScaleFactor: number, originalScaleFactor: number} {
-  _log.info("args", process.argv);
-  const primaryDisplay = screen.getPrimaryDisplay();
-  _log.info("Display scale factor is ", primaryDisplay.scaleFactor);
-  if (primaryDisplay.scaleFactor !== 1 && primaryDisplay.scaleFactor !== 2) {
-    const scaleFactor = primaryDisplay.scaleFactor < 1.5 ? 1 : 2;
-    _log.info("argv[0]: ",process.argv[0]);
-
-    const newArgs = process.argv.slice(1).concat(['--force-device-scale-factor=' + scaleFactor,
-                      EXTRATERM_DEVICE_SCALE_FACTOR + '=' + primaryDisplay.scaleFactor]);
-    // Electron's app.relaunch() doesn't work on packaged builds of Extraterm. So use spawn
-    child_process.spawn(process.argv[0], newArgs, {
-      cwd: process.cwd(),
-      detached: true,
-      env: process.env,
-      stdio: "inherit"
-    });
-
-    _log.info("Restarting with scale factor ", scaleFactor);
-    app.exit(0);
-    return {restartNeeded: true, currentScaleFactor: primaryDisplay.scaleFactor,
-      originalScaleFactor: primaryDisplay.scaleFactor};
-  }
-
-  let originalScaleFactor: number;
-  _log.info("originalFactorArg:", originalFactorArg);
-  if (originalFactorArg != null) {
-    originalScaleFactor = Number.parseFloat(originalFactorArg);
-  } else {
-    originalScaleFactor = primaryDisplay.scaleFactor;
-  }
-  _log.info("originalScaleFactor:", originalScaleFactor);
-  return {restartNeeded: false, currentScaleFactor: primaryDisplay.scaleFactor, originalScaleFactor};
-}
-
 const _log = getLogger("main");
 
 /**
@@ -596,8 +544,6 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     keybindingsInfoList: keybindingsIOManager.getInfoList(),
     availableFonts: getFonts(),
     titleBarStyle,
-    currentScaleFactor: systemConfig == null ? 1 : systemConfig.currentScaleFactor,
-    originalScaleFactor: systemConfig == null ? 1 : systemConfig.originalScaleFactor,
     userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
     userSyntaxThemeDirectory: getUserSyntaxThemeDirectory()
   };

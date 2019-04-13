@@ -151,6 +151,12 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       this._handleMouseWheel(ev);
     }, true);
 
+    this._scrollContainer.addEventListener("mousedown", (ev: MouseEvent): void => {
+      if (ev.target === this._scrollContainer) {
+        this.focus();
+      }
+    });
+
     this._scrollArea.addEventListener(EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     this._scrollArea.addEventListener(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, () => {
       this._virtualScrollArea.scrollToBottom();
@@ -298,12 +304,8 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   private _rootFontSize(): number {
     const generalConfig = this._configDatabase.getConfig("general");
-    const systemConfig = this._configDatabase.getConfig("system");
-    
-    const dpiScaleFactor = systemConfig.originalScaleFactor / systemConfig.currentScaleFactor;
     const unitHeightPx = 12;
-
-    const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent * dpiScaleFactor / 100), 5);
+    const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent / 100), 5);
     return rootFontSize;
   }
 
