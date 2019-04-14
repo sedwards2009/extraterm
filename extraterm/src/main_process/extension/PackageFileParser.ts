@@ -172,7 +172,7 @@ class PackageParser {
       syntaxThemes: parseObjectListJson(contributes, "syntaxThemes", node => this.parseSyntaxThemeContributionsJson(node)),
       syntaxThemeProviders: parseObjectListJson(contributes, "syntaxThemeProviders", node => this.parseSyntaxThemeProviderContributionsJson(node)),
       tabTitleWidgets: parseObjectListJson(contributes, "tabTitleWidgets", node => this.parseTabTitleItemContributionsJson(node)),
-      terminalBorderWidgets: parseObjectListJson(contributes, "terminalBorderWidget", node => this.parseTerminalBorderWidgetContributionsJson(node)),
+      terminalBorderWidgets: parseObjectListJson(contributes, "terminalBorderWidgets", node => this.parseTerminalBorderWidgetContributionsJson(node)),
       terminalThemes: parseObjectListJson(contributes, "terminalThemes", node => this.parseTerminalThemeContributionsJson(node)),
       terminalThemeProviders: parseObjectListJson(contributes, "terminalThemeProviders", node => this.parseTerminalThemeProviderContributionsJson(node)),
       viewers: parseObjectListJson(contributes, "viewers", node => this.parseViewerConstributionJson(node)),
