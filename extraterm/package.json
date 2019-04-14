@@ -47,7 +47,7 @@
     "@types/jest": "^23.3.10",
     "@types/lodash": "^4.14.121",
     "@types/mime": "^2.0.0",
-    "@types/node": "7.0.52",
+    "@types/node": "10.12.18",
     "@types/node-sass": "3.10.32",
     "@types/nodeunit": "0.0.30",
     "@types/qs": "6.2.30",

@@ -349,7 +349,10 @@ class BulkFileServer {
   private _startServer(): void {
     this._server = http.createServer(this._handleRequest.bind(this));    
     this._server.listen(0, "127.0.0.1", () => {
-      this._port = this._server.address().port;
+      const address = this._server.address();
+      if (typeof address !== "string") {
+        this._port = (<net.AddressInfo> address).port;
+      }
       this._log.info(`Bulk file server running on 127.0.0.1 port ${this._port}`);
     });
   }

@@ -11,7 +11,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
-    "@types/node": "7.0.52",
+    "@types/node": "10.12.18",
     "typescript": "3.1.6"
   },
   "scripts": {
