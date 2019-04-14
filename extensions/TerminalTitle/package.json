@@ -1,0 +1,56 @@
+{
+  "name": "terminal-title",
+  "description": "Terminal Title",
+  "version": "1.0.0",
+  "main": "dist/TerminalTitleExtension.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "extraterm-trim-between-tags": "1.0.0",
+    "vue": "2.5.9",
+    "vue-class-component": "6.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "7.0.5",
+    "extraterm-extension-api": "0.1.0",
+    "typescript": "3.1.6"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "terminal-title:editTitle",
+        "title": "Edit Title",
+        "category": "terminal",
+        "icon": "fas fa-pen",
+        "when": ""
+      }
+    ],
+    "tabTitleWidgets": [
+      {
+        "name": "title",
+        "css": {
+          "fontAwesome": true
+        }
+      }
+    ],
+    "terminalBorderWidgets": [
+      {
+        "name": "edit-title",
+        "border": "north",
+        "css": {
+          "fontAwesome": true
+        }
+      }
+    ],
+    "menus": {
+      "terminalTab": [
+        {
+          "command": "terminal-title:editTitle",
+          "show": true
+        }
+      ]
+    }
+  }
+}
