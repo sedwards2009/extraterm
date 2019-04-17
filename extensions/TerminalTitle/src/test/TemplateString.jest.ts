@@ -42,6 +42,18 @@ describe.each([
       { type: "field", namespace: "TERM", key: "TITLE"},
     ]],
 
+    ["foo ${TERMTITLE} bar", [
+      { type: "text", text: "foo " },
+      { type: "error", text: "TERMTITLE"},
+      { type: "text", text: " bar" },
+    ]],
+
+    ["foo ${TERM:} bar", [
+      { type: "text", text: "foo " },
+      { type: "error", text: "TERM:"},
+      { type: "text", text: " bar" },
+    ]],
+
   ])("Test", (input: string, output: Segment[]) => {
 
   test(`parse ${input}`, () => {

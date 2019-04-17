@@ -14,9 +14,9 @@
 "\$"             return 'ESCAPE_DOLLAR';
 
 <field>[^:}]+    return 'SYMBOL';
-<field>":"      return 'COLON';
-<field>"}"      this.popState();
-<<EOF>>         return 'EOF';
+<field>":"       return 'COLON';
+<field>"}"       this.popState();
+<<EOF>>          return 'EOF';
 
 /lex
 
@@ -38,6 +38,10 @@ expr
                 $$ = [{ type: "text", text: $1 }, ...$2];
             }
         }
+    | SYMBOL expr
+        { $$ = [ { type: "error", text: $1 }, ...$2 ]; }
+    | SYMBOL COLON expr
+        { $$ = [ { type: "error", text: $1+':' }, ...$3 ]; }
     | SYMBOL COLON SYMBOL expr
         { $$ = [ { type: "field", namespace: $1, key: $3, html: "", error: "" }, ...$4 ]; }
     | EOF

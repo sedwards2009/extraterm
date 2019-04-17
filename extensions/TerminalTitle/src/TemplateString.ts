@@ -25,7 +25,7 @@ export interface FieldSegment extends Segment {
 export interface ErrorSegment extends Segment {
   type: "error";
   text: string;
-  message: string;
+  error: string;
 }
 
 export class TemplateString {
@@ -40,7 +40,6 @@ export class TemplateString {
 
   private _parse(template: string): Segment[] {
     const result = parser.parse(template);
-    console.log(result);
     return result;
   }
 }
