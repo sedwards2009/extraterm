@@ -25,7 +25,7 @@
     "file-type": "^7.6.0",
     "fontinfo": "0.3.0",
     "get-uri": "2.0.1",
-    "he": "0.5.0",
+    "he": "1.2.0",
     "jschardet": "1.4.1",
     "json-to-ast": "2.1.0",
     "lodash": "^4.17.11",
@@ -43,7 +43,7 @@
   "devDependencies": {
     "@types/commander": "2.3.31",
     "@types/file-type": "^5.2.1",
-    "@types/he": "0.5.29",
+    "@types/he": "1.1.0",
     "@types/jest": "^23.3.10",
     "@types/lodash": "^4.14.121",
     "@types/mime": "^2.0.0",

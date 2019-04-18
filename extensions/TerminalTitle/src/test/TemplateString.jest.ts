@@ -57,11 +57,12 @@ describe.each([
   ])("Test", (input: string, output: Segment[]) => {
 
   test(`parse ${input}`, () => {
-    const ts = new TemplateString(input);
-    expect(ts.segments.length).toBe(output.length);
+    const ts = new TemplateString();
+    ts.setTemplateString(input);
+    expect(ts._segments.length).toBe(output.length);
 
-    for (let i=0; i<ts.segments.length; i++) {
-      const seg = ts.segments[i];
+    for (let i=0; i<ts._segments.length; i++) {
+      const seg = ts._segments[i];
       const outSeg = output[i];
       expect(seg.type).toBe(outSeg.type);
       if (seg.type === "text") {

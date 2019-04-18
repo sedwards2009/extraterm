@@ -3,11 +3,23 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from 'extraterm-extension-api';
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from 'extraterm-extension-api';
+
+import { TemplateString } from './TemplateString';
+import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
+import { IconFormatter } from './IconFormatter';
 
 let log: Logger = null;
+
+interface TabTitleData {
+  templateString: TemplateString;
+  updateTitleFunc: () => void;
+}
+
+const terminalToTemplateMap = new Map<Terminal, TabTitleData>();
+
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
@@ -19,37 +31,52 @@ export function activate(context: ExtensionContext): any {
   });
 
   context.window.registerTabTitleWidget("title", (terminal: Terminal, widget: TabTitleWidget): any => {
+    const templateString = new TemplateString();
+    templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
+    templateString.addFormatter("icon", new IconFormatter());
+    templateString.setTemplateString("${icon:fab fa-linux} ${" + TerminalEnvironment.TERM_TITLE + "}");
+  
     const newDiv = document.createElement("div");
     widget.getContainerElement().appendChild(newDiv);
 
-    const updateTitle = () => {
-      newDiv.innerText = terminal.environment.get(TerminalEnvironment.TERM_TITLE);
+    const updateTitleFunc = () => {
+      newDiv.innerHTML = templateString.formatHtml();
     };
 
-    terminal.environment.onChange(key => {
-      if (key.indexOf(TerminalEnvironment.TERM_TITLE) !== -1) {
-        updateTitle();
-      }
-    });
+    terminal.environment.onChange(updateTitleFunc);
 
-    updateTitle();
+    updateTitleFunc();
+
+    terminalToTemplateMap.set(terminal, { templateString, updateTitleFunc });
     return null;
   });
 
   context.window.registerTerminalBorderWidget("edit-title", (terminal: Terminal, widget: TerminalBorderWidget): any => {
-    return new EditTabTitleWidget(context, terminal, widget);
+    const tabTitleData = terminalToTemplateMap.get(terminal);
+    return new EditTabTitleWidget(context, terminal, widget, tabTitleData.templateString,
+      tabTitleData.updateTitleFunc);
   });
 }
+
 
 class EditTabTitleWidget {
 
   private _ui: EditTabTitlePanelUI = null;
 
-  constructor(context: ExtensionContext, private _terminal: Terminal, private _widget: TerminalBorderWidget) {
+  constructor(context: ExtensionContext, private _terminal: Terminal, private _widget: TerminalBorderWidget,
+      private _templateString: TemplateString, updateFunc: () => void) {
+
     this._ui = new EditTabTitlePanelUI();
 
     const component = this._ui.$mount();
     this._widget.getContainerElement().appendChild(component.$el);
+    this._ui.template = this._templateString.getTemplateString();
+
+    this._ui.$on("templateChange", (template: string) => {
+      this._templateString.setTemplateString(template);
+      updateFunc();
+      this._ui.templateDiagnostic = this._templateString.formatDiagnosticHtml();
+    });
     this._ui.$on("close", () => {
       this._close();
     });
@@ -70,33 +97,33 @@ class EditTabTitleWidget {
       <div class="width-100pc">
         <div class="gui-packed-row width-100pc">
           <label class="compact"><i class="fas fa-pen"></i></label>
-          <input ref="titleFormat" type="text" class="char-width-40"
-            v-model="titleFormat"
+          <input ref="template" type="text" class="char-width-40"
+            v-model="template"
+            v-on:change="onTemplateChange"
             />
           <span class="expand"></span>
           <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
         </div>
-        <div class="width-100pc">
-Title preview goes here.
-        </div>
+        <div class="width-100pc" v-html="templateDiagnostic"></div>
       </div>`
   })
 class EditTabTitlePanelUI extends Vue {
-  titleFormat: string;
+  template: string;
+  templateDiagnostic: string;
 
   constructor() {
     super();
-    this.titleFormat = "";
+    this.template = "";
+    this.templateDiagnostic = "";
+  }
+
+  onTemplateChange(): void {
+    this.$emit('templateChange', this.template);
   }
 
   focus(): void {
-    if (this.$refs.titleFormat != null) {
-      (<HTMLInputElement> this.$refs.titleFormat).focus();
+    if (this.$refs.template != null) {
+      (<HTMLInputElement> this.$refs.template).focus();
     }
   }
-
-  // onCaseSensitive(): void {
-  //   this.caseSensitive = ! this.caseSensitive;
-  //   this.$emit("caseSensitiveChange");
-  // }
 }

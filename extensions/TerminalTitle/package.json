@@ -5,15 +5,17 @@
   "main": "dist/TerminalTitleExtension.js",
   "license": "MIT",
   "scripts": {
-    "build": "jison src/template_string_grammar.jison -o src/template_string_parser.js && tsc",
-    "test": "yarn run build && jest"
+    "build": "jison src/template_string_grammar.jison -o dist/template_string_parser.js && tsc",
+    "test": "yarn run build && cp dist/template_string_parser.js src && jest"
   },
   "dependencies": {
     "extraterm-trim-between-tags": "1.0.0",
+    "he": "1.2.0",
     "vue": "2.5.9",
     "vue-class-component": "6.1.0"
   },
   "devDependencies": {
+    "@types/he": "1.1.0",
     "@types/jest": "^23.3.10",
     "@types/node": "^10.12.18",
     "extraterm-extension-api": "0.1.0",
