@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as path from 'path';
+
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import { Logger, getLogger } from "extraterm-logging";
 import { CssFile } from '../../theme/Theme';
@@ -74,7 +76,7 @@ export class WidgetProxy extends ThemeableElementBase  {
     const cssDecl = this._extensionCss;
     if (cssDecl != null && this._extensionContext != null) {
       const name = this._extensionContext.extensionMetadata.name;
-      const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + cf);
+      const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + path.join(cssDecl.directory, cf));
       const fontAwesomeCss = cssDecl.fontAwesome ? [CssFile.FONT_AWESOME] : [];
       return [CssFile.GENERAL_GUI, ...fontAwesomeCss, ...cssFiles];
     }

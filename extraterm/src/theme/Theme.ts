@@ -19,7 +19,7 @@ export interface ThemeInfo {
 }
 
 export interface ThemeContents {
-  cssFiles: { cssFileName: CssFile, contents: string; }[];
+  cssFiles: { id: string, cssFileName: CssFile, contents: string; }[];
 }
 
 export const CSS_MODULE_INTERNAL_GUI = "<gui>";

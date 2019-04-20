@@ -495,7 +495,7 @@ function handleThemeContentsMessage(msg: Messages.Message): void {
 
   const cssFileMap = new Map<ThemeTypes.CssFile, string>();
   for (const renderedCssFile of themeContentsMessage.themeContents.cssFiles) {
-    cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+    cssFileMap.set(renderedCssFile.id, renderedCssFile.contents);
   }
 
   if (themeContentsMessage.errorMessage !== "") {
@@ -595,7 +595,7 @@ async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[]
     const renderResult = await WebIpc.requestThemeContents(themeType);
     if (renderResult.success) {
       for (const renderedCssFile of renderResult.themeContents.cssFiles) {
-        cssFileMap.set(renderedCssFile.cssFileName, renderedCssFile.contents);
+        cssFileMap.set(renderedCssFile.id, renderedCssFile.contents);
       }
     }
     if (renderResult.errorMessage !== "") {

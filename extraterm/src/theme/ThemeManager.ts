@@ -551,13 +551,14 @@ export class ThemeManager implements AcceptsConfigDatabase {
     ]);
 
     let themeNameStack = [themeGUI, FALLBACK_UI_THEME];
-    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_GUI);
+    const cssFileIds = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_GUI);
+    const cssFileList = cssFileIds.map(id => ({ id, cssFile: cssFileToFilename(id) }));
 
     // Add extra CSS files needed by extensions.
-    let result = await this._renderThemes(themeNameStack, neededCssFiles, completeGlobalVariables);
+    let result = await this._renderThemes(themeNameStack, cssFileList, completeGlobalVariables);
     if ( ! result.success) {
       themeNameStack = [FALLBACK_UI_THEME];
-      const fallbackResult = await this._renderThemes(themeNameStack, neededCssFiles, completeGlobalVariables);
+      const fallbackResult = await this._renderThemes(themeNameStack, cssFileList, completeGlobalVariables);
       fallbackResult.errorMessage = result.errorMessage;
       result = fallbackResult;
     }
@@ -573,12 +574,13 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   private async _renderTerminal(themeTerminal: string, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_TERMINAL);
+    const cssFileIds = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_TERMINAL);
+    const cssFileList = cssFileIds.map(id => ({ id, cssFile: cssFileToFilename(id) }));
     try {
       const terminalThemeInfo = this._themes.get(themeTerminal);
       const completeGlobalVariables = new Map([...this._getTerminalThemeVariablesFromInfo(terminalThemeInfo),
                                         ...(globalVariables == null ? new Map() : globalVariables)]);
-      const result = await this._renderThemes([TERMINAL_CSS_THEME], neededCssFiles, completeGlobalVariables);
+      const result = await this._renderThemes([TERMINAL_CSS_THEME], cssFileList, completeGlobalVariables);
       return result;
     } catch(ex) {
       this._log.warn(ex);
@@ -653,10 +655,12 @@ export class ThemeManager implements AcceptsConfigDatabase {
     const config = <GeneralConfig> this._configDatabase.getConfig(GENERAL_CONFIG);
 
     const syntaxThemeInfo = this._themes.get(config.themeSyntax);
-    const neededCssFiles = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);
+    const neededCssFileIds = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);
+    const cssFileList = neededCssFileIds.map(id => ({ id, cssFile: cssFileToFilename(id) }));
+
     try {
       // Add extra CSS files needed by extensions.
-      const result = await this._renderThemes([SYNTAX_CSS_THEME], neededCssFiles, globalVariables);
+      const result = await this._renderThemes([SYNTAX_CSS_THEME], cssFileList, globalVariables);
       const syntaxCss = this._formatSyntaxTheme(syntaxThemeInfo);
       result.themeContents.cssFiles[0].contents = result.themeContents.cssFiles[0].contents + syntaxCss;
       return result;
@@ -666,7 +670,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     }
   }
 
-  private _renderThemes(themeStack: string[], cssFileList: CssFile[], globalVariables: GlobalVariableMap): Promise<RenderResult> {
+  private _renderThemes(themeStack: string[], cssFileList: {id: string, cssFile: CssFile;}[], globalVariables: GlobalVariableMap): Promise<RenderResult> {
     const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
     return this._renderCssFiles(themeInfoList, cssFileList, globalVariables);
   }
@@ -685,7 +689,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     return themeInfoList;
   }
   
-  private async _renderCssFiles(cssDirectoryStack: CssDirectory[], cssFileList: CssFile[],
+  private async _renderCssFiles(cssDirectoryStack: CssDirectory[], cssFileList: {id: string, cssFile: CssFile;}[],
       globalVariables: GlobalVariableMap): Promise<RenderResult> {
 
     const renderResult: RenderResult = {
@@ -704,10 +708,10 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
     const dirPathStack = _.uniq(cssDirectoryStack.map( themeInfo => themeInfo.path ));
 
-    for (const cssFile of cssFileList) {
-      const {errorMessage, cssText} = await this._renderCssFile(cssFile, dirPathStack, variables);
+    for (const cssFileTuple of cssFileList) {
+      const {errorMessage, cssText} = await this._renderCssFile(cssFileTuple.cssFile, dirPathStack, variables);
       if (errorMessage == null) {
-        renderResult.themeContents.cssFiles.push({cssFileName: cssFile, contents: cssText});
+        renderResult.themeContents.cssFiles.push({id: cssFileTuple.id, cssFileName: cssFileTuple.cssFile, contents: cssText});
       } else {
         renderResult.success = false;
         renderResult.errorMessage += errorMessage + "\n";
@@ -716,14 +720,12 @@ export class ThemeManager implements AcceptsConfigDatabase {
     return renderResult;
   }
 
-  private async _renderCssFile(cssFile: CssFile, dirPathStack: string[], variables: GlobalVariableMap
+  private async _renderCssFile(sassFileName: CssFile, dirPathStack: string[], variables: GlobalVariableMap
     ): Promise<{cssText: string, errorMessage: string}> {
         
     if (DEBUG_SASS) {
-      this._log.debug("Compiling _recursiveRenderThemeStackContents: " + cssFile);
+      this._log.debug("Compiling _recursiveRenderThemeStackContents: " + sassFileName);
     }
-    
-    const sassFileName = cssFileToFilename(cssFile);
     
     if (DEBUG_SASS) {
       this._log.debug("Compiling " + sassFileName);
@@ -868,9 +870,24 @@ export class ThemeManager implements AcceptsConfigDatabase {
     };
 
     for (const extensionMetadata of this._mainExtensionManager.getExtensionMetadata()) {
-      for (const viewerMetadata of extensionMetadata.contributes.viewers) {
+      const extensionCssList: ExtensionCss[] = [];
+      for (const metadata of extensionMetadata.contributes.viewers) {
+        extensionCssList.push(metadata.css);
+      }
+      for (const metadata of extensionMetadata.contributes.terminalBorderWidgets) {
+        extensionCssList.push(metadata.css);
+      }
+      for (const metadata of extensionMetadata.contributes.tabTitleWidgets) {
+        extensionCssList.push(metadata.css);
+      }
+      
+      for (const extensionCss of extensionCssList) {
+        if (extensionCss.cssFile.length === 0) {
+          continue;
+        }
+        
         const nextResult = await this._renderExtensionCss(cssDirectoryStack, globalVariables, extensionMetadata,
-          viewerMetadata.css);
+          extensionCss);
 
         if ( ! nextResult.success) {
           renderResult.success = false;
@@ -881,7 +898,6 @@ export class ThemeManager implements AcceptsConfigDatabase {
         renderResult.themeContents.cssFiles = [...renderResult.themeContents.cssFiles, ...nextResult.themeContents.cssFiles];
       }
     }
-
     return renderResult;
   }
 
@@ -896,12 +912,14 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
     const cssDirectory = path.join(extensionMetadata.path, extensionCssDecl.directory);
     const extDirStack = [{id: extensionMetadata.name, path: cssDirectory}, ...cssDirectoryStack];
-    const cookedCssFiles = extensionCssDecl.cssFile.map(cssFile => extensionMetadata.name + ":" + cssFile);
+    const cssFileList = extensionCssDecl.cssFile.map(cssFile => ({
+                              id: extensionMetadata.name + ":" + path.join(extensionCssDecl.directory,
+                              cssFile), cssFile}) );
 
     const variables = new Map<string, number|boolean|string|Color>(globalVariables);
     variables.set('--source-dir-' + extensionMetadata.name, extensionCssDecl.directory.replace(/\\/g, "/"));
 
-    return this._renderCssFiles(extDirStack, cookedCssFiles, globalVariables);
+    return this._renderCssFiles(extDirStack, cssFileList, globalVariables);
   }
 
   private _formatSyntaxTheme(syntaxThemeInfo: ThemeInfo): string {
