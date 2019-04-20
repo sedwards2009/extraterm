@@ -47,6 +47,10 @@
         "name": "edit-title",
         "border": "north",
         "css": {
+          "directory": "resources/sass",
+          "cssFile": [
+            "editor.scss"
+          ],
           "fontAwesome": true
         }
       }

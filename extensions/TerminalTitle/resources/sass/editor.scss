@@ -1,0 +1,18 @@
+/**
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ */
+
+@import "general-gui/variables";
+
+span.segment_text, span.segment_field, span.segment_error {
+  border-radius: 3px;
+  padding: 2px;
+}
+
+span.segment_text, span.segment_field {
+  border: 1px solid $text-color;
+}
+
+span.segment_error {
+  border: 1px solid $brand-warning;
+}

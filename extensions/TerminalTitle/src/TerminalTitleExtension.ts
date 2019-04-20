@@ -71,6 +71,7 @@ class EditTabTitleWidget {
     const component = this._ui.$mount();
     this._widget.getContainerElement().appendChild(component.$el);
     this._ui.template = this._templateString.getTemplateString();
+    this._ui.templateDiagnostic = this._templateString.formatDiagnosticHtml();
 
     this._ui.$on("templateChange", (template: string) => {
       this._templateString.setTemplateString(template);
@@ -99,7 +100,7 @@ class EditTabTitleWidget {
           <label class="compact"><i class="fas fa-pen"></i></label>
           <input ref="template" type="text" class="char-width-40"
             v-model="template"
-            v-on:change="onTemplateChange"
+            v-on:input="onTemplateChange"
             />
           <span class="expand"></span>
           <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>

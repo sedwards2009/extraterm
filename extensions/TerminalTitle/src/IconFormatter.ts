@@ -12,7 +12,7 @@ export class IconFormatter implements FieldFormatter {
     return `<i class="${he.encode(key)}"></i>`;
   }
 
-  formatDiagnosticHtml(key: string): string {
-    return this.formatHtml(key);
+  getErrorMessage(key: string): string {
+    return null;
   }
 }

@@ -18,8 +18,8 @@ export class TerminalEnvironmentFormatter implements FieldFormatter {
     return value == null ? "" : he.encode(value);
   }
 
-  formatDiagnosticHtml(key: string): string {
+  getErrorMessage(key: string): string {
     const value = this._env.get(this._namespace + ":" + key.toLowerCase());
-    return value == null ? "Unknown key '" + he.encode(value) + "'" : he.encode(value);
+    return value == null ? "Unknown key '" + he.encode(key) + "'" : null;
   }
 }

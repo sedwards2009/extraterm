@@ -28,7 +28,7 @@ export type Segment = TextSegment | FieldSegment | ErrorSegment;
 
 export interface FieldFormatter {
   formatHtml(key: string): string;
-  formatDiagnosticHtml(key: string): string;
+  getErrorMessage(key: string): string;
 }
 
 export class TemplateString {
@@ -86,7 +86,12 @@ export class TemplateString {
           if (formatter == null) {
             return `<span class="segment_error">Unknown '${segment.namespace}'</span>`;
           }
-          return formatter.formatDiagnosticHtml(segment.key);
+          const errorMsg = formatter.getErrorMessage(segment.key);
+          if (errorMsg == null) {
+            return `<span class="segment_field">${formatter.formatHtml(segment.key)}</span>`;
+          } else {
+            return `<span class="segment_error">${errorMsg}</span>`;
+          }
 
         case "error":
           return `<span class="segment_error">Unknown '${segment.text}'</span>`;
