@@ -28,24 +28,32 @@ export class DropDown extends TemplatedElementBase {
 
     const clickHandler = (ev: MouseEvent) => {
       const cm = <ContextMenu>this.querySelector(ContextMenu.TAG_NAME);
-      cm.openAround(this);        
+      cm.openAround(<HTMLElement> ev.target);
     };
 
-    this._assignSlotContent();
-
-    const len = this.childNodes.length;
-    for (let i=0; i<len; i++) {
-      const kid = this.childNodes[i];
-      if (kid.nodeName.slice(0,1) !== '#' && kid.nodeName !== ContextMenu.TAG_NAME) {
-        kid.addEventListener('click', clickHandler);
+    const childChangeCallback: MutationCallback = (mutationsList, observer) => {
+      for(const mutation of mutationsList) {
+        if (mutation.type === "childList") {
+          this._assignSlotContent();
+          return;
+        }
       }
-    }
+    };
 
-    const cm = <ContextMenu>this.querySelector(ContextMenu.TAG_NAME);
-    cm.addEventListener('selected', (ev: MouseEvent) => {
-        var event = new CustomEvent('selected', { detail: ev.detail });
-        this.dispatchEvent(event);
+    const observer = new MutationObserver(childChangeCallback);
+    const config = { attributes: true, childList: true, subtree: true };
+    observer.observe(this, config);
+
+    this.addEventListener('click', clickHandler);
+    this.addEventListener('selected', (ev: MouseEvent) => {
+      var event = new CustomEvent('selected', { detail: ev.detail });
+      this.dispatchEvent(event);
     });
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    this._assignSlotContent();
   }
 
   protected _html(): string {

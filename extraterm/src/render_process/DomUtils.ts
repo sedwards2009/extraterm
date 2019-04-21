@@ -426,3 +426,17 @@ export function activeNestedElements(): Element[] {
   }
   return result;
 }
+
+export function findFixedPositionOffset(element: HTMLElement): { left: number, top: number } {
+  const nodePath = nodePathToRoot(element);
+  for (const node of nodePath) {
+    if (node instanceof HTMLElement) {
+      const style = window.getComputedStyle(node);
+      if (style.position !== "static") {
+        const pos = node.getBoundingClientRect();
+        return { left: pos.left, top: pos.top };
+      }
+    }
+  }
+  return { left: 0, top: 0 };
+}

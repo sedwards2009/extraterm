@@ -11,6 +11,7 @@ import { CheckboxMenuItem } from "./CheckboxMenuItem";
 import * as Util from "./Util";
 import { Logger, getLogger } from "extraterm-logging";
 import { TemplatedElementBase } from "./TemplatedElementBase";
+import { findFixedPositionOffset } from "../DomUtils";
 
 
 const ID_COVER = "ID_COVER";
@@ -57,8 +58,9 @@ export class ContextMenu extends TemplatedElementBase {
     });
     
     container.addEventListener('mousemove', (ev: MouseEvent) => {
-      if (ev.srcElement.nodeName === MenuItem.TAG_NAME || ev.srcElement.nodeName === CheckboxMenuItem.TAG_NAME) {
-        this.selectMenuItem(this.childNodes, ev.srcElement);
+      const srcElement = <HTMLElement> ev.srcElement;
+      if (srcElement.nodeName === MenuItem.TAG_NAME || srcElement.nodeName === CheckboxMenuItem.TAG_NAME) {
+        this.selectMenuItem(this.childNodes, srcElement);
       } else {
         this.selectMenuItem(this.childNodes, null);
       }
@@ -251,6 +253,10 @@ export class ContextMenu extends TemplatedElementBase {
     if (containerY+containerRect.height > window.innerHeight) {
       containerY = targetElementRect.top - containerRect.height;
     }
+
+    const offset = findFixedPositionOffset(container);
+    containerX -= offset.left;
+    containerY -= offset.top;
 
     container.style.left = "" + containerX + "px";
     container.style.top = "" + containerY + "px";
