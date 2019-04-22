@@ -6,6 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from 'extraterm-extension-api';
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 import { TemplateString } from './TemplateString';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
@@ -102,7 +103,7 @@ class EditTabTitleWidget {
 
 @Component(
   {
-    template: `
+    template: trimBetweenTags(`
       <div class="width-100pc">
         <div class="gui-packed-row width-100pc">
           <label class="compact"><i class="fas fa-pen"></i></label>
@@ -112,6 +113,7 @@ class EditTabTitleWidget {
             />
           
           <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
+          <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
           
           <span class="expand"></span>
           <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
@@ -123,16 +125,70 @@ class EditTabTitleWidget {
             class="insert_field_menu_item"
             v-on:click="onInsertFieldClick('term:title')">Title - \${term:title}</div>
         </et-contextmenu>
-      </div>`
+
+        <et-contextmenu ref="insertIconMenu">
+          <div class="insert_icon_grid">
+            <div v-for="(icon, index) in iconList"
+              class="insert_icon_menu_item"
+              v-on:click="onInsertIconClick(icon)"><i v-bind:class="{ [icon]: true }"></i></div>
+            </div>
+        </et-contextmenu>
+      </div>`)
   })
 class EditTabTitlePanelUI extends Vue {
   template: string;
   templateDiagnostic: string;
+  iconList: string[];
 
   constructor() {
     super();
     this.template = "";
     this.templateDiagnostic = "";
+    this.iconList = [
+      "fab fa-linux",
+      "fab fa-windows",
+      "fab fa-apple",
+      "fab fa-android",
+      "fab fa-ubuntu",
+      "fab fa-fedora",
+      "fab fa-redhat",
+      "fab fa-suse",
+      "fab fa-centos",
+      "fab fa-freebsd",
+
+      "fas fa-keyboard",
+      "fas fa-terminal",
+      "fab fa-docker",
+      "fas fa-laptop",
+      "fas fa-desktop",
+      "fas fa-server",
+      "fas fa-database",
+      "fas fa-microchip",
+      "fas fa-mobile-alt",
+      "fas fa-tablet-alt",
+
+      "fas fa-bug",
+      "fas fa-code",
+      "fab fa-git",
+      "fas fa-code-branch",
+      "fas fa-sitemap",
+      "fas fa-cloud",
+      "fas fa-upload",
+      "fas fa-download",
+      "far fa-comments",
+      "far fa-envelope",
+
+      "fas fa-home",
+      "far fa-building",
+      "fas fa-industry",
+      "fas fa-city",
+      "fas fa-robot",
+      "fab fa-raspberry-pi",
+      "fas fa-bolt",
+      "fas fa-exclamation-triangle",
+      "fas fa-shield-alt",
+      "fab fa-usb",
+    ];
   }
 
   onTemplateChange(): void {
@@ -146,6 +202,16 @@ class EditTabTitlePanelUI extends Vue {
   onInsertFieldClick(fieldName: string): void {
     this.template = this.template + `\${${fieldName}}`;
     (<any> this.$refs.insertFieldMenu).close();
+    this.$emit('templateChange', this.template);
+  }
+
+  onInsertIcon(): void {
+    (<any> this.$refs.insertIconMenu).openAround(this.$refs.insertIcon);
+  }
+
+  onInsertIconClick(icon: string): void {
+    this.template = this.template + `\${icon:${icon}}`;
+    (<any> this.$refs.insertIconMenu).close();
     this.$emit('templateChange', this.template);
   }
 

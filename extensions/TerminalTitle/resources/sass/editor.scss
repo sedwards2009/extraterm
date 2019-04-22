@@ -36,3 +36,41 @@ div.insert_field_menu_item {
     background-color: $dropdown-link-hover-bg;
   }
 }
+
+div.insert_icon_grid {
+  display: grid;
+  grid-template-columns: repeat(10, 3rem);
+  grid-template-rows: repeat(4, 3rem);
+  align-items: center;
+  justify-items: center;
+}
+
+div.insert_icon_menu_item {
+  width: 3rem;
+  height: 3rem;
+
+  position: relative;
+
+  cursor: default;
+  font-family: $font-family;
+  font-size: $input-font-size;
+  font-weight: normal;
+  line-height: $line-height-base;
+  color: $text-color;
+  background-color: $dropdown-bg-color;
+  padding: 1px;
+  white-space: nowrap;
+
+  & > I {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  &:hover {
+    text-decoration: none;
+    color: $dropdown-link-hover-color;
+    background-color: $dropdown-link-hover-bg;
+  }
+}
