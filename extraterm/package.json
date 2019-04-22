@@ -37,8 +37,8 @@
     "source-map-support": "^0.3.2",
     "term-api": "1.0.0",
     "utf8": "2.1.2",
-    "vue": "2.5.9",
-    "vue-class-component": "6.1.0"
+    "vue": "2.6.10",
+    "vue-class-component": "6.3.2"
   },
   "devDependencies": {
     "@types/commander": "2.3.31",

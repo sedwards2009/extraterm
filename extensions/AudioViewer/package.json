@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "extraterm-trim-between-tags": "1.0.0",
-    "vue": "2.5.9",
-    "vue-class-component": "6.1.0"
+    "vue": "2.6.10",
+    "vue-class-component": "6.3.2"
   },
   "devDependencies": {
     "@types/node": "^10.12.18",

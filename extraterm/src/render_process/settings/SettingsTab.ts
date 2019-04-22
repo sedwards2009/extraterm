@@ -47,7 +47,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     this.updateThemeCss();
     
     shadow.appendChild(component.$el);
-    component.$el.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
+    component.$el.addEventListener('contextmenu', (ev: MouseEvent) => this._handleContextMenuCapture(ev), true);
   }
 
   getMetadata(): ViewerMetadata {
