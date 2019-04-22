@@ -16,3 +16,23 @@ span.segment_text, span.segment_field {
 span.segment_error {
   border: 1px solid $brand-warning;
 }
+
+div.insert_field_menu_item {
+  cursor: default;
+  font-family: $font-family;
+  font-size: $input-font-size;
+  font-weight: normal;
+  line-height: $line-height-base;
+  color: $text-color;
+  background-color: $dropdown-bg-color;
+  padding: 1px;
+  white-space: nowrap;
+
+  min-width: 15rem;
+
+  &:hover {
+    text-decoration: none;
+    color: $dropdown-link-hover-color;
+    background-color: $dropdown-link-hover-bg;
+  }
+}

@@ -18,6 +18,14 @@ interface TabTitleData {
   updateTitleFunc: () => void;
 }
 
+for (const el of [
+  "et-contextmenu",
+]) {
+  if (Vue.config.ignoredElements.indexOf(el) === -1) {
+    Vue.config.ignoredElements.push(el);
+  }
+}
+
 const terminalToTemplateMap = new Map<Terminal, TabTitleData>();
 
 
@@ -102,10 +110,19 @@ class EditTabTitleWidget {
             v-model="template"
             v-on:input="onTemplateChange"
             />
+          
+          <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
+          
           <span class="expand"></span>
           <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
         </div>
         <div class="width-100pc" v-html="templateDiagnostic"></div>
+
+        <et-contextmenu ref="insertFieldMenu">
+          <div
+            class="insert_field_menu_item"
+            v-on:click="onInsertFieldClick('term:title')">Title - \${term:title}</div>
+        </et-contextmenu>
       </div>`
   })
 class EditTabTitlePanelUI extends Vue {
@@ -119,6 +136,16 @@ class EditTabTitlePanelUI extends Vue {
   }
 
   onTemplateChange(): void {
+    this.$emit('templateChange', this.template);
+  }
+
+  onInsertField(): void {
+    (<any> this.$refs.insertFieldMenu).openAround(this.$refs.insertField);
+  }
+
+  onInsertFieldClick(fieldName: string): void {
+    this.template = this.template + `\${${fieldName}}`;
+    (<any> this.$refs.insertFieldMenu).close();
     this.$emit('templateChange', this.template);
   }
 
