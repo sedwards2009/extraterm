@@ -12,11 +12,12 @@
 [$][^{]          return 'DOLLAR';
 "${"             this.begin('field');
 "\$"             return 'ESCAPE_DOLLAR';
+<<EOF>>          return 'EOF';
 
 <field>[^:}]+    return 'SYMBOL';
 <field>":"       return 'COLON';
 <field>"}"       this.popState();
-<<EOF>>          return 'EOF';
+<field><<EOF>>   return 'EOF';
 
 /lex
 
@@ -45,6 +46,7 @@ expr
     | SYMBOL COLON SYMBOL expr
         { $$ = [ { type: "field", namespace: $1, key: $3, html: "", error: "" }, ...$4 ]; }
     | EOF
+        { $$ = []; }
     ;
 
 string

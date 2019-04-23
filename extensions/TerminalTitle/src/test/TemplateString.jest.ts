@@ -54,6 +54,11 @@ describe.each([
       { type: "text", text: " bar" },
     ]],
 
+    ["foo ${TER", [
+      { type: "text", text: "foo " },
+      { type: "error", text: "TER"},
+    ]],
+
   ])("Test", (input: string, output: Segment[]) => {
 
   test(`parse ${input}`, () => {
