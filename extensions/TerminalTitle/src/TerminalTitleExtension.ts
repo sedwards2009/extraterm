@@ -118,7 +118,7 @@ class EditTabTitleWidget {
           <span class="expand"></span>
           <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
         </div>
-        <div class="width-100pc" v-html="templateDiagnostic"></div>
+        <div class="width-100pc" v-html="templateDiagnostic + '&nbsp;'"></div>
 
         <et-contextmenu ref="insertFieldMenu">
           <div
