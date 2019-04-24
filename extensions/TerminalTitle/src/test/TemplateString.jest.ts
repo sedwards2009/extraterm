@@ -10,19 +10,19 @@ import { Segment, TemplateString, TextSegment, FieldSegment } from "../TemplateS
 
 
 describe.each([
-    ["foo", [{ type: "text", text: "foo" }]],
-    ["foo:bar", [{ type: "text", text: "foo:bar" }]],
-    ["foo\\$bar", [{ type: "text", text: "foo$bar" }]],
+    ["foo", [{ type: "text", text: "foo", startColumn: 0, endColumn: 3 }]],
+    ["foo:bar", [{ type: "text", text: "foo:bar", startColumn: 0, endColumn: 7 }]],
+    ["foo\\$bar", [{ type: "text", text: "foo$bar", startColumn: 0, endColumn: 8 }]],
     ["$foo: ", [{ type: "text", text: "$foo: " }]],
 
     ["foo${TERM:TITLE}", [
-      { type: "text", text: "foo" },
-      { type: "field", namespace: "TERM", key: "TITLE"}
+      { type: "text", text: "foo", startColumn: 0, endColumn: 3 },
+      { type: "field", namespace: "TERM", key: "TITLE", startColumn: 3, endColumn: 16 }
     ]],
 
     ["foo ${TERM:TITLE} bar", [
       { type: "text", text: "foo " },
-      { type: "field", namespace: "TERM", key: "TITLE"},
+      { type: "field", namespace: "TERM", key: "TITLE", startColumn: 4, endColumn: 17},
       { type: "text", text: " bar" },
     ]],
 
@@ -70,6 +70,13 @@ describe.each([
       const seg = ts._segments[i];
       const outSeg = output[i];
       expect(seg.type).toBe(outSeg.type);
+
+      if (outSeg.startColumn !== undefined) {
+        expect(seg.startColumn).toBe(outSeg.startColumn);
+      }
+      if (outSeg.endColumn !== undefined) {
+          expect(seg.endColumn).toBe(outSeg.endColumn);
+      }
       if (seg.type === "text") {
         expect((<TextSegment> seg).text).toBe((<TextSegment> outSeg).text);
 
