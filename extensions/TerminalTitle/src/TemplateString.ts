@@ -18,7 +18,8 @@ export interface FieldSegment {
   type: "field";
   namespace: string;
   key: string;
-
+  text: string;
+  error: string;
   startColumn: number;
   endColumn: number;
 }
@@ -59,6 +60,10 @@ export class TemplateString {
     this._formatterMap.set(namespace.toLowerCase(), formatter);
   }
 
+  getSegments(): Segment[] {
+    return this._segments;
+  }
+
   private _tokenIndex = 0;
   private _tokens: Token[];
   
@@ -72,13 +77,8 @@ export class TemplateString {
       result = [...result, ...this._processFieldStateTokens()];
     }
 
-    // Correct the start and end column info.
-    let i = 0;
-    for (const segment of result) {
-      segment.startColumn = i;
-      i += segment.endColumn;
-      segment.endColumn = i;
-    }
+    this._correctColumns(result);
+    this._detectErrors(result);
 
     return result;
   }
@@ -155,6 +155,8 @@ export class TemplateString {
       type: "field",
       namespace: namespace,
       key: key,
+      text: "${" + namespace + ":" + key + "}",
+      error: null,
       startColumn: 0,
       endColumn: 2 + namespace.length + 1 + key.length + 1
     };
@@ -179,47 +181,52 @@ export class TemplateString {
     return errorSegment;
   }
 
-  formatHtml(): string {
-    return this._segments.map(segment => {
-      switch (segment.type) {
-        case "text":
-          return he.encode(segment.text);
-        case "field":
-          const namespace = segment.namespace.toLowerCase();
-          const formatter = this._formatterMap.get(namespace);
-          if (formatter == null) {
-            return "";
-          }
-          return formatter.formatHtml(segment.key);
-        case "error":
-          return "";
-      }      
-    }).join("");
+  private _correctColumns(segments: Segment[]): void {
+    let i = 0;
+    for (const segment of segments) {
+      segment.startColumn = i;
+      i += segment.endColumn;
+      segment.endColumn = i;
+    }
   }
 
-  formatDiagnosticHtml(): string {
-    return this._segments.map(segment => {
-      switch (segment.type) {
-        case "text":
-          return `<span class="segment_text">${he.encode(segment.text)}</span>`;
-
-        case "field":
-          const namespace = segment.namespace.toLowerCase();
-          const formatter = this._formatterMap.get(namespace);
-          if (formatter == null) {
-            return `<span class="segment_error">Unknown '${segment.namespace}'</span>`;
-          }
+  private _detectErrors(segments: Segment[]): void {
+    for (const segment of segments) {
+      if (segment.type == "field") {
+        const namespace = segment.namespace.toLowerCase();
+        const formatter = this._formatterMap.get(namespace);
+        if (formatter == null) {
+          segment.error = `Unknown '${segment.namespace}'`;
+        } else {
           const errorMsg = formatter.getErrorMessage(segment.key);
-          if (errorMsg == null) {
-            return `<span class="segment_field">${formatter.formatHtml(segment.key)}</span>`;
-          } else {
-            return `<span class="segment_error">${errorMsg}</span>`;
-          }
+          segment.error = errorMsg;
+        }
+      }
+    }
+  }
 
-        case "error":
-          return `<span class="segment_error">Unknown '${segment.text}'</span>`;
-      }      
-    }).join("");
+  getSegmentHtmlList(): string[] {
+    return this._segments.map(segment => this.formatSegment(segment));
+  }
+
+  formatHtml(): string {
+    return this.getSegmentHtmlList().join("");
+  }
+
+  formatSegment(segment: Segment): string {
+    switch (segment.type) {
+      case "text":
+        return he.encode(segment.text);
+      case "field":
+        const namespace = segment.namespace.toLowerCase();
+        const formatter = this._formatterMap.get(namespace);
+        if (formatter == null) {
+          return "";
+        }
+        return formatter.formatHtml(segment.key);
+      case "error":
+        return "";
+    }
   }
 }
 

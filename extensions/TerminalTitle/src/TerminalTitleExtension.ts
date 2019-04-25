@@ -8,7 +8,7 @@ import Vue from 'vue';
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from 'extraterm-extension-api';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
-import { TemplateString } from './TemplateString';
+import { TemplateString, Segment } from './TemplateString';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
 import { IconFormatter } from './IconFormatter';
 
@@ -80,12 +80,13 @@ class EditTabTitleWidget {
     const component = this._ui.$mount();
     this._widget.getContainerElement().appendChild(component.$el);
     this._ui.template = this._templateString.getTemplateString();
-    this._ui.templateDiagnostic = this._templateString.formatDiagnosticHtml();
+    this._ui.segments = this._templateString.getSegments();
+    this._ui.segmentHtml = this._templateString.getSegmentHtmlList();
 
     this._ui.$on("templateChange", (template: string) => {
       this._templateString.setTemplateString(template);
       updateFunc();
-      this._ui.templateDiagnostic = this._templateString.formatDiagnosticHtml();
+      this._ui.segments = this._templateString.getSegments();
     });
     this._ui.$on("close", () => {
       this._close();
@@ -118,7 +119,15 @@ class EditTabTitleWidget {
           <span class="expand"></span>
           <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
         </div>
-        <div class="width-100pc" v-html="templateDiagnostic + '&nbsp;'"></div>
+        <div class="width-100pc">
+          &nbsp;
+          <template v-for="(segment, index) in segments">
+            <span v-if="segment.type == 'text'" class="segment_text" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.text }}</span>
+            <span v-if="segment.type == 'field' && segment.error != null" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
+            <span v-if="segment.type == 'field' && segment.error == null" class="segment_field" v-on:click="selectSegment(index)" v-bind:title="segment.text"><span v-html="segmentHtml[index]"></span></span>
+            <span v-if="segment.type == 'error'" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
+          </template>
+        </div>
 
         <et-contextmenu ref="insertFieldMenu">
           <div
@@ -137,13 +146,15 @@ class EditTabTitleWidget {
   })
 class EditTabTitlePanelUI extends Vue {
   template: string;
-  templateDiagnostic: string;
+  segments: Segment[];
+  segmentHtml: string[];
   iconList: string[];
 
   constructor() {
     super();
     this.template = "";
-    this.templateDiagnostic = "";
+    this.segments = [];
+    this.segmentHtml = [];
     this.iconList = [
       "fab fa-linux",
       "fab fa-windows",
@@ -213,6 +224,12 @@ class EditTabTitlePanelUI extends Vue {
     this.template = this.template + `\${icon:${icon}}`;
     (<any> this.$refs.insertIconMenu).close();
     this.$emit('templateChange', this.template);
+  }
+
+  selectSegment(index: number): void {
+    const segment = this.segments[index];
+    (<HTMLInputElement> this.$refs.template).setSelectionRange(segment.startColumn, segment.endColumn);
+    this.focus();
   }
 
   focus(): void {
