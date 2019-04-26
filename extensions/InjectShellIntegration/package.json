@@ -1,6 +1,8 @@
 {
   "name": "inject-shell-integration",
   "description": "Inject Shell Integration extension for Extraterm",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "src/InjectShellIntegrationExtension.js",
   "scripts": {

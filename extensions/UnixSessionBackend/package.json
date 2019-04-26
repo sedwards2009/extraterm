@@ -1,6 +1,8 @@
 {
   "name": "unix-session-backend",
   "description": "Unix Session Backend",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "src/UnixSessionBackendExtension.js",
   "scripts": {

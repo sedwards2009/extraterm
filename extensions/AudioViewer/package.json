@@ -1,6 +1,8 @@
 {
   "name": "audio-viewer",
   "description": "Audio viewer",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "src/AudioViewerExtension.js",
   "scripts": {

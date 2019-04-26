@@ -1,6 +1,8 @@
 {
   "name": "find",
   "description": "Find in text",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "dist/FindExtension.js",
   "scripts": {

@@ -1,6 +1,8 @@
 {
   "name": "textmate-syntax-theme-provider",
   "description": "TextMate Syntax Theme Provider",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "dist/TextMateSyntaxThemeProviderExtension.js",
   "scripts": {

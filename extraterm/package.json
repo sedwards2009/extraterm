@@ -1,7 +1,9 @@
 {
   "name": "extraterm",
-  "version": "1.0.0",
   "description": "A terminal",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "version": "1.0.0",
   "scripts": {
     "build": "tsc",
     "build-icons": "node resources/extra_icons/build.js",

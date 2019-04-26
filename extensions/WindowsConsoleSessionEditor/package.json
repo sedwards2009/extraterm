@@ -1,6 +1,8 @@
 {
   "name": "windows-console-session-editor",
   "description": "Windows Console Session Editor",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "src/WindowsConsoleSessionEditorExtension.js",
   "scripts": {

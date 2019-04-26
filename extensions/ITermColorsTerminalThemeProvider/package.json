@@ -1,6 +1,8 @@
 {
   "name": "itermcolors-terminal-theme-provider",
   "description": "iTerm Colors Terminal Theme Provider",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "dist/ITermColorsTerminalThemeProviderExtension.js",
   "scripts": {

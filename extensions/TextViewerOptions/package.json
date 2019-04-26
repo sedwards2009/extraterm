@@ -1,6 +1,8 @@
 {
   "name": "text-viewer-options",
   "description": "Text Viewer options extension for extraterm",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "devDependencies": {
     "typescript": "3.4.5",

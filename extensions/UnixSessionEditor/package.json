@@ -1,6 +1,8 @@
 {
   "name": "unix-session-editor",
   "description": "Unix Session Editor",
+  "author": "Simon Edwards",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "src/UnixSessionEditorExtension.js",
   "scripts": {
