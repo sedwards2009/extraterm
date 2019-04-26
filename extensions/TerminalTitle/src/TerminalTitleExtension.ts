@@ -46,6 +46,7 @@ export function activate(context: ExtensionContext): any {
     templateString.setTemplateString("${icon:fab fa-linux} ${" + TerminalEnvironment.TERM_TITLE + "}");
   
     const newDiv = document.createElement("div");
+    newDiv.classList.add("tab_title");
     widget.getContainerElement().appendChild(newDiv);
 
     const updateTitleFunc = () => {

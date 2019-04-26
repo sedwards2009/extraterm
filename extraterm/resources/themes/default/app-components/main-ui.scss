@@ -157,6 +157,10 @@ DIV.tab_title_extensions {
 
   margin-left: pxToRem(8px);
   margin-right: pxToRem(8px);
+  
+  & > ex-extension-widget-proxy {
+    width: 100%;
+  }
 }
 
 DIV.tab_header_close {

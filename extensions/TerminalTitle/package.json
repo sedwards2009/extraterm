@@ -37,6 +37,10 @@
       {
         "name": "title",
         "css": {
+          "directory": "resources/sass",
+          "cssFile": [
+            "tab-title.scss"
+          ],
           "fontAwesome": true
         }
       }
