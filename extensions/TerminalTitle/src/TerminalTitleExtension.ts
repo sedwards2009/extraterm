@@ -87,6 +87,7 @@ class EditTabTitleWidget {
       this._templateString.setTemplateString(template);
       updateFunc();
       this._ui.segments = this._templateString.getSegments();
+      this._ui.segmentHtml = this._templateString.getSegmentHtmlList();
     });
     this._ui.$on("close", () => {
       this._close();
