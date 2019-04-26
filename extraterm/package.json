@@ -40,7 +40,8 @@
     "term-api": "1.0.0",
     "utf8": "2.1.2",
     "vue": "2.6.10",
-    "vue-class-component": "6.3.2"
+    "vue-class-component": "6.3.2",
+    "xregexp": "4.2.4"
   },
   "devDependencies": {
     "@types/commander": "2.3.31",
@@ -53,6 +54,7 @@
     "@types/node-sass": "3.10.32",
     "@types/nodeunit": "0.0.30",
     "@types/qs": "6.2.30",
+    "@types/xregexp": "3.0.29",
     "@types/source-map-support": "0.2.28",
     "@types/utf8": "2.1.5",
     "cajon": "0.2.10",

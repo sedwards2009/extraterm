@@ -4,6 +4,7 @@
 
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition } from 'extraterm-extension-api';
+import * as XRegExp from "xregexp";
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
@@ -21,7 +22,7 @@ import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager } from "ace-ts";
+import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "ace-ts";
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { SearchOptions } from 'ace-ts/build/SearchOptions';
@@ -163,7 +164,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this.style.height = "0px";
       this._mode = Mode.DEFAULT;
 
-      this._aceEditSession = new TerminalEditSession(new TerminalDocument(""));
+      this._aceEditSession = new TerminalEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
       this._aceEditSession.setUndoManager(new UndoManager());
 
       const aceRenderer = new TerminalRenderer(containerDiv);
@@ -1221,31 +1222,8 @@ function px(value) {
   return parseInt(value.slice(0,-2),10);
 }
 
-function maxNormalWidthCodePoint(): number {
-  return 0x01c3;  // Last char before the Croatian digraphs. DejaVuSansMono has some extra wide chars after this.
-}
-
-/**
- * Return true if a code point has a normal monospace width of one cell.
- * 
- * @param the unicode code point to test
- * @return true if the code point has a normal monospace width of one cell.
- */
-function isCodePointNormalWidth(codePoint: number): boolean {
-  if (codePoint < 0x01c4) { // Latin up to the Croatian digraphs.
-    return true;
-  }
-
-  if (codePoint <= 0x1cc) {// Croatian digraphs can be a problem.
-    return false; 
-  }
-
-  if (codePoint < 0x1f1) {  // Up to Latin leter DZ.
-    return true;
-  }
-  if (codePoint <= 0x1f3) { // Latin letter DZ.
-    return false;
-  }
-
-  return false;
+// Expand the list of character to be considered part of words, i.e. when double clipping.
+class TextModeWithWordSelect extends TextMode {
+  tokenRe = XRegExp("^[\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]+", "g");
+  nonTokenRe = XRegExp("^(?:[^\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]|\\s])+", "g");
 }
