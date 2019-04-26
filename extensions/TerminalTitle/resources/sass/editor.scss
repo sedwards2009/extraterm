@@ -5,17 +5,17 @@
 @import "general-gui/variables";
 
 span.segment_text, span.segment_field, span.segment_error {
-  border-radius: 3px;
-  padding: 2px;
   cursor: pointer;
 }
 
 span.segment_text, span.segment_field {
-  border: 1px solid $text-color;
+  &:hover {
+    outline: $text-color solid 2px;
+  }
 }
 
 span.segment_error {
-  border: 1px solid $brand-warning;
+  outline: $brand-warning solid 2px;
 }
 
 div.insert_field_menu_item {

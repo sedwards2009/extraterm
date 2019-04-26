@@ -176,7 +176,7 @@ export class TemplateString {
       text: badInput,
       startColumn: 0,
       endColumn: badInput.length,
-      error: ""
+      error: `Badly formatted field '${badInput}'`
     };
     return errorSegment;
   }
@@ -196,7 +196,7 @@ export class TemplateString {
         const namespace = segment.namespace.toLowerCase();
         const formatter = this._formatterMap.get(namespace);
         if (formatter == null) {
-          segment.error = `Unknown '${segment.namespace}'`;
+          segment.error = `Unknown field '${segment.namespace}:${segment.key}'`;
         } else {
           const errorMsg = formatter.getErrorMessage(segment.key);
           segment.error = errorMsg;
