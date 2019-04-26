@@ -79,6 +79,9 @@ class EditTabTitleWidget {
 
     const component = this._ui.$mount();
     this._widget.getContainerElement().appendChild(component.$el);
+    this._widget.onDidOpen(() => {
+      this._ui.originalTemplate = this._templateString.getTemplateString();
+    });
     this._ui.template = this._templateString.getTemplateString();
     this._ui.segments = this._templateString.getSegments();
     this._ui.segmentHtml = this._templateString.getSegmentHtmlList();
@@ -112,13 +115,25 @@ class EditTabTitleWidget {
           <input ref="template" type="text" class="char-width-40"
             v-model="template"
             v-on:input="onTemplateChange"
+            v-on:keydown.capture="onTemplateKeyDown"
+            v-on:keypress.capture="onTemplateKeyPress"  
             />
           
-          <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
-          <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
-          
+          <div class="group">
+            <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
+            <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
+          </div>
+
+          <div class="group">
+            <button title="Accept" class="inline success char-width-2" v-on:click="onOk">
+              <i class="fas fa-check"></i>
+            </button>
+            <button title="Cancel" class="inline danger char-width-2" v-on:click="onCancel">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
           <span class="expand"></span>
-          <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
         </div>
         <div class="width-100pc">
           &nbsp;
@@ -147,6 +162,7 @@ class EditTabTitleWidget {
   })
 class EditTabTitlePanelUI extends Vue {
   template: string;
+  originalTemplate: string;
   segments: Segment[];
   segmentHtml: string[];
   iconList: string[];
@@ -154,6 +170,7 @@ class EditTabTitlePanelUI extends Vue {
   constructor() {
     super();
     this.template = "";
+    this.originalTemplate = "";
     this.segments = [];
     this.segmentHtml = [];
     this.iconList = [
@@ -231,6 +248,28 @@ class EditTabTitlePanelUI extends Vue {
     const segment = this.segments[index];
     (<HTMLInputElement> this.$refs.template).setSelectionRange(segment.startColumn, segment.endColumn);
     this.focus();
+  }
+
+  onOk(): void {
+    this.$emit("close");
+  }
+
+  onCancel(): void {
+    this.template = this.originalTemplate;
+    this.$emit('templateChange', this.template);
+    this.$emit("close");
+  }
+
+  onTemplateKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      this.onCancel();
+    }
+  }
+
+  onTemplateKeyPress(event: KeyboardEvent): void {
+    if (event.key === "Enter") {
+      this.onOk();
+    }
   }
 
   focus(): void {

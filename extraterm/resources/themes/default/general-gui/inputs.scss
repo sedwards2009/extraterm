@@ -259,6 +259,8 @@ span.group {
   }
 }
 
+@include char-width(2);
+@include char-width(3);
 @include char-width(4);
 @include char-width(6);
 @include char-width(8);
