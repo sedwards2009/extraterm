@@ -48,7 +48,7 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
       </tr>
     </thead>
     <tbody>
-      <tr v-for="command in filteredCommands" :key="command.command" class="command-row">
+      <tr v-for="command in filteredCommands" v-bind:key="command.command" class="command-row">
         <td :title="command">{{command.title}}</td>
         <td class="keybindings-key-colomn">
           <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command.command)">

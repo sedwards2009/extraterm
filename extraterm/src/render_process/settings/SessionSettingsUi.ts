@@ -18,7 +18,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 <div class="settings-page">
   <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
-  <div v-for="(item, index) in sessions" key="item.uuid" class="session-configuration card">
+  <div v-for="(item, index) in sessions" v-bind:key="item.uuid" class="session-configuration card">
     <h3 class="session-name">{{ item.name }}</h3>
     <div class="session-type">{{getSessionTypeName(item.type)}}</div>
 
@@ -37,7 +37,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   </div>
 
   <div class="gui-layout cols-1">
-    <span v-for="item in sessionTypes" key="item.uuid">
+    <span v-for="item in sessionTypes" v-bind:key="item.type">
       <button v-on:click="newSession(item.type)">New {{ item.name }} session type</button>
     </span>
   </div>
