@@ -176,7 +176,7 @@ export class Emulator implements EmulatorApi {
 
   // modes
   private applicationKeypad = false;
-  private applicationCursor = false;
+  private applicationCursorKeys = false;
   private originMode = false;
   private insertMode = false;
   private wraparoundMode = false;
@@ -299,7 +299,7 @@ export class Emulator implements EmulatorApi {
 
     // modes
     this.applicationKeypad = false;
-    this.applicationCursor = false;
+    this.applicationCursorKeys = false;
     this.originMode = false;
     this.insertMode = false;
     this.wraparoundMode = false;
@@ -2212,7 +2212,7 @@ export class Emulator implements EmulatorApi {
   /**
    * @return true if the event and key was understood and handled.
    */
-  private static _translateKey(platform: Platform, ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursor: boolean): string {
+  private static _translateKey(platform: Platform, ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursorKeys: boolean): string {
     const isMac = platform === "darwin";
     let key: string = null;
 
@@ -2267,54 +2267,53 @@ export class Emulator implements EmulatorApi {
 
       // left-arrow
       case 'ArrowLeft':
-        if (applicationCursor) {
-          key = '\x1bOD'; // SS3 as ^[O for 7-bit
-          //key = '\x8fD'; // SS3 as 0x8f for 8-bit
-          break;
-        }
         if (mod !== 1) {
           key = "\x1b[1" + modStr + "D";
         } else {
-          key = '\x1b[D';
+          if (applicationCursorKeys) {
+            key = '\x1bOD';
+          } else {
+            key = '\x1b[D';
+          }
         }
         break;
 
       // right-arrow
       case 'ArrowRight':
-        if (applicationCursor) {
-          key = '\x1bOC';
-          break;
-        }
         if (mod !== 1) {
           key = "\x1b[1" + modStr + "C";
         } else {
-          key = '\x1b[C';
+          if (applicationCursorKeys) {
+            key = '\x1bOC';
+          } else {
+            key = '\x1b[C';
+          }
         }
         break;
 
       // up-arrow
       case 'ArrowUp':
-        if (applicationCursor) {
-          key = '\x1bOA';
-          break;
-        }
         if (mod !== 1) {
           key = "\x1b[1" + modStr + "A";
         } else {
-          key = '\x1b[A';
+          if (applicationCursorKeys) {
+            key = '\x1bOA';
+          } else {
+            key = '\x1b[A';
+          }
         }
         break;
 
       // down-arrow
       case 'ArrowDown':
-        if (applicationCursor) {
-          key = '\x1bOB';
-          break;
-        }
         if (mod !== 1) {
           key = "\x1b[1" + modStr + "B";
         } else {
-          key = '\x1b[B';
+          if (applicationCursorKeys) {
+            key = '\x1bOB';
+          } else {
+            key = '\x1b[B';
+          }
         }
         break;
         
@@ -2419,7 +2418,7 @@ export class Emulator implements EmulatorApi {
   }
 
   keyDown(ev: KeyboardEvent): boolean {
-    const key = Emulator._translateKey(this._platform, ev, this.applicationKeypad, this.applicationCursor);
+    const key = Emulator._translateKey(this._platform, ev, this.applicationKeypad, this.applicationCursorKeys);
 
     if (key === null) {
       return false;
@@ -3578,7 +3577,7 @@ export class Emulator implements EmulatorApi {
     } else if (this.prefix === '?') {
       switch (params) {
         case 1:
-          this.applicationCursor = true;
+          this.applicationCursorKeys = true;
           break;
         case 2:
           this.setgCharset(0, Emulator.charsets.US);
@@ -3790,7 +3789,7 @@ export class Emulator implements EmulatorApi {
     } else if (this.prefix === '?') {
       switch (params) {
         case 1:
-          this.applicationCursor = false;
+          this.applicationCursorKeys = false;
           break;
           
         // 80 Column Mode (DECCOLM).
@@ -4069,7 +4068,7 @@ export class Emulator implements EmulatorApi {
     this.originMode = false;
     this.wraparoundMode = false; // autowrap
     this.applicationKeypad = false; // ?
-    this.applicationCursor = false;
+    this.applicationCursorKeys = false;
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
     this.curAttr = Emulator.defAttr;
