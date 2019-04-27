@@ -43,7 +43,7 @@ export function activate(context: ExtensionContext): any {
     const templateString = new TemplateString();
     templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
     templateString.addFormatter("icon", new IconFormatter());
-    templateString.setTemplateString("${icon:fab fa-linux} ${" + TerminalEnvironment.TERM_TITLE + "}");
+    templateString.setTemplateString("${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}");
   
     const newDiv = document.createElement("div");
     newDiv.classList.add("tab_title");
