@@ -473,6 +473,7 @@ export interface SessionConfiguration {
   name: string;             // Human readable name for the profile.
   type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
   args?: string;            // command line arguments to be passed to command
+  initialDirectory?: string;
 }
 
 /**

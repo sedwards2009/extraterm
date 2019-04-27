@@ -33,7 +33,8 @@ class UnixBackend implements SessionBackend {
       name: "Default shell",
       type: "unix",
       useDefaultShell: true,
-      shell: ""
+      shell: "",
+      initialDirectory: "",
     };
     return [loginSessionConfig];
   }
@@ -69,6 +70,11 @@ class UnixBackend implements SessionBackend {
       rows: rows,
       preMessage
     };
+
+    if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
+      options.cwd = sessionConfig.initialDirectory;
+    }
+
     return new UnixPty(this._log, options);
   }
 

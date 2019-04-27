@@ -36,6 +36,13 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
     <label for="args">Arguments:</label>
     <input type="text" name="args" v-model="args">
+
+    <label for="initialDirectory">Initial Directory:</label>
+    <input type="text" name="initialDirectory" v-model="initialDirectory">
+    <template v-if="initialDirectoryErrorMsg != ''">
+      <label></label>
+      <span><i class="fas fa-exclamation-triangle"></i> {{ initialDirectoryErrorMsg }}</span>
+    </template>
   </div>
 
   <datalist id="etcShells">
@@ -50,4 +57,6 @@ export class UnixSessionEditorUi extends Vue {
   shellErrorMsg = "";
   etcShells: string[] = [];
   args: string = "";
+  initialDirectory = "";
+  initialDirectoryErrorMsg = "";
 }

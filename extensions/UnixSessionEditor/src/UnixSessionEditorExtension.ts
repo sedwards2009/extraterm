@@ -49,7 +49,7 @@ export function activate(context: ExtensionContext): any {
       this._loadConfig(config);
     }
 
-    _loadConfig(config: UnixSessionConfiguration): void {
+    private _loadConfig(config: UnixSessionConfiguration): void {
       let fixedConfig = config;
       if (config.shell == null) {
         fixedConfig = {
@@ -57,7 +57,8 @@ export function activate(context: ExtensionContext): any {
           name: config.name,
           useDefaultShell: true,
           shell: "",
-          args: ""
+          args: "",
+          initialDirectory: ""
         };
       }
 
@@ -66,20 +67,23 @@ export function activate(context: ExtensionContext): any {
       this._ui.shell = fixedConfig.shell;
       this._ui.etcShells = etcShells;
       this._ui.args = fixedConfig.args;
+      this._ui.initialDirectory = fixedConfig.initialDirectory || "";
     }
 
-    _dataChanged(): void {
+    private _dataChanged(): void {
       const changes = {
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
         shell: this._ui.shell,
-        args: this._ui.args
+        args: this._ui.args,
+        initialDirectory: this._ui.initialDirectory,
       };
       this._checkShellPath();
+      this._checkInitialDirectory();
       this.updateSessionConfiguration(changes);
     }
 
-    _checkShellPath(): void {
+    private _checkShellPath(): void {
       if ( ! this._ui.useDefaultShell && this._ui.shell !== "") {
         const shellPath = this._ui.shell;
 
@@ -93,7 +97,7 @@ export function activate(context: ExtensionContext): any {
       }
     }
 
-    async _checkExecutablePath(exePath: string): Promise<string> {
+    private async _checkExecutablePath(exePath: string): Promise<string> {
       try {
         const metadata = await fse.stat(exePath);
         if ( ! metadata.isFile()) {
@@ -107,6 +111,40 @@ export function activate(context: ExtensionContext): any {
         }
         if (err.errno === -constants.EACCES) {
           return "Path isn't executable";
+        }
+        return "errno: " +  err.errno + ", err.code: " + err.code;
+      } 
+      return "";
+    }
+
+    private _checkInitialDirectory(): void {
+      if ( this._ui.initialDirectory !== "") {
+        const initialDirectory = this._ui.initialDirectory;
+  
+        this._checkDirectoryPath(initialDirectory).then(resultMsg => {
+          if (initialDirectory === this._ui.initialDirectory) {
+            this._ui.initialDirectoryErrorMsg = resultMsg;
+          }
+        });
+      } else {
+        this._ui.initialDirectoryErrorMsg = "";
+      }
+    }  
+
+    private async _checkDirectoryPath(exePath: string): Promise<string> {
+      try {
+        const metadata = await fse.stat(exePath);
+        if ( ! metadata.isDirectory()) {
+          return "Path isn't a directory";
+        }
+
+        await fse.access(exePath, fse.constants.R_OK);
+      } catch(err) {
+        if (err.errno === -constants.ENOENT) {
+          return "Path doesn't exist";
+        }
+        if (err.errno === -constants.EACCES) {
+          return "Path isn't readable";
         }
         return "errno: " +  err.errno + ", err.code: " + err.code;
       } 
