@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as child_process from 'child_process';
+import * as constants from 'constants';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from 'extraterm-extension-api';
@@ -62,18 +63,26 @@ class UnixBackend implements SessionBackend {
       ptyEnv[prop] = extraEnv[prop];
     }
 
+    let cwd = sessionConfig.initialDirectory || null;
+    if (cwd == null || cwd === "") {
+      cwd = process.env.HOME;
+    } else {
+      const dirError = this._validateDirectoryPath(cwd);
+      if (dirError != null) {
+        preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${cwd}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+        cwd = process.env.HOME;
+      }
+    }
+
     const options: PtyOptions = {
       exe: shell,
       args,
       env: ptyEnv,
       cols: cols,
       rows: rows,
+      cwd,
       preMessage
     };
-
-    if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
-      options.cwd = sessionConfig.initialDirectory;
-    }
 
     return new UnixPty(this._log, options);
   }
@@ -118,6 +127,26 @@ class UnixBackend implements SessionBackend {
       const fields = line.split(/:/g);
       return { username: fields[0], homeDir: fields[5], shell: fields[6] };
     });
+  }
+
+  private _validateDirectoryPath(dirPath: string): string {
+    try {
+      const metadata = fs.statSync(dirPath);
+      if ( ! metadata.isDirectory()) {
+        return "Path isn't a directory";
+      }
+
+      fs.accessSync(dirPath, fs.constants.R_OK);
+    } catch(err) {
+      if (err.errno === -constants.ENOENT) {
+        return "Path doesn't exist";
+      }
+      if (err.errno === -constants.EACCES) {
+        return "Path isn't readable";
+      }
+      return "errno: " +  err.errno + ", err.code: " + err.code;
+    } 
+    return null;
   }
 }
 
