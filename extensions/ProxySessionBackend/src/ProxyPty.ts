@@ -49,7 +49,8 @@ interface CreatePtyMessage extends ProxyMessage {
   columns: number;
   env: { [key: string]: string; };
   extraEnv: { [key: string]: string; };
-  
+  cwd: string;
+
   // the id field is not user for this message type.
 }
 
@@ -244,7 +245,7 @@ export abstract class ProxyPtyConnector {
     const pty = new ProxyPty(this._sendMessage.bind(this));
     this._ptys.push(pty);
     const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns,
-      id: NULL_ID, env: options.env, extraEnv: options.extraEnv == null ? {} : options.extraEnv};
+      id: NULL_ID, env: options.env, extraEnv: options.extraEnv == null ? {} : options.extraEnv, cwd: options.cwd || null};
     this._sendMessage(null, msg);
     return pty;
   }

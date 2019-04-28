@@ -316,6 +316,13 @@ def process_create_command(cmd):
 
     env.update(cmd.get("extraEnv", {}))
 
+    cwd = cmd["cwd"]
+    if cwd == "" or cwd is None:
+        cwd = None
+    else:
+        if not os.path.exists(cwd):
+            cwd = None
+
     # Fix up the PATH variable on cygwin.
     if sys.platform == "cygwin":
         if "Path" in env and "PATH" not in env:
@@ -323,7 +330,7 @@ def process_create_command(cmd):
             del env["Path"]
         env["PATH"] = cygwin_convert_path_variable(env["PATH"])
     try:
-        pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env) #cwd=, )
+        pty = ptyprocess.PtyProcess.spawn(cmd["argv"], dimensions=(rows, columns), env=env, cwd=cwd)
     except FileNotFoundError:
         pty = DeadPty(cmd["argv"])
 

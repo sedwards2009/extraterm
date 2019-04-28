@@ -43,6 +43,9 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
   <label for="name">Arguments:</label>
   <input type="text" class="form-control" name="args" v-model="args">
+
+  <label for="initialDirectory">Initial Directory:</label>
+  <input type="text" name="initialDirectory" v-model="initialDirectory">
 </div>`)
 })
 export class CygwinProxySessionEditorUi extends Vue {
@@ -53,4 +56,5 @@ export class CygwinProxySessionEditorUi extends Vue {
   cygwinPath = "";
   cygwinPathErrorMsg = "";
   args: string = "";
+  initialDirectory = "";
 }

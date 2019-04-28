@@ -67,7 +67,7 @@ export class WslProxySessionBackend implements SessionBackend {
     const defaultShell = "/bin/bash";
     let shell = sessionConfig.useDefaultShell ? defaultShell : sessionConfig.shell;
     const args = ["-l"].concat(ShellStringParser(sessionConfig.args));
-    
+
     const extraPtyEnv = {
       TERM: "xterm-256color"
     };
@@ -81,9 +81,13 @@ export class WslProxySessionBackend implements SessionBackend {
       args,
       env: null,
       extraEnv: extraPtyEnv,
-      cols: cols,
-      rows: rows
+      cols,
+      rows
     };
+
+    if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
+      options.cwd = sessionConfig.initialDirectory;
+    }
 
     const connector = this._getConnector();
     return connector.spawn(options);

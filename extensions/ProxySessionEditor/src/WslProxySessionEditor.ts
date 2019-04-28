@@ -57,7 +57,8 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
           name: config.name,
           useDefaultShell: true,
           shell: "",
-          args: ""
+          args: "",
+          initialDirectory: "",
         };
       }
 
@@ -66,6 +67,7 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
       this._ui.shell = fixedConfig.shell;
       this._ui.etcShells = [...etcShells];
       this._ui.args = fixedConfig.args;
+      this._ui.initialDirectory = fixedConfig.initialDirectory || "";
     }
 
     _dataChanged(): void {
@@ -73,7 +75,8 @@ export function getWslProxySessionEditorClass(context: ExtensionContext): any {
         name: this._ui.name,
         useDefaultShell: this._ui.useDefaultShell === 1,
         shell: this._ui.shell,
-        args: this._ui.args
+        args: this._ui.args,
+        initialDirectory: this._ui.initialDirectory,
       };
       this.updateSessionConfiguration(changes);
     }

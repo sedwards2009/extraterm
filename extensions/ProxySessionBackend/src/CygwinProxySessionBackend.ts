@@ -109,9 +109,13 @@ export class CygwinProxySessionBackend implements SessionBackend {
       exe: shell,
       args,
       env: ptyEnv,
-      cols: cols,
-      rows: rows
+      cols,
+      rows,
     };
+
+    if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
+      options.cwd = sessionConfig.initialDirectory;
+    }
 
     const pythonExe = this._findCygwinPython(sessionConfig.cygwinPath);
     if (pythonExe == null) {
