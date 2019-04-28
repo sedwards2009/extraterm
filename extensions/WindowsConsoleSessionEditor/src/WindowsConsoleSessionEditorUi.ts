@@ -28,6 +28,13 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
   <label for="name">Arguments:</label>
   <input type="text" name="args" v-model="args">
+
+  <label for="initialDirectory">Initial Directory:</label>
+  <input type="text" name="initialDirectory" v-model="initialDirectory">
+  <template v-if="initialDirectoryErrorMsg != ''">
+    <label></label>
+    <span><i class="fas fa-exclamation-triangle"></i> {{ initialDirectoryErrorMsg }}</span>
+  </template>
 </div>
 `)
 })
@@ -37,4 +44,6 @@ export class WindowsConsoleSessionEditorUi extends Vue {
   args: string = "";
   exeErrorMsg = "";
   availableExes: string[] = [];
+  initialDirectory = "";
+  initialDirectoryErrorMsg = "";
 }

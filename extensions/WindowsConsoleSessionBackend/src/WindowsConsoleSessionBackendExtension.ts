@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as child_process from 'child_process';
+import * as constants from 'constants';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
@@ -78,13 +78,24 @@ class WindowsConsoleBackend implements SessionBackend {
       ptyEnv[prop] = extraEnv[prop];
     }
 
+    let cwd = sessionConfig.initialDirectory || null;
+    if (cwd == null || cwd === "") {
+      cwd = process.env.HOME;
+    } else {
+      const dirError = this._validateDirectoryPath(cwd);
+      if (dirError != null) {
+        preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${cwd}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+        cwd = process.env.HOME;
+      }
+    }
+
     const options: PtyOptions = {
       exe: exe,
       args: args,
       env: ptyEnv,
       cols: 80, //cols,
       rows: 24, //rows,
-      cwd: process.env.HOME,
+      cwd,
       preMessage
     };
     return new WindowsConsolePty(this._log, options);
@@ -112,6 +123,26 @@ class WindowsConsoleBackend implements SessionBackend {
     } catch(err) {
       return false;
     }
+  }
+
+  private _validateDirectoryPath(dirPath: string): string {
+    try {
+      const metadata = fs.statSync(dirPath);
+      if ( ! metadata.isDirectory()) {
+        return "Path isn't a directory";
+      }
+
+      fs.accessSync(dirPath, fs.constants.R_OK);
+    } catch(err) {
+      if (err.errno === -constants.ENOENT) {
+        return "Path doesn't exist";
+      }
+      if (err.errno === -constants.EACCES) {
+        return "Path isn't readable";
+      }
+      return "errno: " +  err.errno + ", err.code: " + err.code;
+    } 
+    return null;
   }
 }
 

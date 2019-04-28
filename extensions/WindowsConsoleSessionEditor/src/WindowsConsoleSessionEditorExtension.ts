@@ -21,8 +21,6 @@ interface WindowsConsoleSessionConfiguration extends SessionConfiguration {
 export function activate(context: ExtensionContext): any {
   log = context.logger;
   
-  log.info("WindowsConsoleSessionEditorExtension activate");
-  
   class WindowsConsoleSessionEditor extends context.window.extensionSessionEditorBaseConstructor {
     private _ui: WindowsConsoleSessionEditorUi = null;
     private _debouncedDataChanged: ()=> void = null;
@@ -49,33 +47,37 @@ export function activate(context: ExtensionContext): any {
       this._loadConfig(config);
     }
 
-    _loadConfig(config: WindowsConsoleSessionConfiguration): void {
+    private _loadConfig(config: WindowsConsoleSessionConfiguration): void {
       let fixedConfig = config;
       if (config.exe == null) {
         fixedConfig = {
           uuid: config.uuid,
           name: config.name,
           exe: "cmd.exe",
-          args: ""
+          args: "",
+          initialDirectory: "",
         };
       }
 
       this._ui.name = fixedConfig.name;
       this._ui.exe = fixedConfig.exe;
       this._ui.args = fixedConfig.args;
+      this._ui.initialDirectory = fixedConfig.initialDirectory || "";
     }
 
-    _dataChanged(): void {
+    private _dataChanged(): void {
       const changes: Partial<WindowsConsoleSessionConfiguration> = {
         name: this._ui.name,
         exe: this._ui.exe,
-        args: this._ui.args
+        args: this._ui.args,
+        initialDirectory: this._ui.initialDirectory,
       };
       this._checkExeField();
+      this._checkInitialDirectory();
       this.updateSessionConfiguration(changes);
     }
 
-    _checkExeField(): void {
+    private _checkExeField(): void {
       if (this._ui.exe !== "") {
         const exePath = this._ui.exe;
 
@@ -89,7 +91,7 @@ export function activate(context: ExtensionContext): any {
       }
     }
 
-    async _checkExe(exe: string): Promise<string> {
+    private async _checkExe(exe: string): Promise<string> {
       if (path.isAbsolute(exe)) {
         return this._checkExecutablePath(exe);
       }
@@ -105,7 +107,7 @@ export function activate(context: ExtensionContext): any {
       return "Couldn't find executable";
     }
 
-    async _checkExecutablePath(exePath: string): Promise<string> {
+    private async _checkExecutablePath(exePath: string): Promise<string> {
       try {
         const metadata = await fse.stat(exePath);
         if ( ! metadata.isFile()) {
@@ -125,7 +127,7 @@ export function activate(context: ExtensionContext): any {
       return "";
     }
 
-    async _initializeAvailableExes(): Promise<void> {
+    private async _initializeAvailableExes(): Promise<void> {
       const availableExes: string[] = [];
       for (const exePath of ["cmd.exe", "powershell.exe", "pwsh.exe"]) {
         const errorMsg = await this._checkExe(exePath);
@@ -134,6 +136,40 @@ export function activate(context: ExtensionContext): any {
         }
       }
       this._ui.availableExes = availableExes;
+    }
+
+    private _checkInitialDirectory(): void {
+      if ( this._ui.initialDirectory !== "") {
+        const initialDirectory = this._ui.initialDirectory;
+  
+        this._checkDirectoryPath(initialDirectory).then(resultMsg => {
+          if (initialDirectory === this._ui.initialDirectory) {
+            this._ui.initialDirectoryErrorMsg = resultMsg;
+          }
+        });
+      } else {
+        this._ui.initialDirectoryErrorMsg = "";
+      }
+    }  
+
+    private async _checkDirectoryPath(exePath: string): Promise<string> {
+      try {
+        const metadata = await fse.stat(exePath);
+        if ( ! metadata.isDirectory()) {
+          return "Path isn't a directory";
+        }
+
+        await fse.access(exePath, fse.constants.R_OK);
+      } catch(err) {
+        if (err.errno === -constants.ENOENT || err.code === "ENOENT") {
+          return "Path doesn't exist";
+        }
+        if (err.errno === -constants.EACCES) {
+          return "Path isn't readable";
+        }
+        return `errno: ${err.errno}, err.code: ${err.code}`;
+      } 
+      return "";
     }
   }
 
