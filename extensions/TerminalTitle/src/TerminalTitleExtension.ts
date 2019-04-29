@@ -150,6 +150,12 @@ class EditTabTitleWidget {
           <div
             class="insert_field_menu_item"
             v-on:click="onInsertFieldClick('term:title')">Title - \${term:title}</div>
+            <div
+            class="insert_field_menu_item"
+            v-on:click="onInsertFieldClick('term:rows')">Rows - \${term:rows}</div>
+            <div
+            class="insert_field_menu_item"
+            v-on:click="onInsertFieldClick('term:columns')">Columns - \${term:columns}</div>
         </et-contextmenu>
 
         <et-contextmenu ref="insertIconMenu">
