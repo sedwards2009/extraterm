@@ -111,8 +111,11 @@ class EditTabTitleWidget {
   {
     template: trimBetweenTags(`
       <div class="width-100pc">
+
+      <div class="gui-packed-row width-100pc">
+        <label class="compact"><i class="fas fa-pen"></i></label>
+        <div>
         <div class="gui-packed-row width-100pc">
-          <label class="compact"><i class="fas fa-pen"></i></label>
           <input ref="template" type="text" class="char-width-40"
             v-model="template"
             v-on:input="onTemplateChange"
@@ -145,17 +148,12 @@ class EditTabTitleWidget {
             <span v-if="segment.type == 'error'" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
           </template>
         </div>
-
+      </div>
+      </div>
         <et-contextmenu ref="insertFieldMenu">
-          <div
-            class="insert_field_menu_item"
-            v-on:click="onInsertFieldClick('term:title')">Title - \${term:title}</div>
-            <div
-            class="insert_field_menu_item"
-            v-on:click="onInsertFieldClick('term:rows')">Rows - \${term:rows}</div>
-            <div
-            class="insert_field_menu_item"
-            v-on:click="onInsertFieldClick('term:columns')">Columns - \${term:columns}</div>
+          <div v-for="fieldTup in fieldList"
+            class="insert_field_menu_item gui-packed-row"
+            v-on:click="onInsertFieldClick(fieldTup[1])"><div class="expand">{{ fieldTup[0] }}</div><div>\${ {{fieldTup[1]}} }</div></div>
         </et-contextmenu>
 
         <et-contextmenu ref="insertIconMenu">
@@ -173,6 +171,7 @@ class EditTabTitlePanelUI extends Vue {
   segments: Segment[];
   segmentHtml: string[];
   iconList: string[];
+  fieldList: [string, string][];
 
   constructor() {
     super();
@@ -180,6 +179,11 @@ class EditTabTitlePanelUI extends Vue {
     this.originalTemplate = "";
     this.segments = [];
     this.segmentHtml = [];
+    this.fieldList = [
+      ["Title", "term:title"],
+      ["Rows", "term:rows"],
+      ["Columns", "term:columns"],
+    ];
     this.iconList = [
       "fab fa-linux",
       "fab fa-windows",
