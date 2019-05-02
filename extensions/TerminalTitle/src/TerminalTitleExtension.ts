@@ -115,40 +115,40 @@ class EditTabTitleWidget {
       <div class="gui-packed-row width-100pc">
         <label class="compact"><i class="fas fa-pen"></i></label>
         <div>
-        <div class="gui-packed-row width-100pc">
-          <input ref="template" type="text" class="char-width-40"
-            v-model="template"
-            v-on:input="onTemplateChange"
-            v-on:keydown.capture="onTemplateKeyDown"
-            v-on:keypress.capture="onTemplateKeyPress"  
-            />
-          
-          <div class="group">
-            <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
-            <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
-          </div>
+          <div class="gui-packed-row width-100pc">
+            <input ref="template" type="text" class="char-width-40"
+              v-model="template"
+              v-on:input="onTemplateChange"
+              v-on:keydown.capture="onTemplateKeyDown"
+              v-on:keypress.capture="onTemplateKeyPress"  
+              />
+            
+            <div class="group">
+              <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
+              <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
+            </div>
 
-          <div class="group">
-            <button title="Accept" class="inline success char-width-2" v-on:click="onOk">
-              <i class="fas fa-check"></i>
-            </button>
-            <button title="Cancel" class="inline danger char-width-2" v-on:click="onCancel">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
+            <div class="group">
+              <button title="Accept" class="inline success char-width-2" v-on:click="onOk">
+                <i class="fas fa-check"></i>
+              </button>
+              <button title="Cancel" class="inline danger char-width-2" v-on:click="onCancel">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
 
-          <span class="expand"></span>
+            <span class="expand"></span>
+          </div>
+          <div class="width-100pc">
+            &nbsp;
+            <template v-for="(segment, index) in segments">
+              <span v-if="segment.type == 'text'" class="segment_text" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.text }}</span>
+              <span v-if="segment.type == 'field' && segment.error != null" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
+              <span v-if="segment.type == 'field' && segment.error == null" class="segment_field" v-on:click="selectSegment(index)" v-bind:title="segment.text"><span v-html="segmentHtml[index]"></span></span>
+              <span v-if="segment.type == 'error'" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
+            </template>
+          </div>
         </div>
-        <div class="width-100pc">
-          &nbsp;
-          <template v-for="(segment, index) in segments">
-            <span v-if="segment.type == 'text'" class="segment_text" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.text }}</span>
-            <span v-if="segment.type == 'field' && segment.error != null" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
-            <span v-if="segment.type == 'field' && segment.error == null" class="segment_field" v-on:click="selectSegment(index)" v-bind:title="segment.text"><span v-html="segmentHtml[index]"></span></span>
-            <span v-if="segment.type == 'error'" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
-          </template>
-        </div>
-      </div>
       </div>
         <et-contextmenu ref="insertFieldMenu">
           <div v-for="fieldTup in fieldList"
