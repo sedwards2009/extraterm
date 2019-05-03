@@ -1,7 +1,13 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)_$(SourceBranchName)
 
 trigger:
-  - master
-  - release/0.42
+  branches:
+      include:
+      - master
+      - release/*
+  tags:
+      include:
+      - v*
 
 jobs:
   - job: commands_zip
