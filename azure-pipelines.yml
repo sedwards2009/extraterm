@@ -8,10 +8,6 @@ trigger:
   tags:
     include:
     - v*
-                                
-
-  - master
-  - release/0.42
 
 jobs:
   - job: commands_zip
