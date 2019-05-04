@@ -1,5 +1,15 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)_$(SourceBranchName)
 
 trigger:
+  branches:
+    include:
+    - master
+    - release/*
+  tags:
+    include:
+    - v*
+                                
+
   - master
   - release/0.42
 
