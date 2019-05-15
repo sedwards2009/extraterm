@@ -152,7 +152,17 @@ describe.each([
     });
 
   });
-
-
 });
 
+test("clearCell()", () => {
+  const grid = makeGrid();
+  grid.setCodePoint(3,4, "A".codePointAt(0));
+  grid.setCodePoint(4,4, "B".codePointAt(0));
+  grid.setCodePoint(5,4, "C".codePointAt(0));
+
+  grid.clearCell(4,4);
+  
+  expect(grid.getCodePoint(3,4)).toBe("A".codePointAt(0));
+  expect(grid.getCodePoint(4,4)).toBe(" ".codePointAt(0));
+  expect(grid.getCodePoint(5,4)).toBe("C".codePointAt(0));
+});

@@ -75,6 +75,18 @@ export class CharCellGrid {
     }
   }
 
+  clearCell(x: number, y: number): void {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    const spaceCodePoint = " ".codePointAt(0);
+    this._dataView.setUint32(offset, spaceCodePoint);
+    this._dataView.setUint8(offset + OFFSET_FLAGS, 0);
+    this._dataView.setUint8(offset + OFFSET_STYLE, 0);
+    this._dataView.setUint8(offset + OFFSET_FG_CLUT_INDEX, 0);
+    this._dataView.setUint8(offset + OFFSET_BG_CLUT_INDEX, 0);
+    this._dataView.setUint32(offset + OFFSET_FG, 0xffffffff);
+    this._dataView.setUint32(offset + OFFSET_BG, 0x000000ff);
+  }
+
   setCodePoint(x: number, y: number, codePoint: number): void {
     this._dataView.setUint32((y * this.width + x) * CELL_SIZE_BYTES + OFFSET_CODEPOINT, codePoint);
   }
