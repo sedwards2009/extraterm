@@ -19,6 +19,10 @@ import { stringToCodePointArray } from "./UnicodeUtils";
  *            * 0x2 (bit 1) - true if underline style
  *            * 0x4 (bit 2) - true if italic style
  *            * 0x8 (bit 3) - true if strikethrough style
+ *            * 0x10 (bit 4) - true if blink style
+ *            * 0x20 (bit 5) - true if inverse style
+ *            * 0x40 (bit 6) - true if invisible style
+ *            * 0x80 (bit 7) - true if faint style
  * 1 byte   - Foreground Colour Lookup Table (palette / CLUT) index
  * 1 byte   - Background Colour Lookup Table (palette / CLUT) index
  * 4 bytes  - Foreground RGBA bytes
@@ -35,6 +39,11 @@ export const STYLE_MASK_BOLD = 1;
 export const STYLE_MASK_UNDERLINE = 2;
 export const STYLE_MASK_ITALIC = 4;
 export const STYLE_MASK_STRIKETHROUGH = 8;
+export const STYLE_MASK_BLINK = 16;
+export const STYLE_MASK_INVERSE = 32;
+export const STYLE_MASK_INVISIBLE = 64;
+export const STYLE_MASK_FAINT = 128;
+
 type StyleCode = number;
 
 const CELL_SIZE_BYTES = 16;
