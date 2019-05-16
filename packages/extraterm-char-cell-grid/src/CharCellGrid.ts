@@ -62,10 +62,12 @@ export class CharCellGrid {
 
   private _rawBuffer: ArrayBuffer;
   private _dataView: DataView;
+  private _uint8View: Uint8Array;
 
   constructor(public readonly width: number, public readonly height: number, private readonly _palette: number[]) {
     this._rawBuffer = new ArrayBuffer(width * height * CELL_SIZE_BYTES);
     this._dataView = new DataView(this._rawBuffer);
+    this._uint8View = new Uint8Array(this._rawBuffer);
     this.clear();
   }
 
@@ -197,5 +199,17 @@ export class CharCellGrid {
       flags = flags & ~FLAG_MASK_EXTRA_FONT;
     }
     this._dataView.setUint16(offset + OFFSET_FLAGS, flags);
+  }
+
+  shiftCellsRight(x: number, y: number, count: number): void {
+    const offsetCell = y * this.width;
+    const moveCount = this.width - x - count;
+    if (moveCount <= 0) {
+      return;
+    }
+
+    this._uint8View.copyWithin((offsetCell + x + count) * CELL_SIZE_BYTES,  // target pos
+                                (offsetCell + x) * CELL_SIZE_BYTES,         // source pos
+                                (offsetCell + this.width - count) * CELL_SIZE_BYTES); // end pos
   }
 }

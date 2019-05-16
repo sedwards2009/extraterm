@@ -166,3 +166,21 @@ test("clearCell()", () => {
   expect(grid.getCodePoint(4,4)).toBe(" ".codePointAt(0));
   expect(grid.getCodePoint(5,4)).toBe("C".codePointAt(0));
 });
+
+test("shiftCellsRight()", () => {
+  const grid = makeGrid();
+  grid.setCodePoint(3, 4, "A".codePointAt(0));
+  grid.setCodePoint(4, 4, "B".codePointAt(0));
+  grid.setCodePoint(5, 4, "C".codePointAt(0));
+  grid.setCodePoint(6, 4, "D".codePointAt(0));
+
+  grid.setCodePoint(0,5, "X".codePointAt(0));
+  grid.shiftCellsRight(4, 4, 1);
+
+  expect(grid.getCodePoint(3, 4)).toBe("A".codePointAt(0));
+  expect(grid.getCodePoint(4, 4)).toBe("B".codePointAt(0));
+  expect(grid.getCodePoint(5, 4)).toBe("B".codePointAt(0));
+  expect(grid.getCodePoint(6, 4)).toBe("C".codePointAt(0));
+
+  expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));  
+});
