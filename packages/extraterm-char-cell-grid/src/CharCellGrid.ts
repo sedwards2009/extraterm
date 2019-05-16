@@ -9,12 +9,12 @@ import { stringToCodePointArray } from "./UnicodeUtils";
  * Cell schema:
  * 
  * 4 bytes  - Unicode code point
- * 1 byte   - Flags
+ * 2 byte   - Flags
  *            * 0x1 (bit 0) - true if using foreground CLUT
  *            * 0x2 (bit 1) - true if using background CLUT
  *            * 0x4 (bit 2) - true if extra fonts are used.
  *            * 0x38 (bit 3,4,5) ligature size as 3 bit number.
- * 1 byte   - Style
+ * 2 byte   - Style
  *            * 0x1 (bit 0) - true if bold style
  *            * 0x2 (bit 1) - true if underline style
  *            * 0x4 (bit 2) - true if italic style
@@ -23,8 +23,8 @@ import { stringToCodePointArray } from "./UnicodeUtils";
  *            * 0x20 (bit 5) - true if inverse style
  *            * 0x40 (bit 6) - true if invisible style
  *            * 0x80 (bit 7) - true if faint style
- * 1 byte   - Foreground Colour Lookup Table (palette / CLUT) index
- * 1 byte   - Background Colour Lookup Table (palette / CLUT) index
+ * 2 byte   - Foreground Colour Lookup Table (palette / CLUT) index
+ * 2 byte   - Background Colour Lookup Table (palette / CLUT) index
  * 4 bytes  - Foreground RGBA bytes
  * 4 bytes  - Background RGBA bytes
  */
@@ -46,16 +46,16 @@ export const STYLE_MASK_FAINT = 128;
 
 type StyleCode = number;
 
-const CELL_SIZE_BYTES = 16;
+const CELL_SIZE_BYTES = 20;
 
 const OFFSET_CODEPOINT = 0;
 const OFFSET_FLAGS = 4;
-const OFFSET_STYLE = 5;
-const OFFSET_FG_CLUT_INDEX = 6;
-const OFFSET_BG_CLUT_INDEX = 7;
+const OFFSET_STYLE = 6;
+const OFFSET_FG_CLUT_INDEX = 8;
+const OFFSET_BG_CLUT_INDEX = 10;
 
-const OFFSET_FG = 8;
-const OFFSET_BG = 12;
+const OFFSET_FG = 12;
+const OFFSET_BG = 16;
 
 
 export class CharCellGrid {
@@ -75,10 +75,10 @@ export class CharCellGrid {
     let offset = 0;
     for (let i=0; i<maxChar; i++, offset += CELL_SIZE_BYTES) {
       this._dataView.setUint32(offset, spaceCodePoint);
-      this._dataView.setUint8(offset + OFFSET_FLAGS, 0);
-      this._dataView.setUint8(offset + OFFSET_STYLE, 0);
-      this._dataView.setUint8(offset + OFFSET_FG_CLUT_INDEX, 0);
-      this._dataView.setUint8(offset + OFFSET_BG_CLUT_INDEX, 0);
+      this._dataView.setUint16(offset + OFFSET_FLAGS, 0);
+      this._dataView.setUint16(offset + OFFSET_STYLE, 0);
+      this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, 0);
+      this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, 0);
       this._dataView.setUint32(offset + OFFSET_FG, 0xffffffff);
       this._dataView.setUint32(offset + OFFSET_BG, 0x000000ff);
     }
@@ -88,10 +88,10 @@ export class CharCellGrid {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     const spaceCodePoint = " ".codePointAt(0);
     this._dataView.setUint32(offset, spaceCodePoint);
-    this._dataView.setUint8(offset + OFFSET_FLAGS, 0);
-    this._dataView.setUint8(offset + OFFSET_STYLE, 0);
-    this._dataView.setUint8(offset + OFFSET_FG_CLUT_INDEX, 0);
-    this._dataView.setUint8(offset + OFFSET_BG_CLUT_INDEX, 0);
+    this._dataView.setUint16(offset + OFFSET_FLAGS, 0);
+    this._dataView.setUint16(offset + OFFSET_STYLE, 0);
+    this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, 0);
+    this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, 0);
     this._dataView.setUint32(offset + OFFSET_FG, 0xffffffff);
     this._dataView.setUint32(offset + OFFSET_BG, 0x000000ff);
   }
@@ -115,8 +115,8 @@ export class CharCellGrid {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     this._dataView.setUint32(offset + OFFSET_BG, rgba);
 
-    const newAttr = this._dataView.getUint8(offset + OFFSET_FLAGS) & ~FLAG_MASK_BG_CLUT;
-    this._dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
+    const newAttr = this._dataView.getUint16(offset + OFFSET_FLAGS) & ~FLAG_MASK_BG_CLUT;
+    this._dataView.setUint16(offset + OFFSET_FLAGS, newAttr);
   }
 
   getBgRGBA(x: number, y: number): number {
@@ -128,8 +128,8 @@ export class CharCellGrid {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     this._dataView.setUint32(offset + OFFSET_FG, rgba);
 
-    const newAttr = this._dataView.getUint8(offset + OFFSET_FLAGS) & ~FLAG_MASK_FG_CLUT;
-    this._dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
+    const newAttr = this._dataView.getUint16(offset + OFFSET_FLAGS) & ~FLAG_MASK_FG_CLUT;
+    this._dataView.setUint16(offset + OFFSET_FLAGS, newAttr);
   }
 
   getFgRGBA(x: number, y: number): number {
@@ -140,10 +140,10 @@ export class CharCellGrid {
   setFgClutIndex(x: number, y: number, index: number): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
 
-    const newAttr = this._dataView.getUint8(offset + OFFSET_FLAGS) | FLAG_MASK_FG_CLUT;
-    this._dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
+    const newAttr = this._dataView.getUint16(offset + OFFSET_FLAGS) | FLAG_MASK_FG_CLUT;
+    this._dataView.setUint16(offset + OFFSET_FLAGS, newAttr);
 
-    this._dataView.setUint8(offset + OFFSET_FG_CLUT_INDEX, index);
+    this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, index);
 
     const rgba = this._palette[index];
     this._dataView.setUint32(offset + OFFSET_FG, rgba);
@@ -151,16 +151,16 @@ export class CharCellGrid {
 
   getFgClutIndex(x: number, y: number): number {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-    return this._dataView.getUint8(offset + OFFSET_FG_CLUT_INDEX);
+    return this._dataView.getUint16(offset + OFFSET_FG_CLUT_INDEX);
   }
 
   setBgClutIndex(x: number, y: number, index: number): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
 
-    const newAttr = this._dataView.getUint8(offset + OFFSET_FLAGS) | FLAG_MASK_BG_CLUT;
-    this._dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
+    const newAttr = this._dataView.getUint16(offset + OFFSET_FLAGS) | FLAG_MASK_BG_CLUT;
+    this._dataView.setUint16(offset + OFFSET_FLAGS, newAttr);
 
-    this._dataView.setUint8(offset + OFFSET_BG_CLUT_INDEX, index);
+    this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, index);
 
     const rgba = this._palette[index];
     this._dataView.setUint32(offset + OFFSET_BG, rgba);
@@ -168,34 +168,34 @@ export class CharCellGrid {
 
   getBgClutIndex(x: number, y: number): number {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-    return this._dataView.getUint8(offset + OFFSET_BG_CLUT_INDEX);
+    return this._dataView.getUint16(offset + OFFSET_BG_CLUT_INDEX);
   }
 
   setStyle(x: number, y: number, style: StyleCode): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
 
-    this._dataView.setUint8(offset + OFFSET_STYLE, style);
+    this._dataView.setUint16(offset + OFFSET_STYLE, style);
   }
 
   getStyle(x: number, y: number): StyleCode {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
 
-    return this._dataView.getUint8(offset + OFFSET_STYLE);
+    return this._dataView.getUint16(offset + OFFSET_STYLE);
   }
 
   getExtraFontsFlag(x: number, y: number): boolean {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-    return (this._dataView.getUint8(offset + OFFSET_FLAGS) & FLAG_MASK_EXTRA_FONT) !== 0;
+    return (this._dataView.getUint16(offset + OFFSET_FLAGS) & FLAG_MASK_EXTRA_FONT) !== 0;
   }
 
   setExtraFontsFlag(x: number, y: number, on: boolean): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-    let flags = this._dataView.getUint8(offset + OFFSET_FLAGS);
+    let flags = this._dataView.getUint16(offset + OFFSET_FLAGS);
     if (on) {
       flags = flags | FLAG_MASK_EXTRA_FONT;
     } else {
       flags = flags & ~FLAG_MASK_EXTRA_FONT;
     }
-    this._dataView.setUint8(offset + OFFSET_FLAGS, flags);
+    this._dataView.setUint16(offset + OFFSET_FLAGS, flags);
   }
 }
