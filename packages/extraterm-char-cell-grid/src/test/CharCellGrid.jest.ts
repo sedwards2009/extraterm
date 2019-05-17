@@ -174,7 +174,7 @@ test("shiftCellsRight()", () => {
   grid.setCodePoint(5, 4, "C".codePointAt(0));
   grid.setCodePoint(6, 4, "D".codePointAt(0));
 
-  grid.setCodePoint(0,5, "X".codePointAt(0));
+  grid.setCodePoint(0, 5, "X".codePointAt(0));
   grid.shiftCellsRight(4, 4, 1);
 
   expect(grid.getCodePoint(3, 4)).toBe("A".codePointAt(0));
@@ -183,4 +183,28 @@ test("shiftCellsRight()", () => {
   expect(grid.getCodePoint(6, 4)).toBe("C".codePointAt(0));
 
   expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));  
+});
+
+test("copy()", () => {
+  const grid = makeGrid();
+  grid.setCodePoint(3, 4, "A".codePointAt(0));
+  grid.setCodePoint(4, 4, "B".codePointAt(0));
+  grid.setCodePoint(5, 4, "C".codePointAt(0));
+
+  const grid2 = grid.copy();
+
+  grid.setCodePoint(3, 4, "X".codePointAt(0));
+  grid.setCodePoint(4, 4, "Y".codePointAt(0));
+  grid.setCodePoint(5, 4, "Z".codePointAt(0));
+
+  expect(grid2.width).toBe(grid.width);
+  expect(grid2.height).toBe(grid.height);
+
+  expect(grid2.getCodePoint(3, 4)).toBe("A".codePointAt(0));
+  expect(grid2.getCodePoint(4, 4)).toBe("B".codePointAt(0));
+  expect(grid2.getCodePoint(5, 4)).toBe("C".codePointAt(0));
+
+  expect(grid.getCodePoint(3, 4)).toBe("X".codePointAt(0));
+  expect(grid.getCodePoint(4, 4)).toBe("Y".codePointAt(0));
+  expect(grid.getCodePoint(5, 4)).toBe("Z".codePointAt(0));
 });

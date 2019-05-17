@@ -66,11 +66,23 @@ export class CharCellGrid {
   private _dataView: DataView;
   private _uint8View: Uint8Array;
 
-  constructor(public readonly width: number, public readonly height: number, private readonly _palette: number[]=null) {
+  constructor(public readonly width: number, public readonly height: number, private readonly _palette: number[]=null,
+      __bare__=false) {
+    if (__bare__) {
+      return;
+    }
     this._rawBuffer = new ArrayBuffer(width * height * CELL_SIZE_BYTES);
     this._dataView = new DataView(this._rawBuffer);
     this._uint8View = new Uint8Array(this._rawBuffer);
     this.clear();
+  }
+
+  copy(): CharCellGrid {
+    const grid = new CharCellGrid(this.width, this.height, this._palette);
+    grid._rawBuffer = this._rawBuffer.slice(0);
+    grid._dataView = new DataView(grid._rawBuffer);
+    grid._uint8View = new Uint8Array(grid._rawBuffer);
+    return grid;
   }
 
   clear(): void {
