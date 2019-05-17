@@ -15,14 +15,15 @@ import { stringToCodePointArray } from "./UnicodeUtils";
  *            * 0x4 (bit 2) - true if extra fonts are used.
  *            * 0x38 (bit 3,4,5) ligature size as 3 bit number.
  * 2 byte   - Style
- *            * 0x1 (bit 0) - true if bold style
- *            * 0x2 (bit 1) - true if underline style
- *            * 0x4 (bit 2) - true if italic style
- *            * 0x8 (bit 3) - true if strikethrough style
- *            * 0x10 (bit 4) - true if blink style
- *            * 0x20 (bit 5) - true if inverse style
- *            * 0x40 (bit 6) - true if invisible style
- *            * 0x80 (bit 7) - true if faint style
+ *            * 0x0001 (bit 0) - true if bold style
+ *            * 0x0002 (bit 1) - true if underline style
+ *            * 0x0004 (bit 2) - true if italic style
+ *            * 0x0008 (bit 3) - true if strikethrough style
+ *            * 0x0010 (bit 4) - true if blink style
+ *            * 0x0020 (bit 5) - true if inverse style
+ *            * 0x0040 (bit 6) - true if invisible style
+ *            * 0x0080 (bit 7) - true if faint style
+ *            * 0x0100 (bit 8) - true if the cursor is in this cell
  * 2 byte   - Foreground Colour Lookup Table (palette / CLUT) index
  * 2 byte   - Background Colour Lookup Table (palette / CLUT) index
  * 4 bytes  - Foreground RGBA bytes
@@ -43,6 +44,7 @@ export const STYLE_MASK_BLINK = 16;
 export const STYLE_MASK_INVERSE = 32;
 export const STYLE_MASK_INVISIBLE = 64;
 export const STYLE_MASK_FAINT = 128;
+export const STYLE_MASK_CURSOR = 256;
 
 type StyleCode = number;
 
