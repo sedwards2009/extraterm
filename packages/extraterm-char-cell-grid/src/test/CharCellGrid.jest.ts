@@ -9,7 +9,7 @@ import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE } from "../CharCell
 
 
 function makeGrid(): CharCellGrid {
-  return new CharCellGrid(10, 15, [
+  return new CharCellGrid(10, 12, [
     0x00000000,
     0xffffffff,
     0xff0000ff,
@@ -185,6 +185,29 @@ test("shiftCellsRight()", () => {
   expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));  
 });
 
+test("shiftCellsLeft()", () => {
+  const grid = makeGrid();
+  grid.setCodePoint(3, 4, "A".codePointAt(0));
+  grid.setCodePoint(4, 4, "B".codePointAt(0));
+  grid.setCodePoint(5, 4, "C".codePointAt(0));
+  grid.setCodePoint(6, 4, "D".codePointAt(0));
+  grid.setCodePoint(7, 4, "E".codePointAt(0));
+  grid.setCodePoint(8, 4, "F".codePointAt(0));
+  grid.setCodePoint(9, 4, "G".codePointAt(0));
+
+  grid.setCodePoint(0, 5, "X".codePointAt(0));
+
+  grid.shiftCellsLeft(4, 4, 2);
+
+  expect(grid.getCodePoint(3, 4)).toBe("A".codePointAt(0));
+  expect(grid.getCodePoint(4, 4)).toBe("D".codePointAt(0));
+  expect(grid.getCodePoint(5, 4)).toBe("E".codePointAt(0));
+  expect(grid.getCodePoint(6, 4)).toBe("F".codePointAt(0));
+  expect(grid.getCodePoint(7, 4)).toBe("G".codePointAt(0));
+
+  expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));  
+});
+
 test("copy()", () => {
   const grid = makeGrid();
   grid.setCodePoint(3, 4, "A".codePointAt(0));
@@ -208,3 +231,27 @@ test("copy()", () => {
   expect(grid.getCodePoint(4, 4)).toBe("Y".codePointAt(0));
   expect(grid.getCodePoint(5, 4)).toBe("Z".codePointAt(0));
 });
+
+function printHorizontalBorder(width: number): string {
+  const chars = [];
+  for (let x=0; x<width; x++) {
+    chars.push("-");
+  }
+  return "+" + chars.join("") + "+";
+}
+
+function printGrid(grid: CharCellGrid): void {
+  const rows = [];
+
+  rows.push(printHorizontalBorder(grid.width));
+  for (let y=0; y<grid.height; y++) {
+    const chars = [];
+    for (let x=0; x<grid.width; x++) {
+      chars.push(grid.getCodePoint(x, y));
+
+    }
+    rows.push("|" + String.fromCodePoint(...chars) + "|");
+  }
+  rows.push(printHorizontalBorder(grid.width));
+  console.log(rows.join("\n"));
+}
