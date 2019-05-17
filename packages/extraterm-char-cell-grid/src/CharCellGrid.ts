@@ -60,6 +60,46 @@ const OFFSET_FG = 12;
 const OFFSET_BG = 16;
 
 
+export interface Cell {
+  codePoint: number;
+  flags: number;
+  style: number;
+  fgRGBA: number;
+  bgRGBA: number;
+
+  fgClutIndex: number;
+  bgClutIndex: number;
+}
+
+export function setCellFgClutFlag(cell: Cell, useClut: boolean): void {
+  if (useClut) {
+    cell.flags = cell.flags | FLAG_MASK_FG_CLUT;
+  } else {
+    cell.flags = cell.flags & ~FLAG_MASK_FG_CLUT;
+  }
+}
+
+export function setCellBgClutFlag(cell: Cell, useClut: boolean): void {
+  if (useClut) {
+    cell.flags = cell.flags | FLAG_MASK_BG_CLUT;
+  } else {
+    cell.flags = cell.flags & ~FLAG_MASK_BG_CLUT;
+  }
+}
+
+const FG_COLOR_INDEX = 257;
+const BG_COLOR_INDEX = 256;
+
+const SpaceCell: Cell = {
+  codePoint: " ".codePointAt(0),
+  flags: 0,
+  style: 0,
+  fgClutIndex: FG_COLOR_INDEX,
+  bgClutIndex: BG_COLOR_INDEX,
+  fgRGBA: 0xffffffff,
+  bgRGBA: 0x00000000,
+}    
+
 export class CharCellGrid {
 
   private _rawBuffer: ArrayBuffer;
@@ -100,16 +140,33 @@ export class CharCellGrid {
     }
   }
 
-  clearCell(x: number, y: number): void {
+  getCell(x: number, y: number): Cell {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-    const spaceCodePoint = " ".codePointAt(0);
-    this._dataView.setUint32(offset, spaceCodePoint);
-    this._dataView.setUint16(offset + OFFSET_FLAGS, 0);
-    this._dataView.setUint16(offset + OFFSET_STYLE, 0);
-    this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, 0);
-    this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, 0);
-    this._dataView.setUint32(offset + OFFSET_FG, 0xffffffff);
-    this._dataView.setUint32(offset + OFFSET_BG, 0x000000ff);
+    const cell: Cell = {
+      codePoint: this._dataView.getUint32(offset),
+      flags: this._dataView.getUint16(offset + OFFSET_FLAGS),
+      style: this._dataView.getUint16(offset + OFFSET_STYLE),
+      fgClutIndex: this._dataView.getUint16(offset + OFFSET_FG_CLUT_INDEX),
+      bgClutIndex: this._dataView.getUint16(offset + OFFSET_BG_CLUT_INDEX),
+      fgRGBA: this._dataView.getUint32(offset + OFFSET_FG),
+      bgRGBA: this._dataView.getUint32(offset + OFFSET_BG),
+    };
+    return cell;
+  }
+
+  setCell(x: number, y: number, cell: Cell): void {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    this._dataView.setUint32(offset, cell.codePoint);
+    this._dataView.setUint16(offset + OFFSET_FLAGS, cell.flags);
+    this._dataView.setUint16(offset + OFFSET_STYLE, cell.style);
+    this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, cell.fgClutIndex);
+    this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, cell.bgClutIndex);
+    this._dataView.setUint32(offset + OFFSET_FG, cell.fgRGBA);
+    this._dataView.setUint32(offset + OFFSET_BG, cell.bgRGBA);
+  }
+
+  clearCell(x: number, y: number): void {
+    this.setCell(x, y, SpaceCell);
   }
 
   setCodePoint(x: number, y: number, codePoint: number): void {
