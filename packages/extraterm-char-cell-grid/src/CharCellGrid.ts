@@ -64,7 +64,7 @@ export class CharCellGrid {
   private _dataView: DataView;
   private _uint8View: Uint8Array;
 
-  constructor(public readonly width: number, public readonly height: number, private readonly _palette: number[]) {
+  constructor(public readonly width: number, public readonly height: number, private readonly _palette: number[]=null) {
     this._rawBuffer = new ArrayBuffer(width * height * CELL_SIZE_BYTES);
     this._dataView = new DataView(this._rawBuffer);
     this._uint8View = new Uint8Array(this._rawBuffer);
@@ -147,8 +147,10 @@ export class CharCellGrid {
 
     this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, index);
 
-    const rgba = this._palette[index];
-    this._dataView.setUint32(offset + OFFSET_FG, rgba);
+    if (this._palette != null) {
+      const rgba = this._palette[index];
+      this._dataView.setUint32(offset + OFFSET_FG, rgba);
+    }
   }
 
   getFgClutIndex(x: number, y: number): number {
@@ -164,8 +166,10 @@ export class CharCellGrid {
 
     this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, index);
 
-    const rgba = this._palette[index];
-    this._dataView.setUint32(offset + OFFSET_BG, rgba);
+    if (this._palette != null) {
+      const rgba = this._palette[index];
+      this._dataView.setUint32(offset + OFFSET_BG, rgba);
+    }
   }
 
   getBgClutIndex(x: number, y: number): number {
