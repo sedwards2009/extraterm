@@ -1,7 +1,7 @@
 /**
  * term.js - an xterm emulator
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
- * Copyright (c) 2014-2017, Simon Edwards <simon@simonzone.com>
+ * Copyright (c) 2014-2019, Simon Edwards <simon@simonzone.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,18 +36,8 @@ import {
   ApplicationModeHandler,
   ApplicationModeResponseAction,
   BellEventListener,
-  backgroundFromCharAttr,
-  BLINK_ATTR_FLAG,
-  BOLD_ATTR_FLAG,
-  CharAttr,
   DataEventListener,
   EmulatorApi,
-  FAINT_ATTR_FLAG,
-  flagsFromCharAttr,
-  foregroundFromCharAttr,
-  INVERSE_ATTR_FLAG,
-  INVISIBLE_ATTR_FLAG,
-  ITALIC_ATTR_FLAG,
   Line,
   TerminalCoord,
   TerminalSize,
@@ -55,8 +45,6 @@ import {
   MouseEventOptions,
   RenderEvent,
   RenderEventHandler,
-  STRIKE_THROUGH_ATTR_FLAG,
-  UNDERLINE_ATTR_FLAG,
   WriteBufferStatus,
   WriteBufferSizeEventListener,
   MinimalKeyboardEvent
@@ -64,6 +52,7 @@ import {
 
 import { log } from "extraterm-logging";
 import * as easta from "easta";
+import { CharCellGrid, STYLE_MASK_CURSOR, Cell, STYLE_MASK_BOLD, STYLE_MASK_FAINT, STYLE_MASK_ITALIC, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_STRIKETHROUGH, copyCell } from 'extraterm-char-cell-grid';
 
 const DEBUG_RESIZE = false;
   
@@ -141,18 +130,10 @@ const WRITE_BUFFER_SIZE_EVENT = "WRITE_BUFFER_SIZE_EVENT";
 
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
-function packCharAttr(flags: number, fg: number, bg: number): CharAttr {
-  return (flags << 18) | (fg << 9) | bg;
-}
-
-function isCharAttrCursor(attr: CharAttr): boolean {
-  return attr === -1;
-}
 
 export class Emulator implements EmulatorApi {
   private cols = 80;
   private rows = 24
-  private lastReportedPhysicalHeight = 0;
   
   private state = 0; // Escape code parsing state.
 
@@ -189,9 +170,37 @@ export class Emulator implements EmulatorApi {
   private glevel = 0;
   private charsets: CharSet[] = [null];
 
-  public static defAttr = packCharAttr(0, 257, 256); // Default character style
-  private curAttr = 0;  // Current character style.
-  private savedCurAttr = packCharAttr(0, 257, 256); // Default character style;
+  // Default character style
+  static defAttr: Cell = {
+    codePoint: " ".codePointAt(0),
+    flags: 0,
+    style: 0,
+    fgClutIndex: 257,
+    bgClutIndex: 256,
+    fgRGBA: 0xffffffff,
+    bgRGBA: 0x00000000,
+  };
+
+  // Current character style.
+  private readonly curAttr: Cell = {
+    codePoint: " ".codePointAt(0),
+    flags: 0,
+    style: 0,
+    fgClutIndex: 257,
+    bgClutIndex: 256,
+    fgRGBA: 0xffffffff,
+    bgRGBA: 0x00000000,
+  };
+
+  private savedCurAttr: Cell = {
+    codePoint: " ".codePointAt(0),
+    flags: 0,
+    style: 0,
+    fgClutIndex: 257,
+    bgClutIndex: 256,
+    fgRGBA: 0xffffffff,
+    bgRGBA: 0x00000000,
+  };
   
   private params = [];
   private currentParam: string | number = 0;
@@ -201,13 +210,11 @@ export class Emulator implements EmulatorApi {
   private lines: Line[] = [];
   
   private termName: string;
-  private geometry: [number, number];
-  public debug: boolean;
+  debug: boolean;
 
   private applicationModeCookie: string;
   private _applicationModeHandler: ApplicationModeHandler = null;
 
-  private isWindows = false;
   private _platform: Platform = "linux";
 
   private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
@@ -253,7 +260,6 @@ export class Emulator implements EmulatorApi {
     }
 
     this._platform = options.platform;
-    this.isWindows = options.platform === "win32";
 
     this.state = 0; // Escape code parsing state.
 
@@ -330,7 +336,7 @@ export class Emulator implements EmulatorApi {
   //  this.savedY;
   //  this.savedCols;
 
-    this.curAttr = Emulator.defAttr;  // Current character style.
+    copyCell(Emulator.defAttr, this.curAttr); // Current character style.
 
     this.params = [];
     this.currentParam = 0;
@@ -343,9 +349,8 @@ export class Emulator implements EmulatorApi {
   }
 
   // back_color_erase feature for xterm.
-  eraseAttr(): number {
-    // if (this.is('screen')) return this.defAttr;
-    return (Emulator.defAttr & ~0x1ff) | (this.curAttr & 0x1ff);
+  eraseAttr(): Cell {
+    return this.curAttr;
   }
 
   /**
@@ -644,7 +649,13 @@ export class Emulator implements EmulatorApi {
       return null;
     }
     const row = this.lines[y];
-    return String.fromCodePoint(...row.chars);
+
+    const codePoints: number[] = [];
+    for (let i =0; i<row.width; i++) {
+      codePoints.push(row.getCodePoint(i, 0));
+    }
+
+    return String.fromCodePoint(...codePoints);
   }
 
   // encode button and
@@ -682,7 +693,6 @@ export class Emulator implements EmulatorApi {
   // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
   // locator: CSI P e ; P b ; P r ; P c ; P p & w
   private sendMouseSequence(button: number, pos0based: TerminalCoord): void {
-    let data: string;
     const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
     
     if (this.vt300Mouse) {
@@ -823,10 +833,8 @@ export class Emulator implements EmulatorApi {
         !this.cursorHidden &&
         this.x < this.cols) {
 
-      const x = this.x;
-
-      const newLine = {chars: new Uint32Array(line.chars), attrs: new Uint32Array(line.attrs)};
-      newLine.attrs[x] = 0xffffffff;
+      const newLine = line.clone();
+      newLine.setStyle(this.x, 0, newLine.getStyle(this.x, 0) | STYLE_MASK_CURSOR);
       return newLine;
     }
     return line;
@@ -852,18 +860,6 @@ export class Emulator implements EmulatorApi {
     this.markRowForRefresh(this.scrollTop);
     this.markRowForRefresh(this.scrollBottom);
   }
-
-  // private scrollDisp(disp) {
-  //   this.ydisp += disp;
-
-  //   if (this.ydisp > this.ybase) {
-  //     this.ydisp = this.ybase;
-  //   } else if (this.ydisp < 0) {
-  //     this.ydisp = 0;
-  //   }
-
-  //   this.markRowRangeForRefresh(0, this.rows - 1);
-  // }
 
   write(data: string): WriteBufferStatus {
     this._writeBuffers.push(data);
@@ -1082,28 +1078,19 @@ export class Emulator implements EmulatorApi {
                   }
                 }
 
-                const {chars, attrs} = this._getRow(this.y);
+                const line = this._getRow(this.y);
                 if (this.insertMode) {
                   // Push the characters out of the way to make space.
-
-                  chars.copyWithin(this.x+1, this.x);
-                  chars[this.x] = ' '.codePointAt(0);
-
-                  attrs.copyWithin(this.x+1, this.x);
-                  attrs[this.x] = this.curAttr;
-                  
-
+                  line.shiftCellsRight(this.x, 0, 1);
+                  line.setCodePoint(this.x, 0, " ".codePointAt(0));
                   if (isWide(ch)) {
-                    chars.copyWithin(this.x+1, this.x);
-                    chars[this.x] = ' '.codePointAt(0);
-
-                    attrs.copyWithin(this.x+1, this.x);
-                    attrs[this.x] = this.curAttr;
+                    line.shiftCellsRight(this.x, 0, 1);
+                    line.setCodePoint(this.x, 0, " ".codePointAt(0));
                   }
                 }
 
-                chars[this.x] = codePoint;
-                attrs[this.x] = this.curAttr;
+                line.setCell(this.x, 0, this.curAttr);
+                line.setCodePoint(this.x, 0 ,codePoint);
 
                 this.x++;
                 this.markRowForRefresh(this.y);
@@ -1112,12 +1099,12 @@ export class Emulator implements EmulatorApi {
                   const j = this.y;
                   const line = this._getRow(j);
                   if (this.cols < 2 || this.x >= this.cols) {
-                    line.chars[this.x - 1] = ' '.codePointAt(0);
-                    line.attrs[this.x - 1] = this.curAttr;
+                    line.setCell(this.x - 1, 0, this.curAttr);
+                    line.setCodePoint(this.x - 1, 0, ' '.codePointAt(0));
                     break;
                   }
-                  line.chars[this.x] =  ' '.codePointAt(0);
-                  line.attrs[this.x] = this.curAttr;
+                  line.setCell(this.x, 0, this.curAttr);
+                  line.setCodePoint(this.x, 0, ' '.codePointAt(0));
                   this.x++;
                 }
               }
@@ -1410,14 +1397,6 @@ export class Emulator implements EmulatorApi {
       // CSI Ps ; Ps ; Ps ; Ps ; Ps T
       // CSI > Ps; Ps T
       case 'T':
-        // if (this.prefix === '>') {
-        //   this.resetTitleModes(this.params);
-        //   break;
-        // }
-        // if (this.params.length > 2) {
-        //   this.initMouseTracking(this.params);
-        //   break;
-        // }
         if (this.params.length < 2 && !this.prefix) {
           this.scrollDown(this.params);
         }
@@ -1441,29 +1420,12 @@ export class Emulator implements EmulatorApi {
 
       // CSI Pm i  Media Copy (MC).
       // CSI ? Pm i
-      // case 'i':
-      //   this.mediaCopy(this.params);
-      //   break;
 
       // CSI Pm m  Character Attributes (SGR).
       // CSI > Ps; Ps m
-      // case 'm': // duplicate
-      //   if (this.prefix === '>') {
-      //     this.setResources(this.params);
-      //   } else {
-      //     this.charAttributes(this.params);
-      //   }
-      //   break;
 
       // CSI Ps n  Device Status Report (DSR).
       // CSI > Ps n
-      // case 'n': // duplicate
-      //   if (this.prefix === '>') {
-      //     this.disableModifiers(this.params);
-      //   } else {
-      //     this.deviceStatus(this.params);
-      //   }
-      //   break;
 
       // CSI > Ps p  Set pointer mode.
       // CSI ! p   Soft terminal reset (DECSTR).
@@ -1474,153 +1436,53 @@ export class Emulator implements EmulatorApi {
       // CSI Ps ; Ps " p
       case 'p':
         switch (this.prefix) {
-          // case '>':
-          //   this.setPointerMode(this.params);
-          //   break;
           case '!':
             this.softReset(this.params);
             break;
-          // case '?':
-          //   if (this.postfix === '$') {
-          //     this.requestPrivateMode(this.params);
-          //   }
-          //   break;
-          // default:
-          //   if (this.postfix === '"') {
-          //     this.setConformanceLevel(this.params);
-          //   } else if (this.postfix === '$') {
-          //     this.requestAnsiMode(this.params);
-          //   }
-          //   break;
+          default:
+            break;
         }
         break;
 
       // CSI Ps q  Load LEDs (DECLL).
       // CSI Ps SP q
       // CSI Ps " q
-      // case 'q':
-      //   if (this.postfix === ' ') {
-      //     this.setCursorStyle(this.params);
-      //     break;
-      //   }
-      //   if (this.postfix === '"') {
-      //     this.setCharProtectionAttr(this.params);
-      //     break;
-      //   }
-      //   this.loadLEDs(this.params);
-      //   break;
 
       // CSI Ps ; Ps r
       //   Set Scrolling Region [top;bottom] (default = full size of win-
       //   dow) (DECSTBM).
       // CSI ? Pm r
       // CSI Pt; Pl; Pb; Pr; Ps$ r
-      // case 'r': // duplicate
-      //   if (this.prefix === '?') {
-      //     this.restorePrivateValues(this.params);
-      //   } else if (this.postfix === '$') {
-      //     this.setAttrInRectangle(this.params);
-      //   } else {
-      //     this.setScrollRegion(this.params);
-      //   }
-      //   break;
 
       // CSI Ps ; Ps ; Ps t
       // CSI Pt; Pl; Pb; Pr; Ps$ t
       // CSI > Ps; Ps t
       // CSI Ps SP t
-      // case 't':
-      //   if (this.postfix === '$') {
-      //     this.reverseAttrInRectangle(this.params);
-      //   } else if (this.postfix === ' ') {
-      //     this.setWarningBellVolume(this.params);
-      //   } else {
-      //     if (this.prefix === '>') {
-      //       this.setTitleModeFeature(this.params);
-      //     } else {
-      //       this.manipulateWindow(this.params);
-      //     }
-      //   }
-      //   break;
 
       // CSI u     Restore cursor (ANSI.SYS).
       // CSI Ps SP u
-      // case 'u': // duplicate
-      //   if (this.postfix === ' ') {
-      //     this.setMarginBellVolume(this.params);
-      //   } else {
-      //     this.restoreCursor(this.params);
-      //   }
-      //   break;
 
       // CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
-      // case 'v':
-      //   if (this.postfix === '$') {
-      //     this.copyRectagle(this.params);
-      //   }
-      //   break;
 
       // CSI Pt ; Pl ; Pb ; Pr ' w
-      // case 'w':
-      //   if (this.postfix === '\'') {
-      //     this.enableFilterRectangle(this.params);
-      //   }
-      //   break;
 
       // CSI Ps x  Request Terminal Parameters (DECREQTPARM).
       // CSI Ps x  Select Attribute Change Extent (DECSACE).
       // CSI Pc; Pt; Pl; Pb; Pr$ x
-      // case 'x':
-      //   if (this.postfix === '$') {
-      //     this.fillRectangle(this.params);
-      //   } else {
-      //     this.requestParameters(this.params);
-      //     //this.__(this.params);
-      //   }
-      //   break;
 
       // CSI Ps ; Pu ' z
       // CSI Pt; Pl; Pb; Pr$ z
-      // case 'z':
-      //   if (this.postfix === '\'') {
-      //     this.enableLocatorReporting(this.params);
-      //   } else if (this.postfix === '$') {
-      //     this.eraseRectangle(this.params);
-      //   }
-      //   break;
 
       // CSI Pm ' {
       // CSI Pt; Pl; Pb; Pr$ {
-      // case '{':
-      //   if (this.postfix === '\'') {
-      //     this.setLocatorEvents(this.params);
-      //   } else if (this.postfix === '$') {
-      //     this.selectiveEraseRectangle(this.params);
-      //   }
-      //   break;
 
       // CSI Ps ' |
-      // case '|':
-      //   if (this.postfix === '\'') {
-      //     this.requestLocatorPosition(this.params);
-      //   }
-      //   break;
 
       // CSI P m SP }
       // Insert P s Column(s) (default = 1) (DECIC), VT420 and up.
-      // case '}':
-      //   if (this.postfix === ' ') {
-      //     this.insertColumns(this.params);
-      //   }
-      //   break;
 
       // CSI P m SP ~
       // Delete P s Column(s) (default = 1) (DECDC), VT420 and up
-      // case '~':
-      //   if (this.postfix === ' ') {
-      //     this.deleteColumns(this.params);
-      //   }
-      //   break;
 
       default:
         this.error('Unknown CSI code: %s (%s).', ch, "" + ch.charCodeAt(0));
@@ -1628,7 +1490,6 @@ export class Emulator implements EmulatorApi {
     }
 
     this.prefix = '';
-    this.postfix = '';
     return i;
   }
   
@@ -2514,30 +2375,16 @@ export class Emulator implements EmulatorApi {
 
     // resize cols
     if (this.cols < newcols) {
-      // Add chars to the lines to match the new (bigger) cols value.
-      const chCodePoint = ' '.codePointAt(0);
+      for (let i = 0; i< this.lines.length; i++) {
+        const line = this.lines[i];
+        const newLine = new CharCellGrid(newcols, 1);
+        newLine.pasteGrid(line, 0, 0);
 
-      for (let i = this.lines.length-1; i >= 0; i--) {
-        const {chars, attrs} = this.lines[i];
-
-        const biggerChars = new Uint32Array(newcols);
-        biggerChars.set(chars);
-
-        const biggerAttrs = new Uint32Array(newcols);
-        biggerAttrs.set(attrs);
-
-        for(let j=chars.length; j<newcols; j++) {
-          biggerChars[j] = chCodePoint;
-          biggerAttrs[j] = Emulator.defAttr;
+        for(let j=line.width; j<newcols; j++) {
+          newLine.setCell(j, 0, Emulator.defAttr);
         }
 
-        this.lines[i] = {chars: biggerChars, attrs: biggerAttrs};
-      }
-    } else if (this.cols > newcols) {
-      // Remove chars from the lines to match the new (smaller) cols value.
-      for (let i = this.lines.length-1; i >= 0; i--) {
-        const line = this.lines[i];
-        this.lines[i] = {chars: line.chars.slice(0, newcols), attrs: line.attrs.slice(0, newcols)};
+        this.lines[i] = newLine;
       }
     }
     this.setupStops(newcols);
@@ -2572,7 +2419,6 @@ export class Emulator implements EmulatorApi {
     // to null for now.
     this.normal = null;
     
-    this.lastReportedPhysicalHeight = this.lines.length;
     this.markRowRangeForRefresh(0, this.lines.length-1);
     
     this._dispatchEvents();
@@ -2650,13 +2496,11 @@ export class Emulator implements EmulatorApi {
     if (line === null) {
       return;
     }
-    const {chars, attrs} = line;
-    const attr = this.eraseAttr();
-    const chCodePoint = ch.codePointAt(0);
 
+    const chCodePoint = ch.codePointAt(0);
     for (; x < this.cols; x++) {
-      chars[x] = chCodePoint;
-      attrs[x] = attr;
+      line.clearCell(x, 0);
+      line.setCodePoint(x, 0, chCodePoint);
     }
 
     this.markRowForRefresh(y);
@@ -2671,15 +2515,11 @@ export class Emulator implements EmulatorApi {
   
   private eraseLeft(x: number, y: number): void {
     const line = this._getRow(y);
-    const {chars, attrs} = line;
-    const attr = this.eraseAttr();
-    const space = ' '.codePointAt(0);
 
     x++;
     while (x !== 0) {
       x--;
-      chars[x] = space;
-      attrs[x] = attr;
+      line.clearCell(x, 0);
     }
 
     this.markRowForRefresh(y);
@@ -2690,14 +2530,7 @@ export class Emulator implements EmulatorApi {
   }
 
   private blankLine(cur?: boolean): Line {
-    const chars = new Uint32Array(this.cols);
-    const attrs = new Uint32Array(this.cols);
-    const line = { chars, attrs };
-
-    chars.fill(' '.codePointAt(0));
-    attrs.fill(cur ? this.eraseAttr() : Emulator.defAttr);
-
-    return line;
+    return new CharCellGrid(this.cols, 1);
   }
 
   private is(term: string): boolean {
@@ -2973,14 +2806,18 @@ export class Emulator implements EmulatorApi {
   private charAttributes(params: number[]): void {
     // Optimize a single SGR0.
     if (params.length === 1 && params[0] === 0) {
-      this.curAttr = Emulator.defAttr;
+      this.curAttr.flags = Emulator.defAttr.flags;
+      this.curAttr.style = Emulator.defAttr.style;
+      this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
+      this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
+      this.curAttr.fgRGBA = Emulator.defAttr.fgRGBA;
+      this.curAttr.bgRGBA = Emulator.defAttr.bgRGBA;
       return;
     }
 
     const len = params.length;
-    let flags = flagsFromCharAttr(this.curAttr);
-    let fg = foregroundFromCharAttr(this.curAttr);
-    let bg = backgroundFromCharAttr(this.curAttr);
+    let fg = 0;
+    let bg = 0;
 
     for (let i = 0; i < len; i++) {
       let p = params[i];
@@ -3000,99 +2837,95 @@ export class Emulator implements EmulatorApi {
         bg = p - 100;
       } else if (p === 0) {
         // default
-        flags = flagsFromCharAttr(Emulator.defAttr);
-        fg = foregroundFromCharAttr(Emulator.defAttr);
-        bg = backgroundFromCharAttr(Emulator.defAttr);
-        // flags = 0;
-        // fg = 0x1ff;
-        // bg = 0x1ff;
-
+        copyCell(Emulator.defAttr, this.curAttr);
       } else if (p === 1) {
         // bold text
-        flags |= BOLD_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_BOLD;
 
       } else if (p === 2) {
         // Faint, decreased intensity (ISO 6429).
-        flags |= FAINT_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_FAINT;
 
       } else if (p === 3) {
         // Italic
-        flags |= ITALIC_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_ITALIC;
 
       } else if (p === 4) {
         // underlined text
-        flags |= UNDERLINE_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_UNDERLINE;
 
       } else if (p === 5) {
         // blink
-        flags |= BLINK_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_BLINK;
 
       } else if (p === 7) {
         // inverse and positive
         // test with: echo -e '\e[31m\e[42mhello\e[7mworld\e[27mhi\e[m'
-        flags |= INVERSE_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_INVERSE;
 
       } else if (p === 8) {
         // invisible
-        flags |= INVISIBLE_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_INVISIBLE;
 
       } else if (p === 9) {
         // Crossed-out characters (ISO 6429).
-        flags |= STRIKE_THROUGH_ATTR_FLAG;
+        this.curAttr.style |= STYLE_MASK_STRIKETHROUGH;
         
       } else if (p >= 10 && p <= 20) {
         // Font setting. Ignore
         
       } else if (p === 22) {
         // not bold and not faint.
-        flags &= ~BOLD_ATTR_FLAG;
-        flags &= ~FAINT_ATTR_FLAG;
+        this.curAttr.style &= ~STYLE_MASK_BOLD;
+        this.curAttr.style &= ~STYLE_MASK_FAINT;
         
       } else if (p === 23) {
         // not italic
-        flags &= ~ITALIC_ATTR_FLAG;
+        this.curAttr.style &= ~STYLE_MASK_ITALIC;
   
       } else if (p === 24) {
         // not underlined
-        flags &= ~UNDERLINE_ATTR_FLAG;
+        this.curAttr.style &= ~STYLE_MASK_UNDERLINE;
 
       } else if (p === 25) {
         // not blink
-        flags &= ~BLINK_ATTR_FLAG;
+        this.curAttr.style &= ~STYLE_MASK_BLINK;
 
       } else if (p === 27) {
         // not inverse
-        flags &= ~INVERSE_ATTR_FLAG;
+        this.curAttr.style &= ~STYLE_MASK_INVERSE;
 
       } else if (p === 28) {
         // not invisible
-        flags &= ~INVISIBLE_ATTR_FLAG;
+        this.curAttr.style &= ~STYLE_MASK_INVISIBLE;
         
       } else if (p === 29) {
         // not strike through
-        flags &= ~STRIKE_THROUGH_ATTR_FLAG;
+        this.curAttr.style &= ~STYLE_MASK_STRIKETHROUGH;
         
       } else if (p === 39) {
         // reset fg
-        fg = foregroundFromCharAttr(Emulator.defAttr);
+        this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
 
       } else if (p === 49) {
         // reset bg
-        bg = backgroundFromCharAttr(Emulator.defAttr);
+        this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
 
       } else if (p === 38) {
         // fg color 256
         if (params[i + 1] === 2) {
           i += 2;
+          // FIXME 24bit color
           fg = matchColor(params[i] & 0xff, params[i + 1] & 0xff, params[i + 2] & 0xff);
           if (fg === -1) {
             fg = 0x1ff;
           }
           i += 2;
+          this.curAttr.fgClutIndex = fg;
         } else if (params[i + 1] === 5) {
           i += 2;
           p = params[i] & 0xff;
-          fg = p;
+          this.curAttr.fgClutIndex = p;
         }
 
       } else if (p === 48) {
@@ -3112,15 +2945,13 @@ export class Emulator implements EmulatorApi {
 
       } else if (p === 100) {
         // reset fg/bg
-        fg = foregroundFromCharAttr(Emulator.defAttr);
-        bg = backgroundFromCharAttr(Emulator.defAttr);
+        this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
+        this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
 
       } else {
         this.error('Unknown SGR attribute: %s.', "" + p);
       }
     }
-
-    this.curAttr = packCharAttr(flags, fg, bg);
   }
 
   // CSI Ps n  Device Status Report (DSR).
@@ -3197,18 +3028,13 @@ export class Emulator implements EmulatorApi {
 
     const row = this.y;
     let j = this.x;
+    const eraseCell = this.eraseAttr();
+    const line = this._getRow(row);
 
-    const attr = this.eraseAttr();
-    const chCodePoint = ' '.codePointAt(0);
+    line.shiftCellsRight(j, 0, param);
 
-    const {chars, attrs} = this._getRow(row);
     while (param-- && j < this.cols) {
-      chars.copyWithin(j+1, j);
-      chars[j] = chCodePoint;
-
-      attrs.copyWithin(j+1, j);
-      attrs[j] = attr;
-
+      line.setCell(j, 0, eraseCell);
       j++;
     }
   }
@@ -3309,16 +3135,13 @@ export class Emulator implements EmulatorApi {
     }
 
     const row = this.y;
-    const attr = this.eraseAttr();
-    const chCodePoint = ' '.codePointAt(0);
+    const emptyCell = this.eraseAttr();
+    const line = this.lines[row];
 
-    const {chars, attrs} = this.lines[row];
+    line.shiftCellsLeft(this.x, 0, param);
+
     while (param--) {
-      chars.copyWithin(this.x, this.x+1);
-      chars[chars.length-1] = chCodePoint;
-
-      attrs.copyWithin(this.x, this.x+1);
-      attrs[attrs.length-1] = attr;
+      line.setCell(line.width-1-param, 0, emptyCell);
     }
   }
 
@@ -3332,13 +3155,10 @@ export class Emulator implements EmulatorApi {
 
     const row = this.y;
     let j = this.x;
-    const attr = this.eraseAttr();
-    const spaceCodePoint = ' '.codePointAt(0);
-    const {chars, attrs} = this._getRow(row);
-
+    const emptyCell = this.eraseAttr();
+    const line = this._getRow(row);
     while (param-- && j < this.cols) {
-      chars[j] = spaceCodePoint;
-      attrs[j] = attr;
+      line.setCell(j, 0, emptyCell);
       j++;
     }
   }
@@ -3904,7 +3724,8 @@ export class Emulator implements EmulatorApi {
     this.x = this.savedX;
     this._setCursorY(this.savedY);
     this.charset = this.savedCharset;
-    this.curAttr = this.savedCurAttr;
+
+    copyCell(this.savedCurAttr, this.curAttr);
   }
 
   /**
@@ -3944,28 +3765,6 @@ export class Emulator implements EmulatorApi {
     this.markRowForRefresh(this.scrollBottom);
   }
 
-  // CSI Ps ; Ps ; Ps ; Ps ; Ps T
-  //   Initiate highlight mouse tracking.  Parameters are
-  //   [func;startx;starty;firstrow;lastrow].  See the section Mouse
-  //   Tracking.
-  private initMouseTracking(params: number[]): void {
-    // Relevant: DECSET 1001
-  }
-
-  // CSI > Ps; Ps T
-  //   Reset one or more features of the title modes to the default
-  //   value.  Normally, "reset" disables the feature.  It is possi-
-  //   ble to disable the ability to reset features by compiling a
-  //   different default for the title modes into xterm.
-  //     Ps = 0  -> Do not set window/icon labels using hexadecimal.
-  //     Ps = 1  -> Do not query window/icon labels using hexadeci-
-  //     mal.
-  //     Ps = 2  -> Do not set window/icon labels using UTF-8.
-  //     Ps = 3  -> Do not query window/icon labels using UTF-8.
-  //   (See discussion of "Title Modes").
-  private esetTitleModes(params: number[]): void {
-  }
-
   // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
   private cursorBackwardTab(params: number[]): void {
     let param = params[0] || 1;
@@ -3977,14 +3776,14 @@ export class Emulator implements EmulatorApi {
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
   private repeatPrecedingCharacter(params: number[]): void {
     let param = params[0] || 1;
-    const {chars, attrs} = this._getRow(this.y);
+    const line = this._getRow(this.y);
 
-    const attr = this.x == 0 ? Emulator.defAttr : attrs[this.x-1];
-    const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : chars[this.x-1];
+    const cell = this.x == 0 ? Emulator.defAttr : line.getCell(this.x-1, 0);
+    const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : line.getCodePoint(this.x-1, 0);
 
     while (param--) {
-      chars[this.x] = chCodePoint;
-      attrs[this.x] = attr;
+      line.setCell(this.x, 0, cell);
+      line.setCodePoint(this.x, 0, chCodePoint);
       this.x++;
     }
   }
@@ -4004,62 +3803,6 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  // CSI Pm i  Media Copy (MC).
-  //     Ps = 0  -> Print screen (default).
-  //     Ps = 4  -> Turn off printer controller mode.
-  //     Ps = 5  -> Turn on printer controller mode.
-  // CSI ? Pm i
-  //   Media Copy (MC, DEC-specific).
-  //     Ps = 1  -> Print line containing cursor.
-  //     Ps = 4  -> Turn off autoprint mode.
-  //     Ps = 5  -> Turn on autoprint mode.
-  //     Ps = 1  0  -> Print composed display, ignores DECPEX.
-  //     Ps = 1  1  -> Print all pages.
-  private mediaCopy(params: number[]): void {
-  }
-
-  // CSI > Ps; Ps m
-  //   Set or reset resource-values used by xterm to decide whether
-  //   to construct escape sequences holding information about the
-  //   modifiers pressed with a given key.  The first parameter iden-
-  //   tifies the resource to set/reset.  The second parameter is the
-  //   value to assign to the resource.  If the second parameter is
-  //   omitted, the resource is reset to its initial value.
-  //     Ps = 1  -> modifyCursorKeys.
-  //     Ps = 2  -> modifyFunctionKeys.
-  //     Ps = 4  -> modifyOtherKeys.
-  //   If no parameters are given, all resources are reset to their
-  //   initial values.
-  private setResources(params: number[]): void {
-  }
-
-  // CSI > Ps n
-  //   Disable modifiers which may be enabled via the CSI > Ps; Ps m
-  //   sequence.  This corresponds to a resource value of "-1", which
-  //   cannot be set with the other sequence.  The parameter identi-
-  //   fies the resource to be disabled:
-  //     Ps = 1  -> modifyCursorKeys.
-  //     Ps = 2  -> modifyFunctionKeys.
-  //     Ps = 4  -> modifyOtherKeys.
-  //   If the parameter is omitted, modifyFunctionKeys is disabled.
-  //   When modifyFunctionKeys is disabled, xterm uses the modifier
-  //   keys to make an extended sequence of functions rather than
-  //   adding a parameter to each function key to denote the modi-
-  //   fiers.
-  private disableModifiers(params: number[]): void {
-  }
-
-  // CSI > Ps p
-  //   Set resource value pointerMode.  This is used by xterm to
-  //   decide whether to hide the pointer cursor as the user types.
-  //   Valid values for the parameter:
-  //     Ps = 0  -> never hide the pointer.
-  //     Ps = 1  -> hide if the mouse tracking mode is not enabled.
-  //     Ps = 2  -> always hide the pointer.  If no parameter is
-  //     given, xterm uses the default, which is 1 .
-  private setPointerMode(params: number[]): void {
-  }
-
   // CSI ! p   Soft terminal reset (DECSTR).
   // http://vt100.net/docs/vt220-rm/table4-10.html
   private softReset(params: number[]): void {
@@ -4071,7 +3814,7 @@ export class Emulator implements EmulatorApi {
     this.applicationCursorKeys = false;
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
-    this.curAttr = Emulator.defAttr;
+    copyCell(Emulator.defAttr, this.curAttr);
     this.x = 0;
     this._setCursorY(0);
     this.charset = null;
@@ -4079,416 +3822,10 @@ export class Emulator implements EmulatorApi {
     this.charsets = [null]; // ??
   }
 
-  // CSI Ps$ p
-  //   Request ANSI mode (DECRQM).  For VT300 and up, reply is
-  //     CSI Ps; Pm$ y
-  //   where Ps is the mode number as in RM, and Pm is the mode
-  //   value:
-  //     0 - not recognized
-  //     1 - set
-  //     2 - reset
-  //     3 - permanently set
-  //     4 - permanently reset
-  private requestAnsiMode(params: number[]): void {
-  }
-
-  // CSI ? Ps$ p
-  //   Request DEC private mode (DECRQM).  For VT300 and up, reply is
-  //     CSI ? Ps; Pm$ p
-  //   where Ps is the mode number as in DECSET, Pm is the mode value
-  //   as in the ANSI DECRQM.
-  private requestPrivateMode(params: number[]): void {
-  }
-
-  // CSI Ps ; Ps " p
-  //   Set conformance level (DECSCL).  Valid values for the first
-  //   parameter:
-  //     Ps = 6 1  -> VT100.
-  //     Ps = 6 2  -> VT200.
-  //     Ps = 6 3  -> VT300.
-  //   Valid values for the second parameter:
-  //     Ps = 0  -> 8-bit controls.
-  //     Ps = 1  -> 7-bit controls (always set for VT100).
-  //     Ps = 2  -> 8-bit controls.
-  private setConformanceLevel(params: number[]): void {
-  }
-
-  // CSI Ps q  Load LEDs (DECLL).
-  //     Ps = 0  -> Clear all LEDS (default).
-  //     Ps = 1  -> Light Num Lock.
-  //     Ps = 2  -> Light Caps Lock.
-  //     Ps = 3  -> Light Scroll Lock.
-  //     Ps = 2  1  -> Extinguish Num Lock.
-  //     Ps = 2  2  -> Extinguish Caps Lock.
-  //     Ps = 2  3  -> Extinguish Scroll Lock.
-  private loadLEDs(params: number[]): void {
-  }
-
-  // CSI Ps SP q
-  //   Set cursor style (DECSCUSR, VT520).
-  //     Ps = 0  -> blinking block.
-  //     Ps = 1  -> blinking block (default).
-  //     Ps = 2  -> steady block.
-  //     Ps = 3  -> blinking underline.
-  //     Ps = 4  -> steady underline.
-  private setCursorStyle(params: number[]): void {
-  }
-
-  // CSI Ps " q
-  //   Select character protection attribute (DECSCA).  Valid values
-  //   for the parameter:
-  //     Ps = 0  -> DECSED and DECSEL can erase (default).
-  //     Ps = 1  -> DECSED and DECSEL cannot erase.
-  //     Ps = 2  -> DECSED and DECSEL can erase.
-  private setCharProtectionAttr(params: number[]): void {
-  }
-
-  // CSI ? Pm r
-  //   Restore DEC Private Mode Values.  The value of Ps previously
-  //   saved is restored.  Ps values are the same as for DECSET.
-  private restorePrivateValues(params: number[]): void {
-  }
-
-  // CSI Pt; Pl; Pb; Pr; Ps$ r
-  //   Change Attributes in Rectangular Area (DECCARA), VT400 and up.
-  //     Pt; Pl; Pb; Pr denotes the rectangle.
-  //     Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
-  // NOTE: xterm doesn't enable this code by default.
-  private setAttrInRectangle(params: number[]): void {
-    let t = params[0];
-    const l = params[1];
-    const b = params[2];
-    const r = params[3];
-    const attr = params[4];
-
-    for (; t < b + 1; t++) {
-      const line = this._getRow(t);
-      const attrs = line.attrs;
-      for (let i = l; i < r; i++) {
-        attrs[i] = attr;
-      }
-    }
-
-    // this.maxRange();
-    this.markRowForRefresh(params[0]);
-    this.markRowForRefresh(params[2]);
-  }
-
   // CSI ? Pm s
   //   Save DEC Private Mode Values.  Ps values are the same as for
   //   DECSET.
   private savePrivateValues(params: number[]): void {
-  }
-
-  // CSI Ps ; Ps ; Ps t
-  //   Window manipulation (from dtterm, as well as extensions).
-  //   These controls may be disabled using the allowWindowOps
-  //   resource.  Valid values for the first (and any additional
-  //   parameters) are:
-  //     Ps = 1  -> De-iconify window.
-  //     Ps = 2  -> Iconify window.
-  //     Ps = 3  ;  x ;  y -> Move window to [x, y].
-  //     Ps = 4  ;  height ;  width -> Resize the xterm window to
-  //     height and width in pixels.
-  //     Ps = 5  -> Raise the xterm window to the front of the stack-
-  //     ing order.
-  //     Ps = 6  -> Lower the xterm window to the bottom of the
-  //     stacking order.
-  //     Ps = 7  -> Refresh the xterm window.
-  //     Ps = 8  ;  height ;  width -> Resize the text area to
-  //     [height;width] in characters.
-  //     Ps = 9  ;  0  -> Restore maximized window.
-  //     Ps = 9  ;  1  -> Maximize window (i.e., resize to screen
-  //     size).
-  //     Ps = 1 0  ;  0  -> Undo full-screen mode.
-  //     Ps = 1 0  ;  1  -> Change to full-screen.
-  //     Ps = 1 1  -> Report xterm window state.  If the xterm window
-  //     is open (non-iconified), it returns CSI 1 t .  If the xterm
-  //     window is iconified, it returns CSI 2 t .
-  //     Ps = 1 3  -> Report xterm window position.  Result is CSI 3
-  //     ; x ; y t
-  //     Ps = 1 4  -> Report xterm window in pixels.  Result is CSI
-  //     4  ;  height ;  width t
-  //     Ps = 1 8  -> Report the size of the text area in characters.
-  //     Result is CSI  8  ;  height ;  width t
-  //     Ps = 1 9  -> Report the size of the screen in characters.
-  //     Result is CSI  9  ;  height ;  width t
-  //     Ps = 2 0  -> Report xterm window's icon label.  Result is
-  //     OSC  L  label ST
-  //     Ps = 2 1  -> Report xterm window's title.  Result is OSC  l
-  //     label ST
-  //     Ps = 2 2  ;  0  -> Save xterm icon and window title on
-  //     stack.
-  //     Ps = 2 2  ;  1  -> Save xterm icon title on stack.
-  //     Ps = 2 2  ;  2  -> Save xterm window title on stack.
-  //     Ps = 2 3  ;  0  -> Restore xterm icon and window title from
-  //     stack.
-  //     Ps = 2 3  ;  1  -> Restore xterm icon title from stack.
-  //     Ps = 2 3  ;  2  -> Restore xterm window title from stack.
-  //     Ps >= 2 4  -> Resize to Ps lines (DECSLPP).
-  private manipulateWindow(params: number[]): void {
-  }
-
-  // CSI Pt; Pl; Pb; Pr; Ps$ t
-  //   Reverse Attributes in Rectangular Area (DECRARA), VT400 and
-  //   up.
-  //     Pt; Pl; Pb; Pr denotes the rectangle.
-  //     Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
-  // NOTE: xterm doesn't enable this code by default.
-  private reverseAttrInRectangle(params: number[]): void {
-  }
-
-  // CSI > Ps; Ps t
-  //   Set one or more features of the title modes.  Each parameter
-  //   enables a single feature.
-  //     Ps = 0  -> Set window/icon labels using hexadecimal.
-  //     Ps = 1  -> Query window/icon labels using hexadecimal.
-  //     Ps = 2  -> Set window/icon labels using UTF-8.
-  //     Ps = 3  -> Query window/icon labels using UTF-8.  (See dis-
-  //     cussion of "Title Modes")
-  private setTitleModeFeature(params: number[]): void {
-  }
-
-  // CSI Ps SP t
-  //   Set warning-bell volume (DECSWBV, VT520).
-  //     Ps = 0  or 1  -> off.
-  //     Ps = 2 , 3  or 4  -> low.
-  //     Ps = 5 , 6 , 7 , or 8  -> high.
-  private setWarningBellVolume(params: number[]): void {
-  }
-
-  // CSI Ps SP u
-  //   Set margin-bell volume (DECSMBV, VT520).
-  //     Ps = 1  -> off.
-  //     Ps = 2 , 3  or 4  -> low.
-  //     Ps = 0 , 5 , 6 , 7 , or 8  -> high.
-  private setMarginBellVolume(params: number[]): void {
-  }
-
-  // CSI Pt; Pl; Pb; Pr; Pp; Pt; Pl; Pp$ v
-  //   Copy Rectangular Area (DECCRA, VT400 and up).
-  //     Pt; Pl; Pb; Pr denotes the rectangle.
-  //     Pp denotes the source page.
-  //     Pt; Pl denotes the target location.
-  //     Pp denotes the target page.
-  // NOTE: xterm doesn't enable this code by default.
-  private copyRectangle(params: number[]): void {
-  }
-
-  // CSI Pt ; Pl ; Pb ; Pr ' w
-  //   Enable Filter Rectangle (DECEFR), VT420 and up.
-  //   Parameters are [top;left;bottom;right].
-  //   Defines the coordinates of a filter rectangle and activates
-  //   it.  Anytime the locator is detected outside of the filter
-  //   rectangle, an outside rectangle event is generated and the
-  //   rectangle is disabled.  Filter rectangles are always treated
-  //   as "one-shot" events.  Any parameters that are omitted default
-  //   to the current locator position.  If all parameters are omit-
-  //   ted, any locator motion will be reported.  DECELR always can-
-  //   cels any prevous rectangle definition.
-  private enableFilterRectangle(params: number[]): void {
-  }
-
-  // CSI Ps x  Request Terminal Parameters (DECREQTPARM).
-  //   if Ps is a "0" (default) or "1", and xterm is emulating VT100,
-  //   the control sequence elicits a response of the same form whose
-  //   parameters describe the terminal:
-  //     Ps -> the given Ps incremented by 2.
-  //     Pn = 1  <- no parity.
-  //     Pn = 1  <- eight bits.
-  //     Pn = 1  <- 2  8  transmit 38.4k baud.
-  //     Pn = 1  <- 2  8  receive 38.4k baud.
-  //     Pn = 1  <- clock multiplier.
-  //     Pn = 0  <- STP flags.
-  private requestParameters(params: number[]): void {
-  }
-
-  // CSI Ps x  Select Attribute Change Extent (DECSACE).
-  //     Ps = 0  -> from start to end position, wrapped.
-  //     Ps = 1  -> from start to end position, wrapped.
-  //     Ps = 2  -> rectangle (exact).
-  private selectChangeExtent(params: number[]): void {
-  }
-
-  // CSI Pc; Pt; Pl; Pb; Pr$ x
-  //   Fill Rectangular Area (DECFRA), VT420 and up.
-  //     Pc is the character to use.
-  //     Pt; Pl; Pb; Pr denotes the rectangle.
-  // NOTE: xterm doesn't enable this code by default.
-  private fillRectangle(params: number[]): void {
-    const ch = params[0];
-    let t = params[1];
-    const l = params[2];
-    const b = params[3];
-    const r = params[4];
-
-    for (; t < b + 1; t++) {
-      const chars = this._getRow(t).chars;
-
-      for (let i = l; i < r; i++) {
-        chars[i] = ch;
-      }
-    }
-
-    // this.maxRange();
-    this.markRowForRefresh(params[1]);
-    this.markRowForRefresh(params[3]);
-  }
-
-  // CSI Ps ; Pu ' z
-  //   Enable Locator Reporting (DECELR).
-  //   Valid values for the first parameter:
-  //     Ps = 0  -> Locator disabled (default).
-  //     Ps = 1  -> Locator enabled.
-  //     Ps = 2  -> Locator enabled for one report, then disabled.
-  //   The second parameter specifies the coordinate unit for locator
-  //   reports.
-  //   Valid values for the second parameter:
-  //     Pu = 0  <- or omitted -> default to character cells.
-  //     Pu = 1  <- device physical pixels.
-  //     Pu = 2  <- character cells.
-  private enableLocatorReporting(params: number[]): void {
-  //  var val = params[0] > 0;
-    //this.mouseEvents = val;
-    //this.decLocator = val;
-  }
-
-  // CSI Pt; Pl; Pb; Pr$ z
-  //   Erase Rectangular Area (DECERA), VT400 and up.
-  //     Pt; Pl; Pb; Pr denotes the rectangle.
-  // NOTE: xterm doesn't enable this code by default.
-  private eraseRectangle(params: number[]): void {
-    let t = params[0];
-    const l = params[1];
-    const b = params[2];
-    const r = params[3];
-
-    const attr = this.eraseAttr();
-    const chCodePoint = ' '.codePointAt(0);
-
-    for (; t < b + 1; t++) {
-      const {chars, attrs} = this._getRow(t);
-      for (let i = l; i < r; i++) {
-        chars[i] = chCodePoint;
-        attrs[i] = attr;
-      }
-    }
-
-    // this.maxRange();
-    this.markRowForRefresh(params[0]);
-    this.markRowForRefresh(params[2]);
-  }
-
-  // CSI Pm ' {
-  //   Select Locator Events (DECSLE).
-  //   Valid values for the first (and any additional parameters)
-  //   are:
-  //     Ps = 0  -> only respond to explicit host requests (DECRQLP).
-  //                (This is default).  It also cancels any filter
-  //   rectangle.
-  //     Ps = 1  -> report button down transitions.
-  //     Ps = 2  -> do not report button down transitions.
-  //     Ps = 3  -> report button up transitions.
-  //     Ps = 4  -> do not report button up transitions.
-  private setLocatorEvents(params: number[]): void {
-  }
-
-  // CSI Pt; Pl; Pb; Pr$ {
-  //   Selective Erase Rectangular Area (DECSERA), VT400 and up.
-  //     Pt; Pl; Pb; Pr denotes the rectangle.
-  private selectiveEraseRectangle(params: number[]): void {
-  }
-
-  // CSI Ps ' |
-  //   Request Locator Position (DECRQLP).
-  //   Valid values for the parameter are:
-  //     Ps = 0 , 1 or omitted -> transmit a single DECLRP locator
-  //     report.
-
-  //   If Locator Reporting has been enabled by a DECELR, xterm will
-  //   respond with a DECLRP Locator Report.  This report is also
-  //   generated on button up and down events if they have been
-  //   enabled with a DECSLE, or when the locator is detected outside
-  //   of a filter rectangle, if filter rectangles have been enabled
-  //   with a DECEFR.
-
-  //     -> CSI Pe ; Pb ; Pr ; Pc ; Pp &  w
-
-  //   Parameters are [event;button;row;column;page].
-  //   Valid values for the event:
-  //     Pe = 0  -> locator unavailable - no other parameters sent.
-  //     Pe = 1  -> request - xterm received a DECRQLP.
-  //     Pe = 2  -> left button down.
-  //     Pe = 3  -> left button up.
-  //     Pe = 4  -> middle button down.
-  //     Pe = 5  -> middle button up.
-  //     Pe = 6  -> right button down.
-  //     Pe = 7  -> right button up.
-  //     Pe = 8  -> M4 button down.
-  //     Pe = 9  -> M4 button up.
-  //     Pe = 1 0  -> locator outside filter rectangle.
-  //   ``button'' parameter is a bitmask indicating which buttons are
-  //     pressed:
-  //     Pb = 0  <- no buttons down.
-  //     Pb & 1  <- right button down.
-  //     Pb & 2  <- middle button down.
-  //     Pb & 4  <- left button down.
-  //     Pb & 8  <- M4 button down.
-  //   ``row'' and ``column'' parameters are the coordinates of the
-  //     locator position in the xterm window, encoded as ASCII deci-
-  //     mal.
-  //   The ``page'' parameter is not used by xterm, and will be omit-
-  //   ted.
-  private requestLocatorPosition(params: number[]): void {
-  }
-
-  // CSI P m SP }
-  // Insert P s Column(s) (default = 1) (DECIC), VT420 and up.
-  // NOTE: xterm doesn't enable this code by default.
-  private insertColumns(params: number[]): void {
-    let param = params[0];
-    const l = this.rows;
-
-    const chCodePoint = ' '.codePointAt(0);
-    const attr = this.eraseAttr();
-
-    while (param--) {
-      for (let i = 0; i < l; i++) {
-        const {chars, attrs} = this._getRow(i);
-        chars.copyWithin(this.x+2, this.x+1);
-        chars[this.x+1] = chCodePoint;
-
-        attrs.copyWithin(this.x+2, this.x+1);
-        attrs[this.x+1] = attr;
-      }
-    }
-
-    this.markAllRowsForRefresh();
-  }
-
-  // CSI P m SP ~
-  // Delete P s Column(s) (default = 1) (DECDC), VT420 and up
-  // NOTE: xterm doesn't enable this code by default.
-  private deleteColumns(params: number[]): void {
-    let param = params[0];
-    const l = this.rows;
-    
-    const chCodePoint = ' '.codePointAt(0);
-    const attr = this.eraseAttr();
-
-    while (param--) {
-      for (let i = 0; i < l; i++) {
-        const {chars, attrs} = this._getRow(i);
-
-        chars.copyWithin(this.x, this.x+1);
-        chars[chars.length-1] = chCodePoint;
-
-        attrs.copyWithin(this.x, this.x+1);
-        attrs[attrs.length-1] = attr;
-      }
-    }
-
-    this.markAllRowsForRefresh();
   }
 
   /**
@@ -4585,10 +3922,6 @@ export class Emulator implements EmulatorApi {
   private addListener(type: string, listener: any): void {
     this._events[type] = this._events[type] || [];
     this._events[type].push(listener);
-  }
-
-  private on(type: string, listener: EventListener): void {
-    this.addListener(type, listener);
   }
 
   private removeListener(type: string, listener): void {

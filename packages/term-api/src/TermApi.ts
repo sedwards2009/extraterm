@@ -1,7 +1,7 @@
 /**
  * term.js - an xterm emulator
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
- * Copyright (c) 2014-2017, Simon Edwards <simon@simonzone.com>
+ * Copyright (c) 2014-2019, Simon Edwards <simon@simonzone.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,13 +32,17 @@
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
+import { CharCellGrid } from 'extraterm-char-cell-grid';
 
 export type CharAttr = number;
 
-export interface Line {
+// FIXME remove
+export interface OldLine {
   chars: Uint32Array;
   attrs: Uint32Array;
 }
+
+export type Line = CharCellGrid;
 
 export interface TerminalCoord {
   x: number;
@@ -251,6 +255,8 @@ export interface EmulatorApi {
   
   registerApplicationModeHandler(handler: ApplicationModeHandler): void;
 }
+
+// FIXME remove the rest of this stuff below
 
 export function flagsFromCharAttr(attr: CharAttr): number {
   return attr >> 18;
