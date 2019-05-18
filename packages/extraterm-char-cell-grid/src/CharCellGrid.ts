@@ -49,6 +49,7 @@ export const STYLE_MASK_CURSOR = 256;
 type StyleCode = number;
 
 const CELL_SIZE_BYTES = 20;
+const CELL_SIZE_UINT32 = CELL_SIZE_BYTES/4; // If this changes, then update pasteGrid().
 
 const OFFSET_CODEPOINT = 0;
 const OFFSET_FLAGS = 4;
@@ -59,7 +60,9 @@ const OFFSET_BG_CLUT_INDEX = 10;
 const OFFSET_FG = 12;
 const OFFSET_BG = 16;
 
-
+/**
+ * The expanded contents of one cell in the grid.
+ */
 export interface Cell {
   codePoint: number;
   flags: number;
@@ -85,6 +88,18 @@ export function setCellBgClutFlag(cell: Cell, useClut: boolean): void {
   } else {
     cell.flags = cell.flags & ~FLAG_MASK_BG_CLUT;
   }
+}
+
+/**
+ * Copies the contents of the `source` cell object to the `dest` cell object.
+ */
+export function copyCell(source: Cell, dest: Cell): void {
+  dest.flags = source.flags;
+  dest.style = source.style;
+  dest.fgClutIndex = source.fgClutIndex;
+  dest.bgClutIndex = source.bgClutIndex;
+  dest.fgRGBA = source.fgRGBA;
+  dest.bgRGBA = source.bgRGBA;
 }
 
 const FG_COLOR_INDEX = 257;
@@ -117,7 +132,7 @@ export class CharCellGrid {
     this.clear();
   }
 
-  copy(): CharCellGrid {
+  clone(): CharCellGrid {
     const grid = new CharCellGrid(this.width, this.height, this._palette);
     grid._rawBuffer = this._rawBuffer.slice(0);
     grid._dataView = new DataView(grid._rawBuffer);
@@ -298,6 +313,48 @@ export class CharCellGrid {
 
     for (let i=this.width-shiftCount; i < this.width; i++) {
       this.setCell(i, y, SpaceCell);
+    }
+  }
+
+  pasteGrid(sourceGrid: CharCellGrid, x: number, y: number): void {
+    const endY = Math.min(y+sourceGrid.height, this.height);
+    const endH = Math.min(x+sourceGrid.width, this.width);
+
+    const uint32ArrayDest = new Uint32Array(this._rawBuffer);
+    const uint32ArraySource = new Uint32Array(sourceGrid._rawBuffer);
+
+    const sx = x < 0 ? -x : 0;
+    x = Math.max(x, 0);
+    let sv = y < 0 ? -y : 0;
+    y = Math.max(y, 0);
+
+    for (let v=y; v<endY; v++, sv++) {
+      let sourceOffset = (sv*sourceGrid.width +sx)* CELL_SIZE_UINT32;
+      let destOffset = (v*this.width + x) * CELL_SIZE_UINT32;
+      for (let h=x; h<endH; h++) {
+
+        // Unrolled copy loop for when CELL_SIZE_UINT32 is 5
+
+        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+        destOffset++;
+        sourceOffset++;
+        
+        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+        destOffset++;
+        sourceOffset++;
+
+        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+        destOffset++;
+        sourceOffset++;
+
+        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+        destOffset++;
+        sourceOffset++;
+
+        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+        destOffset++;
+        sourceOffset++;
+      }
     }
   }
 }

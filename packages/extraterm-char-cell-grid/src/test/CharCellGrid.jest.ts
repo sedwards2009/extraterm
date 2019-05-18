@@ -20,6 +20,27 @@ function makeGrid(): CharCellGrid {
   ]);
 }
 
+function fillGrid(grid: CharCellGrid, char: string): void {
+  const codePoint = char.codePointAt(0);
+  for (let y=0; y<grid.height; y++) {
+    for (let x=0; x<grid.width; x++) {
+      grid.setCodePoint(x, y, codePoint);
+    }
+  }
+}
+
+function isGridFilled(grid: CharCellGrid, char: string): boolean {
+  const codePoint = char.codePointAt(0);
+  for (let y=0; y<grid.height; y++) {
+    for (let x=0; x<grid.width; x++) {
+      if (grid.getCodePoint(x, y) !== codePoint) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 describe.each([
   [0, 0],
   [5, 3],
@@ -208,13 +229,13 @@ test("shiftCellsLeft()", () => {
   expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));  
 });
 
-test("copy()", () => {
+test("clone()", () => {
   const grid = makeGrid();
   grid.setCodePoint(3, 4, "A".codePointAt(0));
   grid.setCodePoint(4, 4, "B".codePointAt(0));
   grid.setCodePoint(5, 4, "C".codePointAt(0));
 
-  const grid2 = grid.copy();
+  const grid2 = grid.clone();
 
   grid.setCodePoint(3, 4, "X".codePointAt(0));
   grid.setCodePoint(4, 4, "Y".codePointAt(0));
@@ -230,6 +251,87 @@ test("copy()", () => {
   expect(grid.getCodePoint(3, 4)).toBe("X".codePointAt(0));
   expect(grid.getCodePoint(4, 4)).toBe("Y".codePointAt(0));
   expect(grid.getCodePoint(5, 4)).toBe("Z".codePointAt(0));
+});
+
+test("pasteGrid() 0,0", () => {
+  const srcGrid = new CharCellGrid(4, 6);
+  const destGrid = new CharCellGrid(20, 15);
+  fillGrid(srcGrid, "S");
+  fillGrid(destGrid, ".");
+
+  destGrid.pasteGrid(srcGrid, 0, 0);
+
+  const sCodePoint = "S".codePointAt(0);
+  const dotCodePoint = ".".codePointAt(0);
+  expect(destGrid.getCodePoint(0, 0)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(3, 0)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(4, 0)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(5, 0)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(0, 5)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(0, 6)).toBe(dotCodePoint);
+});
+
+test("pasteGrid() 2,3", () => {
+  const srcGrid = new CharCellGrid(4, 6);
+  const destGrid = new CharCellGrid(20, 15);
+  fillGrid(srcGrid, "S");
+  fillGrid(destGrid, ".");
+
+  destGrid.pasteGrid(srcGrid, 2, 3);
+
+  const sCodePoint = "S".codePointAt(0);
+  const dotCodePoint = ".".codePointAt(0);
+  expect(destGrid.getCodePoint(1, 3)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(2, 3)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(5, 3)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(6, 3)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(7, 3)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(2, 8)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(2, 9)).toBe(dotCodePoint);
+});
+
+test("pasteGrid() oversize", () => {
+  const srcGrid = new CharCellGrid(10, 20);
+  const destGrid = new CharCellGrid(5, 15);
+  fillGrid(srcGrid, "S");
+  fillGrid(destGrid, ".");
+
+  destGrid.pasteGrid(srcGrid, 0, 0);
+
+  expect(isGridFilled(destGrid, "S")).toBe(true);
+});
+
+test("pasteGrid() oversize and offset", () => {
+  const srcGrid = new CharCellGrid(10, 20);
+  const destGrid = new CharCellGrid(5, 15);
+  fillGrid(srcGrid, "S");
+  fillGrid(destGrid, ".");
+
+  destGrid.pasteGrid(srcGrid, 3, 10);
+
+  const sCodePoint = "S".codePointAt(0);
+  const dotCodePoint = ".".codePointAt(0);
+  expect(destGrid.getCodePoint(2, 10)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(3, 10)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(3, 9)).toBe(dotCodePoint);
+});
+
+test("pasteGrid() neg offset", () => {
+  const srcGrid = new CharCellGrid(5, 8);
+  const destGrid = new CharCellGrid(20, 15);
+  fillGrid(srcGrid, "S");
+  fillGrid(destGrid, ".");
+
+  destGrid.pasteGrid(srcGrid, -3, -5);
+
+  const sCodePoint = "S".codePointAt(0);
+  const dotCodePoint = ".".codePointAt(0);
+  expect(destGrid.getCodePoint(0, 0)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(1, 0)).toBe(sCodePoint);
+  expect(destGrid.getCodePoint(2, 0)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(19, 0)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(0, 3)).toBe(dotCodePoint);
+  expect(destGrid.getCodePoint(4, 3)).toBe(dotCodePoint);
 });
 
 function printHorizontalBorder(width: number): string {
