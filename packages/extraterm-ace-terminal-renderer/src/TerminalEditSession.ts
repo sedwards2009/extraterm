@@ -9,7 +9,7 @@ import { Document,
 
 import * as TermApi from "term-api";
 import * as LineFunctions from "./LineFunctions";
-import { STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT, CharCellGrid } from "extraterm-char-cell-grid";
+import { STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT, CharCellGrid, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 
 
 const OVERSIZE_CLASSES = "oversize";
@@ -395,7 +395,11 @@ function convertNewLineToOldLine(newLine: TermApi.Line): TermApi.OldLine {
       flags |= TermApi.FAINT_ATTR_FLAG;
     }
 
-    oldLine.attrs[i] = TermApi.packAttr(flags, newLine.getFgClutIndex(i, 0), newLine.getBgClutIndex(i, 0));
+    if (style & STYLE_MASK_CURSOR) {
+      oldLine.attrs[i] = 0xffffffff;
+    } else {
+      oldLine.attrs[i] = TermApi.packAttr(flags, newLine.getFgClutIndex(i, 0), newLine.getBgClutIndex(i, 0));
+    }
   }
 
   return oldLine;
@@ -440,8 +444,13 @@ function convertOldLineToNewLine(oldLine: TermApi.OldLine): TermApi.Line {
     if (flags & TermApi.FAINT_ATTR_FLAG) {
       style |= STYLE_MASK_FAINT;
     }
-    
-    newLine.setStyle(i, 0, style);
+
+    if (flags == 0xffffff) {
+      newLine.setStyle(i, 0, STYLE_MASK_CURSOR);
+    } else {
+      newLine.setStyle(i, 0, style);
+    }
+
     newLine.setFgClutIndex(i, 0, fgClutIndex);
     newLine.setBgClutIndex(i, 0, bgClutIndex);
   }

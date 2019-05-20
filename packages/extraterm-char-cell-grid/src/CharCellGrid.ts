@@ -30,8 +30,8 @@ import { stringToCodePointArray } from "./UnicodeUtils";
  * 4 bytes  - Background RGBA bytes
  */
 
-const FLAG_MASK_FG_CLUT = 1;
-const FLAG_MASK_BG_CLUT = 2;
+export const FLAG_MASK_FG_CLUT = 1;
+export const FLAG_MASK_BG_CLUT = 2;
 const FLAG_MASK_EXTRA_FONT = 4;
 const FLAG_MASK_LIGATURE = 0x38;
 const FLAG_RSHIFT_LIGATURE = 3;

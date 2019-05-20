@@ -52,7 +52,24 @@ import {
 
 import { log } from "extraterm-logging";
 import * as easta from "easta";
-import { CharCellGrid, STYLE_MASK_CURSOR, Cell, STYLE_MASK_BOLD, STYLE_MASK_FAINT, STYLE_MASK_ITALIC, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_STRIKETHROUGH, copyCell } from 'extraterm-char-cell-grid';
+import {
+  CharCellGrid,
+  Cell,
+  FLAG_MASK_FG_CLUT,
+  FLAG_MASK_BG_CLUT,
+  STYLE_MASK_BOLD,
+  STYLE_MASK_CURSOR,
+  STYLE_MASK_FAINT,
+  STYLE_MASK_ITALIC,
+  STYLE_MASK_UNDERLINE,
+  STYLE_MASK_BLINK,
+  STYLE_MASK_INVERSE,
+  STYLE_MASK_INVISIBLE,
+  STYLE_MASK_STRIKETHROUGH,
+  copyCell,
+  setCellFgClutFlag,
+  setCellBgClutFlag,
+} from 'extraterm-char-cell-grid';
 
 const DEBUG_RESIZE = false;
   
@@ -173,7 +190,7 @@ export class Emulator implements EmulatorApi {
   // Default character style
   static defAttr: Cell = {
     codePoint: " ".codePointAt(0),
-    flags: 0,
+    flags: FLAG_MASK_FG_CLUT | FLAG_MASK_BG_CLUT,
     style: 0,
     fgClutIndex: 257,
     bgClutIndex: 256,
@@ -184,7 +201,7 @@ export class Emulator implements EmulatorApi {
   // Current character style.
   private readonly curAttr: Cell = {
     codePoint: " ".codePointAt(0),
-    flags: 0,
+    flags: FLAG_MASK_FG_CLUT | FLAG_MASK_BG_CLUT,
     style: 0,
     fgClutIndex: 257,
     bgClutIndex: 256,
@@ -2806,12 +2823,7 @@ export class Emulator implements EmulatorApi {
   private charAttributes(params: number[]): void {
     // Optimize a single SGR0.
     if (params.length === 1 && params[0] === 0) {
-      this.curAttr.flags = Emulator.defAttr.flags;
-      this.curAttr.style = Emulator.defAttr.style;
-      this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
-      this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
-      this.curAttr.fgRGBA = Emulator.defAttr.fgRGBA;
-      this.curAttr.bgRGBA = Emulator.defAttr.bgRGBA;
+      copyCell(Emulator.defAttr, this.curAttr);
       return;
     }
 
@@ -2824,17 +2836,25 @@ export class Emulator implements EmulatorApi {
       if (p >= 30 && p <= 37) {
         // fg color 8
         fg = p - 30;
+        this.curAttr.fgClutIndex = fg;
+        setCellFgClutFlag(this.curAttr, true);
       } else if (p >= 40 && p <= 47) {
         // bg color 8
         bg = p - 40;
+        this.curAttr.bgClutIndex = bg;
+        setCellBgClutFlag(this.curAttr, true);
       } else if (p >= 90 && p <= 97) {
         // fg color 16
         p += 8;
         fg = p - 90;
+        this.curAttr.fgClutIndex = fg;
+        setCellFgClutFlag(this.curAttr, true);
       } else if (p >= 100 && p <= 107) {
         // bg color 16
         p += 8;
         bg = p - 100;
+        this.curAttr.bgClutIndex = bg;
+        setCellBgClutFlag(this.curAttr, true);
       } else if (p === 0) {
         // default
         copyCell(Emulator.defAttr, this.curAttr);
@@ -2906,10 +2926,12 @@ export class Emulator implements EmulatorApi {
       } else if (p === 39) {
         // reset fg
         this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
+        setCellFgClutFlag(this.curAttr, true);
 
       } else if (p === 49) {
         // reset bg
         this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
+        setCellBgClutFlag(this.curAttr, true);
 
       } else if (p === 38) {
         // fg color 256
@@ -2922,10 +2944,14 @@ export class Emulator implements EmulatorApi {
           }
           i += 2;
           this.curAttr.fgClutIndex = fg;
+          setCellFgClutFlag(this.curAttr, true);
+
         } else if (params[i + 1] === 5) {
           i += 2;
           p = params[i] & 0xff;
           this.curAttr.fgClutIndex = p;
+          setCellFgClutFlag(this.curAttr, true);
+
         }
 
       } else if (p === 48) {
@@ -2942,11 +2968,15 @@ export class Emulator implements EmulatorApi {
           p = params[i] & 0xff;
           bg = p;
         }
+        this.curAttr.bgClutIndex = bg;
+        setCellBgClutFlag(this.curAttr, true);
 
       } else if (p === 100) {
         // reset fg/bg
         this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
         this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
+        setCellFgClutFlag(this.curAttr, true);
+        setCellBgClutFlag(this.curAttr, true);
 
       } else {
         this.error('Unknown SGR attribute: %s.', "" + p);
@@ -3715,7 +3745,7 @@ export class Emulator implements EmulatorApi {
     this.savedX = this.x;
     this.savedY = this.y;
     this.savedCharset = this.charset;
-    this.savedCurAttr = this.curAttr;
+    copyCell(this.curAttr, this.savedCurAttr);
   }
 
   // CSI u
