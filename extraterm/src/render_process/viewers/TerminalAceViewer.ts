@@ -171,7 +171,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       aceRenderer.setShowGutter(false);
       aceRenderer.setShowLineNumbers(false);
       aceRenderer.setDisplayIndentGuides(false);
-      aceRenderer.setPadding(0);
 
       this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
       this._aceEditor.setRelayInput(true);
@@ -539,8 +538,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   getReserveViewportHeight(containerHeight: number): number {
     let reserve = 0;
     if (this._useVPad) {
-      if (this._aceEditor != null && this._aceEditor.renderer.lineHeight !== 0) {
-        const defaultTextHeight = this._aceEditor.renderer.lineHeight;
+      if (this._aceEditor != null && this._aceEditor.renderer.layerConfig.charHeightPx !== 0) {
+        const defaultTextHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
         const vPad = containerHeight % defaultTextHeight;
         reserve = vPad;
       }
@@ -623,8 +622,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _computeTerminalSizeFromPixels(widthPixels: number, heightPixels: number): TermApi.TerminalSize | null {
-    const charHeight = this._aceEditor.renderer.lineHeight;
-    const charWidth = this._aceEditor.renderer.characterWidth;
+    const charHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
+    const charWidth = this._aceEditor.renderer.layerConfig.charWidthPx;
 
     if (charHeight === 0 || charWidth === 0) {
       return null;
@@ -663,8 +662,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   
   getCursorPosition(): CursorMoveDetail {
     const cursorPos = this._aceEditor.getCursorPositionScreen();
-    const charHeight = this._aceEditor.renderer.lineHeight;
-    const charWidth = this._aceEditor.renderer.characterWidth;
+    const charHeight = this._aceEditor.renderer.charHeightPx;
+    const charWidth = this._aceEditor.renderer.charWidthPx;
 
     const detail: CursorMoveDetail = {
       left: cursorPos.column * charWidth,
@@ -811,8 +810,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _updateCssVars():  void {
-    this._fontUnitWidth = this._aceEditor.renderer.characterWidth;
-    this._fontUnitHeight = this._aceEditor.renderer.lineHeight;
+    this._fontUnitWidth = this._aceEditor.renderer.layerConfig.charWidthPx;
+    this._fontUnitHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
     const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
     styleElement.textContent = this._getCssVarsRules();
   }
@@ -1186,7 +1185,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
   
   private getVirtualTextHeight(): number {
-    return this._isEmpty ? 0 : this._aceEditor.renderer.lineHeight * this.lineCount();
+    return this._isEmpty ? 0 : this._aceEditor.renderer.layerConfig.charHeightPx * this.lineCount();
   }
   
   private _adjustHeight(newHeight: number): void {
@@ -1200,7 +1199,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     if (this._useVPad) {
       // Adjust the height of the Ace editor such that a small gap is at the bottom to 'push'
       // the lines up and align them with the top of the viewport.
-      aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.lineHeight);
+      aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.layerConfig.charHeightPx);
     } else {
       aceEditorHeight = elementHeight;        
     }

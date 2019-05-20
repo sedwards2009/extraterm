@@ -8,7 +8,7 @@ import * as event from "ace-ts/build/lib/event";
 import { TerminalAceEditor } from "../TerminalAceEditor";
 import * as TermApi from "term-api";
 import { TerminalDocument } from "../TerminalDocument";
-
+import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
 
 function createEditSession(text, mode?): EditSession {
   var doc = new EditSession(text, mode);
@@ -68,44 +68,25 @@ function getLine(): TermApi.Line {
   const input = <HTMLInputElement> document.getElementById("input_line");
   const text = input.value;
 
-  // const attrLineInput = <HTMLInputElement> document.getElementById("attr_line");
-  // if (attrLineInput.value != "") {
-  //   attr = parseInt(attrLineInput.value);
-  // }
+  const line = new CharCellGrid(text.length, 0);
 
   let cellStyle = 0;
   if ((<HTMLInputElement> document.getElementById("bold")).checked) {
-    cellStyle = cellStyle | TermApi.BOLD_ATTR_FLAG;
+    cellStyle = cellStyle | STYLE_MASK_BOLD;
   }
   if ((<HTMLInputElement> document.getElementById("italic")).checked) {
-    cellStyle = cellStyle | TermApi.ITALIC_ATTR_FLAG;
+    cellStyle = cellStyle | STYLE_MASK_ITALIC;
   }
   if ((<HTMLInputElement> document.getElementById("underline")).checked) {
-    cellStyle = cellStyle | TermApi.UNDERLINE_ATTR_FLAG;
+    cellStyle = cellStyle | STYLE_MASK_UNDERLINE;
   }
 
-  let attr = TermApi.packAttr(cellStyle, 267, 256);
-
-  // export const BLINK_ATTR_FLAG = 4;
-  // export const INVERSE_ATTR_FLAG = 8;
-  // export const INVISIBLE_ATTR_FLAG = 16;
-  // export const STRIKE_THROUGH_ATTR_FLAG = 64;
-  // export const FAINT_ATTR_FLAG = 128;
-
-  const codePoints = new Uint32Array(text.length);
   for (let i=0; i<text.length; i++) {
-    codePoints[i] = text.codePointAt(i);
+    line.setCodePoint(i, 0, text.codePointAt(i));
+    line.setFgClutIndex(i, 0, 256);
+    line.setBgClutIndex(i, 0, 256);
   }
 
-  const attrs = new Uint32Array(text.length);
-  for (let i=0; i<text.length; i++) {
-    attrs[i] = attr;
-  }
-
-  const line: TermApi.Line = {
-    chars: codePoints,
-    attrs
-  };
   return line;
 }
 

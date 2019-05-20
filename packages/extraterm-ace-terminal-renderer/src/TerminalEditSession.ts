@@ -8,8 +8,9 @@ import { Document,
          TextMode, RangeBasic } from "ace-ts";
 
 import * as TermApi from "term-api";
-
 import * as LineFunctions from "./LineFunctions";
+import { STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT, CharCellGrid } from "extraterm-char-cell-grid";
+
 
 const OVERSIZE_CLASSES = "oversize";
 const defaultCellAttr = TermApi.packAttr(0, 257, 256);
@@ -17,7 +18,7 @@ const defaultCellAttr = TermApi.packAttr(0, 257, 256);
 
 export class TerminalEditSession extends EditSession {
 
-  private _lineData: TermApi.Line[] = [];
+  private _lineData: TermApi.OldLine[] = [];
 
   constructor(doc: string | Document, mode: LanguageMode = new TextMode(), callback?) {
     super(doc, mode, callback);
@@ -32,7 +33,9 @@ export class TerminalEditSession extends EditSession {
    * 
    * @return True if the text changed.
    */
-  setTerminalLine(row: number, sourceLine: TermApi.Line): boolean {
+  setTerminalLine(row: number, newSourceLine: TermApi.Line): boolean {
+    const sourceLine = convertNewLineToOldLine(newSourceLine);
+
     const line = this._trimRightWhitespace(sourceLine);
     const range: RangeBasic = {
       start: {
@@ -58,13 +61,14 @@ export class TerminalEditSession extends EditSession {
   }
 
   getTerminalLine(row: number): TermApi.Line {
-    return {
+     const oldLine: TermApi.OldLine = {
       attrs: new Uint32Array(this._lineData[row].attrs),
       chars: LineFunctions.stringToCodePointArray(this.getLine(row))
     };
+    return convertOldLineToNewLine(oldLine);
   }
 
-  private _trimRightWhitespace(sourceLine: TermApi.Line): TermApi.Line {
+  private _trimRightWhitespace(sourceLine: TermApi.OldLine): TermApi.OldLine {
     let lineLength = sourceLine.chars.length;
     const spaceCodePoint = ' '.codePointAt(0);
     const attrs = sourceLine.attrs;
@@ -81,7 +85,9 @@ export class TerminalEditSession extends EditSession {
     };
   }
 
-  appendTerminalLine(sourceLine: TermApi.Line): void {
+  appendTerminalLine(newSourceLine: TermApi.Line): void {
+    const sourceLine = convertNewLineToOldLine(newSourceLine);
+
     const line = this._trimRightWhitespace(sourceLine);
     const rowCount = this.getLength();
     const range: RangeBasic = {
@@ -101,7 +107,8 @@ export class TerminalEditSession extends EditSession {
     this._lineData[lineDataLen] = line;
   }
 
-  insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
+  insertTerminalLine(row: number, newSourceLine: TermApi.Line): void {
+    const sourceLine = convertNewLineToOldLine(newSourceLine);
     const line = this._trimRightWhitespace(sourceLine);
     const rowCount = this.getLength();
     const range: RangeBasic = {
@@ -263,7 +270,7 @@ export class TerminalEditSession extends EditSession {
     return folds;
   }
 
-  private _getLineData(row: number): TermApi.Line {
+  private _getLineData(row: number): TermApi.OldLine {
     let data = this._lineData[row];
     if (data == null) {
       const text = this.getLine(row);
@@ -287,7 +294,7 @@ export class TerminalEditSession extends EditSession {
       // Middle rows
       if (delta.lines.length > 2) {
         const middleLast = delta.lines.length-1;
-        const middleRows: TermApi.Line[] = [];
+        const middleRows: TermApi.OldLine[] = [];
         for (let i=1; i<middleLast; i++) {
           middleRows.push(LineFunctions.create(delta.lines[i].length));
         }
@@ -351,4 +358,95 @@ function isCodePointNormalWidth(codePoint: number): boolean {
 function isFirstSurogate(s: string): boolean {
   const codePoint = s.codePointAt(0);
   return (codePoint & 0xFC00) == 0xD800;
+}
+
+function convertNewLineToOldLine(newLine: TermApi.Line): TermApi.OldLine {
+  const width = newLine.width;
+  const oldLine = LineFunctions.create(width);
+  oldLine.chars = new Uint32Array(width);
+
+  for (let i=0; i<width; i++) {
+    oldLine.chars[i] = newLine.getCodePoint(i, 0);
+    const style = newLine.getStyle(i, 0);
+    let flags= 0;
+
+    if (style & STYLE_MASK_BOLD) {
+      flags |= TermApi.BOLD_ATTR_FLAG;
+    }
+    if (style & STYLE_MASK_UNDERLINE) {
+      flags |= TermApi.UNDERLINE_ATTR_FLAG;
+    }
+    if (style & STYLE_MASK_BLINK) {
+      flags |= TermApi.BLINK_ATTR_FLAG;
+    }
+    if (style & STYLE_MASK_INVERSE) {
+      flags |= TermApi.INVERSE_ATTR_FLAG;
+    }
+    if (style & STYLE_MASK_INVISIBLE) {
+      flags |= TermApi.INVISIBLE_ATTR_FLAG;
+    }
+    if (style & STYLE_MASK_ITALIC) {
+      flags |= TermApi.ITALIC_ATTR_FLAG;
+    }
+    if (style & STYLE_MASK_STRIKETHROUGH) {
+      flags |= TermApi.STRIKE_THROUGH_ATTR_FLAG;
+    }
+    if (style & STYLE_MASK_FAINT) {
+      flags |= TermApi.FAINT_ATTR_FLAG;
+    }
+
+    oldLine.attrs[i] = TermApi.packAttr(flags, newLine.getFgClutIndex(i, 0), newLine.getBgClutIndex(i, 0));
+  }
+
+  return oldLine;
+}
+
+function convertOldLineToNewLine(oldLine: TermApi.OldLine): TermApi.Line {
+  const attrs = oldLine.attrs;
+  const width = attrs.length;
+  const codePoints = oldLine.chars;
+  const newLine = new CharCellGrid(width, 1);
+  for (let i=0; i<width; i++) {
+    newLine.setCodePoint(i, 0, codePoints[i]);
+
+    const attr = attrs[i];
+
+    const flags = TermApi.flagsFromCharAttr(attr);
+    const fgClutIndex = TermApi.foregroundFromCharAttr(attr);
+    const bgClutIndex = TermApi.backgroundFromCharAttr(attr);
+    let style = 0;
+    
+    if (flags & TermApi.BOLD_ATTR_FLAG) {
+      style |= STYLE_MASK_BOLD;
+    }
+    if (flags & TermApi.UNDERLINE_ATTR_FLAG) {
+      style |= STYLE_MASK_UNDERLINE;
+    }
+    if (flags & TermApi.BLINK_ATTR_FLAG) {
+      style |= STYLE_MASK_BLINK;
+    }
+    if (flags & TermApi.INVERSE_ATTR_FLAG) {
+      style |= STYLE_MASK_INVERSE;
+    }
+    if (flags & TermApi.INVISIBLE_ATTR_FLAG) {
+      style |= STYLE_MASK_INVISIBLE;
+    }
+    if (flags & TermApi.ITALIC_ATTR_FLAG) {
+      style |= STYLE_MASK_ITALIC;
+    }
+    if (flags & TermApi.STRIKE_THROUGH_ATTR_FLAG) {
+      style |= STYLE_MASK_STRIKETHROUGH;
+    }
+    if (flags & TermApi.FAINT_ATTR_FLAG) {
+      style |= STYLE_MASK_FAINT;
+    }
+    
+    newLine.setStyle(i, 0, style);
+    newLine.setFgClutIndex(i, 0, fgClutIndex);
+    newLine.setBgClutIndex(i, 0, bgClutIndex);
+  }
+
+// TODO convert styles
+
+  return newLine;
 }
