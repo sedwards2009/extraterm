@@ -2516,7 +2516,7 @@ export class Emulator implements EmulatorApi {
 
     const chCodePoint = ch.codePointAt(0);
     for (; x < this.cols; x++) {
-      line.clearCell(x, 0);
+      line.setCell(x, 0, this.curAttr);
       line.setCodePoint(x, 0, chCodePoint);
     }
 
