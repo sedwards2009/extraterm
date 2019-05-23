@@ -64,19 +64,20 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
             ></i>
 
             <button
-                v-if="!readOnly"
+                :disabled="readOnly"
                 v-on:click="deleteKey(keybinding)"
-                class="microtool danger"
-                title="Remove keybinding">
-              <i class="fas fa-times"></i>
+                class="microtool" :class="{danger: !readOnly}"
+                :title="readOnly ? 'Not editable. Use duplicate first' : 'Remove keybinding'">
+                <i class="fas fa-times"></i>
             </button>
           </template>
 
           <button
-              v-if="!readOnly && effectiveInputState(command) === 'read'"
+              v-if="effectiveInputState(command) === 'read'"
+              :disabled="readOnly"
               v-on:click="addKey(command.command)"
-              class="microtool success"
-              title="Add keybinding">
+              class="microtool" :class="{success: !readOnly}"
+              :title="readOnly ? 'Not editable. Use duplicate first' : 'Add keybinding'">
             <i class="fas fa-plus"></i>
           </button>
 

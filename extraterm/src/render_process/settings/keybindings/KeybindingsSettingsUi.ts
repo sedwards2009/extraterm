@@ -34,7 +34,12 @@ export const EVENT_RENAME = "rename";
   <div class="gui-packed-row">
     <label for="theme-terminal">Keybindings:</label>
 
-    <select v-if=" ! editingTitle" class="expand" id="keybindings-style" v-model="selectedKeybindings">
+    <select
+        v-if=" ! editingTitle"
+        class="expand"
+        id="keybindings-style"
+        :title="isSelectedKeybindingsReadOnly ? 'Not editable. Use duplicate first' : ''"
+        v-model="selectedKeybindings">
       <option v-for="option in sortedKeybindingsInfoList" v-bind:value="option.name">
         {{ option.name }}{{ ! option.readOnly ? "\u{00a0}\u{00a0}\u{00a0}\u{1f513}": ""}}
       </option>
@@ -63,7 +68,7 @@ export const EVENT_RENAME = "rename";
 
     <span class="group">
       <button title="Duplicate" class="inline toolbar" v-on:click="duplicate">
-        <i class="fas fa-copy"></i>
+        <i class="fas fa-copy"></i> Duplicate
       </button>
       <button title="Rename" class="inline toolbar" v-bind:disabled="isSelectedKeybindingsReadOnly" v-on:click="rename">
         <i class="fas fa-edit"></i>
