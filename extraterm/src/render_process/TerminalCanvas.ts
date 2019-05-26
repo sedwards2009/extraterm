@@ -72,6 +72,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
   private _enforceScrollbackLengthGuard= false;
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
+  private _lastChildWithFocus: ViewerElement = null;
   private _mode: Mode = Mode.DEFAULT;
   private _fontSizeAdjustment = 0;
 
@@ -235,6 +236,8 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       return;
     }
 
+    this._lastChildWithFocus = <ViewerElement> ev.currentTarget;
+
     // This needs to be done later otherwise it tickles a bug in
     // Chrome/Blink and prevents drag and drop from working.
     // https://bugs.chromium.org/p/chromium/issues/detail?id=726248
@@ -324,8 +327,14 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   focus(): void {
     super.focus({preventScroll: true});
-    if (this._terminalViewer !== null && this._mode === Mode.DEFAULT) {
-      DomUtils.focusWithoutScroll(this._terminalViewer);
+    if (this._mode === Mode.DEFAULT) {
+      if (this._terminalViewer !== null) {
+        DomUtils.focusWithoutScroll(this._terminalViewer);
+      }
+    } else {
+      if (this._lastChildWithFocus != null) {
+        this._lastChildWithFocus.focus();
+      }
     }
   }
 
@@ -342,6 +351,10 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   removeViewerElement(el: ViewerElement): void {
+    if (this._lastChildWithFocus == el) {
+      this._lastChildWithFocus = null;
+    }
+    
     el.removeEventListener('focus', this._childFocusHandlerFunc);
 
     if (el.parentElement === this._scrollArea) {
