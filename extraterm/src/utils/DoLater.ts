@@ -8,13 +8,21 @@ import {Disposable} from 'extraterm-extension-api';
 
 
 let doLaterId: NodeJS.Timer = null;
-let laterList: Function[] = [];
+
+interface DoLaterFunctionEntry {
+  func: Function;
+};
+let laterList: DoLaterFunctionEntry[] = [];
 
 function doLaterTimeoutHandler(): void {
   doLaterId = null;
   const workingList = [...laterList];
   laterList = [];
-  workingList.forEach( f => f() );
+  workingList.forEach(f => {
+    if (f.func != null) {
+      f.func();
+    }
+  });
 }
 
 /**
@@ -25,13 +33,20 @@ function doLaterTimeoutHandler(): void {
  * @return {LaterHandle} This object can be used to cancel the scheduled execution.
  */
 export function doLater(func: Function, msec=0): Disposable {
-  laterList.push(func);
+  const doLaterFunction: DoLaterFunctionEntry = {
+    func
+  };
+  laterList.push(doLaterFunction);
+
   if (doLaterId == null) {
     doLaterId = setTimeout(doLaterTimeoutHandler, msec);
   }
-  return { dispose: () => {
-    laterList = laterList.filter( f => f!== func );
-  } };
+
+  return {
+    dispose: () => {
+      doLaterFunction.func = null;
+    }
+  };
 }
 
 let doLaterFrameId: number = -1;

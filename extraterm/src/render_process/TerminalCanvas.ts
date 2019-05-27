@@ -84,6 +84,9 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   private _onBeforeSelectionChangeEmitter = new EventEmitter<{sourceMouse: boolean}>();
   onBeforeSelectionChange: Event<{sourceMouse: boolean}>;
 
+  private _focusLaterDisposable: Disposable = null;
+  private _terminalViewerFocusInProgress = false;
+
   constructor() {
     super();
     this._log = getLogger("TerminalCanvas", this);
@@ -230,6 +233,11 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   private _handleChildFocus(ev: FocusEvent): void {
+    if (this._terminalViewerFocusInProgress) {
+      // Prevent the doLater() work below from triggering even more work to do later.
+      return;
+    }
+
     const composedPath = ev.composedPath();
     if (composedPath[0] instanceof HTMLSelectElement) {
       // Don't steal the focus away from SELECT elements, otherwise they can't be used.
@@ -241,9 +249,21 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     // This needs to be done later otherwise it tickles a bug in
     // Chrome/Blink and prevents drag and drop from working.
     // https://bugs.chromium.org/p/chromium/issues/detail?id=726248
-    doLater( () => {
+    if (this._focusLaterDisposable != null) {
+      this._focusLaterDisposable.dispose();
+      this._focusLaterDisposable = null;
+    }
+
+    this._focusLaterDisposable = doLater( () => {
+      this._focusLaterDisposable = null;
       if (this._mode === Mode.DEFAULT) {
-        this.focus();
+        if (this._terminalViewer !== null) {
+          if ( ! this._terminalViewer.hasFocus()) {
+            this._terminalViewerFocusInProgress = true;
+            DomUtils.focusWithoutScroll(this._terminalViewer);
+            this._terminalViewerFocusInProgress = false;
+          }
+        }
       }
     });
   }
