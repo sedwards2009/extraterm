@@ -22,7 +22,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   private _log: Logger;
   private _commandToFunctionMap = new Map<string, (args: any) => any>();
   private _commandToCustomizerFunctionMap = new Map<string, () => ExtensionApi.CustomizedCommand>();
-  _commandIndex: Map<string, CommandMenuEntry> = null;
+  _commandToMenuEntryMap: Map<string, CommandMenuEntry[]> = null;
 
   constructor(
       private _internalExtensionContext: InternalExtensionContext,
@@ -32,14 +32,19 @@ export class CommandsRegistry implements ExtensionApi.Commands {
 
     this._log = getLogger("CommandsRegistry", this);
 
-    this._commandIndex = this._buildCommandMenuIndex(commands, menus);
+    this._commandToMenuEntryMap = this._buildCommandMenuIndex(commands, menus);
   }
 
-  private _buildCommandMenuIndex(commands: ExtensionCommandContribution[], menus: ExtensionMenusContribution): Map<string, CommandMenuEntry> {
-    const index = new Map<string, CommandMenuEntry>();
+  private _buildCommandMenuIndex(commands: ExtensionCommandContribution[], menus: ExtensionMenusContribution): Map<string, CommandMenuEntry[]> {
+    const index = new Map<string, CommandMenuEntry[]>();
 
     for (const commandContribution of commands) {
-      index.set(commandContribution.command, {
+
+      if ( ! index.has(commandContribution.command)) {
+        index.set(commandContribution.command, []);
+      }
+
+      index.get(commandContribution.command).push({
         commandContribution,
         commandPalette: true,
         contextMenu: false,
@@ -59,9 +64,11 @@ export class CommandsRegistry implements ExtensionApi.Commands {
 
     for (const menuKey of menuKeys) {
       for (const menuEntry of menus[menuKey]) {
-        const entry = index.get(menuEntry.command);
-        if (entry != null) {
-          entry[menuKey] = menuEntry.show;
+        const entryList = index.get(menuEntry.command);
+        if (entryList != null) {
+          for (const entry of entryList) {
+            entry[menuKey] = menuEntry.show;
+          }
         } else {
           this._log.warn(`Extension '${this._extensionName}' has a menu contribution of type ` +
             `'${menuKey}' for unknown command '${menuEntry.command}'.`);
@@ -73,7 +80,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   }
 
   registerCommand(name: string, commandFunc: (args: any) => any, customizer?: () => ExtensionApi.CustomizedCommand): void {
-    if ( ! this._commandIndex.has(name)) {
+    if ( ! this._commandToMenuEntryMap.has(name)) {
       this._log.warn(`registerCommand() attempted on unknown command '${name}' from extension '${this._extensionName}'.`);
       return;
     }
@@ -84,17 +91,27 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   }
 
   registerCommandContribution(commandContribution: ExtensionCommandContribution): ExtensionApi.Disposable {
-    this._commandIndex.set(commandContribution.command, {
+    if ( ! this._commandToMenuEntryMap.has(commandContribution.command)) {
+      this._commandToMenuEntryMap.set(commandContribution.command, []);
+    }
+    const newEntry = {
       commandContribution,
       commandPalette: true,
       contextMenu: false,
       emptyPane: false,
       newTerminal: false,
       terminalTab: false,
-    });
+    };
+    this._commandToMenuEntryMap.get(commandContribution.command).push(newEntry);
     return {
       dispose: (): void => {
-        this._commandIndex.delete(commandContribution.command);
+        const entryList = this._commandToMenuEntryMap.get(commandContribution.command);
+        const newEntryList = entryList.filter(entry => entry !== newEntry);
+        if (newEntryList.length === 0) {
+          this._commandToMenuEntryMap.delete(commandContribution.command);
+        } else {
+          this._commandToMenuEntryMap.set(commandContribution.command, newEntryList);
+        }
       }
     };
   }
@@ -112,6 +129,6 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   }
 
   getCommands(): string[] {
-    return [...this._commandIndex.keys()];
+    return [...this._commandToMenuEntryMap.keys()];
   }
 }

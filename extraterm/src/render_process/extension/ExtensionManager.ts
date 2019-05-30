@@ -283,18 +283,20 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
     const entries: ExtensionCommandContribution[] = [];
     for (const activeExtension  of this._activeExtensions) {
-      for (const [command, commandEntry] of activeExtension.contextImpl.commands._commandIndex) {
-        if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) &&
-            contextMenuPredicate(commandEntry) && emptyPaneMenuPredicate(commandEntry) &&
-            newTerminalMenuPredicate(commandEntry) && terminalTabMenuPredicate(commandEntry) &&
-            categoryPredicate(commandEntry) && whenPredicate(commandEntry)) {
+      for (const [command, commandEntryList] of activeExtension.contextImpl.commands._commandToMenuEntryMap) {
+        for (const commandEntry of commandEntryList) {
+          if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) &&
+              contextMenuPredicate(commandEntry) && emptyPaneMenuPredicate(commandEntry) &&
+              newTerminalMenuPredicate(commandEntry) && terminalTabMenuPredicate(commandEntry) &&
+              categoryPredicate(commandEntry) && whenPredicate(commandEntry)) {
 
-          const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
-                              commandEntry.commandContribution.command);
-          if (customizer != null) {
-            entries.push( {...commandEntry.commandContribution, ...customizer() });
-          } else {
-            entries.push(commandEntry.commandContribution);
+            const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
+                                commandEntry.commandContribution.command);
+            if (customizer != null) {
+              entries.push( {...commandEntry.commandContribution, ...customizer() });
+            } else {
+              entries.push(commandEntry.commandContribution);
+            }
           }
         }
       }
@@ -614,11 +616,13 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void {
-    const entry = this.commands._commandIndex.get(command);
-    if (entry == null) {
+    const entryList = this.commands._commandToMenuEntryMap.get(command);
+    if (entryList == null) {
       return;
     }
-    entry[menuType] = on;
+    for (const entry of entryList) {
+      entry[menuType] = on;
+    }
   }
 
   registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {

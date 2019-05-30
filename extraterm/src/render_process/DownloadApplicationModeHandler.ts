@@ -54,7 +54,7 @@ enum DownloadHandlerState {
 
 const MAX_CHUNK_BYTES = 3 * 1024;
 const invalidBodyRegex = /[^\n\rA-Za-z0-9/+:=]/;
-
+const ONE_KILOBYTE = 1024;
 
 class DownloadSession {
 
@@ -69,6 +69,7 @@ class DownloadSession {
 
   onCreatedBulkFile: Event<BulkFileHandle>;
   private _onCreatedBulkFileEventEmitter = new EventEmitter<BulkFileHandle>();
+  private _createdEventFired = false;
 
   constructor(private _emulator: TermApi.EmulatorApi, private _broker: BulkFileBroker) {
     this._log = getLogger("DownloadApplicationModeHandler DownloadSession", this);
@@ -130,12 +131,22 @@ class DownloadSession {
       this._fileHandle = this._broker.createWriteableBulkFileHandle(metadata, filesize);
       this._fileHandle.ref();
       this._availableWriteBufferSizeChangedDisposable = this._fileHandle.onAvailableWriteBufferSizeChange(this._handleAvailableWriteBufferSizeChange.bind(this));
-      this._onCreatedBulkFileEventEmitter.fire(this._fileHandle);
 
       this._state = DownloadHandlerState.BODY;
       return this._handleBody("");
     }
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
+  }
+
+  private _fireOnCreatedEvent(force=false): void {
+    if (this._fileHandle == null || this._createdEventFired) {
+      return;
+    }
+
+    if (force || this._fileHandle.getAvailableSize() >= ONE_KILOBYTE) {
+      this._onCreatedBulkFileEventEmitter.fire(this._fileHandle);
+      this._createdEventFired = true;
+    }
   }
 
   private _closeFileHandle(success: boolean): void {
@@ -160,6 +171,7 @@ class DownloadSession {
       if (invalidBodyRegex.test(chunk)) {
         this._log.warn("Chunk contains illegal characters. Aborting.");
         this._state = DownloadHandlerState.ERROR;
+        this._fireOnCreatedEvent(true);
         this._closeFileHandle(false);
         return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
       }
@@ -177,6 +189,7 @@ class DownloadSession {
         if (chunk.charAt(1) !== ":" || chunk.charAt(lastColonIndex) !== ":" || (commandChar !== "D" && commandChar !== "E")) {
           this._log.warn("Data chunk is malformed. Aborting.");
           this._state = DownloadHandlerState.ERROR;
+          this._fireOnCreatedEvent(true);
           this._closeFileHandle(false);
           return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
         }
@@ -196,6 +209,7 @@ class DownloadSession {
         if (this._previousHash.toString("hex") !== hashHex) {
           this._log.warn("Data chunk hash is incorrect.");
           this._state = DownloadHandlerState.ERROR;
+          this._fireOnCreatedEvent(true);
           this._closeFileHandle(false);
           return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
         }
@@ -210,6 +224,8 @@ class DownloadSession {
     }
 
     this._flushBuffer();
+
+    this._fireOnCreatedEvent();
 
     if (this._state === DownloadHandlerState.BODY && this._fileHandle.getAvailableWriteBufferSize() <= 0) {
       return {action: TermApi.ApplicationModeResponseAction.PAUSE};
@@ -272,6 +288,7 @@ class DownloadSession {
     }
 
     if (this._decodedDataBuffers.length === 0 && this._state === DownloadHandlerState.COMPLETE) {
+      this._fireOnCreatedEvent(true);
       this._closeFileHandle(true);
     }
   }
@@ -280,6 +297,7 @@ class DownloadSession {
     let response: TermApi.ApplicationModeResponse = null;
 
     this._flushBuffer();
+    this._fireOnCreatedEvent(true);
 
     if (this._state !== DownloadHandlerState.COMPLETE) {
       this._state = DownloadHandlerState.ERROR;

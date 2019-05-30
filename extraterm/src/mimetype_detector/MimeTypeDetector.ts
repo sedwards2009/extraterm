@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -170,6 +170,7 @@ const modeInfo: ModeInfo[] = [
   {name: "Rust", mime: "text/x-rustsrc", mode: "rust", ext: ["rs"]},
   {name: "SAS", mime: "text/x-sas", mode: "sas", ext: ["sas"]},
   {name: "Sass", mime: "text/x-sass", mode: "sass", ext: ["sass"]},
+  {name: "scad", mime: "application/x-scad", mode: "text", ext: ["scad"]},
   {name: "Scala", mime: "text/x-scala", mode: "clike", ext: ["scala"]},
   {name: "Scheme", mime: "text/x-scheme", mode: "scheme", ext: ["scm", "ss"]},
   {name: "SCSS", mime: "text/x-scss", mode: "css", ext: ["scss"]},

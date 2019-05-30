@@ -72,6 +72,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   // This flag is needed to prevent the _enforceScrollbackLength() method from being run recursively
   private _enforceScrollbackLengthGuard= false;
   private _childFocusHandlerFunc: (ev: FocusEvent) => void;
+  private _lastChildWithFocus: ViewerElement = null;
   private _mode: Mode = Mode.DEFAULT;
   private _fontSizeAdjustment = 0;
 
@@ -82,6 +83,9 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   private _onBeforeSelectionChangeEmitter = new EventEmitter<{sourceMouse: boolean}>();
   onBeforeSelectionChange: Event<{sourceMouse: boolean}>;
+
+  private _focusLaterDisposable: Disposable = null;
+  private _terminalViewerFocusInProgress = false;
 
   constructor() {
     super();
@@ -229,18 +233,37 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   private _handleChildFocus(ev: FocusEvent): void {
+    if (this._terminalViewerFocusInProgress) {
+      // Prevent the doLater() work below from triggering even more work to do later.
+      return;
+    }
+
     const composedPath = ev.composedPath();
     if (composedPath[0] instanceof HTMLSelectElement) {
       // Don't steal the focus away from SELECT elements, otherwise they can't be used.
       return;
     }
 
+    this._lastChildWithFocus = <ViewerElement> ev.currentTarget;
+
     // This needs to be done later otherwise it tickles a bug in
     // Chrome/Blink and prevents drag and drop from working.
     // https://bugs.chromium.org/p/chromium/issues/detail?id=726248
-    doLater( () => {
+    if (this._focusLaterDisposable != null) {
+      this._focusLaterDisposable.dispose();
+      this._focusLaterDisposable = null;
+    }
+
+    this._focusLaterDisposable = doLater( () => {
+      this._focusLaterDisposable = null;
       if (this._mode === Mode.DEFAULT) {
-        this.focus();
+        if (this._terminalViewer !== null) {
+          if ( ! this._terminalViewer.hasFocus()) {
+            this._terminalViewerFocusInProgress = true;
+            DomUtils.focusWithoutScroll(this._terminalViewer);
+            this._terminalViewerFocusInProgress = false;
+          }
+        }
       }
     });
   }
@@ -324,8 +347,14 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   focus(): void {
     super.focus({preventScroll: true});
-    if (this._terminalViewer !== null && this._mode === Mode.DEFAULT) {
-      DomUtils.focusWithoutScroll(this._terminalViewer);
+    if (this._mode === Mode.DEFAULT) {
+      if (this._terminalViewer !== null) {
+        DomUtils.focusWithoutScroll(this._terminalViewer);
+      }
+    } else {
+      if (this._lastChildWithFocus != null) {
+        this._lastChildWithFocus.focus();
+      }
     }
   }
 
@@ -342,6 +371,10 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   removeViewerElement(el: ViewerElement): void {
+    if (this._lastChildWithFocus == el) {
+      this._lastChildWithFocus = null;
+    }
+    
     el.removeEventListener('focus', this._childFocusHandlerFunc);
 
     if (el.parentElement === this._scrollArea) {

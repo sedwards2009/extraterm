@@ -25,7 +25,10 @@ describe.each([
   // Random binary data.
   ["Random", "random.bin", "application/octet-stream"],
   // Part of a linux lib.so file.
-  ["LibSo", "libso.bin", "application/octet-stream"]
+  ["LibSo", "libso.bin", "application/octet-stream"],
+  ["Shell Script", "foo.sh", "text/plain"],
+  ["Fish shell script", "foo.fish", "text/plain"],
+  ["ini file", "foo.ini", "text/plain"],
 ])("", (name: string, filename: string, mimeType: string) => {
   test(`${name} => ${mimeType}`, () => {
     const result = MimeTypeDetector.detect(null, readTestFile(filename));

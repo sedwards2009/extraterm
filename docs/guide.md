@@ -202,8 +202,10 @@ See the [FAQ](faq.md) too
 
 ## Keyboard Shortcuts
 
-The list of available keyboard short cuts can be seen on the 'Key Bindings' tab which is accessible via the "hamburger
+The list of available keyboard short cuts can be seen on the 'Keybindings' tab which is accessible via the "hamburger
 menu" in the top right corner of the window.
+
+Extraterm comes with a number of built in keybindings configurations. These are not directly editable. To customize keyboard shortcuts you must first duplicate one of the default keybindings sets by selecting it and clicking on the Duplicate button  positioned right to the dropdown. Click the Rename button to give this new configuration a suitable name. You can now edit the keybindings for all commands.
 
 
 ## Mouse selections when an app grabs the mouse

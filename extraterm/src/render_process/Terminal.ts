@@ -1284,14 +1284,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _handleShowFile(bulkFileHandle: BulkFileHandle): void {
     const isDownload = bulkFileHandle.getMetadata()["download"] === "true";
     const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFileHandle);
-    if (mimeType == null || isDownload) {
-      this._appendMimeViewer("application/octet-stream", bulkFileHandle);
-    } else {
-      const newViewer = this._appendMimeViewer(mimeType, bulkFileHandle);
-      if (newViewer == null) {
-        this._appendMimeViewer("application/octet-stream", bulkFileHandle);
-      }
-    }
+    this._appendMimeViewer(mimeType == null || isDownload ? "application/octet-stream" : mimeType,
+      bulkFileHandle);
   }
 
   private _appendMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
@@ -1318,7 +1312,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   private _createMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
     let tag: string = null;
-    const candidates = viewerClasses.filter( (viewerClass) => viewerClass.supportsMimeType(mimeType) );
+    const candidates = this._findViewersForMimeType(mimeType);
     if (candidates.length !== 0) {
       tag = candidates[0].TAG_NAME;
     } else {
@@ -1339,6 +1333,27 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     dataViewer.setEditable(true);
     return dataViewer;
   }
+
+  private _findViewersForMimeType(mimeType: string): SupportsMimeTypes[] {
+    const candidates = this._findViewersForMimeTypeStrict(mimeType);
+    if (candidates.length !== 0) {
+      return candidates;
+    }
+
+    if (mimeType.startsWith("text/")) {
+      const textCandidates = this._findViewersForMimeTypeStrict("text/plain");
+      if (textCandidates.length !== 0) {
+        return textCandidates;
+      }
+    }
+
+    return this._findViewersForMimeTypeStrict("application/octet-stream");
+  }
+
+  private _findViewersForMimeTypeStrict(mimeType: string): SupportsMimeTypes[] {
+    return viewerClasses.filter( viewerClass => viewerClass.supportsMimeType(mimeType) );
+  }
+
 
   private _getNextTag(): string {
     let tag  = this._nextTag;
