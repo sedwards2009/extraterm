@@ -21,7 +21,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
-import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
+import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "ace-ts";
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
@@ -81,8 +81,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _commandLine: string = null;
   private _returnCode: string = null;
 
-  private _aceEditor: TerminalAceEditor = null;
-  private _aceEditSession: TerminalEditSession = null;
+  private _aceEditor: TerminalCanvasAceEditor = null;
+  private _aceEditSession: TerminalCanvasEditSession = null;
   private _height = 0;
   private _isEmpty = true;
   private _mode: Mode = Mode.DEFAULT;
@@ -164,15 +164,15 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this.style.height = "0px";
       this._mode = Mode.DEFAULT;
 
-      this._aceEditSession = new TerminalEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
+      this._aceEditSession = new TerminalCanvasEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
       this._aceEditSession.setUndoManager(new UndoManager());
 
-      const aceRenderer = new TerminalRenderer(containerDiv);
+      const aceRenderer = new TerminalCanvasRenderer(containerDiv);
       aceRenderer.setShowGutter(false);
       aceRenderer.setShowLineNumbers(false);
       aceRenderer.setDisplayIndentGuides(false);
 
-      this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
+      this._aceEditor = new TerminalCanvasAceEditor(aceRenderer, this._aceEditSession);
       this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setAutoscroll(false);
