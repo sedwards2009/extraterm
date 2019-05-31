@@ -34,7 +34,7 @@ const xtermColors: number[] = [
 
 // Colors 0-15 + 16-255
 // Much thanks to TooTallNate for writing this.
-function xtermPalette(): number[] {
+export function xtermPalette(): number[] {
   const colors = xtermColors;
   const r = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
 
@@ -74,7 +74,7 @@ export interface CharRenderCanvasOptions {
   fontFamily: string;
   fontSizePx: number;
 
-  parentElement: HTMLElement;
+  debugParentElement?: HTMLElement;
   palette: number[];
 
   extraFonts?: FontSlice[];
@@ -124,7 +124,7 @@ export class CharRenderCanvas {
   private _palette: number[];
 
   constructor(options: CharRenderCanvasOptions) {
-    const { widthPx, heightPx, widthChars, heightChars, fontFamily, fontSizePx, parentElement, palette } = options;
+    const { widthPx, heightPx, widthChars, heightChars, fontFamily, fontSizePx, debugParentElement, palette } = options;
 
     this._palette = palette;
 
@@ -157,7 +157,10 @@ export class CharRenderCanvas {
     this._canvas.width = this._canvasWidthPx;
     this._canvas.height = this._canvasHeightPx;
     this._canvasCtx = this._canvas.getContext("2d", { alpha: true });
-    parentElement.appendChild(this._canvas);
+
+    if (debugParentElement != null) {
+      debugParentElement.appendChild(this._canvas);
+    }
 
     this._charCanvas = <HTMLCanvasElement> document.createElement("canvas");
     this._charCanvas.width = this._canvasWidthPx;
@@ -165,15 +168,29 @@ export class CharRenderCanvas {
 
     this._charCanvasCtx = this._charCanvas.getContext("2d", { alpha: true });
       
-    parentElement.appendChild(this._charCanvas);
-    
+    if (debugParentElement != null) {
+      debugParentElement.appendChild(this._charCanvas);
+    }
+        
     this._fontAtlas = new FontAtlas(fontMetrics);
     this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts, fontMetrics);
-    this._bgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "background", parentElement);
-    this._fgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground", parentElement);
+    this._bgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "background", debugParentElement);
+    this._fgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground", debugParentElement);
+  }
+
+  getCellGrid(): CharCellGrid {
+    return this.cellGrid;
+  }
+
+  getCanvasElement(): HTMLCanvasElement {
+    return this._canvas;
   }
 
   private _setupExtraFontSlices(extraFonts: FontSlice[], metrics: MonospaceFontMetrics): ExtraFontSlice[] {
+    if (extraFonts == null) {
+      return [];
+    }
+
     return extraFonts.map(extraFont => {
 
       const customMetrics = {

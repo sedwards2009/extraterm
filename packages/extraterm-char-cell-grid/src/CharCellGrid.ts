@@ -46,7 +46,7 @@ export const STYLE_MASK_INVISIBLE = 64;
 export const STYLE_MASK_FAINT = 128;
 export const STYLE_MASK_CURSOR = 256;
 
-type StyleCode = number;
+export type StyleCode = number;
 
 const CELL_SIZE_BYTES = 20;
 const CELL_SIZE_UINT32 = CELL_SIZE_BYTES/4; // If this changes, then update pasteGrid().
