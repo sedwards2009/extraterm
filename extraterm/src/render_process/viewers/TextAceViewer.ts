@@ -552,7 +552,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       left: cursorPos.column * charWidth,
       top: cursorPos.row * charHeight,
       bottom: (cursorPos.row + 1) * charHeight,
-      viewPortTop: this._aceEditSession.getScrollTop()
+      viewPortTop: this._aceEditSession.getScrollTopPx()
     };
     return detail;
   }
@@ -723,8 +723,8 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
-    this._aceEditSession.setScrollLeft(xCoord);
-    this._aceEditSession.setScrollTop(yCoord);
+    this._aceEditSession.setScrollLeftPx(xCoord);
+    this._aceEditSession.setScrollTopPx(yCoord);
   }
 
   public dispatchEvent(ev: Event): boolean {

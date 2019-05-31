@@ -257,7 +257,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
       containerDiv.addEventListener('contextmenu', ev => this._handleContextMenu(ev));
 
-      const aceElement = this._aceEditor.renderer.scroller;
+      const aceElement = this._aceEditor.renderer.scrollerElement;
       aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
       aceElement.addEventListener("mouseup", ev => this._handleMouseUpEvent(ev), true);
       aceElement.addEventListener("mousemove", ev => this._handleMouseMoveEvent(ev), true);
@@ -669,7 +669,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       left: cursorPos.column * charWidth,
       top: cursorPos.row * charHeight,
       bottom: (cursorPos.row + 1) * charHeight,
-      viewPortTop: this._aceEditSession.getScrollTop()
+      viewPortTop: this._aceEditSession.getScrollTopPx()
     };
     return detail;
   }
@@ -890,8 +890,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       yCoord = optionsOrX.top;
     }
 
-    this._aceEditSession.setScrollLeft(xCoord);
-    this._aceEditSession.setScrollTop(yCoord);
+    this._aceEditSession.setScrollLeftPx(xCoord);
+    this._aceEditSession.setScrollTopPx(yCoord);
   }
   
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => boolean): void {
