@@ -6,7 +6,7 @@ import { Document,
          Fold,
          LanguageMode,
          TextMode, RangeBasic } from "ace-ts";
-
+import { stringToCodePointArray} from "extraterm-unicode-utilities";
 import * as TermApi from "term-api";
 import * as LineFunctions from "./LineFunctions";
 import { STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT, CharCellGrid, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
@@ -63,7 +63,7 @@ export class TerminalEditSession extends EditSession {
   getTerminalLine(row: number): TermApi.Line {
      const oldLine: TermApi.OldLine = {
       attrs: new Uint32Array(this._lineData[row].attrs),
-      chars: LineFunctions.stringToCodePointArray(this.getLine(row))
+      chars: stringToCodePointArray(this.getLine(row))
     };
     return convertOldLineToNewLine(oldLine);
   }

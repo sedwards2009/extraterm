@@ -25,6 +25,8 @@
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-char-render-canvas": "1.0.0",
     "extraterm-event-emitter": "1.0.0",
+    "extraterm-logging": "1.0.0",
+    "extraterm-unicode-utilities": "1.0.0",
     "term-api": "1.0.0"
   }
 }

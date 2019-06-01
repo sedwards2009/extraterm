@@ -28,7 +28,7 @@ export function stringToCodePointArray(str: string): Uint32Array {
   return codePointArray;
 }
 
-function countCodePoints(str: string): number {
+export function countCodePoints(str: string): number {
   const len = str.length;
   let c = 0;
   let i = 0;

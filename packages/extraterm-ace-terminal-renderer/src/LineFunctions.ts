@@ -65,38 +65,3 @@ export function copy(sourceLine: TermApi.OldLine): TermApi.OldLine {
     chars: new Uint32Array(sourceLine.chars),
   };
 }
-
-export function stringToCodePointArray(str: string): Uint32Array {
-  const codePointArray = newUint32Array(countCodePoints(str));
-  const len = str.length;
-  let c = 0;
-  let i = 0;
-  while (i < len) {
-    const codePoint = str.codePointAt(i);
-    codePointArray[c] = codePoint;
-    if (codePoint > 0xffff) {
-      i += 2;
-    } else {
-      i++;
-    }
-    c++;
-  }
-
-  return codePointArray;
-}
-
-function countCodePoints(str: string): number {
-  const len = str.length;
-  let c = 0;
-  let i = 0;
-  while (i < len) {
-    const codePoint = str.codePointAt(i);
-    if (codePoint > 0xffff) {
-      i += 2;
-    } else {
-      i++;
-    }
-    c++;
-  }
-  return c;
-}

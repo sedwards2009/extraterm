@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { stringToCodePointArray } from "./UnicodeUtils";
+import { stringToCodePointArray } from "extraterm-unicode-utilities";
 
 /**
  * Cell schema:
