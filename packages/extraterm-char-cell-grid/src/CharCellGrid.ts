@@ -199,6 +199,16 @@ export class CharCellGrid {
     }
   }
 
+  getString(x: number, y: number, count?: number): string {
+    const codePoints: number[] = [];
+
+    const lastX = x + (count == null ? this.width : Math.min(this.width, count));
+    for (let i=x; i<lastX; i++) {
+      codePoints.push(this.getCodePoint(i, y));
+    }
+    return String.fromCodePoint(...codePoints);
+  }
+
   setBgRGBA(x: number, y: number, rgba: number): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     this._dataView.setUint32(offset + OFFSET_BG, rgba);
@@ -244,6 +254,11 @@ export class CharCellGrid {
     return this._dataView.getUint16(offset + OFFSET_FG_CLUT_INDEX);
   }
 
+  isFgClut(x: number, y: number): boolean {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    return (this._dataView.getUint16(offset + OFFSET_FLAGS) & FLAG_MASK_FG_CLUT) !== 0;
+  }
+
   setBgClutIndex(x: number, y: number, index: number): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
 
@@ -261,6 +276,11 @@ export class CharCellGrid {
   getBgClutIndex(x: number, y: number): number {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     return this._dataView.getUint16(offset + OFFSET_BG_CLUT_INDEX);
+  }
+
+  isBgClut(x: number, y: number): boolean {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    return (this._dataView.getUint16(offset + OFFSET_FLAGS) & FLAG_MASK_BG_CLUT) !== 0;
   }
 
   setStyle(x: number, y: number, style: StyleCode): void {
