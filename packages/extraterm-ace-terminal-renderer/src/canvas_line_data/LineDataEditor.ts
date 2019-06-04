@@ -26,10 +26,11 @@ export class LineDataEditor {
   private _updateInsert(delta: Delta): void {
     if (delta.start.row === delta.end.row && delta.start.column === delta.end.column) {
       // Simple insert with no deletion.
-
       if (delta.lines.length == 1) {
         const newLine = this._insertIntoLine(this._lineData.getLine(delta.start.row), delta.start.column, delta.lines[0]);
         this._lineData.setLine(delta.start.row, newLine);
+      } else {
+        this._insertRows(delta);
       }
 
     } else {
@@ -76,6 +77,33 @@ export class LineDataEditor {
     for (let i=0; i<strLength; i++) {
       line.setCodePoint(i+pos, 0, codePoints[i]);
     }
+  }
+
+  private _insertRows(delta: Delta): void {
+    const firstLineOfChange = this._lineData.getLine(delta.start.row);
+    const strLines = delta.lines;
+
+    let leftLine = new CharCellGrid(delta.start.column, 1);
+    leftLine.pasteGrid(firstLineOfChange, 0, 0);
+    leftLine = this._insertIntoLine(leftLine, delta.start.column, strLines[0]);
+    this._lineData.setLine(delta.start.row, leftLine);
+
+    let rightLine = new CharCellGrid(firstLineOfChange.width - delta.start.column, 1);
+    rightLine.pasteGrid(firstLineOfChange, -delta.start.column, 0);
+    rightLine = this._insertIntoLine(rightLine, 0, strLines[strLines.length-1]);
+
+    const insertLineList: Line[] = [];
+    if (strLines.length > 2) {
+      for (let i=1; i<strLines.length-1; i++) {
+        const newLine = new CharCellGrid(countCodePoints(strLines[i]), 1);
+        newLine.setString(0, 0, strLines[i]);
+        insertLineList.push(newLine);    
+      }
+    }
+
+    insertLineList.push(rightLine);
+
+    this._lineData.insertLinesBeforeRow(delta.start.row+1, insertLineList);
   }
 
   private _updateRemove(delta: Delta): void {

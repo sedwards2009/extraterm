@@ -26,6 +26,10 @@ class LineDataImpl implements LineData {
   setLine(row: number, line: Line): void {
     this._linesList[row] = line;
   }
+
+  insertLinesBeforeRow(row: number, lines: Line[]): void {
+    this._linesList.splice(row, 0, ...lines);
+  }
 }
 
 function createLineDataFromString(str: string, width: number): LineData {
@@ -73,6 +77,44 @@ test("insert into 1 row with resize", done => {
   
   expect(lineData.getLine(0).width).toBe(13);
   expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01234abc56789");
+
+  done();
+});
+
+test("insert into 1 row with 2 rows", done => {
+  const lineData = createLineDataFromString("0123456789", 10);
+  const editor = new LineDataEditor(lineData);
+
+  const delta: Delta = {
+    action: "insert",
+    start: { row: 0, column: 5},
+    end: { row: 0, column: 5},
+    lines: ["abc", "def"]
+  };
+  editor.update(delta);
+  
+  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01234abc");
+  expect(lineData.getLine(1).getString(0, 0).trim()).toBe("def56789");
+
+  done();
+});
+
+test("insert into 1 row with 4 rows", done => {
+  const lineData = createLineDataFromString("0123456789", 10);
+  const editor = new LineDataEditor(lineData);
+
+  const delta: Delta = {
+    action: "insert",
+    start: { row: 0, column: 5},
+    end: { row: 0, column: 5},
+    lines: ["abc", "def", "ghi", "jkl"]
+  };
+  editor.update(delta);
+  
+  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01234abc");
+  expect(lineData.getLine(1).getString(0, 0).trim()).toBe("def");
+  expect(lineData.getLine(2).getString(0, 0).trim()).toBe("ghi");
+  expect(lineData.getLine(3).getString(0, 0).trim()).toBe("jkl56789");
 
   done();
 });
