@@ -30,6 +30,10 @@ class LineDataImpl implements LineData {
   insertLinesBeforeRow(row: number, lines: Line[]): void {
     this._linesList.splice(row, 0, ...lines);
   }
+
+  deleteLines(startRow: number, endRow: number): void {
+    this._linesList.splice(startRow, endRow-startRow);
+  }
 }
 
 function createLineDataFromString(str: string, width: number): LineData {
@@ -118,3 +122,38 @@ test("insert into 1 row with 4 rows", done => {
 
   done();
 });
+
+test("remove middle of 1 row", done => {
+  const lineData = createLineDataFromString("0123456789", 10);
+  const editor = new LineDataEditor(lineData);
+
+  const delta: Delta = {
+    action: "remove",
+    start: { row: 0, column: 4},
+    end: { row: 0, column: 6},
+    lines: []
+  };
+  editor.update(delta);
+  
+  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01236789");
+
+  done();
+});
+
+test("remove many rows", done => {
+  const lineData = createLineDataFromString("0123456789\nabcdefgh\nijklmnopq", 10);
+  const editor = new LineDataEditor(lineData);
+
+  const delta: Delta = {
+    action: "remove",
+    start: { row: 0, column: 4},
+    end: { row: 2, column: 1},
+    lines: []
+  };
+  editor.update(delta);
+  
+  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("0123jklmnopq");
+
+  done();
+});
+

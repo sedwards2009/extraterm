@@ -107,7 +107,18 @@ export class LineDataEditor {
   }
 
   private _updateRemove(delta: Delta): void {
-
+    if (delta.start.row === delta.end.row) {
+      const line = this._lineData.getLine(delta.start.row);
+      line.shiftCellsLeft(delta.start.column, 0, delta.end.column-delta.start.column);
+    } else {
+      const firstLine = this._lineData.getLine(delta.start.row);
+      const lastLine = this._lineData.getLine(delta.end.row);
+      const cutLeftLine = this._lineLeft(firstLine, delta.start.column);      
+      const cutRightLine = this._lineRight(lastLine, delta.end.column);
+      const joinedLine = this._joinLines(cutLeftLine, cutRightLine);
+      this._lineData.setLine(delta.start.row, joinedLine);
+      this._lineData.deleteLines(delta.start.row+1, delta.end.row);
+    }
   }
 
   /**
@@ -137,5 +148,24 @@ export class LineDataEditor {
       }
     }
     return i<0 ? 0 : i+1;
+  }
+
+  private _lineLeft(line: Line, column: number): Line {
+    const newLine = new CharCellGrid(column, 1);
+    newLine.pasteGrid(line, 0, 0);
+    return newLine;
+  }
+
+  private _lineRight(line: Line, column: number): Line {
+    const newLine = new CharCellGrid(line.width-column, 1);
+    newLine.pasteGrid(line, -column, 0);
+    return newLine;
+  }
+
+  private _joinLines(leftLine: Line, rightLine: Line): Line {
+    const newLine = new CharCellGrid(leftLine.width + rightLine.width, 1);
+    newLine.pasteGrid(leftLine, 0, 0);
+    newLine.pasteGrid(rightLine, leftLine.width, 0);
+    return newLine;
   }
 }
