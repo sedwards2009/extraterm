@@ -48,112 +48,92 @@ function createLineDataFromString(str: string, width: number): LineData {
   return new LineDataImpl(lineList);
 }
 
-
-test("insert into 1 row", done => {
-
-  const lineData = createLineDataFromString("0123456789", 20);
-  const editor = new LineDataEditor(lineData);
-
-  const delta: Delta = {
+const testCases: [string, string, Delta, string][] = [
+  ["insert into one row", "0123456789", {
     action: "insert",
     start: { row: 0, column: 5},
     end: { row: 0, column: 5},
     lines: ["abc"]
-  };
-  editor.update(delta);
+  }, "01234abc56789"],
 
-  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01234abc56789");
-
-  done();
-});
-
-test("insert into 1 row with resize", done => {
-  const lineData = createLineDataFromString("0123456789", 10);
-  const editor = new LineDataEditor(lineData);
-
-  const delta: Delta = {
+  ["insert at start of row", "0123456789", {
     action: "insert",
-    start: { row: 0, column: 5},
-    end: { row: 0, column: 5},
+    start: { row: 0, column: 0},
+    end: { row: 0, column: 0},
     lines: ["abc"]
-  };
-  editor.update(delta);
-  
-  expect(lineData.getLine(0).width).toBe(13);
-  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01234abc56789");
+  }, "abc0123456789"],
 
-  done();
-});
-
-test("insert into 1 row with 2 rows", done => {
-  const lineData = createLineDataFromString("0123456789", 10);
-  const editor = new LineDataEditor(lineData);
-
-  const delta: Delta = {
+  ["insert at end of one row", "0123456789", {
     action: "insert",
-    start: { row: 0, column: 5},
-    end: { row: 0, column: 5},
-    lines: ["abc", "def"]
-  };
-  editor.update(delta);
-  
-  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01234abc");
-  expect(lineData.getLine(1).getString(0, 0).trim()).toBe("def56789");
+    start: { row: 0, column: 10},
+    end: { row: 0, column: 10},
+    lines: ["abc"]
+  }, "0123456789abc"],
 
-  done();
-});
-
-test("insert into 1 row with 4 rows", done => {
-  const lineData = createLineDataFromString("0123456789", 10);
-  const editor = new LineDataEditor(lineData);
-
-  const delta: Delta = {
-    action: "insert",
-    start: { row: 0, column: 5},
-    end: { row: 0, column: 5},
-    lines: ["abc", "def", "ghi", "jkl"]
-  };
-  editor.update(delta);
-  
-  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01234abc");
-  expect(lineData.getLine(1).getString(0, 0).trim()).toBe("def");
-  expect(lineData.getLine(2).getString(0, 0).trim()).toBe("ghi");
-  expect(lineData.getLine(3).getString(0, 0).trim()).toBe("jkl56789");
-
-  done();
-});
-
-test("remove middle of 1 row", done => {
-  const lineData = createLineDataFromString("0123456789", 10);
-  const editor = new LineDataEditor(lineData);
-
-  const delta: Delta = {
-    action: "remove",
-    start: { row: 0, column: 4},
-    end: { row: 0, column: 6},
-    lines: []
-  };
-  editor.update(delta);
-  
-  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("01236789");
-
-  done();
-});
-
-test("remove many rows", done => {
-  const lineData = createLineDataFromString("0123456789\nabcdefgh\nijklmnopq", 10);
-  const editor = new LineDataEditor(lineData);
-
-  const delta: Delta = {
+  ["remove across rows", "0123456789\nabcdefgh\nijklmnopq", {
     action: "remove",
     start: { row: 0, column: 4},
     end: { row: 2, column: 1},
     lines: []
-  };
-  editor.update(delta);
+  }, "0123jklmnopq"],
+
+  ["remove inside one line", "0123456789", {
+    action: "remove",
+    start: { row: 0, column: 4},
+    end: { row: 0, column: 6},
+    lines: []
+  }, "01236789"],
+
+  ["insert into 1 row with 4 rows", "0123456789", {
+    action: "insert",
+    start: { row: 0, column: 5},
+    end: { row: 0, column: 5},
+    lines: ["abc", "def", "ghi", "jkl"]
+  }, "01234abc\ndef\nghi\njkl56789"],
+
+  ["insert into 1 row with 2 rows", "0123456789", {
+    action: "insert",
+    start: { row: 0, column: 5},
+    end: { row: 0, column: 5},
+    lines: ["abc", "def"]
+  }, "01234abc\ndef56789"],
+
+];
+
+describe.each(testCases)("Evaluate", (name: string, input: string, delta: Delta, output: string) => {
+  test(`${name} test`, done => {
+    const width = input.split("\n").reduce((accu, txt) => {
+      return Math.max(accu, txt.length);
+    }, 0);
+
+    const lineData = createLineDataFromString(input, width);
+    const editor = new LineDataEditor(lineData);
   
-  expect(lineData.getLine(0).getString(0, 0).trim()).toBe("0123jklmnopq");
+    editor.update(delta);
+    
+    const outputTextRows = output.split("\n");
+    for (let i=0; i < outputTextRows.length; i++) {
+      expect(lineData.getLine(i).getString(0, 0).trim()).toBe(outputTextRows[i]);
+    }
 
-  done();
+    done();
+  });
+
+  test(`${delta.action} test with double width grid`, done => {
+    const width = input.split("\n").reduce((accu, txt) => {
+      return Math.max(accu, txt.length);
+    }, 0);
+
+    const lineData = createLineDataFromString(input, width*2);
+    const editor = new LineDataEditor(lineData);
+  
+    editor.update(delta);
+    
+    const outputTextRows = output.split("\n");
+    for (let i=0; i < outputTextRows.length; i++) {
+      expect(lineData.getLine(i).getString(0, 0).trim()).toBe(outputTextRows[i]);
+    }
+
+    done();
+  });
 });
-
