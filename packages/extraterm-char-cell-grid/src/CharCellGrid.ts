@@ -113,8 +113,16 @@ const SpaceCell: Cell = {
   bgClutIndex: BG_COLOR_INDEX,
   fgRGBA: 0xffffffff,
   bgRGBA: 0x00000000,
-}    
+}
 
+/**
+ * Represents a grid of character cells
+ * 
+ * Each cell holds a single unicode codepoint and can have multiple styles
+ * and foreground/background colors applied.
+ * 
+ * This code uses a fast and compact representation of the data.
+ */
 export class CharCellGrid {
 
   private _rawBuffer: ArrayBuffer;
@@ -323,6 +331,19 @@ export class CharCellGrid {
                                 (offsetCell + this.width - shiftCount) * CELL_SIZE_BYTES); // end pos
   }
 
+  /**
+   * Scroll part of a row to the left
+   * 
+   * The region to be scrolled to the left is the row of cells starting from
+   * (x,y) and extending to the right edge of the grid. The region is then
+   * scrolled `shiftCount` number of cells to the left inside the region.
+   * Cells on the left side of the region are removed and empty cells are
+   * shifted in from the right side.
+   * 
+   * @param x 
+   * @param y 
+   * @param shiftCount 
+   */
   shiftCellsLeft(x: number, y: number, shiftCount: number): void {
     const offsetCell = y * this.width;
     shiftCount = Math.min(x, shiftCount);

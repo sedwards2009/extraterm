@@ -10,7 +10,7 @@ export class TerminalCanvasAceEditor extends ExtratermAceEditor {
 
   setTerminalLine(row: number, line: Line): void {
     const session = <TerminalCanvasEditSession> this.sessionOrThrow();
-    if ( ! session.setTerminalLine(row, line)) {
+    if (session.setTerminalLine(row, line)) {
       this.renderer.updateLines(row, row, true);
     }
   }

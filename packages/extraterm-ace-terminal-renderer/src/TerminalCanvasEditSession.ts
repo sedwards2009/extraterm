@@ -11,17 +11,45 @@ import { Document,
          TextMode, RangeBasic } from "ace-ts";
 
 import * as TermApi from "term-api";
-import * as CharCellGridFunctions from "./CharCellGridFunctions";
+import { LineData } from "./canvas_line_data/LineData";
+import { LineDataEditor } from "./canvas_line_data/LineDataEditor";
 import { CharCellGrid } from "extraterm-char-cell-grid";
+import { log, Logger, getLogger } from "extraterm-logging";
 
 
 export class TerminalCanvasEditSession extends EditSession {
-
   private _lineData: TermApi.Line[] = [];
+  private _lineDataEditor: LineDataEditor = null;
+  private _log: Logger = null;
 
   constructor(doc: string | Document, mode: LanguageMode = new TextMode(), callback?) {
     super(doc, mode, callback);
-console.log("TerminalCanvasEditSession");
+    this._log = getLogger("TerminalCanvasEditSession", this);
+
+    const lineData: LineData = {
+      getLine: (row: number): TermApi.Line => {
+        let data = this._lineData[row];
+        if (data == null) {
+          const text = this.getLine(row);
+          data = new CharCellGrid(text.length, 1);
+          this._lineData[row] = data;
+        }
+        return data;
+      },
+
+      setLine: (row: number, line: TermApi.Line): void => {
+        this._lineData[row] = line;
+      },
+
+      insertLinesBeforeRow: (row: number, lines: TermApi.Line[]): void => {
+        this._lineData.splice(row, 0, ...lines);
+      },
+    
+      deleteLines: (startRow: number, endRow: number): void => {
+        this._lineData.splice(startRow, endRow-startRow);
+      }
+    };
+    this._lineDataEditor = new LineDataEditor(lineData);
   }
 
   getState(row: number): string {
@@ -45,16 +73,10 @@ console.log("TerminalCanvasEditSession");
       }
     };
 
-    const newText = CharCellGridFunctions.toString(line);
-    const oldText = this.getLine(row);
-    if (newText !== oldText) {
-      this.replace(range, newText);
-      this._lineData[row] = line;
-      return true;
-    } else {
-      this._lineData[row] = line;
-      return false;
-    }
+    const newText = line.getString(0,0);
+    this.replace(range, newText);
+    this._lineData[row] = line;
+    return true;
   }
 
   getTerminalLine(row: number): TermApi.Line {
@@ -79,12 +101,13 @@ console.log("TerminalCanvasEditSession");
       }
     };
 
-    const newText = CharCellGridFunctions.toString(line);
+    const newText = line.getString(0, 0);
     const lineDataLen = this._lineData.length;
     this.replace(range,"\n" + newText);
     this._lineData[lineDataLen] = line;
   }
 
+  @log
   insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
     const line = this._trimRightWhitespace(sourceLine);
     const range: RangeBasic = {
@@ -98,80 +121,16 @@ console.log("TerminalCanvasEditSession");
       }
     };
 
-    const newText = CharCellGridFunctions.toString(line);
+    const newText = line.getString(0, 0);
     this.replace(range, newText + "\n");
     this._lineData[row] = line;
   }
 
   protected _updateInternalDataOnChange(delta: Delta): Fold[] {
     const folds = super._updateInternalDataOnChange(delta);
-
-    // if (delta.action === "insert") {
-    //   this._updateDeltaInsert(delta);
-    // } else {
-    //   this._updateDeltaRemove(delta);
-    // }
-
+    this._lineDataEditor.update(delta);
     return folds;
   }
-
-  private _getLineData(row: number): TermApi.Line {
-    let data = this._lineData[row];
-    if (data == null) {
-      const text = this.getLine(row);
-      data = new CharCellGrid(text.length, 1);
-      this._lineData[row] = data;
-    }
-    return data;
-  }
-
-  // private _updateDeltaInsert(delta: Delta): void {
-  //   const lineData = this._getLineData(delta.start.row);
-
-  //   if (delta.lines.length == 1) {
-  //     CharCellGridFunctions.insertSpaces(lineData, delta.start.column, delta.lines[0].length);
-  //   } else {
-
-  //     // Start row
-  //     const { leftLine, rightLine } = CharCellGridFunctions.split(lineData, delta.start.column);
-  //     this._setLineData(delta.start.row, leftLine);
-
-
-  //     CharCellGridFunctions.insertSpaces(lineData, delta.start.column, delta.lines[0].length);
-
-  //     // Middle rows
-  //     if (delta.lines.length > 2) {
-  //       const middleLast = delta.lines.length-1;
-  //       const middleRows: TermApi.Line[] = [];
-  //       for (let i=1; i<middleLast; i++) {
-  //         middleRows.push(new CharCellGrid(delta.lines[i].length, 1));  // FIXME count codepoints
-  //       }
-  //       this._lineData.splice.apply(this._lineData, [delta.start.row+1, 0, ...middleRows]);
-  //     }
-
-  //     // End row
-  //     CharCellGridFunctions.insertSpaces(endRowAttr, 0, delta.lines[delta.lines.length-1].length);
-  //     this._lineData.splice(delta.start.row + delta.lines.length-1, 0, endRowAttr);
-  //   }
-  // }
-
-  // private _updateDeltaRemove(delta: Delta): void {
-  //   const startRow = delta.start.row;
-  //   const endColumn = delta.end.column;
-  //   const endRow = delta.end.row;
-  //   if (startRow === endRow) {
-  //     CharCellGridFunctions.cut(this._getLineData(startRow), delta.start.column, endColumn);
-  //   } else {
-  //     const startRowLine = this._getLineData(startRow);
-  //     CharCellGridFunctions.cut(startRowLine, delta.start.column);
-  //     const endRowLine = this._getLineData(delta.end.row);
-  //     CharCellGridFunctions.cut(endRowLine, 0, delta.end.column);
-  //     CharCellGridFunctions.insert(startRowLine, startRowLine.attrs.length, endRowLine);
-  //     if (delta.lines.length > 1) {
-  //       this._lineData.splice(delta.start.row+1, delta.lines.length-1);
-  //     }
-  //   }
-  // }
 }
 
 function maxNormalWidthCodePoint(): number {

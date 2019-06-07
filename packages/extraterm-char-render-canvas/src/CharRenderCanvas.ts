@@ -186,6 +186,14 @@ export class CharRenderCanvas {
     return this._canvas;
   }
 
+  getWidthPx(): number {
+    return this._canvasWidthPx;
+  }
+
+  getHeightPx(): number {
+    return this._canvasHeightPx;
+  }
+
   private _setupExtraFontSlices(extraFonts: FontSlice[], metrics: MonospaceFontMetrics): ExtraFontSlice[] {
     if (extraFonts == null) {
       return [];

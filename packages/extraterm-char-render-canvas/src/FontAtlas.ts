@@ -79,7 +79,7 @@ class FontAtlasPage {
     this._pageCanvas.width = FONT_ATLAS_PAGE_WIDTH_CELLS * (this._metrics.widthPx + this._safetyPadding * 2);
     this._pageCanvas.height = FONT_ATLAS_PAGE_HEIGHT_CELLS * (this._metrics.heightPx + this._safetyPadding * 2);
   
-    document.body.appendChild(this._pageCanvas);
+    // document.body.appendChild(this._pageCanvas);
 
     this._pageCtx = this._pageCanvas.getContext("2d");
     this._pageCtx.textBaseline = "top";

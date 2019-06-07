@@ -6,18 +6,19 @@ import { CharCellGrid } from "extraterm-char-cell-grid";
 import { CharRenderCanvas, xtermPalette } from "extraterm-char-render-canvas";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
+import { Logger, getLogger, log } from "extraterm-logging";
 
 export class CanvasTextLayer implements TextLayer {
 
   element: HTMLDivElement;
 
   private _charRenderCanvas: CharRenderCanvas = null;
-  private _charCellGrid: CharCellGrid = null;
   private _editSession: TerminalCanvasEditSession = null;
   private _config: LayerConfig = null;
+  private _log: Logger = null;
 
   constructor(private readonly _contentDiv: HTMLDivElement) {
-console.log("CanvasTextLayer");
+    this._log = getLogger("CanvasTextLayer", this);
   }
 
   dispose(): void {
@@ -61,16 +62,26 @@ console.log("CanvasTextLayer");
     this._config = config;
 
     const visibleRows = this._getVisibleRows(config);
-console.log("visibleRows:", visibleRows);
-    this._setUpRenderCanvas(config, viewPortSize);
+    this._setUpRenderCanvas(config, viewPortSize, visibleRows.length);
 
     this._writeLinesToGrid(this._charRenderCanvas.getCellGrid(), visibleRows, 0);
     this._charRenderCanvas.render();
   }
 
-  private _setUpRenderCanvas(config: LayerConfig, viewPortSize: ViewPortSize): void {
+  private _setUpRenderCanvas(config: LayerConfig, viewPortSize: ViewPortSize, numOfVisibleRows: number): void {
     const canvasWidth = viewPortSize.widthPx;
-    const canvasHeight = viewPortSize.heightPx;
+    const canvasHeight = numOfVisibleRows * config.charHeightPx;
+
+    if (this._charRenderCanvas != null) {
+      if (this._charRenderCanvas.getWidthPx() === canvasWidth &&
+          this._charRenderCanvas.getHeightPx() === canvasHeight) {
+        return;
+      }
+
+      const canvasElement = this._charRenderCanvas.getCanvasElement();
+      canvasElement.parentElement.removeChild(canvasElement);
+      this._charRenderCanvas = null;
+    }
 
     this._charRenderCanvas = new CharRenderCanvas({
       fontFamily: "DejaVuSansMono",   // TODO

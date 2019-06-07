@@ -137,13 +137,13 @@ export class LineDataEditor {
       if ( ! line.isFgClut(i, 0)) {
         break;
       }
-      if ( ! line.getFgClutIndex(i, 257)) {
+      if ( ! line.getFgClutIndex(i, 0)) {
         break;
       }
       if ( ! line.isBgClut(i, 0)) {
         break;
       }
-      if ( ! line.getBgClutIndex(i, 256)) {
+      if ( ! line.getBgClutIndex(i, 0)) {
         break;
       }
     }
