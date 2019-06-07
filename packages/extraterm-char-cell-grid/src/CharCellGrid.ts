@@ -349,7 +349,7 @@ export class CharCellGrid {
     y = Math.max(y, 0);
 
     for (let v=y; v<endY; v++, sv++) {
-      let sourceOffset = (sv*sourceGrid.width +sx)* CELL_SIZE_UINT32;
+      let sourceOffset = (sv*sourceGrid.width +sx) * CELL_SIZE_UINT32;
       let destOffset = (v*this.width + x) * CELL_SIZE_UINT32;
       for (let h=x; h<endH; h++) {
 
@@ -374,6 +374,19 @@ export class CharCellGrid {
         uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
         destOffset++;
         sourceOffset++;
+      }
+
+      if (this._palette != null) {
+        for (let h=x; h<endH; h++) {
+          if (this.isBgClut(h, v)) {
+            this.setBgClutIndex(h, v, this.getBgClutIndex(h, v));
+          }
+          if (this.isFgClut(h, v)) {
+            this.setFgClutIndex(h, v, this.getFgClutIndex(h, v));
+          }
+        
+          destOffset += CELL_SIZE_UINT32;
+        }  
       }
     }
   }

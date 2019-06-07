@@ -41,6 +41,60 @@ function isGridFilled(grid: CharCellGrid, char: string): boolean {
   return true;
 }
 
+
+const xtermColors: number[] = [
+  // dark:
+  0x000000ff, // black
+  0xcd0000ff, // red3
+  0x00cd00ff, // green3
+  0xcdcd00ff, // yellow3
+  0x0000eeff, // blue2
+  0xcd00cdff, // magenta3
+  0x00cdcdff, // cyan3
+  0xe5e5e5ff, // gray90
+  // bright:
+  0x7f7f7fff, // gray50
+  0xff0000ff, // red
+  0x00ff00ff, // green
+  0xffff00ff, // yellow
+  0x5c5cffff, // rgb:5c/5c/ff
+  0xff00ffff, // magenta
+  0x00ffffff, // cyan
+  0xffffffff  // white
+];
+
+// Colors 0-15 + 16-255
+// Much thanks to TooTallNate for writing this.
+function xtermPalette(): number[] {
+  const colors = xtermColors;
+  const r = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
+
+  const out = (r: number, g: number, b: number) => {
+    colors.push( (r << 24) | (g << 16) | (b << 8) | 0xff);
+  }
+
+  let i;
+
+  // 16-231
+  i = 0;
+  for (; i < 216; i++) {
+    out(r[(i / 36) % 6 | 0], r[(i / 6) % 6 | 0], r[i % 6]);
+  }
+
+  // 232-255 (grey)
+  i = 0;
+  for (; i < 24; i++) {
+    const v = 8 + i * 10;
+    out(v, v, v);
+  }
+
+  // Default BG/FG
+  colors[256] = 0x00000000;
+  colors[257] = 0xf0f0f0ff;
+  return colors;
+}
+
+
 describe.each([
   [0, 0],
   [5, 3],
@@ -270,6 +324,22 @@ test("pasteGrid() 0,0", () => {
   expect(destGrid.getCodePoint(0, 5)).toBe(sCodePoint);
   expect(destGrid.getCodePoint(0, 6)).toBe(dotCodePoint);
 });
+
+test("pasteGrid() with palette", () => {
+  const srcGrid = new CharCellGrid(10, 1);
+  const palette = xtermPalette();
+  const destGrid = new CharCellGrid(10, 1, palette);
+  fillGrid(srcGrid, "S");
+  srcGrid.setFgClutIndex(0, 0, 2);
+
+  fillGrid(destGrid, ".");
+
+  destGrid.pasteGrid(srcGrid, 0, 0);
+
+  expect(destGrid.getFgRGBA(0, 0)).toBe(palette[2]);
+});
+
+
 
 test("pasteGrid() 2,3", () => {
   const srcGrid = new CharCellGrid(4, 6);
