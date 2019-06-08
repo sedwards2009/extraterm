@@ -76,7 +76,7 @@ let commandPalette: CommandPalette = null;
 let applicationContextMenu: ApplicationContextMenu = null;
 
 
-export function startUp(closeSplash: () => void): void {
+export async function startUp(closeSplash: () => void): Promise<void> {
   ElectronMenu.setApplicationMenu(null);
 
   startUpTheming();
@@ -85,40 +85,40 @@ export function startUp(closeSplash: () => void): void {
   // Get the Config working.
   configDatabase = new ConfigDatabaseImpl();
   keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
-  const configPromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
-    return handleConfigMessage(msg);
-  });
+
+  const configMsg = await WebIpc.requestConfig("*");
+  handleConfigMessage(configMsg);
   
-  // Get the config and theme info in and then continue starting up.
-  const allPromise = Promise.all<void>( [configPromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
-  allPromise.then(loadFontFaces).then( () => {
+  const themeListMsg = await WebIpc.requestThemeList()
+  handleThemeListMessage(themeListMsg);
 
-    const doc = window.document;
-    doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
+  await loadFontFaces();
 
-    startUpExtensions();
-    startUpMainWebUi();
-    registerCommands(extensionManager);
-    startUpSessions(configDatabase, extensionManager);
+  const doc = window.document;
+  doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
 
-    closeSplash();
+  startUpExtensions();
+  startUpMainWebUi();
+  registerCommands(extensionManager);
+  startUpSessions(configDatabase, extensionManager);
 
-    startUpMainMenu();
-    startUpCommandPalette();
-    startUpApplicationContextMenu();
-    startUpWindowEvents();
-    startUpMenus();
+  closeSplash();
 
-    if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
-      mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
-    } else {
-      mainWebUi.commandOpenSettingsTab("session");
-      Electron.remote.dialog.showErrorBox("No session types available",
-        "Extraterm doesn't have any session types configured.");
-    }
-    mainWebUi.focus();
-    window.focus();
-  });
+  startUpMainMenu();
+  startUpCommandPalette();
+  startUpApplicationContextMenu();
+  startUpWindowEvents();
+  startUpMenus();
+
+  if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
+    mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
+  } else {
+    mainWebUi.commandOpenSettingsTab("session");
+    Electron.remote.dialog.showErrorBox("No session types available",
+      "Extraterm doesn't have any session types configured.");
+  }
+  mainWebUi.focus();
+  window.focus();
 }
 
 function startUpTheming(): void {
