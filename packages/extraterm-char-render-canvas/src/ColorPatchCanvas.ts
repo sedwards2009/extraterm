@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellGrid, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 
 
 export class ColorPatchCanvas {
@@ -19,6 +19,7 @@ export class ColorPatchCanvas {
       private _cellWidth: number,
       private _cellHeight: number,
       private _fgOrBg: "foreground" | "background",
+      private _cursorColor: number,
       parentElement: HTMLElement) {
 
     this._canvasWidthPx = this._cellGrid.width * this._cellWidth;
@@ -50,9 +51,26 @@ export class ColorPatchCanvas {
     ctx.fillStyle = "#000000ff";
     ctx.fillRect(0, 0, widthChars, heightChars);
 
-    const getRGBA: (x: number, y: number) => number = (this._fgOrBg === "foreground"
-      ? this._cellGrid.getFgRGBA.bind(this._cellGrid)
-      : this._cellGrid.getBgRGBA.bind(this._cellGrid));
+    let getRGBA: (x: number, y: number) => number = null;
+    if (this._fgOrBg === "foreground") {
+      getRGBA = (x: number, y: number): number => {
+        const style = this._cellGrid.getStyle(x, y);
+        if (style & STYLE_MASK_CURSOR) {
+          return this._cursorColor;
+        } else {
+          return this._cellGrid.getFgRGBA(x, y);
+        }
+      };
+    } else {
+      getRGBA = (x: number, y: number): number => {
+        const style = this._cellGrid.getStyle(x, y);
+        if (style & STYLE_MASK_CURSOR) {
+          return this._cursorColor;
+        } else {
+          return this._cellGrid.getBgRGBA(x, y);
+        }
+      };
+    }
 
     const imageData = ctx.createImageData(widthChars, heightChars);
     const rawImageData = imageData.data;

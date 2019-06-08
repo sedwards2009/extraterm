@@ -9,6 +9,11 @@ import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 
 const log = console.log.bind(console);
 
+export const PALETTE_BG_INDEX = 256;
+export const PALETTE_FG_INDEX = 257;
+export const PALETTE_CURSOR_INDEX = 258;
+
+
 //-------------------------------------------------------------------------
 
 const xtermColors: number[] = [
@@ -58,8 +63,11 @@ export function xtermPalette(): number[] {
   }
 
   // Default BG/FG
-  colors[256] = 0x00000000;
-  colors[257] = 0xf0f0f0ff;
+  colors[PALETTE_BG_INDEX] = 0x00000000;
+  colors[PALETTE_FG_INDEX] = 0xf0f0f0ff;
+  // Cursor
+  colors[PALETTE_CURSOR_INDEX] = 0xffaa00ff;
+
   return colors;
 }
 
@@ -88,7 +96,6 @@ export interface FontSlice {
   unicodeEnd: number;
   sampleChars?: string[];
 }
-
 
 interface ExtraFontSlice extends FontSlice {
   fontAtlas: FontAtlas;
@@ -174,8 +181,10 @@ export class CharRenderCanvas {
         
     this._fontAtlas = new FontAtlas(fontMetrics);
     this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts, fontMetrics);
-    this._bgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "background", debugParentElement);
-    this._fgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground", debugParentElement);
+    this._bgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "background",
+                                                    this._palette[PALETTE_CURSOR_INDEX], debugParentElement);
+    this._fgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground",
+                                                    this._palette[0], debugParentElement);
   }
 
   getCellGrid(): CharCellGrid {
