@@ -39,6 +39,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { NewTerminalContextArea } from './NewTerminalContextArea';
 import { CommandAndShortcut } from './command/CommandPalette';
 import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
+import { TerminalVisualConfig } from './TerminalVisualConfig';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -95,6 +96,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
+  private _terminalVisualConfig: TerminalVisualConfig = null;
   private _lastFocus: Element = null;
   private _splitLayout = new SplitLayout();
   private _fileBroker = new BulkFileBroker();
@@ -138,6 +140,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
     this._registerCommands(extensionManager);
+  }
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._terminalVisualConfig = terminalVisualConfig;
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
@@ -533,6 +539,7 @@ this._log.debug("tab RMB");
     injectKeybindingsManager(newTerminal, this._keybindingsManager);
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
+    newTerminal.setTerminalVisualConfig(this._terminalVisualConfig);
 
     // Set the default name of the terminal tab to the session name.
     const sessions = this._configManager.getConfig(SESSION_CONFIG);

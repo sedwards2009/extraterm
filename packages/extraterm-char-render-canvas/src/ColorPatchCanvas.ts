@@ -37,7 +37,11 @@ export class ColorPatchCanvas {
     this._fullSizeBackgroundCtx = this._fullSizeBackgroundCanvas.getContext("2d", { alpha: true });
     // parentElement.appendChild(this._fullSizeBackgroundCanvas);
   }
-    
+
+  setCursorColor(color: number): void {
+    this._cursorColor = color;
+  }
+
   getCanvas(): HTMLCanvasElement {
     return this._fullSizeBackgroundCanvas;
   }

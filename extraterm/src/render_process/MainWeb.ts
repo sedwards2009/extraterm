@@ -49,6 +49,7 @@ import { DisposableHolder } from '../utils/DisposableUtils';
 import { ExtensionCommandContribution, Category } from '../ExtensionMetadata';
 import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
+import { TerminalVisualConfig } from './TerminalVisualConfig';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -74,7 +75,7 @@ let configDatabase: ConfigDatabaseImpl = null;
 let extensionManager: ExtensionManager = null;
 let commandPalette: CommandPalette = null;
 let applicationContextMenu: ApplicationContextMenu = null;
-
+let terminalVisualConfig: TerminalVisualConfig = null;
 
 export async function startUp(closeSplash: () => void): Promise<void> {
   ElectronMenu.setApplicationMenu(null);
@@ -93,6 +94,10 @@ export async function startUp(closeSplash: () => void): Promise<void> {
   handleThemeListMessage(themeListMsg);
 
   await loadFontFaces();
+
+  await loadTerminalTheme();
+
+  (<GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG)).themeTerminal
 
   const doc = window.document;
   doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
@@ -163,11 +168,20 @@ function loadFontFaces(): Promise<FontFace[]> {
   return Promise.all<FontFace>( fontPromises );
 }
 
+async function loadTerminalTheme(): Promise<void> {
+  const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
+  terminalVisualConfig = {
+    terminalTheme: themeMsg.terminalTheme
+  };
+}
+
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   injectConfigDatabase(mainWebUi, configDatabase);
   injectKeybindingsManager(mainWebUi, keybindingsManager);
   mainWebUi.setExtensionManager(extensionManager);
+  mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
   const showWindowControls = systemConfig.titleBarStyle === "compact" && process.platform !== "darwin";

@@ -8,8 +8,12 @@ import { CanvasTextLayer } from "./CanvasTextLayer";
 
 export class TerminalCanvasRenderer extends Renderer {
 
-  constructor(container: HTMLElement) {
+  private _canvasTextLayer: CanvasTextLayer;
+  private _palette: number[] = null;
+
+  constructor(container: HTMLElement, palette: number[]) {
     super(container, { injectCss: false, fontSize: null });
+    this.setPalette(palette);
     this.setHScrollTracking(HScrollTracking.VISIBLE);
   }
 
@@ -22,7 +26,16 @@ export class TerminalCanvasRenderer extends Renderer {
   }
 
   protected createTextLayer(contentDiv: HTMLDivElement): TextLayer {
-    return new CanvasTextLayer(contentDiv);
+    this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._palette);
+    return this._canvasTextLayer;
+  }
+
+  setPalette(palette: number[]): void {
+    this._palette = palette;
+    if (this._canvasTextLayer == null) {
+      return;
+    }
+    this._canvasTextLayer.setPalette(palette);
   }
 }
 

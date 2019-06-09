@@ -26,6 +26,8 @@ import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, 
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { SearchOptions } from 'ace-ts/build/SearchOptions';
+import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { Color } from '../gui/Util';
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -89,6 +91,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _editable = false;
   private _useVPad = true;
   private _visualState: VisualState = VisualState.AUTO;
+  private _terminalVisualConfig: TerminalVisualConfig = null;
 
   private _mainStyleLoaded: boolean = false;
   private _resizePollHandle: Disposable = null;
@@ -167,7 +170,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._aceEditSession = new TerminalCanvasEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
       this._aceEditSession.setUndoManager(new UndoManager());
 
-      const aceRenderer = new TerminalCanvasRenderer(containerDiv);
+      const aceRenderer = new TerminalCanvasRenderer(containerDiv, this._extractPalette(this._terminalVisualConfig));
       aceRenderer.setShowGutter(false);
       aceRenderer.setShowLineNumbers(false);
       aceRenderer.setDisplayIndentGuides(false);
@@ -275,6 +278,41 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
   }
 
+  private _extractPalette(terminalVisualConfig: TerminalVisualConfig): number[] {
+    if (terminalVisualConfig == null) {
+      return this._fallbackPalette();
+    } else {
+      return this._extractPaletteFromTerminalVisualConfig(terminalVisualConfig);
+    }
+  }
+
+  private _fallbackPalette(): number[] {
+    const result = [];
+    // Very simple white on black palette.
+    result[0] = 0x00000000;
+    for (let i=1; i<256; i++) {
+      result[i] = 0xffffffff;
+    }
+    result[256] = 0x00000000;
+    result[257] = 0xf0f0f0ff;
+    result[258] = 0xffaa00ff;
+    return result;
+  }
+
+  private _extractPaletteFromTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): number[] {
+    const result: number[] = [];
+    const terminalTheme = terminalVisualConfig.terminalTheme;
+    for (let i=0; i<256; i++) {
+      result.push(cssHexColorToRGBA(terminalTheme[i]));
+    }
+
+    result.push(cssHexColorToRGBA(terminalTheme.backgroundColor));
+    result.push(cssHexColorToRGBA(terminalTheme.foregroundColor));
+    result.push(cssHexColorToRGBA(terminalTheme.cursorBackgroundColor));
+
+    return result;
+  }
+
   private _emitCursorEdgeEvent(edge: Edge, column: number): void {
     doLater( () => {
       const detail: CursorEdgeDetail = { edge, ch: column };
@@ -373,7 +411,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   getVisualState(): VisualState {
     return this._visualState;
   }
-  
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._terminalVisualConfig = terminalVisualConfig;
+  }
+
   getBulkFileHandle(): BulkFileHandle {
     const text =  this._isEmpty ? "" : this._aceEditor.getValue();
     return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
@@ -1225,4 +1267,9 @@ function px(value) {
 class TextModeWithWordSelect extends TextMode {
   tokenRe = XRegExp("^[\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]+", "g");
   nonTokenRe = XRegExp("^(?:[^\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]|\\s])+", "g");
+}
+
+function cssHexColorToRGBA(cssColor: string): number {
+  const color = new Color(cssColor);
+  return color.toRGBA();
 }

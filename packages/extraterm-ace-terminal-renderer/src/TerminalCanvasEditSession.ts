@@ -3,8 +3,6 @@
  */
 import { Document,
          EditSession,
-         HighlighterToken,
-         TokenWithIndex,
          Delta,
          Fold,
          LanguageMode,
@@ -107,7 +105,6 @@ export class TerminalCanvasEditSession extends EditSession {
     this._lineData[lineDataLen] = line;
   }
 
-  @log
   insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
     const line = this._trimRightWhitespace(sourceLine);
     const range: RangeBasic = {

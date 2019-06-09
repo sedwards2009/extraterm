@@ -770,6 +770,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
       handleGlobalKeybindingsEnable(<Messages.GlobalKeybindingsEnableMessage>msg);
       break;
 
+    case Messages.MessageType.TERMINAL_THEME_REQUEST:
+      handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
+      break;
+
     default:
       break;
   }
@@ -850,6 +854,16 @@ function handleThemeRescan(): Messages.ThemeListMessage {
   }
 
   return handleThemeListRequest();
+}
+
+function handleTerminalThemeRequest(webContents: Electron.WebContents, msg: Messages.TerminalThemeRequestMessage): void {
+  const terminalTheme = themeManager.getTerminalTheme(msg.id);
+  const reply: Messages.TerminalThemeMessage = {
+    type: Messages.MessageType.TERMINAL_THEME,
+    terminalTheme
+  };
+
+  webContents.send(Messages.CHANNEL_NAME, reply);
 }
 
 const ptyToSenderMap = new Map<number, number>();

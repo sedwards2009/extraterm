@@ -615,6 +615,16 @@ export class ThemeManager implements AcceptsConfigDatabase {
     return null;
   }
 
+  getTerminalTheme(id: string): TerminalTheme {
+    const terminalThemeInfo = this._themes.get(id);
+    if (terminalThemeInfo == null) {
+      return null;
+    }
+    const contents = this._getTerminalThemeContentsFromInfo(terminalThemeInfo);
+    const completeTheme = this._mergeTerminalThemeDefaults(contents, DEFAULT_TERMINAL_THEME);
+    return completeTheme;
+  }
+
   private _mergeTerminalThemeDefaults(terminalTheme: TerminalTheme, defaultTerminalTheme: TerminalTheme): TerminalTheme {
 
     const keys = ["foregroundColor",

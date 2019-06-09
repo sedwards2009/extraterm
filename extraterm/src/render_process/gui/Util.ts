@@ -165,7 +165,11 @@ export class Color {
     }
     return this._rgbaString;
   }
-  
+
+  toRGBA(): number {
+    return (this._red << 24) | (this._green << 16) | (this._blue << 8) | this._opacity;
+  }
+
   /**
    * Returns the color as a CSS string.
    * 
