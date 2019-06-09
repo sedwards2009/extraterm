@@ -172,14 +172,18 @@ export class CharCellGrid {
     const spaceCodePoint = " ".codePointAt(0);
     const maxChar = this.width * this.height;
     let offset = 0;
+
+    const fgRGBA = this._palette == null ? 0xffffffff : this._palette[FG_COLOR_INDEX];
+    const bgRGBA = this._palette == null ? 0x00000000 : this._palette[BG_COLOR_INDEX];
+
     for (let i=0; i<maxChar; i++, offset += CELL_SIZE_BYTES) {
       this._dataView.setUint32(offset, spaceCodePoint);
-      this._dataView.setUint16(offset + OFFSET_FLAGS, 0);
+      this._dataView.setUint16(offset + OFFSET_FLAGS, FLAG_MASK_FG_CLUT | FLAG_MASK_BG_CLUT);
       this._dataView.setUint16(offset + OFFSET_STYLE, 0);
-      this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, 0);
-      this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, 0);
-      this._dataView.setUint32(offset + OFFSET_FG, 0xffffffff);
-      this._dataView.setUint32(offset + OFFSET_BG, 0x000000ff);
+      this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, FG_COLOR_INDEX);
+      this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, BG_COLOR_INDEX);
+      this._dataView.setUint32(offset + OFFSET_FG, fgRGBA);
+      this._dataView.setUint32(offset + OFFSET_BG, bgRGBA);
     }
   }
 
