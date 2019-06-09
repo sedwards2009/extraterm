@@ -404,6 +404,31 @@ test("pasteGrid() neg offset", () => {
   expect(destGrid.getCodePoint(4, 3)).toBe(dotCodePoint);
 });
 
+test("palette update", () => {
+  const srcGrid = new CharCellGrid(5, 10, xtermPalette());
+  fillGrid(srcGrid, "S");
+  srcGrid.setFgClutIndex(0, 0, 1);
+  srcGrid.setBgClutIndex(0, 0, 3);
+
+  srcGrid.setFgClutIndex(4, 9, 2);
+  srcGrid.setBgClutIndex(4, 9, 4);
+
+  const newPalette = xtermPalette();
+  newPalette[1] = 0x12345678;
+  newPalette[2] = 0x11223344;
+  newPalette[3] = 0x87654321;
+  newPalette[4] = 0xabcdefff;
+
+  srcGrid.setPalette(newPalette);
+
+  expect(srcGrid.getFgRGBA(0, 0)).toBe(0x12345678);
+  expect(srcGrid.getBgRGBA(0, 0)).toBe(0x87654321);
+
+  expect(srcGrid.getFgRGBA(4, 9)).toBe(0x11223344);
+  expect(srcGrid.getBgRGBA(4, 9)).toBe(0xabcdefff);
+});
+
+
 function printHorizontalBorder(width: number): string {
   const chars = [];
   for (let x=0; x<width; x++) {

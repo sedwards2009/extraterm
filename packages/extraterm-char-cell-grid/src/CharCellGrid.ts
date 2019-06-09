@@ -129,7 +129,7 @@ export class CharCellGrid {
   private _dataView: DataView;
   private _uint8View: Uint8Array;
 
-  constructor(public readonly width: number, public readonly height: number, private readonly _palette: number[]=null,
+  constructor(public readonly width: number, public readonly height: number, private _palette: number[]=null,
       __bare__=false) {
     if (__bare__) {
       return;
@@ -138,6 +138,26 @@ export class CharCellGrid {
     this._dataView = new DataView(this._rawBuffer);
     this._uint8View = new Uint8Array(this._rawBuffer);
     this.clear();
+  }
+
+  setPalette(palette: number[]) : void {
+    this._palette = palette;
+    this._reapplyPalette();
+  }
+
+  private _reapplyPalette(): void {
+    const width = this.width;
+    const height = this.height;
+    for (let j=0; j<height; j++) {
+      for (let i=0; i<width; i++) {
+        if (this.isBgClut(i, j)) {
+          this.setBgClutIndex(i, j, this.getBgClutIndex(i,j));
+        }
+        if (this.isFgClut(i, j)) {
+          this.setFgClutIndex(i, j, this.getFgClutIndex(i,j));
+        }
+      }
+    }
   }
 
   clone(): CharCellGrid {

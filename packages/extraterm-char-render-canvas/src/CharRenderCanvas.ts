@@ -124,11 +124,11 @@ export class CharRenderCanvas {
   private cellWidthPx: number = 0;
   private cellHeightPx: number = 0;
 
-  cellGrid: CharCellGrid = null;
+  private _cellGrid: CharCellGrid = null;
   private _bgColorPatchCanvas: ColorPatchCanvas = null;
   private _fgColorPatchCanvas: ColorPatchCanvas = null;
 
-  private _palette: number[];
+  private _palette: number[] = null;
 
   constructor(options: CharRenderCanvasOptions) {
     const { widthPx, heightPx, widthChars, heightChars, fontFamily, fontSizePx, debugParentElement, palette } = options;
@@ -158,7 +158,7 @@ export class CharRenderCanvas {
     }
     this._canvasHeightPx = this._heightChars * this.cellHeightPx;
 
-    this.cellGrid = new CharCellGrid(this._widthChars, this._heightChars, this._palette);
+    this._cellGrid = new CharCellGrid(this._widthChars, this._heightChars, this._palette);
 
     this._canvas = <HTMLCanvasElement> document.createElement("canvas");
     this._canvas.width = this._canvasWidthPx;
@@ -181,14 +181,14 @@ export class CharRenderCanvas {
         
     this._fontAtlas = new FontAtlas(fontMetrics);
     this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts, fontMetrics);
-    this._bgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "background",
+    this._bgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "background",
                                                     this._palette[PALETTE_CURSOR_INDEX], debugParentElement);
-    this._fgColorPatchCanvas = new ColorPatchCanvas(this.cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground",
+    this._fgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground",
                                                     this._palette[0], debugParentElement);
   }
 
   getCellGrid(): CharCellGrid {
-    return this.cellGrid;
+    return this._cellGrid;
   }
 
   getCanvasElement(): HTMLCanvasElement {
@@ -201,6 +201,13 @@ export class CharRenderCanvas {
 
   getHeightPx(): number {
     return this._canvasHeightPx;
+  }
+
+  setPalette(palette: number[]) : void {
+    this._palette = palette;
+    this._cellGrid.setPalette(this._palette);
+    this._bgColorPatchCanvas.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
+    this._fgColorPatchCanvas.setCursorColor(this._palette[0]);
   }
 
   private _setupExtraFontSlices(extraFonts: FontSlice[], metrics: MonospaceFontMetrics): ExtraFontSlice[] {
@@ -226,7 +233,7 @@ export class CharRenderCanvas {
   }
 
   private _updateCharGridFlags(): void {
-    const cellGrid = this.cellGrid;
+    const cellGrid = this._cellGrid;
     const width = cellGrid.width;
     const height = cellGrid.height;
 
@@ -385,7 +392,7 @@ export class CharRenderCanvas {
     
     ctx.globalCompositeOperation = "source-over";
 
-    const cellGrid = this.cellGrid;
+    const cellGrid = this._cellGrid;
     const cellWidth = this.cellWidthPx;
     const cellHeight = this.cellHeightPx;
     const width = cellGrid.width;
@@ -412,7 +419,7 @@ export class CharRenderCanvas {
     ctx.fillStyle = "#ffffffff";
     ctx.globalCompositeOperation = "source-over";
 
-    const cellGrid = this.cellGrid;
+    const cellGrid = this._cellGrid;
     const cellWidth = this.cellWidthPx;
     const cellHeight = this.cellHeightPx;
     const width = cellGrid.width;
