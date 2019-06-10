@@ -56,8 +56,6 @@ const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
 const PACKAGE_JSON_PATH = "../../../package.json";
 
-const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
-
 
 let themeManager: ThemeManager;
 let ptyManager: PtyManager;
@@ -97,7 +95,6 @@ function main(): void {
   parsedArgs.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
     .option('-d, --dev-tools [devTools]', 'Open the dev tools on start up')
     .option('--force-device-scale-factor []', '(This option is used by Electron)')
-    .option(EXTRATERM_DEVICE_SCALE_FACTOR + ' []', '(Internal Extraterm option. Ignore)')
     .parse(normalizedArgv);
 
   setupExtensionManager();
@@ -516,11 +513,8 @@ function getWindowDimensionsFromConfig(windowId: number): SingleWindowConfigurat
 
 function setupLogging(): void {
   const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
-
-  if ( ! process.argv.find(item => item.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR))) {
-    if (fs.existsSync(logFilePath)) {
-      fs.unlinkSync(logFilePath);
-    }
+  if (fs.existsSync(logFilePath)) {
+    fs.unlinkSync(logFilePath);
   }
 
   const logWriter = new FileLogWriter(logFilePath);
