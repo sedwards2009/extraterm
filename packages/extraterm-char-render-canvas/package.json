@@ -4,8 +4,8 @@
   "description": "Fast renderer for character grids on canvas",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "dist/CharRenderCanvas.js",
-  "types": "dist/CharRenderCanvas.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
