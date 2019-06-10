@@ -120,6 +120,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     this._aceEditSession.setUseWorker(false);
 
     const aceRenderer = new TerminalRenderer(containerDiv);
+    aceRenderer.init();
     aceRenderer.setShowGutter(true);
     aceRenderer.setShowLineNumbers(true);
     aceRenderer.setShowFoldWidgets(false);

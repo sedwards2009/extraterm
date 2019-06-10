@@ -94,10 +94,7 @@ export async function startUp(closeSplash: () => void): Promise<void> {
   handleThemeListMessage(themeListMsg);
 
   await loadFontFaces();
-
   await loadTerminalTheme();
-
-  (<GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG)).themeTerminal
 
   const doc = window.document;
   doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
@@ -172,6 +169,8 @@ async function loadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
   terminalVisualConfig = {
+    fontFamily: config.terminalFont,
+    fontSizePx: config.terminalFontSize,
     terminalTheme: themeMsg.terminalTheme
   };
 }

@@ -6,5 +6,7 @@
 import { TerminalTheme } from 'extraterm-extension-api';
 
 export interface TerminalVisualConfig {
+  fontFamily: string;
+  fontSizePx: number;
   terminalTheme: TerminalTheme;
 }

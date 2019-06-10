@@ -162,7 +162,12 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._aceEditSession = new TerminalCanvasEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
       this._aceEditSession.setUndoManager(new UndoManager());
 
-      const aceRenderer = new TerminalCanvasRenderer(containerDiv, this._extractPalette(this._terminalVisualConfig));
+      const aceRenderer = new TerminalCanvasRenderer(containerDiv, {
+        palette: this._extractPalette(this._terminalVisualConfig),
+        fontFamily: this._terminalVisualConfig.fontFamily,
+        fontSizePx: this._terminalVisualConfig.fontSizePx,
+      });
+      aceRenderer.init();
       aceRenderer.setShowGutter(false);
       aceRenderer.setShowLineNumbers(false);
       aceRenderer.setDisplayIndentGuides(false);

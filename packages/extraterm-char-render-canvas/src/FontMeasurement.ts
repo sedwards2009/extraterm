@@ -23,10 +23,10 @@ class FontMeasurement {
 
     const canvas = <HTMLCanvasElement> document.createElement("canvas");
 
-    const canvasWidth = fontSizePx * 3;
-    const canvasHeight = fontSizePx * 3;
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+    this._canvasWidthPx = fontSizePx * 3;
+    this._canvasHeightPx = fontSizePx * 3;
+    canvas.width = this._canvasWidthPx;
+    canvas.height = this._canvasHeightPx;
 
     const ctx = canvas.getContext("2d", { alpha: false });
     ctx.font = "" + fontSizePx + "px " + fontFamily;

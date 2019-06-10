@@ -16,11 +16,17 @@ export class CanvasTextLayer implements TextLayer {
   private _editSession: TerminalCanvasEditSession = null;
   private _config: LayerConfig = null;
   private _log: Logger = null;
-  private _palette: number[] = null;
 
-  constructor(private readonly _contentDiv: HTMLDivElement, palette: number[]) {
+  private _palette: number[] = null;
+  private _fontFamily: string = null;
+  private _fontSizePx: number = 0;
+
+  constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number) {
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
+
+    this._fontFamily = fontFamily;
+    this._fontSizePx = fontSizePx; 
   }
 
   private _fallbackPalette(): number[] {
@@ -43,6 +49,14 @@ export class CanvasTextLayer implements TextLayer {
       return;
     }
     this._charRenderCanvas.setPalette(palette);
+  }
+
+  setFontFamily(fontFamily: string): void {
+    this._fontFamily = fontFamily;
+  }
+
+  setFontSizePx(fontSizePx: number): void {
+    this._fontSizePx = fontSizePx;
   }
 
   dispose(): void {
@@ -108,8 +122,8 @@ export class CanvasTextLayer implements TextLayer {
     }
 
     this._charRenderCanvas = new CharRenderCanvas({
-      fontFamily: "DejaVuSansMono",   // TODO
-      fontSizePx: 13,                 // TODO
+      fontFamily: this._fontFamily,
+      fontSizePx: this._fontSizePx,
       palette: this._palette,
       widthPx: canvasWidth,
       heightPx: canvasHeight
