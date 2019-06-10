@@ -40,14 +40,6 @@ const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
-// Electron on Linux under conditions and configuration which happen on one
-// of my machines, will render underscore characters below the text line and
-// into the line below it. If this is the last line in the viewer, then the
-// underscore will be cut off(!).
-// This hack adds just a little bit of extra space at the bottom of the
-// viewer for the underscore.
-const OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK = 1; // px
-
 const DEBUG_RESIZE = false;
 
 let cssText: string = null;
@@ -586,7 +578,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         reserve = vPad;
       }
     }
-    reserve = Math.max(this._isEmpty ? 0 : OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK, reserve);
     if (DEBUG_RESIZE) {
       this._log.debug("getReserveViewportHeight: ", reserve);
     }
