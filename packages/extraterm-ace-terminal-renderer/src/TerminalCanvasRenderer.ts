@@ -147,8 +147,7 @@ class CanvasFontMetricsMonitor implements FontMetricsMonitor {
     }
 
     const { renderFontMetrics, cssFontMetrics } = computeDpiFontMetrics(this._fontFamily, this._fontSizePx,
-                                                    this._fontSizePx);
-
+                                                    this._devicePixelRatio);
     this._fontMetrics = {
       charWidthPx: cssFontMetrics.widthPx,
       charHeightPx: cssFontMetrics.heightPx,
