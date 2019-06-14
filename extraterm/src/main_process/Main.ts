@@ -76,8 +76,9 @@ function main(): void {
   setupAppData();
   setupLogging();
 
-  app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
-  app.commandLine.appendSwitch('high-dpi-support', 'true');
+  app.commandLine.appendSwitch("disable-smooth-scrolling"); // Turn off the sluggish scrolling.
+  app.commandLine.appendSwitch("high-dpi-support", "true");
+  app.commandLine.appendSwitch("disable-color-correct-rendering");
 
   if (process.platform === "darwin") {
     setupOSX();
