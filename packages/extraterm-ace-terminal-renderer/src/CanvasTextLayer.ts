@@ -8,6 +8,7 @@ import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { computeDpiFontMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
+import { ratioToFraction } from "./RatioToFraction";
 
 export class CanvasTextLayer implements TextLayer {
 
@@ -175,8 +176,8 @@ export class CanvasTextLayer implements TextLayer {
 
     // We are looking for two integers, i & j, such that i/j = devicePixelRatio
     // i & j should be a small as possible.
-    const screenMultiple = 1 / (devicePixelRatio - 1);
-    const renderMultiple = screenMultiple + 1;
+
+    const [renderMultiple, screenMultiple] = ratioToFraction(devicePixelRatio);
 
     const screenLength = Math.ceil(length / screenMultiple) * screenMultiple;
     const renderLength = screenLength / screenMultiple * renderMultiple;
