@@ -3,11 +3,10 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas, xtermPalette } from "extraterm-char-render-canvas";
+import { CharRenderCanvas } from "extraterm-char-render-canvas";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
-import { computeDpiFontMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 import { ratioToFraction } from "./RatioToFraction";
 
 export class CanvasTextLayer implements TextLayer {
@@ -24,8 +23,7 @@ export class CanvasTextLayer implements TextLayer {
   private _fontSizePx: number = 0;
   private _devicePixelRatio = 1;
 
-  private _renderFontMetrics: MonospaceFontMetrics = null;
-  private _cssFontMetrics: MonospaceFontMetrics = null;
+  private _clipDiv: HTMLDivElement = null;
 
   constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
               devicePixelRatio: number) {
@@ -36,14 +34,11 @@ export class CanvasTextLayer implements TextLayer {
     this._fontFamily = fontFamily;
     this._fontSizePx = fontSizePx; 
     this._devicePixelRatio = devicePixelRatio;
-    this._setupMetrics();
-  }
 
-  private _setupMetrics(): void {
-    const { renderFontMetrics, cssFontMetrics } = computeDpiFontMetrics(this._fontFamily, this._fontSizePx,
-                                                    this._devicePixelRatio);
-    this._renderFontMetrics = renderFontMetrics;
-    this._cssFontMetrics = cssFontMetrics;
+    this._clipDiv = <HTMLDivElement> document.createElement("DIV");
+    this._clipDiv.style.overflow = "hidden";
+
+    this._contentDiv.appendChild(this._clipDiv);
   }
 
   private _fallbackPalette(): number[] {
@@ -160,13 +155,14 @@ export class CanvasTextLayer implements TextLayer {
     canvasElement.style.width = "" + canvasWidth + "px";
     canvasElement.style.height = "" + canvasHeight + "px";
 
-    this._contentDiv.appendChild(canvasElement);
+    this._clipDiv.style.width = "" + rawCanvasWidth + "px";
+    this._clipDiv.style.height = "" + rawCanvasHeight + "px";
+    this._clipDiv.appendChild(canvasElement);
   }
 
   private _computeDevicePixelRatioPair(devicePixelRatio: number, length: number): { screenLength: number, renderLength: number } {
     // Compute two lengths, `screenLength` and `renderLength` such that renderLength/screenLength = devicePixelRatio
     // screenLength should be close, but not small than the length parameter.
-
     if (devicePixelRatio === 1) {
       return {
         screenLength: length,
@@ -176,14 +172,9 @@ export class CanvasTextLayer implements TextLayer {
 
     // We are looking for two integers, i & j, such that i/j = devicePixelRatio
     // i & j should be a small as possible.
-
     const [renderMultiple, screenMultiple] = ratioToFraction(devicePixelRatio);
-
     const screenLength = Math.ceil(length / screenMultiple) * screenMultiple;
     const renderLength = screenLength / screenMultiple * renderMultiple;
-
-    console.log(`devicePixelRatio: ${devicePixelRatio}, length: ${length}, screenLength: ${screenLength}, renderLength: ${renderLength}`);
-
     return {
       screenLength,
       renderLength
@@ -225,5 +216,4 @@ export class CanvasTextLayer implements TextLayer {
     }
     return visibleRows;
   }
-
 }
