@@ -147,17 +147,19 @@ export class CharRenderCanvas {
     if (widthPx != null) {
       // Derive char width from pixels width
       this._widthChars = Math.floor(widthPx / this.cellWidthPx);
+      this._canvasWidthPx = widthPx;  
     } else {
       this._widthChars = widthChars;
+      this._canvasWidthPx = this._widthChars * this.cellWidthPx;
     }
-    this._canvasWidthPx = this._widthChars * this.cellWidthPx;
 
     if (heightPx != null) {
       this._heightChars = Math.floor(heightPx / this.cellHeightPx);
+      this._canvasHeightPx = heightPx;
     } else {
       this._heightChars = heightChars;
+      this._canvasHeightPx = this._heightChars * this.cellHeightPx;
     }
-    this._canvasHeightPx = this._heightChars * this.cellHeightPx;
 
     this._cellGrid = new CharCellGrid(this._widthChars, this._heightChars, this._palette);
 

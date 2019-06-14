@@ -4,13 +4,14 @@
 
 import { Renderer, HScrollBar, HScrollTracking, VScrollBar, TextLayer, FontMetricsMonitor, FontMetrics } from "ace-ts";
 import { CanvasTextLayer } from "./CanvasTextLayer";
-import { computeFontMetrics } from "extraterm-char-render-canvas";
+import { computeDpiFontMetrics } from "extraterm-char-render-canvas";
 import { Event } from 'extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
 
 export interface TerminalCanvasRendererOptions {
   palette: number[];
+  devicePixelRatio: number;
   fontFamily: string;
   fontSizePx: number;
 }
@@ -21,6 +22,7 @@ export class TerminalCanvasRenderer extends Renderer {
   private _palette: number[] = null;
   private _fontFamily: string = null;
   private _fontSizePx: number = null;
+  private _devicePixelRatio: number = 1;
   private _canvasFontMetricsMonitor: CanvasFontMetricsMonitor = null;
 
   constructor(container: HTMLElement, options: TerminalCanvasRendererOptions) {
@@ -30,6 +32,7 @@ export class TerminalCanvasRenderer extends Renderer {
     this.setPalette(options.palette);
     this.setFontFamily(options.fontFamily);
     this.setFontSizePx(options.fontSizePx);
+    this.setDevicePixelRatio(options.devicePixelRatio);
     this.setHScrollTracking(HScrollTracking.VISIBLE);
   }
 
@@ -42,12 +45,14 @@ export class TerminalCanvasRenderer extends Renderer {
   }
 
   protected createTextLayer(contentDiv: HTMLDivElement): TextLayer {
-    this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._palette, this._fontFamily, this._fontSizePx);
+    this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._palette, this._fontFamily, this._fontSizePx,
+                              this._devicePixelRatio);
     return this._canvasTextLayer;
   }
   
   protected createFontMetricsMonitor(): FontMetricsMonitor {
-    this._canvasFontMetricsMonitor = new CanvasFontMetricsMonitor(this._fontFamily, this._fontSizePx);
+    this._canvasFontMetricsMonitor = new CanvasFontMetricsMonitor(this._fontFamily, this._fontSizePx,
+                                          this._devicePixelRatio);
     return this._canvasFontMetricsMonitor;
   }
 
@@ -84,6 +89,19 @@ export class TerminalCanvasRenderer extends Renderer {
     }
     this._canvasFontMetricsMonitor.setFontSizePx(fontSizePx);
   }
+
+  setDevicePixelRatio(devicePixelRatio: number): void {
+    this._devicePixelRatio = devicePixelRatio;
+    if (this._canvasTextLayer == null) {
+      return;
+    }
+    this._canvasTextLayer.setDevicePixelRatio(devicePixelRatio);
+
+    if (this._canvasFontMetricsMonitor == null) {
+      return;
+    }
+    this._canvasFontMetricsMonitor.setDevicePixelRatio(devicePixelRatio);
+  }
 }
 
 class HiddenVScrollBar extends VScrollBar {
@@ -116,10 +134,10 @@ class CanvasFontMetricsMonitor implements FontMetricsMonitor {
   private _fontMetrics: FontMetrics = null;
   private _isMonitoring = false;
 
-  constructor(private _fontFamily: string, private _fontSizePx: number) {
+  constructor(private _fontFamily: string, private _fontSizePx: number, private _devicePixelRatio: number) {
     this._log = getLogger("CanvasFontMetricsMonitor", this);
 
-    this._log.debug(`fontFamily: ${this._fontFamily}, fontSizePx: ${this._fontSizePx}`);
+    this._log.debug(`fontFamily: ${this._fontFamily}, fontSizePx: ${this._fontSizePx}, devicePixelRatio: ${this._devicePixelRatio}`);
     this.onChange = this._onChangeEventEmitter.event;
   }
 
@@ -128,10 +146,12 @@ class CanvasFontMetricsMonitor implements FontMetricsMonitor {
       return this._fontMetrics;
     }
 
-    const monoMetrics = computeFontMetrics(this._fontFamily, this._fontSizePx);
+    const { renderFontMetrics, cssFontMetrics } = computeDpiFontMetrics(this._fontFamily, this._fontSizePx,
+                                                    this._fontSizePx);
+
     this._fontMetrics = {
-      charWidthPx: monoMetrics.widthPx,
-      charHeightPx: monoMetrics.heightPx,
+      charWidthPx: cssFontMetrics.widthPx,
+      charHeightPx: cssFontMetrics.heightPx,
       isBoldCompatible: true
     };
     return this._fontMetrics;
@@ -148,11 +168,14 @@ class CanvasFontMetricsMonitor implements FontMetricsMonitor {
   }
 
   setFontFamily(fontFamily: string): void {
-
+// TODO
   }
 
   setFontSizePx(fontSizePx: number): void {
-
+// TODO
   }
 
+  setDevicePixelRatio(ratio: number): void {
+// TODO
+  }
 }

@@ -11,6 +11,35 @@ export function computeFontMetrics(fontFamily: string, fontSizePx: number, sampl
   return fm.computeFontMetrics(fontFamily, fontSizePx, sampleChars);
 }
 
+export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, devicePixelRatio: number,
+    sampleChars: string[]=null): { renderFontMetrics: MonospaceFontMetrics, cssFontMetrics: MonospaceFontMetrics } {
+
+  const fm = new FontMeasurement();
+  const renderFontSizePx = fontSizePx * devicePixelRatio;
+  const renderFontMetrics = fm.computeFontMetrics(fontFamily, renderFontSizePx, sampleChars);
+
+  const cssFontMetrics: MonospaceFontMetrics = {
+    fontSizePx: renderFontMetrics.fontSizePx / devicePixelRatio,
+    fontFamily,
+  
+    fillTextYOffset: renderFontMetrics.fillTextYOffset / devicePixelRatio,
+    fillTextXOffset: renderFontMetrics.fillTextYOffset / devicePixelRatio,
+  
+    widthPx: renderFontMetrics.widthPx / devicePixelRatio,
+    heightPx: renderFontMetrics.heightPx / devicePixelRatio,
+  
+    strikethroughY: renderFontMetrics.strikethroughY / devicePixelRatio,
+    strikethroughHeight: renderFontMetrics.strikethroughHeight / devicePixelRatio,
+    underlineY: renderFontMetrics.underlineY / devicePixelRatio,
+    underlineHeight: renderFontMetrics.underlineHeight / devicePixelRatio,
+  };
+
+  return {
+    renderFontMetrics,
+    cssFontMetrics,
+  }
+}
+
 class FontMeasurement {
 
   private _canvasWidthPx = 250;

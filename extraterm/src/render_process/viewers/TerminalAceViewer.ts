@@ -166,6 +166,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         palette: this._extractPalette(this._terminalVisualConfig),
         fontFamily: this._terminalVisualConfig.fontFamily,
         fontSizePx: this._terminalVisualConfig.fontSizePx,
+        devicePixelRatio: this._terminalVisualConfig.devicePixelRatio,
       });
       aceRenderer.init();
       aceRenderer.setShowGutter(false);

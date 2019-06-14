@@ -171,6 +171,7 @@ async function loadTerminalTheme(): Promise<void> {
   terminalVisualConfig = {
     fontFamily: config.terminalFont,
     fontSizePx: config.terminalFontSize,
+    devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme
   };
 }

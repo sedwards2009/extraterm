@@ -7,6 +7,7 @@ import { CharRenderCanvas, xtermPalette } from "extraterm-char-render-canvas";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
+import { computeDpiFontMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 
 export class CanvasTextLayer implements TextLayer {
 
@@ -20,13 +21,28 @@ export class CanvasTextLayer implements TextLayer {
   private _palette: number[] = null;
   private _fontFamily: string = null;
   private _fontSizePx: number = 0;
+  private _devicePixelRatio = 1;
 
-  constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number) {
+  private _renderFontMetrics: MonospaceFontMetrics = null;
+  private _cssFontMetrics: MonospaceFontMetrics = null;
+
+  constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
+              devicePixelRatio: number) {
+
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
 
     this._fontFamily = fontFamily;
     this._fontSizePx = fontSizePx; 
+    this._devicePixelRatio = devicePixelRatio;
+    this._setupMetrics();
+  }
+
+  private _setupMetrics(): void {
+    const { renderFontMetrics, cssFontMetrics } = computeDpiFontMetrics(this._fontFamily, this._fontSizePx,
+                                                    this._devicePixelRatio);
+    this._renderFontMetrics = renderFontMetrics;
+    this._cssFontMetrics = cssFontMetrics;
   }
 
   private _fallbackPalette(): number[] {
@@ -57,6 +73,10 @@ export class CanvasTextLayer implements TextLayer {
 
   setFontSizePx(fontSizePx: number): void {
     this._fontSizePx = fontSizePx;
+  }
+
+  setDevicePixelRatio(devicePixelRatio: number): void {
+    this._devicePixelRatio = devicePixelRatio;
   }
 
   dispose(): void {
@@ -107,8 +127,14 @@ export class CanvasTextLayer implements TextLayer {
   }
 
   private _setUpRenderCanvas(config: LayerConfig, viewPortSize: ViewPortSize, numOfVisibleRows: number): void {
-    const canvasWidth = viewPortSize.widthPx;
-    const canvasHeight = numOfVisibleRows * config.charHeightPx;
+    const rawCanvasWidth = viewPortSize.widthPx;
+    const rawCanvasHeight = Math.ceil(numOfVisibleRows * config.charHeightPx);
+
+    const widthPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasWidth);
+    const heightPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasHeight);
+
+    const canvasWidth = widthPair.screenLength;
+    const canvasHeight = heightPair.screenLength;
 
     if (this._charRenderCanvas != null) {
       if (this._charRenderCanvas.getWidthPx() === canvasWidth &&
@@ -123,13 +149,44 @@ export class CanvasTextLayer implements TextLayer {
 
     this._charRenderCanvas = new CharRenderCanvas({
       fontFamily: this._fontFamily,
-      fontSizePx: this._fontSizePx,
+      fontSizePx: this._fontSizePx * this._devicePixelRatio,
       palette: this._palette,
-      widthPx: canvasWidth,
-      heightPx: canvasHeight
+      widthPx: widthPair.renderLength,
+      heightPx: heightPair.renderLength
     });
 
-    this._contentDiv.appendChild(this._charRenderCanvas.getCanvasElement());
+    const canvasElement = this._charRenderCanvas.getCanvasElement();
+    canvasElement.style.width = "" + canvasWidth + "px";
+    canvasElement.style.height = "" + canvasHeight + "px";
+
+    this._contentDiv.appendChild(canvasElement);
+  }
+
+  private _computeDevicePixelRatioPair(devicePixelRatio: number, length: number): { screenLength: number, renderLength: number } {
+    // Compute two lengths, `screenLength` and `renderLength` such that renderLength/screenLength = devicePixelRatio
+    // screenLength should be close, but not small than the length parameter.
+
+    if (devicePixelRatio === 1) {
+      return {
+        screenLength: length,
+        renderLength: length
+      };
+    }
+
+    // We are looking for two integers, i & j, such that i/j = devicePixelRatio
+    // i & j should be a small as possible.
+    const screenMultiple = 1 / (devicePixelRatio - 1);
+    const renderMultiple = screenMultiple + 1;
+
+    const screenLength = Math.ceil(length / screenMultiple) * screenMultiple;
+    const renderLength = screenLength / screenMultiple * renderMultiple;
+
+    console.log(`devicePixelRatio: ${devicePixelRatio}, length: ${length}, screenLength: ${screenLength}, renderLength: ${renderLength}`);
+
+    return {
+      screenLength,
+      renderLength
+    };
   }
 
   private _writeLinesToGrid(grid: CharCellGrid, rows: number[], canvasStartRow: number): void {

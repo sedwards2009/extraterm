@@ -8,5 +8,6 @@ import { TerminalTheme } from 'extraterm-extension-api';
 export interface TerminalVisualConfig {
   fontFamily: string;
   fontSizePx: number;
+  devicePixelRatio: number;
   terminalTheme: TerminalTheme;
 }
