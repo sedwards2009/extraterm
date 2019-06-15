@@ -74,27 +74,118 @@ export function xtermPalette(): number[] {
 
 //-------------------------------------------------------------------------
 export interface CharRenderCanvasOptions {
+  /**
+   * Desired width of the canvas in pixels
+   * 
+   * This or `widthChars` must be specified.
+   */
   widthPx?: number;
+
+  /**
+   * Desired height of the canvas in pixels
+   * 
+   * This or `heightChars` must be specified.
+   */
   heightPx?: number;
 
+  /**
+   * Maximum width of the canvas which may be used for show character cells
+   * 
+   * Optional.
+   */
+  usableWidthPx?: number;
+
+  /**
+   * Maximum height of the canvas which may be used for show character cells
+   * 
+   * Optional.
+   */
+  usableHeightPx?: number;
+
+  /**
+   * Desired width of the canvas in character cell widths.
+   * 
+   * This or `widthPx` must be specified.
+   */
   widthChars?: number;
+
+  /**
+   * Desired height of the canvas in character cell widths.
+   * 
+   * This or `heightPx` must be specified.
+   */
   heightChars?: number;
 
+  /**
+   * Font family of the primary font used for rendering the cells
+   * 
+   * The exact name is the same as that required by CSS.
+   */
   fontFamily: string;
+
+  /**
+   * Height of the primary font in pixels
+   */
   fontSizePx: number;
 
   debugParentElement?: HTMLElement;
+
+  /**
+   * Color palette
+   * 
+   * An array of 258 RGBA 32bit colors values.
+   * Indexes 256 (`PALETTE_BG_INDEX`), 257 (`PALETTE_FG_INDEX`) and 258
+   * (`PALETTE_CURSOR_INDEX`) have special meaning. They correspond to
+   * The terminal background color, foreground color, and cursor color.
+   */
   palette: number[];
 
+  /**
+   * List of additional fonts for specific unicode ranges
+   */
   extraFonts?: FontSlice[];
 }
 
 export interface FontSlice {
+  /**
+   * Font family to render the cells using
+   * 
+   * The exact name is the same as that required by CSS.
+   */
   fontFamily: string;
+
+  /**
+   * Size of the font in pixels
+   */
   fontSizePx: number;
+
+  /**
+   * Set to true if the font is a color font
+   */
   isColor?: boolean;
+
+  /**
+   * Start code point of the unicode range
+   * 
+   * This and `unicodeEnd` define the range of unicode code points for
+   * which this font is to be used.
+   */
   unicodeStart: number;
+
+  /**
+   * End code point of the unicode range (exclusive)
+   * 
+   * This and `unicodeStart` define the range of unicode code points for
+   * which this font is to be used.
+   */
   unicodeEnd: number;
+
+  /**
+   * Characters used to determine the effective size of the glyphs
+   * 
+   * These characters are rendered and examined on the pixel level to
+   * determine the actual size of the font on the screen.
+   */
   sampleChars?: string[];
 }
 
@@ -132,7 +223,8 @@ export class CharRenderCanvas {
   private _palette: number[] = null;
 
   constructor(options: CharRenderCanvasOptions) {
-    const { widthPx, heightPx, widthChars, heightChars, fontFamily, fontSizePx, debugParentElement, palette } = options;
+    const { widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily, fontSizePx,
+            debugParentElement, palette } = options;
 
     this._palette = palette;
 
@@ -146,7 +238,8 @@ export class CharRenderCanvas {
   
     if (widthPx != null) {
       // Derive char width from pixels width
-      this._widthChars = Math.floor(widthPx / this.cellWidthPx);
+      const effectiveWidthPx = usableWidthPx == null ? widthPx : usableWidthPx;
+      this._widthChars = Math.floor(effectiveWidthPx / this.cellWidthPx);
       this._canvasWidthPx = widthPx;  
     } else {
       this._widthChars = widthChars;
@@ -154,7 +247,8 @@ export class CharRenderCanvas {
     }
 
     if (heightPx != null) {
-      this._heightChars = Math.floor(heightPx / this.cellHeightPx);
+      const effectiveHeightPx = usableHeightPx == null? heightPx : usableHeightPx;
+      this._heightChars = Math.floor(effectiveHeightPx / this.cellHeightPx);
       this._canvasHeightPx = heightPx;
     } else {
       this._heightChars = heightChars;

@@ -148,7 +148,9 @@ export class CanvasTextLayer implements TextLayer {
       fontSizePx: this._fontSizePx * this._devicePixelRatio,
       palette: this._palette,
       widthPx: widthPair.renderLength,
-      heightPx: heightPair.renderLength
+      heightPx: heightPair.renderLength,
+      usableWidthPx: rawCanvasWidth * this._devicePixelRatio,
+      usableHeightPx: rawCanvasHeight * this._devicePixelRatio,
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();
