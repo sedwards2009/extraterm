@@ -7,6 +7,8 @@ import { ColorPatchCanvas } from "./ColorPatchCanvas";
 import { FontAtlas } from "./FontAtlas";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { computeFontMetrics, debugFontMetrics } from "./FontMeasurement";
+import { FontAtlasRepository } from "./FontAtlasRepository";
+import { Disposable } from "./Disposable";
 
 const log = console.log.bind(console);
 
@@ -144,6 +146,11 @@ export interface CharRenderCanvasOptions {
    * List of additional fonts for specific unicode ranges
    */
   extraFonts?: FontSlice[];
+
+  /**
+   * Font atlas repository to use for fetching font atlases
+   */
+  fontAtlasRepository?: FontAtlasRepository;
 }
 
 export interface FontSlice {
@@ -193,7 +200,7 @@ interface ExtraFontSlice extends FontSlice {
   fontAtlas: FontAtlas;
 }
 
-export class CharRenderCanvas {
+export class CharRenderCanvas implements Disposable {
 
   private _canvas: HTMLCanvasElement = null;
   private _canvasCtx: CanvasRenderingContext2D = null;
@@ -221,10 +228,13 @@ export class CharRenderCanvas {
   private _fgColorPatchCanvas: ColorPatchCanvas = null;
 
   private _palette: number[] = null;
+  private _fontAtlasRepository: FontAtlasRepository = null;
+  
+  private _disposables: Disposable[] = [];
 
   constructor(options: CharRenderCanvasOptions) {
     const { widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily, fontSizePx,
-            debugParentElement, palette } = options;
+            debugParentElement, palette, fontAtlasRepository } = options;
 
     this._palette = palette;
 
@@ -235,7 +245,13 @@ export class CharRenderCanvas {
     debugFontMetrics(fontMetrics);
     this.cellWidthPx = fontMetrics.widthPx;
     this.cellHeightPx = fontMetrics.heightPx;
-  
+
+    if (fontAtlasRepository == null) {
+      this._fontAtlasRepository = new FontAtlasRepository();
+    } else {
+      this._fontAtlasRepository = fontAtlasRepository;
+    }
+
     if (widthPx != null) {
       // Derive char width from pixels width
       const effectiveWidthPx = usableWidthPx == null ? widthPx : usableWidthPx;
@@ -275,13 +291,23 @@ export class CharRenderCanvas {
     if (debugParentElement != null) {
       debugParentElement.appendChild(this._charCanvas);
     }
-        
-    this._fontAtlas = new FontAtlas(fontMetrics);
+  
+    const primaryFontAtlas =  this._fontAtlasRepository.getFontAtlas(fontMetrics);
+    this._disposables.push(primaryFontAtlas);
+    this._fontAtlas = primaryFontAtlas;
+    
     this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts, fontMetrics);
     this._bgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "background",
                                                     this._palette[PALETTE_CURSOR_INDEX], debugParentElement);
     this._fgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground",
                                                     this._palette[0], debugParentElement);
+  }
+
+  dispose(): void {
+    for (const d of this._disposables) {
+      d.dispose();
+    }
+    this._disposables = [];
   }
 
   getCellGrid(): CharCellGrid {
@@ -324,7 +350,8 @@ export class CharRenderCanvas {
       customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
       customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
 
-      const fontAtlas = new FontAtlas(customMetrics);
+      const fontAtlas = this._fontAtlasRepository.getFontAtlas(customMetrics);
+      this._disposables.push(fontAtlas);
       return { ...extraFont, fontAtlas }
     });
   }

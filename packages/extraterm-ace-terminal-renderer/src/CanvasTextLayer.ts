@@ -3,13 +3,16 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, FontAtlasRepository } from "extraterm-char-render-canvas";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";
 
 const PROVISION_HEIGHT_FACTOR = 1.5;
+
+const fontAtlasRepository = new FontAtlasRepository();
+
 
 export class CanvasTextLayer implements TextLayer {
 
@@ -163,6 +166,7 @@ export class CanvasTextLayer implements TextLayer {
       heightPx: heightPxPair.renderLength,
       usableWidthPx: rawWidthPx * this._devicePixelRatio,
       usableHeightPx: rawHeightPx * this._devicePixelRatio,
+      fontAtlasRepository
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();
