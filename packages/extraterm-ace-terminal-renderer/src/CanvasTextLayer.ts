@@ -9,6 +9,8 @@ import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";
 
+const PROVISION_HEIGHT_FACTOR = 1.5;
+
 export class CanvasTextLayer implements TextLayer {
 
   element: HTMLDivElement;
@@ -133,13 +135,17 @@ export class CanvasTextLayer implements TextLayer {
     const canvasHeight = heightPair.screenLength;
 
     if (this._charRenderCanvas != null) {
-      if (this._charRenderCanvas.getWidthPx() === canvasWidth &&
-          this._charRenderCanvas.getHeightPx() === canvasHeight) {
+      if (this._charRenderCanvas.getWidthPx() >= canvasWidth &&
+          this._charRenderCanvas.getHeightPx() >= canvasHeight) {
         return;
       }
       this._deleteCanvasElement();
     }
-    this._createCanvas(rawCanvasWidth, rawCanvasHeight);
+
+    // Overprovision
+    const provisionCanvasHeight = Math.ceil((Math.round(numOfVisibleRows * PROVISION_HEIGHT_FACTOR) + 1)
+                                    * config.charHeightPx);
+    this._createCanvas(rawCanvasWidth, provisionCanvasHeight);
   }
 
   private _createCanvas(rawWidthPx: number, rawHeightPx: number): void {
