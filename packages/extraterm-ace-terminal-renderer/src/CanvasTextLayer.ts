@@ -137,29 +137,41 @@ export class CanvasTextLayer implements TextLayer {
           this._charRenderCanvas.getHeightPx() === canvasHeight) {
         return;
       }
-
-      const canvasElement = this._charRenderCanvas.getCanvasElement();
-      canvasElement.parentElement.removeChild(canvasElement);
-      this._charRenderCanvas = null;
+      this._deleteCanvasElement();
     }
+    this._createCanvas(rawCanvasWidth, rawCanvasHeight);
+  }
+
+  private _createCanvas(rawWidthPx: number, rawHeightPx: number): void {
+    const widthPxPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawWidthPx);
+    const heightPxPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawHeightPx);
+
+    const canvasWidthPx = widthPxPair.screenLength;
+    const canvasHeightPx = heightPxPair.screenLength;
 
     this._charRenderCanvas = new CharRenderCanvas({
       fontFamily: this._fontFamily,
       fontSizePx: this._fontSizePx * this._devicePixelRatio,
       palette: this._palette,
-      widthPx: widthPair.renderLength,
-      heightPx: heightPair.renderLength,
-      usableWidthPx: rawCanvasWidth * this._devicePixelRatio,
-      usableHeightPx: rawCanvasHeight * this._devicePixelRatio,
+      widthPx: widthPxPair.renderLength,
+      heightPx: heightPxPair.renderLength,
+      usableWidthPx: rawWidthPx * this._devicePixelRatio,
+      usableHeightPx: rawHeightPx * this._devicePixelRatio,
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();
-    canvasElement.style.width = "" + canvasWidth + "px";
-    canvasElement.style.height = "" + canvasHeight + "px";
+    canvasElement.style.width = "" + canvasWidthPx + "px";
+    canvasElement.style.height = "" + canvasHeightPx + "px";
 
-    this._clipDiv.style.width = "" + rawCanvasWidth + "px";
-    this._clipDiv.style.height = "" + rawCanvasHeight + "px";
+    this._clipDiv.style.width = "" + rawWidthPx + "px";
+    this._clipDiv.style.height = "" + rawHeightPx + "px";
     this._clipDiv.appendChild(canvasElement);
+  }
+
+  private _deleteCanvasElement(): void {
+    const canvasElement = this._charRenderCanvas.getCanvasElement();
+    canvasElement.parentElement.removeChild(canvasElement);
+    this._charRenderCanvas = null;
   }
 
   private _computeDevicePixelRatioPair(devicePixelRatio: number, length: number): { screenLength: number, renderLength: number } {
