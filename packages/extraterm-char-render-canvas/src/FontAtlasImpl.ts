@@ -5,20 +5,21 @@ import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH
 import * as easta from "easta";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
-
-const log = console.log.bind(console);
+import { Logger, getLogger, log } from "extraterm-logging";
 
 
 export class FontAtlasImpl implements FontAtlas {
-
+  private _log: Logger = null;
   private _cellWidth: number = 0;
   private _cellHeight: number = 0;
   private _pages: FontAtlasPage[] = [];
 
   constructor(private readonly _metrics: MonospaceFontMetrics) {
+    this._log = getLogger("FontAtlasImpl", this);
+
     this._cellWidth = this._metrics.widthPx;
     this._cellHeight = this._metrics.heightPx;
-    log(`FontAtlas cellWidth: ${this._cellWidth}, cellHeight: ${this._cellHeight}`);
+    this._log.debug(`FontAtlas cellWidth: ${this._cellWidth}, cellHeight: ${this._cellHeight}`);
     this._appendPage();
   }
 
@@ -58,6 +59,7 @@ interface CachedGlyph {
 
 
 class FontAtlasPage {
+  private _log: Logger = null;
 
   private _pageCanvas: HTMLCanvasElement = null;
   private _pageCtx: CanvasRenderingContext2D = null;
@@ -69,7 +71,9 @@ class FontAtlasPage {
   private _isFull = false;
 
   constructor(private readonly _metrics: MonospaceFontMetrics) {
-    log(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
+    this._log = getLogger("FontAtlasPage", this);
+
+    this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
     this._initalize();
   }
 
@@ -104,6 +108,12 @@ class FontAtlasPage {
     }
 
     const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(xPixel, yPixel, widthPx, this._metrics.heightPx);
+    ctx.clip();
+
     if (cachedGlyph.imageBitmap != null) {
       // Fast version
       ctx.drawImage(cachedGlyph.imageBitmap,
@@ -120,6 +130,7 @@ class FontAtlasPage {
                     xPixel, yPixel,                                 // Dest location
                     widthPx, this._metrics.heightPx); // Size
     }
+    ctx.restore();
     return true;
   }
 

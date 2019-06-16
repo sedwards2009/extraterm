@@ -13,6 +13,7 @@
   "dependencies": {
     "easta": "3.0.1",
     "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-logging": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0"
   },
   "devDependencies": {

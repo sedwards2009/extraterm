@@ -3,8 +3,8 @@
  */
 
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
+import { Logger, getLogger, log } from "extraterm-logging";
 
-const log = console.log.bind(console);
 
 export function computeFontMetrics(fontFamily: string, fontSizePx: number, sampleChars: string[]=null): MonospaceFontMetrics {
   const fm = new FontMeasurement();
@@ -41,11 +41,13 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
 }
 
 class FontMeasurement {
-
+  private _log: Logger = null;
   private _canvasWidthPx = 250;
   private _canvasHeightPx = 250;
 
   computeFontMetrics(fontFamily: string, fontSizePx: number, sampleChars: string[]=null): MonospaceFontMetrics {
+    this._log = getLogger("FontMeasurement", this);
+
     if (sampleChars == null) {
       sampleChars = ["X"];
     }
@@ -66,10 +68,10 @@ class FontMeasurement {
     logFontMetrics(sampleChars[0], metrics);
 
     const {topY: xTopY, bottomY: xBottomY} = this._renderAndMeasureText(ctx, fontSizePx, sampleChars[0]);
-    log(`X: topY: ${xTopY}, bottomY: ${xBottomY}`);
+    this._log.debug(`X: topY: ${xTopY}, bottomY: ${xBottomY}`);
 
     const {topY: mTopY, bottomY: mBottomY} = this._renderAndMeasureText(ctx, fontSizePx, "m");
-    log(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
+    this._log.debug(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
 
     const charWidthPx = Math.ceil(metrics.width);
     const charHeightPx = Math.ceil(metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent);
@@ -151,7 +153,7 @@ class FontMeasurement {
 }
 
 export function debugFontMetrics(fontMetrics: MonospaceFontMetrics): void {
-  log("MonospaceFontMetrics: " + JSON.stringify(fontMetrics, null, "  "));
+  getLogger("debugFontMetrics()").debug("MonospaceFontMetrics: " + JSON.stringify(fontMetrics, null, "  "));
 }
 
 export function dumpFontMetrics(ctx: CanvasRenderingContext2D): void {
@@ -164,7 +166,7 @@ export function dumpFontMetrics(ctx: CanvasRenderingContext2D): void {
 }
 
 export function logFontMetrics(c: string, metrics): void {
-  log(`${c} is:
+  getLogger("logFontMetrics()").debug(`${c} is:
   width: ${metrics.width}
   actualBoundingBoxAscent: ${metrics.actualBoundingBoxAscent}
   actualBoundingBoxDescent: ${metrics.actualBoundingBoxDescent}
