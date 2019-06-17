@@ -292,6 +292,10 @@
   background: $terminal-selection-unfocused-background-color
 }
 
+.ace_marker-layer {
+  mix-blend-mode: screen;
+}
+
 .ace_marker-layer .ace_bracket {
   margin: -1px 0 0 -1px;
   border: 1px solid rgba(255, 255, 255, 0.15)
