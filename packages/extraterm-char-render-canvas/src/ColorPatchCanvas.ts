@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { CharCellGrid, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
+import { CharCellGrid, STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 
 
 export class ColorPatchCanvas {
@@ -62,7 +62,7 @@ export class ColorPatchCanvas {
         if (style & STYLE_MASK_CURSOR) {
           return this._cursorColor;
         } else {
-          return this._cellGrid.getFgRGBA(x, y);
+          return (style & STYLE_MASK_INVERSE) ? this._cellGrid.getBgRGBA(x, y) : this._cellGrid.getFgRGBA(x, y);
         }
       };
     } else {
@@ -71,7 +71,7 @@ export class ColorPatchCanvas {
         if (style & STYLE_MASK_CURSOR) {
           return this._cursorColor;
         } else {
-          return this._cellGrid.getBgRGBA(x, y);
+          return (style & STYLE_MASK_INVERSE) ? this._cellGrid.getFgRGBA(x, y) : this._cellGrid.getBgRGBA(x, y);
         }
       };
     }
