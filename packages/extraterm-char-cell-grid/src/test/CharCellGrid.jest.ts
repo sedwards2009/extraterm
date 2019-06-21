@@ -428,6 +428,38 @@ test("palette update", () => {
   expect(srcGrid.getBgRGBA(4, 9)).toBe(0xabcdefff);
 });
 
+test("bold bright colors", () => {
+  const palette = xtermPalette();
+  const NORMAL_1 = 0x12345678;
+  const BRIGHT_1 = 0x11223344;
+
+  palette[1] = NORMAL_1;
+  palette[8+1] = BRIGHT_1;
+
+  const grid = new CharCellGrid(5, 10, palette);
+  fillGrid(grid, "S");
+
+  grid.setFgClutIndex(0, 0, 1);
+  expect(grid.getFgRGBA(0, 0)).toBe(NORMAL_1);
+
+  grid.setStyle(0, 0, STYLE_MASK_BOLD);
+  expect(grid.getFgRGBA(0, 0)).toBe(BRIGHT_1);
+
+  grid.setStyle(0, 0, 0);
+  expect(grid.getFgRGBA(0, 0)).toBe(NORMAL_1);
+
+  const palette2 = xtermPalette();
+  const NORMAL_1_2 = 0x22334455;
+  const BRIGHT_1_2 = 0x33445566;
+  palette2[1] = NORMAL_1_2;
+  palette2[8+1] = BRIGHT_1_2;
+
+  grid.setPalette(palette2);
+  expect(grid.getFgRGBA(0, 0)).toBe(NORMAL_1_2);
+
+
+});
+
 
 function printHorizontalBorder(width: number): string {
   const chars = [];

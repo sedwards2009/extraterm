@@ -275,8 +275,18 @@ export class CharCellGrid {
 
     this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, index);
 
+    this._updateInternalRGB(index, offset);
+  }
+
+  private _updateInternalRGB(index: number, offset: number): void {
     if (this._palette != null) {
-      const rgba = this._palette[index];
+      const style = this._dataView.getUint16(offset + OFFSET_STYLE);
+      let rgba = 0;
+      if (index <8 && style & STYLE_MASK_BOLD) {
+        rgba = this._palette[index + 8];
+      } else {
+        rgba = this._palette[index];
+      }
       this._dataView.setUint32(offset + OFFSET_FG, rgba);
     }
   }
@@ -319,6 +329,12 @@ export class CharCellGrid {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
 
     this._dataView.setUint16(offset + OFFSET_STYLE, style);
+
+    const ifFgClut = this._dataView.getUint16(offset + OFFSET_FLAGS) & FLAG_MASK_FG_CLUT;
+    if (ifFgClut) {
+      const index = this._dataView.getUint16(offset + OFFSET_FG_CLUT_INDEX);
+      this._updateInternalRGB(index, offset);
+    }
   }
 
   getStyle(x: number, y: number): StyleCode {
