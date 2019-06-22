@@ -40,7 +40,7 @@ function createLineDataFromString(str: string, width: number): LineData {
   const strLines = str.split("\n");
   const lineList: Line[] = [];
   for (const str of strLines) {
-    const line = new CharCellGrid(width, 1);
+    const line = new CharCellGrid(str.length, 1);
     line.setString(0, 0, str);
     lineList.push(line);
   }
@@ -98,6 +98,20 @@ const testCases: [string, string, Delta, string][] = [
     lines: ["abc", "def"]
   }, "01234abc\ndef56789"],
 
+  ["delete in front", "0123456789\nabcdefgh\nijklmnopq", {
+    action: "remove",
+    start: { row: 0, column: 0},
+    end: { row: 1, column: 0},
+    lines: null
+  }, "abcdefgh\nijklmnopq"],
+
+  ["insert in front", "0123456789\nabcdefgh\nijklmnopq", {
+    action: "insert",
+    start: { row: 0, column: 0},
+    end: { row: 0, column: 0},
+    lines: ["XXX", ""]
+  }, "XXX\n0123456789\nabcdefgh\nijklmnopq"],
+
 ];
 
 describe.each(testCases)("Evaluate", (name: string, input: string, delta: Delta, output: string) => {
@@ -113,25 +127,7 @@ describe.each(testCases)("Evaluate", (name: string, input: string, delta: Delta,
     
     const outputTextRows = output.split("\n");
     for (let i=0; i < outputTextRows.length; i++) {
-      expect(lineData.getLine(i).getString(0, 0).trim()).toBe(outputTextRows[i]);
-    }
-
-    done();
-  });
-
-  test(`${delta.action} test with double width grid`, done => {
-    const width = input.split("\n").reduce((accu, txt) => {
-      return Math.max(accu, txt.length);
-    }, 0);
-
-    const lineData = createLineDataFromString(input, width*2);
-    const editor = new LineDataEditor(lineData);
-  
-    editor.update(delta);
-    
-    const outputTextRows = output.split("\n");
-    for (let i=0; i < outputTextRows.length; i++) {
-      expect(lineData.getLine(i).getString(0, 0).trim()).toBe(outputTextRows[i]);
+      expect(lineData.getLine(i).getString(0, 0)).toBe(outputTextRows[i]);
     }
 
     done();

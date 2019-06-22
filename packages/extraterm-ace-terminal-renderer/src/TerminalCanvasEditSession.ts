@@ -6,13 +6,14 @@ import { Document,
          Delta,
          Fold,
          LanguageMode,
-         TextMode, RangeBasic } from "ace-ts";
+         TextMode, RangeBasic, HeavyString } from "ace-ts";
 
 import * as TermApi from "term-api";
 import { LineData } from "./canvas_line_data/LineData";
 import { LineDataEditor } from "./canvas_line_data/LineDataEditor";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
+import { TermLineHeavyString } from "./TermLineHeavyString";
 
 
 export class TerminalCanvasEditSession extends EditSession {
@@ -59,7 +60,7 @@ export class TerminalCanvasEditSession extends EditSession {
    * @return True if the text changed.
    */
   setTerminalLine(row: number, sourceLine: TermApi.Line): boolean {
-    const line = this._trimRightWhitespace(sourceLine);
+    const existingLine = this.getTerminalLine(row);
     const range: RangeBasic = {
       start: {
         row,
@@ -67,26 +68,31 @@ export class TerminalCanvasEditSession extends EditSession {
       },
       end: {
         row,
-        column: this.getLine(row).length
+        column: existingLine != null ? existingLine.width : 0
       }
     };
 
-    const newText = line.getString(0,0);
-    this.replace(range, newText);
-    this._lineData[row] = line;
+    this.replace(range, [this._createHeavyString(sourceLine)]);
+
+    this._dumpLines();
+
     return true;
+  }
+
+  private _createHeavyString(sourceLine: TermApi.Line): TermLineHeavyString {
+    const heavyString: TermLineHeavyString = {
+      length: sourceLine.width,
+      getString: (): string => sourceLine.getString(0, 0),
+      termLine: sourceLine
+    };
+    return heavyString;
   }
 
   getTerminalLine(row: number): TermApi.Line {
     return this._lineData[row];
   }
 
-  private _trimRightWhitespace(sourceLine: TermApi.Line): TermApi.Line {
-    return sourceLine;
-  }
-
   appendTerminalLine(sourceLine: TermApi.Line): void {
-    const line = this._trimRightWhitespace(sourceLine);
     const rowCount = this.getLength();
     const range: RangeBasic = {
       start: {
@@ -99,14 +105,12 @@ export class TerminalCanvasEditSession extends EditSession {
       }
     };
 
-    const newText = line.getString(0, 0);
-    const lineDataLen = this._lineData.length;
-    this.replace(range,"\n" + newText);
-    this._lineData[lineDataLen] = line;
+    this.replace(range, ["", this._createHeavyString(sourceLine)]);
+
+    this._dumpLines();
   }
 
   insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
-    const line = this._trimRightWhitespace(sourceLine);
     const range: RangeBasic = {
       start: {
         row,
@@ -118,15 +122,45 @@ export class TerminalCanvasEditSession extends EditSession {
       }
     };
 
-    const newText = line.getString(0, 0);
-    this.replace(range, newText + "\n");
-    this._lineData[row] = line;
+    this.replace(range, [this._createHeavyString(sourceLine), ""]);
+
+    this._dumpLines();
+  }
+  
+  private _dumpLines(): void {
+    // this._log.debug("value: |" + this.getDocument().getValue() + "|");
   }
 
   protected _updateInternalDataOnChange(delta: Delta): Fold[] {
     const folds = super._updateInternalDataOnChange(delta);
-    this._lineDataEditor.update(delta);
+    this._sanityCheck(delta, () => this._lineDataEditor.update(delta));
     return folds;
+  }
+
+  private _sanityCheck(delta: Delta, func: Function): void {
+    const startDocString = this.getDocument().getValue();
+
+    func();
+
+    if ( ! this._compareDocs()) {
+      this._log.debug("delta: ", delta);
+      this._log.debug(`pre-doc: |${startDocString}| post-doc: |${this.getDocument().getValue()}|`);
+    }
+  }
+
+  private _compareDocs(): boolean {
+    let result = true;
+    for (let i=0; i<this._lineData.length; i++) {
+      const docString = this.getDocument().getLine(i);
+
+      const dataString = this._lineData[i].getString(0, 0);
+      if (docString !== dataString) {
+        this._log.warn(`***** row: ${i}, doc row |${docString}| != data row |${dataString}|`);
+        result = false;
+      }
+
+    }
+    return result;
   }
 }
 
