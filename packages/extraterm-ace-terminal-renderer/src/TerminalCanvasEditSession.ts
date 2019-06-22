@@ -73,9 +73,6 @@ export class TerminalCanvasEditSession extends EditSession {
     };
 
     this.replace(range, [this._createHeavyString(sourceLine)]);
-
-    this._dumpLines();
-
     return true;
   }
 
@@ -106,8 +103,6 @@ export class TerminalCanvasEditSession extends EditSession {
     };
 
     this.replace(range, ["", this._createHeavyString(sourceLine)]);
-
-    this._dumpLines();
   }
 
   insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
@@ -123,44 +118,12 @@ export class TerminalCanvasEditSession extends EditSession {
     };
 
     this.replace(range, [this._createHeavyString(sourceLine), ""]);
-
-    this._dumpLines();
   }
   
-  private _dumpLines(): void {
-    // this._log.debug("value: |" + this.getDocument().getValue() + "|");
-  }
-
   protected _updateInternalDataOnChange(delta: Delta): Fold[] {
     const folds = super._updateInternalDataOnChange(delta);
-    this._sanityCheck(delta, () => this._lineDataEditor.update(delta));
+    this._lineDataEditor.update(delta);
     return folds;
-  }
-
-  private _sanityCheck(delta: Delta, func: Function): void {
-    const startDocString = this.getDocument().getValue();
-
-    func();
-
-    if ( ! this._compareDocs()) {
-      this._log.debug("delta: ", delta);
-      this._log.debug(`pre-doc: |${startDocString}| post-doc: |${this.getDocument().getValue()}|`);
-    }
-  }
-
-  private _compareDocs(): boolean {
-    let result = true;
-    for (let i=0; i<this._lineData.length; i++) {
-      const docString = this.getDocument().getLine(i);
-
-      const dataString = this._lineData[i].getString(0, 0);
-      if (docString !== dataString) {
-        this._log.warn(`***** row: ${i}, doc row |${docString}| != data row |${dataString}|`);
-        result = false;
-      }
-
-    }
-    return result;
   }
 }
 
