@@ -474,4 +474,40 @@ export class CharRenderCanvas implements Disposable {
   private _updateRenderedCellGrid(): void {
     this._renderedCellGrid.pasteGrid(this._cellGrid, 0, 0);
   }
+
+  /**
+   * Scroll the whole canvas N rows downwards
+   * 
+   * @param verticalOffsetChars number of rows to scroll downs. Accepts
+   *                            negative values to scroll upwards.
+   */
+  scrollVertical(verticalOffsetChars: number): void {
+    if (verticalOffsetChars === 0) {
+      return;
+    }
+
+    const affectedHeightPx = (this._cellGrid.height - Math.abs(verticalOffsetChars)) * this.cellHeightPx;
+    if (affectedHeightPx < 0) {
+      // Scroll offset is so big that nothing will change on screen.
+      return;
+    }
+
+    const ctx = this._charCanvasCtx;
+    const scrollingUp = verticalOffsetChars < 0;
+
+    ctx.save();
+    ctx.beginPath();
+    if (scrollingUp) {
+      ctx.rect(0, 0, this._canvasWidthPx, affectedHeightPx);
+    } else {
+      ctx.rect(0, verticalOffsetChars * this.cellHeightPx, this._canvasWidthPx, affectedHeightPx);
+    }
+    ctx.clip();
+
+    this._charCanvasCtx.drawImage(this._charCanvas, 0, verticalOffsetChars * this.cellHeightPx);
+    ctx.restore();
+
+    this._cellGrid.scrollVertical(verticalOffsetChars);
+    this._renderedCellGrid.scrollVertical(verticalOffsetChars);
+  }
 }

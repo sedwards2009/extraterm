@@ -20,7 +20,7 @@ export class CanvasTextLayer implements TextLayer {
 
   private _charRenderCanvas: CharRenderCanvas = null;
   private _editSession: TerminalCanvasEditSession = null;
-  private _config: LayerConfig = null;
+  private _lastConfig: LayerConfig = null;
   private _log: Logger = null;
 
   private _palette: number[] = null;
@@ -114,11 +114,16 @@ export class CanvasTextLayer implements TextLayer {
   }
 
   scrollRows(config: LayerConfig, viewPortSize: ViewPortSize): void {
+    if (Math.abs(config.firstRow - this._lastConfig.firstRow) < this._charRenderCanvas.getCellGrid().height) {
+      // Scroll the existing contents      
+      this._charRenderCanvas.scrollVertical(config.firstRow - this._lastConfig.firstRow);
+    }
+
     this.update(config, viewPortSize);
   }
 
   update(config: LayerConfig, viewPortSize: ViewPortSize): void {
-    this._config = config;
+    this._lastConfig = config;
 
     const visibleRows = this._getVisibleRows(config);
     this._setUpRenderCanvas(config, viewPortSize, visibleRows.length);

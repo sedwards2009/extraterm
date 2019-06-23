@@ -4,9 +4,18 @@
 import { Line } from "term-api";
 import { ExtratermAceEditor } from "./ExtratermAceEditor";
 import { TerminalEditSession } from "./TerminalEditSession";
+import { log, Logger, getLogger } from "extraterm-logging";
+import { Renderer, EditSession } from "ace-ts";
 
 
 export class TerminalAceEditor extends ExtratermAceEditor {
+  
+  private _log: Logger = null;
+
+  constructor(renderer: Renderer | undefined, session: EditSession | undefined) {
+    super(renderer, session);
+    this._log = getLogger("TerminalAceEditor", this);
+  }
 
   setTerminalLine(row: number, line: Line): void {
     const session = <TerminalEditSession> this.sessionOrThrow();
