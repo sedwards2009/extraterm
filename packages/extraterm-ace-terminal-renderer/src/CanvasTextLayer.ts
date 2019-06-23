@@ -19,7 +19,12 @@ export class CanvasTextLayer implements TextLayer {
   element: HTMLDivElement;
 
   private _charRenderCanvas: CharRenderCanvas = null;
+  private _canvasWidthCssPx = 0;
+  private _canvasHeightCssPx = 0;
+  
   private _editSession: TerminalCanvasEditSession = null;
+
+
   private _lastConfig: LayerConfig = null;
   private _log: Logger = null;
 
@@ -133,27 +138,30 @@ export class CanvasTextLayer implements TextLayer {
   }
 
   private _setUpRenderCanvas(config: LayerConfig, viewPortSize: ViewPortSize, numOfVisibleRows: number): void {
-    const rawCanvasWidth = viewPortSize.widthPx;
-    const rawCanvasHeight = Math.ceil(numOfVisibleRows * config.charHeightPx);
+    const rawCanvasWidthPx = viewPortSize.widthPx;
+    const rawCanvasHeightPx = Math.ceil(numOfVisibleRows * config.charHeightPx);
 
-    const widthPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasWidth);
-    const heightPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasHeight);
+    const widthPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasWidthPx);
+    const heightPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasHeightPx);
 
-    const canvasWidth = widthPair.screenLength;
-    const canvasHeight = heightPair.screenLength;
+    const canvasWidthPx = widthPair.screenLength;
+    const canvasHeightPx = heightPair.screenLength;
 
     if (this._charRenderCanvas != null) {
-      if (this._charRenderCanvas.getWidthPx() >= canvasWidth &&
-          this._charRenderCanvas.getHeightPx() >= canvasHeight) {
+      this._setupClipping(rawCanvasWidthPx, rawCanvasHeightPx);
+
+      if (this._canvasWidthCssPx >= canvasWidthPx &&
+          this._canvasHeightCssPx >= canvasHeightPx) {
         return;
       }
       this._deleteCanvasElement();
     }
 
-    // Overprovision
+    // Over-provision
     const provisionCanvasHeight = Math.ceil((Math.round(numOfVisibleRows * PROVISION_HEIGHT_FACTOR) + 1)
                                     * config.charHeightPx);
-    this._createCanvas(rawCanvasWidth, provisionCanvasHeight);
+    this._createCanvas(rawCanvasWidthPx, provisionCanvasHeight);
+    this._setupClipping(rawCanvasWidthPx, rawCanvasHeightPx);
   }
 
   private _createCanvas(rawWidthPx: number, rawHeightPx: number): void {
@@ -163,6 +171,8 @@ export class CanvasTextLayer implements TextLayer {
     const canvasWidthPx = widthPxPair.screenLength;
     const canvasHeightPx = heightPxPair.screenLength;
 
+    this._canvasWidthCssPx = rawWidthPx;
+    this._canvasHeightCssPx = rawHeightPx;
     this._charRenderCanvas = new CharRenderCanvas({
       fontFamily: this._fontFamily,
       fontSizePx: this._fontSizePx * this._devicePixelRatio,
@@ -178,9 +188,12 @@ export class CanvasTextLayer implements TextLayer {
     canvasElement.style.width = "" + canvasWidthPx + "px";
     canvasElement.style.height = "" + canvasHeightPx + "px";
 
+    this._clipDiv.appendChild(canvasElement);
+  }
+
+  private _setupClipping(rawWidthPx: number, rawHeightPx: number): void {
     this._clipDiv.style.width = "" + rawWidthPx + "px";
     this._clipDiv.style.height = "" + rawHeightPx + "px";
-    this._clipDiv.appendChild(canvasElement);
   }
 
   private _deleteCanvasElement(): void {
