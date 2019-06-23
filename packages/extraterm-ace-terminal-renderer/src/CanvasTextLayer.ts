@@ -141,17 +141,11 @@ export class CanvasTextLayer implements TextLayer {
     const rawCanvasWidthPx = viewPortSize.widthPx;
     const rawCanvasHeightPx = Math.ceil(numOfVisibleRows * config.charHeightPx);
 
-    const widthPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasWidthPx);
-    const heightPair = this._computeDevicePixelRatioPair(this._devicePixelRatio, rawCanvasHeightPx);
-
-    const canvasWidthPx = widthPair.screenLength;
-    const canvasHeightPx = heightPair.screenLength;
-
     if (this._charRenderCanvas != null) {
       this._setupClipping(rawCanvasWidthPx, rawCanvasHeightPx);
 
-      if (this._canvasWidthCssPx >= canvasWidthPx &&
-          this._canvasHeightCssPx >= canvasHeightPx) {
+      if (this._canvasWidthCssPx >= rawCanvasWidthPx &&
+          this._canvasHeightCssPx >= rawCanvasHeightPx) {
         return;
       }
       this._deleteCanvasElement();
