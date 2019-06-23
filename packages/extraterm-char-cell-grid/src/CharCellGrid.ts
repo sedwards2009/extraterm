@@ -451,4 +451,73 @@ export class CharCellGrid {
       }
     }
   }
+
+  /**
+   * Scroll the whole grid N rows downwards
+   * 
+   * @param verticalOffset number of rows to scroll downs. Accepts
+   *                       negative values to scroll upwards.
+   */
+  scrollVertical(verticalOffset: number): void {
+    if (verticalOffset === 0) {
+      return;
+    }
+
+    if (verticalOffset < 0) {
+      this._scrollUp(verticalOffset);
+    } else {
+      this._scrollDown(verticalOffset);
+    }
+  }
+
+  private _scrollUp(verticalOffset: number): void {
+    const absOffset = Math.abs(verticalOffset);
+    const rowWidthUint32 = this.width * CELL_SIZE_UINT32;
+
+    for(let srcY=absOffset, destY=0; srcY<this.height; srcY++, destY++) {
+      let sourceOffset = srcY * rowWidthUint32;
+      let destOffset =  destY * rowWidthUint32;
+      this._copyRow(sourceOffset, destOffset);
+    }
+  }
+
+  private _scrollDown(verticalOffset: number): void {
+    const absOffset = Math.abs(verticalOffset);
+    const rowWidthUint32 = this.width * CELL_SIZE_UINT32;
+
+    for(let srcY=this.height-1-absOffset, destY=this.height-1; srcY>=0; srcY--, destY--) {
+      let sourceOffset = srcY * rowWidthUint32;
+      let destOffset =  destY * rowWidthUint32;
+      this._copyRow(sourceOffset, destOffset);
+    }
+  }
+
+  private _copyRow(sourceOffset: number, destOffset): void {
+    const width = this.width;
+    const uint32Array = new Uint32Array(this._rawBuffer);
+    for (let h=0; h<width; h++) {
+
+      // Unrolled copy loop for when CELL_SIZE_UINT32 is 5
+
+      uint32Array[destOffset] = uint32Array[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+      
+      uint32Array[destOffset] = uint32Array[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32Array[destOffset] = uint32Array[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32Array[destOffset] = uint32Array[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32Array[destOffset] = uint32Array[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+    }
+  }
 }

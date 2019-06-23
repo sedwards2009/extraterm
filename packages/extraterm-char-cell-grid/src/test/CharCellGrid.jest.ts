@@ -456,10 +456,29 @@ test("bold bright colors", () => {
 
   grid.setPalette(palette2);
   expect(grid.getFgRGBA(0, 0)).toBe(NORMAL_1_2);
-
-
 });
 
+test("scroll up", () => {
+  const grid = new CharCellGrid(5, 10);
+  fillGrid(grid, ".");
+  grid.setCodePoint(1, 5, "X".codePointAt(0));
+
+  grid.scrollVertical(-2);
+
+  expect(grid.getCodePoint(1, 5)).toBe(".".codePointAt(0));
+  expect(grid.getCodePoint(1, 3)).toBe("X".codePointAt(0));
+});
+
+test("scroll down", () => {
+  const grid = new CharCellGrid(5, 10);
+  fillGrid(grid, ".");
+  grid.setCodePoint(1, 5, "X".codePointAt(0));
+
+  grid.scrollVertical(2);
+
+  expect(grid.getCodePoint(1, 5)).toBe(".".codePointAt(0));
+  expect(grid.getCodePoint(1, 7)).toBe("X".codePointAt(0));
+});
 
 function printHorizontalBorder(width: number): string {
   const chars = [];
