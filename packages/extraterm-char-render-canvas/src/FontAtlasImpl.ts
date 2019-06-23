@@ -10,16 +10,10 @@ import { Logger, getLogger, log } from "extraterm-logging";
 
 export class FontAtlasImpl implements FontAtlas {
   private _log: Logger = null;
-  private _cellWidth: number = 0;
-  private _cellHeight: number = 0;
   private _pages: FontAtlasPage[] = [];
 
   constructor(private readonly _metrics: MonospaceFontMetrics) {
     this._log = getLogger("FontAtlasImpl", this);
-
-    this._cellWidth = this._metrics.widthPx;
-    this._cellHeight = this._metrics.heightPx;
-    this._log.debug(`FontAtlas cellWidth: ${this._cellWidth}, cellHeight: ${this._cellHeight}`);
     this._appendPage();
   }
 

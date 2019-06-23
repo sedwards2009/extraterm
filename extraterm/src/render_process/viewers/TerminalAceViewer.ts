@@ -1171,7 +1171,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _insertLinesOnScreen(startRow: number, endRow: number, lines: TermApi.Line[]): void {
     const lineCount = this._aceEditSession.getLength();
 
-    // Mark sure there are enough rows inside CodeMirror.
+    // Mark sure there are enough rows inside Ace.
     if (lineCount < endRow + this._terminalFirstRow) {
       const pos = { row: this._terminalFirstRow + lineCount, column: 0 };
       

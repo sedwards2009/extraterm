@@ -50,7 +50,7 @@ import {
   MinimalKeyboardEvent
 } from 'term-api';
 
-import { log } from "extraterm-logging";
+import { log, Logger, getLogger } from "extraterm-logging";
 import * as easta from "easta";
 import {
   CharCellGrid,
@@ -149,6 +149,7 @@ const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
 
 export class Emulator implements EmulatorApi {
+  private _log: Logger = null;
   private cols = 80;
   private rows = 24
   
@@ -265,6 +266,7 @@ export class Emulator implements EmulatorApi {
   private title: string = "";
   
   constructor(options: Options) {
+    this._log = getLogger("Emulator", this);
     this.termName = options.termName === undefined ? 'xterm-256color' : options.termName;
     this.rows = options.rows === undefined ? 24 : options.rows;
     this.cols = options.columns === undefined ? 80 : options.columns;
@@ -815,16 +817,6 @@ export class Emulator implements EmulatorApi {
     this._refreshStart = REFRESH_START_NULL;
     this._refreshEnd = REFRESH_END_NULL;
   }
-
-  // In the screen buffer, each character
-  // is stored as a an array with a character
-  // and a 32-bit integer.
-  // First value: a utf-16 character.
-  // Second value:
-  // Next 9 bits: background color (0-511).
-  // Next 9 bits: foreground color (0-511).
-  // Next 14 bits: a mask for misc. flags:
-  //   1=bold, 2=underline, 4=blink, 8=inverse, 16=invisible
 
   /**
    * Marks a range of rows to be refreshed on the screen.
