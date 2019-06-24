@@ -1092,7 +1092,7 @@ export class Emulator implements EmulatorApi {
                   // Push the characters out of the way to make space.
                   line.shiftCellsRight(this.x, 0, 1);
                   line.setCodePoint(this.x, 0, " ".codePointAt(0));
-                  if (isWide(ch)) {
+                  if (isWide(codePoint)) {
                     line.shiftCellsRight(this.x, 0, 1);
                     line.setCodePoint(this.x, 0, " ".codePointAt(0));
                   }
@@ -1104,7 +1104,7 @@ export class Emulator implements EmulatorApi {
                 this.x++;
                 this.markRowForRefresh(this.y);
 
-                if (isWide(ch)) {
+                if (isWide(codePoint)) {
                   const j = this.y;
                   const line = this._getRow(j);
                   if (this.cols < 2 || this.x >= this.cols) {
@@ -3992,7 +3992,12 @@ function cancelEvent(ev) {
   return false;
 }
 
-function isWide(ch: string): boolean {
+function isWide(codePoint: number): boolean {
+  if (codePoint >= 0x10000) {
+    return true;
+  }
+
+  const ch = String.fromCodePoint(codePoint);
   switch (easta(ch)) {
   	case 'Na': //Narrow
  	  return false;
