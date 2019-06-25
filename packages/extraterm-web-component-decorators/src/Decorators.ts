@@ -133,7 +133,7 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
 
             let newValue: any = newStringValue;
             if (registration.dataType === "Number") {
-              newValue = parseInt(newStringValue, 10);
+              newValue = parseFloat(newStringValue);
             } else if (registration.dataType === "Boolean") {
               newValue = newStringValue === attrName || newStringValue === "" || newStringValue === "true";
             }
@@ -261,7 +261,7 @@ export interface AttributeOptions {
  * be dashes. For example "someString" become attribute "some-string".
  * 
  * This decorator can be used in two ways. The direct way is with no
- * arguements, and the second way is with an options object as a arguement.
+ * arguments, and the second way is with an options object as the single argument.
  * The options object can be used to specify a default (internal) value for
  * the attribute/property.
  * 
