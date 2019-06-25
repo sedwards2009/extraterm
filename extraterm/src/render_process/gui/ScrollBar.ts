@@ -22,6 +22,7 @@ export class ScrollBar extends TemplatedElementBase {
   static TAG_NAME = 'ET-SCROLLBAR';
   
   private _log: Logger;
+  private _lastSetPosition = 0;
 
   constructor() {
     super({ delegatesFocus: false });
@@ -31,9 +32,12 @@ export class ScrollBar extends TemplatedElementBase {
     this._elementById(ID_CONTAINER).addEventListener('scroll', (ev: Event) => {
       const container = this._elementById(ID_CONTAINER);
       const top = container.scrollTop;
+
+      if (top === this._lastSetPosition) {
+        // Prevent emitting an event due to the position being set via API and not the user.
+        return;
+      }
       this.position = top;
-      
-// FIXME this should fire standard scroll events, not custom events.
       
       const event = new CustomEvent('scroll',
           { detail: {
@@ -60,7 +64,7 @@ export class ScrollBar extends TemplatedElementBase {
     return `<div id='${ID_CONTAINER}'><div id='${ID_AREA}'></div></div>`;
   }
 
-  @Attribute length = 1;
+  @Attribute({default: 1}) length = 1;
 
   @Filter("length")
   private _sanitizeLength(value: number): number {
@@ -90,7 +94,7 @@ export class ScrollBar extends TemplatedElementBase {
     return this.length;
   }
 
-  @Attribute position = 0;
+  @Attribute({default: 0}) position = 0;
 
   @Filter("position")
   private _sanitizePosition(value: number): number {
@@ -103,6 +107,7 @@ export class ScrollBar extends TemplatedElementBase {
   private _updatePosition(target: string): void {
     const containerElement = this._elementById(ID_CONTAINER);
     containerElement.scrollTop = this.position;
+    this._lastSetPosition = containerElement.scrollTop;
   }
 
   setPosition(pos: number): void {
