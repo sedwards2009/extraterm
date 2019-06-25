@@ -219,9 +219,9 @@ export class VirtualScrollArea {
   //-----------------------------------------------------------------------
 
   appendScrollable(scrollable: VirtualScrollable): void {
-    const minHeight = Math.ceil(scrollable.getMinHeight());
-    const virtualHeight = Math.ceil(scrollable.getVirtualHeight(this.getScrollContainerHeight()));
-    const reserveViewportHeight = Math.ceil(scrollable.getReserveViewportHeight(this.getScrollContainerHeight()));
+    const minHeight = scrollable.getMinHeight();
+    const virtualHeight = scrollable.getVirtualHeight(this.getScrollContainerHeight());
+    const reserveViewportHeight = scrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
     this._updateAutoscrollBottom( (newState) => {
       newState.scrollableStates.push( {
@@ -270,9 +270,9 @@ export class VirtualScrollArea {
   }
   
   replaceScrollable(oldScrollable: VirtualScrollable, newScrollable: VirtualScrollable): void {
-    const minHeight = Math.ceil(newScrollable.getMinHeight());
-    const virtualHeight = Math.ceil(newScrollable.getVirtualHeight(this.getScrollContainerHeight()));
-    const reserveViewportHeight = Math.ceil(newScrollable.getReserveViewportHeight(this.getScrollContainerHeight()));
+    const minHeight = newScrollable.getMinHeight();
+    const virtualHeight = newScrollable.getVirtualHeight(this.getScrollContainerHeight());
+    const reserveViewportHeight = newScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
     this._updateAutoscrollBottom( (newState) => {
         newState.scrollableStates.filter( (state) => state.scrollable === oldScrollable )
@@ -345,7 +345,7 @@ export class VirtualScrollArea {
    */
   updateContainerHeight(containerHeight: number): void {
     this._updateAutoscrollBottom( (newState) => {
-      newState.containerHeight = Math.round(containerHeight);
+      newState.containerHeight = containerHeight;
     });
   }
 
@@ -357,8 +357,8 @@ export class VirtualScrollArea {
    */
   scrollTo(offset: number): number {
     // Clamp the requested offset.
-    const cleanOffset = Math.min(Math.max(0, Math.ceil(offset)),
-    this._totalVirtualHeight(this._currentState) - this._currentState.containerHeight);
+    const cleanOffset = Math.min(Math.max(0, offset),
+                                 this._totalVirtualHeight(this._currentState) - this._currentState.containerHeight);
     this._update( (newState) => {
       newState.virtualScrollYOffset = cleanOffset;
     });
@@ -383,9 +383,9 @@ export class VirtualScrollArea {
    * @param virtualScrollable the scrollable to update
    */
   updateScrollableSize(virtualScrollable: VirtualScrollable): void {
-    const newMinHeight = Math.ceil(virtualScrollable.getMinHeight());
-    const newVirtualHeight = Math.ceil(virtualScrollable.getVirtualHeight(this.getScrollContainerHeight()));
-    const newReserveViewportHeight = Math.ceil(virtualScrollable.getReserveViewportHeight(this.getScrollContainerHeight()));
+    const newMinHeight = virtualScrollable.getMinHeight();
+    const newVirtualHeight = virtualScrollable.getVirtualHeight(this.getScrollContainerHeight());
+    const newReserveViewportHeight = virtualScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
     // Quickly check to see if anything really changed. Search from the newest back into the scrollback.
     for (let i=this._currentState.scrollableStates.length-1; i>=0; i--) {
@@ -420,9 +420,9 @@ export class VirtualScrollArea {
       newState.scrollableStates
         .forEach( (ss) => {
           if (scrollablesSet.has(ss.scrollable)) {
-            const newMinHeight = Math.ceil(ss.scrollable.getMinHeight());
-            const newVirtualHeight = Math.ceil(ss.scrollable.getVirtualHeight(this.getScrollContainerHeight()));
-            const newReserveViewportHeight = Math.ceil(ss.scrollable.getReserveViewportHeight(this.getScrollContainerHeight()));
+            const newMinHeight = ss.scrollable.getMinHeight();
+            const newVirtualHeight = ss.scrollable.getVirtualHeight(this.getScrollContainerHeight());
+            const newReserveViewportHeight = ss.scrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
             ss.virtualHeight = newVirtualHeight;
             ss.minHeight = newMinHeight;
