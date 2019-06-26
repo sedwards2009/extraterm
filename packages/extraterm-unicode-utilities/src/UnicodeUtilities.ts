@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as easta from "easta";
 
 function newUint32Array(length: number): Uint32Array {
   return new Uint32Array(Math.max(length, 0));
@@ -42,4 +43,28 @@ export function countCodePoints(str: string): number {
     c++;
   }
   return c;
+}
+
+export function isWide(codePoint: number): boolean {
+  if (codePoint >= 0x10000) {
+    return true;
+  }
+
+  const ch = String.fromCodePoint(codePoint);
+  switch (easta(ch)) {
+    case 'Na': //Narrow
+     return false;
+    case 'F': //FullWidth
+      return true;
+    case 'W': // Wide
+      return true;
+    case 'H': //HalfWidth
+      return false;
+    case 'A': //Ambiguous
+      return false;
+    case 'N': //Neutral
+      return false;
+    default:
+      return false;
+  }
 }
