@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { stringToCodePointArray } from "extraterm-unicode-utilities";
+import { stringToCodePointArray, isWide } from "extraterm-unicode-utilities";
 
 /**
  * Cell schema:
@@ -13,8 +13,8 @@ import { stringToCodePointArray } from "extraterm-unicode-utilities";
  *            * 0x1 (bit 0) - true if using foreground CLUT
  *            * 0x2 (bit 1) - true if using background CLUT
  *            * 0x4 (bit 2) - true if extra fonts are used.
- *            * 0x38 (bit 3,4,5) ligature size as 3 bit number.
- * 2 byte   - Style
+ *            * 0x18 (bit 3,4) - width of the char in cells-1, 0=normal 1 cell width, 1=2 cells.
+  * 2 byte   - Style
  *            * 0x0001 (bit 0) - true if bold style
  *            * 0x0002 (bit 1) - true if underline style
  *            * 0x0004 (bit 2) - true if italic style
@@ -32,7 +32,10 @@ import { stringToCodePointArray } from "extraterm-unicode-utilities";
 
 export const FLAG_MASK_FG_CLUT = 1;
 export const FLAG_MASK_BG_CLUT = 2;
-const FLAG_MASK_EXTRA_FONT = 4;
+export const FLAG_MASK_EXTRA_FONT = 4;
+export const FLAG_MASK_WIDTH = 0x18;
+export const FLAG_WIDTH_SHIFT = 3;
+
 const FLAG_MASK_LIGATURE = 0x38;
 const FLAG_RSHIFT_LIGATURE = 3;
 
@@ -217,11 +220,29 @@ export class CharCellGrid {
   }
 
   setCodePoint(x: number, y: number, codePoint: number): void {
-    this._dataView.setUint32((y * this.width + x) * CELL_SIZE_BYTES + OFFSET_CODEPOINT, codePoint);
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+
+    const width = isWide(codePoint) ? 1 : 0;
+    const flags = this._dataView.getUint16(offset + OFFSET_FLAGS);
+    const newFlags = (flags & ~FLAG_MASK_WIDTH) | (width << FLAG_WIDTH_SHIFT);
+    this._dataView.setUint16(offset + OFFSET_FLAGS, newFlags);
+
+    this._dataView.setUint32(offset + OFFSET_CODEPOINT, codePoint);
   }
 
   getCodePoint(x: number, y: number): number {
     return this._dataView.getUint32((y * this.width + x) * CELL_SIZE_BYTES + OFFSET_CODEPOINT);
+  }
+
+  getCharExtraWidth(x: number, y: number): number {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    const flags = this._dataView.getUint16(offset + OFFSET_FLAGS);
+    return (flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT;
+  }
+
+  getFlags(x: number, y: number): number {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    return this._dataView.getUint16(offset + OFFSET_FLAGS);
   }
 
   setString(x: number, y: number, str: string): void {

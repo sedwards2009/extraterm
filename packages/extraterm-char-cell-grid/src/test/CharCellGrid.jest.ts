@@ -480,6 +480,18 @@ test("scroll down", () => {
   expect(grid.getCodePoint(1, 7)).toBe("X".codePointAt(0));
 });
 
+test("character width", () => {
+  const grid = new CharCellGrid(5, 10);
+  fillGrid(grid, ".");
+  expect(grid.getCharExtraWidth(0, 0)).toBe(0);
+
+  grid.setCodePoint(0, 0, 0x1f600); // emoji
+  expect(grid.getCharExtraWidth(0, 0)).toBe(1);
+
+  grid.setCodePoint(0, 0, 65);
+  expect(grid.getCharExtraWidth(0, 0)).toBe(0);
+});
+
 function printHorizontalBorder(width: number): string {
   const chars = [];
   for (let x=0; x<width; x++) {
