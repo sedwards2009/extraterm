@@ -14,6 +14,7 @@ import { LineDataEditor } from "./canvas_line_data/LineDataEditor";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { TermLineHeavyString } from "./TermLineHeavyString";
+import { stringToCodePointArray } from "extraterm-unicode-utilities";
 
 
 export class TerminalCanvasEditSession extends EditSession {
@@ -124,6 +125,38 @@ export class TerminalCanvasEditSession extends EditSession {
     const folds = super._updateInternalDataOnChange(delta);
     this._lineDataEditor.update(delta);
     return folds;
+  }
+
+  getStringScreenWidth(str: string, maxScreenColumn?: number, screenColumn?: number): number[] {
+    if (maxScreenColumn === 0) {
+      return [0, 0];
+    }
+    if (maxScreenColumn == null) {
+      maxScreenColumn = Infinity;
+    }
+    screenColumn = screenColumn || 0;
+
+    const codePoints = stringToCodePointArray(str);
+
+    let codePoint: number;
+    let column: number;
+    for (column = 0; column < codePoints.length; column++) {
+      codePoint = codePoints[column];
+
+      // tab
+      if (codePoint === 9) {
+        screenColumn += this.getScreenTabSize(screenColumn);
+      } else {
+        // Yes, we treat full width chars as being 1 cell because
+        // Term.ts pads then with an extra space char.
+        screenColumn += 1;
+      }
+
+      if (screenColumn > maxScreenColumn) {
+        break;
+      }
+    }
+    return [screenColumn, column];
   }
 }
 
