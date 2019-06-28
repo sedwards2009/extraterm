@@ -69,7 +69,7 @@ export class TerminalCanvasEditSession extends EditSession {
       },
       end: {
         row,
-        column: existingLine != null ? existingLine.width : 0
+        column: existingLine != null ? existingLine.getString(0, 0).length : 0
       }
     };
 
