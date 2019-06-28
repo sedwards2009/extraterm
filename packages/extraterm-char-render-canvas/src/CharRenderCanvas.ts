@@ -482,7 +482,6 @@ export class CharRenderCanvas implements Disposable {
     ctx.globalCompositeOperation = "source-over";
 
     const cellGrid = this._cellGrid;
-    const renderedCellGrid = this._renderedCellGrid;
     const cellWidth = this.cellWidthPx;
     const cellHeight = this.cellHeightPx;
     const width = cellGrid.width;
@@ -493,12 +492,8 @@ export class CharRenderCanvas implements Disposable {
         if (cellGrid.getExtraFontsFlag(i, j)) {
           const codePoint = cellGrid.getCodePoint(i, j);
           const style = cellGrid.getStyle(i, j);
-          const renderedCodePoint = renderedCellGrid.getCodePoint(i, j);
-          const renderedStyle = renderedCellGrid.getStyle(i, j);
-          if (codePoint !== renderedCodePoint || style !== renderedStyle) {
-            const extraFont = this._getExtraFontSliceFromCodePoint(codePoint);
-            extraFont.fontAtlas.drawCodePoint(ctx, codePoint, style, i * cellWidth, j * cellHeight);
-          }
+          const extraFont = this._getExtraFontSliceFromCodePoint(codePoint);
+          extraFont.fontAtlas.drawCodePoint(ctx, codePoint, style, i * cellWidth, j * cellHeight);
         }
       }
     }
