@@ -175,7 +175,15 @@ export class CanvasTextLayer implements TextLayer {
       heightPx: heightPxPair.renderLength,
       usableWidthPx: rawWidthPx * this._devicePixelRatio,
       usableHeightPx: rawHeightPx * this._devicePixelRatio,
-      fontAtlasRepository
+      fontAtlasRepository,
+      extraFonts: [{
+        fontFamily: "emojione",
+        fontSizePx: this._fontSizePx * this._devicePixelRatio,
+        unicodeStart: 0x1f000,
+        unicodeEnd: 0x20000,
+        sampleChars: ["\u{1f600}"]  // Smile emoji
+      }
+]
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();
