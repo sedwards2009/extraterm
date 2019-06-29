@@ -7,7 +7,7 @@ import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture,
 import * as XRegExp from "xregexp";
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
+import {doLater, doLaterFrame, DebouncedDoLater} from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
 import {Logger, getLogger} from "extraterm-logging";

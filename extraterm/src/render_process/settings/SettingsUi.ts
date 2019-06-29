@@ -14,7 +14,7 @@ import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
 import { KEY_BINDINGS_SETTINGS_TAG } from './keybindings/KeybindingsSettings';
 import { SESSION_SETTINGS_TAG } from './SessionSettings';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
-import { doLater } from '../../utils/DoLater';
+import { doLater } from 'extraterm-later';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { VUE_TEXT_ACE_VIEWER_ELEMENT_TAG } from './VueTextAceViewerElement';
 import { VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG } from './VueTerminalAceViewerElement';

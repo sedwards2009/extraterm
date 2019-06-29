@@ -15,7 +15,7 @@ import { getLogger, Logger } from "extraterm-logging";
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from 'extraterm-extension-api';
 import { globalShortcut } from 'electron';
-import { doLater } from '../utils/DoLater';
+import { doLater } from 'extraterm-later';
 import { TermKeybindingsMapping } from '../render_process/keybindings/KeyBindingsManager';
 
 

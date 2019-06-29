@@ -12,7 +12,7 @@ import { log } from "extraterm-logging";
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import { doLater, doLaterFrame, DebouncedDoLater } from '../../utils/DoLater';
+import { doLater, doLaterFrame, DebouncedDoLater } from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';

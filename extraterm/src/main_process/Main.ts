@@ -35,7 +35,7 @@ import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupUserConfig, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
 import { GlobalKeybindingsManager } from './GlobalKeybindings';
-import { doLater } from '../utils/DoLater';
+import { doLater } from 'extraterm-later';
 import { getAvailableFontsSync } from './FontList';
 import { bestOverlap } from './RectangleMatch';
 

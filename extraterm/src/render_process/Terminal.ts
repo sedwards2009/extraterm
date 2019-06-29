@@ -34,7 +34,7 @@ import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
 import { dispatchContextMenuRequest } from './command/CommandUtils';
 import * as DomUtils from './DomUtils';
-import {doLater, DebouncedDoLater} from '../utils/DoLater';
+import {doLater, DebouncedDoLater} from 'extraterm-later';
 import * as Term from './emulator/Term';
 import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';

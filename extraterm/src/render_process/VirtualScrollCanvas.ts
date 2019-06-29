@@ -7,7 +7,7 @@
 import { Disposable } from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import {doLater} from '../utils/DoLater';
+import {doLater} from 'extraterm-later';
 import * as DomUtils from './DomUtils';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";

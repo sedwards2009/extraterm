@@ -7,7 +7,7 @@ import { Disposable } from 'extraterm-extension-api';
 import Vue from 'vue';
 import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorators';
 
-import {DebouncedDoLater} from '../../../utils/DoLater';
+import {DebouncedDoLater} from 'extraterm-later';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../../theme/Theme';

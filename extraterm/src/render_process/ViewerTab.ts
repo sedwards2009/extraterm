@@ -7,7 +7,7 @@
 import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import {doLater, DebouncedDoLater} from '../utils/DoLater';
+import {doLater, DebouncedDoLater} from 'extraterm-later';
 import * as DomUtils from './DomUtils';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {Logger, getLogger} from "extraterm-logging";

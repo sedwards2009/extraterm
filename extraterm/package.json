@@ -20,6 +20,7 @@
     "extraterm-ace-terminal-renderer": "0.1.0",
     "extraterm-boolean-expression-evaluator": "1.0.0",
     "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-later": "1.0.0",
     "extraterm-logging": "1.0.0",
     "extraterm-readonly-toolbox": "0.1.0",
     "extraterm-resize-notifier": "0.1.0",

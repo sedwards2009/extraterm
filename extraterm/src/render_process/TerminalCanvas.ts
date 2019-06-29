@@ -14,7 +14,7 @@ import { EVENT_RESIZE, VirtualScrollable } from "./VirtualScrollArea";
 import { ViewerElement } from "./viewers/ViewerElement";
 import { TerminalViewer } from "./viewers/TerminalAceViewer";
 import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig, ConfigChangeEvent } from "../Config";
-import { doLater } from "../utils/DoLater";
+import { doLater } from "extraterm-later";
 import * as DomUtils from './DomUtils';
 import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
 import { TextViewer } from "./viewers/TextAceViewer";

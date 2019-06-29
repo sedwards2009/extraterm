@@ -8,7 +8,7 @@ import { WebComponent } from 'extraterm-web-component-decorators';
 
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
-import {doLater} from '../../utils/DoLater';
+import {doLater} from 'extraterm-later';
 import {PopDownDialog} from './PopDownDialog';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";

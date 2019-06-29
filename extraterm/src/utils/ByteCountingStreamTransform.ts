@@ -6,7 +6,7 @@
 import {Event} from 'extraterm-extension-api';
 import {Transform} from 'stream';
 
-import {DebouncedDoLater} from './DoLater';
+import {DebouncedDoLater} from 'extraterm-later';
 import {EventEmitter} from './EventEmitter';
 
 

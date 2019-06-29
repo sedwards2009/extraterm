@@ -6,7 +6,7 @@
 import {Disposable} from 'extraterm-extension-api';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
-import {doLater} from '../../utils/DoLater';
+import {doLater} from 'extraterm-later';
 import {PopDownDialog} from './PopDownDialog';
 import * as ThemeTypes from '../../theme/Theme';
 import { TemplatedElementBase } from './TemplatedElementBase';
