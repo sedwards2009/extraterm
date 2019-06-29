@@ -4,8 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {Disposable} from 'extraterm-extension-api';
-
+export interface Disposable {
+  dispose(): void;
+}
 
 let doLaterId: NodeJS.Timer = null;
 let laterList: Function[] = [];
