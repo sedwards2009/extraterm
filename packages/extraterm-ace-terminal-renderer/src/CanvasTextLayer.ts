@@ -75,14 +75,17 @@ export class CanvasTextLayer implements TextLayer {
 
   setFontFamily(fontFamily: string): void {
     this._fontFamily = fontFamily;
+    this._deleteCanvasElement();
   }
 
   setFontSizePx(fontSizePx: number): void {
     this._fontSizePx = fontSizePx;
+    this._deleteCanvasElement();
   }
 
   setDevicePixelRatio(devicePixelRatio: number): void {
     this._devicePixelRatio = devicePixelRatio;
+    this._deleteCanvasElement();
   }
 
   dispose(): void {
@@ -199,6 +202,9 @@ export class CanvasTextLayer implements TextLayer {
   }
 
   private _deleteCanvasElement(): void {
+    if (this._charRenderCanvas == null) {
+      return;
+    }
     const canvasElement = this._charRenderCanvas.getCanvasElement();
     canvasElement.parentElement.removeChild(canvasElement);
     this._charRenderCanvas = null;

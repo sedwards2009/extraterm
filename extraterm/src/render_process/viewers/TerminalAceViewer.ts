@@ -3,7 +3,7 @@
  */
 
 import {WebComponent} from 'extraterm-web-component-decorators';
-import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition } from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition, TerminalTheme } from 'extraterm-extension-api';
 import * as XRegExp from "xregexp";
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
@@ -28,6 +28,7 @@ import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { SearchOptions } from 'ace-ts/build/SearchOptions';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
 import { Color } from '../gui/Util';
+import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -77,6 +78,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
   private _aceEditor: TerminalCanvasAceEditor = null;
   private _aceEditSession: TerminalCanvasEditSession = null;
+  private _aceRenderer: TerminalCanvasRenderer = null;
   private _height = 0;
   private _isEmpty = true;
   private _mode: Mode = Mode.DEFAULT;
@@ -162,18 +164,18 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._aceEditSession = new TerminalCanvasEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
       this._aceEditSession.setUndoManager(new UndoManager());
 
-      const aceRenderer = new TerminalCanvasRenderer(containerDiv, {
+      this._aceRenderer = new TerminalCanvasRenderer(containerDiv, {
         palette: this._extractPalette(this._terminalVisualConfig),
         fontFamily: this._terminalVisualConfig.fontFamily,
         fontSizePx: this._terminalVisualConfig.fontSizePx,
         devicePixelRatio: this._terminalVisualConfig.devicePixelRatio,
       });
-      aceRenderer.init();
-      aceRenderer.setShowGutter(false);
-      aceRenderer.setShowLineNumbers(false);
-      aceRenderer.setDisplayIndentGuides(false);
+      this._aceRenderer.init();
+      this._aceRenderer.setShowGutter(false);
+      this._aceRenderer.setShowLineNumbers(false);
+      this._aceRenderer.setDisplayIndentGuides(false);
 
-      this._aceEditor = new TerminalCanvasAceEditor(aceRenderer, this._aceEditSession);
+      this._aceEditor = new TerminalCanvasAceEditor(this._aceRenderer, this._aceEditSession);
       this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setAutoscroll(false);
@@ -411,7 +413,45 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    const previousConfig = this._terminalVisualConfig;
     this._terminalVisualConfig = terminalVisualConfig;
+    if (this._aceRenderer != null) {
+      const config: TerminalCanvasRendererConfig = {
+        palette: this._extractPalette(terminalVisualConfig),
+        fontFamily: terminalVisualConfig.fontFamily,
+        fontSizePx: terminalVisualConfig.fontSizePx,
+        devicePixelRatio: terminalVisualConfig.devicePixelRatio,
+      };
+
+      if (previousConfig == null) {
+        this._aceRenderer.setTerminalCanvasRendererConfig(config);
+      } else {
+        if (previousConfig.fontFamily !== terminalVisualConfig.fontFamily ||
+            previousConfig.fontSizePx !== terminalVisualConfig.fontSizePx ||
+            previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio ||
+            ! this._isTerminalThemeEqual(previousConfig.terminalTheme, terminalVisualConfig.terminalTheme)) {
+          this._aceRenderer.setTerminalCanvasRendererConfig(config);
+        }
+      }
+    }
+  }
+
+  private _isTerminalThemeEqual(themeA: TerminalTheme, themeB: TerminalTheme): boolean {
+    for (let i=0; i<256; i++) {
+      if (themeA[i] !== themeB[i]) {
+        return false;
+      }
+    }
+    if (themeA.backgroundColor !== themeB.backgroundColor) {
+      return false;
+    }
+    if (themeA.foregroundColor !== themeB.foregroundColor) {
+      return false;
+    }
+    if (themeA.cursorBackgroundColor !== themeB.cursorBackgroundColor) {
+      return false;
+    }
+    return true;
   }
 
   getBulkFileHandle(): BulkFileHandle {

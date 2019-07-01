@@ -7,4 +7,4 @@ export { TerminalRenderer } from "./TerminalRenderer";
 
 export { TerminalCanvasAceEditor } from "./TerminalCanvasAceEditor";
 export { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
-export { TerminalCanvasRenderer, TerminalCanvasRendererOptions } from "./TerminalCanvasRenderer";
+export { TerminalCanvasRenderer, TerminalCanvasRendererConfig } from "./TerminalCanvasRenderer";

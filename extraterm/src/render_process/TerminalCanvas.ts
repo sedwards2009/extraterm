@@ -26,6 +26,7 @@ import { ThemeableElementBase } from "./ThemeableElementBase";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { CssFile } from '../theme/Theme';
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
+import { TerminalVisualConfig } from "./TerminalVisualConfig";
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;
@@ -61,6 +62,8 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   private _cssStyleElement: HTMLStyleElement;
 
   private _configDatabase: ConfigDatabase = null;
+  private _baseTerminalVisualConfig: TerminalVisualConfig = null;
+  private _effectiveTerminalVisualConfig: TerminalVisualConfig = null;
   private _virtualScrollArea: VirtualScrollAreaWithSpacing = null;
   private _stashArea: DocumentFragment = null;
   private _childElementList: ViewerElementStatus[] = [];
@@ -309,6 +312,30 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     return rootFontSize;
   }
 
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._baseTerminalVisualConfig = terminalVisualConfig;
+    this._updateEffectiveTerminalVisualConfig();
+  }
+
+  private _updateEffectiveTerminalVisualConfig(): void {
+    this._effectiveTerminalVisualConfig = this._computeEffectiveTerminalVisualConfig();
+    this._applyTerminalVisualConfig();
+  }
+
+  private _applyTerminalVisualConfig(): void {
+    for (const element of this.getViewerElements()) {
+      if (element instanceof TerminalViewer) {
+        element.setTerminalVisualConfig(this._effectiveTerminalVisualConfig);
+      }
+    }
+  }
+
+  private _computeEffectiveTerminalVisualConfig(): TerminalVisualConfig {
+    const scaleFactor = this._effectiveFontScaleFactor(this._fontSizeAdjustment);
+    const fontSizePx = this._baseTerminalVisualConfig.fontSizePx * scaleFactor;
+    return {...this._baseTerminalVisualConfig, fontSizePx};
+  }
+
   setModeAndVisualState(mode: Mode, visualState: VisualState): void {
     this._mode = mode;
     for (const element of this.getViewerElements()) {
@@ -335,7 +362,11 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   appendViewerElement(el: ViewerElement): void {
     el.addEventListener('focus', this._childFocusHandlerFunc);
-    
+
+    if (el instanceof TerminalViewer) {
+      el.setTerminalVisualConfig(this._baseTerminalVisualConfig);
+    }
+
     this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: RefreshLevel.RESIZE } );
     this._scrollArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);
@@ -633,12 +664,13 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     if (newAdjustment !== this._fontSizeAdjustment) {
       this._fontSizeAdjustment = newAdjustment;
       this._setFontSizeInCss(newAdjustment);
+      this._updateEffectiveTerminalVisualConfig();
     }
   }
 
   private _setFontSizeInCss(size: number): void {
     (<any>this._cssStyleElement.sheet).cssRules[0].style.cssText = this._getCssFontSizeRule(size);
-    // Type stubs are missing cssRules.
+    // The type stubs don't have cssRules defined.
   }
 
   private _resetFontSize(): void {
@@ -658,8 +690,12 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   private _getCssFontSizeRule(adjustment: number): string {
-    const scale = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3][adjustment-MINIMUM_FONT_SIZE];
+    const scale = this._effectiveFontScaleFactor(adjustment);
     return `--terminal-font-size: calc(var(--default-terminal-font-size) * ${scale});`;
+  }
+
+  private _effectiveFontScaleFactor(adjustment: number): number {
+    return [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3][adjustment-MINIMUM_FONT_SIZE];
   }
 
   private _handleViewerCursorEdge(ev: CustomEvent): void {
@@ -716,12 +752,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       return;
     }
     this._enforceScrollbackLengthGuard = true;
-// FIXME are these focus hacks needed still?    
-    // const hasFocus = this.hasFocus();
     this._enforceScrollbackSize2(maxScrollbackLines, maxScrollbackFrames);
-    // if (hasFocus && ! this.hasFocus()) {
-    //   this.focus();
-    // }
     this._enforceScrollbackLengthGuard = false;
   }
 

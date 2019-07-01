@@ -196,6 +196,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
       this._terminalCanvas = new TerminalCanvas();
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
+      this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
       this._containerElement = DomUtils.getShadowId(this, ID_CONTAINER);
       this._containerElement.appendChild(this._terminalCanvas);
 
@@ -305,7 +306,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
-    this._terminalVisualConfig = terminalVisualConfig;
+     this._terminalVisualConfig = terminalVisualConfig;
+     if (this._terminalCanvas != null) {
+       this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
+     }
   }
 
   private _commandNeedsFrame(commandLine: string): boolean {
@@ -575,7 +579,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
                                             // removing it from the DOM in the next method call.
     this._terminalCanvas.appendViewerElement(terminalViewer);
     this._terminalCanvas.setTerminalViewer(terminalViewer);
-    
 
     this._emulator.refreshScreen();
 
@@ -589,7 +592,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
-    terminalViewer.setTerminalVisualConfig(this._terminalVisualConfig);
     return terminalViewer;
   }
 
@@ -1158,16 +1160,16 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._lastCommandTerminalViewer = null;
       
       // Append our new embedded viewer.
-      const newViewerElement = this._createEmbeddedViewerElement();
+      const newEmbeddedViewer = this._createEmbeddedViewerElement();
 
         // Hang the terminal viewer under the Embedded viewer.
-      newViewerElement.className = "extraterm_output";
+      newEmbeddedViewer.className = "extraterm_output";
 
-      this._terminalCanvas.appendViewerElement(newViewerElement);
+      this._terminalCanvas.appendViewerElement(newEmbeddedViewer);
       
       // Create a terminal viewer to display the output of the last command.
       const outputTerminalViewer = this._createTerminalViewer();
-      newViewerElement.setViewerElement(outputTerminalViewer);
+      newEmbeddedViewer.setViewerElement(outputTerminalViewer);
       
       outputTerminalViewer.setReturnCode(returnCode);
       outputTerminalViewer.setCommandLine(this._lastCommandLine);
@@ -1176,7 +1178,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         outputTerminalViewer.setTerminalLines(moveText);
       }
       outputTerminalViewer.setEditable(true);
-      this._emitDidAppendViewer(newViewerElement);
+      this._emitDidAppendViewer(newEmbeddedViewer);
       
       this._appendNewTerminalViewer();
       this._refocus();

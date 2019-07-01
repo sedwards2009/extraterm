@@ -9,7 +9,7 @@ import { Event } from 'extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
 
-export interface TerminalCanvasRendererOptions {
+export interface TerminalCanvasRendererConfig {
   palette: number[];
   devicePixelRatio: number;
   fontFamily: string;
@@ -19,20 +19,14 @@ export interface TerminalCanvasRendererOptions {
 export class TerminalCanvasRenderer extends Renderer {
   private _log: Logger = null;
   private _canvasTextLayer: CanvasTextLayer;
-  private _palette: number[] = null;
-  private _fontFamily: string = null;
-  private _fontSizePx: number = null;
-  private _devicePixelRatio: number = 1;
+  private _terminalCanvasRendererConfig: TerminalCanvasRendererConfig = null;
   private _canvasFontMetricsMonitor: CanvasFontMetricsMonitor = null;
 
-  constructor(container: HTMLElement, options: TerminalCanvasRendererOptions) {
+  constructor(container: HTMLElement, terminalCanvasRendererConfig: TerminalCanvasRendererConfig) {
     super(container, { injectCss: false, fontSize: null });
     this._log = getLogger("TerminalCanvasRenderer", this);
 
-    this.setPalette(options.palette);
-    this.setFontFamily(options.fontFamily);
-    this.setFontSizePx(options.fontSizePx);
-    this.setDevicePixelRatio(options.devicePixelRatio);
+    this.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);
     this.setHScrollTracking(HScrollTracking.VISIBLE);
   }
 
@@ -45,62 +39,28 @@ export class TerminalCanvasRenderer extends Renderer {
   }
 
   protected createTextLayer(contentDiv: HTMLDivElement): TextLayer {
-    this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._palette, this._fontFamily, this._fontSizePx,
-                              this._devicePixelRatio);
+    this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._terminalCanvasRendererConfig.palette,
+      this._terminalCanvasRendererConfig.fontFamily, this._terminalCanvasRendererConfig.fontSizePx,
+      this._terminalCanvasRendererConfig.devicePixelRatio);
     return this._canvasTextLayer;
   }
   
   protected createFontMetricsMonitor(): FontMetricsMonitor {
-    this._canvasFontMetricsMonitor = new CanvasFontMetricsMonitor(this._fontFamily, this._fontSizePx,
-                                          this._devicePixelRatio);
+    this._canvasFontMetricsMonitor = new CanvasFontMetricsMonitor(this._terminalCanvasRendererConfig);
     return this._canvasFontMetricsMonitor;
   }
 
-  setPalette(palette: number[]): void {
-    this._palette = palette;
-    if (this._canvasTextLayer == null) {
-      return;
+  setTerminalCanvasRendererConfig(terminalCanvasRendererConfig: TerminalCanvasRendererConfig): void {
+    this._terminalCanvasRendererConfig = terminalCanvasRendererConfig;
+    if (this._canvasTextLayer != null) {
+      this._canvasTextLayer.setPalette(terminalCanvasRendererConfig.palette);
+      this._canvasTextLayer.setFontFamily(terminalCanvasRendererConfig.fontFamily);
+      this._canvasTextLayer.setFontSizePx(terminalCanvasRendererConfig.fontSizePx);
+      this._canvasTextLayer.setDevicePixelRatio(terminalCanvasRendererConfig.devicePixelRatio);
     }
-    this._canvasTextLayer.setPalette(palette);
-  }
-
-  setFontFamily(fontFamily: string): void {
-    this._fontFamily = fontFamily;
-    if (this._canvasTextLayer == null) {
-      return;
+    if (this._canvasFontMetricsMonitor != null) {
+      this._canvasFontMetricsMonitor.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);
     }
-    this._canvasTextLayer.setFontFamily(fontFamily);
-
-    if (this._canvasFontMetricsMonitor == null) {
-      return;
-    }
-    this._canvasFontMetricsMonitor.setFontFamily(fontFamily);
-  }
-
-  setFontSizePx(fontSizePx: number): void {
-    this._fontSizePx = fontSizePx;
-    if (this._canvasTextLayer == null) {
-      return;
-    }
-    this._canvasTextLayer.setFontSizePx(fontSizePx);
-
-    if (this._canvasFontMetricsMonitor == null) {
-      return;
-    }
-    this._canvasFontMetricsMonitor.setFontSizePx(fontSizePx);
-  }
-
-  setDevicePixelRatio(devicePixelRatio: number): void {
-    this._devicePixelRatio = devicePixelRatio;
-    if (this._canvasTextLayer == null) {
-      return;
-    }
-    this._canvasTextLayer.setDevicePixelRatio(devicePixelRatio);
-
-    if (this._canvasFontMetricsMonitor == null) {
-      return;
-    }
-    this._canvasFontMetricsMonitor.setDevicePixelRatio(devicePixelRatio);
   }
 }
 
@@ -129,15 +89,16 @@ class InsetHScrollBar extends HScrollBar {
 
 class CanvasFontMetricsMonitor implements FontMetricsMonitor {
   private _log: Logger = null;
+  private _terminalCanvasRendererConfig: TerminalCanvasRendererConfig = null;
   private _onChangeEventEmitter = new EventEmitter<FontMetrics>();
   onChange: Event<FontMetrics>;
   private _fontMetrics: FontMetrics = null;
-  private _isMonitoring = false;
 
-  constructor(private _fontFamily: string, private _fontSizePx: number, private _devicePixelRatio: number) {
+  constructor(terminalCanvasRendererConfig: TerminalCanvasRendererConfig) {
     this._log = getLogger("CanvasFontMetricsMonitor", this);
+    this._terminalCanvasRendererConfig = terminalCanvasRendererConfig;
 
-    this._log.debug(`fontFamily: ${this._fontFamily}, fontSizePx: ${this._fontSizePx}, devicePixelRatio: ${this._devicePixelRatio}`);
+    // this._log.debug(`fontFamily: ${this._fontFamily}, fontSizePx: ${this._fontSizePx}, devicePixelRatio: ${this._devicePixelRatio}`);
     this.onChange = this._onChangeEventEmitter.event;
   }
 
@@ -145,36 +106,42 @@ class CanvasFontMetricsMonitor implements FontMetricsMonitor {
     if (this._fontMetrics != null) {
       return this._fontMetrics;
     }
+    this._fontMetrics = this._computeAceFontMetrics();
+    return this._fontMetrics;
+  }
 
-    const { renderFontMetrics, cssFontMetrics } = computeDpiFontMetrics(this._fontFamily, this._fontSizePx,
-                                                    this._devicePixelRatio);
-    this._fontMetrics = {
+  private _computeAceFontMetrics(): FontMetrics {
+    const { renderFontMetrics, cssFontMetrics } = computeDpiFontMetrics(this._terminalCanvasRendererConfig.fontFamily,
+      this._terminalCanvasRendererConfig.fontSizePx, this._terminalCanvasRendererConfig.devicePixelRatio);
+    const fontMetrics = {
       charWidthPx: cssFontMetrics.widthPx,
       charHeightPx: cssFontMetrics.heightPx,
       isBoldCompatible: true
     };
-    return this._fontMetrics;
+    return fontMetrics;
   }
 
   checkForSizeChanges(): void {
+    const newMetrics = this._computeAceFontMetrics();
+    if (this._fontMetrics != null) {
+      if (this._fontMetrics.charHeightPx === newMetrics.charHeightPx &&
+        this._fontMetrics.charWidthPx === newMetrics.charWidthPx &&
+        this._fontMetrics.isBoldCompatible === newMetrics.isBoldCompatible) {
+          return;
+        }
+    }
+    this._fontMetrics = newMetrics;
+    this._onChangeEventEmitter.fire(newMetrics);
   }
 
   startMonitoring(): void {
-    this._isMonitoring = true;
   }
 
   dispose(): void {
   }
 
-  setFontFamily(fontFamily: string): void {
-// TODO
-  }
-
-  setFontSizePx(fontSizePx: number): void {
-// TODO
-  }
-
-  setDevicePixelRatio(ratio: number): void {
-// TODO
+  setTerminalCanvasRendererConfig(terminalCanvasRendererConfig: TerminalCanvasRendererConfig): void {
+    this._terminalCanvasRendererConfig = terminalCanvasRendererConfig;
+    this.checkForSizeChanges();
   }
 }
