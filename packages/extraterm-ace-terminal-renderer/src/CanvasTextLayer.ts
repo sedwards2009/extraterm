@@ -185,8 +185,7 @@ export class CanvasTextLayer implements TextLayer {
         unicodeStart: 0x1f000,
         unicodeEnd: 0x20000,
         sampleChars: ["\u{1f600}"]  // Smile emoji
-      }
-]
+      }]
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();

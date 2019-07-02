@@ -3,13 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from 'extraterm-logging';
 
 import { ViewerElement } from '../viewers/ViewerElement';
 import { TerminalViewer } from '../viewers/TerminalAceViewer';
 import { VirtualScrollCanvas } from '../VirtualScrollCanvas';
 import * as Term from '../emulator/Term';
+import { TerminalVisualConfig } from '../TerminalVisualConfig';
 
 export const VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG = "et-vue-terminal-ace-viewer-element";
 
@@ -19,6 +20,7 @@ export class VueTerminalAceViewerElement extends ViewerElement {
   private _log: Logger = null;
   private _terminalViewer: TerminalViewer = null;
   private _scrollCanvas: VirtualScrollCanvas = null;
+  private _terminalVisualConfig: TerminalVisualConfig = null;
 
   constructor() {
     super();
@@ -33,6 +35,7 @@ export class VueTerminalAceViewerElement extends ViewerElement {
 
       this._terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
       this._terminalViewer.setEditable(false);
+      this._terminalViewer.setTerminalVisualConfig(this._terminalVisualConfig);
 
       const emulator = new Term.Emulator({platform: <Term.Platform> process.platform});
       this._terminalViewer.setEmulator(emulator);
@@ -41,6 +44,13 @@ export class VueTerminalAceViewerElement extends ViewerElement {
       this.appendChild(this._scrollCanvas);
 
       emulator.write(demoContents());
+    }
+  }
+
+  set terminalVisualConfig(terminalVisualConfig: TerminalVisualConfig) {
+    this._terminalVisualConfig = terminalVisualConfig;
+    if (this._terminalViewer != null) {
+      this._terminalViewer.setTerminalVisualConfig(terminalVisualConfig);
     }
   }
 }

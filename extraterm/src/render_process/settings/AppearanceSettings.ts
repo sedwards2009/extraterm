@@ -15,6 +15,7 @@ import * as ThemeTypes from '../../theme/Theme';
 import { shell } from 'electron';
 import * as WebIpc from '../WebIpc';
 import { ExtensionManager } from '../extension/InternalTypes';
+import { TerminalVisualConfig } from '../TerminalVisualConfig';
 
 export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 
@@ -25,6 +26,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   private _userTerminalThemeDirectory: string = null;
   private _userSyntaxThemeDirectory: string = null;
   private _extensionManager: ExtensionManager = null;
+  private _terminalVisualConfig: TerminalVisualConfig = null;
 
   constructor() {
     super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
@@ -111,5 +113,14 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
 
   get extensionManager(): ExtensionManager {
     return this._extensionManager;
+  }
+
+  set terminalVisualConfig(terminalVisualConfig: TerminalVisualConfig) {
+    this._terminalVisualConfig = terminalVisualConfig;
+    this._getUi().terminalVisualConfig = terminalVisualConfig;
+  }
+
+  get terminalVisualConfig(): TerminalVisualConfig {
+    return this._terminalVisualConfig;
   }
 }

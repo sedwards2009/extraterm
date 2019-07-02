@@ -633,7 +633,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   refresh(level: RefreshLevel): void {
     let resizeEventNeeded = false;
 
-    if (this._aceEditSession !== null) {
+    if (this._aceEditSession != null) {
       if (DEBUG_RESIZE) {
         this._log.debug("calling aceEditor.resize()");
       }

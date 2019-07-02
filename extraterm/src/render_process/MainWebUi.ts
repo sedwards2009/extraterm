@@ -684,6 +684,7 @@ this._log.debug("tab RMB");
       config.injectConfigDatabase(settingsTabElement, this._configManager);
       injectKeybindingsManager(settingsTabElement, this._keybindingsManager);
       injectExtensionManager(settingsTabElement, this._extensionManager);
+      settingsTabElement.setTerminalVisualConfig(this._terminalVisualConfig);
 
       settingsTabElement.setThemes(this._themes);
       if (tabName != null) {

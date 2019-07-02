@@ -306,10 +306,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
-     this._terminalVisualConfig = terminalVisualConfig;
-     if (this._terminalCanvas != null) {
-       this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
-     }
+    this._terminalVisualConfig = terminalVisualConfig;
+    if (this._terminalCanvas != null) {
+      this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
+    }
   }
 
   private _commandNeedsFrame(commandLine: string): boolean {
