@@ -24,8 +24,7 @@ export class FontAtlasRepository {
     }
 
     const fontAtlas = new FontAtlasImpl(metrics);
-    this._refCount.set(key, 1);
-    return {
+    const disposableFontAtlas: FontAtlas & Disposable = {
       drawCodePoint: fontAtlas.drawCodePoint.bind(fontAtlas),
 
       dispose: () => {
@@ -37,6 +36,9 @@ export class FontAtlasRepository {
         }
       }
     };
+    this._refCount.set(key, 1);
+    this._map.set(key, disposableFontAtlas);
+    return disposableFontAtlas;
   }
 
   private _key(metrics: MonospaceFontMetrics): string {
