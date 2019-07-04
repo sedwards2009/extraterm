@@ -92,8 +92,12 @@ class FontAtlasPage {
     return this._pageCanvas;
   }
 
+  private _makeLookupKey(codePoint: number, style: StyleCode): number {
+    return style * TWO_TO_THE_24 + codePoint;
+  }
+
   drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): boolean {
-    let cachedGlyph = this._lookupTable.get((style << 24) | codePoint);
+    let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
     if (cachedGlyph == null) {
       if (this._isFull) {
         return false;
@@ -173,7 +177,7 @@ class FontAtlasPage {
       cachedGlyph.imageBitmapPromise = null;
     });
 
-    this._lookupTable.set((style << 24) | codePoint, cachedGlyph);
+    this._lookupTable.set(this._makeLookupKey(codePoint, style), cachedGlyph);
 
     this._incrementNextEmptyCell();
     if (isWide) {

@@ -144,6 +144,17 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this._terminalVisualConfig = terminalVisualConfig;
+
+    const settingsTab = this._getSettingsTab();
+    if (settingsTab != null) {
+      settingsTab.setTerminalVisualConfig(terminalVisualConfig);
+    }
+
+    for (const el of this._splitLayout.getAllTabContents()) {
+      if (el instanceof EtTerminal) {
+        el.setTerminalVisualConfig(terminalVisualConfig);
+      }
+    }
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {

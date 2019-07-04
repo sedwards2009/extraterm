@@ -50,6 +50,7 @@ import { ExtensionCommandContribution, Category } from '../ExtensionMetadata';
 import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
+import { FontLoader } from './gui/Util';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -76,10 +77,13 @@ let extensionManager: ExtensionManager = null;
 let commandPalette: CommandPalette = null;
 let applicationContextMenu: ApplicationContextMenu = null;
 let terminalVisualConfig: TerminalVisualConfig = null;
+let fontLoader: FontLoader = null;
+
 
 export async function startUp(closeSplash: () => void): Promise<void> {
   ElectronMenu.setApplicationMenu(null);
 
+  fontLoader = new FontLoader();
   startUpTheming();
   startUpWebIpc();
 
@@ -93,7 +97,6 @@ export async function startUp(closeSplash: () => void): Promise<void> {
   const themeListMsg = await WebIpc.requestThemeList()
   handleThemeListMessage(themeListMsg);
 
-  await loadFontFaces();
   await loadTerminalTheme();
 
   const doc = window.document;
@@ -154,20 +157,10 @@ function startUpWebIpc(): void {
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
 }  
 
-function loadFontFaces(): Promise<FontFace[]> {
-  // Next phase is wait for the fonts to load.
-  const fontPromises: Promise<FontFace>[] = [];
-  window.document.fonts.forEach( (font: FontFace) => {
-    if (font.status !== 'loaded' && font.status !== 'loading') {
-      fontPromises.push(font.load());
-    }
-  });
-  return Promise.all<FontFace>( fontPromises );
-}
-
 async function loadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
+
   terminalVisualConfig = {
     fontFamily: config.terminalFont,
     fontSizePx: config.terminalFontSize,
@@ -569,8 +562,9 @@ async function setupConfiguration(): Promise<void> {
     const matchingFonts = newSystemConfig.availableFonts.filter(
       (font) => font.postscriptName === newGeneralConfig.terminalFont);
 
-    const fontSizePx = Math.max(5, Math.round(newGeneralConfig.terminalFontSize));
-    setCssVars(newGeneralConfig.terminalFont, matchingFonts[0].path, fontSizePx);
+    const fontSizePx = Math.max(5, newGeneralConfig.terminalFontSize);
+    setCssVars(newGeneralConfig.terminalFont, fontSizePx);
+    await fontLoader.loadFont(newGeneralConfig.terminalFont, matchingFonts[0].path);
   }
 
   if (oldGeneralConfig == null) {
@@ -579,9 +573,6 @@ async function setupConfiguration(): Promise<void> {
     await requestThemeContents();
   } else {
     const refreshThemeTypeList: ThemeTypes.ThemeType[] = [];
-    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
-      refreshThemeTypeList.push("terminal");
-    }
     if (oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax) {
       refreshThemeTypeList.push("syntax");
     }
@@ -591,10 +582,28 @@ async function setupConfiguration(): Promise<void> {
       refreshThemeTypeList.push("gui");
     }
 
-    oldGeneralConfig = newGeneralConfig;
-    oldSystemConfig = newSystemConfig;
     if (refreshThemeTypeList.length !== 0) {
       await requestThemeContents(refreshThemeTypeList);
+    }
+
+    let terminalVisualConfigChanged = false;
+    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
+      await loadTerminalTheme();
+      terminalVisualConfigChanged = true;
+    }
+    if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
+        oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize) {
+
+      terminalVisualConfig = {
+        fontFamily: fontLoader.cssNameFromFontName(newGeneralConfig.terminalFont),
+        fontSizePx: newGeneralConfig.terminalFontSize,
+        devicePixelRatio: window.devicePixelRatio,
+        terminalTheme: terminalVisualConfig.terminalTheme,
+      }
+      terminalVisualConfigChanged = true;
+    }
+    if (terminalVisualConfigChanged) {
+      mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
     }
   }
 
@@ -637,15 +646,10 @@ function reloadThemeContents(): void {
   requestThemeContents();
 }
 
-function setCssVars(fontName: string, fontPath: string, terminalFontSizePx: number): void {
+function setCssVars(fontName: string, terminalFontSizePx: number): void {
   const fontCssName = fontName.replace(/\W/g, "_");
   (<HTMLStyleElement> document.getElementById('CSS_VARS')).textContent =
     `
-    @font-face {
-      font-family: "${fontCssName}";
-      src: url("${fontPath}");
-    }
-
     :root {
       --default-terminal-font-size: ${terminalFontSizePx}px;
       --terminal-font: "${fontCssName}";

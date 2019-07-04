@@ -215,3 +215,47 @@ export function to2DigitHex(value: number): string {
   const h = value.toString(16);
   return h.length === 1 ? "0" + h : h;
 }
+
+//-------------------------------------------------------------------------
+/**
+ * A little class to help load fonts on demand.
+ */
+export class FontLoader {
+  private _knownFontNames = new Set<string>();
+
+  async loadFont(fontName: string, fontPath: string): Promise<void> {
+    if ( ! this._knownFontNames.has(fontName)) {
+      this._appendFontFaceStyleElement(fontName, fontPath);
+      this._knownFontNames.add(fontName);
+    }
+    await this._fontFaceLoad();
+  }
+
+  cssNameFromFontName(fontName: string): string {
+    return fontName.replace(/\W/g, "_");
+  }
+
+  private _appendFontFaceStyleElement(fontName: string, fontPath: string): void {
+    const fontCssName = this.cssNameFromFontName(fontName);
+    const el = <HTMLStyleElement> document.createElement("style");
+    el.textContent =
+      `
+      @font-face {
+        font-family: "${fontCssName}";
+        src: url("${fontPath}");
+      }
+      `;
+    document.head.appendChild(el);
+  }
+
+  private async _fontFaceLoad(): Promise<FontFace[]> {
+    // Next phase is wait for the fonts to load.
+    const fontPromises: Promise<FontFace>[] = [];
+    window.document.fonts.forEach( (font: FontFace) => {
+      if (font.status !== 'loaded' && font.status !== 'loading') {
+        fontPromises.push(font.load());
+      }
+    });
+    return Promise.all<FontFace>( fontPromises );
+  }
+}

@@ -4,17 +4,17 @@
 
 
 export interface MonospaceFontMetrics {
-  fontSizePx: number,
-  fontFamily: string,
+  readonly fontSizePx: number,
+  readonly fontFamily: string,
 
-  fillTextYOffset: number;  // Offset to add to y when rendering text.
-  fillTextXOffset: number;  // Offset to add to x when rendering text.
+  readonly fillTextYOffset: number;  // Offset to add to y when rendering text.
+  readonly fillTextXOffset: number;  // Offset to add to x when rendering text.
 
-  widthPx: number;
-  heightPx: number;
+  readonly widthPx: number;
+  readonly heightPx: number;
 
-  strikethroughY: number;
-  strikethroughHeight: number;
-  underlineY: number;
-  underlineHeight: number;
+  readonly strikethroughY: number;
+  readonly strikethroughHeight: number;
+  readonly underlineY: number;
+  readonly underlineHeight: number;
 }
