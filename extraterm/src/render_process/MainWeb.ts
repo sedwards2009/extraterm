@@ -80,7 +80,7 @@ let terminalVisualConfig: TerminalVisualConfig = null;
 let fontLoader: FontLoader = null;
 
 
-export async function startUp(closeSplash: () => void): Promise<void> {
+export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   ElectronMenu.setApplicationMenu(null);
 
   fontLoader = new FontLoader();
@@ -92,12 +92,12 @@ export async function startUp(closeSplash: () => void): Promise<void> {
   keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
 
   const configMsg = await WebIpc.requestConfig("*");
-  handleConfigMessage(configMsg);
+  await asyncHandleConfigMessage(configMsg);
   
   const themeListMsg = await WebIpc.requestThemeList()
   handleThemeListMessage(themeListMsg);
 
-  await loadTerminalTheme();
+  await asyncLoadTerminalTheme();
 
   const doc = window.document;
   doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
@@ -146,7 +146,7 @@ function startUpWebIpc(): void {
   WebIpc.start();
   
   // Default handling for config messages.
-  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, handleConfigMessage);
+  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, asyncHandleConfigMessage);
   
   // Default handling for theme messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
@@ -157,7 +157,7 @@ function startUpWebIpc(): void {
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
 }  
 
-async function loadTerminalTheme(): Promise<void> {
+async function asyncLoadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
 
@@ -426,7 +426,7 @@ function customizeToggleDeveloperTools(): CustomizedCommand {
 }
 
 function commandReloadThemeContents(): void {
-  reloadThemeContents();
+  asyncReloadThemeContents();
 }
 
 function commandOpenCommandPalette(): void {
@@ -490,12 +490,12 @@ function setupOSXMenus(): void {
   ElectronMenu.setApplicationMenu(topMenu);
 }
 
-function handleConfigMessage(msg: Messages.Message): Promise<void> {
+function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
   const key = configMessage.key;
   configDatabase.setConfigFromMainProcess(key, configMessage.config);
   if ([GENERAL_CONFIG, SYSTEM_CONFIG, "*"].indexOf(key) !== -1) {
-    return setupConfiguration();
+    return asyncSetupConfiguration();
   } else {
     return new Promise<void>( (resolve, cancel) => { resolve(); } );
   }
@@ -543,7 +543,7 @@ function handleClipboardRead(msg: Messages.Message): void {
 let oldSystemConfig: SystemConfig = null;
 let oldGeneralConfig: GeneralConfig = null;
 
-async function setupConfiguration(): Promise<void> {
+async function asyncSetupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
@@ -570,7 +570,7 @@ async function setupConfiguration(): Promise<void> {
   if (oldGeneralConfig == null) {
     oldGeneralConfig = newGeneralConfig;
     oldSystemConfig = newSystemConfig;
-    await requestThemeContents();
+    await asyncRequestThemeContents();
   } else {
     const refreshThemeTypeList: ThemeTypes.ThemeType[] = [];
     if (oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax) {
@@ -583,12 +583,12 @@ async function setupConfiguration(): Promise<void> {
     }
 
     if (refreshThemeTypeList.length !== 0) {
-      await requestThemeContents(refreshThemeTypeList);
+      await asyncRequestThemeContents(refreshThemeTypeList);
     }
 
     let terminalVisualConfigChanged = false;
     if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
-      await loadTerminalTheme();
+      await asyncLoadTerminalTheme();
       terminalVisualConfigChanged = true;
     }
     if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
@@ -611,7 +611,7 @@ async function setupConfiguration(): Promise<void> {
   oldSystemConfig = newSystemConfig;
 }
 
-async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {
+async function asyncRequestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {
   const cssFileMap = new Map<ThemeTypes.CssFile, string>(ThemeConsumer.cssMap());
 
   const neededThemeTypes = new Set<ThemeTypes.ThemeType>(refreshThemeTypeList);
@@ -642,8 +642,8 @@ async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[]
   ThemeConsumer.updateCss(cssFileMap);
 }
 
-function reloadThemeContents(): void {
-  requestThemeContents();
+function asyncReloadThemeContents(): Promise<void> {
+  return asyncRequestThemeContents();
 }
 
 function setCssVars(fontName: string, terminalFontSizePx: number): void {
