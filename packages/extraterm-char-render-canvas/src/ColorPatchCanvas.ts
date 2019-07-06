@@ -89,7 +89,7 @@ export class ColorPatchCanvas {
         offset++;
         rawImageData[offset] = (rgba >> 8) & 0xff; // Blue
         offset++;
-        rawImageData[offset] = 255; // Alpha
+        rawImageData[offset] = rgba & 0xff; // Alpha
         offset++;
       }
     }
