@@ -97,7 +97,7 @@ export class Color {
   _red: number;
   _green: number;
   _blue: number;
-  _opacity: number;
+  _opacity: number; // 0-255
   _hexString: string = null;
   _rgbaString: string = null;
   
@@ -116,19 +116,32 @@ export class Color {
       if (stringColor.startsWith("#")) {
         if (stringColor.length === 4) {
           // Parse the 4bit colour values and expand then to 8bit.
-          this._red = parseInt(stringColor.slice(1,2), 16) * 17;
-          this._green = parseInt(stringColor.slice(2,3), 16) * 17;
-          this._blue = parseInt(stringColor.slice(3,4), 16) * 17;
-          
+          this._red = parseInt(stringColor.slice(1, 2), 16) * 17;
+          this._green = parseInt(stringColor.slice(2, 3), 16) * 17;
+          this._blue = parseInt(stringColor.slice(3, 4), 16) * 17;
+          this._opacity = 255;
+        } else if (stringColor.length === 4) {
+          // Parse the 4bit colour values and expand then to 8bit.
+          this._red = parseInt(stringColor.slice(1, 2), 16) * 17;
+          this._green = parseInt(stringColor.slice(2, 3), 16) * 17;
+          this._blue = parseInt(stringColor.slice(3, 4), 16) * 17;
+          this._opacity = parseInt(stringColor.slice(4, 5), 16) * 17;
+            
         } else if (stringColor.length === 7) {
-          this._red = parseInt(stringColor.slice(1,3), 16);
-          this._green = parseInt(stringColor.slice(3,5), 16);
-          this._blue = parseInt(stringColor.slice(5,7), 16);          
+          this._red = parseInt(stringColor.slice(1, 3), 16);
+          this._green = parseInt(stringColor.slice(3, 5), 16);
+          this._blue = parseInt(stringColor.slice(5, 7), 16);          
+          this._opacity = 255;
+
+        } else if (stringColor.length === 9) {
+          this._red = parseInt(stringColor.slice(1, 3), 16);
+          this._green = parseInt(stringColor.slice(3, 5), 16);
+          this._blue = parseInt(stringColor.slice(5, 7), 16);
+          this._opacity = parseInt(stringColor.slice(7, 9), 16);
         } else {
           // Malformed hex colour.
           
         }
-        this._opacity = 1;
         
       } else {
         // What now?!
@@ -139,7 +152,7 @@ export class Color {
       this._red = red;
       this._green = green !== undefined ? green : 0;
       this._blue = blue !== undefined ? blue : 0;
-      this._opacity = opacity !== undefined ? opacity : 1;
+      this._opacity = opacity !== undefined ? opacity : 255;
     }
   }
   /**
@@ -161,7 +174,7 @@ export class Color {
    */
   toRGBAString(): string {
     if (this._rgbaString === null) {
-      this._rgbaString = "rgba(" + this._red + "," + this._green + "," + this._blue + "," + this._opacity + ")";
+      this._rgbaString = "rgba(" + this._red + "," + this._green + "," + this._blue + "," + (this._opacity/255) + ")";
     }
     return this._rgbaString;
   }
@@ -176,7 +189,7 @@ export class Color {
    * @return the color as a CSS formatted string.
    */
   toString(): string {
-    if (this._opacity == 1) {
+    if (this._opacity == 255) {
       // Use a hex representation.
       return this.toHexString();
     } else {
@@ -200,7 +213,7 @@ export class Color {
     const red = Math.min(255, Math.round(fraction * this._red + rightFraction * otherColor._red));
     const green = Math.min(255, Math.round(fraction * this._green + rightFraction * otherColor._green));
     const blue = Math.min(255, Math.round(fraction * this._blue + rightFraction * otherColor._blue));
-    const opacity = Math.min(255, Math.round(fraction* this._opacity + rightFraction * otherColor._opacity));
+    const opacity = Math.min(255, Math.round(fraction* (this._opacity/255) + rightFraction * (otherColor._opacity/255)));
     return new Color(red, green, blue, opacity);
   }
 }
