@@ -65,13 +65,13 @@ class FontMeasurement {
 
     // Note: most of the properties on a TextMetrics object are behind Blink's experimental flag. 1/5/2019
     const metrics = ctx.measureText(sampleChars[0]);
-    logFontMetrics(sampleChars[0], metrics);
+    // logFontMetrics(sampleChars[0], metrics);
 
     const {topY: xTopY, bottomY: xBottomY} = this._renderAndMeasureText(ctx, fontSizePx, sampleChars[0]);
-    this._log.debug(`X: topY: ${xTopY}, bottomY: ${xBottomY}`);
+    // this._log.debug(`X: topY: ${xTopY}, bottomY: ${xBottomY}`);
 
     const {topY: mTopY, bottomY: mBottomY} = this._renderAndMeasureText(ctx, fontSizePx, "m");
-    this._log.debug(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
+    // this._log.debug(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
 
     const charWidthPx = Math.ceil(metrics.width);
     const charHeightPx = Math.ceil(metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent);

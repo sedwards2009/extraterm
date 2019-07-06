@@ -69,7 +69,7 @@ class FontAtlasPage {
   constructor(private readonly _metrics: MonospaceFontMetrics) {
     this._log = getLogger("FontAtlasPage", this);
 
-    this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
+    // this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
     this._initalize();
   }
 

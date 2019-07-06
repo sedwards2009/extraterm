@@ -245,7 +245,7 @@ export class CharRenderCanvas implements Disposable {
     this._fontFamily = fontFamily || "monospace";
 
     const fontMetrics = computeFontMetrics(this._fontFamily, this._fontSizePx);
-    debugFontMetrics(fontMetrics);
+    // debugFontMetrics(fontMetrics);
     this.cellWidthPx = fontMetrics.widthPx;
     this.cellHeightPx = fontMetrics.heightPx;
 
