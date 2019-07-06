@@ -356,10 +356,10 @@ abbrev@1:
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
   integrity sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
 
-"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.12.0/ace-ts-v0.12.0.tgz":
-  version "0.12.0"
-  uid e42a788d50e2f2809233bf373044bb6516ff73d0
-  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.12.0/ace-ts-v0.12.0.tgz#e42a788d50e2f2809233bf373044bb6516ff73d0"
+"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.13.0/ace-ts-v0.13.0.tgz":
+  version "0.13.0"
+  uid "2793db8b13225bd2452463679a45825b8494d80e"
+  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.13.0/ace-ts-v0.13.0.tgz#2793db8b13225bd2452463679a45825b8494d80e"
 
 acorn-dynamic-import@^2.0.0:
   version "2.0.2"
@@ -2740,10 +2740,10 @@ duplexify@^3.4.2, duplexify@^3.6.0:
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
 
-easta@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/easta/-/easta-2.0.0.tgz#e52898fbba6e9ce7b0e24d6ac4f31b5bac538f44"
-  integrity sha512-GSLaWvPLKPaVP05nxhlk3OVBL39zXJqc2vdRK7QJpI3PpPbnv0lA2LNDVlPEBhEvBBMSIOiQBOYLP7w6EI34rA==
+easta@3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/easta/-/easta-3.0.1.tgz#7c4b2b957d1401fef9fd412ffaf87f130d19b9fd"
+  integrity sha512-3fgMwIiyh2T2QbYoFYuR0cPOm5tEJj8x3KqkhzVC/3oqFz/U+CDBDoULkyojjBMfxRYh0K7oVl4OcEGoEat21Q==
 
 ebnf-parser@0.1.10:
   version "0.1.10"
