@@ -1,11 +1,11 @@
-import { TerminalEditSession } from "../TerminalEditSession";
+import { TerminalCanvasEditSession } from "../TerminalCanvasEditSession";
 import { EditSession } from "ace-ts/build/EditSession";
 import { Editor } from "ace-ts/build/Editor";
 import { UndoManager } from "ace-ts/build/UndoManager";
 import { Renderer } from "ace-ts/build/Renderer";
 import * as dom from "ace-ts/build/lib/dom";
 import * as event from "ace-ts/build/lib/event";
-import { TerminalAceEditor } from "../TerminalAceEditor";
+import { TerminalCanvasAceEditor } from "../TerminalCanvasAceEditor";
 import * as TermApi from "term-api";
 import { TerminalDocument } from "../TerminalDocument";
 import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
@@ -16,7 +16,7 @@ function createEditSession(text, mode?): EditSession {
   return doc;
 };
 
-function terminalEditor(elementOrString: HTMLElement | string): TerminalAceEditor {
+function terminalEditor(elementOrString: HTMLElement | string): TerminalCanvasAceEditor {
   let el: Element = null;
   let value = "";
   if (typeof elementOrString == "string") {
@@ -38,10 +38,10 @@ function terminalEditor(elementOrString: HTMLElement | string): TerminalAceEdito
       el.innerHTML = "";
   }
 
-  var editSession = new TerminalEditSession(new TerminalDocument(value));
+  var editSession = new TerminalCanvasEditSession(new TerminalDocument(value));
   editSession.setUndoManager(new UndoManager());
 
-  var editor = new TerminalAceEditor(new Renderer(el as HTMLElement), editSession);
+  var editor = new TerminalCanvasAceEditor(new Renderer(el as HTMLElement), editSession);
   editor.addCommand({
       name: "pasteSomething",
       bindKey: {win: "Ctrl-V", mac: "Command-V"},
