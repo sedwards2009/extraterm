@@ -8,6 +8,8 @@ import { FontAtlas } from "./FontAtlas";
 import { Logger, getLogger, log } from "extraterm-logging";
 
 
+const TWO_TO_THE_24 = 2 ** 24;
+
 export class FontAtlasImpl implements FontAtlas {
   private _log: Logger = null;
   private _pages: FontAtlasPage[] = [];
