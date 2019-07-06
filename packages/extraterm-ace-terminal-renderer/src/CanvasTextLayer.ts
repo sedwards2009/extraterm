@@ -136,7 +136,7 @@ export class CanvasTextLayer implements TextLayer {
     const visibleRows = this._getVisibleRows(config);
     this._setUpRenderCanvas(config, viewPortSize, visibleRows.length);
 
-    this._writeLinesToGrid(this._charRenderCanvas.getCellGrid(), visibleRows, 0);
+    this._writeLinesToGrid(this._charRenderCanvas.getCellGrid(), visibleRows);
     this._charRenderCanvas.render();
   }
 
@@ -230,12 +230,29 @@ export class CanvasTextLayer implements TextLayer {
     };
   }
 
-  private _writeLinesToGrid(grid: CharCellGrid, rows: number[], canvasStartRow: number): void {
-    let canvasRow = canvasStartRow;
+  private _writeLinesToGrid(grid: CharCellGrid, rows: number[]): void {
+    let canvasRow = 0;
     for (const docRow of rows) {
       const terminalLine = this._editSession.getTerminalLine(docRow);
-      grid.pasteGrid(terminalLine, 0, canvasRow);
+      if (terminalLine != null) {
+        grid.pasteGrid(terminalLine, 0, canvasRow);
+
+        if (terminalLine.width < grid.width) {
+          for (let i = terminalLine.width; i < grid.width; i++) {
+            grid.clearCell(i, canvasRow);
+          }
+        }
+      } else {
+        // Just clear the row
+        for (let i = 0; i < grid.width; i++) {
+          grid.clearCell(i, canvasRow);
+        }
+      }
       canvasRow++;
+
+      if (canvasRow >= grid.height) {
+        break;
+      }
     }
   }
 
@@ -256,11 +273,13 @@ export class CanvasTextLayer implements TextLayer {
                 foldStart = foldLine ? foldLine.start.row : Infinity;
             }
         }
+
+        visibleRows.push(row);
+
         if (row > lastRow) {
             break;
         }
 
-        visibleRows.push(row);
         row++;
     }
     return visibleRows;
