@@ -17,16 +17,12 @@
     "extraterm-unicode-utilities": "1.0.0"
   },
   "devDependencies": {
-    "@types/jest": "^23.3.10",
     "@types/node": "^10.12.18",
-    "jest": "^23.6.0",
-    "ts-jest": "^23.10.5",
     "typescript": "3.4.5"
   },
   "scripts": {
     "run": "false",
     "build-all": "yarn run build",
-    "build": "tsc",
-    "test": "yarn run build && jest"
+    "build": "tsc"
   }
 }
