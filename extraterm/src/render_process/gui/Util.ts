@@ -3,6 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Event } from 'extraterm-extension-api';
+import { EventEmitter } from "../../utils/EventEmitter";
+
 
 /**
  * Convert a value to a boolean.
@@ -270,5 +273,32 @@ export class FontLoader {
       }
     });
     return Promise.all<FontFace>( fontPromises );
+  }
+}
+
+//-------------------------------------------------------------------------
+/**
+ * Listener for window DPI changes.
+ * 
+ * `onChange(newDpi)` fires when the window DPI changes.
+ */
+export class DpiWatcher {
+  private _onChangeEventEmitter = new EventEmitter<number>();
+  onChange: Event<number>;
+  private _mediaQueryList: MediaQueryList = null;
+
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
+    this._setupListener();
+  }
+
+  private _setupListener(): void {
+    this._mediaQueryList = window.matchMedia(`(resolution: ${window.devicePixelRatio*96}dpi)`);
+    this._mediaQueryList.addEventListener("change", (ev: MediaQueryListEvent) => {
+      if ( ! ev.matches) {
+        this._onChangeEventEmitter.fire(window.devicePixelRatio);
+      }
+      this._setupListener();
+    });
   }
 }

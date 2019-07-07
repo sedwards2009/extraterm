@@ -50,7 +50,7 @@ import { ExtensionCommandContribution, Category } from '../ExtensionMetadata';
 import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
-import { FontLoader } from './gui/Util';
+import { FontLoader, DpiWatcher } from './gui/Util';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -78,12 +78,13 @@ let commandPalette: CommandPalette = null;
 let applicationContextMenu: ApplicationContextMenu = null;
 let terminalVisualConfig: TerminalVisualConfig = null;
 let fontLoader: FontLoader = null;
-
+let dpiWatcher: DpiWatcher = null;
 
 export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   ElectronMenu.setApplicationMenu(null);
 
   fontLoader = new FontLoader();
+  dpiWatcher = new DpiWatcher();
   startUpTheming();
   startUpWebIpc();
 
@@ -114,6 +115,7 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   startUpApplicationContextMenu();
   startUpWindowEvents();
   startUpMenus();
+  dpiWatcher.onChange(newDpi => handleDpiChange(newDpi));
 
   if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
     mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
@@ -488,6 +490,14 @@ function setupOSXMenus(): void {
 
   const topMenu = ElectronMenu.buildFromTemplate(template);
   ElectronMenu.setApplicationMenu(topMenu);
+}
+
+function handleDpiChange(dpi: number): void {
+  const newTerminalVisualConfig = {
+    ...terminalVisualConfig, devicePixelRatio: window.devicePixelRatio
+  };
+  terminalVisualConfig = newTerminalVisualConfig;
+  mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 }
 
 function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
