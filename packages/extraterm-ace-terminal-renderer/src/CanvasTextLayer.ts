@@ -46,6 +46,8 @@ export class CanvasTextLayer implements TextLayer {
     this._devicePixelRatio = devicePixelRatio;
 
     this._clipDiv = <HTMLDivElement> document.createElement("DIV");
+    this._clipDiv.classList.add("ace_layer");
+    this._clipDiv.classList.add("ace_text_layer");
     this._clipDiv.style.overflow = "hidden";
 
     this._contentDiv.appendChild(this._clipDiv);

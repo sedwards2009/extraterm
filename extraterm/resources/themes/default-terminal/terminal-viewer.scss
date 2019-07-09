@@ -247,6 +247,10 @@
   pointer-events: none;
 }
 
+.ace_text_layer {
+  z-index: 0;
+}
+
 .ace_gutter-layer {
   position: relative;
   width: auto;
