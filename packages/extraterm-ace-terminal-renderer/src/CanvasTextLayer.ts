@@ -3,7 +3,7 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas, FontAtlasRepository } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, FontAtlasRepository, CursorStyle } from "extraterm-char-render-canvas";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
@@ -32,6 +32,8 @@ export class CanvasTextLayer implements TextLayer {
   private _fontFamily: string = null;
   private _fontSizePx: number = 0;
   private _devicePixelRatio = 1;
+
+  private _cursorStyle = CursorStyle.BLOCK;
 
   private _clipDiv: HTMLDivElement = null;
 
@@ -88,6 +90,14 @@ export class CanvasTextLayer implements TextLayer {
   setDevicePixelRatio(devicePixelRatio: number): void {
     this._devicePixelRatio = devicePixelRatio;
     this._deleteCanvasElement();
+  }
+
+  setCursorStyle(cursorStyle: CursorStyle): void {
+    this._cursorStyle = cursorStyle;
+    if (this._charRenderCanvas != null) {
+      this._charRenderCanvas.setCursorStyle(cursorStyle);
+      this._charRenderCanvas.render();
+    }
   }
 
   dispose(): void {
@@ -187,7 +197,8 @@ export class CanvasTextLayer implements TextLayer {
         unicodeStart: 0x1f000,
         unicodeEnd: 0x20000,
         sampleChars: ["\u{1f600}"]  // Smile emoji
-      }]
+      }],
+      cursorStyle: this._cursorStyle
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();

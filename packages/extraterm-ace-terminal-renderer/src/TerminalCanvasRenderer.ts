@@ -8,6 +8,7 @@ import { computeDpiFontMetrics } from "extraterm-char-render-canvas";
 import { Event } from 'extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
+import { CursorStyle } from "extraterm-char-render-canvas";
 
 export interface TerminalCanvasRendererConfig {
   palette: number[];
@@ -60,6 +61,12 @@ export class TerminalCanvasRenderer extends Renderer {
     }
     if (this._canvasFontMetricsMonitor != null) {
       this._canvasFontMetricsMonitor.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);
+    }
+  }
+  
+  setRenderCursorStyle(cursorStyle: CursorStyle): void {
+    if (this._canvasTextLayer != null) {
+      this._canvasTextLayer.setCursorStyle(cursorStyle);
     }
   }
 }

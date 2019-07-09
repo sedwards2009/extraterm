@@ -21,7 +21,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
-import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer } from "extraterm-ace-terminal-renderer";
+import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer, CursorStyle } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "ace-ts";
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
@@ -399,9 +399,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
           containerDiv.classList.add(CLASS_FOCUSED);
           containerDiv.classList.remove(CLASS_UNFOCUSED);
+
+          this._aceRenderer.setRenderCursorStyle(CursorStyle.BLOCK);
         } else {
           containerDiv.classList.add(CLASS_UNFOCUSED);
           containerDiv.classList.remove(CLASS_FOCUSED);
+
+          this._aceRenderer.setRenderCursorStyle(CursorStyle.OUTLINE);
         }
       }
       this._visualState = newVisualState;

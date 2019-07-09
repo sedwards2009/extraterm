@@ -14,6 +14,8 @@ export class ColorPatchCanvas {
   private _canvasWidthPx: number;
   private _canvasHeightPx: number;
 
+  private _renderCursor = true;
+
   constructor(
       private _cellGrid: CharCellGrid,
       private _cellWidth: number,
@@ -46,7 +48,13 @@ export class ColorPatchCanvas {
     return this._fullSizeBackgroundCanvas;
   }
 
+  setRenderCursor(renderCursor: boolean): void {
+    this._renderCursor = renderCursor;
+  }
+
   render(): void {
+    const renderCursor = this._renderCursor;
+
     const ctx = this._backgroundCtx;
 
     const widthChars = this._cellGrid.width;
@@ -59,7 +67,7 @@ export class ColorPatchCanvas {
     if (this._fgOrBg === "foreground") {
       getRGBA = (x: number, y: number): number => {
         const style = this._cellGrid.getStyle(x, y);
-        if (style & STYLE_MASK_CURSOR) {
+        if ((style & STYLE_MASK_CURSOR) && renderCursor) {
           return this._cursorColor;
         } else {
           return (style & STYLE_MASK_INVERSE) ? this._cellGrid.getBgRGBA(x, y) : this._cellGrid.getFgRGBA(x, y);
@@ -68,7 +76,7 @@ export class ColorPatchCanvas {
     } else {
       getRGBA = (x: number, y: number): number => {
         const style = this._cellGrid.getStyle(x, y);
-        if (style & STYLE_MASK_CURSOR) {
+        if ((style & STYLE_MASK_CURSOR) && renderCursor) {
           return this._cursorColor;
         } else {
           return (style & STYLE_MASK_INVERSE) ? this._cellGrid.getFgRGBA(x, y) : this._cellGrid.getBgRGBA(x, y);

@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
-import { CharCellGrid, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT } from "extraterm-char-cell-grid";
+import { CharCellGrid, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { ColorPatchCanvas } from "./ColorPatchCanvas";
 import { FontAtlas } from "./FontAtlas";
@@ -150,6 +150,8 @@ export interface CharRenderCanvasOptions {
    * Font atlas repository to use for fetching font atlases
    */
   fontAtlasRepository?: FontAtlasRepository;
+
+  cursorStyle?: CursorStyle;
 }
 
 export interface FontSlice {
@@ -199,6 +201,11 @@ interface ExtraFontSlice extends FontSlice {
   fontAtlas: FontAtlas;
 }
 
+export enum CursorStyle {
+  BLOCK,
+  OUTLINE
+}
+
 export class CharRenderCanvas implements Disposable {
   private _log: Logger = null;
   
@@ -234,12 +241,15 @@ export class CharRenderCanvas implements Disposable {
   
   private _disposables: Disposable[] = [];
 
+  private _cursorStyle = CursorStyle.BLOCK;
+
   constructor(options: CharRenderCanvasOptions) {
     this._log = getLogger("CharRenderCanvas", this);
     const { widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily, fontSizePx,
-            debugParentElement, palette, fontAtlasRepository } = options;
+            debugParentElement, palette, fontAtlasRepository, cursorStyle } = options;
 
     this._palette = palette;
+    this._cursorStyle = cursorStyle === undefined? CursorStyle.BLOCK : cursorStyle;
 
     this._fontSizePx = fontSizePx || 10;
     this._fontFamily = fontFamily || "monospace";
@@ -330,6 +340,10 @@ export class CharRenderCanvas implements Disposable {
     return this._canvasHeightPx;
   }
 
+  setCursorStyle(cursorStyle: CursorStyle): void {
+    this._cursorStyle = cursorStyle;
+  }
+
   setPalette(palette: number[]) : void {
     this._palette = palette;
     this._cellGrid.setPalette(this._palette);
@@ -389,7 +403,9 @@ export class CharRenderCanvas implements Disposable {
     this._updateCharGridFlags();
 
     this._renderCharacters();
+    this._fgColorPatchCanvas.setRenderCursor(this._cursorStyle === CursorStyle.BLOCK);
     this._fgColorPatchCanvas.render();
+    this._bgColorPatchCanvas.setRenderCursor(this._cursorStyle === CursorStyle.BLOCK);
     this._bgColorPatchCanvas.render();
 
     this._canvasCtx.globalCompositeOperation = "copy";
@@ -402,6 +418,7 @@ export class CharRenderCanvas implements Disposable {
     this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
 
     this._renderColorCharacters(this._canvasCtx);
+    this._renderCursors(this._canvasCtx);
 
     this._updateRenderedCellGrid();
   }
@@ -499,6 +516,32 @@ export class CharRenderCanvas implements Disposable {
     }
   }
 
+  private _renderCursors(ctx: CanvasRenderingContext2D): void {
+    if (this._cursorStyle === CursorStyle.BLOCK) {
+      return;
+    }
+
+    ctx.save();
+    ctx.strokeStyle = RGBAToCss(this._palette[PALETTE_CURSOR_INDEX]);
+    ctx.globalCompositeOperation = "source-over";
+
+    const cellGrid = this._cellGrid;
+    const cellWidth = this.cellWidthPx;
+    const cellHeight = this.cellHeightPx;
+    const width = cellGrid.width;
+    const height = cellGrid.height;
+
+    for (let j=0; j<height; j++) {
+      for (let i=0; i<width; i++) {
+        if (cellGrid.getStyle(i, j) & STYLE_MASK_CURSOR) {
+          ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + 0.5, cellWidth-1, cellHeight-1);
+        }
+      }
+    }
+
+    ctx.restore();
+  }
+
   private _updateRenderedCellGrid(): void {
     this._renderedCellGrid.pasteGrid(this._cellGrid, 0, 0);
   }
@@ -538,4 +581,12 @@ export class CharRenderCanvas implements Disposable {
     this._cellGrid.scrollVertical(verticalOffsetChars);
     this._renderedCellGrid.scrollVertical(verticalOffsetChars);
   }
+}
+
+function RGBAToCss(rgba: number): string {
+  const red = (rgba >> 24) & 0xff;
+  const green = (rgba >> 16) & 0xff;
+  const blue = (rgba >> 8) & 0xff;
+  const alpha = (rgba & 0xff) / 255;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
