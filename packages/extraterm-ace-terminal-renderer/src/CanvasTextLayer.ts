@@ -26,6 +26,7 @@ export class CanvasTextLayer implements TextLayer {
 
 
   private _lastConfig: LayerConfig = null;
+  private _lastViewPortSize: ViewPortSize = null;
   private _log: Logger = null;
 
   private _palette: number[] = null;
@@ -66,6 +67,22 @@ export class CanvasTextLayer implements TextLayer {
     result[257] = 0xf0f0f0ff;
     result[258] = 0xffaa00ff;
     return result;
+  }
+
+  /**
+   * Reduce memory use by freeing the canvas
+   * 
+   * See `rerender()`
+   */
+  reduceMemory(): void {
+    this._deleteCanvasElement();
+  }
+
+  rerender(): void {
+    if (this._lastConfig == null || this._lastViewPortSize == null) {
+      return;
+    }
+    this.update(this._lastConfig, this._lastViewPortSize);
   }
 
   setPalette(palette: number[]): void {
@@ -144,6 +161,7 @@ export class CanvasTextLayer implements TextLayer {
 
   update(config: LayerConfig, viewPortSize: ViewPortSize): void {
     this._lastConfig = config;
+    this._lastViewPortSize = viewPortSize;
 
     const visibleRows = this._getVisibleRows(config);
     this._setUpRenderCanvas(config, viewPortSize, visibleRows.length);

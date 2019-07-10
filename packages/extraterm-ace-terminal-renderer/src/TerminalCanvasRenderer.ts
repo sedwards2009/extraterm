@@ -36,7 +36,7 @@ export class TerminalCanvasRenderer extends Renderer {
   }
 
   protected createHScrollBar(container: HTMLElement): HScrollBar {
-      return new InsetHScrollBar(container, this);
+    return new InsetHScrollBar(container, this);
   }
 
   protected createTextLayer(contentDiv: HTMLDivElement): TextLayer {
@@ -67,6 +67,18 @@ export class TerminalCanvasRenderer extends Renderer {
   setRenderCursorStyle(cursorStyle: CursorStyle): void {
     if (this._canvasTextLayer != null) {
       this._canvasTextLayer.setCursorStyle(cursorStyle);
+    }
+  }
+
+  reduceMemory(): void {
+    if (this._canvasTextLayer != null) {
+      this._canvasTextLayer.reduceMemory();
+    }
+  }
+
+  rerenderText(): void {
+    if (this._canvasTextLayer != null) {
+      this._canvasTextLayer.rerender();
     }
   }
 }

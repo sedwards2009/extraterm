@@ -107,11 +107,17 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _bookmarkCounter = 0;
   private _bookmarkIndex = new Map<BookmarkRef, Anchor>();
 
+  private _rerenderLater: DebouncedDoLater = null;
+  private _checkDisconnectLater: DebouncedDoLater = null;
+
   constructor() {
     super();
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
-    this._renderEventListener = this._handleRenderEvent.bind(this);
+    this._checkDisconnectLater = new DebouncedDoLater(() => this._handleDelayedDisconnect());
+    this._rerenderLater = new DebouncedDoLater(() => this._handleDelayedRerender());
 
+    this._renderEventListener = this._handleRenderEvent.bind(this);
+    
     this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
@@ -272,8 +278,28 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._needEmulatorResize = false;
       this._resizePoll();
     }
+    this._rerenderLater.trigger();
   }
-  
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._checkDisconnectLater.trigger();
+  }
+
+  private _handleDelayedDisconnect(): void {
+    if (this.isConnected || this._aceRenderer == null) {
+      return;
+    }
+    this._aceRenderer.reduceMemory();
+  }
+
+  private _handleDelayedRerender(): void {
+    if ( ! this.isConnected || this._aceRenderer == null) {
+      return;
+    }
+    this._aceRenderer.rerenderText();
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
   }
