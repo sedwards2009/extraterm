@@ -371,88 +371,6 @@ export class Emulator implements EmulatorApi {
   eraseAttr(): Cell {
     return this.curAttr;
   }
-
-  /**
-   * Colors
-   *
-   * This palette is only used when matching 24bit colours to the user's CSS based colours.
-   * (We assume that this default palette is close enough to the actual one being used.)
-   */
-
-  // Colors 0-15
-  static xtermColors = [
-    // dark:
-    '#000000', // black
-    '#cd0000', // red3
-    '#00cd00', // green3
-    '#cdcd00', // yellow3
-    '#0000ee', // blue2
-    '#cd00cd', // magenta3
-    '#00cdcd', // cyan3
-    '#e5e5e5', // gray90
-    // bright:
-    '#7f7f7f', // gray50
-    '#ff0000', // red
-    '#00ff00', // green
-    '#ffff00', // yellow
-    '#5c5cff', // rgb:5c/5c/ff
-    '#ff00ff', // magenta
-    '#00ffff', // cyan
-    '#ffffff'  // white
-  ];
-
-  // Colors 0-15 + 16-255
-  // Much thanks to TooTallNate for writing this.
-  static colors = (function() {
-    var colors = Emulator.xtermColors.slice();
-    var r = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff];
-    var i;
-
-    // 16-231
-    i = 0;
-    for (; i < 216; i++) {
-      out(r[(i / 36) % 6 | 0], r[(i / 6) % 6 | 0], r[i % 6]);
-    }
-
-    // 232-255 (grey)
-    i = 0;
-    for (; i < 24; i++) {
-      const v = 8 + i * 10;
-      out(v, v, v);
-    }
-
-    function out(r, g, b) {
-      colors.push('#' + hex(r) + hex(g) + hex(b));
-    }
-
-    function hex(c) {
-      c = c.toString(16);
-      return c.length < 2 ? '0' + c : c;
-    }
-
-    // Default BG/FG
-    colors[256] = '#000000';
-    colors[257] = '#f0f0f0';
-    return colors;
-  })();
-
-  static vcolors = (function() {
-    var out = [];
-    var colors = Emulator.colors;
-    var i = 0;
-    var color;
-
-    for (; i < 256; i++) {
-      color = parseInt(colors[i].substring(1), 16);
-      out.push([
-        (color >> 16) & 0xff,
-        (color >> 8) & 0xff,
-        color & 0xff
-      ]);
-    }
-
-    return out;
-  })();
   
   focus(): void {
     if (this.sendFocus) {
@@ -2929,14 +2847,10 @@ export class Emulator implements EmulatorApi {
         // fg color 256
         if (params[i + 1] === 2) {
           i += 2;
-          // FIXME 24bit color
-          fg = matchColor(params[i] & 0xff, params[i + 1] & 0xff, params[i + 2] & 0xff);
-          if (fg === -1) {
-            fg = 0x1ff;
-          }
+          fg = ((params[i] & 0xff) << 24) | ((params[i + 1] & 0xff) << 16) | ((params[i + 2] & 0xff) << 8) | 0xff;
           i += 2;
-          this.curAttr.fgClutIndex = fg;
-          setCellFgClutFlag(this.curAttr, true);
+          this.curAttr.fgRGBA = fg;
+          setCellFgClutFlag(this.curAttr, false);
 
         } else if (params[i + 1] === 5) {
           i += 2;
@@ -2950,18 +2864,17 @@ export class Emulator implements EmulatorApi {
         // bg color 256
         if (params[i + 1] === 2) {
           i += 2;
-          bg = matchColor(params[i] & 0xff, params[i + 1] & 0xff, params[i + 2] & 0xff);
-          if (bg === -1) {
-            bg = 0x1ff;
-          }
+          bg = ((params[i] & 0xff) << 24) | ((params[i + 1] & 0xff) << 16) | ((params[i + 2] & 0xff) << 8) | 0xff;
           i += 2;
+          this.curAttr.bgRGBA = bg;
+          setCellBgClutFlag(this.curAttr, false);
         } else if (params[i + 1] === 5) {
           i += 2;
           p = params[i] & 0xff;
           bg = p;
+          this.curAttr.bgClutIndex = bg;
+          setCellBgClutFlag(this.curAttr, true);
         }
-        this.curAttr.bgClutIndex = bg;
-        setCellBgClutFlag(this.curAttr, true);
 
       } else if (p === 100) {
         // reset fg/bg
@@ -4014,52 +3927,4 @@ function isWide(codePoint: number): boolean {
   	default:
   	  return false;
   }
-}
-
-const matchColorCache = {};
-
-function matchColor(r1, g1, b1) {
-  var hash = (r1 << 16) | (g1 << 8) | b1;
-
-  if (matchColorCache[hash] !== undefined) {
-    return matchColorCache[hash];
-  }
-
-  var ldiff = Infinity;
-  var li = -1;
-  var i = 0;
-  var c;
-  var r2;
-  var g2;
-  var b2;
-  var diff;
-
-  for (; i < Emulator.vcolors.length; i++) {
-    c = Emulator.vcolors[i];
-    r2 = c[0];
-    g2 = c[1];
-    b2 = c[2];
-
-    diff = matchColorDistance(r1, g1, b1, r2, g2, b2);
-
-    if (diff === 0) {
-      li = i;
-      break;
-    }
-
-    if (diff < ldiff) {
-      ldiff = diff;
-      li = i;
-    }
-  }
-
-  matchColorCache[hash] = li;
-  return li;
-}
-
-// http://stackoverflow.com/questions/1633828
-function matchColorDistance(r1, g1, b1, r2, g2, b2) {
-  return Math.pow(30 * (r1 - r2), 2) +
-    Math.pow(59 * (g1 - g2), 2) +
-    Math.pow(11 * (b1 - b2), 2);
 }
