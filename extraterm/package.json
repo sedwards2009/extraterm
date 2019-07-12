@@ -32,7 +32,7 @@
     "he": "1.2.0",
     "jschardet": "1.4.1",
     "json-to-ast": "2.1.0",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "markdown": "0.5.0",
     "mime-types": "^2.1.21",
     "node-sass": "4.12.0",

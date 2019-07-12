@@ -9,7 +9,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "extraterm-event-emitter": "1.0.0",
     "node-pty": "0.9.0-beta19"
   },
