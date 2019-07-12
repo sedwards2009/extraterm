@@ -17,7 +17,7 @@
     "extraterm-unicode-utilities": "1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^10.12.18",
+    "@types/node": "^12.6.2",
     "typescript": "3.5.3"
   },
   "scripts": {

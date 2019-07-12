@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 
 import * as SourceDir from '../SourceDir';
 
-const PATCH_MODULE_VERSION = "69";  // This version number also appears in build_package.js
+const PATCH_MODULE_VERSION = "70";  // This version number also appears in build_package.js
 const previousSASS_BINARY_PATH = process.env.SASS_BINARY_PATH;
 if (process.versions.modules === PATCH_MODULE_VERSION) {
   // Patch in our special node-sass binary for the V8 module version used by Electron.

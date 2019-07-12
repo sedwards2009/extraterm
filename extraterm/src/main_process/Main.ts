@@ -320,11 +320,12 @@ function openWindow(parsedArgs: Command): void {
   const options = <Electron.BrowserWindowConstructorOptions> {
     width: 1200,
     height: 600,
-    "webPreferences": {
-      "experimentalFeatures": true,
+    webPreferences: {
+      experimentalFeatures: true,
+      nodeIntegration: true
     },
     title: "Extraterm",
-    backgroundColor: themeInfo.loadingBackgroundColor
+    backgroundColor: themeInfo.loadingBackgroundColor,
   };
 
   if (process.platform === "darwin") {
