@@ -18,7 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^10.12.18",
-    "typescript": "3.4.5"
+    "typescript": "3.5.3"
   },
   "scripts": {
     "run": "false",

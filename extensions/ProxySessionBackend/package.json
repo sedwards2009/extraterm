@@ -16,7 +16,7 @@
     "@types/lodash": "^4.14.121",
     "@types/node": "^10.12.18",
     "extraterm-extension-api": "0.1.0",
-    "typescript": "3.4.5"
+    "typescript": "3.5.3"
   },
   "includePlatform": [
     {
