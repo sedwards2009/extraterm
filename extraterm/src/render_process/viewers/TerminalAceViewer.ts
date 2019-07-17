@@ -1230,11 +1230,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _handleScrollbackEvent(scrollbackLines: TermApi.Line[]): void {
-    for (let i=0; i<scrollbackLines.length; i++) {
-      const line = scrollbackLines[i];
-      this._aceEditSession.insertTerminalLine(this._terminalFirstRow + i, line);
-    }
-
+    this._aceEditSession.insertTerminalLines(this._terminalFirstRow, scrollbackLines);
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
   }
 

@@ -106,7 +106,7 @@ export class TerminalCanvasEditSession extends EditSession {
     this.replace(range, ["", this._createHeavyString(sourceLine)]);
   }
 
-  insertTerminalLine(row: number, sourceLine: TermApi.Line): void {
+  insertTerminalLines(row: number, lines: TermApi.Line[]): void {
     const range: RangeBasic = {
       start: {
         row,
@@ -118,7 +118,7 @@ export class TerminalCanvasEditSession extends EditSession {
       }
     };
 
-    this.replace(range, [this._createHeavyString(sourceLine), ""]);
+    this.replace(range, [...lines.map(this._createHeavyString), ""]);
   }
   
   protected _updateInternalDataOnChange(delta: Delta): Fold[] {
