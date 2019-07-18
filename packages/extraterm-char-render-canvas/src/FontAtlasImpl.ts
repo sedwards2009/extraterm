@@ -6,6 +6,7 @@ import * as easta from "easta";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
 import { Logger, getLogger, log } from "extraterm-logging";
+import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
 
 
 const TWO_TO_THE_24 = 2 ** 24;
@@ -137,21 +138,28 @@ class FontAtlasPage {
   private _insertChar(codePoint: number, style: StyleCode): CachedGlyph {
     const xPixels = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
     const yPixels = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
-    const str = String.fromCodePoint(codePoint);
 
-    const isWide = isFullWidth(str);
-    const widthPx = isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+    let widthPx = this._metrics.widthPx;
+    let isWide = false;
+    if (isBoxCharacter(codePoint)) {
+      drawBoxCharacter(this._pageCtx, codePoint, xPixels, yPixels, this._metrics.widthPx, this._metrics.heightPx);
+    } else {
+      const str = String.fromCodePoint(codePoint);
 
-    let styleName = "";
-    if (style & STYLE_MASK_BOLD) {
-      styleName += "bold ";
+      isWide = isFullWidth(str);
+      widthPx = isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+
+      let styleName = "";
+      if (style & STYLE_MASK_BOLD) {
+        styleName += "bold ";
+      }
+      if (style & STYLE_MASK_ITALIC) {
+        styleName += "italic ";
+      }
+
+      this._pageCtx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
+      this._pageCtx.fillText(str, xPixels + this._metrics.fillTextXOffset, yPixels + this._metrics.fillTextYOffset);
     }
-    if (style & STYLE_MASK_ITALIC) {
-      styleName += "italic ";
-    }
-
-    this._pageCtx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
-    this._pageCtx.fillText(str, xPixels + this._metrics.fillTextXOffset, yPixels + this._metrics.fillTextYOffset);
 
     if (style & STYLE_MASK_STRIKETHROUGH) {
       this._pageCtx.fillRect(xPixels,
