@@ -440,8 +440,8 @@ const boxGlyphs = [
   "..#.." +
   "..#.." +
   "#####" +
-  "....." +
-  ".....",
+  "..#.." +
+  "..#..",
 
   // 0x253D BOX DRAWINGS LEFT HEAVY AND RIGHT VERTICAL LIGHT
   "..#.." +
@@ -462,7 +462,7 @@ const boxGlyphs = [
   "#####" +
   "#####" +
   "#####" +
-  ".....",
+  "..#..",
 
   // 0x2540 BOX DRAWINGS UP HEAVY AND DOWN HORIZONTAL LIGHT
   ".###." +
@@ -471,6 +471,451 @@ const boxGlyphs = [
   "..#.." +
   "..#..",
 
+  // 0x2541  BOX DRAWINGS DOWN HEAVY AND UP HORIZONTAL LIGHT
+  "..#.." +
+  "..#.." +
+  "#####" +
+  ".###." +
+  ".###.",
+
+  // 0x2542  BOX DRAWINGS VERTICAL HEAVY AND HORIZONTAL LIGHT
+  ".###." +
+  ".###." +
+  "#####" +
+  ".###." +
+  ".###.",
+
+
+  // 0x2543  BOX DRAWINGS LEFT UP HEAVY AND RIGHT DOWN LIGHT
+  ".###." +
+  "####." +
+  "#####" +
+  "####." +
+  "..#..",
+
+  // 0x2544  BOX DRAWINGS RIGHT UP HEAVY AND LEFT DOWN LIGHT
+  ".###." +
+  ".####" +
+  "#####" +
+  ".####" +
+  "..#..",
+
+  // 0x2545  BOX DRAWINGS LEFT DOWN HEAVY AND RIGHT UP LIGHT
+  "..#.." +
+  "####." +
+  "#####" +
+  "####." +
+  ".###.",
+
+  // 0x2546  BOX DRAWINGS RIGHT DOWN HEAVY AND LEFT UP LIGHT
+  "..#.." +
+  ".####" +
+  "#####" +
+  ".####" +
+  ".###.",
+
+  // 0x2547  BOX DRAWINGS DOWN LIGHT AND UP HORIZONTAL HEAVY
+  ".###." +
+  "#####" +
+  "#####" +
+  "#####" +
+  "..#..",
+
+  // 0x2548  BOX DRAWINGS UP LIGHT AND DOWN HORIZONTAL HEAVY
+  "..#.." +
+  "#####" +
+  "#####" +
+  "#####" +
+  ".###.",
+
+  // 0x2549  BOX DRAWINGS RIGHT LIGHT AND LEFT VERTICAL HEAVY
+  ".###." +
+  "####." +
+  "#####" +
+  "####." +
+  ".###.",
+
+  // 0x254A  BOX DRAWINGS LEFT LIGHT AND RIGHT VERTICAL HEAVY
+  ".###." +
+  ".####" +
+  "#####" +
+  ".####" +
+  ".###.",
+
+  // 0x254B  BOX DRAWINGS HEAVY VERTICAL AND HORIZONTAL
+  ".###." +
+  "#####" +
+  "#####" +
+  "#####" +
+  ".###.",
+
+  // 0x254C BOX DRAWINGS LIGHT DOUBLE DASH HORIZONTAL
+  "....." +
+  "....." +
+  ".#.#." +
+  "....." +
+  ".....",
+
+  // 0x254D BOX DRAWINGS HEAVY DOUBLE DASH HORIZONTAL
+  "....." +
+  ".#.#." +
+  ".#.#." +
+  ".#.#." +
+  ".....",
+
+  // 0x254E BOX DRAWINGS LIGHT DOUBLE DASH VERTICAL
+  "....." +
+  "..#.." +
+  "....." +
+  "..#.." +
+  ".....",
+
+  // 0x254F BOX DRAWINGS HEAVY DOUBLE DASH VERTICAL
+  "....." +
+  ".###." +
+  "....." +
+  ".###." +
+  ".....",
+  
+  // 0x2550 BOX DRAWINGS DOUBLE HORIZONTAL
+  "....." +
+  "#####" +
+  "....." +
+  "#####" +
+  ".....",
+
+  // 0x2551 BOX DRAWINGS DOUBLE VERTICAL
+  ".#.#." +
+  ".#.#." +
+  ".#.#." +
+  ".#.#." +
+  ".#.#.",
+
+  // 0x2552 BOX DRAWINGS DOWN SINGLE AND RIGHT DOUBLE
+  "....." +
+  "..###" +
+  "..#.." +
+  "..###" +
+  "..#..",
+
+  // 0x2553 BOX DRAWINGS DOWN DOUBLE AND RIGHT SINGLE
+  "....." +
+  "....." +
+  ".####" +
+  ".#.#." +
+  ".#.#.",
+
+  // 0x2554 BOX DRAWINGS DOUBLE DOWN AND RIGHT
+  "....." +
+  ".####" +
+  ".#..." +
+  ".#.##" +
+  ".#.#.",
+
+  // 0x2555 BOX DRAWINGS DOWN SINGLE AND LEFT DOUBLE
+  "....." +
+  "###.." +
+  "..#.." +
+  "###.." +
+  "..#..",
+
+  // 0x2556 BOX DRAWINGS DOWN DOUBLE AND LEFTSINGLE
+  "....." +
+  "....." +
+  "####." +
+  ".#.#." +
+  ".#.#.",
+
+  // 0x2557 BOX DRAWINGS DOUBLE DOWN AND LEFT
+  "....." +
+  "####." +
+  "...#." +
+  "##.#." +
+  ".#.#.",
+
+  // 0x2558 BOX DRAWINGS UP SINGLE AND RIGHT DOUBLE
+  "..#.." +
+  "..###" +
+  "..#.." +
+  "..###" +
+  ".....",
+
+  // 0x2559 BOX DRAWINGS UP DOUBLE AND RIGHT SINGLE
+  ".#.#." +
+  ".#.#." +
+  ".####" +
+  "....." +
+  ".....",
+
+  // 0x255A BOX DRAWINGS DOUBLE UP AND RIGHT
+  ".#.#." +
+  ".#.##" +
+  ".#..." +
+  ".####" +
+  ".....",
+  
+  // 0x255B BOX DRAWINGS UP SINGLE AND LEFT DOUBLE
+  "..#.." +
+  "###.." +
+  "..#.." +
+  "###.." +
+  ".....",
+  
+  // 0x255C BOX DRAWINGS UP DOUBLE AND LEFT SINGLE
+  ".#.#." +
+  ".#.#." +
+  "####." +
+  "....." +
+  ".....",
+  
+  // 0x255D BOX DRAWINGS DOUBLE UP AND LEFT
+  ".#.#." +
+  "##.#." +
+  "...#." +
+  "####." +
+  ".....",
+  
+  // 0x255E BOX DRAWINGS VERTICAL SINGLE AND RIGHT DOUBLE
+  "..#.." +
+  "..###" +
+  "..#.." +
+  "..###" +
+  "..#..",
+  
+  // 0x255F BOX DRAWINGS VERTICAL DOUBLE AND RIGHT SINGLE
+  ".#.#." +
+  ".#.#." +
+  ".#.##" +
+  ".#.#." +
+  ".#.#.",
+  
+  // 0x2560 BOX DRAWINGS DOUBLE VERTICAL AND RIGHT
+  ".#.#." +
+  ".#.##" +
+  ".#..." +
+  ".#.##" +
+  ".#.#.",
+  
+  // 0x2561 BOX DRAWINGS VERTICAL SINGLE AND LEFT DOUBLE
+  "..#.." +
+  "###.." +
+  "..#.." +
+  "###.." +
+  "..#..",
+  
+  // 0x2562 BOX DRAWINGS VERTICAL DOUBLE AND LEFT SINGLE
+  ".#.#." +
+  ".#.#." +
+  "##.#." +
+  ".#.#." +
+  ".#.#.",
+
+  // 0x2563 BOX DRAWINGS DOUBLE VERTICAL AND LEFT
+  ".#.#." +
+  "##.#." +
+  "...#." +
+  "##.#." +
+  ".#.#.",
+
+  // 0x2564 BOX DRAWINGS DOWN SINGLE AND HORIZONTAL DOUBLE
+  "....." +
+  "#####" +
+  "....." +
+  "#####" +
+  "..#..",
+  
+  // 0x2565 BOX DRAWINGS DOWN DOUBLE AND HORIZONTAL SINGLE
+  "....." +
+  "....." +
+  "#####" +
+  ".#.#." +
+  ".#.#.",
+  
+  // 0x2566 BOX DRAWINGS DOUBLE DOWN AND HORIZONTAL
+  "....." +
+  "#####" +
+  "....." +
+  "##.##" +
+  ".#.#.",
+  
+  // 0x2567 BOX DRAWINGS UP SINGLE AND HORIZONTAL DOUBLE
+  "..#.." +
+  "#####" +
+  "....." +
+  "#####" +
+  ".....",
+  
+  // 0x2568 BOX DRAWINGS UP DOUBLE AND HORIZONTAL SINGLE
+  ".#.#." +
+  ".#.#." +
+  "#####" +
+  "....." +
+  ".....",
+
+  // 0x2569 BOX DRAWINGS DOUBLE UP AND HORIZONTAL
+  ".#.#." +
+  "##.##" +
+  "....." +
+  "#####" +
+  ".....",
+
+  // 0x256A BOX DRAWINGS VERTICAL SINGLE AND HORIZONTAL DOUBLE
+  "..#.." +
+  "#####" +
+  "..#.." +
+  "#####" +
+  "..#..",
+
+  // 0x256B BOX DRAWINGS VERTICAL DOUBLE AND HORIZONTAL SINGLE
+  ".#.#." +
+  ".#.#." +
+  "#####" +
+  ".#.#." +
+  ".#.#.",
+
+  // 0x256C BOX DRAWINGS DOUBLE VERTICAL AND HORIZONTAL
+  ".#.#." +
+  "##.##" +
+  "....." +
+  "##.##" +
+  ".#.#.",
+
+  // 0x256D BOX DRAWINGS LIGHT ARC DOWN AND RIGHT
+  "....." +
+  "....." +
+  "...##" +
+  "..#.." +
+  "..#..",
+
+  // 0x256E BOX DRAWINGS LIGHT ARC DOWN AND LEFT
+  "....." +
+  "....." +
+  "##..." +
+  "..#.." +
+  "..#..",
+
+  // 0x256F BOX DRAWINGS LIGHT ARC UP AND LEFT
+  "..#.." +
+  "..#.." +
+  "##..." +
+  "....." +
+  ".....",
+
+  // 0x2570 BOX DRAWINGS LIGHT ARC UP AND RIGHT
+  "..#.." +
+  "..#.." +
+  "...##" +
+  "....." +
+  ".....",
+
+  // 0x2571 BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT
+  // TODO use custom code for this.
+  "....#" +
+  "...#." +
+  "..#.." +
+  ".#..." +
+  "#....",
+  
+  // 0x2572 BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT
+  // TODO use custom code for this.
+  "#...." +
+  ".#..." +
+  "..#.." +
+  "...#." +
+  "....#",
+
+  // 0x2573 BOX DRAWINGS LIGHT DIAGONAL CROSS
+  // TODO use custom code for this.
+  "#...#" +
+  ".#.#." +
+  "..#.." +
+  ".#.#." +
+  "#...#",
+
+  // 0x2574 BOX DRAWINGS LIGHT LEFT
+  "....." +
+  "....." +
+  "###.." +
+  "....." +
+  ".....",
+
+  // 0x2575 BOX DRAWINGS LIGHT UP
+  "..#.." +
+  "..#.." +
+  "..#.." +
+  "....." +
+  ".....",
+
+  // 0x2576 BOX DRAWINGS LIGHT RIGHT
+  "....." +
+  "....." +
+  "..###" +
+  "....." +
+  ".....",
+
+  // 0x2577 BOX DRAWINGS LIGHT DOWN
+  "....." +
+  "....." +
+  "..#.." +
+  "..#.." +
+  "..#..",
+
+  // 0x2578 BOX DRAWINGS HEAVY LEFT
+  "....." +
+  "###.." +
+  "###.." +
+  "###.." +
+  ".....",
+
+  // 0x2579 BOX DRAWINGS HEAVY UP
+  ".###." +
+  ".###." +
+  ".###." +
+  "....." +
+  ".....",
+
+  // 0x257A BOX DRAWINGS HEAVY RIGHT
+  "....." +
+  "..###" +
+  "..###" +
+  "..###" +
+  ".....",
+
+  // 0x257B BOX DRAWINGS HEAVY DOWN
+  "....." +
+  "....." +
+  ".###." +
+  ".###." +
+  ".###.",
+
+  // 0x257C  BOX DRAWINGS LIGHT LEFT AND HEAVY RIGHT
+  "....." +
+  "..###" +
+  "#####" +
+  "..###" +
+  ".....",
+
+  // 0x257D  BOX DRAWINGS LIGHT UP AND HEAVY DOWN
+  "..#.." +
+  "..#.." +
+  ".###." +
+  ".###." +
+  ".###.",
+
+  // 0x257E  BOX DRAWINGS HEAVY LEFT AND LIGHT RIGHT
+  "....." +
+  "###.." +
+  "#####" +
+  "###.." +
+  ".....",
+
+  // 0x257F  BOX DRAWINGS HEAVY UP AND LIGHT DOWN
+  ".###." +
+  ".###." +
+  ".###." +
+  "..#.." +
+  "..#..",
+ 
 ];
 
 export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
