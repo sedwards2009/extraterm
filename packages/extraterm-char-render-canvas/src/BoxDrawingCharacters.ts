@@ -9,13 +9,13 @@ const _log = getLogger("BoxDrawingCharacters");
 const FIRST_BOX_CODE_POINT = 0x2500;
 
 export function isBoxCharacter(codePoint: number): boolean {
-  return codePoint >= FIRST_BOX_CODE_POINT && codePoint < (FIRST_BOX_CODE_POINT + boxGlyphs.length);
+  return codePoint >= FIRST_BOX_CODE_POINT && codePoint < (FIRST_BOX_CODE_POINT + boxGlyphs5x5.length);
 }
 
 const GRID_WIDTH = 5;
 const GRID_HEIGHT = 5;
 
-const boxGlyphs = [
+const boxGlyphs5x5 = [
   // 0x2500 BOX DRAWINGS LIGHT HORIZONTAL
   "....." +
   "....." +
@@ -915,12 +915,17 @@ const boxGlyphs = [
   ".###." +
   "..#.." +
   "..#..",
- 
 ];
 
 export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
     width: number, height: number): void {
 _log.debug("drawBoxCharacter");
+
+  draw5x5BoxCharacter(ctx, codePoint, dx, dy, width, height);
+}
+
+function draw5x5BoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
+  width: number, height: number): void {
 
   // Our box glyphs are on a 5x5 grid where the pixels which touch the edges must be rendered twice
   // the size of the pixels which make up the center. Also we want the glyph pixels to be rendered
@@ -935,49 +940,41 @@ _log.debug("drawBoxCharacter");
   const leftColumnThickness = Math.ceil((width - 3 * hThickness) / 2);
   const rightColumnThickness = width - 3 * hThickness - leftColumnThickness;
 
-  const glyphString = boxGlyphs[codePoint - FIRST_BOX_CODE_POINT];
-  let pixelOffset = 0;
+  const glyphString = boxGlyphs5x5[codePoint - FIRST_BOX_CODE_POINT];
 
-  const horizontalThicknesses = new Array(GRID_WIDTH);
-  horizontalThicknesses[0] = leftColumnThickness;
+  const horizontalThickness = new Array(GRID_WIDTH);
+  horizontalThickness[0] = leftColumnThickness;
   for (let i=1; i<GRID_WIDTH-1; i++) {
-    horizontalThicknesses[i] = hThickness;
+    horizontalThickness[i] = hThickness;
   }
-  horizontalThicknesses[GRID_WIDTH-1] = rightColumnThickness;
+  horizontalThickness[GRID_WIDTH-1] = rightColumnThickness;
 
   const horizontalGridLines = new Array(GRID_WIDTH);
-  let accu = 0;
-  for (let i=0; i<GRID_WIDTH; i++) {
+  for (let accu=0, i=0; i<GRID_WIDTH; i++) {
     horizontalGridLines[i] = accu;
-    accu += horizontalThicknesses[i];
+    accu += horizontalThickness[i];
   }
 
-  // Top row
-  for (let x=0; x<GRID_WIDTH; x++) {
-    if (glyphString.charAt(pixelOffset) === "#") {
-      ctx.fillRect(dx + horizontalGridLines[x], dy, horizontalThicknesses[x], topRowThickness);
-    }
-    pixelOffset++;
+  const verticalThickness = new Array(GRID_HEIGHT);
+  verticalThickness[0] = topRowThickness;
+  for (let i=1; i<GRID_HEIGHT-1; i++) {
+    verticalThickness[i] = vThickness;
+  }
+  verticalThickness[GRID_HEIGHT-1] = bottomRowThickness;
+
+  const verticalGridLines = new Array(GRID_HEIGHT);
+  for (let accu=0, i=0; i<GRID_HEIGHT; i++) {
+    verticalGridLines[i] = accu;
+    accu += verticalThickness[i];
   }
 
-  // Middle section
-  let yOffset = topRowThickness;
-  for (let y=1; y<GRID_HEIGHT-1; y++) {
+  let pixelOffset = 0;
+  for (let y=0; y<GRID_HEIGHT; y++) {
     for (let x=0; x<GRID_WIDTH; x++) {
       if (glyphString.charAt(pixelOffset) === "#") {
-        ctx.fillRect(dx + horizontalGridLines[x], dy+yOffset, horizontalThicknesses[x], vThickness);
+        ctx.fillRect(dx + horizontalGridLines[x], dy+verticalGridLines[y], horizontalThickness[x], verticalThickness[y]);
       }
-
       pixelOffset++;
     }
-    yOffset += vThickness;
-  }  
-
-  // Bottom row
-  for (let x=0; x<GRID_WIDTH; x++) {
-    if (glyphString.charAt(pixelOffset) === "#") {
-      ctx.fillRect(dx + horizontalGridLines[x], dy+yOffset, horizontalThicknesses[x], bottomRowThickness);
-    }
-    pixelOffset++;
   }
 }
