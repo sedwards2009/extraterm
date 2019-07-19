@@ -10,6 +10,7 @@ const FIRST_BOX_CODE_POINT = 0x2500;
 
 enum GlyphRenderer {
   FIVE_BY_FIVE,
+  EIGHT_BY_EIGHT,
   DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT,
   DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT,
   DIAGONAL_CROSS,
@@ -40,6 +41,10 @@ export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: numbe
   switch (thisGlyphData.glyphRenderer) {
     case GlyphRenderer.FIVE_BY_FIVE:
       draw5x5BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      break;
+
+    case GlyphRenderer.EIGHT_BY_EIGHT:
+      draw8x8BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
       break;
 
     case GlyphRenderer.DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT:
@@ -78,7 +83,6 @@ function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
 
   const leftColumnThickness = Math.ceil((width - 3 * hThickness) / 2);
   const rightColumnThickness = width - 3 * hThickness - leftColumnThickness;
-
 
   const horizontalThickness = new Array(5);
   horizontalThickness[0] = leftColumnThickness;
@@ -155,6 +159,54 @@ function drawDiagonalUpperLeftToLowerRight(ctx: CanvasRenderingContext2D, dx: nu
   ctx.lineTo(dx+width, dy+height);
   ctx.stroke();
   ctx.restore();
+}
+
+function draw8x8BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
+  width: number, height: number): void {
+
+  const glyphString = thisGlyphData.glyphString;
+  const metrics = compute8x8GlyphGrid(width, height);
+  drawNxNGlyph(ctx, glyphString, dx, dy, metrics);
+}
+
+function compute8x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
+  const widthSizes = computeIntegerLineSizes(width, 8);
+  const heightSizes = computeIntegerLineSizes(height, 8);
+
+  return {
+    gridWidth: 8,
+    gridHeight: 8,
+    horizontalThickness: widthSizes.gridSizes,
+    horizontalGridLines: widthSizes.gridLines,
+    verticalThickness: heightSizes.gridSizes,
+    verticalGridLines: heightSizes.gridLines,
+  };
+}
+
+function computeIntegerLineSizes(targetSize: number, gridSize: number): {
+  gridSizes: number[],
+  gridLines: number[]
+} {
+  const exactSize = targetSize / gridSize;
+  let accuError = 0;
+  const gridSizes = new Array(gridSize);
+  for (let i=0; i<gridSize; i++) {
+    const idealSize = exactSize + accuError;
+    const thisSize = Math.floor(idealSize);
+    gridSizes[i] = thisSize;
+    accuError = idealSize - thisSize;
+  }
+
+  const gridLines = new Array(8);
+  for (let accu=0, i=0; i<gridSize; i++) {
+    gridLines[i] = accu;
+    accu += gridSizes[i];
+  }
+
+  return {
+    gridSizes,
+    gridLines
+  };
 }
 
 const glyphData: GlyphData[] = [
@@ -1423,4 +1475,422 @@ const glyphData: GlyphData[] = [
       ".###." +
       "..#.." +
       "..#..",
-  },];
+  },
+  {
+    // 0x2580 UPPER HALF BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "........" +
+      "........" +
+      "........" +
+      "........"
+  },
+  {
+    // 0x2581 LOWER ONE EIGHTH BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "########"
+  },
+  {
+    // 0x2582 LOWER ONE QUARTER BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x2583 LOWER THREE EIGHTHS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "########" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x2584 LOWER HALF BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "########" +
+      "########" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x2585 LOWER FIVE EIGHTHS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "........" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x2586 LOWER THREE QUARTERS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x2587 LOWER SEVEN EIGHTHS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x2588 FULL BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x2589 LEFT SEVEN EIGHTHS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "#######." +
+      "#######." +
+      "#######." +
+      "#######." +
+      "#######." +
+      "#######." +
+      "#######." +
+      "#######."
+  },
+  {
+    // 0x258A LEFT THREE QUARTERS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "######.." +
+      "######.." +
+      "######.." +
+      "######.." +
+      "######.." +
+      "######.." +
+      "######.." +
+      "######.."
+  },
+  {
+    // 0x258B LEFT FIVE EIGHTHS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "#####..." +
+      "#####..." +
+      "#####..." +
+      "#####..." +
+      "#####..." +
+      "#####..." +
+      "#####..." +
+      "#####..."
+  },
+  {
+    // 0x258C LEFT HALF BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...."
+  },
+  {
+    // 0x258D LEFT THREE EIGHTHS BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "###....." +
+      "###....." +
+      "###....." +
+      "###....." +
+      "###....." +
+      "###....." +
+      "###....." +
+      "###....."
+  },
+  {
+    // 0x258E LEFT ONE QUARTER BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "##......" +
+      "##......" +
+      "##......" +
+      "##......" +
+      "##......" +
+      "##......" +
+      "##......" +
+      "##......"
+  },
+  {
+    // 0x258F LEFT ONE EIGHTH BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "#......." +
+      "#......." +
+      "#......." +
+      "#......." +
+      "#......." +
+      "#......." +
+      "#......." +
+      "#......."
+  },
+  {
+    // 0x2590 RIGHT HALF BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "....###." +
+      "....###." +
+      "....###." +
+      "....###." +
+      "....###." +
+      "....###." +
+      "....###." +
+      "....###."
+  },
+  {
+    // 0x2591 LIGHT SHADE
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "...#...#" +
+      ".#...#.." +
+      "...#...#" +
+      ".#...#.." +
+      "...#...#" +
+      ".#...#.." +
+      "...#...#" +
+      ".#...#.."
+  },
+  {
+    // 0x2592 MEDIUM SHADE
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "#.#.#.#." +
+      ".#.#.#.#" +
+      "#.#.#.#." +
+      ".#.#.#.#" +
+      "#.#.#.#." +
+      ".#.#.#.#" +
+      "#.#.#.#." +
+      ".#.#.#.#"
+  },
+  {
+    // 0x2593 DARK SHADE
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "########" +
+      "#.#.#.#." +
+      "########" +
+      "#.#.#.#." +
+      "########" +
+      "#.#.#.#." +
+      "########" +
+      "#.#.#.#."
+  },
+  {
+    // 0x2594 UPPER ONE EIGHTH BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "########" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "........"
+  },
+  {
+    // 0x2595 RIGHT ONE EIGHTH BLOCK
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      ".......#" +
+      ".......#" +
+      ".......#" +
+      ".......#" +
+      ".......#" +
+      ".......#" +
+      ".......#" +
+      ".......#"
+  },
+  {
+
+    // 0x2596  QUADRANT LOWER LEFT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...."
+  },
+  {
+    // 0x2597  QUADRANT LOWER RIGHT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "........" +
+      "........" +
+      "........" +
+      "........" +
+      "....####" +
+      "....####" +
+      "....####" +
+      "....####"
+  },
+  {
+    // 0x2598  QUADRANT UPPER LEFT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...." +
+      "........" +
+      "........" +
+      "........" +
+      "........"
+  },
+  {
+    // 0x2599  QUADRANT UPPER LEFT AND LOWER LEFT AND LOWER RIGHT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...." +
+      "########" +
+      "########" +
+      "########" +
+      "########"
+  },
+  {
+    // 0x259A  QUADRANT UPPER LEFT AND LOWER RIGHT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...." +
+      "....####" +
+      "....####" +
+      "....####" +
+      "....####"
+  },
+  {
+    // 0x259B  QUADRANT UPPER LEFT AND UPPER RIGHT AND LOWER LEFT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...."
+  },
+  {
+    // 0x259C  QUADRANT UPPER LEFT AND UPPER RIGHT AND LOWER RIGHT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "########" +
+      "########" +
+      "########" +
+      "########" +
+      "....####" +
+      "....####" +
+      "....####" +
+      "....####"
+  },
+  {
+    // 0x259D  QUADRANT UPPER RIGHT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "....####" +
+      "....####" +
+      "....####" +
+      "....####" +
+      "........" +
+      "........" +
+      "........" +
+      "........"
+  },
+  {
+    // 0x259E  QUADRANT UPPER RIGHT AND LOWER LEFT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "....####" +
+      "....####" +
+      "....####" +
+      "....####" +
+      "####...." +
+      "####...." +
+      "####...." +
+      "####...."
+  },
+  {
+    // 0x259F  QUADRANT UPPER RIGHT AND LOWER LEFT AND LOWER RIGHT
+    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
+    glyphString:
+      "....####" +
+      "....####" +
+      "....####" +
+      "....####" +
+      "########" +
+      "########" +
+      "########" +
+      "########"
+  },
+];
