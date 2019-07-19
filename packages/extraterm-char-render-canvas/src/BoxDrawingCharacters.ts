@@ -8,17 +8,153 @@ const _log = getLogger("BoxDrawingCharacters");
 
 const FIRST_BOX_CODE_POINT = 0x2500;
 
-export function isBoxCharacter(codePoint: number): boolean {
-  return codePoint >= FIRST_BOX_CODE_POINT && codePoint < (FIRST_BOX_CODE_POINT + glyphData.length);
-}
-
 enum GlyphRenderer {
-  FIVE_BY_FIVE
+  FIVE_BY_FIVE,
+  DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT,
+  DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT,
+  DIAGONAL_CROSS,
 }
 
 interface GlyphData {
   glyphRenderer: GlyphRenderer;
   glyphString: string;
+}
+
+interface GlyphGridMetrics {
+  gridWidth: number;
+  gridHeight: number;
+  horizontalThickness: number[];
+  horizontalGridLines: number[];
+  verticalThickness: number[];
+  verticalGridLines: number[];
+}
+
+export function isBoxCharacter(codePoint: number): boolean {
+  return codePoint >= FIRST_BOX_CODE_POINT && codePoint < (FIRST_BOX_CODE_POINT + glyphData.length);
+}
+
+export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
+    width: number, height: number): void {
+
+  const thisGlyphData = glyphData[codePoint-FIRST_BOX_CODE_POINT]
+  switch (thisGlyphData.glyphRenderer) {
+    case GlyphRenderer.FIVE_BY_FIVE:
+      draw5x5BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      break;
+
+    case GlyphRenderer.DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT:
+      drawDiagonalUpperRightToLowerLeft(ctx, dx, dy, width, height);
+      break;
+
+    case GlyphRenderer.DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT:
+      drawDiagonalUpperLeftToLowerRight(ctx, dx, dy, width, height);
+      break;
+
+    case GlyphRenderer.DIAGONAL_CROSS:
+      drawDiagonalUpperRightToLowerLeft(ctx, dx, dy, width, height);
+      drawDiagonalUpperLeftToLowerRight(ctx, dx, dy, width, height);
+      break;
+  }
+}
+
+function draw5x5BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
+    width: number, height: number): void {
+
+  const glyphString = thisGlyphData.glyphString;
+  const metrics = compute5x5GlyphGrid(width, height);
+  drawNxNGlyph(ctx, glyphString, dx, dy, metrics);
+}
+
+function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
+  // Our box glyphs are on a 5x5 grid where the pixels which touch the edges must be rendered twice
+  // the size of the pixels which make up the center. Also we want the glyph pixels to be rendered
+  // with consistent integer dimensions, and any extra space is distributed to the edge pixels.
+
+  const hThickness = Math.floor(width / 7);
+  const vThickness = Math.floor(height / 7);
+
+  const topRowThickness = Math.ceil((height - 3 * vThickness) / 2);
+  const bottomRowThickness = height - 3 * vThickness - topRowThickness;
+
+  const leftColumnThickness = Math.ceil((width - 3 * hThickness) / 2);
+  const rightColumnThickness = width - 3 * hThickness - leftColumnThickness;
+
+
+  const horizontalThickness = new Array(5);
+  horizontalThickness[0] = leftColumnThickness;
+  for (let i=1; i<5-1; i++) {
+    horizontalThickness[i] = hThickness;
+  }
+  horizontalThickness[5-1] = rightColumnThickness;
+
+  const horizontalGridLines = new Array(5);
+  for (let accu=0, i=0; i<5; i++) {
+    horizontalGridLines[i] = accu;
+    accu += horizontalThickness[i];
+  }
+
+  const verticalThickness = new Array(5);
+  verticalThickness[0] = topRowThickness;
+  for (let i=1; i<5-1; i++) {
+    verticalThickness[i] = vThickness;
+  }
+  verticalThickness[5-1] = bottomRowThickness;
+
+  const verticalGridLines = new Array(5);
+  for (let accu=0, i=0; i<5; i++) {
+    verticalGridLines[i] = accu;
+    accu += verticalThickness[i];
+  }
+
+  return {
+    gridWidth: 5,
+    gridHeight: 5,
+    horizontalThickness,
+    horizontalGridLines,
+    verticalThickness,
+    verticalGridLines,
+  };
+}
+
+function drawNxNGlyph(ctx: CanvasRenderingContext2D, glyphString: string, dx: number, dy: number,
+  metrics: GlyphGridMetrics): void {
+
+  const { gridWidth, gridHeight, horizontalGridLines, verticalGridLines, horizontalThickness,
+    verticalThickness } = metrics;
+  
+  let pixelOffset = 0;
+  for (let y=0; y < gridHeight; y++) {
+    for (let x=0; x < gridWidth; x++) {
+      if (glyphString.charAt(pixelOffset) === "#") {
+        ctx.fillRect(dx + horizontalGridLines[x], dy+verticalGridLines[y], horizontalThickness[x], verticalThickness[y]);
+      }
+      pixelOffset++;
+    }
+  }
+}
+
+function drawDiagonalUpperRightToLowerLeft(ctx: CanvasRenderingContext2D, dx: number, dy: number, width: number,
+    height: number): void {
+
+  ctx.save();
+  ctx.lineWidth = Math.ceil(width/7);
+  ctx.beginPath();
+  ctx.moveTo(dx+width, dy);
+  ctx.lineTo(dx, dy+height);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawDiagonalUpperLeftToLowerRight(ctx: CanvasRenderingContext2D, dx: number, dy: number, width: number,
+    height: number): void {
+
+  ctx.save();
+  ctx.lineWidth = Math.ceil(width/7);
+  ctx.beginPath();
+  ctx.moveTo(dx, dy);
+  ctx.lineTo(dx+width, dy+height);
+  ctx.stroke();
+  ctx.restore();
 }
 
 const glyphData: GlyphData[] = [
@@ -1155,36 +1291,18 @@ const glyphData: GlyphData[] = [
   },
   {
     // 0x2571 BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
-    glyphString:
-      // TODO use custom code for this.
-      "....#" +
-      "...#." +
-      "..#.." +
-      ".#..." +
-      "#....",
+    glyphRenderer: GlyphRenderer.DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT,
+    glyphString: null,
   },  
   {
     // 0x2572 BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
-    glyphString:
-      // TODO use custom code for this.
-      "#...." +
-      ".#..." +
-      "..#.." +
-      "...#." +
-      "....#",
+    glyphRenderer: GlyphRenderer.DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT,
+    glyphString: null,
   },
   {
     // 0x2573 BOX DRAWINGS LIGHT DIAGONAL CROSS
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
-    glyphString:
-      // TODO use custom code for this.
-      "#...#" +
-      ".#.#." +
-      "..#.." +
-      ".#.#." +
-      "#...#",
+    glyphRenderer: GlyphRenderer.DIAGONAL_CROSS,
+    glyphString: null,
   },
   {
     // 0x2574 BOX DRAWINGS LIGHT LEFT
@@ -1306,94 +1424,3 @@ const glyphData: GlyphData[] = [
       "..#.." +
       "..#..",
   },];
-
-export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
-    width: number, height: number): void {
-_log.debug("drawBoxCharacter");
-
-  draw5x5BoxCharacter(ctx, codePoint, dx, dy, width, height);
-}
-
-interface GlyphGridMetrics {
-  gridWidth: number;
-  gridHeight: number;
-  horizontalThickness: number[];
-  horizontalGridLines: number[];
-  verticalThickness: number[];
-  verticalGridLines: number[];
-}
-
-function draw5x5BoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
-  width: number, height: number): void {
-
-  const glyphString = glyphData[codePoint - FIRST_BOX_CODE_POINT].glyphString;
-  const metrics = compute5x5GlyphGrid(width, height);
-  drawNxNGlyph(ctx, glyphString, dx, dy, metrics);
-}
-
-function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
-  // Our box glyphs are on a 5x5 grid where the pixels which touch the edges must be rendered twice
-  // the size of the pixels which make up the center. Also we want the glyph pixels to be rendered
-  // with consistent integer dimensions, and any extra space is distributed to the edge pixels.
-
-  const hThickness = Math.floor(width / 7);
-  const vThickness = Math.floor(height / 7);
-
-  const topRowThickness = Math.ceil((height - 3 * vThickness) / 2);
-  const bottomRowThickness = height - 3 * vThickness - topRowThickness;
-
-  const leftColumnThickness = Math.ceil((width - 3 * hThickness) / 2);
-  const rightColumnThickness = width - 3 * hThickness - leftColumnThickness;
-
-
-  const horizontalThickness = new Array(5);
-  horizontalThickness[0] = leftColumnThickness;
-  for (let i=1; i<5-1; i++) {
-    horizontalThickness[i] = hThickness;
-  }
-  horizontalThickness[5-1] = rightColumnThickness;
-
-  const horizontalGridLines = new Array(5);
-  for (let accu=0, i=0; i<5; i++) {
-    horizontalGridLines[i] = accu;
-    accu += horizontalThickness[i];
-  }
-
-  const verticalThickness = new Array(5);
-  verticalThickness[0] = topRowThickness;
-  for (let i=1; i<5-1; i++) {
-    verticalThickness[i] = vThickness;
-  }
-  verticalThickness[5-1] = bottomRowThickness;
-
-  const verticalGridLines = new Array(5);
-  for (let accu=0, i=0; i<5; i++) {
-    verticalGridLines[i] = accu;
-    accu += verticalThickness[i];
-  }
-
-  return {
-    gridWidth: 5,
-    gridHeight: 5,
-    horizontalThickness,
-    horizontalGridLines,
-    verticalThickness,
-    verticalGridLines,
-  };
-}
-
-function drawNxNGlyph(ctx: CanvasRenderingContext2D, glyphString: string, dx: number, dy: number,
-    metrics: GlyphGridMetrics): void {
-
-  const { gridWidth, gridHeight, horizontalGridLines, verticalGridLines, horizontalThickness, verticalThickness } = metrics;
-    
-  let pixelOffset = 0;
-  for (let y=0; y < gridHeight; y++) {
-    for (let x=0; x < gridWidth; x++) {
-      if (glyphString.charAt(pixelOffset) === "#") {
-        ctx.fillRect(dx + horizontalGridLines[x], dy+verticalGridLines[y], horizontalThickness[x], verticalThickness[y]);
-      }
-      pixelOffset++;
-    }
-  }
-}
