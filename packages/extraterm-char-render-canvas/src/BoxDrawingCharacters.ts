@@ -33,6 +33,11 @@ interface GlyphGridMetrics {
   verticalGridLines: number[];
 }
 
+interface GridAxisMetrics {
+  gridSizes: number[],
+  gridLines: number[]
+}
+
 export function isBoxCharacter(codePoint: number): boolean {
   return codePoint >= FIRST_BOX_CODE_POINT && codePoint < (FIRST_BOX_CODE_POINT + glyphData.length);
 }
@@ -86,52 +91,43 @@ function draw5x5BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: Glyph
 }
 
 function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
-  // Our box glyphs are on a 5x5 grid where the pixels which touch the edges must be rendered twice
-  // the size of the pixels which make up the center. Also we want the glyph pixels to be rendered
-  // with consistent integer dimensions, and any extra space is distributed to the edge pixels.
-
-  const hThickness = Math.floor(width / 7);
-  const vThickness = Math.floor(height / 7);
-
-  const topRowThickness = Math.ceil((height - 3 * vThickness) / 2);
-  const bottomRowThickness = height - 3 * vThickness - topRowThickness;
-
-  const leftColumnThickness = Math.ceil((width - 3 * hThickness) / 2);
-  const rightColumnThickness = width - 3 * hThickness - leftColumnThickness;
-
-  const horizontalThickness = new Array(5);
-  horizontalThickness[0] = leftColumnThickness;
-  for (let i=1; i<5-1; i++) {
-    horizontalThickness[i] = hThickness;
-  }
-  horizontalThickness[5-1] = rightColumnThickness;
-
-  const horizontalGridLines = new Array(5);
-  for (let accu=0, i=0; i<5; i++) {
-    horizontalGridLines[i] = accu;
-    accu += horizontalThickness[i];
-  }
-
-  const verticalThickness = new Array(5);
-  verticalThickness[0] = topRowThickness;
-  for (let i=1; i<5-1; i++) {
-    verticalThickness[i] = vThickness;
-  }
-  verticalThickness[5-1] = bottomRowThickness;
-
-  const verticalGridLines = new Array(5);
-  for (let accu=0, i=0; i<5; i++) {
-    verticalGridLines[i] = accu;
-    accu += verticalThickness[i];
-  }
+  const horizontalAxis = compute5LineSegments(width);
+  const verticalAxis = compute5LineSegments(height);
 
   return {
     gridWidth: 5,
     gridHeight: 5,
-    horizontalThickness,
-    horizontalGridLines,
-    verticalThickness,
-    verticalGridLines,
+    horizontalThickness: horizontalAxis.gridSizes,
+    horizontalGridLines: horizontalAxis.gridLines,
+    verticalThickness: verticalAxis.gridSizes,
+    verticalGridLines: verticalAxis.gridLines,
+  };
+}
+
+function compute5LineSegments(totalLength: number): GridAxisMetrics {
+  // Our box glyphs are on a 5x5 grid where the pixels which touch the edges must be rendered twice
+  // the size of the pixels which make up the center. Also we want the glyph pixels to be rendered
+  // with consistent integer dimensions, and any extra space is distributed to the edge pixels.
+
+  const baseLength = Math.floor(totalLength / 7);
+  const firstLength = Math.ceil((totalLength - 3 * baseLength) / 2);
+  const lastLength = totalLength - 3 * baseLength - firstLength;
+
+  const segmentLengths = new Array(5);
+  segmentLengths[0] = firstLength;
+  for (let i=1; i<5-1; i++) {
+    segmentLengths[i] = baseLength;
+  }
+  segmentLengths[5-1] = lastLength;
+
+  const segmentPositions = new Array(5);
+  for (let accu=0, i=0; i<5; i++) {
+    segmentPositions[i] = accu;
+    accu += segmentLengths[i];
+  }
+  return {
+    gridLines: segmentPositions,
+    gridSizes: segmentLengths
   };
 }
 
@@ -185,8 +181,8 @@ function draw8x8BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: Glyph
 }
 
 function compute8x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
-  const widthSizes = computeIntegerLineSizes(width, 8);
-  const heightSizes = computeIntegerLineSizes(height, 8);
+  const widthSizes = computeIntegerLineSegments(width, 8);
+  const heightSizes = computeIntegerLineSegments(height, 8);
 
   return {
     gridWidth: 8,
@@ -198,29 +194,26 @@ function compute8x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
   };
 }
 
-function computeIntegerLineSizes(targetSize: number, gridSize: number): {
-  gridSizes: number[],
-  gridLines: number[]
-} {
-  const exactSize = targetSize / gridSize;
+function computeIntegerLineSegments(totalLength: number, gridSize: number): GridAxisMetrics {
+  const exactLength = totalLength / gridSize;
   let accuError = 0;
-  const gridSizes = new Array(gridSize);
+  const segmentLengths = new Array(gridSize);
   for (let i=0; i<gridSize; i++) {
-    const idealSize = exactSize + accuError;
-    const thisSize = Math.floor(idealSize);
-    gridSizes[i] = thisSize;
-    accuError = idealSize - thisSize;
+    const idealLength = exactLength + accuError;
+    const thisLength = Math.floor(idealLength);
+    segmentLengths[i] = thisLength;
+    accuError = idealLength - thisLength;
   }
 
-  const gridLines = new Array(8);
+  const segmentPositions = new Array(8);
   for (let accu=0, i=0; i<gridSize; i++) {
-    gridLines[i] = accu;
-    accu += gridSizes[i];
+    segmentPositions[i] = accu;
+    accu += segmentLengths[i];
   }
 
   return {
-    gridSizes,
-    gridLines
+    gridSizes: segmentLengths,
+    gridLines: segmentPositions
   };
 }
 
