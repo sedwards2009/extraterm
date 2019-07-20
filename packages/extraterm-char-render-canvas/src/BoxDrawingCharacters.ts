@@ -14,6 +14,9 @@ enum GlyphRenderer {
   DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT,
   DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT,
   DIAGONAL_CROSS,
+  LIGHT_SHADE,
+  MEDIUM_SHADE,
+  DARK_SHADE,
 }
 
 interface GlyphData {
@@ -59,6 +62,18 @@ export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: numbe
       drawDiagonalUpperRightToLowerLeft(ctx, dx, dy, width, height);
       drawDiagonalUpperLeftToLowerRight(ctx, dx, dy, width, height);
       break;
+
+    case GlyphRenderer.LIGHT_SHADE:
+      drawShade(ctx, dx, dy, width, height, 0.25);
+      break;
+
+    case GlyphRenderer.MEDIUM_SHADE:
+      drawShade(ctx, dx, dy, width, height, 0.5);
+      break;
+
+    case GlyphRenderer.DARK_SHADE:
+      drawShade(ctx, dx, dy, width, height, 0.75);
+      break;    
   }
 }
 
@@ -208,6 +223,14 @@ function computeIntegerLineSizes(targetSize: number, gridSize: number): {
     gridLines
   };
 }
+
+function drawShade(ctx: CanvasRenderingContext2D, dx: number, dy: number, width: number, height: number, alpha: number): void {
+  ctx.save();
+  ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+  ctx.fillRect(dx, dy, width, height);
+  ctx.restore();
+}
+
 
 const glyphData: GlyphData[] = [
   {
@@ -1699,42 +1722,18 @@ const glyphData: GlyphData[] = [
   },
   {
     // 0x2591 LIGHT SHADE
-    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
-    glyphString:
-      "...#...#" +
-      ".#...#.." +
-      "...#...#" +
-      ".#...#.." +
-      "...#...#" +
-      ".#...#.." +
-      "...#...#" +
-      ".#...#.."
+    glyphRenderer: GlyphRenderer.LIGHT_SHADE,
+    glyphString: null
   },
   {
     // 0x2592 MEDIUM SHADE
-    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
-    glyphString:
-      "#.#.#.#." +
-      ".#.#.#.#" +
-      "#.#.#.#." +
-      ".#.#.#.#" +
-      "#.#.#.#." +
-      ".#.#.#.#" +
-      "#.#.#.#." +
-      ".#.#.#.#"
+    glyphRenderer: GlyphRenderer.MEDIUM_SHADE,
+    glyphString: null
   },
   {
     // 0x2593 DARK SHADE
-    glyphRenderer: GlyphRenderer.EIGHT_BY_EIGHT,
-    glyphString:
-      "########" +
-      "#.#.#.#." +
-      "########" +
-      "#.#.#.#." +
-      "########" +
-      "#.#.#.#." +
-      "########" +
-      "#.#.#.#."
+    glyphRenderer: GlyphRenderer.DARK_SHADE,
+    glyphString: null
   },
   {
     // 0x2594 UPPER ONE EIGHTH BLOCK
