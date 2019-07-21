@@ -17,6 +17,10 @@ enum GlyphRenderer {
   LIGHT_SHADE,
   MEDIUM_SHADE,
   DARK_SHADE,
+  ARC_DOWN_AND_RIGHT,
+  ARC_DOWN_AND_LEFT,
+  ARC_UP_AND_LEFT,
+  ARC_UP_AND_RIGHT,
 }
 
 interface GlyphData {
@@ -78,7 +82,14 @@ export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: numbe
 
     case GlyphRenderer.DARK_SHADE:
       drawShade(ctx, dx, dy, width, height, 0.75);
-      break;    
+      break;
+
+    case GlyphRenderer.ARC_DOWN_AND_RIGHT:
+    case GlyphRenderer.ARC_DOWN_AND_LEFT:
+    case GlyphRenderer.ARC_UP_AND_LEFT:
+    case GlyphRenderer.ARC_UP_AND_RIGHT:
+      drawArcDownAndRight(ctx, thisGlyphData.glyphRenderer, dx, dy, width, height);
+      break;
   }
 }
 
@@ -224,6 +235,95 @@ function drawShade(ctx: CanvasRenderingContext2D, dx: number, dy: number, width:
   ctx.restore();
 }
 
+const arc5x5Glyphs = {
+  [GlyphRenderer.ARC_DOWN_AND_RIGHT]:
+    "....." +
+    "....." +
+    "....#" +
+    "....." +
+    "..#..",
+
+  [GlyphRenderer.ARC_DOWN_AND_LEFT]:
+    "....." +
+    "....." +
+    "#...." +
+    "....." +
+    "..#..",
+
+  [GlyphRenderer.ARC_UP_AND_LEFT]:
+    "..#.." +
+    "....." +
+    "#...." +
+    "....." +
+    ".....",
+
+  [GlyphRenderer.ARC_UP_AND_RIGHT]:
+    "..#.." +
+    "....." +
+    "....#" +
+    "....." +
+    ".....",
+};
+
+interface ArcStartEndPoint {
+  startPointX: number;
+  startPointY: number;
+  endPointX: number;
+  endPointY: number;
+}
+
+const arcStartEndPoints = {
+  [GlyphRenderer.ARC_DOWN_AND_RIGHT]: {
+    startPointX: 0.5,
+    startPointY: 1,
+    endPointX: 1,
+    endPointY: 0.5,
+  },
+  [GlyphRenderer.ARC_DOWN_AND_LEFT]: {
+    startPointX: 0.5,
+    startPointY: 1,
+    endPointX: 0,
+    endPointY: 0.5,
+  },
+  [GlyphRenderer.ARC_UP_AND_LEFT]: {
+    startPointX: 0.5,
+    startPointY: 0,
+    endPointX: 0,
+    endPointY: 0.5,
+  },
+  [GlyphRenderer.ARC_UP_AND_RIGHT]: {
+    startPointX: 0.5,
+    startPointY: 0,
+    endPointX: 1,
+    endPointY: 0.5,
+  },
+};
+
+function drawArcDownAndRight(ctx: CanvasRenderingContext2D, renderer: GlyphRenderer, dx: number, dy: number,
+    width: number, height: number): void {
+
+  const metrics = compute5x5GlyphGrid(width, height);
+  const glyphString = arc5x5Glyphs[renderer];
+  drawNxNGlyph(ctx, glyphString, dx, dy, metrics);
+
+  ctx.save();
+
+  ctx.lineWidth = 1/3;
+
+  // We scale and translate the middle 3x3 part of the 5x5 grid to be a unit square, and
+  // then draw into that distorted square. This simplifies the drawing code and also ensures
+  // that the line widths are correct at the start and end of the arc.
+  ctx.translate(dx + metrics.horizontalGridLines[1], dy + metrics.verticalGridLines[1]);
+  ctx.scale(metrics.horizontalGridLines[4]-metrics.horizontalGridLines[1],
+    metrics.verticalGridLines[4]-metrics.verticalGridLines[1]);
+
+  const arcStartEndPoint = arcStartEndPoints[renderer];
+  ctx.moveTo(arcStartEndPoint.startPointX, arcStartEndPoint.startPointY);
+  ctx.quadraticCurveTo(0.5, 0.5, arcStartEndPoint.endPointX, arcStartEndPoint.endPointY);
+  ctx.stroke();
+
+  ctx.restore();
+}
 
 const glyphData: GlyphData[] = [
   {
@@ -1319,43 +1419,23 @@ const glyphData: GlyphData[] = [
   },
   {
     // 0x256D BOX DRAWINGS LIGHT ARC DOWN AND RIGHT
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
-    glyphString:
-      "....." +
-      "....." +
-      "...##" +
-      "..#.." +
-      "..#..",
+    glyphRenderer: GlyphRenderer.ARC_DOWN_AND_RIGHT,
+    glyphString: null
   },
   {
     // 0x256E BOX DRAWINGS LIGHT ARC DOWN AND LEFT
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
-    glyphString:
-      "....." +
-      "....." +
-      "##..." +
-      "..#.." +
-      "..#..",
+    glyphRenderer: GlyphRenderer.ARC_DOWN_AND_LEFT,
+    glyphString: null
   },
   {
     // 0x256F BOX DRAWINGS LIGHT ARC UP AND LEFT
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
-    glyphString:
-      "..#.." +
-      "..#.." +
-      "##..." +
-      "....." +
-      ".....",
+    glyphRenderer: GlyphRenderer.ARC_UP_AND_LEFT,
+    glyphString: null
   },
   {
     // 0x2570 BOX DRAWINGS LIGHT ARC UP AND RIGHT
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
-    glyphString:
-      "..#.." +
-      "..#.." +
-      "...##" +
-      "....." +
-      ".....",
+    glyphRenderer: GlyphRenderer.ARC_UP_AND_RIGHT,
+    glyphString: null
   },
   {
     // 0x2571 BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT
