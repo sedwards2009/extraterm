@@ -11,6 +11,8 @@ const FIRST_BOX_CODE_POINT = 0x2500;
 enum GlyphRenderer {
   FIVE_BY_FIVE,
   EIGHT_BY_EIGHT,
+  FIVE_BY_EIGHT,
+  EIGHT_BY_FIVE,
   DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT,
   DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT,
   DIAGONAL_CROSS,
@@ -59,6 +61,14 @@ export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: numbe
       draw8x8BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
       break;
 
+    case GlyphRenderer.FIVE_BY_EIGHT:
+      draw5x8BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      break;
+
+    case GlyphRenderer.EIGHT_BY_FIVE:
+      draw8x5BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      break;
+    
     case GlyphRenderer.DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT:
       drawDiagonalUpperRightToLowerLeft(ctx, dx, dy, width, height);
       break;
@@ -98,7 +108,7 @@ function draw5x5BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: Glyph
 
   const glyphString = thisGlyphData.glyphString;
   const metrics = compute5x5GlyphGrid(width, height);
-  drawNxNGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
 }
 
 function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
@@ -159,7 +169,7 @@ function compute5LineSegmentsFromBaseLength(totalLength: number, baseLength: num
   };
 }
 
-function drawNxNGlyph(ctx: CanvasRenderingContext2D, glyphString: string, dx: number, dy: number,
+function drawNxMGlyph(ctx: CanvasRenderingContext2D, glyphString: string, dx: number, dy: number,
   metrics: GlyphGridMetrics): void {
 
   const { gridWidth, gridHeight, horizontalGridLines, verticalGridLines, horizontalThickness,
@@ -205,7 +215,7 @@ function draw8x8BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: Glyph
 
   const glyphString = thisGlyphData.glyphString;
   const metrics = compute8x8GlyphGrid(width, height);
-  drawNxNGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
 }
 
 function compute8x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
@@ -242,6 +252,50 @@ function computeIntegerLineSegments(totalLength: number, gridSize: number): Grid
   return {
     gridSizes: segmentLengths,
     gridLines: segmentPositions
+  };
+}
+
+function draw5x8BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
+    width: number, height: number): void {
+  const glyphString = thisGlyphData.glyphString;
+  const metrics = compute5x8GlyphGrid(width, height);
+  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
+}
+
+function compute5x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
+  const baseLength = Math.floor(Math.min(width, height) / 5);
+  const widthSizes = compute5LineSegmentsFromBaseLength(width, baseLength);
+  const heightSizes = computeIntegerLineSegments(height, 8);
+
+  return {
+    gridWidth: 5,
+    gridHeight: 8,
+    horizontalThickness: widthSizes.gridSizes,
+    horizontalGridLines: widthSizes.gridLines,
+    verticalThickness: heightSizes.gridSizes,
+    verticalGridLines: heightSizes.gridLines,
+  };
+}
+
+function draw8x5BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
+    width: number, height: number): void {
+  const glyphString = thisGlyphData.glyphString;
+  const metrics = compute8x5GlyphGrid(width, height);
+  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
+}
+
+function compute8x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
+  const baseLength = Math.floor(Math.min(width, height) / 5);
+  const widthSizes = computeIntegerLineSegments(width, 8);
+  const heightSizes = compute5LineSegmentsFromBaseLength(height, baseLength);
+
+  return {
+    gridWidth: 8,
+    gridHeight: 5,
+    horizontalThickness: widthSizes.gridSizes,
+    horizontalGridLines: widthSizes.gridLines,
+    verticalThickness: heightSizes.gridSizes,
+    verticalGridLines: heightSizes.gridLines,
   };
 }
 
@@ -321,7 +375,7 @@ function drawArcDownAndRight(ctx: CanvasRenderingContext2D, renderer: GlyphRende
 
   const metrics = compute5x5GlyphGrid(width, height);
   const glyphString = arc5x5Glyphs[renderer];
-  drawNxNGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
 
   ctx.save();
 
@@ -385,83 +439,95 @@ const glyphData: GlyphData[] = [
   },
   {
     // 0x2504 BOX DRAWINGS LIGHT TRIPLE DASH HORIZONTAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.EIGHT_BY_FIVE,
     glyphString:
-      "....." +
-      "....." +
-      "#.#.#" +
-      "....." +
-      ".....",
+      "........" +
+      "........" +
+      ".#..#.#." +
+      "........" +
+      "........",
   },
   {
     // 0x2505 BOX DRAWINGS HEAVY TRIPLE DASH HORIZONTAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.EIGHT_BY_FIVE,
     glyphString:
-      "....." +
-      "#.#.#" +
-      "#.#.#" +
-      "#.#.#" +
-      ".....",
-  },
+      "........" +
+      ".#..#.#." +
+      ".#..#.#." +
+      ".#..#.#." +
+      "........",
+},
   {
     // 0x2506 BOX DRAWINGS LIGHT TRIPLE DASH VERTICAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.FIVE_BY_EIGHT,
     glyphString:
-      "..#.." +
       "....." +
       "..#.." +
       "....." +
-      "..#..",
+      "....." +
+      "..#.." +
+      "....." +
+      "..#.." +
+      ".....",
   },
   {
     // 0x2507 BOX DRAWINGS HEAVY TRIPLE DASH VERTICAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.FIVE_BY_EIGHT,
     glyphString:
-      ".###." +
       "....." +
       ".###." +
       "....." +
-      ".###.",
+      "....." +
+      ".###." +
+      "....." +
+      ".###." +
+      ".....",
   },
   {
     // 0x2508 BOX DRAWINGS LIGHT QUADRUPLE DASH HORIZONTAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.EIGHT_BY_FIVE,
     glyphString:
-      "....." +
-      "....." +
-      "##.##" +
-      "....." +
-      ".....",
+      "........" +
+      "........" +
+      ".#.#.#.#" +
+      "........" +
+      "........",
   },
   {
     // 0x2509 BOX DRAWINGS HEAVY QUADRUPLE DASH HORIZONTAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.EIGHT_BY_FIVE,
     glyphString:
-      "....." +
-      "##.##" +
-      "##.##" +
-      "##.##" +
-      ".....",
+      "........" +
+      ".#.#.#.#" +
+      ".#.#.#.#" +
+      ".#.#.#.#" +
+      "........",
   },
   {
     // 0x250A BOX DRAWINGS LIGHT QUADRUPLE DASH VERTICAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.FIVE_BY_EIGHT,
     glyphString:
-      "..#.." +
       "..#.." +
       "....." +
       "..#.." +
-      "..#..",
+      "....." +
+      "..#.." +
+      "....." +
+      "..#.." +
+      ".....",
   },
   {
     // 0x250B BOX DRAWINGS HEAVY QUADRUPLE DASH VERTICAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.FIVE_BY_EIGHT,
     glyphString:
-      ".###." +
       ".###." +
       "....." +
       ".###." +
-      ".###.",
+      "....." +
+      ".###." +
+      "....." +
+      ".###." +
+      ".....",
   },
   {
     // 0x250C BOX DRAWINGS LIGHT DOWN AND RIGHT
@@ -1106,42 +1172,48 @@ const glyphData: GlyphData[] = [
   },
   {
     // 0x254C BOX DRAWINGS LIGHT DOUBLE DASH HORIZONTAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.EIGHT_BY_FIVE,
     glyphString:
-      "....." +
-      "....." +
-      ".#.#." +
-      "....." +
-      ".....",
+      "........" +
+      "........" +
+      "##..##.." +
+      "........" +
+      "........",
   },
   {
     // 0x254D BOX DRAWINGS HEAVY DOUBLE DASH HORIZONTAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.EIGHT_BY_FIVE,
     glyphString:
-      "....." +
-      ".#.#." +
-      ".#.#." +
-      ".#.#." +
-      ".....",
+      "........" +
+      "##..##.." +
+      "##..##.." +
+      "##..##.." +
+      "........",
   },
   {
     // 0x254E BOX DRAWINGS LIGHT DOUBLE DASH VERTICAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.FIVE_BY_EIGHT,
     glyphString:
-      "....." +
+      "..#.." +
       "..#.." +
       "....." +
+      "....." +
       "..#.." +
+      "..#.." +
+      "....." +
       ".....",
   },
   {
     // 0x254F BOX DRAWINGS HEAVY DOUBLE DASH VERTICAL
-    glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
+    glyphRenderer: GlyphRenderer.FIVE_BY_EIGHT,
     glyphString:
-      "....." +
+      ".###." +
       ".###." +
       "....." +
+      "....." +
       ".###." +
+      ".###." +
+      "....." +
       ".....",
   },  
   {
