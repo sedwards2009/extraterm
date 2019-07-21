@@ -102,8 +102,30 @@ function draw5x5BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: Glyph
 }
 
 function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
-  const horizontalAxis = compute5LineSegments(width);
-  const verticalAxis = compute5LineSegments(height);
+  // Our box glyphs are on a 5x5 grid where the pixels which touch the edges may be rendered larger
+  // than the pixels which make up the center. Also we want the glyph pixels to be rendered
+  // with consistent integer dimensions, and any extra space is distributed to the edge pixels.
+  //
+  // i.e. our grid holding pixels can look like this:
+  //
+  // +--+-+-+-+--+
+  // |  | | | |  |
+  // |  | | | |  |
+  // +--+-+-+-+--+
+  // |  | | | |  |
+  // +--+-+-+-+--+
+  // |  | | | |  |
+  // +--+-+-+-+--+
+  // |  | | | |  |
+  // +--+-+-+-+--+
+  // |  | | | |  |
+  // |  | | | |  |
+  // +--+-+-+-+--+
+
+
+  const baseLength = Math.floor(Math.min(width, height) / 5);
+  const horizontalAxis = compute5LineSegmentsFromBaseLength(width, baseLength);
+  const verticalAxis = compute5LineSegmentsFromBaseLength(height, baseLength);
 
   return {
     gridWidth: 5,
@@ -115,12 +137,7 @@ function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
   };
 }
 
-function compute5LineSegments(totalLength: number): GridAxisMetrics {
-  // Our box glyphs are on a 5x5 grid where the pixels which touch the edges must be rendered twice
-  // the size of the pixels which make up the center. Also we want the glyph pixels to be rendered
-  // with consistent integer dimensions, and any extra space is distributed to the edge pixels.
-
-  const baseLength = Math.floor(totalLength / 7);
+function compute5LineSegmentsFromBaseLength(totalLength: number, baseLength: number): GridAxisMetrics {
   const firstLength = Math.ceil((totalLength - 3 * baseLength) / 2);
   const lastLength = totalLength - 3 * baseLength - firstLength;
 
