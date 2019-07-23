@@ -1115,8 +1115,7 @@ export class Emulator implements EmulatorApi {
     this.params.push(this.currentParam);
     this.currentParam = 0;
 
-    // ';'
-    if (ch === ';') {
+    if (ch === ';' || ch === ':') {
       return i;
     }
 
@@ -2753,6 +2752,10 @@ export class Emulator implements EmulatorApi {
         bg = p - 40;
         this.curAttr.bgClutIndex = bg;
         setCellBgClutFlag(this.curAttr, true);
+      } else if (p === 58 || p === 59) {
+        // DECO. set/reset the color of character decorations.
+        // Not supported here.
+        break;
       } else if (p >= 90 && p <= 97) {
         // fg color 16
         p += 8;
