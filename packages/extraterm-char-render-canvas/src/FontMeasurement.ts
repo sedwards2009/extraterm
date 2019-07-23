@@ -49,40 +49,41 @@ class FontMeasurement {
     this._log = getLogger("FontMeasurement", this);
 
     if (sampleChars == null) {
-      sampleChars = ["X"];
+      sampleChars = ["X", "_", "g", "\u00C5", "\u00E7", "\u014A", "\u013B","\u0141", "\u0126"];
     }
 
     const canvas = <HTMLCanvasElement> document.createElement("canvas");
 
-    this._canvasWidthPx = fontSizePx * 3;
-    this._canvasHeightPx = fontSizePx * 3;
+    this._canvasWidthPx = Math.ceil(fontSizePx * 3);
+    this._canvasHeightPx = Math.ceil(fontSizePx * 3);
     canvas.width = this._canvasWidthPx;
     canvas.height = this._canvasHeightPx;
 
     const ctx = canvas.getContext("2d", { alpha: false });
     ctx.font = "" + fontSizePx + "px " + fontFamily;
     ctx.textBaseline = "top";
-
+ 
     // Note: most of the properties on a TextMetrics object are behind Blink's experimental flag. 1/5/2019
     const metrics = ctx.measureText(sampleChars[0]);
     // logFontMetrics(sampleChars[0], metrics);
+    const charWidthPx = Math.ceil(metrics.width);
 
-    const {topY: xTopY, bottomY: xBottomY} = this._renderAndMeasureText(ctx, fontSizePx, sampleChars[0]);
-    // this._log.debug(`X: topY: ${xTopY}, bottomY: ${xBottomY}`);
+    let ascent = Math.floor(-metrics.fontBoundingBoxAscent);
+    let descent = Math.ceil(metrics.fontBoundingBoxDescent);
+    for (const sampleChar of sampleChars) {
+      const { topY, bottomY } = this._renderAndMeasureText(ctx, fontSizePx, sampleChar);
+      ascent = Math.min(ascent, topY);
+      descent = Math.max(descent, bottomY+1);
+    }
 
+    const fillTextYOffset = -ascent;
+    const charHeightPx = descent - ascent;
+
+    // this._log.debug(`charWidthPx: ${charWidthPx }, charHeightPx: ${charHeightPx}, fillTextYOffset: ${fillTextYOffset}`);
+
+    // Used for the strike through and underline Y positions.
     const {topY: mTopY, bottomY: mBottomY} = this._renderAndMeasureText(ctx, fontSizePx, "m");
     // this._log.debug(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
-
-    const charWidthPx = Math.ceil(metrics.width);
-    const charHeightPx = Math.ceil(metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent);
-
-    let fillTextYOffset = Math.ceil(metrics.fontBoundingBoxAscent);
-    if (xTopY < 0) {
-      // Sometimes glyphs still manage to protrude above the top of the font box.
-      // So we shrink and shift them a bit.
-      fontSizePx = fontSizePx + xTopY;
-      fillTextYOffset = fillTextYOffset - xTopY;
-    }
 
     return {
       fontSizePx,
@@ -96,7 +97,7 @@ class FontMeasurement {
 
       strikethroughY: Math.round((mTopY + mBottomY) /2) + fillTextYOffset,
       strikethroughHeight: 1,
-      underlineY: Math.round(xBottomY + 2) + fillTextYOffset,
+      underlineY: Math.round(mBottomY + 2) + fillTextYOffset,
       underlineHeight: 1,
     };
   }
@@ -110,13 +111,14 @@ class FontMeasurement {
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = "#ffffffff";
 
-    ctx.fillText(text, fontSizePx, fontSizePx);
+    const textXY = Math.ceil(fontSizePx);
+    ctx.fillText(text, textXY, textXY);
 
     const imageData = ctx.getImageData(0, 0, fontSizePx * 3, fontSizePx * 3);
     const topRowY = this._findTopRowInImageData(imageData);
     const bottomRowY = this._findBottomRowInImageData(imageData);
     ctx.restore();
-    return { topY: topRowY-fontSizePx, bottomY: bottomRowY-fontSizePx }
+    return { topY: topRowY-textXY, bottomY: bottomRowY-textXY }
   }
 
   private _findTopRowInImageData(imageData: ImageData): number {
