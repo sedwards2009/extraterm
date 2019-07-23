@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
-import { CharCellGrid, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
+import { CharCellGrid, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { ColorPatchCanvas } from "./ColorPatchCanvas";
 import { FontAtlas } from "./FontAtlas";
@@ -484,7 +484,8 @@ export class CharRenderCanvas implements Disposable {
           renderedCharWidthCounter = Math.max(renderedCharWidthCounter,
                                               ((renderedFlags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT)+1);          
           if (mustRender) {
-            this._fontAtlas.drawCodePoint(ctx, codePoint, style, i * cellWidth, j * cellHeight);
+            const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : codePoint;
+            this._fontAtlas.drawCodePoint(ctx, effectiveCodePoint, style, i * cellWidth, j * cellHeight);
           }
         }
 
