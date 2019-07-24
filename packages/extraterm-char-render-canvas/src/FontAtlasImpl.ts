@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE } from "extraterm-char-cell-grid";
+import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
 import * as easta from "easta";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
@@ -139,6 +139,11 @@ class FontAtlasPage {
     const xPixels = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
     const yPixels = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
 
+    this._pageCtx.save();
+    if (style & STYLE_MASK_FAINT) {
+      this._pageCtx.fillStyle = "#ffffff80";
+    }
+
     let widthPx = this._metrics.widthPx;
     let isWide = false;
     if (isBoxCharacter(codePoint)) {
@@ -193,7 +198,8 @@ class FontAtlasPage {
     if (isWide) {
       this._incrementNextEmptyCell();
     }
-
+    
+    this._pageCtx.restore();
     return cachedGlyph;
   }
 
