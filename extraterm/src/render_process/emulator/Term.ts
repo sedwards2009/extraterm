@@ -224,7 +224,6 @@ export class Emulator implements EmulatorApi {
   private params = [];
   private currentParam: string | number = 0;
   private prefix = '';
-  private postfix = '';
   
   private lines: Line[] = [];
   
@@ -361,7 +360,6 @@ export class Emulator implements EmulatorApi {
     this.params = [];
     this.currentParam = 0;
     this.prefix = '';
-    this.postfix = '';
     
     this.lines = [];
   //  this.tabs;
@@ -1109,7 +1107,6 @@ export class Emulator implements EmulatorApi {
 
     // '$', '"', ' ', '\''
     if (ch === '$' || ch === '"' || ch === ' ' || ch === '\'') {
-      this.postfix = ch;
       return i;
     }
 
