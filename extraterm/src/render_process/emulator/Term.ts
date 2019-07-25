@@ -66,6 +66,7 @@ import {
   STYLE_MASK_INVERSE,
   STYLE_MASK_INVISIBLE,
   STYLE_MASK_STRIKETHROUGH,
+  STYLE_MASK_OVERLINE,
   copyCell,
   setCellFgClutFlag,
   setCellBgClutFlag,
@@ -2878,6 +2879,13 @@ export class Emulator implements EmulatorApi {
           this.curAttr.bgClutIndex = bg;
           setCellBgClutFlag(this.curAttr, true);
         }
+      } else if (p === 53) {
+        // Overline style
+        this.curAttr.style |= STYLE_MASK_OVERLINE;
+
+      } else if (p === 55) {
+        // Reset overline style
+        this.curAttr.style &= ~STYLE_MASK_OVERLINE;
 
       } else if (p === 100) {
         // reset fg/bg

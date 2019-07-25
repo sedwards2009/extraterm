@@ -32,6 +32,9 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
     strikethroughHeight: renderFontMetrics.strikethroughHeight / devicePixelRatio,
     underlineY: renderFontMetrics.underlineY / devicePixelRatio,
     underlineHeight: renderFontMetrics.underlineHeight / devicePixelRatio,
+
+    overlineY: renderFontMetrics.overlineY / devicePixelRatio,
+    overlineHeight: renderFontMetrics.overlineHeight / devicePixelRatio,
   };
 
   return {
@@ -99,6 +102,9 @@ class FontMeasurement {
       strikethroughHeight: 1,
       underlineY: Math.round(mBottomY + 2) + fillTextYOffset,
       underlineHeight: 1,
+
+      overlineY: 0,
+      overlineHeight: 1,
     };
   }
 

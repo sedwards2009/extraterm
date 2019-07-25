@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
+import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT, STYLE_MASK_OVERLINE } from "extraterm-char-cell-grid";
 import * as easta from "easta";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
@@ -176,6 +176,12 @@ class FontAtlasPage {
       this._pageCtx.fillRect(xPixels,
                               yPixels + this._metrics.underlineY,
                               widthPx, this._metrics.underlineHeight);
+    }
+
+    if (style & STYLE_MASK_OVERLINE) {
+      this._pageCtx.fillRect(xPixels,
+                              yPixels + this._metrics.overlineY,
+                              widthPx, this._metrics.overlineHeight);
     }
 
     // ImageBitmaps are meant to be much fast to paint with compared to normal canvas.

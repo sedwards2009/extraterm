@@ -24,6 +24,7 @@ import { stringToCodePointArray, isWide } from "extraterm-unicode-utilities";
  *            * 0x0040 (bit 6) - true if invisible style
  *            * 0x0080 (bit 7) - true if faint style
  *            * 0x0100 (bit 8) - true if the cursor is in this cell
+ *            * 0x0200 (bit 9) - true if overline style
  * 2 byte   - Foreground Colour Lookup Table (palette / CLUT) index
  * 2 byte   - Background Colour Lookup Table (palette / CLUT) index
  * 4 bytes  - Foreground RGBA bytes
@@ -48,6 +49,7 @@ export const STYLE_MASK_INVERSE = 32;
 export const STYLE_MASK_INVISIBLE = 64;
 export const STYLE_MASK_FAINT = 128;
 export const STYLE_MASK_CURSOR = 256;
+export const STYLE_MASK_OVERLINE = 512;
 
 export type StyleCode = number;
 
