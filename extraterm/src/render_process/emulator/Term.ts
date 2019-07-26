@@ -71,6 +71,7 @@ import {
   setCellFgClutFlag,
   setCellBgClutFlag,
 } from 'extraterm-char-cell-grid';
+import { ControlSequenceParameters } from "./ControlSequenceParameters";
 
 const DEBUG_RESIZE = false;
   
@@ -91,20 +92,19 @@ const REFRESH_DELAY = 100;  // ms. How long to wait before doing a screen refres
  *   http://linux.die.net/man/7/urxvt
  */
 
-
-/**
- * States
- */
-const STATE_NORMAL = 0;
-const STATE_ESCAPE = 1;
-const STATE_CSI = 2;
-const STATE_OSC = 3;
-const STATE_CHARSET = 4;
-const STATE_DCS = 5;
-const STATE_IGNORE = 6;
-const STATE_APPLICATION_START = 7;
-const STATE_APPLICATION_END = 8;
-const STATE_DEC_HASH = 9;
+enum ParserState {
+  NORMAL,
+  ESCAPE,
+  CSI,
+  OSC,
+  CHARSET,
+  DCS_START,
+  DCS_STRING,
+  IGNORE,
+  APPLICATION_START,
+  APPLICATION_END,
+  DEC_HASH,
+}
 
 const MAX_PROCESS_WRITE_SIZE = 4096;
 
@@ -154,7 +154,7 @@ export class Emulator implements EmulatorApi {
   private cols = 80;
   private rows = 24
   
-  private state = 0; // Escape code parsing state.
+  private state = ParserState.NORMAL;
 
   private mouseEvents = false;
 
@@ -221,9 +221,7 @@ export class Emulator implements EmulatorApi {
     bgRGBA: 0x00000000,
   };
   
-  private params = [];
-  private currentParam: string | number = 0;
-  private prefix = '';
+  private _params = new ControlSequenceParameters();
   
   private lines: Line[] = [];
   
@@ -280,7 +278,7 @@ export class Emulator implements EmulatorApi {
 
     this._platform = options.platform;
 
-    this.state = 0; // Escape code parsing state.
+    this.state = ParserState.NORMAL;
 
     this._resetVariables();
     this._hasFocus = false;
@@ -357,9 +355,7 @@ export class Emulator implements EmulatorApi {
 
     copyCell(Emulator.defAttr, this.curAttr); // Current character style.
 
-    this.params = [];
-    this.currentParam = 0;
-    this.prefix = '';
+    this._params = new ControlSequenceParameters();
     
     this.lines = [];
   //  this.tabs;
@@ -935,7 +931,7 @@ export class Emulator implements EmulatorApi {
       }
 
       switch (this.state) {
-        case STATE_NORMAL:
+        case ParserState.NORMAL:
           switch (ch) {
             // '\0'
             // case '\0':
@@ -983,7 +979,7 @@ export class Emulator implements EmulatorApi {
 
             // '\e'
             case '\x1b':
-              this.state = STATE_ESCAPE;
+              this.state = ParserState.ESCAPE;
               break;
 
             default:
@@ -1038,39 +1034,40 @@ export class Emulator implements EmulatorApi {
           }
           break;
 
-        case STATE_ESCAPE:
+        case ParserState.ESCAPE:
           i = this._processDataEscape(ch, i);
           break;
 
-        case STATE_CHARSET:
+        case ParserState.CHARSET:
           i = this._processDataCharset(ch, i);
           break;
 
-        case STATE_OSC:
+        case ParserState.OSC:
           i = this._processDataOSC(ch, i);
           break;
 
-        case STATE_CSI:
+        case ParserState.CSI:
           i = this._processDataCSI(ch, i);
           break;
 
-        case STATE_DCS:
+        case ParserState.DCS_START:
+        case ParserState.DCS_STRING:
           i = this._processDataDCS(ch, i);
           break;
 
-        case STATE_IGNORE:
+        case ParserState.IGNORE:
           i = this._processDataIgnore(ch, i);
           break;
           
-        case STATE_APPLICATION_START:
+        case ParserState.APPLICATION_START:
           this._processDataApplicationStart(ch);
           break;
 
-        case STATE_APPLICATION_END:
+        case ParserState.APPLICATION_END:
           [data, i] = this._processDataApplicationEnd(data, i);
           break;
           
-        case STATE_DEC_HASH:
+        case ParserState.DEC_HASH:
           this._processDataDecHash(ch);
           break;
       }
@@ -1095,13 +1092,13 @@ export class Emulator implements EmulatorApi {
   private _processDataCSI(ch: string, i: number): number {
     // '?', '>', '!'
     if (ch === '?' || ch === '>' || ch === '!') {
-      this.prefix = ch;
+      this._params.prefix = ch;
       return i;
     }
 
     // 0 - 9
     if (ch >= '0' && ch <= '9') {
-      this.currentParam = (<number> this.currentParam) * 10 + ch.charCodeAt(0) - 48;
+      this._params.appendDigit(ch);
       return i;
     }
 
@@ -1110,67 +1107,66 @@ export class Emulator implements EmulatorApi {
       return i;
     }
 
-    this.params.push(this.currentParam);
-    this.currentParam = 0;
+    this._params.endParameter();
 
     if (ch === ';' || ch === ':') {
       return i;
     }
 
-    this.state = STATE_NORMAL;
+    this.state = ParserState.NORMAL;
 
     switch (ch) {
       // CSI Ps A
       // Cursor Up Ps Times (default = 1) (CUU).
       case 'A':
-        this.cursorUp(this.params);
+        this.cursorUp(this._params);
         break;
 
       // CSI Ps B
       // Cursor Down Ps Times (default = 1) (CUD).
       case 'B':
-        this.cursorDown(this.params);
+        this.cursorDown(this._params);
         break;
 
       // CSI Ps C
       // Cursor Forward Ps Times (default = 1) (CUF).
       case 'C':
-        this.cursorForward(this.params);
+        this.cursorForward(this._params);
         break;
 
       // CSI Ps D
       // Cursor Backward Ps Times (default = 1) (CUB).
       case 'D':
-        this.cursorBackward(this.params);
+        this.cursorBackward(this._params);
         break;
 
       // CSI Ps ; Ps H
       // Cursor Position [row;column] (default = [1,1]) (CUP).
       case 'H':
-        this.cursorPos(this.params);
+        this.cursorPos(this._params);
         break;
 
       // CSI Ps J  Erase in Display (ED).
       case 'J':
-        this.eraseInDisplay(this.params);
+        this.eraseInDisplay(this._params);
         break;
 
       // CSI Ps K  Erase in Line (EL).
       case 'K':
-        this.eraseInLine(this.params);
+        this.eraseInLine(this._params);
         break;
 
       // CSI Pm m  Character Attributes (SGR).
       case 'm':
-        if (!this.prefix) {
-          this.charAttributes(this.params);
+        if ( ! this._params.prefix) {
+          this.charAttributes(this._params);
         }
         break;
 
       // CSI Ps n  Device Status Report (DSR).
       case 'n':
-        if (!this.prefix) {
-          this.deviceStatus(this.params);
+        if ( ! this._params.prefix) {
+          this.deviceStatus(this._params);
         }
         break;
 
@@ -1181,61 +1177,61 @@ export class Emulator implements EmulatorApi {
       // CSI Ps @
       // Insert Ps (Blank) Character(s) (default = 1) (ICH).
       case '@':
-        this.insertChars(this.params);
+        this.insertChars(this._params);
         break;
 
       // CSI Ps E
       // Cursor Next Line Ps Times (default = 1) (CNL).
       case 'E':
-        this.cursorNextLine(this.params);
+        this.cursorNextLine(this._params);
         break;
 
       // CSI Ps F
       // Cursor Preceding Line Ps Times (default = 1) (CNL).
       case 'F':
-        this.cursorPrecedingLine(this.params);
+        this.cursorPrecedingLine(this._params);
         break;
 
       // CSI Ps G
       // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
       case 'G':
-        this.cursorCharAbsolute(this.params);
+        this.cursorCharAbsolute(this._params);
         break;
 
       // CSI Ps L
       // Insert Ps Line(s) (default = 1) (IL).
       case 'L':
-        this.insertLines(this.params);
+        this.insertLines(this._params);
         break;
 
       // CSI Ps M
       // Delete Ps Line(s) (default = 1) (DL).
       case 'M':
-        this.deleteLines(this.params);
+        this.deleteLines(this._params);
         break;
 
       // CSI Ps P
       // Delete Ps Character(s) (default = 1) (DCH).
       case 'P':
-        this.deleteChars(this.params);
+        this.deleteChars(this._params);
         break;
 
       // CSI Ps X
       // Erase Ps Character(s) (default = 1) (ECH).
       case 'X':
-        this.eraseChars(this.params);
+        this.eraseChars(this._params);
         break;
 
       // CSI Pm `  Character Position Absolute
       //   [column] (default = [row,1]) (HPA).
       case '`':
-        this.charPosAbsolute(this.params);
+        this.charPosAbsolute(this._params);
         break;
 
       // 141 61 a * HPR -
       // Horizontal Position Relative
       case 'a':
-        this.HPositionRelative(this.params);
+        this.HPositionRelative(this._params);
         break;
 
       // CSI P s c
@@ -1243,37 +1239,37 @@ export class Emulator implements EmulatorApi {
       // CSI > P s c
       // Send Device Attributes (Secondary DA)
       case 'c':
-        this.sendDeviceAttributes(this.params);
+        this.sendDeviceAttributes(this._params);
         break;
 
       // CSI Pm d
       // Line Position Absolute  [row] (default = [1,column]) (VPA).
       case 'd':
-        this.linePosAbsolute(this.params);
+        this.linePosAbsolute(this._params);
         break;
 
       // 145 65 e * VPR - Vertical Position Relative
       case 'e':
-        this.VPositionRelative(this.params);
+        this.VPositionRelative(this._params);
         break;
 
       // CSI Ps ; Ps f
       //   Horizontal and Vertical Position [row;column] (default =
       //   [1,1]) (HVP).
       case 'f':
-        this.HVPosition(this.params);
+        this.HVPosition(this._params);
         break;
 
       // CSI Pm h  Set Mode (SM).
       // CSI ? Pm h - mouse escape codes, cursor escape codes
       case 'h':
-        this.setMode(this.params);
+        this.setMode(this._params);
         break;
 
       // CSI Pm l  Reset Mode (RM).
       // CSI ? Pm l
       case 'l':
-        this.resetMode(this.params);
+        this.resetMode(this._params);
         break;
 
       // CSI Ps ; Ps r
@@ -1281,15 +1277,15 @@ export class Emulator implements EmulatorApi {
       //   dow) (DECSTBM).
       // CSI ? Pm r
       case 'r':
-        this.setScrollRegion(this.params);
+        this.setScrollRegion(this._params);
         break;
 
       // CSI s     Save cursor (ANSI.SYS).
       // CSI ? Pm s
       case 's':
-        if (this.prefix === '?') {
-          this.savePrivateValues(this.params);
-        } else if (this.prefix === '') {
+        if (this._params.prefix === '?') {
+          this.savePrivateValues(this._params);
+        } else if (this._params.prefix === '') {
           this.saveCursor();
         }
         break;
@@ -1297,7 +1293,7 @@ export class Emulator implements EmulatorApi {
       // CSI u
       //   Restore cursor (ANSI.SYS).
       case 'u':
-        if (this.prefix === '') {
+        if (this._params.prefix === '') {
           this.restoreCursor();
         }
         break;
@@ -1309,37 +1305,37 @@ export class Emulator implements EmulatorApi {
       // CSI Ps I
       // Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
       case 'I':
-        this.cursorForwardTab(this.params);
+        this.cursorForwardTab(this._params);
         break;
 
       // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
       case 'S':
-        this.scrollUp(this.params);
+        this.scrollUp(this._params);
         break;
 
       // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
       // CSI Ps ; Ps ; Ps ; Ps ; Ps T
       // CSI > Ps; Ps T
       case 'T':
-        if (this.params.length < 2 && !this.prefix) {
-          this.scrollDown(this.params);
+        if (this._params.length < 2 && !this._params.prefix) {
+          this.scrollDown(this._params);
         }
         break;
 
       // CSI Ps Z
       // Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
       case 'Z':
-        this.cursorBackwardTab(this.params);
+        this.cursorBackwardTab(this._params);
         break;
 
       // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
       case 'b':
-        this.repeatPrecedingCharacter(this.params);
+        this.repeatPrecedingCharacter(this._params);
         break;
 
       // CSI Ps g  Tab Clear (TBC).
       case 'g':
-        this.tabClear(this.params);
+        this.tabClear(this._params);
         break;
 
       // CSI Pm i  Media Copy (MC).
@@ -1359,9 +1355,9 @@ export class Emulator implements EmulatorApi {
       //   Request DEC private mode (DECRQM).
       // CSI Ps ; Ps " p
       case 'p':
-        switch (this.prefix) {
+        switch (this._params.prefix) {
           case '!':
-            this.softReset(this.params);
+            this.softReset(this._params);
             break;
           default:
             break;
@@ -1413,7 +1409,6 @@ export class Emulator implements EmulatorApi {
         break;
     }
 
-    this.prefix = '';
     return i;
   }
   
@@ -1421,40 +1416,36 @@ export class Emulator implements EmulatorApi {
     switch (ch) {
       // ESC [ Control Sequence Introducer ( CSI is 0x9b).
       case '[':
-        this.params = [];
-        this.currentParam = 0;
-        this.state = STATE_CSI;
+        this._params = new ControlSequenceParameters();
+        this.state = ParserState.CSI;
         break;
 
       // ESC ] Operating System Command ( OSC is 0x9d).
       case ']':
-        this.params = [];
-        this.currentParam = 0;
-        this.state = STATE_OSC;
+        this._params = new ControlSequenceParameters();
+        this.state = ParserState.OSC;
         break;
         
       // ESC & Application mode
       case '&':
-        this.params = [];
-        this.currentParam = "";
-        this.state = STATE_APPLICATION_START;
+        this._params = new ControlSequenceParameters();
+        this.state = ParserState.APPLICATION_START;
         break;
         
       // ESC P Device Control String ( DCS is 0x90).
       case 'P':
-        this.params = [];
-        this.currentParam = 0;
-        this.state = STATE_DCS;
+        this._params = new ControlSequenceParameters();
+        this.state = ParserState.DCS_START;
         break;
 
       // ESC _ Application Program Command ( APC is 0x9f).
       case '_':
-        this.state = STATE_IGNORE;
+        this.state = ParserState.IGNORE;
         break;
 
       // ESC ^ Privacy Message ( PM is 0x9e).
       case '^':
-        this.state = STATE_IGNORE;
+        this.state = ParserState.IGNORE;
         break;
 
       // ESC c Full Reset (RIS).
@@ -1484,7 +1475,7 @@ export class Emulator implements EmulatorApi {
         //this.charset = null;
         this.setgLevel(0);
         this.setgCharset(0, Emulator.charsets.US);
-        this.state = STATE_NORMAL;
+        this.state = ParserState.NORMAL;
         i++;
         break;
 
@@ -1515,7 +1506,7 @@ export class Emulator implements EmulatorApi {
             this.gcharset = 2;
             break;
         }
-        this.state = STATE_CHARSET;
+        this.state = ParserState.CHARSET;
         break;
 
       // Designate G3 Character Set (VT300).
@@ -1523,7 +1514,7 @@ export class Emulator implements EmulatorApi {
       // Not implemented.
       case '/':
         this.gcharset = 3;
-        this.state = STATE_CHARSET;
+        this.state = ParserState.CHARSET;
         i--;
         break;
 
@@ -1566,18 +1557,18 @@ export class Emulator implements EmulatorApi {
       // ESC 7 Save Cursor (DECSC).
       case '7':
         this.saveCursor();
-        this.state = STATE_NORMAL;
+        this.state = ParserState.NORMAL;
         break;
 
       // ESC 8 Restore Cursor (DECRC).
       case '8':
         this.restoreCursor();
-        this.state = STATE_NORMAL;
+        this.state = ParserState.NORMAL;
         break;
 
       // ESC # 3 DEC line height/width
       case '#':
-        this.state = STATE_DEC_HASH;
+        this.state = ParserState.DEC_HASH;
         break;
 
       // ESC H Tab Set (HTS is 0x88).
@@ -1589,18 +1580,18 @@ export class Emulator implements EmulatorApi {
       case '=':
         this.log('Serial port requested application keypad.');
         this.applicationKeypad = true;
-        this.state = STATE_NORMAL;
+        this.state = ParserState.NORMAL;
         break;
 
       // ESC > Normal Keypad (DECPNM).
       case '>':
         this.log('Switching back to normal keypad.');
         this.applicationKeypad = false;
-        this.state = STATE_NORMAL;
+        this.state = ParserState.NORMAL;
         break;
         
       default:
-        this.state = STATE_NORMAL;
+        this.state = ParserState.NORMAL;
         this.error('Unknown ESC control: %s.', ch);
         break;
     }
@@ -1662,7 +1653,7 @@ export class Emulator implements EmulatorApi {
     }
     this.setgCharset(this.gcharset, cs);
     this.gcharset = null;
-    this.state = STATE_NORMAL;
+    this.state = ParserState.NORMAL;
     return i;
   }
   
@@ -1675,14 +1666,14 @@ export class Emulator implements EmulatorApi {
         i++;
       }
 
-      this.params.push(this.currentParam);
+      this._params.endParameter();
 
-      switch (this.params[0]) {
+      switch (this._params[0].intValue) {
         case 0:
         case 1:
         case 2:
-          if (this.params[1]) {
-            this.title = this.params[1];
+          if (this._params[1]) {
+            this.title = this._params[1].stringValue;
             this.handleTitle(this.title);
           }
           break;
@@ -1732,110 +1723,118 @@ export class Emulator implements EmulatorApi {
           break;
       }
 
-      this.params = [];
-      this.currentParam = 0;
-      this.state = STATE_NORMAL;
+      this._params = new ControlSequenceParameters();
+      this.state = ParserState.NORMAL;
+
     } else {
-      if (!this.params.length) {
+      if ( ! this._params.length) {
         if (ch >= '0' && ch <= '9') {
-          this.currentParam =
-            (<number> this.currentParam) * 10 + ch.charCodeAt(0) - 48;
+          this._params.appendDigit(ch);
         } else if (ch === ';') {
-          this.params.push(this.currentParam);
-          this.currentParam = '';
+          this._params.endParameter();
         }
       } else {
-        this.currentParam += ch;
+        this._params.appendString(ch);
       }
     }
     return i;
   }
   
   private _processDataDCS(ch: string, i: number): number {
-    if (ch === '\x1b' || ch === '\x07') {
-      if (ch === '\x1b') i++;
+    switch (this.state) {
+      case ParserState.DCS_START:
+        this._params.appendPrefix(ch);
+        if (this._params.prefix.length === 2) {
+          this.state = ParserState.DCS_STRING;
+        }
+        break;
 
-      switch (this.prefix) {
-        // User-Defined Keys (DECUDK).
-        case '':
-          break;
-
-        // Request Status String (DECRQSS).
-        // test: echo -e '\eP$q"p\e\\'
-        case '$q':
-          var pt = this.currentParam;
-          var valid = false;
-          let replyPt = "";
-          
-          switch (pt) {
-            // DECSCA
-            case '"q':
-              replyPt = '0"q';
-              break;
-
-            // DECSCL
-            case '"p':
-              replyPt = '61"p';
-              break;
-
-            // DECSTBM
-            case 'r':
-              replyPt = '' +
-                (this.scrollTop + 1) +
-                ';' +
-                (this.scrollBottom + 1) +
-                'r';
-              break;
-
-            // SGR
-            case 'm':
-              replyPt = '0m';
-              break;
-
-            default:
-              this.error('Unknown DCS Pt: %s.', "" + pt);
-              replyPt = '';
-              break;
+      case ParserState.DCS_STRING:
+        const isStringTerminator = ch === '\x1b' || ch === '\x07';
+        if ( ! isStringTerminator) {
+          this._params.appendString(ch);
+        } else {
+          if (ch === '\x1b') {
+            i++;
           }
+          this._params.endParameter();
+          this._executeDCSCommand(this._params);
 
-          this.send('\x1bP' + (valid ? 1 : 0) + '$r' + replyPt + '\x1b\\');
-          break;
+          this._params = new ControlSequenceParameters();
+          this.state = ParserState.NORMAL;
+        }      
+        break;
 
-        // Set Termcap/Terminfo Data (xterm, experimental).
-        case '+p':
-          break;
-
-        // Request Termcap/Terminfo String (xterm, experimental)
-        // Regular xterm does not even respond to this sequence.
-        // This can cause a small glitch in vim.
-        // test: echo -ne '\eP+q6b64\e\\'
-        case '+q':
-          pt = this.currentParam;
-          valid = false;
-
-          this.send('\x1bP' + (valid ? 1 : 0) + '+r' + pt + '\x1b\\');
-          break;
-
-        default:
-          this.error('Unknown DCS prefix: %s.', this.prefix);
-          break;
-      }
-
-      this.currentParam = 0;
-      this.prefix = '';
-      this.state = STATE_NORMAL;
-    } else if (!this.currentParam) {
-      if (!this.prefix && ch !== '$' && ch !== '+') {
-        this.currentParam = ch;
-      } else if (this.prefix.length === 2) {
-        this.currentParam = ch;
-      } else {
-        this.prefix += ch;
-      }
-    } else {
-      this.currentParam += ch;
+      default:
+        break;
     }
     return i;
+  }
+
+  private _executeDCSCommand(params: ControlSequenceParameters): void {
+    switch (this._params.prefix) {
+      // User-Defined Keys (DECUDK).
+      case '':
+        break;
+
+      // Request Status String (DECRQSS).
+      // test: echo -e '\eP$q"p\e\\'
+      case '$q':
+        const pt = params[0].stringValue;
+        let valid = false;
+        let replyPt = "";
+        
+        switch (pt) {
+          // DECSCA
+          case '"q':
+            replyPt = '0"q';
+            break;
+
+          // DECSCL
+          case '"p':
+            replyPt = '61"p';
+            break;
+
+          // DECSTBM
+          case 'r':
+            replyPt = '' + (this.scrollTop + 1) + ';' + (this.scrollBottom + 1) + 'r';
+            break;
+
+          // SGR
+          case 'm':
+            replyPt = '0m';
+            break;
+
+          default:
+            this.error('Unknown DCS Pt: %s.', "" + pt);
+            replyPt = '';
+            break;
+        }
+
+        this.send('\x1bP' + (valid ? 1 : 0) + '$r' + replyPt + '\x1b\\');
+        break;
+
+      // Set Termcap/Terminfo Data (xterm, experimental).
+      case '+p':
+        break;
+
+      // Request Termcap/Terminfo String (xterm, experimental)
+      // Regular xterm does not even respond to this sequence.
+      // This can cause a small glitch in vim.
+      // test: echo -ne '\eP+q6b64\e\\'
+      case '+q':
+        // FIXME This is disabled due to the fact that it isn't completely implemented.
+
+        // pt = this.currentParam;
+        // valid = false;
+
+        // this.send('\x1bP' + (valid ? 1 : 0) + '+r' + pt + '\x1b\\');
+        break;
+
+      default:
+        this.error('Unknown DCS prefix: %s.', this._params.prefix);
+        break;
+    }
   }
   
   private _processDataIgnore(ch: string, i: number): number {
@@ -1844,7 +1843,7 @@ export class Emulator implements EmulatorApi {
       if (ch === '\x1b') {
         i++;
       }
-      this.state = STATE_NORMAL;
+      this.state = ParserState.NORMAL;
     }
     return i;
   }
@@ -1858,34 +1857,33 @@ export class Emulator implements EmulatorApi {
         || ch === '/') {
 
       // Add to the current parameter.
-      this.currentParam += ch;  // FIXME don't absorb infinite data here.
+      this._params.appendString(ch);  // FIXME don't absorb infinite data here.
       
     } else if (ch === ';') {
       // Parameter separator.
-      this.params.push(this.currentParam);
-      this.currentParam = '';
+      this._params.endParameter();
       
     } else if (ch === '\x07') {
       // End of parameters.
-      this.params.push(this.currentParam);
-      if (this.params[0] === this.applicationModeCookie) {
-        this.state = STATE_APPLICATION_END;
+      this._params.endParameter();
+      if (this._params[0].stringValue === this.applicationModeCookie) {
+        this.state = ParserState.APPLICATION_END;
         this._dispatchEvents();
         if (this._applicationModeHandler != null) {
-          const response = this._applicationModeHandler.start(this.params);
+          const response = this._applicationModeHandler.start(this._params.getStringList());
           if (response.action === ApplicationModeResponseAction.ABORT) {
-            this.state = STATE_NORMAL;
+            this.state = ParserState.NORMAL;
           } else if (response.action === ApplicationModeResponseAction.PAUSE) {
             this.pauseProcessing();
           }
         }
       } else {
         this.log("Invalid application mode cookie.");
-        this.state = STATE_NORMAL;
+        this.state = ParserState.NORMAL;
       }
     } else {
       // Invalid application start.
-      this.state = STATE_NORMAL;
+      this.state = ParserState.NORMAL;
       this.log("Invalid application mode start command.");
     }
   }
@@ -1899,7 +1897,7 @@ export class Emulator implements EmulatorApi {
         const effectiveString = data.slice(i);
         const response = this._applicationModeHandler.data(effectiveString);
         if (response.action === ApplicationModeResponseAction.ABORT) {
-          this.state = STATE_NORMAL;
+          this.state = ParserState.NORMAL;
 
           if (response.remainingData != null) {
             return [response.remainingData, 0];
@@ -1921,12 +1919,12 @@ export class Emulator implements EmulatorApi {
         const response = this._applicationModeHandler.end();
         if (response.action === ApplicationModeResponseAction.ABORT) {
           if (response.remainingData != null) {
-            this.state = STATE_NORMAL;
+            this.state = ParserState.NORMAL;
             return [response.remainingData, 0];
           }
         }
       }
-      this.state = STATE_NORMAL;
+      this.state = ParserState.NORMAL;
       
     } else {
       // Incoming end-mode character. Send the last piece of data.
@@ -1934,7 +1932,7 @@ export class Emulator implements EmulatorApi {
       if (this._applicationModeHandler != null) {
         const response = this._applicationModeHandler.data(data.slice(i, nextzero));
         if (response.action === ApplicationModeResponseAction.ABORT) {
-          this.state = STATE_NORMAL;
+          this.state = ParserState.NORMAL;
         } else if (response.action === ApplicationModeResponseAction.PAUSE) {
           this.pauseProcessing();
         }
@@ -1957,7 +1955,7 @@ export class Emulator implements EmulatorApi {
         break;
     }
     
-    this.state = STATE_NORMAL;
+    this.state = ParserState.NORMAL;
   }
   
   writeln(data: string): void {
@@ -2481,7 +2479,7 @@ export class Emulator implements EmulatorApi {
     } else {
       this._setCursorY(this.y+1);
     }
-    this.state = STATE_NORMAL;
+    this.state = ParserState.NORMAL;
   }
 
   // ESC M Reverse Index (RI is 0x8d).
@@ -2499,7 +2497,7 @@ export class Emulator implements EmulatorApi {
     } else {
       this._setCursorY(this.y-1);
     }
-    this.state = STATE_NORMAL;
+    this.state = ParserState.NORMAL;
   }
 
   reset(): void {
@@ -2517,7 +2515,7 @@ export class Emulator implements EmulatorApi {
   // ESC H Tab Set (HTS is 0x88).
   private tabSet(): void {
     this.tabs[this.x] = true;
-    this.state = STATE_NORMAL;
+    this.state = ParserState.NORMAL;
   }
 
   /**
@@ -2526,8 +2524,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps A
   // Cursor Up Ps Times (default = 1) (CUU).
-  private cursorUp(params: number[]): void {
-    let param = params[0];
+  private cursorUp(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -2541,8 +2539,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps B
   // Cursor Down Ps Times (default = 1) (CUD).
-  private cursorDown(params: number[]): void {
-    let param = params[0];
+  private cursorDown(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -2557,8 +2555,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps C
   // Cursor Forward Ps Times (default = 1) (CUF).
-  private cursorForward(params: number[]): void {
-    let param = params[0];
+  private cursorForward(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -2570,18 +2568,22 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps D
   // Cursor Backward Ps Times (default = 1) (CUB).
-  private cursorBackward(params) {
-    var param = params[0];
-    if (param < 1) param = 1;
+  private cursorBackward(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
+    if (param < 1) {
+      param = 1;
+    }
     this.x -= param;
-    if (this.x < 0) this.x = 0;
-  };
+    if (this.x < 0) {
+      this.x = 0;
+    }
+  }
 
   // CSI Ps ; Ps H
   // Cursor Position [row;column] (default = [1,1]) (CUP).
-  private cursorPos(params: number[]): void {
-    let y = params[0] - 1 + (this.originMode ? this.scrollTop : 0);
-    let x = (params.length >= 2) ? params[1] - 1 : 0;
+  private cursorPos(params: ControlSequenceParameters): void {
+    let y = params[0].intValue - 1 + (this.originMode ? this.scrollTop : 0);
+    let x = (params.length >= 2) ? params[1].intValue - 1 : 0;
     
     if (y < 0) {
       y = 0;
@@ -2609,9 +2611,9 @@ export class Emulator implements EmulatorApi {
   //     Ps = 0  -> Selective Erase Below (default).
   //     Ps = 1  -> Selective Erase Above.
   //     Ps = 2  -> Selective Erase All.
-  private eraseInDisplay(params: number[]): void {
+  private eraseInDisplay(params: ControlSequenceParameters): void {
     let j: number;
-    switch (params[0]) {
+    switch (params[0].intValue) {
       case 0:
         this.eraseRight(this.x, this.y);
         j = this.y + 1;
@@ -2648,8 +2650,8 @@ export class Emulator implements EmulatorApi {
   //     Ps = 0  -> Selective Erase to Right (default).
   //     Ps = 1  -> Selective Erase to Left.
   //     Ps = 2  -> Selective Erase All.
-  private eraseInLine(params: number[]): void {
-    switch (params[0]) {
+  private eraseInLine(params: ControlSequenceParameters): void {
+    switch (params[0].intValue) {
       case 0:
         this.eraseRight(this.x, this.y);
         break;
@@ -2727,9 +2729,9 @@ export class Emulator implements EmulatorApi {
   //     Ps.
   //     Ps = 4 8  ; 5  ; Ps -> Set background color to the second
   //     Ps.
-  private charAttributes(params: number[]): void {
+  private charAttributes(params: ControlSequenceParameters): void {
     // Optimize a single SGR0.
-    if (params.length === 1 && params[0] === 0) {
+    if (params.length === 1 && params[0].intValue === 0) {
       copyCell(Emulator.defAttr, this.curAttr);
       return;
     }
@@ -2739,7 +2741,7 @@ export class Emulator implements EmulatorApi {
     let bg = 0;
 
     for (let i = 0; i < len; i++) {
-      let p = params[i];
+      let p = params[i].intValue;
       if (p >= 30 && p <= 37) {
         // fg color 8
         fg = p - 30;
@@ -2846,32 +2848,37 @@ export class Emulator implements EmulatorApi {
 
       } else if (p === 38) {
         // fg color 256
-        if (params[i + 1] === 2) {
+        if (params.getDefaultInt(i + 1, -1) === 2) {  // Set to RGB color
           i += 2;
-          fg = ((params[i] & 0xff) << 24) | ((params[i + 1] & 0xff) << 16) | ((params[i + 2] & 0xff) << 8) | 0xff;
+          fg = ((params.getDefaultInt(i, 0) & 0xff) << 24) |
+                ((params.getDefaultInt(i + 1, 0) & 0xff) << 16) |
+                ((params.getDefaultInt(i + 2, 0) & 0xff) << 8) |
+                0xff;
           i += 2;
           this.curAttr.fgRGBA = fg;
           setCellFgClutFlag(this.curAttr, false);
 
-        } else if (params[i + 1] === 5) {
+        } else if (params.getDefaultInt(i + 1, -1) === 5) { // Set to index color
           i += 2;
-          p = params[i] & 0xff;
+          p = params.getDefaultInt(i, 0) & 0xff;
           this.curAttr.fgClutIndex = p;
           setCellFgClutFlag(this.curAttr, true);
-
         }
 
       } else if (p === 48) {
         // bg color 256
-        if (params[i + 1] === 2) {
+        if (params.getDefaultInt(i + 1, 0) === 2) {
           i += 2;
-          bg = ((params[i] & 0xff) << 24) | ((params[i + 1] & 0xff) << 16) | ((params[i + 2] & 0xff) << 8) | 0xff;
+          bg = ((params.getDefaultInt(i, 0) & 0xff) << 24) |
+                ((params.getDefaultInt(i + 1, 0) & 0xff) << 16) |
+                ((params.getDefaultInt(i + 2, 0) & 0xff) << 8) |
+                0xff;
           i += 2;
           this.curAttr.bgRGBA = bg;
           setCellBgClutFlag(this.curAttr, false);
-        } else if (params[i + 1] === 5) {
+        } else if (params.getDefaultInt(i + 1, -1) === 5) {
           i += 2;
-          p = params[i] & 0xff;
+          p = params.getDefaultInt(i, 0) & 0xff;
           bg = p;
           this.curAttr.bgClutIndex = bg;
           setCellBgClutFlag(this.curAttr, true);
@@ -2918,9 +2925,9 @@ export class Emulator implements EmulatorApi {
   //     Ps = 5 3  -> Report Locator status as
   //   CSI ? 5 3  n  Locator available, if compiled-in, or
   //   CSI ? 5 0  n  No Locator, if not.
-  private deviceStatus(params: number[]): void {
-    if ( ! this.prefix) {
-      switch (params[0]) {
+  private deviceStatus(params: ControlSequenceParameters): void {
+    if ( ! params.prefix) {
+      switch (params.getDefaultInt(0, 0)) {
         case 5:
           // status report
           this.send('\x1b[0n');
@@ -2930,10 +2937,10 @@ export class Emulator implements EmulatorApi {
           this.send('\x1b[' + (this.y + 1) + ';' + (this.x + 1) + 'R');
           break;
       }
-    } else if (this.prefix === '?') {
+    } else if (params.prefix === '?') {
       // modern xterm doesnt seem to
       // respond to any of these except ?6, 6, and 5
-      switch (params[0]) {
+      switch (params.getDefaultInt(0, 0)) {
         case 6:
           // cursor position
           this.send('\x1b[?' + (this.y + 1) + ';' + (this.x + 1) + 'R');
@@ -2964,10 +2971,11 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps @
   // Insert Ps (Blank) Character(s) (default = 1) (ICH).
-  private insertChars(params: number[]): void {
-    let param = params[0];
+  private insertChars(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
-      param = 1;}
+      param = 1;
+    }
 
     const row = this.y;
     let j = this.x;
@@ -2985,8 +2993,8 @@ export class Emulator implements EmulatorApi {
   // CSI Ps E
   // Cursor Next Line Ps Times (default = 1) (CNL).
   // same as CSI Ps B ?
-  private cursorNextLine(params: number[]): void {
-    let param = params[0];
+  private cursorNextLine(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3001,8 +3009,8 @@ export class Emulator implements EmulatorApi {
   // CSI Ps F
   // Cursor Preceding Line Ps Times (default = 1) (CNL).
   // reuse CSI Ps A ?
-  private cursorPrecedingLine(params: number[]): void {
-    let param = params[0];
+  private cursorPrecedingLine(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3016,8 +3024,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps G
   // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
-  private cursorCharAbsolute(params: number[]): void {
-    let param = params[0];
+  private cursorCharAbsolute(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3026,8 +3034,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps L
   // Insert Ps Line(s) (default = 1) (IL).
-  private insertLines(params: number[]): void {
-    let param = params[0];
+  private insertLines(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3041,15 +3049,14 @@ export class Emulator implements EmulatorApi {
       this.lines.splice(j, 1);
     }
 
-    // this.maxRange();
     this.markRowForRefresh(this.y);
     this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps M
   // Delete Ps Line(s) (default = 1) (DL).
-  private deleteLines(params: number[]): void {
-    let param = params[0];
+  private deleteLines(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3064,15 +3071,14 @@ export class Emulator implements EmulatorApi {
       this.lines.splice(row, 1);
     }
 
-    // this.maxRange();
     this.markRowForRefresh(this.y);
     this.markRowForRefresh(this.scrollBottom);
   }
 
   // CSI Ps P
   // Delete Ps Character(s) (default = 1) (DCH).
-  private deleteChars(params: number[]): void {
-    let param = params[0];
+  private deleteChars(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3090,8 +3096,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps X
   // Erase Ps Character(s) (default = 1) (ECH).
-  private eraseChars(params: number[]): void {
-    let param = params[0];
+  private eraseChars(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3108,8 +3114,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Pm `  Character Position Absolute
   //   [column] (default = [row,1]) (HPA).
-  private charPosAbsolute(params: number[]): void {
-    let param = params[0];
+  private charPosAbsolute(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3122,8 +3128,8 @@ export class Emulator implements EmulatorApi {
   // 141 61 a * HPR -
   // Horizontal Position Relative
   // reuse CSI Ps C ?
-  private HPositionRelative(params: number[]): void {
-    let param = params[0];
+  private HPositionRelative(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3168,18 +3174,18 @@ export class Emulator implements EmulatorApi {
   // More information:
   //   xterm/charproc.c - line 2012, for more information.
   //   vim responds with ^[[?0c or ^[[?1c after the terminal's response (?)
-  private sendDeviceAttributes(params: number[]): void {
-    if (params[0] > 0) {
+  private sendDeviceAttributes(params: ControlSequenceParameters): void {
+    if (params.getDefaultInt(0, 0) > 0) {
       return;
     }
-
-    if ( ! this.prefix) {
+// FIXME Does this need to support different terms? Is the linux one safe with its input echoing?
+    if ( ! params.prefix) {
       if (this.is('xterm') || this.is('rxvt-unicode') || this.is('screen')) {
         this.send('\x1b[?1;2c');
       } else if (this.is('linux')) {
         this.send('\x1b[?6c');
       }
-    } else if (this.prefix === '>') {
+    } else if (params.prefix === '>') {
       // xterm and urxvt
       // seem to spit this
       // out around ~370 times (?).
@@ -3199,8 +3205,8 @@ export class Emulator implements EmulatorApi {
 
   // CSI Pm d
   // Line Position Absolute  [row] (default = [1,column]) (VPA).
-  private linePosAbsolute(params: number[]): void {
-    let param = params[0];
+  private linePosAbsolute(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3213,8 +3219,8 @@ export class Emulator implements EmulatorApi {
 
   // 145 65 e * VPR - Vertical Position Relative
   // reuse CSI Ps B ?
-  private VPositionRelative(params: number[]): void {
-    let param = params[0];
+  private VPositionRelative(params: ControlSequenceParameters): void {
+    let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
@@ -3228,7 +3234,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps ; Ps f
   //   Horizontal and Vertical Position [row;column] (default =
   //   [1,1]) (HVP).
-  private HVPosition(params: number[]): void {
+  private HVPosition(params: ControlSequenceParameters): void {
     this.cursorPos(params);
   }
 
@@ -3316,136 +3322,127 @@ export class Emulator implements EmulatorApi {
   //     Ps = 2 0 0 4  -> Set bracketed paste mode.
   // Modes:
   //   http://vt100.net/docs/vt220-rm/chapter4.html
-  private setMode(params: number|number[]): void {
-    if (typeof params === 'object') {
-      const l = params.length;
-      let i = 0;
-
-      for (; i < l; i++) {
-        this.setMode(params[i]);
-      }
-
-      return;
-    }
-
-    if (this.prefix === '') {
-      switch (params) {
-        case 4:
-          this.insertMode = true;
-          break;
-        case 20:
-          //this.convertEol = true;
-          break;
-      }
-    } else if (this.prefix === '?') {
-      switch (params) {
-        case 1:
-          this.applicationCursorKeys = true;
-          break;
-        case 2:
-          this.setgCharset(0, Emulator.charsets.US);
-          this.setgCharset(1, Emulator.charsets.US);
-          this.setgCharset(2, Emulator.charsets.US);
-          this.setgCharset(3, Emulator.charsets.US);
-          // set VT100 mode here
-          break;
-        case 3: // 132 col mode
-          this.savedCols = this.cols;
-          this.resize( { rows:this.rows, columns: 132 } );
-          break;
-        case 6:
-          this.originMode = true;
-          this.x = 0;
-          this._setCursorY(this.scrollTop);
-          break;
-        case 7:
-          this.wraparoundMode = true;
-          break;
-        case 12:
-          // this.cursorBlink = true;
-          break;
-        case 66:
-          this.log('Serial port requested application keypad.');
-          this.applicationKeypad = true;
-          break;
-        case 9: // X10 Mouse
-          // no release, no motion, no wheel, no modifiers.
-        case 1000: // vt200 mouse
-          // no motion.
-          // no modifiers, except control on the wheel.
-        case 1002: // button event mouse
-        case 1003: // any event mouse
-          // any event - sends motion events,
-          // even if there is no button held down.
-          this.x10Mouse = params === 9;
-          this.vt200Mouse = params === 1000;
-          this.normalMouse = params > 1000;
-          this.mouseEvents = true;
-          break;
-        case 1004: // send focusin/focusout events
-          // focusin: ^[[I
-          // focusout: ^[[O
-          this.sendFocus = true;
-          break;
-        case 1005: // utf8 ext mode mouse
-          this.utfMouse = true;
-          // for wide terminals
-          // simply encodes large values as utf8 characters
-          break;
-        case 1006: // sgr ext mode mouse
-          this.sgrMouse = true;
-          // for wide terminals
-          // does not add 32 to fields
-          // press: ^[[<b;x;yM
-          // release: ^[[<b;x;ym
-          break;
-        case 1015: // urxvt ext mode mouse
-          this.urxvtMouse = true;
-          // for wide terminals
-          // numbers for fields
-          // press: ^[[b;x;yM
-          // motion: ^[[b;x;yT
-          break;
-        case 25: // show cursor
-          this.cursorHidden = false;
-          break;
-        case 1049: // alt screen buffer cursor
-          //this.saveCursor();
-          // FALL-THROUGH
-        case 47: // alt screen buffer
-        case 1047: // alt screen buffer
-          if ( ! this.normal) {
-            const normal: SavedState = {
-              cols: this.cols,
-              rows: this.rows,
-              lines: this.lines,
-              x: this.x,
-              y: this.y,
-              scrollTop: this.scrollTop,
-              scrollBottom: this.scrollBottom,
-              tabs: this.tabs,
-            };
-            
-            // Preserve these variables during the reset().
-            const previousCharset = this.charset;
-            const previousGlevel = this.glevel;
-            const previousCharsets = this.charsets;
-            
-            this._fullReset();
-            
-            this.charset = previousCharset;
-            this.glevel = previousGlevel;
-            this.charsets = previousCharsets;
-            
-            // Materialize the same number of rows as the normal lines array to ensure that
-            // the new screen buffer is rendered over all of the previous screen.
-            while (this.lines.length < normal.lines.length) {
-              this._getRow(this.lines.length);
+  private setMode(params: ControlSequenceParameters): void {
+    for (let i=0; i < params.length; i++) {
+      if (params.prefix === '') {
+        switch (params[i].intValue) {
+          case 4:
+            this.insertMode = true;
+            break;
+          case 20:
+            //this.convertEol = true;
+            break;
+        }
+      } else if (params.prefix === '?') {
+        switch (params[i].intValue) {
+          case 1:
+            this.applicationCursorKeys = true;
+            break;
+          case 2:
+            this.setgCharset(0, Emulator.charsets.US);
+            this.setgCharset(1, Emulator.charsets.US);
+            this.setgCharset(2, Emulator.charsets.US);
+            this.setgCharset(3, Emulator.charsets.US);
+            // set VT100 mode here
+            break;
+          case 3: // 132 col mode
+            this.savedCols = this.cols;
+            this.resize( { rows:this.rows, columns: 132 } );
+            break;
+          case 6:
+            this.originMode = true;
+            this.x = 0;
+            this._setCursorY(this.scrollTop);
+            break;
+          case 7:
+            this.wraparoundMode = true;
+            break;
+          case 12:
+            // this.cursorBlink = true;
+            break;
+          case 66:
+            this.log('Serial port requested application keypad.');
+            this.applicationKeypad = true;
+            break;
+          case 9: // X10 Mouse
+            // no release, no motion, no wheel, no modifiers.
+          case 1000: // vt200 mouse
+            // no motion.
+            // no modifiers, except control on the wheel.
+          case 1002: // button event mouse
+          case 1003: // any event mouse
+            // any event - sends motion events,
+            // even if there is no button held down.
+            this.x10Mouse = params[i].intValue === 9;
+            this.vt200Mouse = params[i].intValue === 1000;
+            this.normalMouse = params[i].intValue > 1000;
+            this.mouseEvents = true;
+            break;
+          case 1004: // send focusin/focusout events
+            // focusin: ^[[I
+            // focusout: ^[[O
+            this.sendFocus = true;
+            break;
+          case 1005: // utf8 ext mode mouse
+            this.utfMouse = true;
+            // for wide terminals
+            // simply encodes large values as utf8 characters
+            break;
+          case 1006: // sgr ext mode mouse
+            this.sgrMouse = true;
+            // for wide terminals
+            // does not add 32 to fields
+            // press: ^[[<b;x;yM
+            // release: ^[[<b;x;ym
+            break;
+          case 1015: // urxvt ext mode mouse
+            this.urxvtMouse = true;
+            // for wide terminals
+            // numbers for fields
+            // press: ^[[b;x;yM
+            // motion: ^[[b;x;yT
+            break;
+          case 25: // show cursor
+            this.cursorHidden = false;
+            break;
+          case 1049: // alt screen buffer cursor
+            //this.saveCursor();
+            // FALL-THROUGH
+          case 47: // alt screen buffer
+          case 1047: // alt screen buffer
+            if ( ! this.normal) {
+              const normal: SavedState = {
+                cols: this.cols,
+                rows: this.rows,
+                lines: this.lines,
+                x: this.x,
+                y: this.y,
+                scrollTop: this.scrollTop,
+                scrollBottom: this.scrollBottom,
+                tabs: this.tabs,
+              };
+              
+              // Preserve these variables during the reset().
+              const previousCharset = this.charset;
+              const previousGlevel = this.glevel;
+              const previousCharsets = this.charsets;
+              
+              this._fullReset();
+              
+              this.charset = previousCharset;
+              this.glevel = previousGlevel;
+              this.charsets = previousCharsets;
+              
+              // Materialize the same number of rows as the normal lines array to ensure that
+              // the new screen buffer is rendered over all of the previous screen.
+              while (this.lines.length < normal.lines.length) {
+                this._getRow(this.lines.length);
+              }
+              
+              this.normal = normal;
             }
-            
-            this.normal = normal;
-          }
-          break;
+            break;
+        }
       }
     }
   }
@@ -3530,106 +3527,100 @@ export class Emulator implements EmulatorApi {
   //     Ps = 1 0 6 0  -> Reset legacy keyboard emulation (X11R6).
   //     Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style.
   //     Ps = 2 0 0 4  -> Reset bracketed paste mode.
-  private resetMode(params: number|number[]) {
-    if (typeof params === 'object') {
-      const l = params.length;
-      for (let i=0; i < l; i++) {
-        this.resetMode(params[i]);
-      }
+  private resetMode(params: ControlSequenceParameters): void {
+    for (let i=0; i < params.length; i++) {
 
-      return;
-    }
-
-    if (!this.prefix) {
-      switch (params) {
-        case 4:
-          this.insertMode = false;
-          break;
-        case 20:
-          //this.convertEol = false;
-          break;
-      }
-    } else if (this.prefix === '?') {
-      switch (params) {
-        case 1:
-          this.applicationCursorKeys = false;
-          break;
+      if ( ! params.prefix) {
+        switch (params[i].intValue) {
+          case 4:
+            this.insertMode = false;
+            break;
+          case 20:
+            //this.convertEol = false;
+            break;
+        }
+      } else if (params.prefix === '?') {
+        switch (params[i].intValue) {
+          case 1:
+            this.applicationCursorKeys = false;
+            break;
+            
+          // 80 Column Mode (DECCOLM).
+          case 3:
+            this.fillScreen();
+            this.x = 0;
+            this._setCursorY(0);
           
-        // 80 Column Mode (DECCOLM).
-        case 3:
-          this.fillScreen();
-          this.x = 0;
-          this._setCursorY(0);
-        
-          if (this.cols === 132 && this.savedCols) {
-            this.resize( { rows: this.rows, columns: this.savedCols } );
-          }
-          break;
-        case 6:
-          this.originMode = false;
-          this.x = 0;
-          this._setCursorY(0);
-          break;
-        case 7:
-          this.wraparoundMode = false;
-          break;
-        case 12:
-          // this.cursorBlink = false;
-          break;
-        case 66:
-          this.log('Switching back to normal keypad.');
-          this.applicationKeypad = false;
-          break;
-        case 9: // X10 Mouse
-        case 1000: // vt200 mouse
-        case 1002: // button event mouse
-        case 1003: // any event mouse
-          this.x10Mouse = false;
-          this.vt200Mouse = false;
-          this.normalMouse = false;
-          this.mouseEvents = false;
-          break;
-        case 1004: // send focusin/focusout events
-          this.sendFocus = false;
-          break;
-        case 1005: // utf8 ext mode mouse
-          this.utfMouse = false;
-          break;
-        case 1006: // sgr ext mode mouse
-          this.sgrMouse = false;
-          break;
-        case 1015: // urxvt ext mode mouse
-          this.urxvtMouse = false;
-          break;
-        case 25: // hide cursor
-          this.cursorHidden = true;
-          break;
-        case 1049: // alt screen buffer cursor
-          // FALL-THROUGH
-        case 47: // normal screen buffer
-        case 1047: // normal screen buffer - clearing it first
-          if (this.normal) {
-            const currentcols = this.cols;
-            const currentrows = this.rows;
-            
-            this.lines = this.normal.lines;
-            this.cols = this.normal.cols;
-            this.rows = this.normal.rows;
-            this.x = this.normal.x;
-            this._setCursorY(this.normal.y);
-            this.scrollTop = this.normal.scrollTop;
-            this.scrollBottom = this.normal.scrollBottom;
-            this.tabs = this.normal.tabs;
-            
-            this.normal = null;
-            // if (params === 1049) {
-            //   this.x = this.savedX;
-            //   this._setCursorY(this.savedY);
-            // }
-            this.resize( { rows: currentrows, columns: currentcols } );
-            this.markRowRangeForRefresh(0, this.rows - 1);
-          }
-          break;
+            if (this.cols === 132 && this.savedCols) {
+              this.resize( { rows: this.rows, columns: this.savedCols } );
+            }
+            break;
+          case 6:
+            this.originMode = false;
+            this.x = 0;
+            this._setCursorY(0);
+            break;
+          case 7:
+            this.wraparoundMode = false;
+            break;
+          case 12:
+            // this.cursorBlink = false;
+            break;
+          case 66:
+            this.log('Switching back to normal keypad.');
+            this.applicationKeypad = false;
+            break;
+          case 9: // X10 Mouse
+          case 1000: // vt200 mouse
+          case 1002: // button event mouse
+          case 1003: // any event mouse
+            this.x10Mouse = false;
+            this.vt200Mouse = false;
+            this.normalMouse = false;
+            this.mouseEvents = false;
+            break;
+          case 1004: // send focusin/focusout events
+            this.sendFocus = false;
+            break;
+          case 1005: // utf8 ext mode mouse
+            this.utfMouse = false;
+            break;
+          case 1006: // sgr ext mode mouse
+            this.sgrMouse = false;
+            break;
+          case 1015: // urxvt ext mode mouse
+            this.urxvtMouse = false;
+            break;
+          case 25: // hide cursor
+            this.cursorHidden = true;
+            break;
+          case 1049: // alt screen buffer cursor
+            // FALL-THROUGH
+          case 47: // normal screen buffer
+          case 1047: // normal screen buffer - clearing it first
+            if (this.normal) {
+              const currentcols = this.cols;
+              const currentrows = this.rows;
+              
+              this.lines = this.normal.lines;
+              this.cols = this.normal.cols;
+              this.rows = this.normal.rows;
+              this.x = this.normal.x;
+              this._setCursorY(this.normal.y);
+              this.scrollTop = this.normal.scrollTop;
+              this.scrollBottom = this.normal.scrollBottom;
+              this.tabs = this.normal.tabs;
+              
+              this.normal = null;
+              // if (params === 1049) {
+              //   this.x = this.savedX;
+              //   this._setCursorY(this.savedY);
+              // }
+              this.resize( { rows: currentrows, columns: currentcols } );
+              this.markRowRangeForRefresh(0, this.rows - 1);
+            }
+            break;
+        }
       }
     }
   }
@@ -3638,10 +3629,10 @@ export class Emulator implements EmulatorApi {
   //   Set Scrolling Region [top;bottom] (default = full size of win-
   //   dow) (DECSTBM).
   // CSI ? Pm r
-  private setScrollRegion(params: number[]): void {
-    if (this.prefix === '') {
-      const top = (params[0] || 1) - 1;
-      const bottom = (params[1] || this.rows) - 1;
+  private setScrollRegion(params: ControlSequenceParameters): void {
+    if (params.prefix === '') {
+      const top = Math.max(1, params.getDefaultInt(0, 1)) - 1;
+      const bottom = Math.max(1, params.getDefaultInt(1, this.rows)) - 1;
       if ( ! (top >= 0 && bottom < this.rows && top < bottom)) {
         return;
       }
@@ -3677,16 +3668,16 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps I
   //   Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
-  private cursorForwardTab(params: number[]): void {
-    let param = params[0] || 1;
+  private cursorForwardTab(params: ControlSequenceParameters): void {
+    let param = params[0].intValue || 1;
     while (param--) {
       this.x = this.nextStop();
     }
   }
 
   // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
-  private scrollUp(params: number[]): void {
-    let param = params[0] || 1;
+  private scrollUp(params: ControlSequenceParameters): void {
+    let param = params[0].intValue || 1;
     while (param--) {
       this.lines.splice(this.scrollTop, 1);
       this.lines.splice(this.scrollBottom, 0, this.blankLine());
@@ -3697,8 +3688,8 @@ export class Emulator implements EmulatorApi {
   }
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
-  private scrollDown(params: number[]): void {
-    let param = params[0] || 1;
+  private scrollDown(params: ControlSequenceParameters): void {
+    let param = params[0].intValue || 1;
     while (param--) {
       this.lines.splice(this.scrollBottom, 1);
       this.lines.splice(this.scrollTop, 0, this.blankLine());
@@ -3709,16 +3700,16 @@ export class Emulator implements EmulatorApi {
   }
 
   // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
-  private cursorBackwardTab(params: number[]): void {
-    let param = params[0] || 1;
+  private cursorBackwardTab(params: ControlSequenceParameters): void {
+    let param = params[0].intValue || 1;
     while (param--) {
       this.x = this.prevStop();
     }
   }
 
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
-  private repeatPrecedingCharacter(params: number[]): void {
-    let param = params[0] || 1;
+  private repeatPrecedingCharacter(params: ControlSequenceParameters): void {
+    let param = params[0].intValue || 1;
     const line = this._getRow(this.y);
 
     const cell = this.x == 0 ? Emulator.defAttr : line.getCell(this.x-1, 0);
@@ -3737,8 +3728,8 @@ export class Emulator implements EmulatorApi {
   // Potentially:
   //   Ps = 2  -> Clear Stops on Line.
   //   http://vt100.net/annarbor/aaa-ug/section6.html
-  private tabClear(params: number[]): void {
-    let param = params[0];
+  private tabClear(params: ControlSequenceParameters): void {
+    const param = params.getDefaultInt(0, 0);
     if (param <= 0) {
       delete this.tabs[this.x];
     } else if (param === 3) {
@@ -3748,7 +3739,7 @@ export class Emulator implements EmulatorApi {
 
   // CSI ! p   Soft terminal reset (DECSTR).
   // http://vt100.net/docs/vt220-rm/table4-10.html
-  private softReset(params: number[]): void {
+  private softReset(params: ControlSequenceParameters): void {
     this.cursorHidden = false;
     this.insertMode = false;
     this.originMode = false;
@@ -3768,7 +3759,7 @@ export class Emulator implements EmulatorApi {
   // CSI ? Pm s
   //   Save DEC Private Mode Values.  Ps values are the same as for
   //   DECSET.
-  private savePrivateValues(params: number[]): void {
+  private savePrivateValues(params: ControlSequenceParameters): void {
   }
 
   /**
