@@ -95,7 +95,8 @@ const REFRESH_DELAY = 100;  // ms. How long to wait before doing a screen refres
 enum ParserState {
   NORMAL,
   ESCAPE,
-  CSI,
+  CSI_START,
+  CSI_PARAMS,
   OSC,
   CHARSET,
   DCS_START,
@@ -1046,7 +1047,8 @@ export class Emulator implements EmulatorApi {
           i = this._processDataOSC(ch, i);
           break;
 
-        case ParserState.CSI:
+        case ParserState.CSI_START:
+        case ParserState.CSI_PARAMS:
           i = this._processDataCSI(ch, i);
           break;
 
@@ -1090,83 +1092,96 @@ export class Emulator implements EmulatorApi {
 }
         
   private _processDataCSI(ch: string, i: number): number {
-    // '?', '>', '!'
-    if (ch === '?' || ch === '>' || ch === '!') {
-      this._params.prefix = ch;
-      return i;
+    switch (this.state) {
+      case ParserState.CSI_START:
+        // '?', '>', '!'
+        if (ch === '?' || ch === '>' || ch === '!') {
+          this._params.prefix = ch;
+        } else {
+          // Push this char back and try again.
+          i--;
+        }
+        this.state = ParserState.CSI_PARAMS;
+        return i;
+
+      case ParserState.CSI_PARAMS:
+        // 0 - 9
+        if (ch >= '0' && ch <= '9') {
+          this._params.appendDigit(ch);
+          return i;
+        }
+
+        // '$', '"', ' ', '\''
+        if (ch === '$' || ch === '"' || ch === ' ' || ch === '\'') {
+          return i;
+        }
+
+        this._params.nextParameter();
+
+        if (ch === ';') {
+          return i;
+        }
+    
+        this._executeCSICommand(this._params, ch);
+        this.state = ParserState.NORMAL;
+        break;
     }
+    return i;
+  }
 
-    // 0 - 9
-    if (ch >= '0' && ch <= '9') {
-      this._params.appendDigit(ch);
-      return i;
-    }
-
-    // '$', '"', ' ', '\''
-    if (ch === '$' || ch === '"' || ch === ' ' || ch === '\'') {
-      return i;
-    }
-
-    this._params.endParameter();
-
-    if (ch === ';' || ch === ':') {
-      return i;
-    }
-
-    this.state = ParserState.NORMAL;
-
+  private _executeCSICommand(params: ControlSequenceParameters, ch: string): void {
     switch (ch) {
       // CSI Ps A
       // Cursor Up Ps Times (default = 1) (CUU).
       case 'A':
-        this.cursorUp(this._params);
+        this.cursorUp(params);
         break;
 
       // CSI Ps B
       // Cursor Down Ps Times (default = 1) (CUD).
       case 'B':
-        this.cursorDown(this._params);
+        this.cursorDown(params);
         break;
 
       // CSI Ps C
       // Cursor Forward Ps Times (default = 1) (CUF).
       case 'C':
-        this.cursorForward(this._params);
+        this.cursorForward(params);
         break;
 
       // CSI Ps D
       // Cursor Backward Ps Times (default = 1) (CUB).
       case 'D':
-        this.cursorBackward(this._params);
+        this.cursorBackward(params);
         break;
 
       // CSI Ps ; Ps H
       // Cursor Position [row;column] (default = [1,1]) (CUP).
       case 'H':
-        this.cursorPos(this._params);
+        this.cursorPos(params);
         break;
 
       // CSI Ps J  Erase in Display (ED).
       case 'J':
-        this.eraseInDisplay(this._params);
+        this.eraseInDisplay(params);
         break;
 
       // CSI Ps K  Erase in Line (EL).
       case 'K':
-        this.eraseInLine(this._params);
+        this.eraseInLine(params);
         break;
 
       // CSI Pm m  Character Attributes (SGR).
       case 'm':
-        if ( ! this._params.prefix) {
-          this.charAttributes(this._params);
+        if ( ! params.prefix) {
+          this.charAttributes(params);
         }
         break;
 
       // CSI Ps n  Device Status Report (DSR).
       case 'n':
-        if ( ! this._params.prefix) {
-          this.deviceStatus(this._params);
+        if ( ! params.prefix) {
+          this.deviceStatus(params);
         }
         break;
 
@@ -1177,61 +1192,61 @@ export class Emulator implements EmulatorApi {
       // CSI Ps @
       // Insert Ps (Blank) Character(s) (default = 1) (ICH).
       case '@':
-        this.insertChars(this._params);
+        this.insertChars(params);
         break;
 
       // CSI Ps E
       // Cursor Next Line Ps Times (default = 1) (CNL).
       case 'E':
-        this.cursorNextLine(this._params);
+        this.cursorNextLine(params);
         break;
 
       // CSI Ps F
       // Cursor Preceding Line Ps Times (default = 1) (CNL).
       case 'F':
-        this.cursorPrecedingLine(this._params);
+        this.cursorPrecedingLine(params);
         break;
 
       // CSI Ps G
       // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
       case 'G':
-        this.cursorCharAbsolute(this._params);
+        this.cursorCharAbsolute(params);
         break;
 
       // CSI Ps L
       // Insert Ps Line(s) (default = 1) (IL).
       case 'L':
-        this.insertLines(this._params);
+        this.insertLines(params);
         break;
 
       // CSI Ps M
       // Delete Ps Line(s) (default = 1) (DL).
       case 'M':
-        this.deleteLines(this._params);
+        this.deleteLines(params);
         break;
 
       // CSI Ps P
       // Delete Ps Character(s) (default = 1) (DCH).
       case 'P':
-        this.deleteChars(this._params);
+        this.deleteChars(params);
         break;
 
       // CSI Ps X
       // Erase Ps Character(s) (default = 1) (ECH).
       case 'X':
-        this.eraseChars(this._params);
+        this.eraseChars(params);
         break;
 
       // CSI Pm `  Character Position Absolute
       //   [column] (default = [row,1]) (HPA).
       case '`':
-        this.charPosAbsolute(this._params);
+        this.charPosAbsolute(params);
         break;
 
       // 141 61 a * HPR -
       // Horizontal Position Relative
       case 'a':
-        this.HPositionRelative(this._params);
+        this.HPositionRelative(params);
         break;
 
       // CSI P s c
@@ -1239,37 +1254,37 @@ export class Emulator implements EmulatorApi {
       // CSI > P s c
       // Send Device Attributes (Secondary DA)
       case 'c':
-        this.sendDeviceAttributes(this._params);
+        this.sendDeviceAttributes(params);
         break;
 
       // CSI Pm d
       // Line Position Absolute  [row] (default = [1,column]) (VPA).
       case 'd':
-        this.linePosAbsolute(this._params);
+        this.linePosAbsolute(params);
         break;
 
       // 145 65 e * VPR - Vertical Position Relative
       case 'e':
-        this.VPositionRelative(this._params);
+        this.VPositionRelative(params);
         break;
 
       // CSI Ps ; Ps f
       //   Horizontal and Vertical Position [row;column] (default =
       //   [1,1]) (HVP).
       case 'f':
-        this.HVPosition(this._params);
+        this.HVPosition(params);
         break;
 
       // CSI Pm h  Set Mode (SM).
       // CSI ? Pm h - mouse escape codes, cursor escape codes
       case 'h':
-        this.setMode(this._params);
+        this.setMode(params);
         break;
 
       // CSI Pm l  Reset Mode (RM).
       // CSI ? Pm l
       case 'l':
-        this.resetMode(this._params);
+        this.resetMode(params);
         break;
 
       // CSI Ps ; Ps r
@@ -1277,15 +1292,15 @@ export class Emulator implements EmulatorApi {
       //   dow) (DECSTBM).
       // CSI ? Pm r
       case 'r':
-        this.setScrollRegion(this._params);
+        this.setScrollRegion(params);
         break;
 
       // CSI s     Save cursor (ANSI.SYS).
       // CSI ? Pm s
       case 's':
-        if (this._params.prefix === '?') {
-          this.savePrivateValues(this._params);
-        } else if (this._params.prefix === '') {
+        if (params.prefix === '?') {
+          this.savePrivateValues(params);
+        } else if (params.prefix === '') {
           this.saveCursor();
         }
         break;
@@ -1293,7 +1308,7 @@ export class Emulator implements EmulatorApi {
       // CSI u
       //   Restore cursor (ANSI.SYS).
       case 'u':
-        if (this._params.prefix === '') {
+        if (params.prefix === '') {
           this.restoreCursor();
         }
         break;
@@ -1305,37 +1320,37 @@ export class Emulator implements EmulatorApi {
       // CSI Ps I
       // Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
       case 'I':
-        this.cursorForwardTab(this._params);
+        this.cursorForwardTab(params);
         break;
 
       // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
       case 'S':
-        this.scrollUp(this._params);
+        this.scrollUp(params);
         break;
 
       // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
       // CSI Ps ; Ps ; Ps ; Ps ; Ps T
       // CSI > Ps; Ps T
       case 'T':
-        if (this._params.length < 2 && !this._params.prefix) {
-          this.scrollDown(this._params);
+        if (params.length < 2 && !params.prefix) {
+          this.scrollDown(params);
         }
         break;
 
       // CSI Ps Z
       // Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
       case 'Z':
-        this.cursorBackwardTab(this._params);
+        this.cursorBackwardTab(params);
         break;
 
       // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
       case 'b':
-        this.repeatPrecedingCharacter(this._params);
+        this.repeatPrecedingCharacter(params);
         break;
 
       // CSI Ps g  Tab Clear (TBC).
       case 'g':
-        this.tabClear(this._params);
+        this.tabClear(params);
         break;
 
       // CSI Pm i  Media Copy (MC).
@@ -1355,9 +1370,9 @@ export class Emulator implements EmulatorApi {
       //   Request DEC private mode (DECRQM).
       // CSI Ps ; Ps " p
       case 'p':
-        switch (this._params.prefix) {
+        switch (params.prefix) {
           case '!':
-            this.softReset(this._params);
+            this.softReset(params);
             break;
           default:
             break;
@@ -1408,8 +1423,6 @@ export class Emulator implements EmulatorApi {
         this.error('Unknown CSI code: %s (%s).', ch, "" + ch.charCodeAt(0));
         break;
     }
-
-    return i;
   }
   
   private _processDataEscape(ch: string, i: number): number {
@@ -1417,7 +1430,7 @@ export class Emulator implements EmulatorApi {
       // ESC [ Control Sequence Introducer ( CSI is 0x9b).
       case '[':
         this._params = new ControlSequenceParameters();
-        this.state = ParserState.CSI;
+        this.state = ParserState.CSI_START;
         break;
 
       // ESC ] Operating System Command ( OSC is 0x9d).
@@ -1666,7 +1679,7 @@ export class Emulator implements EmulatorApi {
         i++;
       }
 
-      this._params.endParameter();
+      this._params.nextParameter();
 
       switch (this._params[0].intValue) {
         case 0:
@@ -1731,7 +1744,7 @@ export class Emulator implements EmulatorApi {
         if (ch >= '0' && ch <= '9') {
           this._params.appendDigit(ch);
         } else if (ch === ';') {
-          this._params.endParameter();
+          this._params.nextParameter();
         }
       } else {
         this._params.appendString(ch);
@@ -1757,7 +1770,7 @@ export class Emulator implements EmulatorApi {
           if (ch === '\x1b') {
             i++;
           }
-          this._params.endParameter();
+          this._params.nextParameter();
           this._executeDCSCommand(this._params);
 
           this._params = new ControlSequenceParameters();
@@ -1861,11 +1874,11 @@ export class Emulator implements EmulatorApi {
       
     } else if (ch === ';') {
       // Parameter separator.
-      this._params.endParameter();
+      this._params.nextParameter();
       
     } else if (ch === '\x07') {
       // End of parameters.
-      this._params.endParameter();
+      this._params.nextParameter();
       if (this._params[0].stringValue === this.applicationModeCookie) {
         this.state = ParserState.APPLICATION_END;
         this._dispatchEvents();

@@ -45,7 +45,7 @@ export class ControlSequenceParameters {
     this._currentParameter.stringValue = currentValue + ch;
   }
 
-  endParameter(): void {
+  nextParameter(): void {
     if (this._currentParameter.stringValue === null) {
       this._currentParameter.stringValue = "" + this._currentParameter.intValue;
     }
