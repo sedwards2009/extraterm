@@ -17,6 +17,7 @@ export interface MonospaceFontMetrics {
   readonly strikethroughHeight: number;
   readonly underlineY: number;
   readonly underlineHeight: number;
+  readonly secondUnderlineY: number;
 
   readonly overlineY: number;
   readonly overlineHeight: number;

@@ -14,17 +14,17 @@ import { stringToCodePointArray, isWide } from "extraterm-unicode-utilities";
  *            * 0x2 (bit 1) - true if using background CLUT
  *            * 0x4 (bit 2) - true if extra fonts are used.
  *            * 0x18 (bit 3,4) - width of the char in cells-1, 0=normal 1 cell width, 1=2 cells.
-  * 2 byte   - Style
- *            * 0x0001 (bit 0) - true if bold style
- *            * 0x0002 (bit 1) - true if underline style
- *            * 0x0004 (bit 2) - true if italic style
- *            * 0x0008 (bit 3) - true if strikethrough style
- *            * 0x0010 (bit 4) - true if blink style
- *            * 0x0020 (bit 5) - true if inverse style
- *            * 0x0040 (bit 6) - true if invisible style
- *            * 0x0080 (bit 7) - true if faint style
- *            * 0x0100 (bit 8) - true if the cursor is in this cell
- *            * 0x0200 (bit 9) - true if overline style
+ * 2 byte   - Style
+ *            * 0x0003 (bit 0, 1) - 2 bit underline style, See UNDERLINE_STYLE_* constants.
+ *            * 0x0004 (bit 2) - true if bold style
+ *            * 0x0008 (bit 3) - true if italic style
+ *            * 0x0010 (bit 4) - true if strikethrough style
+ *            * 0x0020 (bit 5) - true if blink style
+ *            * 0x0030 (bit 6) - true if inverse style
+ *            * 0x0080 (bit 7) - true if invisible style
+ *            * 0x0100 (bit 8) - true if faint style
+ *            * 0x0200 (bit 9) - true if the cursor is in this cell
+ *            * 0x0400 (bit 10) - true if overline style
  * 2 byte   - Foreground Colour Lookup Table (palette / CLUT) index
  * 2 byte   - Background Colour Lookup Table (palette / CLUT) index
  * 4 bytes  - Foreground RGBA bytes
@@ -40,16 +40,22 @@ export const FLAG_WIDTH_SHIFT = 3;
 const FLAG_MASK_LIGATURE = 0x38;
 const FLAG_RSHIFT_LIGATURE = 3;
 
-export const STYLE_MASK_BOLD = 1;
-export const STYLE_MASK_UNDERLINE = 2;
-export const STYLE_MASK_ITALIC = 4;
-export const STYLE_MASK_STRIKETHROUGH = 8;
-export const STYLE_MASK_BLINK = 16;
-export const STYLE_MASK_INVERSE = 32;
-export const STYLE_MASK_INVISIBLE = 64;
-export const STYLE_MASK_FAINT = 128;
-export const STYLE_MASK_CURSOR = 256;
-export const STYLE_MASK_OVERLINE = 512;
+export const STYLE_MASK_UNDERLINE = 3;
+export const STYLE_MASK_BOLD = 4;
+export const STYLE_MASK_ITALIC = 8;
+export const STYLE_MASK_STRIKETHROUGH = 16;
+export const STYLE_MASK_BLINK = 32;
+export const STYLE_MASK_INVERSE = 64;
+export const STYLE_MASK_INVISIBLE = 128;
+export const STYLE_MASK_FAINT = 256;
+export const STYLE_MASK_CURSOR = 512;
+export const STYLE_MASK_OVERLINE = 1024;
+
+export const UNDERLINE_STYLE_OFF = 0;
+export const UNDERLINE_STYLE_NORMAL = 1;
+export const UNDERLINE_STYLE_DOUBLE = 2;
+export const UNDERLINE_STYLE_CURLY = 3;
+
 
 export type StyleCode = number;
 

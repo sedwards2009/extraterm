@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT, STYLE_MASK_OVERLINE } from "extraterm-char-cell-grid";
+import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT, STYLE_MASK_OVERLINE, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE } from "extraterm-char-cell-grid";
 import * as easta from "easta";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
@@ -172,9 +172,15 @@ class FontAtlasPage {
                               widthPx, this._metrics.strikethroughHeight);
     }
 
-    if (style & STYLE_MASK_UNDERLINE) {
+    const underline = style & STYLE_MASK_UNDERLINE;
+    if (underline === UNDERLINE_STYLE_NORMAL || underline === UNDERLINE_STYLE_DOUBLE) {
       this._pageCtx.fillRect(xPixels,
                               yPixels + this._metrics.underlineY,
+                              widthPx, this._metrics.underlineHeight);
+    }
+    if (underline === UNDERLINE_STYLE_DOUBLE) {
+      this._pageCtx.fillRect(xPixels,
+                              yPixels + this._metrics.secondUnderlineY,
                               widthPx, this._metrics.underlineHeight);
     }
 

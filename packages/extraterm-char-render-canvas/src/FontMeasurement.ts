@@ -31,6 +31,7 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
     strikethroughY: renderFontMetrics.strikethroughY / devicePixelRatio,
     strikethroughHeight: renderFontMetrics.strikethroughHeight / devicePixelRatio,
     underlineY: renderFontMetrics.underlineY / devicePixelRatio,
+    secondUnderlineY: renderFontMetrics.secondUnderlineY / devicePixelRatio,
     underlineHeight: renderFontMetrics.underlineHeight / devicePixelRatio,
 
     overlineY: renderFontMetrics.overlineY / devicePixelRatio,
@@ -88,6 +89,10 @@ class FontMeasurement {
     const {topY: mTopY, bottomY: mBottomY} = this._renderAndMeasureText(ctx, fontSizePx, "m");
     // this._log.debug(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
 
+    const underlineHeight = 1;
+    const underlineY = Math.round(mBottomY + 2) + fillTextYOffset;
+    const secondUnderlineY = underlineY + 2 * underlineHeight;
+
     return {
       fontSizePx,
       fontFamily,
@@ -100,8 +105,9 @@ class FontMeasurement {
 
       strikethroughY: Math.round((mTopY + mBottomY) /2) + fillTextYOffset,
       strikethroughHeight: 1,
-      underlineY: Math.round(mBottomY + 2) + fillTextYOffset,
-      underlineHeight: 1,
+      underlineY,
+      secondUnderlineY,
+      underlineHeight,
 
       overlineY: 0,
       overlineHeight: 1,

@@ -67,6 +67,10 @@ import {
   STYLE_MASK_INVISIBLE,
   STYLE_MASK_STRIKETHROUGH,
   STYLE_MASK_OVERLINE,
+  UNDERLINE_STYLE_OFF,
+  UNDERLINE_STYLE_NORMAL,
+  UNDERLINE_STYLE_DOUBLE,
+  UNDERLINE_STYLE_CURLY,
   copyCell,
   setCellFgClutFlag,
   setCellBgClutFlag,
@@ -2804,7 +2808,7 @@ export class Emulator implements EmulatorApi {
       } else if (p === 4) {
         // underlined text
         if (params[i].subparameters.length === 0) {
-          this.curAttr.style |= STYLE_MASK_UNDERLINE;
+          this.curAttr.style |= UNDERLINE_STYLE_NORMAL;
         } else {
           switch (params[i].subparameters[0].intValue) {
             case 0:
@@ -2813,11 +2817,15 @@ export class Emulator implements EmulatorApi {
               break;
             case 1:
               // Plain underline
+              this.curAttr.style |= UNDERLINE_STYLE_NORMAL;
+              break;
             case 2:
               // Double underline
+              this.curAttr.style |= UNDERLINE_STYLE_DOUBLE;
+              break;
             case 3:
               // Curly underline
-              this.curAttr.style |= STYLE_MASK_UNDERLINE;
+              this.curAttr.style |= UNDERLINE_STYLE_CURLY;
               break;
             default:
               break;
@@ -2843,6 +2851,10 @@ export class Emulator implements EmulatorApi {
         
       } else if (p >= 10 && p <= 20) {
         // Font setting. Ignore
+
+      } else if (p === 21) {
+        // Double underline
+        this.curAttr.style |= UNDERLINE_STYLE_DOUBLE;
         
       } else if (p === 22) {
         // not bold and not faint.
