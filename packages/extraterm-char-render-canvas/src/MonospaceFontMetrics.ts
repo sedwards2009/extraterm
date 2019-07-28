@@ -21,4 +21,8 @@ export interface MonospaceFontMetrics {
 
   readonly overlineY: number;
   readonly overlineHeight: number;
+
+  readonly curlyHeight: number;
+  readonly curlyThickness: number;
+  readonly curlyY: number;
 }

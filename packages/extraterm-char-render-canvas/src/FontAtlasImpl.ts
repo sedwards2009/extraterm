@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT, STYLE_MASK_OVERLINE, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE } from "extraterm-char-cell-grid";
+import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT, STYLE_MASK_OVERLINE, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
 import * as easta from "easta";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
@@ -182,6 +182,18 @@ class FontAtlasPage {
       this._pageCtx.fillRect(xPixels,
                               yPixels + this._metrics.secondUnderlineY,
                               widthPx, this._metrics.underlineHeight);
+    }
+    if (underline === UNDERLINE_STYLE_CURLY) {
+      this._pageCtx.save();
+      this._pageCtx.lineWidth = this._metrics.curlyThickness;
+      this._pageCtx.beginPath();
+      this._pageCtx.moveTo(xPixels, yPixels+this._metrics.curlyY);
+      this._pageCtx.quadraticCurveTo(xPixels + widthPx/4, yPixels+this._metrics.curlyY-this._metrics.curlyHeight/2,
+                                      xPixels + widthPx/2, yPixels+this._metrics.curlyY);
+      this._pageCtx.quadraticCurveTo(xPixels + widthPx*3/4, yPixels+this._metrics.curlyY+this._metrics.curlyHeight/2,
+                                        xPixels + widthPx, yPixels+this._metrics.curlyY);
+      this._pageCtx.stroke();
+      this._pageCtx.restore();
     }
 
     if (style & STYLE_MASK_OVERLINE) {

@@ -36,6 +36,10 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
 
     overlineY: renderFontMetrics.overlineY / devicePixelRatio,
     overlineHeight: renderFontMetrics.overlineHeight / devicePixelRatio,
+
+    curlyHeight: renderFontMetrics.curlyHeight / devicePixelRatio,
+    curlyThickness: renderFontMetrics.curlyThickness / devicePixelRatio,
+    curlyY: renderFontMetrics.curlyY / devicePixelRatio,
   };
 
   return {
@@ -93,6 +97,10 @@ class FontMeasurement {
     const underlineY = Math.round(mBottomY + 2) + fillTextYOffset;
     const secondUnderlineY = underlineY + 2 * underlineHeight;
 
+    const curlyThickness = 1;
+    const curlyHeight = 4;
+    const curlyY = underlineY + curlyHeight/2;
+
     return {
       fontSizePx,
       fontFamily,
@@ -111,6 +119,10 @@ class FontMeasurement {
 
       overlineY: 0,
       overlineHeight: 1,
+
+      curlyHeight,
+      curlyThickness,
+      curlyY,    
     };
   }
 
