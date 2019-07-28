@@ -2897,41 +2897,20 @@ export class Emulator implements EmulatorApi {
 
       } else if (p === 38) {
         // fg color 256
-        if (params.getDefaultInt(i + 1, -1) === 2) {  // Set to RGB color
-          i += 2;
-          fg = ((params.getDefaultInt(i, 0) & 0xff) << 24) |
-                ((params.getDefaultInt(i + 1, 0) & 0xff) << 16) |
-                ((params.getDefaultInt(i + 2, 0) & 0xff) << 8) |
-                0xff;
-          i += 2;
-          this.curAttr.fgRGBA = fg;
-          setCellFgClutFlag(this.curAttr, false);
-
-        } else if (params.getDefaultInt(i + 1, -1) === 5) { // Set to index color
-          i += 2;
-          p = params.getDefaultInt(i, 0) & 0xff;
-          this.curAttr.fgClutIndex = p;
-          setCellFgClutFlag(this.curAttr, true);
+        if (params[i].subparameters.length === 0) {
+          i = this._setForegroundColorFromParams(params, i);
+        } else {
+          this._setForegroundColorFromParams(params[i].subparameters, -1);
         }
 
       } else if (p === 48) {
         // bg color 256
-        if (params.getDefaultInt(i + 1, 0) === 2) {
-          i += 2;
-          bg = ((params.getDefaultInt(i, 0) & 0xff) << 24) |
-                ((params.getDefaultInt(i + 1, 0) & 0xff) << 16) |
-                ((params.getDefaultInt(i + 2, 0) & 0xff) << 8) |
-                0xff;
-          i += 2;
-          this.curAttr.bgRGBA = bg;
-          setCellBgClutFlag(this.curAttr, false);
-        } else if (params.getDefaultInt(i + 1, -1) === 5) {
-          i += 2;
-          p = params.getDefaultInt(i, 0) & 0xff;
-          bg = p;
-          this.curAttr.bgClutIndex = bg;
-          setCellBgClutFlag(this.curAttr, true);
+        if (params[i].subparameters.length === 0) {
+          i = this._setBackgroundColorFromParams(params, i);
+        } else {
+          this._setBackgroundColorFromParams(params[i].subparameters, -1);
         }
+        
       } else if (p === 53) {
         // Overline style
         this.curAttr.style |= STYLE_MASK_OVERLINE;
@@ -2951,6 +2930,48 @@ export class Emulator implements EmulatorApi {
         this.error('Unknown SGR attribute: %s.', "" + p);
       }
     }
+  }
+
+  private _setForegroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
+    // fg color 256
+    if (params.getDefaultInt(paramIndex + 1, -1) === 2) {  // Set to RGB color
+      paramIndex += 2;
+      const fg = ((params.getDefaultInt(paramIndex, 0) & 0xff) << 24) |
+            ((params.getDefaultInt(paramIndex + 1, 0) & 0xff) << 16) |
+            ((params.getDefaultInt(paramIndex + 2, 0) & 0xff) << 8) |
+            0xff;
+      paramIndex += 2;
+      this.curAttr.fgRGBA = fg;
+      setCellFgClutFlag(this.curAttr, false);
+
+    } else if (params.getDefaultInt(paramIndex + 1, -1) === 5) { // Set to index color
+      paramIndex += 2;
+      const p = params.getDefaultInt(paramIndex, 0) & 0xff;
+      this.curAttr.fgClutIndex = p;
+      setCellFgClutFlag(this.curAttr, true);
+    }
+    return paramIndex;
+  }
+
+  private _setBackgroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
+    // bg color 256
+    if (params.getDefaultInt(paramIndex + 1, -1) === 2) {  // Set to RGB color
+      paramIndex += 2;
+      const fg = ((params.getDefaultInt(paramIndex, 0) & 0xff) << 24) |
+            ((params.getDefaultInt(paramIndex + 1, 0) & 0xff) << 16) |
+            ((params.getDefaultInt(paramIndex + 2, 0) & 0xff) << 8) |
+            0xff;
+      paramIndex += 2;
+      this.curAttr.bgRGBA = fg;
+      setCellBgClutFlag(this.curAttr, false);
+
+    } else if (params.getDefaultInt(paramIndex + 1, -1) === 5) { // Set to index color
+      paramIndex += 2;
+      const p = params.getDefaultInt(paramIndex, 0) & 0xff;
+      this.curAttr.bgClutIndex = p;
+      setCellBgClutFlag(this.curAttr, true);
+    }
+    return paramIndex;
   }
 
   // CSI Ps n  Device Status Report (DSR).
