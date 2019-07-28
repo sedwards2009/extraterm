@@ -7,21 +7,32 @@
 export interface Parameter {
   intValue: number;
   stringValue: string;
-  subParameters: Parameter[];
+  subparameters: ControlSequenceParameters;
+}
+
+enum ParameterMode {
+  Parameter,
+  Subparameter,
 }
 
 /**
  * Small utility class for gathering parameters to a VT control sequence.
  */
 export class ControlSequenceParameters {
+  private _mode = ParameterMode.Parameter;
   prefix: string = null;
   private _params: Parameter[] = [];
-  private _currentParameter: Parameter;
+  private _currentParameter: Parameter = null;
 
   [index: number]: Parameter;
 
   constructor() {
-    this._currentParameter = this._newParameter();
+  }
+
+  private _initializeCurrentParameter(): void {
+    if (this._currentParameter == null) {
+      this._currentParameter = this._newParameter();
+    }
   }
 
   get length(): number {
@@ -37,29 +48,49 @@ export class ControlSequenceParameters {
   }
 
   appendDigit(ch: string): void {
-    this._currentParameter.intValue = this._currentParameter.intValue * 10 + ch.charCodeAt(0) - 48;
+    this._initializeCurrentParameter();
+    if (this._mode === ParameterMode.Parameter) {
+      this._currentParameter.intValue = this._currentParameter.intValue * 10 + ch.charCodeAt(0) - 48;
+    } else {
+      this._params[this._params.length-1].subparameters.appendDigit(ch);
+    }
   }
 
   appendString(ch: string): void {
-    const currentValue = this._currentParameter.stringValue == null ? "" : this._currentParameter.stringValue;
-    this._currentParameter.stringValue = currentValue + ch;
+    this._initializeCurrentParameter();
+    if (this._mode === ParameterMode.Parameter) {
+      const currentValue = this._currentParameter.stringValue == null ? "" : this._currentParameter.stringValue;
+      this._currentParameter.stringValue = currentValue + ch;
+    } else {
+      this._params[this._params.length-1].subparameters.appendString(ch);
+    }
   }
 
   nextParameter(): void {
-    if (this._currentParameter.stringValue === null) {
-      this._currentParameter.stringValue = "" + this._currentParameter.intValue;
-    }
+    this._initializeCurrentParameter();
+    if (this._mode === ParameterMode.Parameter) {
+      if (this._currentParameter.stringValue === null) {
+        this._currentParameter.stringValue = "" + this._currentParameter.intValue;
+      }
 
-    this[this._params.length] = this._currentParameter;
-    this._params.push(this._currentParameter);
-    this._currentParameter = this._newParameter();
+      this[this._params.length] = this._currentParameter;
+      this._params.push(this._currentParameter);
+      this._currentParameter = this._newParameter();
+    } else {
+      this._params[this._params.length-1].subparameters.nextParameter();
+      this._mode = ParameterMode.Parameter;
+    }
+  }
+
+  startSubparameter(): void {
+    this._mode = ParameterMode.Subparameter;
   }
 
   private _newParameter(): Parameter {
     return {
       intValue: 0,
       stringValue: null,
-      subParameters: []
+      subparameters: new ControlSequenceParameters(),
     };
   }
 

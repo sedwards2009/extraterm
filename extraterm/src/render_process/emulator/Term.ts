@@ -1121,7 +1121,12 @@ export class Emulator implements EmulatorApi {
         if (ch === ';') {
           return i;
         }
-    
+
+        if (ch === ':') {
+          this._params.startSubparameter();
+          return i;
+        }    
+
         this._executeCSICommand(this._params, ch);
         this.state = ParserState.NORMAL;
         break;
@@ -2798,7 +2803,26 @@ export class Emulator implements EmulatorApi {
 
       } else if (p === 4) {
         // underlined text
-        this.curAttr.style |= STYLE_MASK_UNDERLINE;
+        if (params[i].subparameters.length === 0) {
+          this.curAttr.style |= STYLE_MASK_UNDERLINE;
+        } else {
+          switch (params[i].subparameters[0].intValue) {
+            case 0:
+              // not underlined
+              this.curAttr.style &= ~STYLE_MASK_UNDERLINE;
+              break;
+            case 1:
+              // Plain underline
+            case 2:
+              // Double underline
+            case 3:
+              // Curly underline
+              this.curAttr.style |= STYLE_MASK_UNDERLINE;
+              break;
+            default:
+              break;
+          }
+        }
 
       } else if (p === 5) {
         // blink
