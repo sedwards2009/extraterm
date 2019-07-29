@@ -113,8 +113,8 @@ export function copyCell(source: Cell, dest: Cell): void {
   dest.bgRGBA = source.bgRGBA;
 }
 
-const FG_COLOR_INDEX = 257;
-const BG_COLOR_INDEX = 256;
+export const FG_COLOR_INDEX = 257;
+export const BG_COLOR_INDEX = 256;
 
 const SpaceCell: Cell = {
   codePoint: " ".codePointAt(0),

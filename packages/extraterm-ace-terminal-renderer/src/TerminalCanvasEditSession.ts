@@ -78,12 +78,7 @@ export class TerminalCanvasEditSession extends EditSession {
   }
 
   private _createHeavyString(sourceLine: TermApi.Line): TermLineHeavyString {
-    const heavyString: TermLineHeavyString = {
-      length: sourceLine.width,
-      getString: (): string => sourceLine.getString(0, 0),
-      termLine: sourceLine
-    };
-    return heavyString;
+    return new TermLineHeavyString(sourceLine);
   }
 
   getTerminalLine(row: number): TermApi.Line {
