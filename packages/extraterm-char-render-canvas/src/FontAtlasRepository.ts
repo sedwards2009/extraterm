@@ -26,6 +26,7 @@ export class FontAtlasRepository {
     const fontAtlas = new FontAtlasImpl(metrics);
     const disposableFontAtlas: FontAtlas & Disposable = {
       drawCodePoint: fontAtlas.drawCodePoint.bind(fontAtlas),
+      drawCodePointToImageData: fontAtlas.drawCodePointToImageData.bind(fontAtlas),
 
       dispose: () => {
         let value = this._refCount.get(key);

@@ -214,6 +214,7 @@ export class CharRenderCanvas implements Disposable {
 
   private _charCanvas: HTMLCanvasElement = null;
   private _charCanvasCtx: CanvasRenderingContext2D = null;
+  private _charCanvasImageData: ImageData = null;
 
   private _canvasWidthPx = 512;
   private _canvasHeightPx = 512;
@@ -301,7 +302,8 @@ export class CharRenderCanvas implements Disposable {
     this._charCanvas.height = this._canvasHeightPx;
 
     this._charCanvasCtx = this._charCanvas.getContext("2d", { alpha: true });
-      
+    this._charCanvasImageData = new ImageData(this._canvasWidthPx, this._canvasHeightPx);
+
     if (debugParentElement != null) {
       debugParentElement.appendChild(this._charCanvas);
     }
@@ -402,7 +404,9 @@ export class CharRenderCanvas implements Disposable {
   render(): void {
     this._updateCharGridFlags();
 
-    this._renderCharacters();
+    // this._renderCharacters();
+    this._renderCharactersUsingImageData();
+
     this._fgColorPatchCanvas.setRenderCursor(this._cursorStyle === CursorStyle.BLOCK);
     this._fgColorPatchCanvas.render();
     this._bgColorPatchCanvas.setRenderCursor(this._cursorStyle === CursorStyle.BLOCK);
@@ -495,6 +499,83 @@ export class CharRenderCanvas implements Disposable {
     }
   }
 
+  private _renderCharactersUsingImageData(): void {
+    const ctx = this._charCanvasCtx;
+
+    // const imageData = this._charCanvasCtx.getImageData(0, 0, this._charCanvas.width, this._charCanvas.height);
+    const imageData = this._charCanvasImageData;
+
+    ctx.fillStyle = "#ffffffff";
+    ctx.globalCompositeOperation = "copy";
+
+    const cellGrid = this._cellGrid;
+    const renderedCellGrid = this._renderedCellGrid;
+    const cellWidth = this.cellWidthPx;
+    const cellHeight = this.cellHeightPx;
+    const width = cellGrid.width;
+    const height = cellGrid.height;
+    const spaceCodePoint = " ".codePointAt(0);
+    
+    for (let j=0; j<height; j++) {
+
+      // These control the correct re-rendering or not rendering 
+      // of cells which are to the right of multi-cell characters.
+      let charWidthCounter = 0; 
+      let renderedCharWidthCounter = 0;
+
+      for (let i=0; i<width; i++) {
+
+        const flags = cellGrid.getFlags(i, j);
+        const renderedFlags = renderedCellGrid.getFlags(i, j);
+
+        const extraFontFlag = (flags & FLAG_MASK_EXTRA_FONT) !== 0;
+        const renderedExtraFontFlag = (renderedFlags & FLAG_MASK_EXTRA_FONT) !== 0;
+
+        if (extraFontFlag) {
+          if ( ! renderedExtraFontFlag) {
+            // Erase the char in the char canvas and make room for
+            // the glyph from the extrafont which will be drawn later.
+            this._fontAtlas.drawCodePointToImageData(imageData, spaceCodePoint, 0, i * cellWidth, j * cellHeight);
+
+          }
+        } else {
+          const codePoint = cellGrid.getCodePoint(i, j);
+          const style = cellGrid.getStyle(i, j);
+          const renderedCodePoint = renderedCellGrid.getCodePoint(i, j);
+          const renderedStyle = renderedCellGrid.getStyle(i, j);
+
+          const cellChanged = codePoint !== renderedCodePoint || style !== renderedStyle
+
+          let mustRender = false;
+          if (cellChanged) {
+            
+            // Only allow the render if we aren't destroying an extra wide char to the left.
+            if (charWidthCounter <= 0) {  
+              mustRender = true;
+            }
+          } else {
+            if(renderedCharWidthCounter > 0 && charWidthCounter <= 0) {
+              mustRender = true;
+            }
+          }
+          charWidthCounter = Math.max(charWidthCounter,
+                                      ((flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT)+1);
+          renderedCharWidthCounter = Math.max(renderedCharWidthCounter,
+                                              ((renderedFlags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT)+1);          
+          if (mustRender) {
+            const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : codePoint;
+            this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, i * cellWidth, j * cellHeight);
+          }
+        }
+
+        charWidthCounter--;
+        renderedCharWidthCounter--;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }
+
   private _renderColorCharacters(ctx: CanvasRenderingContext2D): void {
     ctx.fillStyle = "#ffffffff";
     ctx.globalCompositeOperation = "source-over";
@@ -581,6 +662,26 @@ export class CharRenderCanvas implements Disposable {
 
     this._cellGrid.scrollVertical(verticalOffsetChars);
     this._renderedCellGrid.scrollVertical(verticalOffsetChars);
+    this._scrollCharImageData(verticalOffsetChars);
+  }
+
+  private _scrollCharImageData(verticalOffsetChars: number): void {
+    if (verticalOffsetChars === 0) {
+      return;
+    }
+
+    const affectedHeightPx = (this._cellGrid.height - Math.abs(verticalOffsetChars)) * this.cellHeightPx;
+    if (affectedHeightPx < 0) {
+      // Scroll offset is so big that nothing will change on screen.
+      return;
+    }
+
+    const scrollingUp = verticalOffsetChars < 0;
+    if (scrollingUp) {
+      this._charCanvasImageData.data.copyWithin(0, (-verticalOffsetChars * this.cellHeightPx) * this._charCanvasImageData.width *4);
+    } else {
+      this._charCanvasImageData.data.copyWithin((verticalOffsetChars * this.cellHeightPx) * this._charCanvasImageData.width *4, 0);
+    }
   }
 }
 
