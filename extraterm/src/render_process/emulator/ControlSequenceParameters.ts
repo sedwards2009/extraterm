@@ -20,7 +20,7 @@ enum ParameterMode {
  */
 export class ControlSequenceParameters {
   private _mode = ParameterMode.Parameter;
-  prefix: string = null;
+  prefix = "";
   private _params: Parameter[] = [];
   private _currentParameter: Parameter = null;
 
