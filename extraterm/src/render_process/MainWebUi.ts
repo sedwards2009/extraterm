@@ -572,7 +572,8 @@ this._log.debug("tab RMB");
 
   private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string): void {
     const extraEnv = {
-      [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue()
+      [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
+      "COLORTERM": "truecolor",   // Advertise that we support 24bit color
     };
     const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, extraEnv, newTerminal.getColumns(),
       newTerminal.getRows());
