@@ -1300,7 +1300,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
 
     const elementHeight = this.getHeight();
-    let aceEditorHeight;
+    let aceEditorHeight: number;
     if (this._useVPad) {
       // Adjust the height of the Ace editor such that a small gap is at the bottom to 'push'
       // the lines up and align them with the top of the viewport.
@@ -1314,7 +1314,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.style.height = "" + (aceEditorHeight-reserveHeight) + "px";
-    this._aceEditor.resize(true);
+    this._aceEditor.resize(false);
     containerDiv.style.height = "" + aceEditorHeight + "px";
   }
 }
