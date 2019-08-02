@@ -28,7 +28,7 @@ import { ViewerElement } from '../viewers/ViewerElement';
 import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
 import { TabWidget } from '../gui/TabWidget';
 import { EventEmitter } from '../../utils/EventEmitter';
-import { DebouncedDoLater } from '../../utils/DoLater';
+import { DebouncedDoLater } from 'extraterm-later';
 import { WidgetProxy } from './WidgetProxy';
 
 

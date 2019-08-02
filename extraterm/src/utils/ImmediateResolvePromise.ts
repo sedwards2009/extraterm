@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { doLater } from "./DoLater";
+import { doLater } from "extraterm-later";
 
 export function newImmediateResolvePromise<V=void>(value: V=undefined): Promise<V> {
   return new Promise<V>( (resolve, reject) => {

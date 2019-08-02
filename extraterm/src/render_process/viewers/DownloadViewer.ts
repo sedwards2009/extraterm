@@ -5,7 +5,7 @@
 import {BulkFileHandle, BulkFileState, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
-import {DebouncedDoLater} from '../../utils/DoLater';
+import {DebouncedDoLater} from 'extraterm-later';
 import {FileTransferProgress} from '../gui/file_transfer/FileTransferProgress';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";

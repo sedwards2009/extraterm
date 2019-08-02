@@ -39,6 +39,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { NewTerminalContextArea } from './NewTerminalContextArea';
 import { CommandAndShortcut } from './command/CommandPalette';
 import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
+import { TerminalVisualConfig } from './TerminalVisualConfig';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -95,6 +96,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
   private _themes: ThemeTypes.ThemeInfo[] = [];
+  private _terminalVisualConfig: TerminalVisualConfig = null;
   private _lastFocus: Element = null;
   private _splitLayout = new SplitLayout();
   private _fileBroker = new BulkFileBroker();
@@ -138,6 +140,21 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
     this._registerCommands(extensionManager);
+  }
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._terminalVisualConfig = terminalVisualConfig;
+
+    const settingsTab = this._getSettingsTab();
+    if (settingsTab != null) {
+      settingsTab.setTerminalVisualConfig(terminalVisualConfig);
+    }
+
+    for (const el of this._splitLayout.getAllTabContents()) {
+      if (el instanceof EtTerminal) {
+        el.setTerminalVisualConfig(terminalVisualConfig);
+      }
+    }
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
@@ -533,6 +550,7 @@ this._log.debug("tab RMB");
     injectKeybindingsManager(newTerminal, this._keybindingsManager);
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
+    newTerminal.setTerminalVisualConfig(this._terminalVisualConfig);
 
     // Set the default name of the terminal tab to the session name.
     const sessions = this._configManager.getConfig(SESSION_CONFIG);
@@ -554,7 +572,8 @@ this._log.debug("tab RMB");
 
   private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string): void {
     const extraEnv = {
-      [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue()
+      [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
+      "COLORTERM": "truecolor",   // Advertise that we support 24bit color
     };
     const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, extraEnv, newTerminal.getColumns(),
       newTerminal.getRows());
@@ -677,6 +696,7 @@ this._log.debug("tab RMB");
       config.injectConfigDatabase(settingsTabElement, this._configManager);
       injectKeybindingsManager(settingsTabElement, this._keybindingsManager);
       injectExtensionManager(settingsTabElement, this._extensionManager);
+      settingsTabElement.setTerminalVisualConfig(this._terminalVisualConfig);
 
       settingsTabElement.setThemes(this._themes);
       if (tabName != null) {

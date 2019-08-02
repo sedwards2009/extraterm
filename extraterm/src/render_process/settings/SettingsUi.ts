@@ -14,11 +14,12 @@ import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
 import { KEY_BINDINGS_SETTINGS_TAG } from './keybindings/KeybindingsSettings';
 import { SESSION_SETTINGS_TAG } from './SessionSettings';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
-import { doLater } from '../../utils/DoLater';
+import { doLater } from 'extraterm-later';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { VUE_TEXT_ACE_VIEWER_ELEMENT_TAG } from './VueTextAceViewerElement';
 import { VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG } from './VueTerminalAceViewerElement';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { TerminalVisualConfig } from '../TerminalVisualConfig';
 
 
 for (const el of [
@@ -70,7 +71,8 @@ interface MenuItem {
       <et-appearance-settings v-show="selectedTab == 'appearance'"
         v-bind:configDatabase.prop="getConfigDatabase()"
         v-bind:themes.prop="themes"
-        v-bind:extensionManager.prop="getExtensionManager()">
+        v-bind:extensionManager.prop="getExtensionManager()"
+        v-bind:terminalVisualConfig.prop="getTerminalVisualConfig()">
       </et-appearance-settings>
     </template>
 
@@ -102,6 +104,7 @@ export class SettingsUi extends Vue {
   private _configDatabase: ConfigDatabase = null;
   private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
+  private _terminalVisualConfig: TerminalVisualConfig = null;
 
   firstShowComplete: boolean;
   selectedTab: string;
@@ -161,6 +164,15 @@ export class SettingsUi extends Vue {
 
   getExtensionManager(): ExtensionManager {
     return this._extensionManager;    
+  }
+
+  getTerminalVisualConfig(): TerminalVisualConfig {
+    return this._terminalVisualConfig;
+  }
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._terminalVisualConfig = terminalVisualConfig;
+    this.$forceUpdate();
   }
 
   formatIcon(icon: string): object {

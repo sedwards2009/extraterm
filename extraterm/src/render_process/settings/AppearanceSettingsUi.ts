@@ -11,6 +11,7 @@ import {FontInfo, TitleBarStyle, TerminalMarginStyle} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { TerminalVisualConfig } from '../TerminalVisualConfig';
 
 
 const ID_TERMINAL_FONT_SIZE = "ID_TERMINAL_FONT_SIZE";
@@ -89,7 +90,9 @@ interface SelectableOption {
 
     <et-vue-terminal-ace-viewer-element
       id="terminal_theme_preview"
-      class="full-width">
+      class="full-width"
+      :terminalVisualConfig.prop="terminalVisualConfig"
+      >
     </et-vue-terminal-ace-viewer-element>
   </div>
 
@@ -220,6 +223,8 @@ export class AppearanceSettingsUi extends Vue {
   themeTerminalFormatNames: string[] = [];
   themeSyntaxFormatNames: string[] = [];
 
+  terminalVisualConfig: TerminalVisualConfig;
+
   constructor() {
     super();
     this.terminalFontSize = 13;
@@ -268,6 +273,7 @@ export class AppearanceSettingsUi extends Vue {
 
     this.themeSyntaxPreviewContents = 0;
     this.themeSyntaxPreviewContentOptions = ThemeSyntaxPreviewContents;
+    this.terminalVisualConfig = null;
   }
 
   get themeTerminalOptions(): ThemeTypes.ThemeInfo[] {

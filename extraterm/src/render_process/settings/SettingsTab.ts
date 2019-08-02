@@ -16,6 +16,7 @@ import { SettingsUi } from './SettingsUi';
 import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
 import * as SupportsDialogStack from "../SupportsDialogStack";
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
+import { TerminalVisualConfig } from '../TerminalVisualConfig';
 
 
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
@@ -30,6 +31,8 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   private _log: Logger = null;
   private _ui: SettingsUi = null;
   private _dialogStack: HTMLElement[] = [];
+  private _terminalVisualConfig: TerminalVisualConfig = null;
+
 
   constructor() {
     super();
@@ -85,6 +88,10 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._ui.themes = themes;
+  }
+  
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._ui.setTerminalVisualConfig(terminalVisualConfig);
   }
   
   private _handleContextMenuCapture(ev: MouseEvent): void {

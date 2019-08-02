@@ -8,7 +8,7 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
-import { BulkFileMetadata, BulkFileState, EnvironmentMap } from 'extraterm-extension-api';
+import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme } from 'extraterm-extension-api';
 
 import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
@@ -76,6 +76,9 @@ export const enum MessageType {
   DELETE_KEYBINDINGS,
   UPDATE_KEYBINDINGS,
   GLOBAL_KEYBINDINGS_ENABLE,
+
+  TERMINAL_THEME_REQUEST,
+  TERMINAL_THEME,
 }
 
 /**
@@ -497,4 +500,12 @@ export interface KeybindingsUpdateMessage extends Message {
 
 export interface GlobalKeybindingsEnableMessage extends Message {
   enabled: boolean;
+}
+
+export interface TerminalThemeRequestMessage extends Message {
+  id: string;
+}
+
+export interface TerminalThemeMessage extends Message {
+  terminalTheme: TerminalTheme;
 }

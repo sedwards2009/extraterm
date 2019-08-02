@@ -12,7 +12,7 @@ import { log } from "extraterm-logging";
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import { doLater, doLaterFrame, DebouncedDoLater } from '../../utils/DoLater';
+import { doLater, doLaterFrame, DebouncedDoLater } from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
@@ -120,11 +120,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     this._aceEditSession.setUseWorker(false);
 
     const aceRenderer = new TerminalRenderer(containerDiv);
+    aceRenderer.init();
     aceRenderer.setShowGutter(true);
     aceRenderer.setShowLineNumbers(true);
     aceRenderer.setShowFoldWidgets(false);
     aceRenderer.setDisplayIndentGuides(false);
-    aceRenderer.setPadding(0);
     
     this._aceEditor = new ExtratermAceEditor(aceRenderer, this._aceEditSession);
 
@@ -546,14 +546,14 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
   getCursorPosition(): CursorMoveDetail {
     const cursorPos = this._aceEditor.getCursorPositionScreen();
-    const charHeight = this._aceEditor.renderer.lineHeight;
-    const charWidth = this._aceEditor.renderer.characterWidth;
+    const charHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
+    const charWidth = this._aceEditor.renderer.layerConfig.charWidthPx;
 
     const detail: CursorMoveDetail = {
       left: cursorPos.column * charWidth,
       top: cursorPos.row * charHeight,
       bottom: (cursorPos.row + 1) * charHeight,
-      viewPortTop: this._aceEditSession.getScrollTop()
+      viewPortTop: this._aceEditSession.getScrollTopPx()
     };
     return detail;
   }
@@ -589,7 +589,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
   }
 
   pixelHeightToRows(pixelHeight: number): number {
-    const charHeight = this._aceEditor.renderer.lineHeight;
+    const charHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
     return Math.floor(pixelHeight / charHeight);
   }
 
@@ -654,8 +654,8 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
   }
 
   private _updateCssVars():  void {
-    this._fontUnitWidth = this._aceEditor.renderer.characterWidth;
-    this._fontUnitHeight = this._aceEditor.renderer.lineHeight;
+    this._fontUnitWidth = this._aceEditor.renderer.layerConfig.charWidthPx;
+    this._fontUnitHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
     const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
     styleElement.textContent = this._getCssVarsRules();
   }
@@ -724,8 +724,8 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     if (DomUtils.getShadowRoot(this) === null) {
       return;
     }
-    this._aceEditSession.setScrollLeft(xCoord);
-    this._aceEditSession.setScrollTop(yCoord);
+    this._aceEditSession.setScrollLeftPx(xCoord);
+    this._aceEditSession.setScrollTopPx(yCoord);
   }
 
   public dispatchEvent(ev: Event): boolean {
@@ -782,11 +782,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       return 0;
     }
 
-    let lineHeight = this._aceEditor.renderer.lineHeight;
+    let lineHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
     if (lineHeight === 0) {
       this._aceEditor.updateFontSize();
     }
-    lineHeight = this._aceEditor.renderer.lineHeight;
+    lineHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
     return this._isEmpty ? 0 : lineHeight * this._aceEditSession.getScreenLength();
   }
   

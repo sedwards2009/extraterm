@@ -14,9 +14,9 @@
     "vue-class-component": "6.3.2"
   },
   "devDependencies": {
-    "@types/node": "^10.12.18",
+    "@types/node": "^12.6.2",
     "extraterm-extension-api": "0.1.0",
-    "typescript": "3.4.5"
+    "typescript": "3.5.3"
   },
   "contributes": {
     "viewers": [

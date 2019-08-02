@@ -35,7 +35,7 @@ import { KeybindingsIOManager } from './KeybindingsIOManager';
 
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupUserConfig, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
 import { GlobalKeybindingsManager } from './GlobalKeybindings';
-import { doLater } from '../utils/DoLater';
+import { doLater } from 'extraterm-later';
 import { getAvailableFontsSync } from './FontList';
 import { bestOverlap } from './RectangleMatch';
 
@@ -55,8 +55,6 @@ const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
 const PACKAGE_JSON_PATH = "../../../package.json";
-
-const EXTRATERM_DEVICE_SCALE_FACTOR = "--extraterm-device-scale-factor";
 
 
 let themeManager: ThemeManager;
@@ -78,8 +76,9 @@ function main(): void {
   setupAppData();
   setupLogging();
 
-  app.commandLine.appendSwitch('disable-smooth-scrolling'); // Turn off the sluggish scrolling.
-  app.commandLine.appendSwitch('high-dpi-support', 'true');
+  app.commandLine.appendSwitch("disable-smooth-scrolling"); // Turn off the sluggish scrolling.
+  app.commandLine.appendSwitch("high-dpi-support", "true");
+  app.commandLine.appendSwitch("disable-color-correct-rendering");
 
   if (process.platform === "darwin") {
     setupOSX();
@@ -97,7 +96,6 @@ function main(): void {
   parsedArgs.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
     .option('-d, --dev-tools [devTools]', 'Open the dev tools on start up')
     .option('--force-device-scale-factor []', '(This option is used by Electron)')
-    .option(EXTRATERM_DEVICE_SCALE_FACTOR + ' []', '(Internal Extraterm option. Ignore)')
     .parse(normalizedArgv);
 
   setupExtensionManager();
@@ -322,11 +320,12 @@ function openWindow(parsedArgs: Command): void {
   const options = <Electron.BrowserWindowConstructorOptions> {
     width: 1200,
     height: 600,
-    "webPreferences": {
-      "experimentalFeatures": true,
+    webPreferences: {
+      experimentalFeatures: true,
+      nodeIntegration: true
     },
     title: "Extraterm",
-    backgroundColor: themeInfo.loadingBackgroundColor
+    backgroundColor: themeInfo.loadingBackgroundColor,
   };
 
   if (process.platform === "darwin") {
@@ -516,11 +515,8 @@ function getWindowDimensionsFromConfig(windowId: number): SingleWindowConfigurat
 
 function setupLogging(): void {
   const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
-
-  if ( ! process.argv.find(item => item.startsWith(EXTRATERM_DEVICE_SCALE_FACTOR))) {
-    if (fs.existsSync(logFilePath)) {
-      fs.unlinkSync(logFilePath);
-    }
+  if (fs.existsSync(logFilePath)) {
+    fs.unlinkSync(logFilePath);
   }
 
   const logWriter = new FileLogWriter(logFilePath);
@@ -770,6 +766,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
       handleGlobalKeybindingsEnable(<Messages.GlobalKeybindingsEnableMessage>msg);
       break;
 
+    case Messages.MessageType.TERMINAL_THEME_REQUEST:
+      handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
+      break;
+
     default:
       break;
   }
@@ -850,6 +850,16 @@ function handleThemeRescan(): Messages.ThemeListMessage {
   }
 
   return handleThemeListRequest();
+}
+
+function handleTerminalThemeRequest(webContents: Electron.WebContents, msg: Messages.TerminalThemeRequestMessage): void {
+  const terminalTheme = themeManager.getTerminalTheme(msg.id);
+  const reply: Messages.TerminalThemeMessage = {
+    type: Messages.MessageType.TERMINAL_THEME,
+    terminalTheme
+  };
+
+  webContents.send(Messages.CHANNEL_NAME, reply);
 }
 
 const ptyToSenderMap = new Map<number, number>();

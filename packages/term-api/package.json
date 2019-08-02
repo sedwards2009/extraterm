@@ -10,8 +10,11 @@
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
+  "dependencies": {
+    "extraterm-char-cell-grid": "1.0.0"
+  },
   "devDependencies": {
-    "typescript": "3.4.5"
+    "typescript": "3.5.3"
   },
   "scripts": {
     "build": "tsc"

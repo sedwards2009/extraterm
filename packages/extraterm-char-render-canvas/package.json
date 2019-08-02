@@ -1,0 +1,28 @@
+{
+  "name": "extraterm-char-render-canvas",
+  "version": "1.0.0",
+  "description": "Fast renderer for character grids on canvas",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "dependencies": {
+    "easta": "3.0.1",
+    "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-logging": "1.0.0",
+    "extraterm-unicode-utilities": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^12.6.2",
+    "typescript": "3.5.3"
+  },
+  "scripts": {
+    "run": "false",
+    "build-all": "yarn run build",
+    "build": "tsc"
+  }
+}

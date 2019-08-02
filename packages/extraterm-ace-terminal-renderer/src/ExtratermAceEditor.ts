@@ -65,7 +65,5 @@ export class ExtratermAceEditor extends Editor {
     }
 
     cursorLayer.setSmoothBlinking(false);
-    cursorLayer.isBlinking = true;
-    cursorLayer.setCssClass("ace_slim-cursors", true);
   }
 }

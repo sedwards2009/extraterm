@@ -1,0 +1,23 @@
+{
+  "name": "extraterm-unicode-utilities",
+  "version": "1.0.0",
+  "description": "Unicode utilities",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/UnicodeUtilities.js",
+  "types": "dist/UnicodeUtilities.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "dependencies": {
+    "easta": "3.0.1"
+  },
+  "devDependencies": {
+    "typescript": "3.5.3"
+  },
+  "scripts": {
+    "run": "false",
+    "build": "tsc"
+  }
+}

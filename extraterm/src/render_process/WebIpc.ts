@@ -251,3 +251,11 @@ export function enableGlobalKeybindings(enabled: boolean): void {
   const msg: Messages.GlobalKeybindingsEnableMessage = {type: Messages.MessageType.GLOBAL_KEYBINDINGS_ENABLE, enabled};
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
+
+export function requestTerminalTheme(id: string): Promise<Messages.TerminalThemeMessage> {
+  const msg: Messages.TerminalThemeRequestMessage = {
+    type: Messages.MessageType.TERMINAL_THEME_REQUEST,
+    id
+  };
+  return <Promise<Messages.TerminalThemeMessage>> request(msg, Messages.MessageType.TERMINAL_THEME);
+}

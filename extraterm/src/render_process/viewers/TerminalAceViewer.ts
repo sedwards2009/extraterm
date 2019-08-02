@@ -3,11 +3,11 @@
  */
 
 import {WebComponent} from 'extraterm-web-component-decorators';
-import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition } from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition, TerminalTheme } from 'extraterm-extension-api';
 import * as XRegExp from "xregexp";
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import {doLater, doLaterFrame, DebouncedDoLater} from '../../utils/DoLater';
+import {doLater, doLaterFrame, DebouncedDoLater} from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
 import {Logger, getLogger} from "extraterm-logging";
@@ -21,11 +21,14 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
-import { TerminalAceEditor, TerminalDocument, TerminalEditSession, TerminalRenderer } from "extraterm-ace-terminal-renderer";
+import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer, CursorStyle } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "ace-ts";
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { SearchOptions } from 'ace-ts/build/SearchOptions';
+import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { Color } from '../gui/Util';
+import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -37,14 +40,6 @@ const CLASS_UNFOCUSED = "terminal-unfocused";
 const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
-
-// Electron on Linux under conditions and configuration which happen on one
-// of my machines, will render underscore characters below the text line and
-// into the line below it. If this is the last line in the viewer, then the
-// underscore will be cut off(!).
-// This hack adds just a little bit of extra space at the bottom of the
-// viewer for the underscore.
-const OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK = 1; // px
 
 const DEBUG_RESIZE = false;
 
@@ -81,14 +76,16 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _commandLine: string = null;
   private _returnCode: string = null;
 
-  private _aceEditor: TerminalAceEditor = null;
-  private _aceEditSession: TerminalEditSession = null;
+  private _aceEditor: TerminalCanvasAceEditor = null;
+  private _aceEditSession: TerminalCanvasEditSession = null;
+  private _aceRenderer: TerminalCanvasRenderer = null;
   private _height = 0;
   private _isEmpty = true;
   private _mode: Mode = Mode.DEFAULT;
   private _editable = false;
   private _useVPad = true;
   private _visualState: VisualState = VisualState.AUTO;
+  private _terminalVisualConfig: TerminalVisualConfig = null;
 
   private _mainStyleLoaded: boolean = false;
   private _resizePollHandle: Disposable = null;
@@ -110,11 +107,17 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _bookmarkCounter = 0;
   private _bookmarkIndex = new Map<BookmarkRef, Anchor>();
 
+  private _rerenderLater: DebouncedDoLater = null;
+  private _checkDisconnectLater: DebouncedDoLater = null;
+
   constructor() {
     super();
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
-    this._renderEventListener = this._handleRenderEvent.bind(this);
+    this._checkDisconnectLater = new DebouncedDoLater(() => this._handleDelayedDisconnect());
+    this._rerenderLater = new DebouncedDoLater(() => this._handleDelayedRerender());
 
+    this._renderEventListener = this._handleRenderEvent.bind(this);
+    
     this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
@@ -164,16 +167,21 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this.style.height = "0px";
       this._mode = Mode.DEFAULT;
 
-      this._aceEditSession = new TerminalEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
+      this._aceEditSession = new TerminalCanvasEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
       this._aceEditSession.setUndoManager(new UndoManager());
 
-      const aceRenderer = new TerminalRenderer(containerDiv);
-      aceRenderer.setShowGutter(false);
-      aceRenderer.setShowLineNumbers(false);
-      aceRenderer.setDisplayIndentGuides(false);
-      aceRenderer.setPadding(0);
+      this._aceRenderer = new TerminalCanvasRenderer(containerDiv, {
+        palette: this._extractPalette(this._terminalVisualConfig),
+        fontFamily: this._terminalVisualConfig.fontFamily,
+        fontSizePx: this._terminalVisualConfig.fontSizePx,
+        devicePixelRatio: this._terminalVisualConfig.devicePixelRatio,
+      });
+      this._aceRenderer.init();
+      this._aceRenderer.setShowGutter(false);
+      this._aceRenderer.setShowLineNumbers(false);
+      this._aceRenderer.setDisplayIndentGuides(false);
 
-      this._aceEditor = new TerminalAceEditor(aceRenderer, this._aceEditSession);
+      this._aceEditor = new TerminalCanvasAceEditor(this._aceRenderer, this._aceEditSession);
       this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setAutoscroll(false);
@@ -258,7 +266,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
       containerDiv.addEventListener('contextmenu', ev => this._handleContextMenu(ev));
 
-      const aceElement = this._aceEditor.renderer.scroller;
+      const aceElement = this._aceEditor.renderer.scrollerElement;
       aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
       aceElement.addEventListener("mouseup", ev => this._handleMouseUpEvent(ev), true);
       aceElement.addEventListener("mousemove", ev => this._handleMouseMoveEvent(ev), true);
@@ -270,10 +278,65 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._needEmulatorResize = false;
       this._resizePoll();
     }
+    this._rerenderLater.trigger();
   }
-  
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._checkDisconnectLater.trigger();
+  }
+
+  private _handleDelayedDisconnect(): void {
+    if (this.isConnected || this._aceRenderer == null) {
+      return;
+    }
+    this._aceRenderer.reduceMemory();
+  }
+
+  private _handleDelayedRerender(): void {
+    if ( ! this.isConnected || this._aceRenderer == null) {
+      return;
+    }
+    this._aceRenderer.rerenderText();
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL_VIEWER];
+  }
+
+  private _extractPalette(terminalVisualConfig: TerminalVisualConfig): number[] {
+    if (terminalVisualConfig == null) {
+      return this._fallbackPalette();
+    } else {
+      return this._extractPaletteFromTerminalVisualConfig(terminalVisualConfig);
+    }
+  }
+
+  private _fallbackPalette(): number[] {
+    const result = [];
+    // Very simple white on black palette.
+    result[0] = 0x00000000;
+    for (let i=1; i<256; i++) {
+      result[i] = 0xffffffff;
+    }
+    result[256] = 0x00000000;
+    result[257] = 0xf0f0f0ff;
+    result[258] = 0xffaa00ff;
+    return result;
+  }
+
+  private _extractPaletteFromTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): number[] {
+    const result: number[] = [];
+    const terminalTheme = terminalVisualConfig.terminalTheme;
+    for (let i=0; i<256; i++) {
+      result.push(cssHexColorToRGBA(terminalTheme[i]));
+    }
+
+    result.push(cssHexColorToRGBA(terminalTheme.backgroundColor));
+    result.push(cssHexColorToRGBA(terminalTheme.foregroundColor));
+    result.push(cssHexColorToRGBA(terminalTheme.cursorBackgroundColor));
+
+    return result;
   }
 
   private _emitCursorEdgeEvent(edge: Edge, column: number): void {
@@ -362,9 +425,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
           containerDiv.classList.add(CLASS_FOCUSED);
           containerDiv.classList.remove(CLASS_UNFOCUSED);
+
+          this._aceRenderer.setRenderCursorStyle(CursorStyle.BLOCK);
         } else {
           containerDiv.classList.add(CLASS_UNFOCUSED);
           containerDiv.classList.remove(CLASS_FOCUSED);
+
+          this._aceRenderer.setRenderCursorStyle(CursorStyle.OUTLINE);
         }
       }
       this._visualState = newVisualState;
@@ -374,7 +441,49 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   getVisualState(): VisualState {
     return this._visualState;
   }
-  
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    const previousConfig = this._terminalVisualConfig;
+    this._terminalVisualConfig = terminalVisualConfig;
+    if (this._aceRenderer != null) {
+      const config: TerminalCanvasRendererConfig = {
+        palette: this._extractPalette(terminalVisualConfig),
+        fontFamily: terminalVisualConfig.fontFamily,
+        fontSizePx: terminalVisualConfig.fontSizePx,
+        devicePixelRatio: terminalVisualConfig.devicePixelRatio,
+      };
+
+      if (previousConfig == null) {
+        this._aceRenderer.setTerminalCanvasRendererConfig(config);
+      } else {
+        if (previousConfig.fontFamily !== terminalVisualConfig.fontFamily ||
+            previousConfig.fontSizePx !== terminalVisualConfig.fontSizePx ||
+            previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio ||
+            ! this._isTerminalThemeEqual(previousConfig.terminalTheme, terminalVisualConfig.terminalTheme)) {
+          this._aceRenderer.setTerminalCanvasRendererConfig(config);
+        }
+      }
+    }
+  }
+
+  private _isTerminalThemeEqual(themeA: TerminalTheme, themeB: TerminalTheme): boolean {
+    for (let i=0; i<256; i++) {
+      if (themeA[i] !== themeB[i]) {
+        return false;
+      }
+    }
+    if (themeA.backgroundColor !== themeB.backgroundColor) {
+      return false;
+    }
+    if (themeA.foregroundColor !== themeB.foregroundColor) {
+      return false;
+    }
+    if (themeA.cursorBackgroundColor !== themeB.cursorBackgroundColor) {
+      return false;
+    }
+    return true;
+  }
+
   getBulkFileHandle(): BulkFileHandle {
     const text =  this._isEmpty ? "" : this._aceEditor.getValue();
     return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
@@ -539,13 +648,12 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   getReserveViewportHeight(containerHeight: number): number {
     let reserve = 0;
     if (this._useVPad) {
-      if (this._aceEditor != null && this._aceEditor.renderer.lineHeight !== 0) {
-        const defaultTextHeight = this._aceEditor.renderer.lineHeight;
+      if (this._aceEditor != null && this._aceEditor.renderer.layerConfig.charHeightPx !== 0) {
+        const defaultTextHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
         const vPad = containerHeight % defaultTextHeight;
         reserve = vPad;
       }
     }
-    reserve = Math.max(this._isEmpty ? 0 : OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK, reserve);
     if (DEBUG_RESIZE) {
       this._log.debug("getReserveViewportHeight: ", reserve);
     }
@@ -555,7 +663,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   refresh(level: RefreshLevel): void {
     let resizeEventNeeded = false;
 
-    if (this._aceEditSession !== null) {
+    if (this._aceEditSession != null) {
       if (DEBUG_RESIZE) {
         this._log.debug("calling aceEditor.resize()");
       }
@@ -623,8 +731,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _computeTerminalSizeFromPixels(widthPixels: number, heightPixels: number): TermApi.TerminalSize | null {
-    const charHeight = this._aceEditor.renderer.lineHeight;
-    const charWidth = this._aceEditor.renderer.characterWidth;
+    const charHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
+    const charWidth = this._aceEditor.renderer.layerConfig.charWidthPx;
 
     if (charHeight === 0 || charWidth === 0) {
       return null;
@@ -663,14 +771,14 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   
   getCursorPosition(): CursorMoveDetail {
     const cursorPos = this._aceEditor.getCursorPositionScreen();
-    const charHeight = this._aceEditor.renderer.lineHeight;
-    const charWidth = this._aceEditor.renderer.characterWidth;
+    const charHeight = this._aceEditor.renderer.charHeightPx;
+    const charWidth = this._aceEditor.renderer.charWidthPx;
 
     const detail: CursorMoveDetail = {
       left: cursorPos.column * charWidth,
       top: cursorPos.row * charHeight,
       bottom: (cursorPos.row + 1) * charHeight,
-      viewPortTop: this._aceEditSession.getScrollTop()
+      viewPortTop: this._aceEditSession.getScrollTopPx()
     };
     return detail;
   }
@@ -811,8 +919,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _updateCssVars():  void {
-    this._fontUnitWidth = this._aceEditor.renderer.characterWidth;
-    this._fontUnitHeight = this._aceEditor.renderer.lineHeight;
+    this._fontUnitWidth = this._aceEditor.renderer.layerConfig.charWidthPx;
+    this._fontUnitHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
     const styleElement = <HTMLStyleElement> DomUtils.getShadowId(this, ID_CSS_VARS);
     styleElement.textContent = this._getCssVarsRules();
   }
@@ -891,8 +999,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       yCoord = optionsOrX.top;
     }
 
-    this._aceEditSession.setScrollLeft(xCoord);
-    this._aceEditSession.setScrollTop(yCoord);
+    this._aceEditSession.setScrollLeftPx(xCoord);
+    this._aceEditSession.setScrollTopPx(yCoord);
   }
   
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => boolean): void {
@@ -1122,18 +1230,14 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _handleScrollbackEvent(scrollbackLines: TermApi.Line[]): void {
-    for (let i=0; i<scrollbackLines.length; i++) {
-      const line = scrollbackLines[i];
-      this._aceEditSession.insertTerminalLine(this._terminalFirstRow + i, line);
-    }
-
+    this._aceEditSession.insertTerminalLines(this._terminalFirstRow, scrollbackLines);
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
   }
 
   private _insertLinesOnScreen(startRow: number, endRow: number, lines: TermApi.Line[]): void {
     const lineCount = this._aceEditSession.getLength();
 
-    // Mark sure there are enough rows inside CodeMirror.
+    // Mark sure there are enough rows inside Ace.
     if (lineCount < endRow + this._terminalFirstRow) {
       const pos = { row: this._terminalFirstRow + lineCount, column: 0 };
       
@@ -1186,7 +1290,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
   
   private getVirtualTextHeight(): number {
-    return this._isEmpty ? 0 : this._aceEditor.renderer.lineHeight * this.lineCount();
+    return this._isEmpty ? 0 : this._aceEditor.renderer.layerConfig.charHeightPx * this.lineCount();
   }
   
   private _adjustHeight(newHeight: number): void {
@@ -1196,11 +1300,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
 
     const elementHeight = this.getHeight();
-    let aceEditorHeight;
+    let aceEditorHeight: number;
     if (this._useVPad) {
       // Adjust the height of the Ace editor such that a small gap is at the bottom to 'push'
       // the lines up and align them with the top of the viewport.
-      aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.lineHeight);
+      aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.layerConfig.charHeightPx);
     } else {
       aceEditorHeight = elementHeight;        
     }
@@ -1210,7 +1314,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.style.height = "" + (aceEditorHeight-reserveHeight) + "px";
-    this._aceEditor.resize(true);
+    this._aceEditor.resize(false);
     containerDiv.style.height = "" + aceEditorHeight + "px";
   }
 }
@@ -1226,4 +1330,9 @@ function px(value) {
 class TextModeWithWordSelect extends TextMode {
   tokenRe = XRegExp("^[\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]+", "g");
   nonTokenRe = XRegExp("^(?:[^\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]|\\s])+", "g");
+}
+
+function cssHexColorToRGBA(cssColor: string): number {
+  const color = new Color(cssColor);
+  return color.toRGBA();
 }

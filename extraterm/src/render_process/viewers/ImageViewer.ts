@@ -10,7 +10,7 @@ import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
-import {DebouncedDoLater} from '../../utils/DoLater';
+import {DebouncedDoLater} from 'extraterm-later';
 import {ViewerElement} from './ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';

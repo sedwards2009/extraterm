@@ -1,0 +1,21 @@
+{
+  "name": "extraterm-later",
+  "version": "1.0.0",
+  "description": "Utilities for executing a function later.",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/DoLater.js",
+  "types": "dist/DoLater.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "typescript": "3.5.3"
+  },
+  "scripts": {
+    "run": "false",
+    "build-all": "yarn run build",
+    "build": "tsc"
+  }
+}

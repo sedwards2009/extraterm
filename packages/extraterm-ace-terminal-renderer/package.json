@@ -11,18 +11,26 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
+    "@types/jest": "^23.3.10",
     "http-server": "0.10.0",
-    "typescript": "3.4.5",
+    "jest": "^23.6.0",
+    "ts-jest": "^23.10.5",
+    "typescript": "3.5.3",
     "webpack": "^4.8.3",
     "webpack-cli": "^2.1.3"
   },
   "scripts": {
     "build": "tsc",
-    "build-test": "tsc && webpack --config webpack.test.config.js"
+    "build-test": "tsc && webpack --config webpack.test.config.js",
+    "test": "yarn run build && jest"
   },
   "dependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.12.0/ace-ts-v0.12.0.tgz",
+    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.14.0/ace-ts-v0.14.0.tgz",
+    "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-char-render-canvas": "1.0.0",
     "extraterm-event-emitter": "1.0.0",
+    "extraterm-logging": "1.0.0",
+    "extraterm-unicode-utilities": "1.0.0",
     "term-api": "1.0.0"
   }
 }

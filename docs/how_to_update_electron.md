@@ -40,10 +40,10 @@ Outside the Extraterm source tree, find some space and do:
 
 * `git clone --recursive https://github.com/sass/node-sass.git`
 * `cd node-sass`
-* `git checkout v4.9.0` -- this should match the desired version of node-sass
+* `git checkout v4.12.0` -- this should match the desired version of node-sass
 * `git submodule update --init --recursive`
 * `npm install`
-* `node ./node_modules/node-gyp/bin/node-gyp.js rebuild --target=4.0.4 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- The `--target` option should match the new Electron version!
+* `node ./node_modules/node-gyp/bin/node-gyp.js rebuild --target=5.0.6 --arch=x64 --dist-url=https://atom.io/download/atom-shell --verbose --libsass_ext= --libsass_cflags= --libsass_ldflags= --libsass_library=` -- The `--target` option should match the new Electron version!
 
 Now that it has been built it needs to be moved to the right location in the source tree.
 

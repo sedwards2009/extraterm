@@ -1,0 +1,380 @@
+/**
+ * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ */
+import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE, STYLE_MASK_FAINT, STYLE_MASK_OVERLINE, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
+import * as easta from "easta";
+import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
+import { FontAtlas } from "./FontAtlas";
+import { Logger, getLogger, log } from "extraterm-logging";
+import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
+
+
+const TWO_TO_THE_24 = 2 ** 24;
+
+export class FontAtlasImpl implements FontAtlas {
+  private _log: Logger = null;
+  private _imageBitmapPages: ImageBitmapFontAtlasPage[] = [];
+  private _cpuRenderedPages: CPURenderedFontAtlasPage[] = [];
+
+  constructor(private readonly _metrics: MonospaceFontMetrics) {
+    this._log = getLogger("FontAtlasImpl", this);
+  }
+
+  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode,
+                xPixel: number, yPixel: number): void {
+
+    for (let page of this._imageBitmapPages) {
+      if (page.drawCodePoint(ctx, codePoint, style, xPixel, yPixel)) {
+        return;
+      }
+    }
+
+    const page = this._appendImageBitmapPage();
+    page.drawCodePoint(ctx, codePoint, style, xPixel, yPixel);
+  }
+
+  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): void {
+    for (let page of this._cpuRenderedPages) {
+      if (page.drawCodePointToImageData(destImageData, codePoint, style, xPixel, yPixel)) {
+        return;
+      }
+    }
+
+    const page = this._appendCPURenderedPage();
+    page.drawCodePointToImageData(destImageData, codePoint, style, xPixel, yPixel);
+  }
+
+  private _appendImageBitmapPage(): ImageBitmapFontAtlasPage {
+    const page = new ImageBitmapFontAtlasPage(this._metrics);
+    this._imageBitmapPages.push(page);
+    return page;
+  }
+
+  private _appendCPURenderedPage(): CPURenderedFontAtlasPage {
+    const page = new CPURenderedFontAtlasPage(this._metrics);
+    this._cpuRenderedPages.push(page);
+    return page;
+  }
+}
+
+//-------------------------------------------------------------------------
+
+const FONT_ATLAS_PAGE_WIDTH_CELLS = 8;
+const FONT_ATLAS_PAGE_HEIGHT_CELLS = 32;
+
+
+interface CachedGlyph {
+  xPixels: number;
+  yPixels: number;
+  isWide: boolean;
+  widthPx: number;
+}
+
+
+abstract class FontAtlasPageBase<CG extends CachedGlyph> {
+  private _log: Logger = null;
+
+  protected _pageCanvas: HTMLCanvasElement = null;
+  protected _pageCtx: CanvasRenderingContext2D = null;
+  private _safetyPadding: number = 0;
+
+  private _nextEmptyCellX: number = 0;
+  private _nextEmptyCellY: number = 0;
+  private _lookupTable: Map<number, CG> = new Map();
+  private _isFull = false;
+
+  constructor(protected readonly _metrics: MonospaceFontMetrics) {
+    this._log = getLogger("FontAtlasPage", this);
+
+    // this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
+    this._initalize();
+  }
+
+  private _initalize(): void {
+    this._safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) /4);
+
+    this._pageCanvas = document.createElement("canvas");
+    this._pageCanvas.width = FONT_ATLAS_PAGE_WIDTH_CELLS * (this._metrics.widthPx + this._safetyPadding * 2);
+    this._pageCanvas.height = FONT_ATLAS_PAGE_HEIGHT_CELLS * (this._metrics.heightPx + this._safetyPadding * 2);
+  
+    // document.body.appendChild(this._pageCanvas);
+
+    this._pageCtx = this._pageCanvas.getContext("2d");
+    this._pageCtx.textBaseline = "top";
+
+    this._pageCtx.fillStyle = "#00000000";
+    this._pageCtx.fillRect(0, 0, this._pageCanvas.width, this._pageCanvas.height);
+    this._pageCtx.fillStyle = "#ffffffff";
+  }
+
+  getCanvas(): HTMLCanvasElement {
+    return this._pageCanvas;
+  }
+
+  private _makeLookupKey(codePoint: number, style: StyleCode): number {
+    return style * TWO_TO_THE_24 + codePoint;
+  }
+
+  protected _getGlyph(codePoint: number, style: StyleCode): CG {
+    let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
+    if (cachedGlyph != null) {
+      return cachedGlyph;
+    }
+    if (this._isFull) {
+      return null;
+    }
+    return this._insertChar(codePoint, style);
+  }
+  
+  protected _insertChar(codePoint: number, style: StyleCode): CG {
+    const xPixels = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
+    const yPixels = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
+
+    this._pageCtx.save();
+    if (style & STYLE_MASK_FAINT) {
+      this._pageCtx.fillStyle = "#ffffff80";
+    }
+
+    let widthPx = this._metrics.widthPx;
+    let isWide = false;
+    if (isBoxCharacter(codePoint)) {
+      drawBoxCharacter(this._pageCtx, codePoint, xPixels, yPixels, this._metrics.widthPx, this._metrics.heightPx);
+    } else {
+      const str = String.fromCodePoint(codePoint);
+
+      isWide = isFullWidth(str);
+      widthPx = isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+
+      let styleName = "";
+      if (style & STYLE_MASK_BOLD) {
+        styleName += "bold ";
+      }
+      if (style & STYLE_MASK_ITALIC) {
+        styleName += "italic ";
+      }
+
+      this._pageCtx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
+      this._pageCtx.fillText(str, xPixels + this._metrics.fillTextXOffset, yPixels + this._metrics.fillTextYOffset);
+    }
+
+    if (style & STYLE_MASK_STRIKETHROUGH) {
+      this._pageCtx.fillRect(xPixels,
+                              yPixels + this._metrics.strikethroughY,
+                              widthPx, this._metrics.strikethroughHeight);
+    }
+
+    const underline = style & STYLE_MASK_UNDERLINE;
+    if (underline === UNDERLINE_STYLE_NORMAL || underline === UNDERLINE_STYLE_DOUBLE) {
+      this._pageCtx.fillRect(xPixels,
+                              yPixels + this._metrics.underlineY,
+                              widthPx, this._metrics.underlineHeight);
+    }
+    if (underline === UNDERLINE_STYLE_DOUBLE) {
+      this._pageCtx.fillRect(xPixels,
+                              yPixels + this._metrics.secondUnderlineY,
+                              widthPx, this._metrics.underlineHeight);
+    }
+    if (underline === UNDERLINE_STYLE_CURLY) {
+      this._pageCtx.save();
+      this._pageCtx.lineWidth = this._metrics.curlyThickness;
+      this._pageCtx.beginPath();
+      this._pageCtx.moveTo(xPixels, yPixels+this._metrics.curlyY);
+      this._pageCtx.quadraticCurveTo(xPixels + widthPx/4, yPixels+this._metrics.curlyY-this._metrics.curlyHeight/2,
+                                      xPixels + widthPx/2, yPixels+this._metrics.curlyY);
+      this._pageCtx.quadraticCurveTo(xPixels + widthPx*3/4, yPixels+this._metrics.curlyY+this._metrics.curlyHeight/2,
+                                        xPixels + widthPx, yPixels+this._metrics.curlyY);
+      this._pageCtx.stroke();
+      this._pageCtx.restore();
+    }
+
+    if (style & STYLE_MASK_OVERLINE) {
+      this._pageCtx.fillRect(xPixels,
+                              yPixels + this._metrics.overlineY,
+                              widthPx, this._metrics.overlineHeight);
+    }
+
+    const cachedGlyph = this._createCachedGlyphStruct({
+      xPixels,
+      yPixels,
+      isWide,
+      widthPx,
+    });
+
+    this._lookupTable.set(this._makeLookupKey(codePoint, style), cachedGlyph);
+
+    this._incrementNextEmptyCell();
+    if (isWide) {
+      this._incrementNextEmptyCell();
+    }
+    
+    this._pageCtx.restore();
+    return cachedGlyph;
+  }
+
+  protected abstract _createCachedGlyphStruct(cg: CachedGlyph): CG;
+
+  private _incrementNextEmptyCell(): void {
+    this._nextEmptyCellX++;
+    if (this._nextEmptyCellX >= (FONT_ATLAS_PAGE_WIDTH_CELLS -1)) {
+      this._nextEmptyCellX = 0;
+      this._nextEmptyCellY++;
+      if (this._nextEmptyCellY >= FONT_ATLAS_PAGE_HEIGHT_CELLS) {
+        this._isFull = true;
+      }
+    }
+  }
+}
+
+//-------------------------------------------------------------------------
+interface ImageBitmapCachedGlyph extends CachedGlyph {
+  imageBitmapPromise: Promise<ImageBitmap>;
+  imageBitmap: ImageBitmap;
+}
+
+/**
+ * Font atlas based glyph renderer which uses ImageBitmap and related
+ * graphics APIs to copy glyphs into a target canvas.
+ */
+class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCachedGlyph> {
+
+  protected _createCachedGlyphStruct(cg: CachedGlyph): ImageBitmapCachedGlyph {
+    return { ...cg, imageBitmapPromise: null, imageBitmap: null };
+  }
+
+  protected _insertChar(codePoint: number, style: StyleCode): ImageBitmapCachedGlyph {
+    const cg = super._insertChar(codePoint, style);
+
+    // ImageBitmaps are meant to be much fast to paint with compared to normal canvas.
+    const promise = window.createImageBitmap(this._pageCanvas, cg.xPixels, cg.yPixels, cg.widthPx,
+                                              this._metrics.heightPx);
+    cg.imageBitmapPromise = promise;
+    promise.then((imageBitmap: ImageBitmap) => {
+      cg.imageBitmap = imageBitmap;
+      cg.imageBitmapPromise = null;
+    });
+
+    return cg;
+  }
+
+  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): boolean {
+
+    const cachedGlyph = this._getGlyph(codePoint, style);
+    if (cachedGlyph === null) {
+      return false;
+    }
+
+    const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(xPixel, yPixel, widthPx, this._metrics.heightPx);
+    ctx.clip();
+
+    if (cachedGlyph.imageBitmap != null) {
+      // Fast version
+      ctx.drawImage(cachedGlyph.imageBitmap,
+        0, 0,                             // Source location
+        widthPx, this._metrics.heightPx,  // Size
+        xPixel, yPixel,                   // Dest location
+        widthPx, this._metrics.heightPx); // Size
+
+    } else {
+      // Slow canvas version for when the ImageBitmap isn't ready yet.
+      ctx.drawImage(this._pageCanvas,
+                    cachedGlyph.xPixels, cachedGlyph.yPixels,   // Source location
+                    widthPx, this._metrics.heightPx,  // Size
+                    xPixel, yPixel,                                 // Dest location
+                    widthPx, this._metrics.heightPx); // Size
+    }
+    ctx.restore();
+    return true;
+  }
+
+}
+
+//-------------------------------------------------------------------------
+interface CPURenderedCachedGlyph extends CachedGlyph {
+  imageData: ImageData;
+}
+
+/**
+ * Font atlas based glyph renderer which uses the CPU to copy glyphs into a
+ * target ImageData object.
+ * 
+ * This renderer is based around pushing bytes using the CPU only. It doesn't
+ * incur the overhead of the graphics APIs and for large numbers of small
+ * glyphs it can be significantly faster.
+ */
+class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph> {
+
+  protected _createCachedGlyphStruct(cg: CachedGlyph): CPURenderedCachedGlyph {
+    return { ...cg, imageData: null };
+  }
+
+  protected _insertChar(codePoint: number, style: StyleCode): CPURenderedCachedGlyph {
+    const cg = super._insertChar(codePoint, style);
+    cg.imageData = this._pageCtx.getImageData(cg.xPixels, cg.yPixels, cg.widthPx, this._metrics.heightPx)
+    return cg;
+  }
+
+  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): boolean {
+    const cachedGlyph = this._getGlyph(codePoint, style);
+    if (cachedGlyph === null) {
+      return false;
+    }
+
+    const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+    const heightPx = this._metrics.heightPx;
+
+    const destData = destImageData.data;
+    const glyphData = cachedGlyph.imageData.data;
+
+    // Manually copy the image data across
+    let glyphOffset = 0;
+    for (let y=0; y<heightPx; y++) {
+
+      let destOffset = ((yPixel+y) * destImageData.width + xPixel) * 4;
+      for (let x=0; x<widthPx; x++) {
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+      }
+    }
+
+    return true;
+  }
+}
+
+//-------------------------------------------------------------------------
+
+function isFullWidth(ch: string): boolean {
+  switch (easta(ch)) {
+  	case 'Na': //Narrow
+ 	  return false;
+  	case 'F': //FullWidth
+  	  return true;
+  	case 'W': // Wide
+  	  return true;
+  	case 'H': //HalfWidth
+  	  return false;
+  	case 'A': //Ambiguous
+  	  return false;
+  	case 'N': //Neutral
+  	  return false;
+  	default:
+  	  return false;
+  }
+}
+

@@ -34,7 +34,7 @@ import * as GeneralEvents from './GeneralEvents';
 import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
 import { dispatchContextMenuRequest } from './command/CommandUtils';
 import * as DomUtils from './DomUtils';
-import {doLater, DebouncedDoLater} from '../utils/DoLater';
+import {doLater, DebouncedDoLater} from 'extraterm-later';
 import * as Term from './emulator/Term';
 import {UploadProgressBar} from './UploadProgressBar';
 import * as WebIpc from './WebIpc';
@@ -47,6 +47,7 @@ import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigD
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
+import { TerminalVisualConfig } from './TerminalVisualConfig';
 
 const log = LogDecorator;
 
@@ -114,7 +115,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   
   private _fileBroker: BulkFileBroker = null;
   private _downloadHandler: DownloadApplicationModeHandler = null;
-  
+  private _terminalVisualConfig: TerminalVisualConfig = null;
+
   private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
   private _bracketStyle: string = null;
 
@@ -194,6 +196,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
       this._terminalCanvas = new TerminalCanvas();
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
+      this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
       this._containerElement = DomUtils.getShadowId(this, ID_CONTAINER);
       this._containerElement.appendChild(this._terminalCanvas);
 
@@ -300,6 +303,13 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
+  }
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._terminalVisualConfig = terminalVisualConfig;
+    if (this._terminalCanvas != null) {
+      this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
+    }
   }
 
   private _commandNeedsFrame(commandLine: string): boolean {
@@ -562,25 +572,27 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   private _appendNewTerminalViewer(): void {
-    // Create the TerminalViewer
-    const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-    injectKeybindingsManager(terminalViewer, this._keyBindingManager);
-    injectConfigDatabase(terminalViewer, this._configDatabase);
-    
+    const terminalViewer = this._createTerminalViewer();
     terminalViewer.setEmulator(this._emulator);
 
     this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea 
                                             // removing it from the DOM in the next method call.
-    this._terminalCanvas.appendViewerElement(terminalViewer)
+    this._terminalCanvas.appendViewerElement(terminalViewer);
     this._terminalCanvas.setTerminalViewer(terminalViewer);
-    
-    terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
-                                      ? VisualState.FOCUSED
-                                      : VisualState.UNFOCUSED);
 
     this._emulator.refreshScreen();
 
     this._emitDidAppendViewer(terminalViewer);
+  }
+
+  private _createTerminalViewer(): TerminalViewer {
+    const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
+    injectKeybindingsManager(terminalViewer, this._keyBindingManager);
+    injectConfigDatabase(terminalViewer, this._configDatabase);
+    terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
+                                      ? VisualState.FOCUSED
+                                      : VisualState.UNFOCUSED);
+    return terminalViewer;
   }
 
   /**
@@ -1148,22 +1160,17 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._lastCommandTerminalViewer = null;
       
       // Append our new embedded viewer.
-      const newViewerElement = this._createEmbeddedViewerElement();
+      const newEmbeddedViewer = this._createEmbeddedViewerElement();
 
         // Hang the terminal viewer under the Embedded viewer.
-      newViewerElement.className = "extraterm_output";
+      newEmbeddedViewer.className = "extraterm_output";
 
-      this._terminalCanvas.appendViewerElement(newViewerElement);
+      this._terminalCanvas.appendViewerElement(newEmbeddedViewer);
       
       // Create a terminal viewer to display the output of the last command.
-      const outputTerminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-      injectKeybindingsManager(outputTerminalViewer, this._keyBindingManager);
-      injectConfigDatabase(outputTerminalViewer, this._configDatabase);
-      newViewerElement.setViewerElement(outputTerminalViewer);
+      const outputTerminalViewer = this._createTerminalViewer();
+      newEmbeddedViewer.setViewerElement(outputTerminalViewer);
       
-      outputTerminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
-                                      ? VisualState.FOCUSED
-                                      : VisualState.UNFOCUSED);
       outputTerminalViewer.setReturnCode(returnCode);
       outputTerminalViewer.setCommandLine(this._lastCommandLine);
       outputTerminalViewer.setUseVPad(false);
@@ -1171,7 +1178,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         outputTerminalViewer.setTerminalLines(moveText);
       }
       outputTerminalViewer.setEditable(true);
-      this._emitDidAppendViewer(newViewerElement);
+      this._emitDidAppendViewer(newEmbeddedViewer);
       
       this._appendNewTerminalViewer();
       this._refocus();

@@ -8,6 +8,7 @@ import * as SourceMapSupport from 'source-map-support';
 
 import {Emulator, Platform} from './Term';
 import {RenderEvent, Line} from 'term-api';
+import { STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 const performanceNow = require('performance-now');
 
 test("basic", done => {
@@ -202,8 +203,15 @@ class RenderDevice {
 }
 
 function lineToString(line: Line): string {
-  const lineWithCursor = line.chars.map((c, index) => line.attrs[index] === 0xffffffff ? '#'.codePointAt(0) : c);
-  return String.fromCodePoint(...lineWithCursor);
+  const codePoints = [];
+  for (let i=0; i<line.width; i++) {
+    if (line.getStyle(i, 0) & STYLE_MASK_CURSOR) {
+      codePoints.push("#".codePointAt(0));
+    } else {
+      codePoints.push(line.getCodePoint(i, 0));
+    }
+  }
+  return String.fromCodePoint(...codePoints);
 }
 
 function formatRectString(str: string): string {

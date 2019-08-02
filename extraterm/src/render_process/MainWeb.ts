@@ -49,6 +49,8 @@ import { DisposableHolder } from '../utils/DisposableUtils';
 import { ExtensionCommandContribution, Category } from '../ExtensionMetadata';
 import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
+import { TerminalVisualConfig } from './TerminalVisualConfig';
+import { FontLoader, DpiWatcher } from './gui/Util';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -74,51 +76,56 @@ let configDatabase: ConfigDatabaseImpl = null;
 let extensionManager: ExtensionManager = null;
 let commandPalette: CommandPalette = null;
 let applicationContextMenu: ApplicationContextMenu = null;
+let terminalVisualConfig: TerminalVisualConfig = null;
+let fontLoader: FontLoader = null;
+let dpiWatcher: DpiWatcher = null;
 
-
-export function startUp(closeSplash: () => void): void {
+export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   ElectronMenu.setApplicationMenu(null);
 
+  fontLoader = new FontLoader();
+  dpiWatcher = new DpiWatcher();
   startUpTheming();
   startUpWebIpc();
 
   // Get the Config working.
   configDatabase = new ConfigDatabaseImpl();
   keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
-  const configPromise = WebIpc.requestConfig("*").then( (msg: Messages.ConfigMessage) => {
-    return handleConfigMessage(msg);
-  });
+
+  const configMsg = await WebIpc.requestConfig("*");
+  await asyncHandleConfigMessage(configMsg);
   
-  // Get the config and theme info in and then continue starting up.
-  const allPromise = Promise.all<void>( [configPromise, WebIpc.requestThemeList().then(handleThemeListMessage)] );
-  allPromise.then(loadFontFaces).then( () => {
+  const themeListMsg = await WebIpc.requestThemeList()
+  handleThemeListMessage(themeListMsg);
 
-    const doc = window.document;
-    doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
+  await asyncLoadTerminalTheme();
 
-    startUpExtensions();
-    startUpMainWebUi();
-    registerCommands(extensionManager);
-    startUpSessions(configDatabase, extensionManager);
+  const doc = window.document;
+  doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
 
-    closeSplash();
+  startUpExtensions();
+  startUpMainWebUi();
+  registerCommands(extensionManager);
+  startUpSessions(configDatabase, extensionManager);
 
-    startUpMainMenu();
-    startUpCommandPalette();
-    startUpApplicationContextMenu();
-    startUpWindowEvents();
-    startUpMenus();
+  closeSplash();
 
-    if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
-      mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
-    } else {
-      mainWebUi.commandOpenSettingsTab("session");
-      Electron.remote.dialog.showErrorBox("No session types available",
-        "Extraterm doesn't have any session types configured.");
-    }
-    mainWebUi.focus();
-    window.focus();
-  });
+  startUpMainMenu();
+  startUpCommandPalette();
+  startUpApplicationContextMenu();
+  startUpWindowEvents();
+  startUpMenus();
+  dpiWatcher.onChange(newDpi => handleDpiChange(newDpi));
+
+  if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
+    mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
+  } else {
+    mainWebUi.commandOpenSettingsTab("session");
+    Electron.remote.dialog.showErrorBox("No session types available",
+      "Extraterm doesn't have any session types configured.");
+  }
+  mainWebUi.focus();
+  window.focus();
 }
 
 function startUpTheming(): void {
@@ -141,7 +148,7 @@ function startUpWebIpc(): void {
   WebIpc.start();
   
   // Default handling for config messages.
-  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, handleConfigMessage);
+  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, asyncHandleConfigMessage);
   
   // Default handling for theme messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
@@ -152,15 +159,16 @@ function startUpWebIpc(): void {
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
 }  
 
-function loadFontFaces(): Promise<FontFace[]> {
-  // Next phase is wait for the fonts to load.
-  const fontPromises: Promise<FontFace>[] = [];
-  window.document.fonts.forEach( (font: FontFace) => {
-    if (font.status !== 'loaded' && font.status !== 'loading') {
-      fontPromises.push(font.load());
-    }
-  });
-  return Promise.all<FontFace>( fontPromises );
+async function asyncLoadTerminalTheme(): Promise<void> {
+  const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
+
+  terminalVisualConfig = {
+    fontFamily: config.terminalFont,
+    fontSizePx: config.terminalFontSize,
+    devicePixelRatio: window.devicePixelRatio,
+    terminalTheme: themeMsg.terminalTheme
+  };
 }
 
 function startUpMainWebUi(): void {
@@ -168,6 +176,7 @@ function startUpMainWebUi(): void {
   injectConfigDatabase(mainWebUi, configDatabase);
   injectKeybindingsManager(mainWebUi, keybindingsManager);
   mainWebUi.setExtensionManager(extensionManager);
+  mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
   const showWindowControls = systemConfig.titleBarStyle === "compact" && process.platform !== "darwin";
@@ -419,7 +428,7 @@ function customizeToggleDeveloperTools(): CustomizedCommand {
 }
 
 function commandReloadThemeContents(): void {
-  reloadThemeContents();
+  asyncReloadThemeContents();
 }
 
 function commandOpenCommandPalette(): void {
@@ -483,12 +492,20 @@ function setupOSXMenus(): void {
   ElectronMenu.setApplicationMenu(topMenu);
 }
 
-function handleConfigMessage(msg: Messages.Message): Promise<void> {
+function handleDpiChange(dpi: number): void {
+  const newTerminalVisualConfig = {
+    ...terminalVisualConfig, devicePixelRatio: window.devicePixelRatio
+  };
+  terminalVisualConfig = newTerminalVisualConfig;
+  mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
+}
+
+function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
   const key = configMessage.key;
   configDatabase.setConfigFromMainProcess(key, configMessage.config);
   if ([GENERAL_CONFIG, SYSTEM_CONFIG, "*"].indexOf(key) !== -1) {
-    return setupConfiguration();
+    return asyncSetupConfiguration();
   } else {
     return new Promise<void>( (resolve, cancel) => { resolve(); } );
   }
@@ -536,7 +553,7 @@ function handleClipboardRead(msg: Messages.Message): void {
 let oldSystemConfig: SystemConfig = null;
 let oldGeneralConfig: GeneralConfig = null;
 
-async function setupConfiguration(): Promise<void> {
+async function asyncSetupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
@@ -555,19 +572,17 @@ async function setupConfiguration(): Promise<void> {
     const matchingFonts = newSystemConfig.availableFonts.filter(
       (font) => font.postscriptName === newGeneralConfig.terminalFont);
 
-    const fontSizePx = Math.max(5, Math.round(newGeneralConfig.terminalFontSize));
-    setCssVars(newGeneralConfig.terminalFont, matchingFonts[0].path, fontSizePx);
+    const fontSizePx = Math.max(5, newGeneralConfig.terminalFontSize);
+    setCssVars(newGeneralConfig.terminalFont, fontSizePx);
+    await fontLoader.loadFont(newGeneralConfig.terminalFont, matchingFonts[0].path);
   }
 
   if (oldGeneralConfig == null) {
     oldGeneralConfig = newGeneralConfig;
     oldSystemConfig = newSystemConfig;
-    await requestThemeContents();
+    await asyncRequestThemeContents();
   } else {
     const refreshThemeTypeList: ThemeTypes.ThemeType[] = [];
-    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
-      refreshThemeTypeList.push("terminal");
-    }
     if (oldGeneralConfig.themeSyntax !== newGeneralConfig.themeSyntax) {
       refreshThemeTypeList.push("syntax");
     }
@@ -577,10 +592,28 @@ async function setupConfiguration(): Promise<void> {
       refreshThemeTypeList.push("gui");
     }
 
-    oldGeneralConfig = newGeneralConfig;
-    oldSystemConfig = newSystemConfig;
     if (refreshThemeTypeList.length !== 0) {
-      await requestThemeContents(refreshThemeTypeList);
+      await asyncRequestThemeContents(refreshThemeTypeList);
+    }
+
+    let terminalVisualConfigChanged = false;
+    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
+      await asyncLoadTerminalTheme();
+      terminalVisualConfigChanged = true;
+    }
+    if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
+        oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize) {
+
+      terminalVisualConfig = {
+        fontFamily: fontLoader.cssNameFromFontName(newGeneralConfig.terminalFont),
+        fontSizePx: newGeneralConfig.terminalFontSize,
+        devicePixelRatio: window.devicePixelRatio,
+        terminalTheme: terminalVisualConfig.terminalTheme,
+      }
+      terminalVisualConfigChanged = true;
+    }
+    if (terminalVisualConfigChanged) {
+      mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
     }
   }
 
@@ -588,7 +621,7 @@ async function setupConfiguration(): Promise<void> {
   oldSystemConfig = newSystemConfig;
 }
 
-async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {
+async function asyncRequestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {
   const cssFileMap = new Map<ThemeTypes.CssFile, string>(ThemeConsumer.cssMap());
 
   const neededThemeTypes = new Set<ThemeTypes.ThemeType>(refreshThemeTypeList);
@@ -619,19 +652,14 @@ async function requestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[]
   ThemeConsumer.updateCss(cssFileMap);
 }
 
-function reloadThemeContents(): void {
-  requestThemeContents();
+function asyncReloadThemeContents(): Promise<void> {
+  return asyncRequestThemeContents();
 }
 
-function setCssVars(fontName: string, fontPath: string, terminalFontSizePx: number): void {
+function setCssVars(fontName: string, terminalFontSizePx: number): void {
   const fontCssName = fontName.replace(/\W/g, "_");
   (<HTMLStyleElement> document.getElementById('CSS_VARS')).textContent =
     `
-    @font-face {
-      font-family: "${fontCssName}";
-      src: url("${fontPath}");
-    }
-
     :root {
       --default-terminal-font-size: ${terminalFontSizePx}px;
       --terminal-font: "${fontCssName}";

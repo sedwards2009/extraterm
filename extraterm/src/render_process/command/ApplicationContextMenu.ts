@@ -10,7 +10,7 @@ import { Logger } from "extraterm-extension-api";
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from "../DomUtils";
-import { doLater } from "../../utils/DoLater";
+import { doLater } from "extraterm-later";
 import { ExtensionManager, CommandQueryOptions } from "../extension/InternalTypes";
 import { MenuItem } from "../gui/MenuItem";
 import { DividerMenuItem } from "../gui/DividerMenuItem";

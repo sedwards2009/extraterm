@@ -6,7 +6,7 @@ function newUint32Array(length: number): Uint32Array {
   return new Uint32Array(Math.max(length, 0));
 }
 
-export function create(length: number): TermApi.Line {
+export function create(length: number): TermApi.OldLine {
   const attrs= new Uint32Array(length);
   for (let i=0; i<length; i++) {
     attrs[i] = DEFAULT_CELL;
@@ -18,7 +18,7 @@ export function create(length: number): TermApi.Line {
   };  
 }
 
-export function insertSpaces(line: TermApi.Line, column: number, count: number): void {
+export function insertSpaces(line: TermApi.OldLine, column: number, count: number): void {
   const newAttr = newUint32Array(line.attrs.length + count);
   newAttr.set(line.attrs, 0);
   newAttr.set(line.attrs.slice(column), column + count);
@@ -28,7 +28,7 @@ export function insertSpaces(line: TermApi.Line, column: number, count: number):
   line.attrs = newAttr;
 }
 
-export function split(line: TermApi.Line, column: number): TermApi.Line {
+export function split(line: TermApi.OldLine, column: number): TermApi.OldLine {
   const leftAttr = new Uint32Array(line.attrs.slice(0, column));
   const rightAttr = newUint32Array(line.attrs.length - column);
   rightAttr.set(line.attrs.slice(column), 0);
@@ -39,7 +39,7 @@ export function split(line: TermApi.Line, column: number): TermApi.Line {
   };
 }
 
-export function cut(line: TermApi.Line, startColumn: number, endColumn?: number): void {
+export function cut(line: TermApi.OldLine, startColumn: number, endColumn?: number): void {
   if (endColumn == null) {
     const newAttr = new Uint32Array(line.attrs.slice(0, startColumn));
     line.attrs = newAttr;
@@ -51,7 +51,7 @@ export function cut(line: TermApi.Line, startColumn: number, endColumn?: number)
   }
 }
 
-export function insert(line: TermApi.Line, column: number, insetLine: TermApi.Line): void {
+export function insert(line: TermApi.OldLine, column: number, insetLine: TermApi.OldLine): void {
   const leftAttr = newUint32Array(line.attrs.length + insetLine.attrs.length);
   leftAttr.set(line.attrs.slice(0, column), 0);
   leftAttr.set(insetLine.attrs, column);
@@ -59,44 +59,9 @@ export function insert(line: TermApi.Line, column: number, insetLine: TermApi.Li
   line.attrs = leftAttr;
 }
 
-export function copy(sourceLine: TermApi.Line): TermApi.Line {
+export function copy(sourceLine: TermApi.OldLine): TermApi.OldLine {
   return {
     attrs: new Uint32Array(sourceLine.attrs),
     chars: new Uint32Array(sourceLine.chars),
   };
-}
-
-export function stringToCodePointArray(str: string): Uint32Array {
-  const codePointArray = newUint32Array(countCodePoints(str));
-  const len = str.length;
-  let c = 0;
-  let i = 0;
-  while (i < len) {
-    const codePoint = str.codePointAt(i);
-    codePointArray[c] = codePoint;
-    if (codePoint > 0xffff) {
-      i += 2;
-    } else {
-      i++;
-    }
-    c++;
-  }
-
-  return codePointArray;
-}
-
-function countCodePoints(str: string): number {
-  const len = str.length;
-  let c = 0;
-  let i = 0;
-  while (i < len) {
-    const codePoint = str.codePointAt(i);
-    if (codePoint > 0xffff) {
-      i += 2;
-    } else {
-      i++;
-    }
-    c++;
-  }
-  return c;
 }

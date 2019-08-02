@@ -3,6 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Event } from 'extraterm-extension-api';
+import { EventEmitter } from "../../utils/EventEmitter";
+
 
 /**
  * Convert a value to a boolean.
@@ -97,7 +100,7 @@ export class Color {
   _red: number;
   _green: number;
   _blue: number;
-  _opacity: number;
+  _opacity: number; // 0-255
   _hexString: string = null;
   _rgbaString: string = null;
   
@@ -116,19 +119,32 @@ export class Color {
       if (stringColor.startsWith("#")) {
         if (stringColor.length === 4) {
           // Parse the 4bit colour values and expand then to 8bit.
-          this._red = parseInt(stringColor.slice(1,2), 16) * 17;
-          this._green = parseInt(stringColor.slice(2,3), 16) * 17;
-          this._blue = parseInt(stringColor.slice(3,4), 16) * 17;
-          
+          this._red = parseInt(stringColor.slice(1, 2), 16) * 17;
+          this._green = parseInt(stringColor.slice(2, 3), 16) * 17;
+          this._blue = parseInt(stringColor.slice(3, 4), 16) * 17;
+          this._opacity = 255;
+        } else if (stringColor.length === 4) {
+          // Parse the 4bit colour values and expand then to 8bit.
+          this._red = parseInt(stringColor.slice(1, 2), 16) * 17;
+          this._green = parseInt(stringColor.slice(2, 3), 16) * 17;
+          this._blue = parseInt(stringColor.slice(3, 4), 16) * 17;
+          this._opacity = parseInt(stringColor.slice(4, 5), 16) * 17;
+            
         } else if (stringColor.length === 7) {
-          this._red = parseInt(stringColor.slice(1,3), 16);
-          this._green = parseInt(stringColor.slice(3,5), 16);
-          this._blue = parseInt(stringColor.slice(5,7), 16);          
+          this._red = parseInt(stringColor.slice(1, 3), 16);
+          this._green = parseInt(stringColor.slice(3, 5), 16);
+          this._blue = parseInt(stringColor.slice(5, 7), 16);          
+          this._opacity = 255;
+
+        } else if (stringColor.length === 9) {
+          this._red = parseInt(stringColor.slice(1, 3), 16);
+          this._green = parseInt(stringColor.slice(3, 5), 16);
+          this._blue = parseInt(stringColor.slice(5, 7), 16);
+          this._opacity = parseInt(stringColor.slice(7, 9), 16);
         } else {
           // Malformed hex colour.
           
         }
-        this._opacity = 1;
         
       } else {
         // What now?!
@@ -139,7 +155,7 @@ export class Color {
       this._red = red;
       this._green = green !== undefined ? green : 0;
       this._blue = blue !== undefined ? blue : 0;
-      this._opacity = opacity !== undefined ? opacity : 1;
+      this._opacity = opacity !== undefined ? opacity : 255;
     }
   }
   /**
@@ -161,18 +177,22 @@ export class Color {
    */
   toRGBAString(): string {
     if (this._rgbaString === null) {
-      this._rgbaString = "rgba(" + this._red + "," + this._green + "," + this._blue + "," + this._opacity + ")";
+      this._rgbaString = "rgba(" + this._red + "," + this._green + "," + this._blue + "," + (this._opacity/255) + ")";
     }
     return this._rgbaString;
   }
-  
+
+  toRGBA(): number {
+    return (this._red << 24) | (this._green << 16) | (this._blue << 8) | this._opacity;
+  }
+
   /**
    * Returns the color as a CSS string.
    * 
    * @return the color as a CSS formatted string.
    */
   toString(): string {
-    if (this._opacity == 1) {
+    if (this._opacity == 255) {
       // Use a hex representation.
       return this.toHexString();
     } else {
@@ -196,7 +216,7 @@ export class Color {
     const red = Math.min(255, Math.round(fraction * this._red + rightFraction * otherColor._red));
     const green = Math.min(255, Math.round(fraction * this._green + rightFraction * otherColor._green));
     const blue = Math.min(255, Math.round(fraction * this._blue + rightFraction * otherColor._blue));
-    const opacity = Math.min(255, Math.round(fraction* this._opacity + rightFraction * otherColor._opacity));
+    const opacity = Math.min(255, Math.round(fraction* (this._opacity/255) + rightFraction * (otherColor._opacity/255)));
     return new Color(red, green, blue, opacity);
   }
 }
@@ -210,4 +230,75 @@ export class Color {
 export function to2DigitHex(value: number): string {
   const h = value.toString(16);
   return h.length === 1 ? "0" + h : h;
+}
+
+//-------------------------------------------------------------------------
+/**
+ * A little class to help load fonts on demand.
+ */
+export class FontLoader {
+  private _knownFontNames = new Set<string>();
+
+  async loadFont(fontName: string, fontPath: string): Promise<void> {
+    if ( ! this._knownFontNames.has(fontName)) {
+      this._appendFontFaceStyleElement(fontName, fontPath);
+      this._knownFontNames.add(fontName);
+    }
+    await this._fontFaceLoad();
+  }
+
+  cssNameFromFontName(fontName: string): string {
+    return fontName.replace(/\W/g, "_");
+  }
+
+  private _appendFontFaceStyleElement(fontName: string, fontPath: string): void {
+    const fontCssName = this.cssNameFromFontName(fontName);
+    const el = <HTMLStyleElement> document.createElement("style");
+    el.textContent =
+      `
+      @font-face {
+        font-family: "${fontCssName}";
+        src: url("${fontPath}");
+      }
+      `;
+    document.head.appendChild(el);
+  }
+
+  private async _fontFaceLoad(): Promise<FontFace[]> {
+    // Next phase is wait for the fonts to load.
+    const fontPromises: Promise<FontFace>[] = [];
+    window.document.fonts.forEach( (font: FontFace) => {
+      if (font.status !== 'loaded' && font.status !== 'loading') {
+        fontPromises.push(font.load());
+      }
+    });
+    return Promise.all<FontFace>( fontPromises );
+  }
+}
+
+//-------------------------------------------------------------------------
+/**
+ * Listener for window DPI changes.
+ * 
+ * `onChange(newDpi)` fires when the window DPI changes.
+ */
+export class DpiWatcher {
+  private _onChangeEventEmitter = new EventEmitter<number>();
+  onChange: Event<number>;
+  private _mediaQueryList: MediaQueryList = null;
+
+  constructor() {
+    this.onChange = this._onChangeEventEmitter.event;
+    this._setupListener();
+  }
+
+  private _setupListener(): void {
+    this._mediaQueryList = window.matchMedia(`(resolution: ${window.devicePixelRatio*96}dpi)`);
+    this._mediaQueryList.addEventListener("change", (ev: MediaQueryListEvent) => {
+      if ( ! ev.matches) {
+        this._onChangeEventEmitter.fire(window.devicePixelRatio);
+      }
+      this._setupListener();
+    });
+  }
 }

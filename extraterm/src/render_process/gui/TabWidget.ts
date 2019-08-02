@@ -6,7 +6,7 @@
 import * as _ from 'lodash';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
 
-import {doLater} from '../../utils/DoLater';
+import {doLater} from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import { log } from "extraterm-logging";
 import {Logger, getLogger} from "extraterm-logging";
