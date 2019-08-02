@@ -13,40 +13,46 @@ const TWO_TO_THE_24 = 2 ** 24;
 
 export class FontAtlasImpl implements FontAtlas {
   private _log: Logger = null;
-  private _pages: FontAtlasPage[] = [];
+  private _imageBitmapPages: ImageBitmapFontAtlasPage[] = [];
+  private _cpuRenderedPages: CPURenderedFontAtlasPage[] = [];
 
   constructor(private readonly _metrics: MonospaceFontMetrics) {
     this._log = getLogger("FontAtlasImpl", this);
-    this._appendPage();
   }
 
   drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode,
                 xPixel: number, yPixel: number): void {
 
-    for (let page of this._pages) {
+    for (let page of this._imageBitmapPages) {
       if (page.drawCodePoint(ctx, codePoint, style, xPixel, yPixel)) {
         return;
       }
     }
 
-    const page = this._appendPage();
+    const page = this._appendImageBitmapPage();
     page.drawCodePoint(ctx, codePoint, style, xPixel, yPixel);
   }
 
   drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): void {
-    for (let page of this._pages) {
+    for (let page of this._cpuRenderedPages) {
       if (page.drawCodePointToImageData(destImageData, codePoint, style, xPixel, yPixel)) {
         return;
       }
     }
 
-    const page = this._appendPage();
+    const page = this._appendCPURenderedPage();
     page.drawCodePointToImageData(destImageData, codePoint, style, xPixel, yPixel);
   }
 
-  private _appendPage(): FontAtlasPage {
-    const page = new FontAtlasPage(this._metrics);
-    this._pages.push(page);
+  private _appendImageBitmapPage(): ImageBitmapFontAtlasPage {
+    const page = new ImageBitmapFontAtlasPage(this._metrics);
+    this._imageBitmapPages.push(page);
+    return page;
+  }
+
+  private _appendCPURenderedPage(): CPURenderedFontAtlasPage {
+    const page = new CPURenderedFontAtlasPage(this._metrics);
+    this._cpuRenderedPages.push(page);
     return page;
   }
 }
@@ -61,25 +67,23 @@ interface CachedGlyph {
   xPixels: number;
   yPixels: number;
   isWide: boolean;
-  imageBitmapPromise: Promise<ImageBitmap>;
-  imageBitmap: ImageBitmap;
-  imageData: ImageData;
+  widthPx: number;
 }
 
 
-class FontAtlasPage {
+abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   private _log: Logger = null;
 
-  private _pageCanvas: HTMLCanvasElement = null;
-  private _pageCtx: CanvasRenderingContext2D = null;
+  protected _pageCanvas: HTMLCanvasElement = null;
+  protected _pageCtx: CanvasRenderingContext2D = null;
   private _safetyPadding: number = 0;
 
   private _nextEmptyCellX: number = 0;
   private _nextEmptyCellY: number = 0;
-  private _lookupTable: Map<number, CachedGlyph> = new Map();
+  private _lookupTable: Map<number, CG> = new Map();
   private _isFull = false;
 
-  constructor(private readonly _metrics: MonospaceFontMetrics) {
+  constructor(protected readonly _metrics: MonospaceFontMetrics) {
     this._log = getLogger("FontAtlasPage", this);
 
     // this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
@@ -111,41 +115,7 @@ class FontAtlasPage {
     return style * TWO_TO_THE_24 + codePoint;
   }
 
-  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): boolean {
-
-    const cachedGlyph = this._getGlyph(codePoint, style);
-    if (cachedGlyph === null) {
-      return false;
-    }
-
-    const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(xPixel, yPixel, widthPx, this._metrics.heightPx);
-    ctx.clip();
-
-    if (cachedGlyph.imageBitmap != null) {
-      // Fast version
-      ctx.drawImage(cachedGlyph.imageBitmap,
-        0, 0,                             // Source location
-        widthPx, this._metrics.heightPx,  // Size
-        xPixel, yPixel,                   // Dest location
-        widthPx, this._metrics.heightPx); // Size
-
-    } else {
-      // Slow canvas version for when the ImageBitmap isn't ready yet.
-      ctx.drawImage(this._pageCanvas,
-                    cachedGlyph.xPixels, cachedGlyph.yPixels,   // Source location
-                    widthPx, this._metrics.heightPx,  // Size
-                    xPixel, yPixel,                                 // Dest location
-                    widthPx, this._metrics.heightPx); // Size
-    }
-    ctx.restore();
-    return true;
-  }
-
-  private _getGlyph(codePoint: number, style: StyleCode): CachedGlyph {
+  protected _getGlyph(codePoint: number, style: StyleCode): CG {
     let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
     if (cachedGlyph != null) {
       return cachedGlyph;
@@ -155,47 +125,8 @@ class FontAtlasPage {
     }
     return this._insertChar(codePoint, style);
   }
-
-  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): boolean {
-    const cachedGlyph = this._getGlyph(codePoint, style);
-    if (cachedGlyph === null) {
-      return false;
-    }
-
-    const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
-    const heightPx = this._metrics.heightPx;
-
-    const destData = destImageData.data;
-    const glyphData = cachedGlyph.imageData.data;
-
-    // Manually copy the image data across
-    let glyphOffset = 0;
-    for (let y=0; y<heightPx; y++) {
-
-      let destOffset = ((yPixel+y) * destImageData.width + xPixel) * 4;
-      for (let x=0; x<widthPx; x++) {
-        destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
-
-        destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
-
-        destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
-
-        destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
-      }
-    }
-
-    return true;
-  }
   
-  private _insertChar(codePoint: number, style: StyleCode): CachedGlyph {
+  protected _insertChar(codePoint: number, style: StyleCode): CG {
     const xPixels = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
     const yPixels = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
 
@@ -262,19 +193,11 @@ class FontAtlasPage {
                               widthPx, this._metrics.overlineHeight);
     }
 
-    // ImageBitmaps are meant to be much fast to paint with compared to normal canvas.
-    const promise = window.createImageBitmap(this._pageCanvas, xPixels, yPixels, widthPx, this._metrics.heightPx);
-    const cachedGlyph: CachedGlyph = {
+    const cachedGlyph = this._createCachedGlyphStruct({
       xPixels,
       yPixels,
       isWide,
-      imageBitmapPromise: promise,
-      imageBitmap: null,
-      imageData: this._pageCtx.getImageData(xPixels, yPixels, widthPx, this._metrics.heightPx)
-    };
-    promise.then((imageBitmap: ImageBitmap) => {
-      cachedGlyph.imageBitmap = imageBitmap;
-      cachedGlyph.imageBitmapPromise = null;
+      widthPx,
     });
 
     this._lookupTable.set(this._makeLookupKey(codePoint, style), cachedGlyph);
@@ -287,6 +210,8 @@ class FontAtlasPage {
     this._pageCtx.restore();
     return cachedGlyph;
   }
+
+  protected abstract _createCachedGlyphStruct(cg: CachedGlyph): CG;
 
   private _incrementNextEmptyCell(): void {
     this._nextEmptyCellX++;
@@ -301,7 +226,138 @@ class FontAtlasPage {
 }
 
 //-------------------------------------------------------------------------
+interface ImageBitmapCachedGlyph extends CachedGlyph {
+  imageBitmapPromise: Promise<ImageBitmap>;
+  imageBitmap: ImageBitmap;
+}
 
+/**
+ * Font atlas based glyph renderer which uses ImageBitmap and related
+ * graphics APIs to copy glyphs into a target canvas.
+ */
+class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCachedGlyph> {
+
+  protected _createCachedGlyphStruct(cg: CachedGlyph): ImageBitmapCachedGlyph {
+    return { ...cg, imageBitmapPromise: null, imageBitmap: null };
+  }
+
+  protected _insertChar(codePoint: number, style: StyleCode): ImageBitmapCachedGlyph {
+    const cg = super._insertChar(codePoint, style);
+
+    // ImageBitmaps are meant to be much fast to paint with compared to normal canvas.
+    const promise = window.createImageBitmap(this._pageCanvas, cg.xPixels, cg.yPixels, cg.widthPx,
+                                              this._metrics.heightPx);
+    cg.imageBitmapPromise = promise;
+    promise.then((imageBitmap: ImageBitmap) => {
+      cg.imageBitmap = imageBitmap;
+      cg.imageBitmapPromise = null;
+    });
+
+    return cg;
+  }
+
+  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): boolean {
+
+    const cachedGlyph = this._getGlyph(codePoint, style);
+    if (cachedGlyph === null) {
+      return false;
+    }
+
+    const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(xPixel, yPixel, widthPx, this._metrics.heightPx);
+    ctx.clip();
+
+    if (cachedGlyph.imageBitmap != null) {
+      // Fast version
+      ctx.drawImage(cachedGlyph.imageBitmap,
+        0, 0,                             // Source location
+        widthPx, this._metrics.heightPx,  // Size
+        xPixel, yPixel,                   // Dest location
+        widthPx, this._metrics.heightPx); // Size
+
+    } else {
+      // Slow canvas version for when the ImageBitmap isn't ready yet.
+      ctx.drawImage(this._pageCanvas,
+                    cachedGlyph.xPixels, cachedGlyph.yPixels,   // Source location
+                    widthPx, this._metrics.heightPx,  // Size
+                    xPixel, yPixel,                                 // Dest location
+                    widthPx, this._metrics.heightPx); // Size
+    }
+    ctx.restore();
+    return true;
+  }
+
+}
+
+//-------------------------------------------------------------------------
+interface CPURenderedCachedGlyph extends CachedGlyph {
+  imageData: ImageData;
+}
+
+/**
+ * Font atlas based glyph renderer which uses the CPU to copy glyphs into a
+ * target ImageData object.
+ * 
+ * This renderer is based around pushing bytes using the CPU only. It doesn't
+ * incur the overhead of the graphics APIs and for large numbers of small
+ * glyphs it can be significantly faster.
+ */
+class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph> {
+
+  protected _createCachedGlyphStruct(cg: CachedGlyph): CPURenderedCachedGlyph {
+    return { ...cg, imageData: null };
+  }
+
+  protected _insertChar(codePoint: number, style: StyleCode): CPURenderedCachedGlyph {
+    const cg = super._insertChar(codePoint, style);
+    cg.imageData = this._pageCtx.getImageData(cg.xPixels, cg.yPixels, cg.widthPx, this._metrics.heightPx)
+    return cg;
+  }
+
+  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): boolean {
+    const cachedGlyph = this._getGlyph(codePoint, style);
+    if (cachedGlyph === null) {
+      return false;
+    }
+
+    const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+    const heightPx = this._metrics.heightPx;
+
+    const destData = destImageData.data;
+    const glyphData = cachedGlyph.imageData.data;
+
+    // Manually copy the image data across
+    let glyphOffset = 0;
+    for (let y=0; y<heightPx; y++) {
+
+      let destOffset = ((yPixel+y) * destImageData.width + xPixel) * 4;
+      for (let x=0; x<widthPx; x++) {
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+
+        destData[destOffset] = glyphData[glyphOffset];
+        destOffset++
+        glyphOffset++
+      }
+    }
+
+    return true;
+  }
+}
+
+//-------------------------------------------------------------------------
 
 function isFullWidth(ch: string): boolean {
   switch (easta(ch)) {

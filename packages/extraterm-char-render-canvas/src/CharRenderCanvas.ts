@@ -73,6 +73,11 @@ export function xtermPalette(): number[] {
   return colors;
 }
 
+export enum Renderer {
+  ImageBitmap,  // Use ImageBitmap and graphics API to copy glyphs.
+  CPU   // Use the CPU to copy glyphs.
+}
+
 //-------------------------------------------------------------------------
 export interface CharRenderCanvasOptions {
   /**
@@ -152,6 +157,11 @@ export interface CharRenderCanvasOptions {
   fontAtlasRepository?: FontAtlasRepository;
 
   cursorStyle?: CursorStyle;
+
+  /**
+   * The render method to use.
+   */
+  renderer?: Renderer;
 }
 
 export interface FontSlice {
@@ -243,12 +253,14 @@ export class CharRenderCanvas implements Disposable {
   private _disposables: Disposable[] = [];
 
   private _cursorStyle = CursorStyle.BLOCK;
+  private _renderer: Renderer;
 
   constructor(options: CharRenderCanvasOptions) {
     this._log = getLogger("CharRenderCanvas", this);
     const { widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily, fontSizePx,
-            debugParentElement, palette, fontAtlasRepository, cursorStyle } = options;
+            debugParentElement, palette, fontAtlasRepository, cursorStyle, renderer } = options;
 
+    this._renderer = renderer || Renderer.ImageBitmap;
     this._palette = palette;
     this._cursorStyle = cursorStyle === undefined? CursorStyle.BLOCK : cursorStyle;
 
@@ -404,8 +416,11 @@ export class CharRenderCanvas implements Disposable {
   render(): void {
     this._updateCharGridFlags();
 
-    // this._renderCharacters();
-    this._renderCharactersUsingImageData();
+    if (this._renderer === Renderer.ImageBitmap) {
+      this._renderCharacters();
+    } else {
+      this._renderCharactersUsingImageData();
+    }
 
     this._fgColorPatchCanvas.setRenderCursor(this._cursorStyle === CursorStyle.BLOCK);
     this._fgColorPatchCanvas.render();
@@ -639,14 +654,25 @@ export class CharRenderCanvas implements Disposable {
       return;
     }
 
+    if (this._renderer === Renderer.ImageBitmap) {
+      this._scrollCharCanvas(verticalOffsetChars);
+    } else {
+      this._scrollCharImageData(verticalOffsetChars);
+    }
+
+    this._cellGrid.scrollVertical(verticalOffsetChars);
+    this._renderedCellGrid.scrollVertical(verticalOffsetChars);
+  }
+
+  private _scrollCharCanvas(verticalOffsetChars: number): void {
+    const ctx = this._charCanvasCtx;
+    const scrollingUp = verticalOffsetChars < 0;
+
     const affectedHeightPx = (this._cellGrid.height - Math.abs(verticalOffsetChars)) * this.cellHeightPx;
     if (affectedHeightPx < 0) {
       // Scroll offset is so big that nothing will change on screen.
       return;
     }
-
-    const ctx = this._charCanvasCtx;
-    const scrollingUp = verticalOffsetChars < 0;
 
     ctx.save();
     ctx.beginPath();
@@ -659,10 +685,6 @@ export class CharRenderCanvas implements Disposable {
 
     this._charCanvasCtx.drawImage(this._charCanvas, 0, verticalOffsetChars * this.cellHeightPx);
     ctx.restore();
-
-    this._cellGrid.scrollVertical(verticalOffsetChars);
-    this._renderedCellGrid.scrollVertical(verticalOffsetChars);
-    this._scrollCharImageData(verticalOffsetChars);
   }
 
   private _scrollCharImageData(verticalOffsetChars: number): void {

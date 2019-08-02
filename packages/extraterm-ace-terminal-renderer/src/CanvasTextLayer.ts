@@ -3,7 +3,7 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas, FontAtlasRepository, CursorStyle } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer } from "extraterm-char-render-canvas";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
@@ -216,7 +216,8 @@ export class CanvasTextLayer implements TextLayer {
         unicodeEnd: 0x20000,
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }],
-      cursorStyle: this._cursorStyle
+      cursorStyle: this._cursorStyle,
+      renderer: Renderer.CPU,
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();

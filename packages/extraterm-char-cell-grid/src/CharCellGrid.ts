@@ -521,7 +521,7 @@ export class CharCellGrid {
     }
   }
 
-  private _copyRow(sourceOffset: number, destOffset): void {
+  private _copyRow(sourceOffset: number, destOffset: number): void {
     const width = this.width;
     const uint32Array = new Uint32Array(this._rawBuffer);
     for (let h=0; h<width; h++) {
