@@ -151,11 +151,13 @@ export class CanvasTextLayer implements TextLayer {
   }
 
   scrollRows(config: LayerConfig, viewPortSize: ViewPortSize): void {
-    if (Math.abs(config.firstRow - this._lastConfig.firstRow) < this._charRenderCanvas.getCellGrid().height) {
-      // Scroll the existing contents      
-      this._charRenderCanvas.scrollVertical(config.firstRow - this._lastConfig.firstRow);
+    if (this._charRenderCanvas != null) {
+      if (Math.abs(config.firstRow - this._lastConfig.firstRow) < this._charRenderCanvas.getCellGrid().height) {
+        // Scroll the existing contents      
+        this._charRenderCanvas.scrollVertical(config.firstRow - this._lastConfig.firstRow);
+      }
     }
-
+    
     this.update(config, viewPortSize);
   }
 
