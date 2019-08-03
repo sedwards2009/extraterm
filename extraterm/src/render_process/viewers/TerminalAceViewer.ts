@@ -26,7 +26,7 @@ import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, 
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { SearchOptions } from 'ace-ts/build/SearchOptions';
-import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { Color } from '../gui/Util';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 
@@ -52,7 +52,7 @@ function getCssText(): string {
 
 @WebComponent({tag: "et-terminal-ace-viewer"})
 export class TerminalViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
-    TextEditor, Disposable {
+    TextEditor, AcceptsTerminalVisualConfig, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";

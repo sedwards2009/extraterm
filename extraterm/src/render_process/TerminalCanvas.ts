@@ -26,7 +26,7 @@ import { ThemeableElementBase } from "./ThemeableElementBase";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { CssFile } from '../theme/Theme';
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
-import { TerminalVisualConfig } from "./TerminalVisualConfig";
+import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;
@@ -347,9 +347,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   private _applyTerminalVisualConfig(): void {
     for (const element of this.getViewerElements()) {
-      if (element instanceof TerminalViewer) {
-        element.setTerminalVisualConfig(this._effectiveTerminalVisualConfig);
-      }
+      injectTerminalVisualConfig(element, this._effectiveTerminalVisualConfig);
     }
   }
 
@@ -392,9 +390,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   appendViewerElement(el: ViewerElement): void {
     el.addEventListener('focus', this._childFocusHandlerFunc);
 
-    if (el instanceof TerminalViewer) {
-      el.setTerminalVisualConfig(this._baseTerminalVisualConfig);
-    }
+    injectTerminalVisualConfig(el, this._baseTerminalVisualConfig);
 
     this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: RefreshLevel.RESIZE } );
     this._scrollArea.appendChild(el);

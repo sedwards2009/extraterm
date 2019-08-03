@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -28,6 +28,7 @@ import {VisualState} from './ViewerElementTypes';
 import * as VirtualScrollArea from '../VirtualScrollArea';
 import { SetterState } from '../VirtualScrollArea';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { injectTerminalVisualConfig, TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 
 
 const ID = "EtEmbeddedViewerTemplate";
@@ -106,7 +107,8 @@ class TitleBarUI extends Vue {
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
 @WebComponent({tag: "et-embeddedviewer"})
-export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste {
+export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
+    AcceptsTerminalVisualConfig {
   
   static TAG_NAME = 'ET-EMBEDDEDVIEWER';
 
@@ -129,6 +131,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   private _log: Logger = null;
   private _visualState: VisualState = ViewerElementTypes.VisualState.AUTO;
   private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
+  private _terminalVisualConfig: TerminalVisualConfig = null;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea;
   private _boundFocusHandler: (ev: FocusEvent) => void;
   private _requestContainerScroll = false; // true if the container needs scroll to be set.
@@ -211,6 +214,14 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     }
   }
 
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._terminalVisualConfig = terminalVisualConfig;
+    const viewerElement = this._getViewerElement();
+    if (viewerElement != null) {
+      injectTerminalVisualConfig(viewerElement, this._terminalVisualConfig);
+    }
+  }
+
   setViewerElement(element: ViewerElement): void {
     const oldViewer = this._getViewerElement()
     if (oldViewer != null) {
@@ -224,6 +235,8 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     if (element !== null) {
       element.setVisualState(this._visualState);
       element.setMode(this._mode);
+      injectTerminalVisualConfig(element, this._terminalVisualConfig);
+
       element.addEventListener('focus', this._boundFocusHandler);
       this.appendChild(element);
       this._virtualScrollArea.appendScrollable(element);

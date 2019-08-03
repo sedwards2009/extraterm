@@ -39,7 +39,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { NewTerminalContextArea } from './NewTerminalContextArea';
 import { CommandAndShortcut } from './command/CommandPalette';
 import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
-import { TerminalVisualConfig } from './TerminalVisualConfig';
+import { TerminalVisualConfig, injectTerminalVisualConfig } from './TerminalVisualConfig';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -151,9 +151,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
 
     for (const el of this._splitLayout.getAllTabContents()) {
-      if (el instanceof EtTerminal) {
-        el.setTerminalVisualConfig(terminalVisualConfig);
-      }
+      injectTerminalVisualConfig(el, terminalVisualConfig);
     }
   }
 
