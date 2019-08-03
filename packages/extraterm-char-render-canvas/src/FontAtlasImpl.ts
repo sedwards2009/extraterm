@@ -323,7 +323,18 @@ class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph>
       return false;
     }
 
-    const widthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+    const glyphWidthPx = cachedGlyph.isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
+
+    let glyphRowStride = 0;
+    let widthPx = glyphWidthPx;
+
+    // Clip the right edge of the glyph. This shouldn't be needed most of the time, but it is possible
+    // that a multi-cell wide glyph is positioned at the far right side of the `destImageData`.
+    if (glyphWidthPx + xPixel > destImageData.width) {
+      widthPx = destImageData.width - xPixel;
+      glyphRowStride = (glyphWidthPx - widthPx) * 4;
+    }
+
     const heightPx = this._metrics.heightPx;
 
     const destData = destImageData.data;
@@ -331,6 +342,8 @@ class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph>
 
     // Manually copy the image data across
     let glyphOffset = 0;
+
+
     for (let y=0; y<heightPx; y++) {
 
       let destOffset = ((yPixel+y) * destImageData.width + xPixel) * 4;
@@ -351,6 +364,7 @@ class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph>
         destOffset++
         glyphOffset++
       }
+      glyphOffset += glyphRowStride;
     }
 
     return true;
