@@ -29,6 +29,7 @@ import * as VirtualScrollArea from '../VirtualScrollArea';
 import { SetterState } from '../VirtualScrollArea';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { injectTerminalVisualConfig, TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
+import { dispatchContextMenuRequest } from '../command/CommandUtils';
 
 
 const ID = "EtEmbeddedViewerTemplate";
@@ -482,6 +483,15 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
     const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
     this._titleBarUI = new TitleBarUI({ el: headerDiv });
+
+    const outputContainerDiv = DomUtils.getShadowId(this, ID_OUTPUT_CONTAINER);
+    outputContainerDiv.addEventListener('contextmenu', (ev) => this._handleContextMenu(ev));
+  }
+
+  private _handleContextMenu(ev: MouseEvent): void {
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+    dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
 
   private _getMetadata(): ViewerMetadata {
