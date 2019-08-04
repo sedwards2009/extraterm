@@ -848,9 +848,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   setTerminalLines(lines: TermApi.Line[]): void {
-    for (let i=0; i<lines.length; i++) {
-      this._aceEditor.setTerminalLine(i, lines[i]);
-    }
+    this._aceEditor.setTerminalLines(0, lines);
     this._isEmpty = false;
     emitResizeEvent(this);
   }
