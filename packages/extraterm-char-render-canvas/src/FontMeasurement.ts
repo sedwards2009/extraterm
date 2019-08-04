@@ -5,14 +5,33 @@
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
 
+const computeFontMetricsCache = new Map<string, MonospaceFontMetrics>();
+const computeDpiFontMetricsCache = new Map<string, { renderFontMetrics: MonospaceFontMetrics, cssFontMetrics: MonospaceFontMetrics }>();
+
 
 export function computeFontMetrics(fontFamily: string, fontSizePx: number, sampleChars: string[]=null): MonospaceFontMetrics {
+  const cacheKey = `${fontFamily};${fontSizePx};${sampleChars == null ? "" : sampleChars.join("")}`;
+
+  let metrics = computeFontMetricsCache.get(cacheKey);
+  if (metrics != null) {
+    return metrics;
+  }
+
   const fm = new FontMeasurement();
-  return fm.computeFontMetrics(fontFamily, fontSizePx, sampleChars);
+  metrics = fm.computeFontMetrics(fontFamily, fontSizePx, sampleChars);
+
+  computeFontMetricsCache.set(cacheKey, metrics);
+  return metrics;
 }
 
 export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, devicePixelRatio: number,
     sampleChars: string[]=null): { renderFontMetrics: MonospaceFontMetrics, cssFontMetrics: MonospaceFontMetrics } {
+
+  const cacheKey = `${fontFamily};${fontSizePx};${devicePixelRatio};${sampleChars == null ? "" : sampleChars.join("")}`;
+  let metrics = computeDpiFontMetricsCache.get(cacheKey);
+  if (metrics != null) {
+    return metrics;
+  }
 
   const fm = new FontMeasurement();
   const renderFontSizePx = fontSizePx * devicePixelRatio;
@@ -42,10 +61,13 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
     curlyY: renderFontMetrics.curlyY / devicePixelRatio,
   };
 
-  return {
+  metrics = {
     renderFontMetrics,
     cssFontMetrics,
-  }
+  };
+
+  computeDpiFontMetricsCache.set(cacheKey, metrics);
+  return metrics;
 }
 
 class FontMeasurement {
