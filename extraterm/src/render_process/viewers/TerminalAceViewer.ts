@@ -1247,13 +1247,9 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         emptyText += "\n";
       }
       this._aceEditSession.insert(pos, emptyText);
-
     }
 
-    for (let i=0; i<lines.length; i++) {
-      this._aceEditor.setTerminalLine(startRow + i + this._terminalFirstRow, lines[i]);
-    }
-
+    this._aceEditor.setTerminalLines(startRow + this._terminalFirstRow, lines);
     this._isEmpty = false;
   }
   

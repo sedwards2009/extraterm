@@ -77,6 +77,24 @@ export class TerminalCanvasEditSession extends EditSession {
     return true;
   }
 
+  setTerminalLines(startRow: number, sourceLines: TermApi.Line[]): boolean {
+    const lastRow = startRow + sourceLines.length - 1;
+    const existingEndLine = this.getTerminalLine(lastRow);
+    const range: RangeBasic = {
+      start: {
+        row: startRow,
+        column: 0
+      },
+      end: {
+        row: lastRow,
+        column: existingEndLine != null ? existingEndLine.getString(0, 0).length : 0
+      }
+    };
+
+    this.replace(range, sourceLines.map(line => this._createHeavyString(line)));
+    return true;
+  }
+
   private _createHeavyString(sourceLine: TermApi.Line): TermLineHeavyString {
     return new TermLineHeavyString(sourceLine);
   }

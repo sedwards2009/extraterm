@@ -15,6 +15,14 @@ export class TerminalCanvasAceEditor extends ExtratermAceEditor {
     }
   }
 
+  setTerminalLines(startRow: number, lines: Line[]): void {
+    const session = <TerminalCanvasEditSession> this.sessionOrThrow();
+    const endRow = startRow + lines.length -1;
+    if (session.setTerminalLines(startRow, lines)) {
+      this.renderer.updateLines(startRow, endRow, true);
+    }
+  }
+
   getTerminalLine(row: number): Line {
     const session = <TerminalCanvasEditSession> this.sessionOrThrow();
     return session.getTerminalLine(row);
