@@ -8,13 +8,6 @@ import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 
 export class TerminalCanvasAceEditor extends ExtratermAceEditor {
 
-  setTerminalLine(row: number, line: Line): void {
-    const session = <TerminalCanvasEditSession> this.sessionOrThrow();
-    if (session.setTerminalLine(row, line)) {
-      this.renderer.updateLines(row, row, true);
-    }
-  }
-
   setTerminalLines(startRow: number, lines: Line[]): void {
     const session = <TerminalCanvasEditSession> this.sessionOrThrow();
     const endRow = startRow + lines.length -1;

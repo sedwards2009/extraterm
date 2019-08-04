@@ -102,7 +102,7 @@ function start(): void {
   
   document.getElementById("replace_text").addEventListener('click', () => {
     const line = getLine();
-    editor.setTerminalLine(0, line);
+    editor.setTerminalLines(0, [line]);
   });
 }
 start();

@@ -60,23 +60,6 @@ export class TerminalCanvasEditSession extends EditSession {
    * 
    * @return True if the text changed.
    */
-  setTerminalLine(row: number, sourceLine: TermApi.Line): boolean {
-    const existingLine = this.getTerminalLine(row);
-    const range: RangeBasic = {
-      start: {
-        row,
-        column: 0
-      },
-      end: {
-        row,
-        column: existingLine != null ? existingLine.getString(0, 0).length : 0
-      }
-    };
-
-    this.replace(range, [this._createHeavyString(sourceLine)]);
-    return true;
-  }
-
   setTerminalLines(startRow: number, sourceLines: TermApi.Line[]): boolean {
     const lastRow = startRow + sourceLines.length - 1;
     const existingEndLine = this.getTerminalLine(lastRow);
