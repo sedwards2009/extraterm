@@ -472,14 +472,20 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         return false;
       }
     }
-    if (themeA.backgroundColor !== themeB.backgroundColor) {
-      return false;
-    }
-    if (themeA.foregroundColor !== themeB.foregroundColor) {
-      return false;
-    }
-    if (themeA.cursorBackgroundColor !== themeB.cursorBackgroundColor) {
-      return false;
+
+    const objectKeys: (keyof TerminalTheme)[] = [
+      "foregroundColor",
+      "backgroundColor",
+      "cursorForegroundColor",
+      "cursorBackgroundColor",
+      "findHighlightBackgroundColor",
+      "selectionBackgroundColor"
+    ];
+
+    for (const key in objectKeys) {
+      if (themeA[key] !== themeB[key]) {
+          return false;
+      }
     }
     return true;
   }
