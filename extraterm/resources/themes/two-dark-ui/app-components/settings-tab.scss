@@ -57,6 +57,10 @@ $tab-background-color-active: $background-color;
   flex-grow: 1;
   padding: $panel-body-padding;
   overflow: auto;
+
+  &:focus {
+    outline: 0 solid transparent;
+  }
 }
 
 #ID_COMMAND_OUTPUT_HANDLING > table td.CLASS_FRAME {
