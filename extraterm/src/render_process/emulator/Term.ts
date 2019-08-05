@@ -2535,10 +2535,13 @@ export class Emulator implements EmulatorApi {
   private eraseLeft(x: number, y: number): void {
     const line = this._getRow(y);
 
+    const clearCellAttrs = { ...this.curAttr };
+    clearCellAttrs.style = 0;
+
     x++;
     while (x !== 0) {
       x--;
-      line.clearCell(x, 0);
+      line.setCell(x, 0, clearCellAttrs);
     }
 
     this.markRowForRefresh(y);
