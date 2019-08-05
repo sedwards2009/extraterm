@@ -62,6 +62,7 @@ export class TerminalCanvasRenderer extends Renderer {
     if (this._canvasFontMetricsMonitor != null) {
       this._canvasFontMetricsMonitor.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);
     }
+    this.rerenderText();
   }
   
   setRenderCursorStyle(cursorStyle: CursorStyle): void {
