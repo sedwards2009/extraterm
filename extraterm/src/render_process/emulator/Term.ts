@@ -1143,39 +1143,55 @@ export class Emulator implements EmulatorApi {
       // CSI Ps A
       // Cursor Up Ps Times (default = 1) (CUU).
       case 'A':
-        this.cursorUp(params);
+        if (params.prefix === "") {
+          this.cursorUp(params);
+        }
         break;
 
       // CSI Ps B
       // Cursor Down Ps Times (default = 1) (CUD).
       case 'B':
-        this.cursorDown(params);
+        if (params.prefix === "") {
+          this.cursorDown(params);
+        }
         break;
 
       // CSI Ps C
       // Cursor Forward Ps Times (default = 1) (CUF).
       case 'C':
-        this.cursorForward(params);
+        if (params.prefix === "") {
+          this.cursorForward(params);
+        }
         break;
 
       // CSI Ps D
       // Cursor Backward Ps Times (default = 1) (CUB).
       case 'D':
-        this.cursorBackward(params);
+        if (params.prefix === "") {
+          this.cursorBackward(params);
+        }
         break;
 
       // CSI Ps ; Ps H
       // Cursor Position [row;column] (default = [1,1]) (CUP).
       case 'H':
-        this.cursorPos(params);
+        if (params.prefix === "") {
+          this.cursorPos(params);
+        }
         break;
 
       // CSI Ps J  Erase in Display (ED).
+      // CSI ? Ps J
+      //   Erase in Display (DECSED).
       case 'J':
-        this.eraseInDisplay(params);
+        if (params.prefix === "") {
+          this.eraseInDisplay(params);
+        }
         break;
 
       // CSI Ps K  Erase in Line (EL).
+      // CSI ? Ps K
+      //   Erase in Line (DECSEL).
       case 'K':
         this.eraseInLine(params);
         break;
@@ -1201,61 +1217,81 @@ export class Emulator implements EmulatorApi {
       // CSI Ps @
       // Insert Ps (Blank) Character(s) (default = 1) (ICH).
       case '@':
-        this.insertChars(params);
+        if (params.prefix === "") {
+          this.insertChars(params);
+        }
         break;
 
       // CSI Ps E
       // Cursor Next Line Ps Times (default = 1) (CNL).
       case 'E':
-        this.cursorNextLine(params);
+        if (params.prefix === "") {
+          this.cursorNextLine(params);
+        }
         break;
 
       // CSI Ps F
       // Cursor Preceding Line Ps Times (default = 1) (CNL).
       case 'F':
-        this.cursorPrecedingLine(params);
+        if (params.prefix === "") {
+          this.cursorPrecedingLine(params);
+        }
         break;
 
       // CSI Ps G
       // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
       case 'G':
-        this.cursorCharAbsolute(params);
+        if (params.prefix === "") {
+          this.cursorCharAbsolute(params);
+        }
         break;
 
       // CSI Ps L
       // Insert Ps Line(s) (default = 1) (IL).
       case 'L':
-        this.insertLines(params);
+        if (params.prefix === "") {
+          this.insertLines(params);
+        }
         break;
 
       // CSI Ps M
       // Delete Ps Line(s) (default = 1) (DL).
       case 'M':
-        this.deleteLines(params);
+        if (params.prefix === "") {
+          this.deleteLines(params);
+        }
         break;
 
       // CSI Ps P
       // Delete Ps Character(s) (default = 1) (DCH).
       case 'P':
-        this.deleteChars(params);
+        if (params.prefix === "") {
+          this.deleteChars(params);
+        }
         break;
 
       // CSI Ps X
       // Erase Ps Character(s) (default = 1) (ECH).
       case 'X':
-        this.eraseChars(params);
+        if (params.prefix === "") {
+          this.eraseChars(params);
+        }
         break;
 
       // CSI Pm `  Character Position Absolute
       //   [column] (default = [row,1]) (HPA).
       case '`':
-        this.charPosAbsolute(params);
+        if (params.prefix === "") {
+          this.charPosAbsolute(params);
+        }
         break;
 
       // 141 61 a * HPR -
       // Horizontal Position Relative
       case 'a':
-        this.HPositionRelative(params);
+        if (params.prefix === "") {
+          this.HPositionRelative(params);
+        }
         break;
 
       // CSI P s c
@@ -1269,19 +1305,25 @@ export class Emulator implements EmulatorApi {
       // CSI Pm d
       // Line Position Absolute  [row] (default = [1,column]) (VPA).
       case 'd':
-        this.linePosAbsolute(params);
+        if (params.prefix === "") {
+          this.linePosAbsolute(params);
+        }
         break;
 
       // 145 65 e * VPR - Vertical Position Relative
       case 'e':
-        this.VPositionRelative(params);
+        if (params.prefix === "") {
+          this.VPositionRelative(params);
+        }
         break;
 
       // CSI Ps ; Ps f
       //   Horizontal and Vertical Position [row;column] (default =
       //   [1,1]) (HVP).
       case 'f':
-        this.HVPosition(params);
+        if (params.prefix === "") {
+          this.HVPosition(params);
+        }
         break;
 
       // CSI Pm h  Set Mode (SM).
@@ -1404,12 +1446,16 @@ export class Emulator implements EmulatorApi {
       // CSI Ps I
       // Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
       case 'I':
-        this.cursorForwardTab(params);
+        if (params.prefix === '') {
+          this.cursorForwardTab(params);
+        }
         break;
 
       // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
       case 'S':
-        this.scrollUp(params);
+        if (params.prefix === '') {
+          this.scrollUp(params);
+        }
         break;
 
       // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
@@ -1424,17 +1470,23 @@ export class Emulator implements EmulatorApi {
       // CSI Ps Z
       // Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
       case 'Z':
-        this.cursorBackwardTab(params);
+        if (params.prefix === '') {
+          this.cursorBackwardTab(params);
+        }
         break;
 
       // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
       case 'b':
-        this.repeatPrecedingCharacter(params);
+        if (params.prefix === '') {
+          this.repeatPrecedingCharacter(params);
+        }
         break;
 
       // CSI Ps g  Tab Clear (TBC).
       case 'g':
-        this.tabClear(params);
+        if (params.prefix === '') {
+          this.tabClear(params);
+        }
         break;
 
       // CSI Pm i  Media Copy (MC).
