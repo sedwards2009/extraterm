@@ -588,8 +588,13 @@ async function asyncSetupConfiguration(): Promise<void> {
     }
 
     if (oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI ||
-        oldGeneralConfig.terminalMarginStyle !== newGeneralConfig.terminalMarginStyle) {
+        oldGeneralConfig.terminalMarginStyle !== newGeneralConfig.terminalMarginStyle ||
+        oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
       refreshThemeTypeList.push("gui");
+    }
+
+    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
+      refreshThemeTypeList.push("terminal");
     }
 
     if (refreshThemeTypeList.length !== 0) {
