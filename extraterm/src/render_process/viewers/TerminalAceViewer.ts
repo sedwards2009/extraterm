@@ -1029,6 +1029,10 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     if (pos === null) {
       return;
     }
+    if (pos.row - this._terminalFirstRow < 0) {
+      // Don't send mouse events for stuff which happens in the scrollback area.
+      return;
+    }
 
     // FIXME use the 'buttons' API.
     const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
