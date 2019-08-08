@@ -159,7 +159,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       const clone = this.createClone();
       shadow.appendChild(clone);
       
-      this._initFontLoading();
       this.installThemeCss();
 
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
@@ -276,7 +275,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     
     if (this._needEmulatorResize) {
       this._needEmulatorResize = false;
-      this._resizePoll();
     }
     this._rerenderLater.trigger();
   }
@@ -730,12 +728,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _computeTerminalSizeFromViewer(): TermApi.TerminalSize | null {
-    if ( ! this.isFontLoaded()) {
-      if (DEBUG_RESIZE) {
-        this._log.debug("resizeEmulatorToBox() styles have not been applied yet.");
-      }
-      return null;
-    }
     if (this.clientWidth === 0) {
       return null;
     }
@@ -773,10 +765,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   pixelHeightToRows(pixelHeight: number): number {
     const result = this._computeTerminalSizeFromPixels(1024, pixelHeight);
     return result == null ? 2 : result.rows;
-  }
-
-  isFontLoaded(): boolean {
-    return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
 
   lineCount(): number {
@@ -1103,82 +1091,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
   
-  //-----------------------------------------------------------------------
-  //
-  // #######                        #                                            
-  // #        ####  #    # #####    #        ####    ##   #####  # #    #  ####  
-  // #       #    # ##   #   #      #       #    #  #  #  #    # # ##   # #    # 
-  // #####   #    # # #  #   #      #       #    # #    # #    # # # #  # #      
-  // #       #    # #  # #   #      #       #    # ###### #    # # #  # # #  ### 
-  // #       #    # #   ##   #      #       #    # #    # #    # # #   ## #    # 
-  // #        ####  #    #   #      #######  ####  #    # #####  # #    #  ####  
-  //
-  //-----------------------------------------------------------------------
-
-  private _initFontLoading(): void {
-    this._mainStyleLoaded = false;
-    
-    DomUtils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
-      this._mainStyleLoaded = true;
-      this._handleStyleLoad();
-    });
-  }
-  
-  private _cleanUpFontLoading(): void {
-    if (this._resizePollHandle !== null) {
-      this._resizePollHandle.dispose();
-      this._resizePollHandle = null;
-    }
-  }
-
-  private _handleStyleLoad(): void {
-    if (this._mainStyleLoaded) {
-      // Start polling the term for application of the font.
-      this._resizePollHandle = doLaterFrame(this._resizePoll.bind(this));
-    }
-  }
-  
-  private _effectiveFontFamily(): string {
-    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    const cs = window.getComputedStyle(containerDiv, null);
-    return cs.getPropertyValue("font-family");
-  }
-
-  private _resizePoll(): void {
-    // if (this._mainStyleLoaded) {  // FIXME this font loading stuff needs to be replaced with resize canary.
-    //   if ( ! this.isFontLoaded()) {
-    //     // Font has not been correctly applied yet.
-    //     this._resizePollHandle = doLaterFrame(this._resizePoll.bind(this));
-    //   } else {
-    //     // Yay! the font is correct. Resize the term soon.
-    //     this._codeMirror.defaultTextHeight(); // tickle the DOM to maybe force CSS recalc.
-
-    //     if (this.parentElement == null) {
-    //       this._needEmulatorResize = true;  // Do it later.
-    //     } else {
-    //       window.setTimeout(() => {
-    //         if (this.parentElement == null) {
-    //           this._needEmulatorResize = true;  // Do it later.
-    //         } else {
-    //           this.resizeEmulatorToParentContainer();
-    //         }
-    //       }, 100);  // 100ms
-    //     }
-    //   }
-    // }
-  }
-  
-  //-----------------------------------------------------------------------
-  //
-  // ######                                     
-  // #     # ###### #    # #####  ###### #####  
-  // #     # #      ##   # #    # #      #    # 
-  // ######  #####  # #  # #    # #####  #    # 
-  // #   #   #      #  # # #    # #      #####  
-  // #    #  #      #   ## #    # #      #   #  
-  // #     # ###### #    # #####  ###### #    # 
-  //                                            
-  //-----------------------------------------------------------------------
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
     let emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
 
