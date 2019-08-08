@@ -453,15 +453,27 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         devicePixelRatio: terminalVisualConfig.devicePixelRatio,
       };
 
+      let requestResize = false;
       if (previousConfig == null) {
         this._aceRenderer.setTerminalCanvasRendererConfig(config);
+        requestResize = true;
       } else {
-        if (previousConfig.fontFamily !== terminalVisualConfig.fontFamily ||
-            previousConfig.fontSizePx !== terminalVisualConfig.fontSizePx ||
-            previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio ||
+
+        const fontPropertiesChanged = previousConfig.fontFamily !== terminalVisualConfig.fontFamily ||
+          previousConfig.fontSizePx !== terminalVisualConfig.fontSizePx ||
+          previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio;
+
+        if (fontPropertiesChanged ||
             ! this._isTerminalThemeEqual(previousConfig.terminalTheme, terminalVisualConfig.terminalTheme)) {
           this._aceRenderer.setTerminalCanvasRendererConfig(config);
         }
+        requestResize = fontPropertiesChanged;
+      }
+
+      if (requestResize) {
+        window.queueMicrotask(() => {
+          emitResizeEvent(this);
+        });
       }
     }
   }
