@@ -1034,14 +1034,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       return;
     }
 
-    // FIXME use the 'buttons' API.
-    const button = ev.button !== undefined ? ev.button : (ev.which !== undefined ? ev.which - 1 : null);
-
-    // send the button
+    // send the buttons
     const options: TermApi.MouseEventOptions = {
-      leftButton: button === 0,
-      middleButton: button === 1,
-      rightButton: button === 2,
+      leftButton: (ev.buttons & 1) !== 0,
+      middleButton: (ev.buttons & 4) !== 0,
+      rightButton: (ev.buttons & 2) !== 0,
       ctrlKey: ev.ctrlKey,
       shiftKey: ev.shiftKey,
       metaKey: ev.metaKey,
