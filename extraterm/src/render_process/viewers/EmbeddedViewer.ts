@@ -554,8 +554,6 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     this._titleBarUI.closeHandler = this._emitCloseRequest.bind(this);
     
     const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);    
-    outputDiv.addEventListener('mousedown', this.focus.bind(this));
-    outputDiv.addEventListener('click', this.focus.bind(this));
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
     outputDiv.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     
@@ -571,12 +569,6 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       if (viewerElement === null) {
         return;
       }
-// FIXME
-      // if (isCommandable(viewerElement)) {
-      //   viewerElement.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x: ev.clientX, y: ev.clientY});
-      // } else {
-      //   this.executeCommand(COMMAND_OPEN_CONTEXT_MENU, {x: ev.clientX, y: ev.clientY});
-      // }
     });
   }
 
