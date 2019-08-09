@@ -296,7 +296,12 @@ function restoreAllWindows(): void {
         window.show();
       }
       window.restore();
-    }
+      
+      doLater(() => {
+        window.moveTop();
+        window.focus();
+      });
+  }
   }
 }
 
