@@ -4,10 +4,11 @@
 import { Delta, HeavyString } from "ace-ts";
 import { LineData } from "./LineData";
 import { Line } from "term-api";
-import { countCodePoints, stringToCodePointArray } from "extraterm-unicode-utilities";
+import { countCodePoints } from "extraterm-unicode-utilities";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { TermLineHeavyString } from "../TermLineHeavyString";
+import { lastVisibleCellInLine } from "../LineFunctions";
 
 
 /**
@@ -50,7 +51,7 @@ export class LineDataEditor {
   }
 
   private _insertIntoLine(line: Line, pos: number, insertLine: Line): Line {
-    const usedLength = this._getUsedLineLength(line);
+    const usedLength = lastVisibleCellInLine(line, 0) + 1;
     const strLength = insertLine.width;
     if ((usedLength + strLength) > line.width) {
       // Resize the line
@@ -128,35 +129,6 @@ export class LineDataEditor {
     }
   }
 
-  /**
-   * Get the length of the line after blank white space is stripped from the right side.
-   */
-  private _getUsedLineLength(line: Line): number {
-    const spaceCodePoint = " ".codePointAt(0);
-    let i = line.width-1;
-    for (; i>=0; i--) {
-      if (line.getCodePoint(i, 0) !== spaceCodePoint) {
-        break;
-      }
-      if (line.getStyle(i, 0) !== 0) {
-        break;
-      }
-      if ( ! line.isFgClut(i, 0)) {
-        break;
-      }
-      if ( ! line.getFgClutIndex(i, 0)) {
-        break;
-      }
-      if ( ! line.isBgClut(i, 0)) {
-        break;
-      }
-      if ( ! line.getBgClutIndex(i, 0)) {
-        break;
-      }
-    }
-    return i<0 ? 0 : i+1;
-  }
-
   private _lineLeft(line: Line, column: number): Line {
     const newLine = new CharCellGrid(column, 1);
     newLine.pasteGrid(line, 0, 0);
@@ -164,7 +136,7 @@ export class LineDataEditor {
   }
 
   private _lineRight(line: Line, column: number): Line {
-    const newLine = new CharCellGrid(line.width-column, 1);
+    const newLine = new CharCellGrid(Math.max(line.width-column, 0), 1);
     newLine.pasteGrid(line, -column, 0);
     return newLine;
   }

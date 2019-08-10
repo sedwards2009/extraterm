@@ -3,9 +3,7 @@
  */
 import { HeavyString } from "ace-ts";
 import * as TermApi from "term-api";
-import { BG_COLOR_INDEX } from "extraterm-char-cell-grid";
-
-const spaceCodePoint = " ".codePointAt(0);
+import { lastVisibleCellInLine } from "./LineFunctions";
 
 export class TermLineHeavyString implements HeavyString {
 
@@ -22,17 +20,6 @@ export class TermLineHeavyString implements HeavyString {
   }
 
   private _toTrimmedString(termLine: TermApi.Line): string {
-    let lastNonEmpty = 0;
-    for (let i=0; i<termLine.width; i++) {
-      const codePoint = termLine.getCodePoint(i, 0);
-      if (codePoint !== spaceCodePoint ||
-            termLine.getStyle(i, 0) !== 0 ||
-            ! termLine.isBgClut(i, 0) ||
-            termLine.getBgClutIndex(i, 0) !== BG_COLOR_INDEX) {
-        lastNonEmpty = i;
-      }
-    }
-
-    return termLine.getString(0, 0, lastNonEmpty+1);
+    return termLine.getString(0,0, lastVisibleCellInLine(termLine) + 1);
   }
 }
