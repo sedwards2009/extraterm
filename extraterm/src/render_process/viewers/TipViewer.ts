@@ -304,7 +304,7 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
         if (keyBindings != null) {
           const shortcut = keyBindings.mapCommandToReadableKeyStrokes(dataCommand);
           if (shortcut.length !== 0) {
-            kbd.innerHTML = `<span>${he.encode(shortcut[0])}</span>`;
+            kbd.innerHTML = `<span class="keycap">${he.encode(shortcut[0])}</span>`;
           } else {
             kbd.parentNode.removeChild(kbd);
           }
