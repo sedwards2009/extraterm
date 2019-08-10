@@ -16,11 +16,11 @@
   },
   "devDependencies": {
     "@types/he": "1.1.0",
-    "@types/jest": "^23.3.10",
+    "@types/jest": "23.3.13",
     "@types/node": "^12.6.2",
     "extraterm-extension-api": "0.1.0",
-    "jest": "^23.6.0",
-    "ts-jest": "^23.10.5",
+    "jest": "23.6.0",
+    "ts-jest": "23.10.5",
     "typescript": "3.5.3"
   },
   "contributes": {
