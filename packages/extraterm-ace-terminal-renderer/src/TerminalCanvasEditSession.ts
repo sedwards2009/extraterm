@@ -70,7 +70,7 @@ export class TerminalCanvasEditSession extends EditSession {
       },
       end: {
         row: lastRow,
-        column: existingEndLine != null ? existingEndLine.getString(0, 0).length : 0
+        column: existingEndLine != null ? existingEndLine.getUTF16StringLength(0, 0) : 0
       }
     };
 

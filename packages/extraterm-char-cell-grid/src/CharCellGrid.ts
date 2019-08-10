@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { stringToCodePointArray, isWide } from "extraterm-unicode-utilities";
+import { stringToCodePointArray, isWide, utf16LengthOfCodePoint } from "extraterm-unicode-utilities";
 
 /**
  * Cell schema:
@@ -268,6 +268,16 @@ export class CharCellGrid {
       codePoints.push(this.getCodePoint(i, y));
     }
     return String.fromCodePoint(...codePoints);
+  }
+
+  getUTF16StringLength(x: number, y: number, count?: number): number {
+    const lastX = x + (count == null ? this.width : Math.min(this.width, count));
+    let size = 0;
+    for (let i=x; i<lastX; i++) {
+      const codePoint = this.getCodePoint(i, y);
+      size += utf16LengthOfCodePoint(codePoint);
+    }
+    return size;
   }
 
   setBgRGBA(x: number, y: number, rgba: number): void {
