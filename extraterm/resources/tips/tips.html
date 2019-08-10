@@ -12,7 +12,7 @@
 
 <article>
   <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Command Palette</h2>
-  <p>Extraterm has a pop up Command Palette <span class="CLASS_KEYCAP" data-command="openCommandPalette"></span>
+  <p>Extraterm has a pop up Command Palette <span class="CLASS_KEYCAP" data-command="extraterm:application.openCommandPalette"></span>
     where all relevant commands can be seen, searched and executed.
   </p>
 </article>
@@ -20,11 +20,11 @@
 <article>
   <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Tabs</h2>
   <p>Use tabs to run multiple terminal sessions at the same time. Create a new tab by clicking on the plus button in the top
-    right or by using <span class="CLASS_KEYCAP" data-command="newTerminal"></span> on the keyboard.
+    right or by using <span class="CLASS_KEYCAP" data-command="extraterm:window.newTerminal"></span> on the keyboard.
   </p>
   <p>
-    Move between tabs using next <span class="CLASS_KEYCAP" data-command="selectTabRight"></span> and
-    previous <span class="CLASS_KEYCAP" data-command="selectTabLeft"></span> keys.
+    Move between tabs using next <span class="CLASS_KEYCAP" data-command="extraterm:window.focusTabRight"></span> and
+    previous <span class="CLASS_KEYCAP" data-command="extraterm:window.focusTabLeft"></span> keys.
   </p>
 </article>
 
@@ -35,9 +35,9 @@
     integration</a> has been set up, Extraterm will place 'frames' around the output of commands. Frames also display
     the command which was executed and warn when a command has indicated failure status. Frames can also be deleted
     from the scrollback if desired (<i class='fa fa-times-circle'></i>
-    <span class="CLASS_KEYCAP" data-command="deleteLastFrame"></span>) or moved
+    <span class="CLASS_KEYCAP" data-command="extraterm:terminal.deleteLastFrame"></span>) or moved
     into their own tab for safe keeping (<i class="fa fa-external-link" aria-hidden="true"></i>
-    <span class="CLASS_KEYCAP" data-command="openLastFrame"></span>), plus many
+    <span class="CLASS_KEYCAP" data-command="extraterm:terminal.openLastFrame"></span>), plus many
     other things.
   </p>
 </article>
@@ -50,15 +50,15 @@
     like in a text editor.
   </p>
   <p>
-    Enter cursor mode using <span class="CLASS_KEYCAP" data-command="enterCursorMode"></span>.
+    Enter cursor mode using <span class="CLASS_KEYCAP" data-command="extraterm:terminal.enterCursorMode"></span>.
     Once in cursor mode you have a blinking vertical bar cursor and keypresses are no longer sent to your shell. The
     cursor keys works like a text editor and text can be selected using shift and copied to the clipboard  
-    <span class="CLASS_KEYCAP" data-command="copyToClipboard"></span>. Text
+    <span class="CLASS_KEYCAP" data-command="extraterm:terminal.copyToClipboard"></span>. Text
     inside frames can also be edited in-place. Useful when you want to use previous command output to prepare your next
     command line.
   </p>
   <p>
-    Exit cursor mode using <span class="CLASS_KEYCAP" data-command="enterNormalMode"></span>.
+    Exit cursor mode using <span class="CLASS_KEYCAP" data-command="extraterm:terminal.enterNormalMode"></span>.
   </p>
   <p>
     <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#cursor-mode">More detailed
@@ -72,8 +72,8 @@
     Extraterm has some text editor features, and like many modern text editors it too support mutliple cursor editing.
   </p>
   <p>
-    When in cursor mode press <span class="CLASS_KEYCAP" data-command="verticalMultiCursor"></span>
-    or the Command Palette <span class="CLASS_KEYCAP" data-command="openCommandPalette"></span>
+    When in cursor mode press <span class="CLASS_KEYCAP" data-command="extraterm:textEditor.cursorColumn"></span>
+    or the Command Palette <span class="CLASS_KEYCAP" data-command="extraterm:application.openCommandPalette"></span>
     ("Selection to Multiple Cursors") to create a column of cursors. Press Escape to return to one cursor.
   </p>
   <p>
@@ -92,7 +92,7 @@
   </p>
   <p>
     Once your command is complete the next question is how to get the shell to execute it. One way is to select it and
-    copy it to the clipboard <span class="CLASS_KEYCAP" data-command="copyToClipboard"></span>, exit cursor mode and then paste <span class="CLASS_KEYCAP"
+    copy it to the clipboard <span class="CLASS_KEYCAP" data-command="extraterm:terminal.copyToClipboard"></span>, exit cursor mode and then paste <span class="CLASS_KEYCAP"
     data-command="pasteFromClipboard"></span> it into the shell.
   </p>
   <p>
@@ -100,9 +100,9 @@
   </p>
   <ul>
     <li>"type selection" command <span class="CLASS_KEYCAP"
-    data-command="typeSelection"></span> which types the selected text into the shell.</li>
+    data-command="extraterm:terminal.typeSelection"></span> which types the selected text into the shell.</li>
     <li>"type selection and hit enter" command <span class="CLASS_KEYCAP"
-    data-command="typeSelectionAndCr"></span> does the same thing as above but also executes the command.</li>
+    data-command="extraterm:terminal.typeSelectionAndCr"></span> does the same thing as above but also executes the command.</li>
   </ul>
   <p>
     <a href="https://github.com/sedwards2009/extraterm/blob/master/docs/tips/command_editing.md">Click here to see a
@@ -137,8 +137,8 @@
   <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Use the "Go to Previous/Next Frame" commands to quickly move
   through the scrollback</h2>
   <p>
-    Use the "Go to Previous Frame" <span class="CLASS_KEYCAP" data-command="goToPreviousFrame"></span> and "Go to Next Frame" <span class="CLASS_KEYCAP"
-    data-command="goToNextFrame"></span> commands to quickly navigate between frames in
+    Use the "Go to Previous Frame" <span class="CLASS_KEYCAP" data-command="extraterm:terminal.goToPreviousFrame"></span> and "Go to Next Frame" <span class="CLASS_KEYCAP"
+    data-command="extraterm:terminal.goToNextFrame"></span> commands to quickly navigate between frames in
     the scrollback. This is useful when you are at the bottom of a tower of output and you want to get to the top.
   </p>
 </article>
@@ -146,13 +146,13 @@
 <article>
   <h2><i class="fa fa-lightbulb-o" aria-hidden="true"></i> Tip: Splitting the window</h2>
   <p>
-    The "Horizontal Split" <span class="CLASS_KEYCAP" data-command="horizontalSplit"></span>
-    and "Vertical Split" <span class="CLASS_KEYCAP" data-command="verticalSplit"></span>
+    The "Horizontal Split" <span class="CLASS_KEYCAP" data-command="extraterm:window.horizontalSplit"></span>
+    and "Vertical Split" <span class="CLASS_KEYCAP" data-command="extraterm:window.verticalSplit"></span>
     commands let you split the window in half with side-by-side groups of tabs. These too can be split again if
     desired.
   </p>
   <p>
-    These commands are all available in the Command Palette <span class="CLASS_KEYCAP" data-command="openCommandPalette"></span>.
+    These commands are all available in the Command Palette <span class="CLASS_KEYCAP" data-command="extraterm:application.openCommandPalette"></span>.
   </p>
 </article>
 
