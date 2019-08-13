@@ -425,13 +425,13 @@ export class CharCellGrid {
    */
   shiftCellsLeft(x: number, y: number, shiftCount: number): void {
     const offsetCell = y * this.width;
-    shiftCount = Math.min(x, shiftCount);
+    if ((x + shiftCount) < this.width) {
+      this._uint8View.copyWithin((offsetCell + x) * CELL_SIZE_BYTES,                // target pos
+                                  (offsetCell + x + shiftCount) * CELL_SIZE_BYTES,  // source pos
+                                  (offsetCell + this.width) * CELL_SIZE_BYTES);     // end pos
+    }
 
-    this._uint8View.copyWithin((offsetCell + x) * CELL_SIZE_BYTES,                // target pos
-                                (offsetCell + x + shiftCount) * CELL_SIZE_BYTES,  // source pos
-                                (offsetCell + this.width) * CELL_SIZE_BYTES);     // end pos
-
-    for (let i=this.width-shiftCount; i < this.width; i++) {
+    for (let i=Math.max(x, this.width-shiftCount); i < this.width; i++) {
       this.setCell(i, y, SpaceCell);
     }
   }
