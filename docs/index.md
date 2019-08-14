@@ -14,6 +14,7 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 * Unicode support
 * Color emoji
 * Keyboard friendly "Command Palette"
+* 24 bit color
 * Configurable key bindings
 * Keyboard based selections
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
