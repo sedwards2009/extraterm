@@ -213,7 +213,11 @@ interface ExtraFontSlice extends FontSlice {
 
 export enum CursorStyle {
   BLOCK,
-  OUTLINE
+  BLOCK_OUTLINE,
+  UNDERLINE,
+  UNDERLINE_OUTLINE,
+  BEAM,
+  BEAM_OUTLINE,
 }
 
 export class CharRenderCanvas implements Disposable {
@@ -422,9 +426,10 @@ export class CharRenderCanvas implements Disposable {
       this._renderCharactersUsingImageData();
     }
 
-    this._fgColorPatchCanvas.setRenderCursor(this._cursorStyle === CursorStyle.BLOCK);
+    const renderCursor = this._cursorStyle === CursorStyle.BLOCK;
+    this._fgColorPatchCanvas.setRenderCursor(renderCursor);
     this._fgColorPatchCanvas.render();
-    this._bgColorPatchCanvas.setRenderCursor(this._cursorStyle === CursorStyle.BLOCK);
+    this._bgColorPatchCanvas.setRenderCursor(renderCursor);
     this._bgColorPatchCanvas.render();
 
     this._canvasCtx.globalCompositeOperation = "copy";
@@ -619,7 +624,9 @@ export class CharRenderCanvas implements Disposable {
     }
 
     ctx.save();
-    ctx.strokeStyle = RGBAToCss(this._palette[PALETTE_CURSOR_INDEX]);
+    const cursorColor = RGBAToCss(this._palette[PALETTE_CURSOR_INDEX]);
+    ctx.strokeStyle = cursorColor;
+    ctx.fillStyle = cursorColor;
     ctx.globalCompositeOperation = "source-over";
 
     const cellGrid = this._cellGrid;
@@ -631,7 +638,30 @@ export class CharRenderCanvas implements Disposable {
     for (let j=0; j<height; j++) {
       for (let i=0; i<width; i++) {
         if (cellGrid.getStyle(i, j) & STYLE_MASK_CURSOR) {
-          ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + 0.5, cellWidth-1, cellHeight-1);
+          switch (this._cursorStyle) {
+            case CursorStyle.BLOCK_OUTLINE:
+              ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + 0.5, cellWidth-1, cellHeight-1);
+              break;
+
+            case CursorStyle.UNDERLINE:
+              ctx.fillRect(i * cellWidth, j * cellHeight + cellHeight-3, cellWidth, 3);
+              break;
+
+            case CursorStyle.UNDERLINE_OUTLINE:
+              ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + cellHeight-2.5, cellWidth-1, 2);
+              break;
+
+            case CursorStyle.BEAM:
+              ctx.fillRect(i * cellWidth, j * cellHeight, 2, cellHeight);
+              break;
+
+            case CursorStyle.BEAM_OUTLINE:
+              ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + 0.5, 2, cellHeight-1);
+              break;
+  
+            default:
+              break;
+          }
         }
       }
     }
