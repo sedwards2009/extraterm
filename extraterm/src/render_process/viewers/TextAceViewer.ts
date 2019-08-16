@@ -134,6 +134,12 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
     this._exitCursorMode();
 
+    aceRenderer.on("changeCharacterSize", () => {
+      doLater( () => {
+        this._emitVirtualResizeEvent();
+      });
+    });
+    
     this._aceEditor.on("change", (data, editor) => {
       if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
         return;
