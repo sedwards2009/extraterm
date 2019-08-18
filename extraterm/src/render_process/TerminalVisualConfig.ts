@@ -8,6 +8,7 @@ import { ConfigCursorStyle } from '../Config';
 
 export interface TerminalVisualConfig {
   cursorStyle: ConfigCursorStyle;
+  cursorBlink: boolean;
   fontFamily: string;
   fontSizePx: number;
   devicePixelRatio: number;

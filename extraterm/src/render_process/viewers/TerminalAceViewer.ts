@@ -447,11 +447,20 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
           containerDiv.classList.remove(CLASS_UNFOCUSED);
 
           this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
+
+          if (this._emulator != null && this._terminalVisualConfig != null) {
+            this._emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
+          }
+
         } else {
           containerDiv.classList.add(CLASS_UNFOCUSED);
           containerDiv.classList.remove(CLASS_FOCUSED);
 
           this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToHollowRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
+
+          if (this._emulator !== null && this._terminalVisualConfig != null) {
+            this._emulator.setCursorBlink(false);
+          }
         }
       }
       this._visualState = newVisualState;

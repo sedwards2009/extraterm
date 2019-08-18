@@ -306,6 +306,12 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    if (this._emulator != null && (this._terminalVisualConfig == null ||
+        this._terminalVisualConfig.cursorBlink !== terminalVisualConfig.cursorBlink)) {
+
+      this._emulator.setCursorBlink(terminalVisualConfig.cursorBlink);
+    }
+
     this._terminalVisualConfig = terminalVisualConfig;
     if (this._terminalCanvas != null) {
       this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
@@ -562,6 +568,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     };
     emulator.registerApplicationModeHandler(applicationModeHandler);
     emulator.addWriteBufferSizeEventListener(this._handleWriteBufferSize.bind(this));
+    if (this._terminalVisualConfig != null) {
+      emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
+    }
     this._emulator = emulator;
     this._initDownloadApplicationModeHandler();
   }

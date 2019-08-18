@@ -88,6 +88,9 @@ interface SelectableOption {
       <button class="inline char-width-3" v-on:click="cursorStyle = 'beam';"  :class="{ selected: cursorStyle==='beam' }">&#x2503;</button>
     </span>
 
+    <label></label>
+    <span><label><input type="checkbox" v-model="cursorBlink">Blink Cursor</label></span>
+
     <label for="${ID_TERMINAL_MARGIN}">Margin:</label>
     <select class="char-width-6" id="${ID_TERMINAL_MARGIN}" v-model="terminalMarginStyle">
       <option v-for="option in terminalMarginOptions" v-bind:value="option.id">
@@ -203,6 +206,7 @@ interface SelectableOption {
 })
 export class AppearanceSettingsUi extends Vue {
   cursorStyle: ConfigCursorStyle;
+  cursorBlink: boolean;
   terminalFontSize: number;
   themes: ThemeTypes.ThemeInfo[];
 
@@ -235,6 +239,7 @@ export class AppearanceSettingsUi extends Vue {
   constructor() {
     super();
     this.cursorStyle = "block";
+    this.cursorBlink = false;
     this.terminalFontSize = 13;
     this.themes = [];
     this.themeTerminal = "";

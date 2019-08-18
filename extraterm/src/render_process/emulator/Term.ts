@@ -83,6 +83,7 @@ const REFRESH_START_NULL = 100000000;
 const REFRESH_END_NULL = -100000000;
 const MAX_BATCH_TIME = 16;  // 16 ms = 60Hz
 const REFRESH_DELAY = 100;  // ms. How long to wait before doing a screen refresh during busy times.
+const BLINK_INTERVAL_MS = 500;
 
 
 /**
@@ -170,7 +171,7 @@ export class Emulator implements EmulatorApi {
   
   private oldy = 0;
 
-  private cursorState = false;       // Cursor blink state.
+  private _cursorBlinkState = false;
   
   private cursorHidden = false;
   private _hasFocus = false;
@@ -227,9 +228,9 @@ export class Emulator implements EmulatorApi {
   };
   
   private _params = new ControlSequenceParameters();
-  
+  private _blinkIntervalId: null | number = null;
   private lines: Line[] = [];
-  
+  private cursorBlink: boolean = true;
   private termName: string;
   debug: boolean;
 
@@ -292,6 +293,8 @@ export class Emulator implements EmulatorApi {
     this._processWriteChunkTimer = null;  // Timer ID for our write chunk timer.
     
     this._refreshTimer = null;  // Timer ID for triggering an on scren refresh.
+
+    this._startBlink();
   }
   
   destroy(): void {
@@ -314,7 +317,7 @@ export class Emulator implements EmulatorApi {
     this._setCursorY(0);
     this.oldy = 0;
 
-    this.cursorState = true;       // Cursor blink state.
+    this._cursorBlinkState = true;       // Cursor blink state.
     
     this.cursorHidden = false;
     this._hasFocus = false;
@@ -361,7 +364,7 @@ export class Emulator implements EmulatorApi {
     copyCell(Emulator.defAttr, this.curAttr); // Current character style.
 
     this._params = new ControlSequenceParameters();
-    
+    this._blinkIntervalId = null;
     this.lines = [];
   //  this.tabs;
     this.setupStops();
@@ -377,6 +380,7 @@ export class Emulator implements EmulatorApi {
       this.send('\x1b[I');
     }
     this._hasFocus = true;    
+    this._showCursor();
     this._dispatchEvents();
   }
   
@@ -756,8 +760,8 @@ export class Emulator implements EmulatorApi {
 
     // Place the cursor in the row.
     if (row === this.y &&
-        this.cursorState &&
-        !this.cursorHidden &&
+        this._cursorBlinkState &&
+        ! this.cursorHidden &&
         this.x < this.cols) {
 
       const newLine = line.clone();
@@ -765,6 +769,62 @@ export class Emulator implements EmulatorApi {
       return newLine;
     }
     return line;
+  }
+
+  private _cursorBlink(): void {
+    if ( ! this.hasFocus()) {
+      return;
+    }
+    this._cursorBlinkState = ! this._cursorBlinkState;
+    this.markRowForRefresh(this.y);
+    this._scheduleRefresh(true);
+  }
+
+  private _showCursor(): void {
+    if ( ! this.cursorBlink) {
+      return;
+    }
+
+    if (this._blinkIntervalId !== null) {
+      window.clearInterval(this._blinkIntervalId);
+    }
+    this._blinkIntervalId = setInterval(this._blinker, BLINK_INTERVAL_MS);
+
+    this._cursorBlinkState = true;
+    this._getRow(this.y);
+    this.markRowForRefresh(this.y);
+    this._scheduleRefresh(true);
+  }
+
+  /**
+   * Set cursor blinking on or off.
+   * 
+   * @param {boolean} blink True if the cursor should blink.
+   */
+  setCursorBlink(blink: boolean): void {
+    if (blink === this.cursorBlink) {
+      return;
+    }
+
+    if (this._blinkIntervalId !== null) {
+      window.clearInterval(this._blinkIntervalId);
+      this._blinkIntervalId = null;
+    }
+
+    this.cursorBlink = blink;
+    if (blink) {
+      this._startBlink();
+    } else {
+      this._cursorBlinkState = true;
+      this._getRow(this.y);
+      this.markRowForRefresh(this.y);
+      this._scheduleRefresh(true);
+    }
+  }
+
+  private _startBlink(): void {
+    this._blinker = () => this._cursorBlink();
+    this._showCursor();
   }
 
   private scroll(): void {
@@ -2356,6 +2416,7 @@ export class Emulator implements EmulatorApi {
       return false;
     }
 
+    this._showCursor();
     this.handler(key);
 
     cancelEvent(ev);
@@ -2380,6 +2441,7 @@ export class Emulator implements EmulatorApi {
       return false;
     }
 
+    this._showCursor();
     this.handler(key);
     
     cancelEvent(ev);
@@ -2387,6 +2449,7 @@ export class Emulator implements EmulatorApi {
   }
 
   plainKeyPress(key: string): boolean {
+    this._showCursor();
     this.handler(key);
     return true;
   }
@@ -3639,7 +3702,10 @@ export class Emulator implements EmulatorApi {
                 this._getRow(this.lines.length);
               }
               
-              this.normal = normal;
+              this.normal = normal;              
+              this.markRowRangeForRefresh(0, this.rows - 1);
+
+              this._showCursor();
             }
             break;
         }
@@ -3818,6 +3884,7 @@ export class Emulator implements EmulatorApi {
               // }
               this.resize( { rows: currentrows, columns: currentcols } );
               this.markRowRangeForRefresh(0, this.rows - 1);
+              this._showCursor();
             }
             break;
         }

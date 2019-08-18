@@ -70,6 +70,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
       const ui = this._getUi();
       const generalConfig = <GeneralConfig> config;
       ui.cursorStyle = generalConfig.cursorStyle;
+      ui.cursorBlink = generalConfig.blinkingCursor;
       ui.terminalFont = generalConfig.terminalFont;
       ui.terminalFontSize = generalConfig.terminalFontSize;
       ui.themeGUI = generalConfig.themeGUI;
@@ -91,6 +92,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.showTrayIcon = ui.showTrayIcon;
     newConfig.minimizeToTray = ui.minimizeToTray;
     newConfig.cursorStyle = ui.cursorStyle;
+    newConfig.blinkingCursor = ui.cursorBlink;
     newConfig.terminalFont = ui.terminalFont;
     newConfig.terminalFontSize = ui.terminalFontSize;
     newConfig.themeGUI = ui.themeGUI;

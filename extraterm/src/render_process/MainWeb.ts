@@ -165,6 +165,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
 
   terminalVisualConfig = {
     cursorStyle: config.cursorStyle,
+    cursorBlink: config.blinkingCursor,
     fontFamily: config.terminalFont,
     fontSizePx: config.terminalFontSize,
     devicePixelRatio: window.devicePixelRatio,
@@ -609,10 +610,12 @@ async function asyncSetupConfiguration(): Promise<void> {
     }
     if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
         oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize ||
-        oldGeneralConfig.cursorStyle !== newGeneralConfig.cursorStyle) {
+        oldGeneralConfig.cursorStyle !== newGeneralConfig.cursorStyle ||
+        oldGeneralConfig.blinkingCursor !== newGeneralConfig.blinkingCursor) {
 
       terminalVisualConfig = {
         cursorStyle: newGeneralConfig.cursorStyle,
+        cursorBlink: newGeneralConfig.blinkingCursor,
         fontFamily: fontLoader.cssNameFromFontName(newGeneralConfig.terminalFont),
         fontSizePx: newGeneralConfig.terminalFontSize,
         devicePixelRatio: window.devicePixelRatio,

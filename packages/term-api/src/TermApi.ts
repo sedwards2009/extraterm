@@ -225,6 +225,8 @@ export interface EmulatorApi {
   blur(): void;
   hasFocus(): boolean;
 
+  setCursorBlink(blink: boolean): void;
+
   flushRenderQueue(): void;
 
   newLine(): void;
