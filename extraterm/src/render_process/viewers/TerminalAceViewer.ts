@@ -29,6 +29,7 @@ import { SearchOptions } from 'ace-ts/build/SearchOptions';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { Color } from '../gui/Util';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
+import { ConfigCursorStyle } from '../../Config';
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -170,6 +171,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._aceEditSession.setUndoManager(new UndoManager());
 
       this._aceRenderer = new TerminalCanvasRenderer(containerDiv, {
+        cursorStyle: this._configCursorStyleToRendererCursorStyle(this._terminalVisualConfig.cursorStyle),
         palette: this._extractPalette(this._terminalVisualConfig),
         fontFamily: this._terminalVisualConfig.fontFamily,
         fontSizePx: this._terminalVisualConfig.fontSizePx,
@@ -336,6 +338,28 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     return result;
   }
+  
+  private _configCursorStyleToRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {
+    switch (configCursorStyle) {
+      case "block":
+        return CursorStyle.BLOCK;
+      case "underscore":
+        return CursorStyle.UNDERLINE;
+      case "beam":
+        return CursorStyle.BEAM;
+    }
+  }
+
+  private _configCursorStyleToHollowRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {
+    switch (configCursorStyle) {
+      case "block":
+        return CursorStyle.BLOCK_OUTLINE;
+      case "underscore":
+        return CursorStyle.UNDERLINE_OUTLINE;
+      case "beam":
+        return CursorStyle.BEAM_OUTLINE;
+    }
+  }
 
   private _emitCursorEdgeEvent(edge: Edge, column: number): void {
     doLater( () => {
@@ -418,24 +442,27 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     if (newVisualState !== this._visualState) {
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       if (containerDiv !== null) {
-        if ((newVisualState === VisualState.AUTO && this.hasFocus()) ||
-            newVisualState === VisualState.FOCUSED) {
-
+        if (this._showAsFocussed(newVisualState)) {
           containerDiv.classList.add(CLASS_FOCUSED);
           containerDiv.classList.remove(CLASS_UNFOCUSED);
 
-          this._aceRenderer.setRenderCursorStyle(CursorStyle.BLOCK);
+          this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
         } else {
           containerDiv.classList.add(CLASS_UNFOCUSED);
           containerDiv.classList.remove(CLASS_FOCUSED);
 
-          this._aceRenderer.setRenderCursorStyle(CursorStyle.OUTLINE);
+          this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToHollowRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
         }
       }
       this._visualState = newVisualState;
     }
   }
-  
+
+  private _showAsFocussed(visualState: VisualState): boolean {
+    return (visualState === VisualState.AUTO && this.hasFocus()) ||
+      visualState === VisualState.FOCUSED;
+  }
+
   getVisualState(): VisualState {
     return this._visualState;
   }
@@ -444,7 +471,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     const previousConfig = this._terminalVisualConfig;
     this._terminalVisualConfig = terminalVisualConfig;
     if (this._aceRenderer != null) {
+
+      const cursorStyle = (this._showAsFocussed(this._visualState)
+                            ? this._configCursorStyleToRendererCursorStyle(terminalVisualConfig.cursorStyle)
+                            : this._configCursorStyleToHollowRendererCursorStyle(terminalVisualConfig.cursorStyle));
+
       const config: TerminalCanvasRendererConfig = {
+        cursorStyle,
         palette: this._extractPalette(terminalVisualConfig),
         fontFamily: terminalVisualConfig.fontFamily,
         fontSizePx: terminalVisualConfig.fontSizePx,
@@ -462,6 +495,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
           previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio;
 
         if (fontPropertiesChanged ||
+            previousConfig.cursorStyle !== terminalVisualConfig.cursorStyle ||
             ! this._isTerminalThemeEqual(previousConfig.terminalTheme, terminalVisualConfig.terminalTheme)) {
           this._aceRenderer.setTerminalCanvasRendererConfig(config);
         }

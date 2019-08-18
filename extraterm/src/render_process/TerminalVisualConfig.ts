@@ -4,8 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { TerminalTheme } from 'extraterm-extension-api';
+import { ConfigCursorStyle } from '../Config';
 
 export interface TerminalVisualConfig {
+  cursorStyle: ConfigCursorStyle;
   fontFamily: string;
   fontSizePx: number;
   devicePixelRatio: number;

@@ -39,7 +39,7 @@ export class CanvasTextLayer implements TextLayer {
   private _clipDiv: HTMLDivElement = null;
 
   constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
-              devicePixelRatio: number) {
+              devicePixelRatio: number, cursorStyle: CursorStyle) {
 
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
@@ -47,7 +47,8 @@ export class CanvasTextLayer implements TextLayer {
     this._fontFamily = fontFamily;
     this._fontSizePx = fontSizePx; 
     this._devicePixelRatio = devicePixelRatio;
-
+    this._cursorStyle = cursorStyle;
+    
     this._clipDiv = <HTMLDivElement> document.createElement("DIV");
     this._clipDiv.classList.add("ace_layer");
     this._clipDiv.classList.add("ace_text_layer");

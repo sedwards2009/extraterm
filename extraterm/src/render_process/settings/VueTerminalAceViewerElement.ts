@@ -11,6 +11,7 @@ import { TerminalViewer } from '../viewers/TerminalAceViewer';
 import { VirtualScrollCanvas } from '../VirtualScrollCanvas';
 import * as Term from '../emulator/Term';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { VisualState } from '../viewers/ViewerElementTypes';
 
 export const VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG = "et-vue-terminal-ace-viewer-element";
 
@@ -35,6 +36,7 @@ export class VueTerminalAceViewerElement extends ViewerElement {
 
       this._terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
       this._terminalViewer.setEditable(false);
+      this._terminalViewer.setVisualState(VisualState.FOCUSED);
       this._terminalViewer.setTerminalVisualConfig(this._terminalVisualConfig);
 
       const emulator = new Term.Emulator({platform: <Term.Platform> process.platform});

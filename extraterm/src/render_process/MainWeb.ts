@@ -164,6 +164,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
 
   terminalVisualConfig = {
+    cursorStyle: config.cursorStyle,
     fontFamily: config.terminalFont,
     fontSizePx: config.terminalFontSize,
     devicePixelRatio: window.devicePixelRatio,
@@ -607,9 +608,11 @@ async function asyncSetupConfiguration(): Promise<void> {
       terminalVisualConfigChanged = true;
     }
     if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
-        oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize) {
+        oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize ||
+        oldGeneralConfig.cursorStyle !== newGeneralConfig.cursorStyle) {
 
       terminalVisualConfig = {
+        cursorStyle: newGeneralConfig.cursorStyle,
         fontFamily: fontLoader.cssNameFromFontName(newGeneralConfig.terminalFont),
         fontSizePx: newGeneralConfig.terminalFontSize,
         devicePixelRatio: window.devicePixelRatio,

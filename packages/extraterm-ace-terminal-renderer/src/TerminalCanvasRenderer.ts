@@ -9,8 +9,11 @@ import { Event } from 'extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { CursorStyle } from "extraterm-char-render-canvas";
+export { CursorStyle } from "extraterm-char-render-canvas";
+
 
 export interface TerminalCanvasRendererConfig {
+  cursorStyle: CursorStyle;
   palette: number[];
   devicePixelRatio: number;
   fontFamily: string;
@@ -42,7 +45,7 @@ export class TerminalCanvasRenderer extends Renderer {
   protected createTextLayer(contentDiv: HTMLDivElement): TextLayer {
     this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._terminalCanvasRendererConfig.palette,
       this._terminalCanvasRendererConfig.fontFamily, this._terminalCanvasRendererConfig.fontSizePx,
-      this._terminalCanvasRendererConfig.devicePixelRatio);
+      this._terminalCanvasRendererConfig.devicePixelRatio, this._terminalCanvasRendererConfig.cursorStyle);
     return this._canvasTextLayer;
   }
   
@@ -54,6 +57,7 @@ export class TerminalCanvasRenderer extends Renderer {
   setTerminalCanvasRendererConfig(terminalCanvasRendererConfig: TerminalCanvasRendererConfig): void {
     this._terminalCanvasRendererConfig = terminalCanvasRendererConfig;
     if (this._canvasTextLayer != null) {
+      this._canvasTextLayer.setCursorStyle(terminalCanvasRendererConfig.cursorStyle);
       this._canvasTextLayer.setPalette(terminalCanvasRendererConfig.palette);
       this._canvasTextLayer.setFontFamily(terminalCanvasRendererConfig.fontFamily);
       this._canvasTextLayer.setFontSizePx(terminalCanvasRendererConfig.fontSizePx);

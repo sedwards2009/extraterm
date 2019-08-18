@@ -16,7 +16,7 @@ import { Logger, getLogger } from "extraterm-logging";
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { EventEmitter } from '../utils/EventEmitter';
 
-import {CommandLineAction, SystemConfig, ShowTipsStrEnum, ConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, FontInfo } from '../Config';
+import {CommandLineAction, SystemConfig, ShowTipsStrEnum, ConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, FontInfo, ConfigCursorStyle } from '../Config';
 
 import * as Messages from '../WindowMessages';
 import { ThemeManager } from '../theme/ThemeManager';
@@ -188,6 +188,15 @@ export function setupUserConfig(themeManager: ThemeManager, configDatabase: Conf
     userStoredConfig.terminalFont = DEFAULT_TERMINALFONT;
   }
 
+  if (userStoredConfig.cursorStyle == null) {
+    userStoredConfig.cursorStyle = "block";
+  } else {
+    const cursorStyles: ConfigCursorStyle[] = ["block", "underscore", "beam"];
+    if (cursorStyles.indexOf(userStoredConfig.cursorStyle) === -1) {
+      userStoredConfig.cursorStyle = "block";
+    }
+  }
+
   if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), 'terminal')) {
     userStoredConfig.themeTerminal = FALLBACK_TERMINAL_THEME;
   }
@@ -318,6 +327,7 @@ function defaultValue<T>(value: T, defaultValue: T): T {
 
 function setConfigDefaults(config: UserStoredConfig): void {
   config.blinkingCursor = defaultValue(config.blinkingCursor, false);
+  config.cursorStyle = defaultValue<ConfigCursorStyle>(config.cursorStyle, "block");
   config.scrollbackMaxLines = defaultValue(config.scrollbackMaxLines, 500000);
   config.scrollbackMaxFrames = defaultValue(config.scrollbackMaxFrames, 100);
   config.showTips = defaultValue<ShowTipsStrEnum>(config.showTips, 'always');

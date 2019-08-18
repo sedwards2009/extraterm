@@ -7,7 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
 
-import {FontInfo, TitleBarStyle, TerminalMarginStyle} from '../../Config';
+import {FontInfo, TitleBarStyle, TerminalMarginStyle, ConfigCursorStyle} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -80,6 +80,13 @@ interface SelectableOption {
     <div>
       <p class="minor">{{themeTerminalFormatsMessage}}</p>
     </div>
+
+    <label>Cursor style:</label>
+    <span class="group">
+      <button class="inline char-width-3" v-on:click="cursorStyle = 'block';" :class="{ selected: cursorStyle==='block' }">&#x2588;</button>
+      <button class="inline char-width-3" v-on:click="cursorStyle = 'underscore';"  :class="{ selected: cursorStyle==='underscore' }">&#x2582;</button>
+      <button class="inline char-width-3" v-on:click="cursorStyle = 'beam';"  :class="{ selected: cursorStyle==='beam' }">&#x2503;</button>
+    </span>
 
     <label for="${ID_TERMINAL_MARGIN}">Margin:</label>
     <select class="char-width-6" id="${ID_TERMINAL_MARGIN}" v-model="terminalMarginStyle">
@@ -195,7 +202,7 @@ interface SelectableOption {
 `)
 })
 export class AppearanceSettingsUi extends Vue {
-
+  cursorStyle: ConfigCursorStyle;
   terminalFontSize: number;
   themes: ThemeTypes.ThemeInfo[];
 
@@ -227,6 +234,7 @@ export class AppearanceSettingsUi extends Vue {
 
   constructor() {
     super();
+    this.cursorStyle = "block";
     this.terminalFontSize = 13;
     this.themes = [];
     this.themeTerminal = "";

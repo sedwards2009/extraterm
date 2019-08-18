@@ -11,9 +11,11 @@ export type ShowTipsStrEnum = "always" | "daily" | "never";
 export type TitleBarStyle = "native" | "theme" | "compact";
 export type TerminalMarginStyle = "none" | "thin" | "normal" | "thick";
 
+export type ConfigCursorStyle = "block" | "underscore" | "beam";
 
 export interface GeneralConfig {
   blinkingCursor?: boolean;
+  cursorStyle?: ConfigCursorStyle;
   themeTerminal?: string;
   themeSyntax?: string;
   themeGUI?: string;

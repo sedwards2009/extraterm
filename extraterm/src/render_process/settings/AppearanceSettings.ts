@@ -4,7 +4,6 @@
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
-import * as path from 'path';
 
 import { AppearanceSettingsUi } from './AppearanceSettingsUi';
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, ConfigKey, SYSTEM_CONFIG, SystemConfig } from '../../Config';
@@ -70,6 +69,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     if (key === GENERAL_CONFIG) {
       const ui = this._getUi();
       const generalConfig = <GeneralConfig> config;
+      ui.cursorStyle = generalConfig.cursorStyle;
       ui.terminalFont = generalConfig.terminalFont;
       ui.terminalFontSize = generalConfig.terminalFontSize;
       ui.themeGUI = generalConfig.themeGUI;
@@ -90,6 +90,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.titleBarStyle = ui.titleBarStyle;
     newConfig.showTrayIcon = ui.showTrayIcon;
     newConfig.minimizeToTray = ui.minimizeToTray;
+    newConfig.cursorStyle = ui.cursorStyle;
     newConfig.terminalFont = ui.terminalFont;
     newConfig.terminalFontSize = ui.terminalFontSize;
     newConfig.themeGUI = ui.themeGUI;
