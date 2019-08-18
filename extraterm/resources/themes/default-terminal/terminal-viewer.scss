@@ -272,16 +272,31 @@
   mix-blend-mode: difference;
 }
 
+$ace_ibeam_thickness: 1.5px;
+
 .ace_cursor {
   z-index: 4;
   position: absolute;
-  -moz-box-sizing: border-box;
-  -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  border-left: 2px solid;
+  border-left: $ace_ibeam_thickness solid;
 
   border-color: $terminal-cursor-background-color;
   mix-blend-mode: difference; 
+
+  &::before {
+    content: " ";
+    display: block;
+    position: absolute;
+
+    box-sizing: border-box;
+    top: 0;
+    left: calc(-50% - #{$ace_ibeam_thickness});
+    width: calc( 100% + #{$ace_ibeam_thickness});
+    height: 100%;
+
+    border-top: $ace_ibeam_thickness solid $terminal-cursor-background-color;
+    border-bottom: $ace_ibeam_thickness solid $terminal-cursor-background-color;
+  }
 }
 
 #ID_CONTAINER.hide-cursor .ace_cursor {
