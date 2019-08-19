@@ -154,6 +154,14 @@ const WRITE_BUFFER_SIZE_EVENT = "WRITE_BUFFER_SIZE_EVENT";
 
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
+class LineImpl extends CharCellGrid implements Line {
+
+  wrapped = false;
+
+  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
+    super(width, height, _palette, __bare__);
+  }
+}
 
 export class Emulator implements EmulatorApi {
   private _log: Logger = null;
@@ -1057,7 +1065,8 @@ export class Emulator implements EmulatorApi {
 
                 if (this.x >= this.cols) {
                   this.x = 0;
-                  this.markRowForRefresh(this.y);                  
+                  this.markRowForRefresh(this.y);
+                  this.markRowAsWrapped(this.y);
                   if (this.y+1 > this.scrollBottom) {
                     this.scroll();
                   } else {
@@ -2511,7 +2520,7 @@ export class Emulator implements EmulatorApi {
     if (this.cols < newcols) {
       for (let i = 0; i< this.lines.length; i++) {
         const line = this.lines[i];
-        const newLine = new CharCellGrid(newcols, 1);
+        const newLine = new LineImpl(newcols, 1);
         newLine.pasteGrid(line, 0, 0);
 
         for(let j=line.width; j<newcols; j++) {
@@ -2667,7 +2676,7 @@ export class Emulator implements EmulatorApi {
   }
 
   private blankLine(cur?: boolean): Line {
-    return new CharCellGrid(this.cols, 1);
+    return new LineImpl(this.cols, 1);
   }
 
   private is(term: string): boolean {
