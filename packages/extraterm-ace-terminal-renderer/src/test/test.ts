@@ -64,11 +64,26 @@ function terminalEditor(elementOrString: HTMLElement | string): TerminalCanvasAc
   return editor;
 }
 
+// FIXME de-duplicate this class
+class LineImpl extends CharCellGrid implements TermApi.Line {
+  wrapped = false;
+
+  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
+    super(width, height, _palette, __bare__);
+  }
+
+  clone(): TermApi.Line {
+    const grid = new LineImpl(this.width, this.height, this.palette);
+    this.cloneInto(grid);
+    return grid;
+  }
+}
+
 function getLine(): TermApi.Line {
   const input = <HTMLInputElement> document.getElementById("input_line");
   const text = input.value;
 
-  const line = new CharCellGrid(text.length, 0);
+  const line = new LineImpl(text.length, 0);
 
   let cellStyle = 0;
   if ((<HTMLInputElement> document.getElementById("bold")).checked) {

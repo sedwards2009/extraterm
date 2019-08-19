@@ -10,6 +10,20 @@ import { Line } from "term-api";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { Delta } from "ace-ts";
 
+// FIXME de-duplicate this class
+class LineImpl extends CharCellGrid implements Line {
+  wrapped = false;
+
+  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
+    super(width, height, _palette, __bare__);
+  }
+  
+  clone(): Line {
+    const grid = new LineImpl(this.width, this.height, this.palette);
+    this.cloneInto(grid);
+    return grid;
+  }
+}
 
 class LineDataImpl implements LineData {
 
@@ -34,13 +48,17 @@ class LineDataImpl implements LineData {
   deleteLines(startRow: number, endRow: number): void {
     this._linesList.splice(startRow, endRow-startRow);
   }
+
+  createLine(width: number): Line {
+    return new LineImpl(width, 1);
+  }
 }
 
 function createLineDataFromString(str: string, width: number): LineData {
   const strLines = str.split("\n");
   const lineList: Line[] = [];
   for (const str of strLines) {
-    const line = new CharCellGrid(str.length, 1);
+    const line = new LineImpl(str.length, 1);
     line.setString(0, 0, str);
     lineList.push(line);
   }

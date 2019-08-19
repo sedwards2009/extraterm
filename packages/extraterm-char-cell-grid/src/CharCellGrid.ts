@@ -140,7 +140,7 @@ export class CharCellGrid {
   private _dataView: DataView;
   private _uint8View: Uint8Array;
 
-  constructor(public readonly width: number, public readonly height: number, private _palette: number[]=null,
+  constructor(public readonly width: number, public readonly height: number, public palette: number[]=null,
       __bare__=false) {
     if (__bare__) {
       return;
@@ -152,7 +152,7 @@ export class CharCellGrid {
   }
 
   setPalette(palette: number[]) : void {
-    this._palette = palette;
+    this.palette = palette;
     this._reapplyPalette();
   }
 
@@ -172,11 +172,15 @@ export class CharCellGrid {
   }
 
   clone(): CharCellGrid {
-    const grid = new CharCellGrid(this.width, this.height, this._palette);
+    const grid = new CharCellGrid(this.width, this.height, this.palette);
+    this.cloneInto(grid);
+    return grid;
+  }
+
+  cloneInto(grid: CharCellGrid): void {
     grid._rawBuffer = this._rawBuffer.slice(0);
     grid._dataView = new DataView(grid._rawBuffer);
     grid._uint8View = new Uint8Array(grid._rawBuffer);
-    return grid;
   }
 
   clear(): void {
@@ -184,8 +188,8 @@ export class CharCellGrid {
     const maxChar = this.width * this.height;
     let offset = 0;
 
-    const fgRGBA = this._palette == null ? 0xffffffff : this._palette[FG_COLOR_INDEX];
-    const bgRGBA = this._palette == null ? 0x00000000 : this._palette[BG_COLOR_INDEX];
+    const fgRGBA = this.palette == null ? 0xffffffff : this.palette[FG_COLOR_INDEX];
+    const bgRGBA = this.palette == null ? 0x00000000 : this.palette[BG_COLOR_INDEX];
 
     for (let i=0; i<maxChar; i++, offset += CELL_SIZE_BYTES) {
       this._dataView.setUint32(offset, spaceCodePoint);
@@ -318,13 +322,13 @@ export class CharCellGrid {
   }
 
   private _updateInternalRGB(index: number, offset: number): void {
-    if (this._palette != null) {
+    if (this.palette != null) {
       const style = this._dataView.getUint16(offset + OFFSET_STYLE);
       let rgba = 0;
       if (index <8 && style & STYLE_MASK_BOLD) {
-        rgba = this._palette[index + 8];
+        rgba = this.palette[index + 8];
       } else {
-        rgba = this._palette[index];
+        rgba = this.palette[index];
       }
       this._dataView.setUint32(offset + OFFSET_FG, rgba);
     }
@@ -348,8 +352,8 @@ export class CharCellGrid {
 
     this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, index);
 
-    if (this._palette != null) {
-      const rgba = this._palette[index];
+    if (this.palette != null) {
+      const rgba = this.palette[index];
       this._dataView.setUint32(offset + OFFSET_BG, rgba);
     }
   }
@@ -476,7 +480,7 @@ export class CharCellGrid {
         sourceOffset++;
       }
 
-      if (this._palette != null) {
+      if (this.palette != null) {
         for (let h=x; h<endH; h++) {
           if (this.isBgClut(h, v)) {
             this.setBgClutIndex(h, v, this.getBgClutIndex(h, v));

@@ -136,7 +136,7 @@ interface CharSet {
 }
 
 interface SavedState {
-  lines: Line[];
+  lines: LineImpl[];
   cols: number;
   rows: number;
   x: number;
@@ -154,12 +154,19 @@ const WRITE_BUFFER_SIZE_EVENT = "WRITE_BUFFER_SIZE_EVENT";
 
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
+// FIXME de-duplicate this class
 class LineImpl extends CharCellGrid implements Line {
 
   wrapped = false;
 
-  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
-    super(width, height, _palette, __bare__);
+  constructor(width: number, height: number, palette: number[]=null, __bare__=false) {
+    super(width, height, palette, __bare__);
+  }
+
+  clone(): Line {
+    const grid = new LineImpl(this.width, this.height, this.palette);
+    this.cloneInto(grid);
+    return grid;
   }
 }
 
@@ -237,7 +244,7 @@ export class Emulator implements EmulatorApi {
   
   private _params = new ControlSequenceParameters();
   private _blinkIntervalId: null | number = null;
-  private lines: Line[] = [];
+  private lines: LineImpl[] = [];
   private cursorBlink: boolean = true;
   private termName: string;
   debug: boolean;
@@ -571,7 +578,7 @@ export class Emulator implements EmulatorApi {
     this._dispatchEvents();
   }
 
-  private _getRow(row: number): Line {
+  private _getRow(row: number): LineImpl {
     while (row >= this.lines.length) {
       this.lines.push(this.blankLine());
     }
@@ -579,7 +586,7 @@ export class Emulator implements EmulatorApi {
   }
 
   // Fetch the LineCell at row 'row' if it exists, else return null.
-  private _tryGetRow(row: number): Line {
+  private _tryGetRow(row: number): LineImpl {
     return row >= this.lines.length ? null : this.lines[row];
   }
 
@@ -2599,7 +2606,12 @@ export class Emulator implements EmulatorApi {
   private markRowForRefresh(y: number): void {
     this.markRowRangeForRefresh(y, y);
   }
-  
+
+  private markRowAsWrapped(y: number): void {
+    const line = this._getRow(y);
+    line.wrapped = true;
+  }
+
   private _setCursorY(newY: number): void {
     this._getRow(newY);
     this.y = newY;
@@ -2675,7 +2687,7 @@ export class Emulator implements EmulatorApi {
     this.eraseRight(0, y);
   }
 
-  private blankLine(cur?: boolean): Line {
+  private blankLine(cur?: boolean): LineImpl {
     return new LineImpl(this.cols, 1);
   }
 

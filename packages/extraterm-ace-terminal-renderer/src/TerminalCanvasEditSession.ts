@@ -16,6 +16,21 @@ import { log, Logger, getLogger } from "extraterm-logging";
 import { TermLineHeavyString } from "./TermLineHeavyString";
 import { stringToCodePointArray } from "extraterm-unicode-utilities";
 
+// FIXME de-duplicate this class
+class LineImpl extends CharCellGrid implements TermApi.Line {
+  wrapped = false;
+
+  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
+    super(width, height, _palette, __bare__);
+  }
+
+  clone(): TermApi.Line {
+    const grid = new LineImpl(this.width, this.height, this.palette);
+    this.cloneInto(grid);
+    return grid;
+  }
+}
+
 
 export class TerminalCanvasEditSession extends EditSession {
   private _lineData: TermApi.Line[] = [];
@@ -27,11 +42,15 @@ export class TerminalCanvasEditSession extends EditSession {
     this._log = getLogger("TerminalCanvasEditSession", this);
 
     const lineData: LineData = {
+      createLine: (width: number): TermApi.Line => {
+        return new LineImpl(width, 1);
+      },
+
       getLine: (row: number): TermApi.Line => {
         let data = this._lineData[row];
         if (data == null) {
           const text = this.getLine(row);
-          data = new CharCellGrid(text.length, 1);
+          data = new LineImpl(text.length, 1);
           this._lineData[row] = data;
         }
         return data;

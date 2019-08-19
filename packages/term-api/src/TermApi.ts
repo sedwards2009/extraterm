@@ -42,7 +42,10 @@ export interface OldLine {
   attrs: Uint32Array;
 }
 
-export type Line = CharCellGrid;
+export interface Line extends CharCellGrid {
+  wrapped: boolean;
+  clone(): Line;
+}
 
 export interface TerminalCoord {
   x: number;

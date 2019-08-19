@@ -55,7 +55,7 @@ export class LineDataEditor {
     const strLength = insertLine.width;
     if ((usedLength + strLength) > line.width) {
       // Resize the line
-      const newLine = new CharCellGrid(usedLength + strLength, 1);
+      const newLine = this._lineData.createLine(usedLength + strLength);
       newLine.pasteGrid(line, 0, 0);
 
       this._insertIntoLineNoResize(newLine, pos, insertLine);
@@ -76,12 +76,12 @@ export class LineDataEditor {
     const firstLineOfChange = this._lineData.getLine(delta.start.row);
     const strLines = delta.lines;
 
-    let leftLine = new CharCellGrid(delta.start.column, 1);
+    let leftLine = this._lineData.createLine(delta.start.column);
     leftLine.pasteGrid(firstLineOfChange, 0, 0);
     leftLine = this._insertIntoLine(leftLine, delta.start.column, this._getLineFromDeltaLine(strLines[0]));
     this._lineData.setLine(delta.start.row, leftLine);
 
-    let rightLine = new CharCellGrid(firstLineOfChange.width - delta.start.column, 1);
+    let rightLine = this._lineData.createLine(firstLineOfChange.width - delta.start.column);
     rightLine.pasteGrid(firstLineOfChange, -delta.start.column, 0);
     rightLine = this._insertIntoLine(rightLine, 0, this._getLineFromDeltaLine(strLines[strLines.length-1]));
 
@@ -99,7 +99,7 @@ export class LineDataEditor {
 
   private _getLineFromDeltaLine(line: string | HeavyString): Line {
     if (typeof line === "string") {
-      const newLine = new CharCellGrid(countCodePoints(line), 1);
+      const newLine = this._lineData.createLine(countCodePoints(line));
       newLine.setString(0, 0, line);
       return newLine;
     } else {
@@ -111,10 +111,10 @@ export class LineDataEditor {
     if (delta.start.row === delta.end.row) {
       const line = this._lineData.getLine(delta.start.row);
 
-      const leftLine = new CharCellGrid(delta.start.column, 1);
+      const leftLine = this._lineData.createLine(delta.start.column);
       leftLine.pasteGrid(line, 0, 0);
 
-      const newLine = new CharCellGrid(Math.max(0, delta.start.column + line.width-delta.end.column), 1);
+      const newLine = this._lineData.createLine(Math.max(0, delta.start.column + line.width-delta.end.column));
       newLine.pasteGrid(line, -delta.end.column+delta.start.column, 0);
       newLine.pasteGrid(leftLine, 0, 0);
       this._lineData.setLine(delta.start.row, newLine);
@@ -130,19 +130,19 @@ export class LineDataEditor {
   }
 
   private _lineLeft(line: Line, column: number): Line {
-    const newLine = new CharCellGrid(column, 1);
+    const newLine = this._lineData.createLine(column);
     newLine.pasteGrid(line, 0, 0);
     return newLine;
   }
 
   private _lineRight(line: Line, column: number): Line {
-    const newLine = new CharCellGrid(Math.max(line.width-column, 0), 1);
+    const newLine = this._lineData.createLine(Math.max(line.width-column, 0));
     newLine.pasteGrid(line, -column, 0);
     return newLine;
   }
 
   private _joinLines(leftLine: Line, rightLine: Line): Line {
-    const newLine = new CharCellGrid(leftLine.width + rightLine.width, 1);
+    const newLine = this._lineData.createLine(leftLine.width + rightLine.width);
     newLine.pasteGrid(leftLine, 0, 0);
     newLine.pasteGrid(rightLine, leftLine.width, 0);
     return newLine;
