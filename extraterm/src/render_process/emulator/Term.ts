@@ -364,7 +364,6 @@ export class Emulator implements EmulatorApi {
     copyCell(Emulator.defAttr, this.curAttr); // Current character style.
 
     this._params = new ControlSequenceParameters();
-    this._blinkIntervalId = null;
     this.lines = [];
   //  this.tabs;
     this.setupStops();
