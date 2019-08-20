@@ -213,7 +213,7 @@ export class CanvasTextLayer implements TextLayer {
       usableHeightPx: rawHeightPx * this._devicePixelRatio,
       fontAtlasRepository,
       extraFonts: [{
-        fontFamily: "emojione",
+        fontFamily: process.platform === "win32" ? this._fontFamily : "emojione",
         fontSizePx: this._fontSizePx * this._devicePixelRatio,
         unicodeStart: 0x1f000,
         unicodeEnd: 0x20000,
