@@ -166,7 +166,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
   terminalVisualConfig = {
     cursorStyle: config.cursorStyle,
     cursorBlink: config.blinkingCursor,
-    fontFamily: config.terminalFont,
+    fontFamily: fontLoader.cssNameFromFontName(config.terminalFont),
     fontSizePx: config.terminalFontSize,
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme
