@@ -188,7 +188,7 @@ export interface FontSlice {
    * This and `unicodeEnd` define the range of unicode code points for
    * which this font is to be used.
    */
-  unicodeStart: number;
+  unicodeStart?: number;
 
   /**
    * End code point of the unicode range (exclusive)
@@ -196,7 +196,7 @@ export interface FontSlice {
    * This and `unicodeStart` define the range of unicode code points for
    * which this font is to be used.
    */
-  unicodeEnd: number;
+  unicodeEnd?: number;
 
   /**
    * Characters used to determine the effective size of the glyphs
@@ -205,10 +205,13 @@ export interface FontSlice {
    * determine the actual size of the font on the screen.
    */
   sampleChars?: string[];
+
+  unicodeCodePoints?: number[];
 }
 
 interface ExtraFontSlice extends FontSlice {
   fontAtlas: FontAtlas;
+  codePointSet: Set<number>;
 }
 
 export enum CursorStyle {
@@ -388,7 +391,22 @@ export class CharRenderCanvas implements Disposable {
 
       const fontAtlas = this._fontAtlasRepository.getFontAtlas(customMetrics);
       this._disposables.push(fontAtlas);
-      return { ...extraFont, fontAtlas }
+
+      let codePointSet: Set<number> = null;
+      if (extraFont.unicodeCodePoints != null) {
+        codePointSet = new Set<number>(extraFont.unicodeCodePoints);
+      }
+
+      if (extraFont.unicodeStart != null && extraFont.unicodeEnd != null) {
+        if (codePointSet == null) {
+          codePointSet = new Set();
+        }
+        for (let c = extraFont.unicodeStart; c <= extraFont.unicodeEnd; c++) {
+          codePointSet.add(c);
+        }
+      }
+
+      return { ...extraFont, fontAtlas, codePointSet }
     });
   }
 
@@ -410,7 +428,7 @@ export class CharRenderCanvas implements Disposable {
 
   private _getExtraFontSliceFromCodePoint(codePoint: number): ExtraFontSlice {
     for (const fontSlice of this._extraFontSlices) {
-      if (codePoint >= fontSlice.unicodeStart && codePoint < fontSlice.unicodeEnd) {
+      if (fontSlice.codePointSet.has(codePoint)) {
         return fontSlice;
       }
     }
