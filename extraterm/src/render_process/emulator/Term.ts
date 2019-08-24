@@ -51,7 +51,8 @@ import {
 } from 'term-api';
 
 import { log, Logger, getLogger } from "extraterm-logging";
-import * as easta from "easta";
+import { isWide } from "extraterm-unicode-utilities";
+
 import {
   CharCellGrid,
   Cell,
@@ -4168,28 +4169,4 @@ function cancelEvent(ev) {
   if (ev.stopPropagation) ev.stopPropagation();
   ev.cancelBubble = true;
   return false;
-}
-
-function isWide(codePoint: number): boolean {
-  if (codePoint >= 0x10000) {
-    return true;
-  }
-
-  const ch = String.fromCodePoint(codePoint);
-  switch (easta(ch)) {
-  	case 'Na': //Narrow
- 	  return false;
-  	case 'F': //FullWidth
-  	  return true;
-  	case 'W': // Wide
-  	  return true;
-  	case 'H': //HalfWidth
-  	  return false;
-  	case 'A': //Ambiguous
-  	  return false;
-  	case 'N': //Neutral
-  	  return false;
-  	default:
-  	  return false;
-  }
 }
