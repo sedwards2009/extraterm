@@ -1,28 +1,18 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
 import {Disposable, Event} from 'extraterm-extension-api';
 
-import {DisposableHolder} from '../utils/DisposableUtils';
-
 
 /**
  * An event emitter which can be subscribe to to hear when this event is fired.
  */
-export class EventEmitter<T> implements Disposable {
+export class EventEmitter<T> {
 
   private _listeners: ((t: T) => void)[] = [];
-  private _disposables = new DisposableHolder();
-
-  /**
-   * Dispose of and disconnect all listeners.
-   */
-  dispose(): void {
-    this._disposables.dispose();
-  }
 
   /**
    * Attach a listener to this event.
@@ -32,10 +22,11 @@ export class EventEmitter<T> implements Disposable {
    */
   event: Event<T> = (listener: (t: T) => void): Disposable => {
     this._listeners.push(listener);
-    return this._disposables.add({
+    return {
       dispose: () => {
         this._listeners = this._listeners.filter(item => item !== listener);
-      }});
+      }
+    };
   }
 
   /**
