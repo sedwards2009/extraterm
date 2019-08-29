@@ -21,9 +21,9 @@ export class CanvasTextLayer implements TextLayer {
   private _charRenderCanvas: CharRenderCanvas = null;
   private _canvasWidthCssPx = 0;
   private _canvasHeightCssPx = 0;
-  
-  private _editSession: TerminalCanvasEditSession = null;
+  private _currentCanvasRawWidthPx = 0;
 
+  private _editSession: TerminalCanvasEditSession = null;
 
   private _lastConfig: LayerConfig = null;
   private _lastViewPortSize: ViewPortSize = null;
@@ -178,7 +178,7 @@ export class CanvasTextLayer implements TextLayer {
     const rawCanvasHeightPx = Math.ceil(numOfVisibleRows * config.charHeightPx);
 
     if (this._charRenderCanvas != null) {
-      this._setupClipping(rawCanvasWidthPx, rawCanvasHeightPx);
+      this._setupClipping(this._currentCanvasRawWidthPx, rawCanvasHeightPx);
 
       if (this._canvasWidthCssPx >= rawCanvasWidthPx &&
           this._canvasHeightCssPx >= rawCanvasHeightPx) {
@@ -190,8 +190,11 @@ export class CanvasTextLayer implements TextLayer {
     // Over-provision
     const provisionCanvasHeight = Math.ceil((Math.round(numOfVisibleRows * PROVISION_HEIGHT_FACTOR) + 1)
                                     * config.charHeightPx);
-    this._createCanvas(rawCanvasWidthPx, provisionCanvasHeight);
-    this._setupClipping(rawCanvasWidthPx, rawCanvasHeightPx);
+    
+    const allocRawCanvasWidthPx = Math.max(rawCanvasWidthPx, this._currentCanvasRawWidthPx);
+    this._currentCanvasRawWidthPx = allocRawCanvasWidthPx;
+    this._createCanvas(allocRawCanvasWidthPx, provisionCanvasHeight);
+    this._setupClipping(allocRawCanvasWidthPx, rawCanvasHeightPx);
   }
 
   private _createCanvas(rawWidthPx: number, rawHeightPx: number): void {
