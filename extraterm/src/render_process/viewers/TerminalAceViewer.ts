@@ -80,6 +80,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _aceEditor: TerminalCanvasAceEditor = null;
   private _aceEditSession: TerminalCanvasEditSession = null;
   private _aceRenderer: TerminalCanvasRenderer = null;
+  private _aceHasUndoManager = false;
+
   private _height = 0;
   private _isEmpty = true;
   private _mode: Mode = Mode.DEFAULT;
@@ -88,8 +90,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _visualState: VisualState = VisualState.AUTO;
   private _terminalVisualConfig: TerminalVisualConfig = null;
 
-  private _mainStyleLoaded: boolean = false;
-  private _resizePollHandle: Disposable = null;
   private _needEmulatorResize: boolean = false;
   
   // Emulator dimensions
@@ -168,7 +168,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._mode = Mode.DEFAULT;
 
       this._aceEditSession = new TerminalCanvasEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
-      this._aceEditSession.setUndoManager(new UndoManager());
 
       this._aceRenderer = new TerminalCanvasRenderer(containerDiv, {
         cursorStyle: this._configCursorStyleToRendererCursorStyle(this._terminalVisualConfig.cursorStyle),
@@ -986,6 +985,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._aceEditor.selection.moveCursorToPosition({ row: this._aceEditSession.getLength()-1, column: 0 });
     }
     if (this._editable) {
+      if ( ! this._aceHasUndoManager) {
+        this._aceEditSession.setUndoManager(new UndoManager());
+        this._aceHasUndoManager = true;
+      }
+
       this._aceEditor.setReadOnly(false);
     } else {
       this._aceEditor.setRelayInput(false);
