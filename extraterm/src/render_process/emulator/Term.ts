@@ -674,8 +674,8 @@ export class Emulator implements EmulatorApi {
 
     if (this.urxvtMouse) {
       this.log("sendEvent(): urxvtMouse");
-      const x = pos.x + 1;
-      const y = pos.y + 1;
+      const x = pos.x;
+      const y = pos.y;
       this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
       return;
     }
