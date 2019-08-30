@@ -637,7 +637,6 @@ export class Emulator implements EmulatorApi {
     const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
     
     if (this.vt300Mouse) {
-      this.log("sendEvent(): vt300Mouse");
       // NOTE: Unstable.
       // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
       button &= 3;
@@ -673,7 +672,6 @@ export class Emulator implements EmulatorApi {
     }
 
     if (this.urxvtMouse) {
-      this.log("sendEvent(): urxvtMouse");
       const x = pos.x;
       const y = pos.y;
       this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
@@ -681,14 +679,12 @@ export class Emulator implements EmulatorApi {
     }
 
     if (this.sgrMouse) {
-      this.log("sendEvent(): sgrMouse");
       const x = pos.x;
       const y = pos.y;
       this.send('\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
         ';' + y + ((button & 3) === 3 ? 'm' : 'M'));
       return;
     }
-    this.log("sendEvent(): default");
 
     const encodedData = [];
     this.encodeMouseData(encodedData, button+32);
@@ -700,7 +696,6 @@ export class Emulator implements EmulatorApi {
 
     this.send('\x1b[M' + String.fromCharCode.apply(String, encodedData));
   }
-
   
   // mouseup, mousedown, mousewheel
   // left click: ^[[M 3<^[[M#3<
