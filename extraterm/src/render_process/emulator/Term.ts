@@ -333,18 +333,6 @@ export class Emulator implements EmulatorApi {
     this.glevel = 0;
     this.charsets = [null];
 
-    // mouse properties
-  //  this.decLocator;
-  //  this.x10Mouse;
-  //  this.vt200Mouse;
-  //  this.vt300Mouse;
-  //  this.normalMouse;
-  //  this.mouseEvents;
-  //  this.sendFocus;
-  //  this.utfMouse;
-  //  this.sgrMouse;
-  //  this.urxvtMouse;
-
     // misc
   //  this.element;
   //  this.children;

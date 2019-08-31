@@ -20,14 +20,15 @@ export class MouseEncoder {
   private _log: Logger = null;
 
   mouseEvents = false;
+
   utfMouse = false;
   decLocator = false;
   urxvtMouse = false;
   sgrMouse = false;
-  vt300Mouse = false;
-  vt200Mouse = false;
+
   normalMouse = false;
   x10Mouse = false;
+  vt200Mouse = false;
 
   private _mouseButtonDown = false;
   private _lastMovePos: TerminalCoord = null;
@@ -208,28 +209,6 @@ export class MouseEncoder {
   private _computeMouseSequence(button: number, pos0based: TerminalCoord): string {
     const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
     
-    if (this.vt300Mouse) {
-      // NOTE: Unstable.
-      // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
-      button &= 3;
-      const x = pos.x;
-      const y = pos.y;
-      let data = '\x1b[24';
-      if (button === 0) {
-        data += '1';
-      } else if (button === 1) {
-        data += '3';
-      } else if (button === 2) {
-        data += '5';
-      } else if (button === 3) {
-        return null;
-      } else {
-        data += '0';
-      }
-      data += '~[' + x + ',' + y + ']\r';
-      return data;
-    }
-
     if (this.decLocator) {
       // NOTE: Unstable.
       this._log.debug("sendEvent with decLocator is not implemented!");
