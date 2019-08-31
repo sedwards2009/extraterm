@@ -51,6 +51,7 @@ import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
 import { FontLoader, DpiWatcher } from './gui/Util';
+import { doLater } from 'extraterm-later';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -166,7 +167,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
   terminalVisualConfig = {
     cursorStyle: config.cursorStyle,
     cursorBlink: config.blinkingCursor,
-    fontFamily: config.terminalFont,
+    fontFamily: fontLoader.cssNameFromFontName(config.terminalFont),
     fontSizePx: config.terminalFontSize,
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme
@@ -300,8 +301,12 @@ function setUpWindowControls(): void {
     WebIpc.windowMinimizeRequest();
   });
 
-  document.getElementById(ID_MAXIMIZE_BUTTON).addEventListener('click', () => {
+  const maximizeButton = document.getElementById(ID_MAXIMIZE_BUTTON);
+  maximizeButton.addEventListener('click', () => {
     WebIpc.windowMaximizeRequest();
+    doLater(() => {
+      mainWebUi.focus();
+    });
   });
 
   document.getElementById(ID_CLOSE_BUTTON).addEventListener('click', () => {

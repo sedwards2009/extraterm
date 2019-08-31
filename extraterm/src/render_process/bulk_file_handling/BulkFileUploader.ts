@@ -51,9 +51,6 @@ export class BulkFileUploader implements Disposable {
   constructor(private _bulkFileHandle: BulkFileHandle, private _pty: Pty) {
     this._log = getLogger("BulkFileUploader", this);
 
-    this._disposables.add(this._onUploadedChangeEmitter);
-    this._disposables.add(this._onFinishedEmitter);
-
     this.onUploadedChange = this._onUploadedChangeEmitter.event;
     this.onFinished = this._onFinishedEmitter.event;
   }

@@ -7,6 +7,7 @@ import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
+import { isWide as isFullWidth } from "extraterm-unicode-utilities";
 
 
 const TWO_TO_THE_24 = 2 ** 24;
@@ -142,7 +143,7 @@ abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     } else {
       const str = String.fromCodePoint(codePoint);
 
-      isWide = isFullWidth(str);
+      isWide = isFullWidth(codePoint);
       widthPx = isWide ? 2*this._metrics.widthPx : this._metrics.widthPx;
 
       let styleName = "";
@@ -368,27 +369,6 @@ class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph>
     }
 
     return true;
-  }
-}
-
-//-------------------------------------------------------------------------
-
-function isFullWidth(ch: string): boolean {
-  switch (easta(ch)) {
-  	case 'Na': //Narrow
- 	  return false;
-  	case 'F': //FullWidth
-  	  return true;
-  	case 'W': // Wide
-  	  return true;
-  	case 'H': //HalfWidth
-  	  return false;
-  	case 'A': //Ambiguous
-  	  return false;
-  	case 'N': //Neutral
-  	  return false;
-  	default:
-  	  return false;
   }
 }
 

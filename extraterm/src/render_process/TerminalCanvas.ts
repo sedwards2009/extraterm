@@ -62,6 +62,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   private _cssStyleElement: HTMLStyleElement;
 
   private _configDatabase: ConfigDatabase = null;
+  private _configDatabaseDisposable: Disposable = null;
   private _baseTerminalVisualConfig: TerminalVisualConfig = null;
   private _effectiveTerminalVisualConfig: TerminalVisualConfig = null;
   private _virtualScrollArea: VirtualScrollAreaWithSpacing = null;
@@ -226,6 +227,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   disconnectedCallback(): void {
+    super.disconnectedCallback();
     this._needsCompleteRefresh = true;
     this._elementAttached = false;
   }
@@ -284,16 +286,22 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   dispose(): void {
+    this._disposeConfigDatabase();
     for (const kid of this._childElementList) {
       if (DisposableUtils.isDisposable(kid.element)) {
         kid.element.dispose();
       }
     }
+
+    if (this._scrollContainer != null) {
+      TerminalCanvas._resizeNotifier.unobserve(this._scrollContainer);
+    }
   }
 
   setConfigDatabase(configManager: ConfigDatabase): void {
+    this._disposeConfigDatabase();
     this._configDatabase = configManager;
-    this._configDatabase.onChange((event: ConfigChangeEvent) => {
+    this._configDatabaseDisposable = this._configDatabase.onChange((event: ConfigChangeEvent) => {
       if (event.key === "general") {
         const oldConfig = <GeneralConfig> event.oldConfig;
         const newConfig = <GeneralConfig> event.newConfig;
@@ -306,6 +314,14 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
         }
       }
     });
+  }
+
+  private _disposeConfigDatabase(): void {
+    if (this._configDatabaseDisposable == null) {
+      return;
+    }
+    this._configDatabaseDisposable.dispose();
+    this._configDatabaseDisposable = null;
   }
 
   private _updateScrollableSpacing(): void {
