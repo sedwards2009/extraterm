@@ -213,6 +213,11 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     if (viewerElement !== null) {
       viewerElement.dispose();
     }
+
+    if (this._titleBarUI != null) {
+      this._titleBarUI.$destroy();
+    }
+    super.dispose();
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {

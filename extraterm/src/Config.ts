@@ -134,6 +134,8 @@ export interface ConfigDatabase {
   /**
    * Register a listener to hear when the config has changed.
    *
+   * Be sure to dispose of the registration once you are finished with it,
+   * otherwise this connect may keep your listener object alive.
    */
   onChange: Event<ConfigChangeEvent>;
   

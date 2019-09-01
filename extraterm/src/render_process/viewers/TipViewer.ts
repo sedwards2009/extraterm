@@ -81,10 +81,22 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
   }
 
   dispose(): void {
+    if (this._configManagerDisposable != null) {
+      this._configManagerDisposable.dispose();
+      this._configManagerDisposable = null;
+    }
+
     if (this._keybindingsManagerDisposable != null) {
       this._keybindingsManagerDisposable.dispose();
       this._keybindingsManagerDisposable = null;
     }
+
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    if (containerDiv != null) {
+      TipViewer._resizeNotifier.unobserve(containerDiv);
+    }
+
+    super.dispose();
   }
 
   getMetadata(): ViewerMetadata {
@@ -148,14 +160,6 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
       });
     }
     this._handleResize();
-  }
-  
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    if (this._configManagerDisposable !== null) {
-      this._configManagerDisposable.dispose();
-      this._configManagerDisposable = null;
-    }
   }
   
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

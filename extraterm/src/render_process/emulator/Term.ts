@@ -51,7 +51,8 @@ import {
 } from 'term-api';
 
 import { log, Logger, getLogger } from "extraterm-logging";
-import * as easta from "easta";
+import { isWide } from "extraterm-unicode-utilities";
+
 import {
   CharCellGrid,
   Cell,
@@ -364,7 +365,6 @@ export class Emulator implements EmulatorApi {
     copyCell(Emulator.defAttr, this.curAttr); // Current character style.
 
     this._params = new ControlSequenceParameters();
-    this._blinkIntervalId = null;
     this.lines = [];
   //  this.tabs;
     this.setupStops();
@@ -637,7 +637,6 @@ export class Emulator implements EmulatorApi {
     const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
     
     if (this.vt300Mouse) {
-      this.log("sendEvent(): vt300Mouse");
       // NOTE: Unstable.
       // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
       button &= 3;
@@ -673,22 +672,19 @@ export class Emulator implements EmulatorApi {
     }
 
     if (this.urxvtMouse) {
-      this.log("sendEvent(): urxvtMouse");
-      const x = pos.x + 1;
-      const y = pos.y + 1;
+      const x = pos.x;
+      const y = pos.y;
       this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
       return;
     }
 
     if (this.sgrMouse) {
-      this.log("sendEvent(): sgrMouse");
       const x = pos.x;
       const y = pos.y;
       this.send('\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
         ';' + y + ((button & 3) === 3 ? 'm' : 'M'));
       return;
     }
-    this.log("sendEvent(): default");
 
     const encodedData = [];
     this.encodeMouseData(encodedData, button+32);
@@ -700,7 +696,6 @@ export class Emulator implements EmulatorApi {
 
     this.send('\x1b[M' + String.fromCharCode.apply(String, encodedData));
   }
-
   
   // mouseup, mousedown, mousewheel
   // left click: ^[[M 3<^[[M#3<
@@ -4169,28 +4164,4 @@ function cancelEvent(ev) {
   if (ev.stopPropagation) ev.stopPropagation();
   ev.cancelBubble = true;
   return false;
-}
-
-function isWide(codePoint: number): boolean {
-  if (codePoint >= 0x10000) {
-    return true;
-  }
-
-  const ch = String.fromCodePoint(codePoint);
-  switch (easta(ch)) {
-  	case 'Na': //Narrow
- 	  return false;
-  	case 'F': //FullWidth
-  	  return true;
-  	case 'W': // Wide
-  	  return true;
-  	case 'H': //HalfWidth
-  	  return false;
-  	case 'A': //Ambiguous
-  	  return false;
-  	case 'N': //Neutral
-  	  return false;
-  	default:
-  	  return false;
-  }
 }

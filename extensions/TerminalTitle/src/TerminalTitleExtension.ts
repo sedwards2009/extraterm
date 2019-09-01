@@ -27,7 +27,7 @@ for (const el of [
   }
 }
 
-const terminalToTemplateMap = new Map<Terminal, TabTitleData>();
+const terminalToTemplateMap = new WeakMap<Terminal, TabTitleData>();
 
 
 export function activate(context: ExtensionContext): any {
