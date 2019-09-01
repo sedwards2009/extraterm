@@ -16,6 +16,19 @@ import { log, Logger, getLogger } from "extraterm-logging";
 // Relevant functions in xterm/button.c:
 //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
 
+
+const BUTTONS_CODE_SHIFT = 16;
+const BUTTONS_CODE_META = 32;
+const BUTTONS_CODE_CTRL = 64;
+
+const BUTTONS_CODE_LEFT = 0;
+const BUTTONS_CODE_MIDDLE = 1;
+const BUTTONS_CODE_RIGHT = 2;
+const BUTTONS_CODE_RELEASE = 3;
+
+const BUTTON_CODE_BUTTON_MASK = 3;
+
+
 export class MouseEncoder {
   private _log: Logger = null;
 
@@ -57,7 +70,7 @@ export class MouseEncoder {
 
     // no mods
     if (this.vt200Mouse) {
-      const ctrlCode = ev.ctrlKey ? (16<<2) : 0; // ctrl only
+      const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
       button = this._mouseEventOptionsToButtons(ev, false) | ctrlCode;
     } else if ( ! this.normalMouse) {
       button = this._mouseEventOptionsToButtons(ev, false);  // no mods
@@ -99,7 +112,7 @@ export class MouseEncoder {
     
     // no mods
     if (this.vt200Mouse) {
-      const ctrlCode = ev.ctrlKey ? (16<<2) : 0; // ctrl only
+      const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
       button = this._mouseEventOptionsToButtons(ev, false) | ctrlCode;
     } else if ( ! this.normalMouse) {
       button = this._mouseEventOptionsToButtons(ev, false);  // no mods
@@ -143,7 +156,7 @@ export class MouseEncoder {
 
     // no mods
     if (this.vt200Mouse) {
-      const ctrlCode = ev.ctrlKey ? (16<<2) : 0; // ctrl only
+      const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
       button = this._mouseEventOptionsToButtons(ev, true) | ctrlCode;
     } else if ( ! this.normalMouse) {
       button = this._mouseEventOptionsToButtons(ev, true);  // no mods
@@ -169,24 +182,22 @@ export class MouseEncoder {
     
     let button = 0;
     if (release) {
-      button = 3;
+      button = BUTTONS_CODE_RELEASE;
     } else if (ev.leftButton) {
-      button = 0;
+      button = BUTTONS_CODE_LEFT;
     } else if (ev.middleButton) {
-      button = 1;
+      button = BUTTONS_CODE_MIDDLE;
     } else if (ev.rightButton) {
-      button = 2;
+      button = BUTTONS_CODE_RIGHT;
     }
     return button;
   }
 
   private _mouseEventOptionsToMods(ev: MouseEventOptions): number {
-    const shift = ev.shiftKey ? 4 : 0;
-    const meta = ev.metaKey ? 8 : 0;
-    const ctrl = ev.ctrlKey ? 16 : 0;
-    const mod = shift | meta | ctrl;
-    
-    return mod << 2;
+    const shift = ev.shiftKey ? BUTTONS_CODE_SHIFT : 0;
+    const meta = ev.metaKey ? BUTTONS_CODE_META : 0;
+    const ctrl = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0;
+    return shift | meta | ctrl;
   }
 
   // encode button and
@@ -247,8 +258,9 @@ export class MouseEncoder {
     if (this.sgrMouse) {
       const x = pos.x;
       const y = pos.y;
-      return  '\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
-        ';' + y + ((button & 3) === 3 ? 'm' : 'M');
+      const isRelease = (button & BUTTON_CODE_BUTTON_MASK) === BUTTONS_CODE_RELEASE;
+      return  '\x1b[<' + (isRelease ? button & ~BUTTON_CODE_BUTTON_MASK : button) + ';' + x +
+        ';' + y + (isRelease ? 'm' : 'M');
     }
 
     const encodedData = [];
