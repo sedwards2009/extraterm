@@ -52,14 +52,17 @@ export class MouseEncoder {
     return sequence;
   }
 
-  private _computeMouseDownSequence(  ev: MouseEventOptions): string {
-    let button = this.mouseEventOptionsToButtons(ev);
-    
+  private _computeMouseDownSequence(ev: MouseEventOptions): string {
+    let button = 0;
+
     // no mods
     if (this.vt200Mouse) {
-      button = button & ~0xc;   // ctrl only
+      const ctrlCode = ev.ctrlKey ? (16<<2) : 0; // ctrl only
+      button = this._mouseEventOptionsToButtons(ev, false) | ctrlCode;
     } else if ( ! this.normalMouse) {
-      button = button & ~0x1c;  // no mods
+      button = this._mouseEventOptionsToButtons(ev, false);  // no mods
+    } else {
+      button = this._mouseEventOptionsToModsButtons(ev);
     }
     
     const sequence = this._computeMouseSequence(button, {x: ev.column, y: ev.row});
@@ -92,13 +95,16 @@ export class MouseEncoder {
   private _computeMouseMoveSequence(ev: MouseEventOptions): string {
     const pos = {x: ev.column, y: ev.row};
 
-    let button = this.mouseEventOptionsToButtons(ev);
+    let button = 0;
     
     // no mods
     if (this.vt200Mouse) {
-      button = button & ~0xc;   // ctrl only
+      const ctrlCode = ev.ctrlKey ? (16<<2) : 0; // ctrl only
+      button = this._mouseEventOptionsToButtons(ev, false) | ctrlCode;
     } else if ( ! this.normalMouse) {
-      button = button & ~0x1c;  // no mods
+      button = this._mouseEventOptionsToButtons(ev, false);  // no mods
+    } else {
+      button = this._mouseEventOptionsToModsButtons(ev);
     }
     
     // buttons marked as motions
@@ -106,7 +112,8 @@ export class MouseEncoder {
     button |= 32;
 
     return this._computeMouseSequence(button, pos);
-  }    
+  }
+  
   mouseUp(ev: MouseEventOptions): string {
     if ( ! this.mouseEvents) {
       return null;
@@ -132,19 +139,26 @@ export class MouseEncoder {
   }
 
   private _computeMouseUpSequence(ev: MouseEventOptions): string {
-    let button = this.mouseEventOptionsToButtons(ev, true);
-    
+    let button = 0;
+
     // no mods
     if (this.vt200Mouse) {
-      button = button & ~0xc;   // ctrl only
+      const ctrlCode = ev.ctrlKey ? (16<<2) : 0; // ctrl only
+      button = this._mouseEventOptionsToButtons(ev, true) | ctrlCode;
     } else if ( ! this.normalMouse) {
-      button = button & ~0x1c;  // no mods
+      button = this._mouseEventOptionsToButtons(ev, true);  // no mods
+    } else {
+      button = this._mouseEventOptionsToModsButtons(ev, true);
     }
     
     return this._computeMouseSequence(button,  {x: ev.column, y: ev.row});
   }
 
-  private mouseEventOptionsToButtons(ev, release=false): number {
+  private _mouseEventOptionsToModsButtons(ev: MouseEventOptions, release=false): number {
+    return this._mouseEventOptionsToMods(ev) | this._mouseEventOptionsToButtons(ev, release);
+  }
+
+  private _mouseEventOptionsToButtons(ev: MouseEventOptions, release=false): number {
     // two low bits:
     // 0 = left
     // 1 = middle
@@ -163,13 +177,16 @@ export class MouseEncoder {
     } else if (ev.rightButton) {
       button = 2;
     }
-    
+    return button;
+  }
+
+  private _mouseEventOptionsToMods(ev: MouseEventOptions): number {
     const shift = ev.shiftKey ? 4 : 0;
     const meta = ev.metaKey ? 8 : 0;
     const ctrl = ev.ctrlKey ? 16 : 0;
     const mod = shift | meta | ctrl;
     
-    return (mod << 2) | button;
+    return mod << 2;
   }
 
   // encode button and
