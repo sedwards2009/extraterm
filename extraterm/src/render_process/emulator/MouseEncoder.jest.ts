@@ -16,8 +16,6 @@ function emptyEvent(): MouseEventOptions {
     leftButton: false,
     middleButton: false,
     rightButton: false,
-    wheelUpButton: false,
-    wheelDownButton: false,
     shiftKey: false,
     metaKey: false,
     ctrlKey: false,
@@ -125,3 +123,16 @@ test("utf8 mouse", done => {
 
   done();
 });
+
+test("sgr mouse wheel", done => {
+  const mouseEncoder = new MouseEncoder();
+  mouseEncoder.normalMouse = true;
+  mouseEncoder.sgrMouse = true;
+  mouseEncoder.mouseEvents = true;
+
+  expect(mouseEncoder.wheelUp( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001b[<64;6;3M");
+  expect(mouseEncoder.wheelDown( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001b[<65;6;3M");
+
+  done();
+});
+

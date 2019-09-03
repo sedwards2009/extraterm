@@ -414,6 +414,26 @@ export class Emulator implements EmulatorApi {
     }
   }
 
+  mouseWheelUp(ev: MouseEventOptions): boolean {
+    const sequence = this._mouseEncoder.wheelUp(ev);
+    if (sequence != null) {
+      this.send(sequence);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  mouseWheelDown(ev: MouseEventOptions): boolean {
+    const sequence = this._mouseEncoder.wheelDown(ev);
+    if (sequence != null) {
+      this.send(sequence);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   refreshScreen(): void {
     this.markRowRangeForRefresh(0, this.lines.length);
     this._dispatchEvents();

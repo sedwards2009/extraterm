@@ -157,7 +157,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
     this._scrollContainer.addEventListener('wheel', (ev: WheelEvent): void => {
       this._handleMouseWheel(ev);
-    }, true);
+    });
 
     this._scrollContainer.addEventListener("mousedown", (ev: MouseEvent): void => {
       if (ev.target === this._scrollContainer) {

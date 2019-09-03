@@ -270,6 +270,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
       aceElement.addEventListener("mouseup", ev => this._handleMouseUpEvent(ev), true);
       aceElement.addEventListener("mousemove", ev => this._handleMouseMoveEvent(ev), true);
+      aceElement.addEventListener("wheel", ev => this._handleMouseWheelEvent(ev), true);
     }
 
     this._updateCssVars();
@@ -1111,7 +1112,51 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
-  
+
+  private _handleMouseWheelEvent(ev: WheelEvent): void {
+    if (this._emulator === null) {
+      return;
+    }
+
+    if (ev.ctrlKey) { 
+      return;
+    }
+    const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
+    if (pos === null) {
+      return;
+    }
+    if (pos.row - this._terminalFirstRow < 0) {
+      // Don't send mouse events for stuff which happens in the scrollback area.
+      return;
+    }
+
+    // send the buttons
+    const options: TermApi.MouseEventOptions = {
+      leftButton: false,
+      middleButton: false,
+      rightButton: false,
+      ctrlKey: ev.ctrlKey,
+      shiftKey: ev.shiftKey,
+      metaKey: ev.metaKey,
+      row: pos.row - this._terminalFirstRow,
+      column: pos.column
+    };
+
+    if (ev.deltaY < 0) {
+      if ( ! this._emulator.mouseWheelUp(options)) {
+        return;
+      }
+    } else {
+      if ( ! this._emulator.mouseWheelDown(options)) {
+        return;
+      }
+    }
+
+    // The emulator consumed the event. Stop Ace from processing it too.
+    ev.stopPropagation();
+    ev.preventDefault();
+  }
+
   executeAceCommand(command: string): void {
     const aceCommand = this._aceEditor.commands.getCommandByName(command);
     if (aceCommand == null) {
