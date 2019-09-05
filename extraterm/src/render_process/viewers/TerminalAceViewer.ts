@@ -1114,20 +1114,52 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _handleMouseWheelEvent(ev: WheelEvent): void {
-    if (this._emulator === null) {
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    if (this._processMouseWheelEvent(ev)) {
       return;
     }
 
+    const syntheticWheelEventDetail = {
+      "deltaX": ev.deltaX,
+      "deltaY": ev.deltaY,
+      "deltaZ": ev.deltaZ,
+      "deltaMode": ev.deltaMode
+    };
+
+    // Send a synthetic-wheel event. This is needed so that we can get the wheel event info
+    // to TerminalCanvas above this element but without allowing the real wheel event from
+    // touching the Ace instance. If the Ace instance gets the wheel event it will scroll
+    // and screw up the display, but at the same time when we cancel the wheel event it
+    // stops it from reaching TerminalCanvas. The work around is this custom event.
+    window.queueMicrotask( () => {
+      const syntheticWheelEvent = new CustomEvent("synthetic-wheel",
+        { bubbles: true, detail: syntheticWheelEventDetail });
+      this.dispatchEvent(syntheticWheelEvent);
+    });
+  }
+
+  // Returns true if wheel event was consumed by the emulator.
+  private _processMouseWheelEvent(ev: WheelEvent): boolean {
+    // Stop Ace from processing this even by itself.
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    if (this._emulator === null) {
+      return false;
+    }
+
     if (ev.ctrlKey) { 
-      return;
+      return false;
     }
     const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
     if (pos === null) {
-      return;
+      return false;
     }
     if (pos.row - this._terminalFirstRow < 0) {
       // Don't send mouse events for stuff which happens in the scrollback area.
-      return;
+      return false;
     }
 
     // send the buttons
@@ -1142,19 +1174,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       column: pos.column
     };
 
-    if (ev.deltaY < 0) {
-      if ( ! this._emulator.mouseWheelUp(options)) {
-        return;
-      }
-    } else {
-      if ( ! this._emulator.mouseWheelDown(options)) {
-        return;
-      }
-    }
-
-    // The emulator consumed the event. Stop Ace from processing it too.
-    ev.stopPropagation();
-    ev.preventDefault();
+    return ev.deltaY < 0 ? this._emulator.mouseWheelUp(options) : this._emulator.mouseWheelDown(options);
   }
 
   executeAceCommand(command: string): void {

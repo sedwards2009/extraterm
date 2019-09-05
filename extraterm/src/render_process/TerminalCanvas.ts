@@ -156,7 +156,14 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     });
 
     this._scrollContainer.addEventListener('wheel', (ev: WheelEvent): void => {
-      this._handleMouseWheel(ev);
+      ev.stopPropagation();
+      ev.preventDefault();
+  
+      this._handleMouseWheelDelta(ev.deltaY);
+    });
+
+    this._scrollContainer.addEventListener("synthetic-wheel", (ev: CustomEvent): void => {
+      this._handleMouseWheelDelta(ev.detail.deltaY);
     });
 
     this._scrollContainer.addEventListener("mousedown", (ev: MouseEvent): void => {
@@ -452,10 +459,8 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     this._virtualScrollArea.updateScrollableSize(element);
   }
 
-  private _handleMouseWheel(ev: WheelEvent): void {
-    ev.stopPropagation();
-    ev.preventDefault();
-    const delta = ev.deltaY * SCROLL_STEP;
+  private _handleMouseWheelDelta(deltaY: number): void {
+    const delta = deltaY * SCROLL_STEP;
     this._virtualScrollArea.scrollTo(this._virtualScrollArea.getScrollYOffset() + delta);
   }
 
