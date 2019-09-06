@@ -6,7 +6,7 @@ import { Document,
          Delta,
          Fold,
          LanguageMode,
-         TextMode, RangeBasic } from "ace-ts";
+         TextMode, RangeBasic, OrientedRange } from "ace-ts";
 
 import * as TermApi from "term-api";
 import { LineData } from "./canvas_line_data/LineData";
@@ -172,6 +172,24 @@ export class TerminalCanvasEditSession extends EditSession {
       }
     }
     return [screenColumn, column];
+  }
+
+  getUnwrappedTextRange(range: OrientedRange): string {
+    const doc = this.docOrThrow();
+    const wrappedText = doc.getTextRange(range);
+    const lines = wrappedText.split("\n");
+
+    const unwrappedLines: string[] = [];
+    const startRow = range.start.row;
+    for (let i=0; i<(lines.length-1); i++) {
+      const terminalLine = this.getTerminalLine(startRow + i);
+      unwrappedLines.push(lines[i]);
+      if ( ! terminalLine.wrapped) {
+        unwrappedLines.push("\n");
+      }
+    }
+    unwrappedLines.push(lines[lines.length-1]);
+    return unwrappedLines.join("");
   }
 }
 

@@ -403,9 +403,9 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     const selection = this._aceEditSession.getSelection()
     if (selection.inMultiSelectMode) {
-      return selection.getAllRanges().map(range => this._aceEditSession.getTextRange(range)).join("\n");
+      return selection.getAllRanges().map(range => this._aceEditSession.getUnwrappedTextRange(range)).join("\n");
     } else {
-      return this._aceEditor.getSelectedText();
+      return this._aceEditSession.getUnwrappedTextRange(selection.getRange());
     }
   }
 
