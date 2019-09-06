@@ -218,6 +218,9 @@ export interface EmulatorApi {
    * @return true if the event has been fully handled.
    */
   mouseMove(ev: MouseEventOptions): boolean;
+
+  mouseWheelUp(ev: MouseEventOptions): boolean;
+  mouseWheelDown(ev: MouseEventOptions): boolean;
   
   write(data: string): WriteBufferStatus;
   
