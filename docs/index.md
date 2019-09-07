@@ -7,22 +7,23 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 
 ## Features
 
-* Supports Linux and macOS, on Windows WSL, CMD, PowerShell and Cygwin
-* xterm compatible
+* Supports Linux and macOS, and on Windows WSL, CMD, PowerShell and Cygwin
 * Multiple tabs and panes, split and tiled any way you like
-* Show images in the terminal
-* Unicode support
-* Color emoji
-* Keyboard friendly "Command Palette"
+* Images in terminal
 * 24 bit color
+* Color emoji on all platforms
+* Keyboard friendly "Command Palette"
+* Text selection using cursor/keyboard, block selections, multi-cursor selections
+* Text zoom
 * Configurable key bindings
-* Keyboard based selections
+* Global shortcuts
+* Unicode support
+* Search
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
 * Easy uploads and downloads using the shell integration
 * Command output is editable in place. Multi-cursor editing
 * Previous command output can be used as input for new commands
 * Supports iTerm2 and TextMate themes
-* Text zoom
 * Open source [MIT license](https://github.com/sedwards2009/extraterm/blob/master/LICENSE.txt)
 * [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
 

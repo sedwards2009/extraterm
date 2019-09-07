@@ -245,13 +245,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._terminalCanvas.dispose();
   }
 
-  setBlinkingCursor(blink: boolean): void {
-    // this._blinkingCursor = blink;
-    // if (this._term !== null) {
-    //   this._term.setCursorBlink(blink);
-    // }
-  }
-  
   /**
    * The number of columns in the terminal screen.
    */

@@ -245,11 +245,9 @@ function maximizeAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
     window.show();
     window.maximize();
-// FIXME electron upgrade needed to make this work    
-
-    // if (process.platform !== "linux") {
-    //   window.moveTop();
-    // }
+    if (process.platform !== "linux") {
+      window.moveTop();
+    }
   }
 }
 

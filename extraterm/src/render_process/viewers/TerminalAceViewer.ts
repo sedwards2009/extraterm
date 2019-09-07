@@ -80,6 +80,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _aceEditor: TerminalCanvasAceEditor = null;
   private _aceEditSession: TerminalCanvasEditSession = null;
   private _aceRenderer: TerminalCanvasRenderer = null;
+  private _aceHasUndoManager = false;
+
   private _height = 0;
   private _isEmpty = true;
   private _mode: Mode = Mode.DEFAULT;
@@ -88,8 +90,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _visualState: VisualState = VisualState.AUTO;
   private _terminalVisualConfig: TerminalVisualConfig = null;
 
-  private _mainStyleLoaded: boolean = false;
-  private _resizePollHandle: Disposable = null;
   private _needEmulatorResize: boolean = false;
   
   // Emulator dimensions
@@ -168,7 +168,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._mode = Mode.DEFAULT;
 
       this._aceEditSession = new TerminalCanvasEditSession(new TerminalDocument(""), new TextModeWithWordSelect());
-      this._aceEditSession.setUndoManager(new UndoManager());
 
       this._aceRenderer = new TerminalCanvasRenderer(containerDiv, {
         cursorStyle: this._configCursorStyleToRendererCursorStyle(this._terminalVisualConfig.cursorStyle),
@@ -271,6 +270,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
       aceElement.addEventListener("mouseup", ev => this._handleMouseUpEvent(ev), true);
       aceElement.addEventListener("mousemove", ev => this._handleMouseMoveEvent(ev), true);
+      aceElement.addEventListener("wheel", ev => this._handleMouseWheelEvent(ev), true);
     }
 
     this._updateCssVars();
@@ -986,6 +986,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._aceEditor.selection.moveCursorToPosition({ row: this._aceEditSession.getLength()-1, column: 0 });
     }
     if (this._editable) {
+      if ( ! this._aceHasUndoManager) {
+        this._aceEditSession.setUndoManager(new UndoManager());
+        this._aceHasUndoManager = true;
+      }
+
       this._aceEditor.setReadOnly(false);
     } else {
       this._aceEditor.setRelayInput(false);
@@ -1107,7 +1112,71 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
-  
+
+  private _handleMouseWheelEvent(ev: WheelEvent): void {
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    if (this._processMouseWheelEvent(ev)) {
+      return;
+    }
+
+    const syntheticWheelEventDetail = {
+      "deltaX": ev.deltaX,
+      "deltaY": ev.deltaY,
+      "deltaZ": ev.deltaZ,
+      "deltaMode": ev.deltaMode
+    };
+
+    // Send a synthetic-wheel event. This is needed so that we can get the wheel event info
+    // to TerminalCanvas above this element but without allowing the real wheel event from
+    // touching the Ace instance. If the Ace instance gets the wheel event it will scroll
+    // and screw up the display, but at the same time when we cancel the wheel event it
+    // stops it from reaching TerminalCanvas. The work around is this custom event.
+    window.queueMicrotask( () => {
+      const syntheticWheelEvent = new CustomEvent("synthetic-wheel",
+        { bubbles: true, detail: syntheticWheelEventDetail });
+      this.dispatchEvent(syntheticWheelEvent);
+    });
+  }
+
+  // Returns true if wheel event was consumed by the emulator.
+  private _processMouseWheelEvent(ev: WheelEvent): boolean {
+    // Stop Ace from processing this even by itself.
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    if (this._emulator === null) {
+      return false;
+    }
+
+    if (ev.ctrlKey) { 
+      return false;
+    }
+    const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
+    if (pos === null) {
+      return false;
+    }
+    if (pos.row - this._terminalFirstRow < 0) {
+      // Don't send mouse events for stuff which happens in the scrollback area.
+      return false;
+    }
+
+    // send the buttons
+    const options: TermApi.MouseEventOptions = {
+      leftButton: false,
+      middleButton: false,
+      rightButton: false,
+      ctrlKey: ev.ctrlKey,
+      shiftKey: ev.shiftKey,
+      metaKey: ev.metaKey,
+      row: pos.row - this._terminalFirstRow,
+      column: pos.column
+    };
+
+    return ev.deltaY < 0 ? this._emulator.mouseWheelUp(options) : this._emulator.mouseWheelDown(options);
+  }
+
   executeAceCommand(command: string): void {
     const aceCommand = this._aceEditor.commands.getCommandByName(command);
     if (aceCommand == null) {

@@ -51,7 +51,8 @@ import {
 } from 'term-api';
 
 import { log, Logger, getLogger } from "extraterm-logging";
-import * as easta from "easta";
+import { isWide } from "extraterm-unicode-utilities";
+
 import {
   CharCellGrid,
   Cell,
@@ -76,6 +77,7 @@ import {
   setCellBgClutFlag,
 } from 'extraterm-char-cell-grid';
 import { ControlSequenceParameters } from "./ControlSequenceParameters";
+import { MouseEncoder } from "./MouseEncoder";
 
 const DEBUG_RESIZE = false;
   
@@ -177,7 +179,7 @@ export class Emulator implements EmulatorApi {
   
   private state = ParserState.NORMAL;
 
-  private mouseEvents = false;
+  private _mouseEncoder = new MouseEncoder();
 
   private x = 0;      // Cursor x position
   private y = 0;      // Cursor y position
@@ -267,17 +269,6 @@ export class Emulator implements EmulatorApi {
   private tabs: { [key: number]: boolean };
   private sendFocus = false;
 
-  private _mouseButtonDown = false;
-  private utfMouse = false;
-  private decLocator = false;
-  private urxvtMouse = false;
-  private sgrMouse = false;
-  private vt300Mouse = false;
-  private vt200Mouse = false;
-  private normalMouse = false;
-  private x10Mouse = false;
-  private _pressed = 32;
-  private _lastMovePos: TerminalCoord = null;
   
   private _events: { [type: string]: EventListener[]; } = {};
   private _blinker: Function = null;
@@ -357,18 +348,6 @@ export class Emulator implements EmulatorApi {
     this.glevel = 0;
     this.charsets = [null];
 
-    // mouse properties
-  //  this.decLocator;
-  //  this.x10Mouse;
-  //  this.vt200Mouse;
-  //  this.vt300Mouse;
-  //  this.normalMouse;
-  //  this.mouseEvents;
-  //  this.sendFocus;
-  //  this.utfMouse;
-  //  this.sgrMouse;
-  //  this.urxvtMouse;
-
     // misc
   //  this.element;
   //  this.children;
@@ -379,7 +358,6 @@ export class Emulator implements EmulatorApi {
     copyCell(Emulator.defAttr, this.curAttr); // Current character style.
 
     this._params = new ControlSequenceParameters();
-    this._blinkIntervalId = null;
     this.lines = [];
   //  this.tabs;
     this.setupStops();
@@ -420,137 +398,57 @@ export class Emulator implements EmulatorApi {
     this._hasFocus = false;
     this._dispatchEvents();
   }
-
-  // XTerm mouse events
-  // http://invisible-island.net/xterm/ctlseqs/ctlseqs.html#Mouse%20Tracking
-  // To better understand these
-  // the xterm code is very helpful:
-  // Relevant files:
-  //   button.c, charproc.c, misc.c
-  // Relevant functions in xterm/button.c:
-  //   BtnCode, EmitButtonCode, EditorButton, SendMousePosition
   
   mouseDown(ev: MouseEventOptions): boolean {
-    if ( ! this.mouseEvents) {
+    const sequence = this._mouseEncoder.mouseDown(ev);
+    if (sequence != null) {
+      this.send(sequence);
+      return true;
+    } else {
       return false;
     }
-
-    let button = this.mouseEventOptionsToButtons(ev);
-    
-    // no mods
-    if (this.vt200Mouse) {
-      button = button & ~0xc;   // ctrl only
-    } else if ( ! this.normalMouse) {
-      button = button & ~0x1c;  // no mods
-    }
-    
-    this.sendMouseButtonSequence( {x: ev.column, y: ev.row}, button);
-    
-    if (this.vt200Mouse) {
-      this.sendMouseButtonSequence({x: ev.column, y: ev.row}, 3); // release button
-      return true;
-    }
-    // bind events
-    if (this.normalMouse) {
-      this._lastMovePos = null;
-      this._mouseButtonDown = true;
-    }  
-    return true;
   }
-  
+
   mouseMove(ev: MouseEventOptions): boolean {
-    if ( ! this.mouseEvents) {
-      return false;
-    }
-
-    if ( ! this._mouseButtonDown) {
-      return false;
-    }
-    if (this._lastMovePos !== null && this._lastMovePos.x === ev.column && this._lastMovePos.y === ev.row) {
+    const sequence = this._mouseEncoder.mouseMove(ev);
+    if (sequence != null) {
+      this.send(sequence);
       return true;
+    } else {
+      return false;
     }
-    
-    const pos = {x: ev.column, y: ev.row};
-    let button = this.mouseEventOptionsToButtons(ev);
-    
-    // no mods
-    if (this.vt200Mouse) {
-      button = button & ~0xc;   // ctrl only
-    } else if ( ! this.normalMouse) {
-      button = button & ~0x1c;  // no mods
-    }
-    
-    // buttons marked as motions
-    // are incremented by 32
-    button |= 32;
-
-    this.sendMouseSequence(button, pos);
-    
-    this._lastMovePos = pos;
-    return true;
   }
 
   mouseUp(ev: MouseEventOptions): boolean {
-    if ( ! this.mouseEvents) {
-      return false;
-    }
-
-    if ( ! this._mouseButtonDown) {
-      return false;
-    }
-    
-    if (this.x10Mouse) {
-      this._mouseButtonDown = false;
-      return false; // No mouse ups for x10.
-    }
-    
-    if (ev === null) {
-      this._mouseButtonDown = false;
+    const sequence = this._mouseEncoder.mouseUp(ev);
+    if (sequence != null) {
+      this.send(sequence);
       return true;
+    } else {
+      return false;
     }
-
-    let button = this.mouseEventOptionsToButtons(ev, true);
-    
-    // no mods
-    if (this.vt200Mouse) {
-      button = button & ~0xc;   // ctrl only
-    } else if ( ! this.normalMouse) {
-      button = button & ~0x1c;  // no mods
-    }
-    
-    this.sendMouseButtonSequence( {x: ev.column, y: ev.row}, button);
-    this._mouseButtonDown = false;
-    return true;
   }
 
-  private mouseEventOptionsToButtons(ev, release=false): number {
-    // two low bits:
-    // 0 = left
-    // 1 = middle
-    // 2 = right
-    // 3 = release
-    // wheel up/down:
-    // 1, and 2 - with 64 added
-    
-    let button = 0;
-    if (release) {
-      button = 3;
-    } else if (ev.leftButton) {
-      button = 0;
-    } else if (ev.middleButton) {
-      button = 1;
-    } else if (ev.rightButton) {
-      button = 2;
+  mouseWheelUp(ev: MouseEventOptions): boolean {
+    const sequence = this._mouseEncoder.wheelUp(ev);
+    if (sequence != null) {
+      this.send(sequence);
+      return true;
+    } else {
+      return false;
     }
-    
-    const shift = ev.shiftKey ? 4 : 0;
-    const meta = ev.metaKey ? 8 : 0;
-    const ctrl = ev.ctrlKey ? 16 : 0;
-    const mod = shift | meta | ctrl;
-    
-    return (mod << 2) | button;
   }
-  
+
+  mouseWheelDown(ev: MouseEventOptions): boolean {
+    const sequence = this._mouseEncoder.wheelDown(ev);
+    if (sequence != null) {
+      this.send(sequence);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   refreshScreen(): void {
     this.markRowRangeForRefresh(0, this.lines.length);
     this._dispatchEvents();
@@ -612,117 +510,6 @@ export class Emulator implements EmulatorApi {
     }
 
     return String.fromCodePoint(...codePoints);
-  }
-
-  // encode button and
-  // position to characters
-  private encodeMouseData(buffer: number[], ch: number): void {
-    if ( ! this.utfMouse) {
-      if (ch === 255) {
-        buffer.push(0);
-        return;
-      }
-      if (ch > 127) {
-        ch = 127;
-      }
-      buffer.push(ch);
-    } else {
-      if (ch === 2047) {
-        buffer.push(0);
-      }
-      if (ch < 127) {
-        buffer.push(ch);
-      } else {
-        if (ch > 2047) {
-          ch = 2047;
-        }
-        buffer.push(0xC0 | (ch >> 6));
-        buffer.push(0x80 | (ch & 0x3F));
-      }
-    }
-  }
-
-  // send a mouse event:
-  // regular/utf8: ^[[M Cb Cx Cy
-  // urxvt: ^[[ Cb ; Cx ; Cy M
-  // sgr: ^[[ Cb ; Cx ; Cy M/m
-  // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
-  // locator: CSI P e ; P b ; P r ; P c ; P p & w
-  private sendMouseSequence(button: number, pos0based: TerminalCoord): void {
-    const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
-    
-    if (this.vt300Mouse) {
-      this.log("sendEvent(): vt300Mouse");
-      // NOTE: Unstable.
-      // http://www.vt100.net/docs/vt3xx-gp/chapter15.html
-      button &= 3;
-      const x = pos.x;
-      const y = pos.y;
-      let data = '\x1b[24';
-      if (button === 0) {
-        data += '1';
-      } else if (button === 1) {
-        data += '3';
-      } else if (button === 2) {
-        data += '5';
-      } else if (button === 3) {
-        return;
-      } else {
-        data += '0';
-      }
-      data += '~[' + x + ',' + y + ']\r';
-      this.send(data);
-      return;
-    }
-
-    if (this.decLocator) {
-      // NOTE: Unstable.
-      this.log("sendEvent with decLocator is not implemented!");
-      
-      // const x = pos.x;
-      // const y = pos.y;
-      // const translatedButton = {0:2, 1:4, 2:6, 3:3}[button & 3];
-      // self.send('\x1b[' + translatedButton + ';' + (translatedButton === 3 ? 4 : 0) + ';' + y + ';' + x + ';' +
-      //   (pos.page || 0) + '&w');
-      return;
-    }
-
-    if (this.urxvtMouse) {
-      this.log("sendEvent(): urxvtMouse");
-      const x = pos.x + 1;
-      const y = pos.y + 1;
-      this.send('\x1b[' + (button+32) + ';' + x + ';' + y + 'M');
-      return;
-    }
-
-    if (this.sgrMouse) {
-      this.log("sendEvent(): sgrMouse");
-      const x = pos.x;
-      const y = pos.y;
-      this.send('\x1b[<' + ((button & 3) === 3 ? button & ~3 : button) + ';' + x +
-        ';' + y + ((button & 3) === 3 ? 'm' : 'M'));
-      return;
-    }
-    this.log("sendEvent(): default");
-
-    const encodedData = [];
-    this.encodeMouseData(encodedData, button+32);
-    
-    // xterm sends raw bytes and
-    // starts at 32 (SP) for each.    
-    this.encodeMouseData(encodedData, pos.x + 32);
-    this.encodeMouseData(encodedData, pos.y + 32);
-
-    this.send('\x1b[M' + String.fromCharCode.apply(String, encodedData));
-  }
-
-  
-  // mouseup, mousedown, mousewheel
-  // left click: ^[[M 3<^[[M#3<
-  // mousewheel up: ^[[M`3>
-  private sendMouseButtonSequence(pos: TerminalCoord, button: number): void {
-    this.sendMouseSequence(button, pos);
-    this._pressed = (button === 3) ? 32 : button;  
   }
 
 
@@ -3657,10 +3444,10 @@ export class Emulator implements EmulatorApi {
           case 1003: // any event mouse
             // any event - sends motion events,
             // even if there is no button held down.
-            this.x10Mouse = params[i].intValue === 9;
-            this.vt200Mouse = params[i].intValue === 1000;
-            this.normalMouse = params[i].intValue > 1000;
-            this.mouseEvents = true;
+            this._mouseEncoder.x10Mouse = params[i].intValue === 9;
+            this._mouseEncoder.vt200Mouse = params[i].intValue === 1000;
+            this._mouseEncoder.normalMouse = params[i].intValue > 1000;
+            this._mouseEncoder.mouseEvents = true;
             break;
           case 1004: // send focusin/focusout events
             // focusin: ^[[I
@@ -3668,19 +3455,19 @@ export class Emulator implements EmulatorApi {
             this.sendFocus = true;
             break;
           case 1005: // utf8 ext mode mouse
-            this.utfMouse = true;
+            this._mouseEncoder.utfMouse = true;
             // for wide terminals
             // simply encodes large values as utf8 characters
             break;
           case 1006: // sgr ext mode mouse
-            this.sgrMouse = true;
+            this._mouseEncoder.sgrMouse = true;
             // for wide terminals
             // does not add 32 to fields
             // press: ^[[<b;x;yM
             // release: ^[[<b;x;ym
             break;
           case 1015: // urxvt ext mode mouse
-            this.urxvtMouse = true;
+            this._mouseEncoder.urxvtMouse = true;
             // for wide terminals
             // numbers for fields
             // press: ^[[b;x;yM
@@ -3861,22 +3648,22 @@ export class Emulator implements EmulatorApi {
           case 1000: // vt200 mouse
           case 1002: // button event mouse
           case 1003: // any event mouse
-            this.x10Mouse = false;
-            this.vt200Mouse = false;
-            this.normalMouse = false;
-            this.mouseEvents = false;
+            this._mouseEncoder.x10Mouse = false;
+            this._mouseEncoder.vt200Mouse = false;
+            this._mouseEncoder.normalMouse = false;
+            this._mouseEncoder.mouseEvents = false;
             break;
           case 1004: // send focusin/focusout events
             this.sendFocus = false;
             break;
           case 1005: // utf8 ext mode mouse
-            this.utfMouse = false;
+            this._mouseEncoder.utfMouse = false;
             break;
           case 1006: // sgr ext mode mouse
-            this.sgrMouse = false;
+            this._mouseEncoder.sgrMouse = false;
             break;
           case 1015: // urxvt ext mode mouse
-            this.urxvtMouse = false;
+            this._mouseEncoder.urxvtMouse = false;
             break;
           case 25: // hide cursor
             this.cursorHidden = true;
@@ -4190,28 +3977,4 @@ function cancelEvent(ev) {
   if (ev.stopPropagation) ev.stopPropagation();
   ev.cancelBubble = true;
   return false;
-}
-
-function isWide(codePoint: number): boolean {
-  if (codePoint >= 0x10000) {
-    return true;
-  }
-
-  const ch = String.fromCodePoint(codePoint);
-  switch (easta(ch)) {
-  	case 'Na': //Narrow
- 	  return false;
-  	case 'F': //FullWidth
-  	  return true;
-  	case 'W': // Wide
-  	  return true;
-  	case 'H': //HalfWidth
-  	  return false;
-  	case 'A': //Ambiguous
-  	  return false;
-  	case 'N': //Neutral
-  	  return false;
-  	default:
-  	  return false;
-  }
 }

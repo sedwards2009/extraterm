@@ -25,6 +25,7 @@
     "extraterm-readonly-toolbox": "0.1.0",
     "extraterm-resize-notifier": "0.1.0",
     "extraterm-trim-between-tags": "1.0.0",
+    "extraterm-unicode-utilities": "1.0.0",
     "extraterm-web-component-decorators": "0.1.0",
     "file-type": "^7.6.0",
     "fontinfo": "0.3.0",
