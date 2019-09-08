@@ -1,0 +1,1 @@
+The `download_twemoji_ttf.sh` script in this directory can be run to download the latest version of the Twemoji font in TTF format from Fedora. This script requires Docker. The TTF file is written to this directory.
