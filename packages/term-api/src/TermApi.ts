@@ -224,7 +224,10 @@ export interface EmulatorApi {
 
   mouseWheelUp(ev: MouseEventOptions): boolean;
   mouseWheelDown(ev: MouseEventOptions): boolean;
-  
+
+  // Paste text into the terminal.
+  pasteText(text: string): void;
+
   write(data: string): WriteBufferStatus;
   
   focus(): void;

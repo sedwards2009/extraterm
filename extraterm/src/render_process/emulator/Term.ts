@@ -204,6 +204,7 @@ export class Emulator implements EmulatorApi {
   private insertMode = false;
   private wraparoundMode = false;
   private normalSavedState: SavedState = null;
+  private _bracketedPaste = false;  // See https://cirw.in/blog/bracketed-paste
 
   // charset
   private charset: CharSet = null;
@@ -341,6 +342,7 @@ export class Emulator implements EmulatorApi {
     this.insertMode = false;
     this.wraparoundMode = false;
     this.normalSavedState = null;
+    this._bracketedPaste = false;
 
     // charset
     this.charset = null;
@@ -2285,6 +2287,21 @@ export class Emulator implements EmulatorApi {
     this.x = 0;
   }
 
+  pasteText(text: string): void {
+    if (text == null) {
+      return;
+    }
+
+    if (this._bracketedPaste) {
+      this.send("\x1b[200~");
+      const cleanText = text.replace(/\x1b[[]201~/g, "");
+      this.send(cleanText);
+      this.send("\x1b[201~");
+    } else {
+      this.send(text);
+    }
+  }
+
   log(...args: any[]): void {
     if (!this.debug) {
       return;
@@ -3515,6 +3532,10 @@ export class Emulator implements EmulatorApi {
               this._showCursor();
             }
             break;
+
+          case 2004:  // Bracketed paste
+            this._bracketedPaste = true;
+            break;
         }
       }
     }
@@ -3695,6 +3716,10 @@ export class Emulator implements EmulatorApi {
               this._showCursor();
             }
             break;
+
+          case 2004:  // Bracketed paste
+            this._bracketedPaste = false;
+            break;
         }
       }
     }
@@ -3821,6 +3846,7 @@ export class Emulator implements EmulatorApi {
     this.wraparoundMode = false; // autowrap
     this.applicationKeypad = false; // ?
     this.applicationCursorKeys = false;
+    this._bracketedPaste = false;
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
     copyCell(Emulator.defAttr, this.curAttr);

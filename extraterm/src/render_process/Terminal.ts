@@ -1221,7 +1221,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     } else {
       // An Enter key for the terminal is \r, but line endings in text can be either CRLF or LF. Thus, conversion.
       const terminalText = text.replace(/[\r][\n]/g, "\r").replace(/[\n]/g, "\r");
-      this.sendToPty(terminalText);
+      this._emulator.pasteText(terminalText);
     }
   }
 
