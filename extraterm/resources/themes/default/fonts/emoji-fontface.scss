@@ -9,8 +9,8 @@
 @if($extraterm-platform == "linux") {
 
 @font-face {
-  font-family: 'EmojiOne';
-  src: url($--source-dir-default + '/fonts/emojione-android.ttf?v=1.0.0') format('truetype');
+  font-family: 'coloremoji';
+  src: url($--source-dir-default + '/fonts/Twemoji.ttf?v=1.0.0') format('truetype');
   font-weight: normal;
   font-style: normal;
   unicode-range: U+2000-1ffff;
