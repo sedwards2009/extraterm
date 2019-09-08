@@ -203,7 +203,7 @@ export class Emulator implements EmulatorApi {
   private originMode = false;
   private insertMode = false;
   private wraparoundMode = false;
-  private normal: SavedState = null;
+  private normalSavedState: SavedState = null;
 
   // charset
   private charset: CharSet = null;
@@ -340,7 +340,7 @@ export class Emulator implements EmulatorApi {
     this.originMode = false;
     this.insertMode = false;
     this.wraparoundMode = false;
-    this.normal = null;
+    this.normalSavedState = null;
 
     // charset
     this.charset = null;
@@ -1590,14 +1590,12 @@ export class Emulator implements EmulatorApi {
 
       // ESC = Application Keypad (DECPAM).
       case '=':
-        this.log('Serial port requested application keypad.');
         this.applicationKeypad = true;
         this.state = ParserState.NORMAL;
         break;
 
       // ESC > Normal Keypad (DECPNM).
       case '>':
-        this.log('Switching back to normal keypad.');
         this.applicationKeypad = false;
         this.state = ParserState.NORMAL;
         break;
@@ -2354,8 +2352,9 @@ export class Emulator implements EmulatorApi {
     // to resize the original
     // screen buffer. just set it
     // to null for now.
-    this.normal = null;
-    
+    this.normalSavedState = null;
+    this._mouseEncoder.sendCursorKeysForWheel = false;
+
     this.markRowRangeForRefresh(0, this.lines.length-1);
     
     this._dispatchEvents();
@@ -3432,7 +3431,6 @@ export class Emulator implements EmulatorApi {
             // this.cursorBlink = true;
             break;
           case 66:
-            this.log('Serial port requested application keypad.');
             this.applicationKeypad = true;
             break;
           case 9: // X10 Mouse
@@ -3481,8 +3479,8 @@ export class Emulator implements EmulatorApi {
             // FALL-THROUGH
           case 47: // alt screen buffer
           case 1047: // alt screen buffer
-            if ( ! this.normal) {
-              const normal: SavedState = {
+            if (this.normalSavedState == null) {
+              const normalSavedState: SavedState = {
                 cols: this.cols,
                 rows: this.rows,
                 lines: this.lines,
@@ -3499,18 +3497,19 @@ export class Emulator implements EmulatorApi {
               const previousCharsets = this.charsets;
               
               this._fullReset();
-              
+              this._mouseEncoder.sendCursorKeysForWheel = true;
+
               this.charset = previousCharset;
               this.glevel = previousGlevel;
               this.charsets = previousCharsets;
               
               // Materialize the same number of rows as the normal lines array to ensure that
               // the new screen buffer is rendered over all of the previous screen.
-              while (this.lines.length < normal.lines.length) {
+              while (this.lines.length < normalSavedState.lines.length) {
                 this._getRow(this.lines.length);
               }
               
-              this.normal = normal;              
+              this.normalSavedState = normalSavedState;
               this.markRowRangeForRefresh(0, this.rows - 1);
 
               this._showCursor();
@@ -3640,8 +3639,10 @@ export class Emulator implements EmulatorApi {
           case 12:
             // this.cursorBlink = false;
             break;
+          case 25: // hide cursor
+            this.cursorHidden = true;
+            break;
           case 66:
-            this.log('Switching back to normal keypad.');
             this.applicationKeypad = false;
             break;
           case 9: // X10 Mouse
@@ -3665,27 +3666,26 @@ export class Emulator implements EmulatorApi {
           case 1015: // urxvt ext mode mouse
             this._mouseEncoder.urxvtMouse = false;
             break;
-          case 25: // hide cursor
-            this.cursorHidden = true;
-            break;
           case 1049: // alt screen buffer cursor
             // FALL-THROUGH
           case 47: // normal screen buffer
           case 1047: // normal screen buffer - clearing it first
-            if (this.normal) {
+            if (this.normalSavedState != null) {
               const currentcols = this.cols;
               const currentrows = this.rows;
               
-              this.lines = this.normal.lines;
-              this.cols = this.normal.cols;
-              this.rows = this.normal.rows;
-              this.x = this.normal.x;
-              this._setCursorY(this.normal.y);
-              this.scrollTop = this.normal.scrollTop;
-              this.scrollBottom = this.normal.scrollBottom;
-              this.tabs = this.normal.tabs;
+              this.lines = this.normalSavedState.lines;
+              this.cols = this.normalSavedState.cols;
+              this.rows = this.normalSavedState.rows;
+              this.x = this.normalSavedState.x;
+              this._setCursorY(this.normalSavedState.y);
+              this.scrollTop = this.normalSavedState.scrollTop;
+              this.scrollBottom = this.normalSavedState.scrollBottom;
+              this.tabs = this.normalSavedState.tabs;
               
-              this.normal = null;
+              this.normalSavedState = null;
+              this._mouseEncoder.sendCursorKeysForWheel = false;
+
               // if (params === 1049) {
               //   this.x = this.savedX;
               //   this._setCursorY(this.savedY);

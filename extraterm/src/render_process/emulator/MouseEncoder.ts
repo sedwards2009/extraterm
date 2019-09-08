@@ -47,6 +47,13 @@ export class MouseEncoder {
   x10Mouse = false;
   vt200Mouse = false;
 
+  // If this is true and no other mouse mode is selected,
+  // then wheel event will send cursor key up/down.
+  sendCursorKeysForWheel = false;
+
+  // The number of cursor up/down key presses to send if `sendCursorKeysForWheel` is active.
+  wheelCursorKeyAcceleration = 5;
+
   private _mouseButtonDown = false;
   private _lastMovePos: TerminalCoord = null;
 
@@ -284,6 +291,9 @@ export class MouseEncoder {
 
   wheelUp(ev: MouseEventOptions): string {
     if ( ! this.mouseEvents) {
+      if (this.sendCursorKeysForWheel) {
+        return DuplicateString("\x1bOA", this.wheelCursorKeyAcceleration);
+      }
       return null;
     }
     const button = this._mouseEventOptionsToWheelButtons(ev, true);
@@ -296,9 +306,23 @@ export class MouseEncoder {
 
   wheelDown(ev: MouseEventOptions): string {
     if ( ! this.mouseEvents) {
+      if (this.sendCursorKeysForWheel) {
+        return DuplicateString("\x1bOB", this.wheelCursorKeyAcceleration);
+      }
       return null;
     }    
     const button = this._mouseEventOptionsToWheelButtons(ev, false);
     return this._computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Press);
   }
+}
+
+function DuplicateString(str: string, count: number): string {
+  if (count == 1) {
+    return str;
+  }
+  let result = "";
+  for (let i=0; i<count; i++) {
+    result = result + str;
+  }
+  return result;
 }

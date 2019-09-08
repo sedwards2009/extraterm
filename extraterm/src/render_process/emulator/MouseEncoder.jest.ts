@@ -136,3 +136,13 @@ test("sgr mouse wheel", done => {
   done();
 });
 
+test("send wheel cursor keys",  done => {
+  const mouseEncoder = new MouseEncoder();
+  mouseEncoder.sendCursorKeysForWheel = true;
+  mouseEncoder.wheelCursorKeyAcceleration = 2;
+
+  expect(mouseEncoder.wheelUp( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001bOA\u001bOA");
+  expect(mouseEncoder.wheelDown( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001bOB\u001bOB");
+
+  done();
+});
