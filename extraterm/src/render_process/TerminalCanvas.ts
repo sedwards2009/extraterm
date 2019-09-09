@@ -413,7 +413,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   appendViewerElement(el: ViewerElement): void {
     el.addEventListener('focus', this._childFocusHandlerFunc);
 
-    injectTerminalVisualConfig(el, this._baseTerminalVisualConfig);
+    injectTerminalVisualConfig(el, this._effectiveTerminalVisualConfig);
 
     this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: RefreshLevel.RESIZE } );
     this._scrollArea.appendChild(el);
