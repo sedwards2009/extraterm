@@ -50,10 +50,10 @@ function pruneNodeSass(versionedOutputDir, arch, platform) {
   });
 }
 
-function pruneEmojiOne(versionedOutputDir, platform) {
+function pruneTwemoji(versionedOutputDir, platform) {
   if (platform !== "linux") {
-    const emojiOnePath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/fonts/emojione-android.ttf");
-    rm(emojiOnePath);
+    const twemojiPath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/fonts/Twemoji.ttf");
+    rm(twemojiPath);
   }
 }
 
@@ -181,7 +181,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
 
   // Prune any unneeded node-sass binaries.
   pruneNodeSass(versionedOutputDir, arch, platform);
-  pruneEmojiOne(versionedOutputDir, platform);
+  pruneTwemoji(versionedOutputDir, platform);
 
   // Zip it up.
   log("Zipping up the package");
