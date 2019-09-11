@@ -264,7 +264,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
-      containerDiv.addEventListener('contextmenu', ev => this._handleContextMenu(ev));
 
       const aceElement = this._aceEditor.renderer.scrollerElement;
       aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
@@ -1055,19 +1054,19 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._aceEditSession.setScrollTopPx(yCoord);
   }
   
-  private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => boolean): void {
+  private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => boolean): boolean {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
     if (ev.ctrlKey) { 
-      return;
+      return false;
     }
     const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
     if (pos === null) {
-      return;
+      return false;
     }
     if (pos.row - this._terminalFirstRow < 0) {
       // Don't send mouse events for stuff which happens in the scrollback area.
-      return;
+      return false;
     }
 
     // send the buttons
@@ -1086,20 +1085,40 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       // The emulator consumed the event. Stop Ace from processing it too.
       ev.stopPropagation();
       ev.preventDefault();
+      return true;
     }
+    return false;
   }
   
   private _handleMouseDownEvent(ev: MouseEvent): void {
+    const isRightMouseButton = (ev.buttons & 2) !== 0;
+    if (isRightMouseButton) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+
     if (this._emulator === null) {
       return;
     }
     if ( ! this.hasFocus()) {
       this.focus();
     }
-    this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator));
+    if (this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator))) {
+      return;
+    }
+
+    if (isRightMouseButton) {
+      this._handleContextMenu(ev);
+    }
   }
   
   private _handleMouseUpEvent(ev: MouseEvent): void {
+    const isRightMouseButton = (ev.buttons & 2) !== 0;
+    if (isRightMouseButton) {
+      ev.preventDefault();
+      ev.stopPropagation();
+    }
+
     if (this._emulator === null) {
       return;
     }
