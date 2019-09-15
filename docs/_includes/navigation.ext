@@ -1,4 +1,4 @@
-<div class="navigation-bar"><a href="/index.html">About</a><a href="/news.html">News</a><a href="/features.html">Features</a><a href="/documentation.html">Documentation</a><a href="https://github.com/sedwards2009/extraterm/releases">Download</a><a href="https://twitter.com/ExtratermDev">{% include twitter_logo.ext %}@ExtratermDev</a>
+<div class="navigation-bar"><a href="/index.html">About</a><a href="/news.html">News</a><a href="/features.html">Features</a><a href="/documentation.html">Documentation</a><a href="/download.html">Download</a><a href="https://twitter.com/ExtratermDev">{% include twitter_logo.ext %}@ExtratermDev</a>
 <span class="github-btn large">
   <a href="{{ site.github.repository_url }}" target="_self" class="btn">
     <svg version="1.1" width="16" height="16" viewBox="0 0 16 16" class="octicon octicon-mark-github" aria-hidden="true">
