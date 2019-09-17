@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import {CommandLineAction} from '../../Config';
+import {CommandLineAction} from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 

@@ -9,7 +9,7 @@ import Vue from 'vue';
 import { ConfigDatabase } from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
-import { FRAME_SETTINGS_TAG } from './FrameSettings';
+import { FRAME_SETTINGS_TAG } from './frames/FrameSettings';
 import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
 import { KEY_BINDINGS_SETTINGS_TAG } from './keybindings/KeybindingsSettings';
 import { SESSION_SETTINGS_TAG } from './SessionSettings';

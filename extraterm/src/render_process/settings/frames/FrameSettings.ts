@@ -6,10 +6,10 @@ import {WebComponent} from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { FrameSettingsUi, nextId, Identifiable, IdentifiableCommandLineAction} from './FrameSettingsUi';
-import { COMMAND_LINE_ACTIONS_CONFIG, ConfigKey, CommandLineAction, GENERAL_CONFIG, GeneralConfig } from '../../Config';
+import { COMMAND_LINE_ACTIONS_CONFIG, ConfigKey, CommandLineAction, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
-import { SettingsBase } from './SettingsBase';
+import { SettingsBase } from '../SettingsBase';
 
 export const FRAME_SETTINGS_TAG = "et-frame-settings";
 
