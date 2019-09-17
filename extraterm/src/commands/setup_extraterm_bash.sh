@@ -1,6 +1,6 @@
 # This file should be sourced from your .bashrc file.
 #
-# Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
+# Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
 #
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
@@ -18,6 +18,10 @@ if ( isfunction "preexec_invoke_exec" ); then return 0; fi
 
 # Early-out if LC_EXTRATERM_COOKIE is not set
 if [ -z "$LC_EXTRATERM_COOKIE" ]; then return 0; fi
+if [[ "$TERM" =~ 'screen' ]]; then
+    unset -v LC_EXTRATERM_COOKIE
+    return 0;
+fi
 
 echo "Setting up Extraterm support."
 
