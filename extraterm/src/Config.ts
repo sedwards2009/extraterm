@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -39,6 +39,10 @@ export interface GeneralConfig {
   windowConfiguration?: WindowConfiguration;
 
   frameByDefault?: boolean;
+
+  frameRule?: FrameRule;
+  frameRuleLines?: number;
+
   autoCopySelectionToClipboard?: boolean;
 }
 
@@ -55,12 +59,17 @@ export const SESSION_CONFIG = "session";
 export const SYSTEM_CONFIG = "system";
 
 
-export type CommandLineActionMatchType = 'name' | 'regexp';
+export type CommandLineActionMatchType = "name" | "regexp";
+
+export type FrameRule = "always_frame" | "frame_if_lines" | "never_frame";
 
 export interface CommandLineAction {
   match: string;
   matchType: CommandLineActionMatchType;
   frame: boolean;
+
+  frameRule: FrameRule;
+  frameRuleLines: number;
 }
 
 export interface KeybindingsInfo {

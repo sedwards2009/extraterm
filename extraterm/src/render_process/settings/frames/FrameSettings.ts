@@ -39,7 +39,9 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
 
     if (key === GENERAL_CONFIG) {
       const generalConfig = <GeneralConfig> config;
-      ui.frameByDefault = config.frameByDefault ? "true" : "false";
+      ui.frameByDefault = generalConfig.frameByDefault ? "true" : "false";
+      ui.frameRule = generalConfig.frameRule;
+      ui.frameRuleLines = generalConfig.frameRuleLines;
     }
   }
 
@@ -51,6 +53,8 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
 
     const generalConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
     generalConfig.frameByDefault = ui.frameByDefault === "true" ? true : false;
+    generalConfig.frameRule = ui.frameRule;
+    generalConfig.frameRuleLines = ui.frameRuleLines;
     this._updateConfig(GENERAL_CONFIG, generalConfig);
   }
 }

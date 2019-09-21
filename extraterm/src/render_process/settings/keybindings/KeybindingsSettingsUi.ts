@@ -32,7 +32,7 @@ export const EVENT_RENAME = "rename";
   <h2><i class="far fa-keyboard"></i>&nbsp;&nbsp;Keybindings</h2>
 
   <div class="gui-packed-row">
-    <label for="theme-terminal">Keybindings:</label>
+    <label>Keybindings:</label>
 
     <select
         v-if=" ! editingTitle"

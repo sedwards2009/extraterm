@@ -233,6 +233,14 @@ export function setupUserConfig(themeManager: ThemeManager, configDatabase: Conf
     userStoredConfig.frameByDefault = true;
   }
 
+  if (userStoredConfig.frameRule == null) {
+    userStoredConfig.frameRule = userStoredConfig.frameByDefault ? "always_frame" : "never_frame";
+  }
+
+  if (userStoredConfig.frameRuleLines == null) {
+    userStoredConfig.frameRuleLines = 5;
+  }
+
   // Validate the selected keybindings config value.
   if ( ! keybindingsIOManager.hasKeybindingsName(userStoredConfig.keybindingsName)) {
     userStoredConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
@@ -247,7 +255,19 @@ export function setupUserConfig(themeManager: ThemeManager, configDatabase: Conf
   if (userStoredConfig.commandLineActions == null) {
     configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, []);
   } else {
-    configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, userStoredConfig.commandLineActions);
+
+    const cleanActions: CommandLineAction[] = [];
+    for (let action of userStoredConfig.commandLineActions) {
+      cleanActions.push({
+        frame: action.frame,
+        frameRule: action.frameRule,
+        match: action.match,
+        frameRuleLines: action.frameRuleLines,
+        matchType: action.matchType,
+      });
+    }
+
+    configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, cleanActions);
   }
 
   if ( ! availableFonts.some( (font) => font.postscriptName === userStoredConfig.terminalFont)) {
@@ -340,17 +360,18 @@ function setConfigDefaults(config: UserStoredConfig): void {
   config.titleBarStyle = defaultValue(config.titleBarStyle, "compact");
   config.terminalMarginStyle = defaultValue(config.terminalMarginStyle, "normal");
   config.frameByDefault = defaultValue(config.frameByDefault, true);
+  config.frameRule = defaultValue(config.frameRule, "always_frame");
+  config.frameRuleLines = defaultValue(config.frameRuleLines, 5);
 
   if (config.commandLineActions === undefined) {
     const defaultCLA: CommandLineAction[] = [
-      { match: 'cd', matchType: 'name', frame: false },      
-      { match: 'rm', matchType: 'name', frame: false },
-      { match: 'mkdir', matchType: 'name', frame: false },
-      { match: 'rmdir', matchType: 'name', frame: false },
-      { match: 'mv', matchType: 'name', frame: false },
-      { match: 'cp', matchType: 'name', frame: false },
-      { match: 'chmod', matchType: 'name', frame: false },
-      { match: 'show', matchType: 'name', frame: false }
+      { frameRule: "never_frame", frameRuleLines: 5, match: 'cd', matchType: 'name', frame: false },      
+      { frameRule: "always_frame", frameRuleLines: 5, match: 'rm', matchType: 'name', frame: false },
+      { frameRule: "always_frame", frameRuleLines: 5, match: 'rmdir', matchType: 'name', frame: false },
+      { frameRule: "always_frame", frameRuleLines: 5, match: 'mv', matchType: 'name', frame: false },
+      { frameRule: "always_frame", frameRuleLines: 5, match: 'cp', matchType: 'name', frame: false },
+      { frameRule: "always_frame", frameRuleLines: 5, match: 'chmod', matchType: 'name', frame: false },
+      { frameRule: "always_frame", frameRuleLines: 5, match: 'show', matchType: 'name', frame: false }
     ];
     config.commandLineActions = defaultCLA;
   }

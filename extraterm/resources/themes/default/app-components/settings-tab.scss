@@ -123,6 +123,19 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
   margin-bottom: 0.5rem;
 }
 
+
+.frame-configuration {
+  & h3 {
+    margin-top: 0;
+  }
+
+  & .frame-card-buttons {
+    position: absolute;
+    right: $component-padding-horizontal*1.5;
+    top: $component-padding-horizontal*1.5;
+  }
+}
+
 #syntax_theme_preview, #terminal_theme_preview {
   display: block;
   width: 100%;

@@ -6,8 +6,9 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import {CommandLineAction} from '../../../Config';
+import { CommandLineAction, FrameRule } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { FrameRuleConfigUi } from './FrameRuleConfigUi';
 
 
 export interface Identifiable {
@@ -26,56 +27,56 @@ export function nextId(): string {
 
 @Component(
   {
+    components: {
+      "frame-rule-config": FrameRuleConfigUi
+    },
     template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="far fa-window-maximize"></i>&nbsp;&nbsp;Frame Handling Rules</h2>
 
-  <label for="tips">Default action:</label>
-  <select v-model="frameByDefault" class="char-width-20">
-    <option value="true">Frame command output</option>
-    <option value="false">Do not frame command output</option>
-  </select>
+  <div class="gui-packed-row width-100pc">
+    <label class="char-width-8">Default action:</label>
+    <frame-rule-config
+      :frame-rule.sync="frameRule"
+      :frame-rule-lines.sync="frameRuleLines"
+    />
+  </div>
 
-  <table class="table">
-    <thead v-if="commandLineActions.length !== 0">
-      <tr>
-        <th width="35%">Match</th>
-        <th width="40%">Command</th>
-        <th width="15%">Frame</th>
-        <th width="10%"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-if="commandLineActions.length !== 0" v-for="commandLineAction in commandLineActions" track-by="id">
-        <td><select v-model="commandLineAction.matchType" class="width-100pc">
+  <div v-for="commandLineAction in commandLineActions" class="frame-configuration card">
+    <h3 class="">Rule: {{commandLineAction.match}}</h3>
+    <div class="frame-card-buttons">
+      <button v-on:click="deleteCommandLineAction(commandLineAction.id);" class="microtool danger"><i class="fa fa-times"></i></button>
+    </div>
+
+    <div class="gui-layout cols-1-2 width-100pc">
+      <label>Match:</label>
+      <div class="gui-packed-row width-100pc">
+        <input type="text" class="expand" v-model="commandLineAction.match" debounce="500" />
+        <select v-model="commandLineAction.matchType" class="char-width-12">
           <option value="name">Match command name</option>
           <option value="regexp">Match regular expression</option>
-          </select></td>
-        <td><input type="text" class="width-100pc" v-model="commandLineAction.match" debounce="500" /></td>
-        <td>
-          <label>
-            <input type="checkbox" v-model="commandLineAction.frame" /> Frame
-          </label>
-        </td>
-        <td>
-          <button @click="deleteCommandLineAction(commandLineAction.id);" class="small danger">Delete</button>
-        </td>
-      </tr>
-      
-      <tr>
-        <td colspan="4">
-          <button @click="addCommandLineAction">New Rule</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+        </select>
+      </div>
+
+      <label>Action:</label>
+      <frame-rule-config
+        :frame-rule.sync="commandLineAction.frameRule"
+        :frame-rule-lines.sync="commandLineAction.frameRuleLines"
+      />
+    </div>
+  </div>
+
+  <button @click="addCommandLineAction">New Rule</button>
 </div>
 `)
 })
 export class FrameSettingsUi extends Vue {
 
   frameByDefault: "true" | "false" = "true";
+
   commandLineActions: IdentifiableCommandLineAction[] = [];
+  frameRule: FrameRule = "always_frame";
+  frameRuleLines = 5;
 
   constructor() {
     super();
@@ -83,7 +84,14 @@ export class FrameSettingsUi extends Vue {
   }
 
   addCommandLineAction(): void {
-    const emptyAction: IdentifiableCommandLineAction = { match: "", matchType: 'name', frame: true, id: nextId() };
+    const emptyAction: IdentifiableCommandLineAction = {
+      match: "",
+      matchType: "name",
+      frame: true,
+      id: nextId(),
+      frameRule: "always_frame",
+      frameRuleLines: 1
+    };
     this.commandLineActions.push(emptyAction);
   }
 
