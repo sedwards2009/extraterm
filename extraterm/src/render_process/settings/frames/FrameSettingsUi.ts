@@ -42,7 +42,7 @@ export function nextId(): string {
     />
   </div>
 
-  <div v-for="commandLineAction in commandLineActions" class="frame-configuration card">
+  <div v-for="commandLineAction in commandLineActions" v-bind:key="commandLineAction.id" class="frame-configuration card">
     <h3 class="">Rule: {{commandLineAction.match}}</h3>
     <div class="frame-card-buttons">
       <button v-on:click="deleteCommandLineAction(commandLineAction.id);" class="microtool danger"><i class="fa fa-times"></i></button>
