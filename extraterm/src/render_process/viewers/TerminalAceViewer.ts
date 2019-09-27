@@ -880,7 +880,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     emitResizeEvent(this);
   }
 
-  getTerminalLines(startLineOrBookmark: number | BookmarkRef): TermApi.Line[] {
+  getTerminalLinesToEnd(startLineOrBookmark: number | BookmarkRef): TermApi.Line[] {
     const startRow = this._getLineNumberFromBookmark(startLineOrBookmark);
     if (startRow < 0) {
       return null;
@@ -907,7 +907,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._bookmarkCounter++;
     
     const ref: BookmarkRef = {
-      bookmarkRefId: bookmarkCounter
+      bookmarkRefId: bookmarkCounter,
+      backupRow: 0,
     };
     this._bookmarkIndex.set(ref, textBookmark);
     
@@ -1223,33 +1224,10 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
   
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
-    let emitVirtualResizeEventFlag = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
-
-    // Refresh the active part of the screen.
-    const startRow = event.refreshStartRow;
-    if (startRow !== -1) {
-      const endRow = event.refreshEndRow;
-      const lines: TermApi.Line[] = [];
-      for (let row = startRow; row < endRow; row++) {
-        lines.push(this._emulator.lineAtRow(row));
-      }
-      this._insertLinesOnScreen(startRow, endRow, lines);
-      
-      // Update our realised rows var if needed.
-      const lineCount = this._aceEditSession.getLength();
-      const currentRealizedRows = lineCount - this._terminalFirstRow;
-      if (currentRealizedRows !== this._realizedRows) {
-        this._realizedRows = currentRealizedRows;
-        emitVirtualResizeEventFlag = true;
-      }
-    }
-    
-    if (event.scrollbackLines !== null && event.scrollbackLines.length !== 0) {
-      this._handleScrollbackEvent(event.scrollbackLines);
-      emitVirtualResizeEventFlag = true;
-    }
-    
-    if (emitVirtualResizeEventFlag) {
+    const sizeResized = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
+    const refreshResized = this._refreshScreen(event.refreshStartRow, event.refreshEndRow);
+    const scrollbackResized = this._insertScrollbackLines(event.scrollbackLines);
+    if (sizeResized || refreshResized || scrollbackResized) {
       emitResizeEvent(this);
     }
 
@@ -1289,9 +1267,64 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     return true;
   }
 
-  private _handleScrollbackEvent(scrollbackLines: TermApi.Line[]): void {
+  /**
+   * @returns true if a resize has occurred
+   */
+  private _refreshScreen(refreshStartRow: number, refreshEndRow: number): boolean {
+    if (refreshStartRow === -1) {
+      return false;
+    }
+
+    let emitVirtualResizeEventFlag = false;
+
+    const endRow = refreshEndRow;
+    const lines: TermApi.Line[] = [];
+    for (let row = refreshStartRow; row < endRow; row++) {
+      lines.push(this._emulator.lineAtRow(row));
+    }
+
+    this._saveBookmarks();
+    this._insertLinesOnScreen(refreshStartRow, endRow, lines);
+    this._restoreBookmarks();
+    
+    // Update our realised rows var if needed.
+    const lineCount = this._aceEditSession.getLength();
+    const currentRealizedRows = lineCount - this._terminalFirstRow;
+    if (currentRealizedRows !== this._realizedRows) {
+      this._realizedRows = currentRealizedRows;
+      emitVirtualResizeEventFlag = true;
+    }
+    return emitVirtualResizeEventFlag;
+  }
+
+  /**
+   * @returns true if a resize has occurred
+   */
+  private _insertScrollbackLines(scrollbackLines: TermApi.Line[]): boolean {
+    if (scrollbackLines == null || scrollbackLines.length === 0) {
+      return false;
+    }
+
+    this._saveBookmarks();
     this._aceEditSession.insertTerminalLines(this._terminalFirstRow, scrollbackLines);
+    this._restoreBookmarks();
+
     this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
+    return true;
+  }
+
+  private _saveBookmarks(): void {
+    for (const [bookmarkRef, anchor] of this._bookmarkIndex) {
+      const pos = anchor.getPosition();
+      bookmarkRef.backupRow = pos.row;
+    }
+  }
+
+  private _restoreBookmarks(): void {
+    for (const [bookmarkRef, anchor] of this._bookmarkIndex) {
+      const pos = anchor.getPosition();
+      anchor.setPosition(bookmarkRef.backupRow, pos.column);
+    }
   }
 
   private _insertLinesOnScreen(startRow: number, endRow: number, lines: TermApi.Line[]): void {

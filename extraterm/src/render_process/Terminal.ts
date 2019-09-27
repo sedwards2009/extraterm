@@ -309,26 +309,34 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
   }
 
-  private _commandNeedsFrame(commandLine: string): boolean {
-    const cleanCommandLine = commandLine.trim();
-    if (cleanCommandLine === "") {
+  private _commandNeedsFrame(commandLine: string, linesOfOutput=-1): boolean {
+    if (commandLine.trim() === "" || this._configDatabase === null) {
       return false;
     }
     
-    if (this._configDatabase === null) {
-      return false;
-    } else {
-    
-      const commandLineActions: DeepReadonly<CommandLineAction[]> = 
-        this._configDatabase.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
-      const frameByDefault = this._configDatabase.getConfig(GENERAL_CONFIG).frameByDefault;
-
-      for (const cla of commandLineActions) {
-        if (this._commandLineActionMatches(commandLine, cla)) {
-          return cla.frame;
+    const commandLineActions: DeepReadonly<CommandLineAction[]> = 
+      this._configDatabase.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
+    for (const cla of commandLineActions) {
+      if (this._commandLineActionMatches(commandLine, cla)) {
+        switch (cla.frameRule) {
+          case "always_frame":
+            return true;
+          case "never_frame":
+            return false;
+          case "frame_if_lines":
+            return linesOfOutput !== -1 && linesOfOutput > cla.frameRuleLines;
         }
       }
-      return frameByDefault;
+    }
+
+    const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+    switch (generalConfig.frameRule) {
+      case "always_frame":
+          return true;
+        case "never_frame":
+          return false;
+        case "frame_if_lines":
+          return linesOfOutput !== -1 && linesOfOutput > generalConfig.frameRuleLines;
     }
   }
 
@@ -1142,20 +1150,24 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         return;
       }
       
-      if (returnCode === "0") {
+      let moveTextLines = this._lastCommandTerminalViewer.getTerminalLinesToEnd(this._lastCommandTerminalLine);
+      if (returnCode === "0" && ! this._commandNeedsFrame(this._lastCommandLine, moveTextLines.length)) {
         // No need to frame anything.
         this._lastCommandLine = null;
         this._lastCommandTerminalViewer = null;
         return;
       }
-      
+
+      this._moveCursorToFreshLine();
+      moveTextLines = this._lastCommandTerminalViewer.getTerminalLinesToEnd(this._lastCommandTerminalLine);
+      moveTextLines = moveTextLines.slice(0,-1);
+
       // Insert a frame where there was none because this command returned an error code.
       
       // Close off the current terminal viewer.
       this._disconnectActiveTerminalViewer();
       
       // Extract the output of the failed command.
-      const moveText = this._lastCommandTerminalViewer.getTerminalLines(this._lastCommandTerminalLine);
       this._lastCommandTerminalViewer.deleteLines(this._lastCommandTerminalLine);
       this._lastCommandTerminalViewer = null;
       
@@ -1174,8 +1186,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       outputTerminalViewer.setReturnCode(returnCode);
       outputTerminalViewer.setCommandLine(this._lastCommandLine);
       outputTerminalViewer.setUseVPad(false);
-      if (moveText !== null) {
-        outputTerminalViewer.setTerminalLines(moveText);
+      if (moveTextLines !== null) {
+        outputTerminalViewer.setTerminalLines(moveTextLines);
       }
       outputTerminalViewer.setEditable(true);
       this._emitDidAppendViewer(newEmbeddedViewer);
