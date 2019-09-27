@@ -66,8 +66,6 @@ export type FrameRule = "always_frame" | "frame_if_lines" | "never_frame";
 export interface CommandLineAction {
   match: string;
   matchType: CommandLineActionMatchType;
-  frame: boolean;
-
   frameRule: FrameRule;
   frameRuleLines: number;
 }

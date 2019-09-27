@@ -15,7 +15,9 @@ import { freezeDeep } from 'extraterm-readonly-toolbox';
 
 import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME, FALLBACK_SYNTAX_THEME } from '../theme/Theme';
 import { EventEmitter } from '../utils/EventEmitter';
-import {CommandLineAction, SystemConfig, ShowTipsStrEnum, ConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle } from '../Config';
+import {CommandLineAction, SystemConfig, ConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG,
+  SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, FontInfo,
+  ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle } from '../Config';
 import * as Messages from '../WindowMessages';
 import { ThemeManager } from '../theme/ThemeManager';
 import { KeybindingsIOManager } from './KeybindingsIOManager';
@@ -213,13 +215,7 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
 
   if (userStoredConfig.commandLineActions == null) {
     const defaultCLA: CommandLineAction[] = [
-      { frameRule: "never_frame", frameRuleLines: 5, match: 'cd', matchType: 'name', frame: false },      
-      { frameRule: "always_frame", frameRuleLines: 5, match: 'rm', matchType: 'name', frame: false },
-      { frameRule: "always_frame", frameRuleLines: 5, match: 'rmdir', matchType: 'name', frame: false },
-      { frameRule: "always_frame", frameRuleLines: 5, match: 'mv', matchType: 'name', frame: false },
-      { frameRule: "always_frame", frameRuleLines: 5, match: 'cp', matchType: 'name', frame: false },
-      { frameRule: "always_frame", frameRuleLines: 5, match: 'chmod', matchType: 'name', frame: false },
-      { frameRule: "always_frame", frameRuleLines: 5, match: 'show', matchType: 'name', frame: false }
+      { frameRule: "never_frame", frameRuleLines: 5, match: "show", matchType: "name" }
     ];
     userStoredConfig.commandLineActions = defaultCLA;
   } else {
@@ -233,8 +229,8 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
 
   sanitizeStringEnumField(userStoredConfig, "cursorStyle", configCursorStyles, "block");
   sanitizeField(userStoredConfig, "frameByDefault", true);
-  sanitizeStringEnumField(userStoredConfig, "frameRule", frameRules, "always_frame");
-  sanitizeField(userStoredConfig, "frameRuleLines", 5);
+  sanitizeStringEnumField(userStoredConfig, "frameRule", frameRules, "frame_if_lines");
+  sanitizeField(userStoredConfig, "frameRuleLines", 10);
   sanitizeField(userStoredConfig, "keybindingsName", process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC);
   sanitizeField(userStoredConfig, "minimizeToTray", false);
   sanitizeField(userStoredConfig, "scrollbackMaxFrames", 100);
@@ -250,7 +246,7 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
       sessionConfiguration.type = "";
     }
 
-    if (sessionConfiguration.initialDirectory === undefined || typeof sessionConfiguration.initialDirectory !== "string") {
+    if (sessionConfiguration.initialDirectory == null || typeof sessionConfiguration.initialDirectory !== "string") {
       sessionConfiguration.initialDirectory = null;
     }
 
@@ -269,7 +265,7 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
   userStoredConfig.terminalFontSize = Math.max(Math.min(1024, userStoredConfig.terminalFontSize), 4);
 
   sanitizeField(userStoredConfig, "themeTerminal", FALLBACK_TERMINAL_THEME);
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), 'terminal')) {
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), "terminal")) {
     userStoredConfig.themeTerminal = FALLBACK_TERMINAL_THEME;
   }
 
@@ -277,7 +273,7 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
   sanitizeStringEnumField(userStoredConfig, "terminalMarginStyle", marginStyles, "normal");
 
   sanitizeField(userStoredConfig, "themeSyntax", FALLBACK_SYNTAX_THEME);
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), 'syntax')) {
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), "syntax")) {
     userStoredConfig.themeSyntax = FALLBACK_SYNTAX_THEME;
   }
 
