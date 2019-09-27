@@ -67,6 +67,9 @@ export function nextId(): string {
   </div>
 
   <button @click="addCommandLineAction">New Rule</button>
+  <p>
+  Add rules to customize whether different commands are framed or not.
+  </p>
 </div>
 `)
 })
