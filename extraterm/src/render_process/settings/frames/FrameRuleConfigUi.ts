@@ -55,6 +55,6 @@ export class FrameRuleConfigUi extends Vue {
   }
 
   onFrameRuleLinesChange(event: Event): void {
-    this.$emit("update:frame-rule-lines", (<HTMLInputElement> event.target).value);
+    this.$emit("update:frame-rule-lines", Number.parseInt((<HTMLInputElement> event.target).value));
   }
 }
