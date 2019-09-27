@@ -87,7 +87,6 @@ export class FrameSettingsUi extends Vue {
     const emptyAction: IdentifiableCommandLineAction = {
       match: "",
       matchType: "name",
-      frame: true,
       id: nextId(),
       frameRule: "always_frame",
       frameRuleLines: 1
