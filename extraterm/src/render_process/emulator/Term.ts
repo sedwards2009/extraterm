@@ -2283,8 +2283,10 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  private carriageReturn(): void {
+  carriageReturn(): void {
+    this._getRow(this.y);
     this.x = 0;
+    this.markRowRangeForRefresh(this.y, this.y);
   }
 
   pasteText(text: string): void {

@@ -1020,6 +1020,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const dims = this._emulator.getDimensions();
     if (dims.cursorX !== 0 && this._emulator.getLineText(dims.cursorY).trim() !== '') {
       this._emulator.newLine();
+      this._emulator.carriageReturn();
     }
   }
 
