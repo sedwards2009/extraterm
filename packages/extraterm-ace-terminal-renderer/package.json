@@ -25,7 +25,7 @@
     "test": "yarn run build && jest"
   },
   "dependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.14.0/ace-ts-v0.14.0.tgz",
+    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.15.0/ace-ts-v0.15.0.tgz",
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-char-render-canvas": "1.0.0",
     "extraterm-event-emitter": "1.0.0",

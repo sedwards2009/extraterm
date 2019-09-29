@@ -287,11 +287,6 @@
   opacity: 0.2;
 }
 
-.ace_smooth-blinking .ace_cursor {
-  -webkit-transition: opacity 0.18s;
-          transition: opacity 0.18s;
-}
-
 .ace_marker-layer .ace_step, .ace_marker-layer .ace_stack {
   position: absolute;
   z-index: 3;

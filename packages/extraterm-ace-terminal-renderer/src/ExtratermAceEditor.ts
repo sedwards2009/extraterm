@@ -63,7 +63,5 @@ export class ExtratermAceEditor extends Editor {
     if (!cursorLayer) {
         return;
     }
-
-    cursorLayer.setSmoothBlinking(false);
   }
 }
