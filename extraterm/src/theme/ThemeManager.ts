@@ -960,7 +960,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     const cursorColor = syntaxTheme.cursor != null ? syntaxTheme.cursor : "#ffb300";
     lines.push(`
 .ace_cursor {
-  border-left: 1px solid ${cursorColor};
+  border-left: 2px solid ${cursorColor};
 }
 `);
 
