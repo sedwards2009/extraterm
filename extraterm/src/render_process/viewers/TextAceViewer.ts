@@ -5,7 +5,8 @@
 import { BulkFileHandle, Disposable, ViewerMetadata, FindOptions, FindStartPosition } from 'extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
-import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Renderer, Position, UndoManager } from "ace-ts";
+import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Position,
+  UndoManager } from "ace-ts";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 
@@ -16,7 +17,7 @@ import { doLater, doLaterFrame, DebouncedDoLater } from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
-import {ThemeableElementBase} from '../ThemeableElementBase';
+import { ThemeableElementBase } from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as ViewerElementTypes from '../viewers/ViewerElementTypes';
 import { emitResizeEvent as VirtualScrollAreaEmitResizeEvent, SetterState } from '../VirtualScrollArea';
@@ -48,12 +49,6 @@ const OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK = 1; // px
 
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 const DEBUG_RESIZE = false;
-
-let cssText: string = null;
-
-function getCssText(): string {
-  return cssText;
-}
 
 
 @WebComponent({tag: "et-text-viewer"})
@@ -633,8 +628,6 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
         .terminal {
           font-family: sans-serif, ${NO_STYLE_HACK};
         }
-
-        ${getCssText()}
         </style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <style id="${ThemeableElementBase.ID_THEME}"></style>
