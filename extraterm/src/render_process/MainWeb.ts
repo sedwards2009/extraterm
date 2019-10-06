@@ -600,7 +600,8 @@ async function asyncSetupConfiguration(): Promise<void> {
       refreshThemeTypeList.push("gui");
     }
 
-    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
+    if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal ||
+        oldGeneralConfig.gpuDriverWorkaround !== newGeneralConfig.gpuDriverWorkaround) {
       refreshThemeTypeList.push("terminal");
     }
 
