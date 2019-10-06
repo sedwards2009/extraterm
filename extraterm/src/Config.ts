@@ -10,7 +10,7 @@ import { KeybindingsFile } from './keybindings/KeybindingsFile';
 export type ShowTipsStrEnum = "always" | "daily" | "never";
 export type TitleBarStyle = "native" | "theme" | "compact";
 export type TerminalMarginStyle = "none" | "thin" | "normal" | "thick";
-
+export type GpuDriverWorkaround = "none" | "no_blend";
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
 
 export interface GeneralConfig {
@@ -44,6 +44,8 @@ export interface GeneralConfig {
   frameRuleLines?: number;
 
   autoCopySelectionToClipboard?: boolean;
+
+  gpuDriverWorkaround?: GpuDriverWorkaround;
 }
 
 // This is the format of the user config JSON file as stored on the filesystem.

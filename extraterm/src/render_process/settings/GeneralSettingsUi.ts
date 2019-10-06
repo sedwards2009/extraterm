@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import { ShowTipsStrEnum } from '../../Config';
+import { ShowTipsStrEnum, GpuDriverWorkaround } from '../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID_SCROLLBACK = "ID_SCROLLBACK";
@@ -37,7 +37,15 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
     <label></label>
     <span><label><input type="checkbox" v-model="autoCopySelectionToClipboard">Automatically copy selection to clipboard</label></span>
+
+    <label></label>
+    <span>&nbsp;</span>
     
+    <label></label>
+    <span><label><input type="checkbox" v-model="gpuDriverWorkaroundFlag">Reduce graphic effects</label></span>
+
+    <label></label>
+    <span>Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors etc.</span>
   </div>
 </div>
 `)
@@ -50,6 +58,7 @@ export class GeneralSettingsUi extends Vue {
   maxScrollbackLines: number;
   maxScrollbackFrames: number;
   autoCopySelectionToClipboard: boolean;
+  gpuDriverWorkaroundFlag: boolean;
 
   constructor() {
     super();
@@ -58,5 +67,6 @@ export class GeneralSettingsUi extends Vue {
     this.maxScrollbackLines = 500000;
     this.maxScrollbackFrames = 100;
     this.autoCopySelectionToClipboard = true;
+    this.gpuDriverWorkaroundFlag = false;
   }
 }

@@ -41,6 +41,10 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
       if (ui.autoCopySelectionToClipboard !== generalConfig.autoCopySelectionToClipboard) {
         ui.autoCopySelectionToClipboard = generalConfig.autoCopySelectionToClipboard;
       }
+
+      if ((ui.gpuDriverWorkaroundFlag ? "no_blend" : "none") !== generalConfig.gpuDriverWorkaround) {
+        ui.gpuDriverWorkaroundFlag = generalConfig.gpuDriverWorkaround === "no_blend";
+      }
     }
   }
 
@@ -52,6 +56,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     newGeneralConfig.scrollbackMaxLines = ui.maxScrollbackLines;
     newGeneralConfig.scrollbackMaxFrames = ui.maxScrollbackFrames;
     newGeneralConfig.autoCopySelectionToClipboard = ui.autoCopySelectionToClipboard;
+    newGeneralConfig.gpuDriverWorkaround = ui.gpuDriverWorkaroundFlag ? "no_blend" : "none";
 
     this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
   }

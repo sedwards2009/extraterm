@@ -269,6 +269,9 @@
 
 .ace_cursor-layer {
   z-index: 4;
+  @if($extraterm-gpu-driver-workaround == "none") {
+    mix-blend-mode:difference;
+  }
 }
 
 $ace_ibeam_thickness: 1.5px;
@@ -281,16 +284,25 @@ $ace_ibeam_thickness: 1.5px;
 
   border-color: $terminal-cursor-background-color;
 
-  &.blink_state_alt {
-    border-color: #000000;
-    opacity: 0.5;
-
-    &::before {
-      border-color: #000000;
-      opacity: 0.5;
+  @if($extraterm-gpu-driver-workaround == "none") {
+    mix-blend-mode: difference;
+    &.blink_state_alt {
+      opacity: 0.0;
     }
   }
-  
+
+  @if($extraterm-gpu-driver-workaround == "no_blend") {
+    &.blink_state_alt {
+      border-color: #000000;
+      opacity: 0.5;
+
+      &::before {
+        border-color: #000000;
+        opacity: 0.5;
+      }
+    }
+  }
+
   &::before {
     content: " ";
     display: block;
@@ -316,14 +328,20 @@ $ace_ibeam_thickness: 1.5px;
   z-index: 5;
 
   background: $terminal-selection-background-color;
-  opacity: 0.75;
+
+  @if($extraterm-gpu-driver-workaround == "no_blend") {
+    opacity: 0.75;
+  }
 }
 
 .terminal-unfocused .ace_selection {
   background: $terminal-selection-unfocused-background-color
 }
 
-.ace_marker-layer {
+@if($extraterm-gpu-driver-workaround == "none") {
+  .ace_marker-layer {
+    mix-blend-mode: screen;
+  }  
 }
 
 .ace_marker-layer .ace_bracket {

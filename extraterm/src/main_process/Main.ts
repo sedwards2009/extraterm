@@ -22,7 +22,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent, SingleWindowConfiguration } from '../Config';
+import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent, SingleWindowConfiguration, UserStoredConfig } from '../Config';
 import {FileLogWriter, getLogger, addLogWriter} from "extraterm-logging";
 import { PtyManager } from './pty/PtyManager';
 import * as ResourceLoader from '../ResourceLoader';
@@ -812,11 +812,10 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
   const globalVariables: GlobalVariableMap = new Map();
 
   const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  globalVariables.set("extraterm-gpu-driver-workaround", generalConfig.gpuDriverWorkaround);
   globalVariables.set("extraterm-titlebar-style", generalConfig.titleBarStyle);
   globalVariables.set("extraterm-platform", process.platform);
-
-  const userStoredConfig = configDatabase.getConfigCopy(GENERAL_CONFIG);
-  globalVariables.set("extarterm-margin-style", userStoredConfig.terminalMarginStyle);
+  globalVariables.set("extarterm-margin-style", generalConfig.terminalMarginStyle);
 
   try {
     const renderResult = await themeManager.render(msg.themeType, globalVariables);
