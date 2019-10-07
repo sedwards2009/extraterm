@@ -45,7 +45,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     <span><label><input type="checkbox" v-model="gpuDriverWorkaroundFlag">Reduce graphic effects</label></span>
 
     <label></label>
-    <span>Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors etc.</span>
+    <span>Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors.</span>
   </div>
 </div>
 `)
