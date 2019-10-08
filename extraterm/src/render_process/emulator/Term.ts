@@ -2328,19 +2328,18 @@ export class Emulator implements EmulatorApi {
     const newrows = Math.max(newSize.rows, 1);
 
     // resize cols
-    if (this.cols < newcols) {
-      for (let i = 0; i< this.lines.length; i++) {
-        const line = this.lines[i];
-        const newLine = new LineImpl(newcols, 1);
-        newLine.pasteGrid(line, 0, 0);
+    for (let i = 0; i< this.lines.length; i++) {
+      const line = this.lines[i];
+      const newLine = new LineImpl(newcols, 1);
+      newLine.pasteGrid(line, 0, 0);
 
-        for(let j=line.width; j<newcols; j++) {
-          newLine.setCell(j, 0, Emulator.defAttr);
-        }
-
-        this.lines[i] = newLine;
+      for(let j=line.width; j<newcols; j++) {
+        newLine.setCell(j, 0, Emulator.defAttr);
       }
+
+      this.lines[i] = newLine;
     }
+    
     this.setupStops(newcols);
     this.cols = newcols;
 
