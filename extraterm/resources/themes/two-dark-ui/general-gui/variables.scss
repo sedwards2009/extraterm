@@ -348,4 +348,8 @@ $tab-text-color-active:            $text-highlight-color;
 $tab-text-color-editor:            contrast($ui-syntax-color, darken($ui-syntax-color, 50%), $text-highlight-color, 50%);
 $tab-height: $ui-tab-height;
 
+$root-background-color: if($extraterm-window-background-mode == "opaque",
+                          $tab-bar-background-color,
+                          change_color($tab-bar-background-color, $alpha: 
+                          ((100 - $extraterm-window-background-transparency-percent) / 100)));
 $settings-bg-selected-color: lighten($background-color, 8%) !default;

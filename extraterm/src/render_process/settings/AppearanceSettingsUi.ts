@@ -7,7 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as _ from 'lodash';
 
-import {FontInfo, TitleBarStyle, TerminalMarginStyle, ConfigCursorStyle} from '../../Config';
+import {FontInfo, TitleBarStyle, TerminalMarginStyle, ConfigCursorStyle, WindowBackgroundMode} from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { ThemeSyntaxPreviewContents } from './SyntaxThemePreviewContent';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -32,6 +32,13 @@ interface SelectableOption {
   id: number;
   name: string;
 }
+
+interface WindowBackgroundModeOption {
+  id: string;
+  name: string;
+}
+
+const isWindows = process.platform === "win32";
 
 
 @Component(
@@ -140,6 +147,20 @@ interface SelectableOption {
       </option>
     </select>
 
+    <template v-if="isWindows">
+    <label>Window Background:</label>
+    <select id="window-background" v-model="windowBackgroundMode" class="char-width-12">
+      <option v-for="option in windowBackgroundModeOptions" v-bind:value="option.id">
+        {{ option.name }}
+      </option>
+    </select>
+
+    <label>Transparency:</label>
+    <span><input type="range" min="0" max="10" v-model="windowBackgroundTransparency10Percent"
+      v-bind:disabled="windowBackgroundMode=='opaque'">
+      {{windowBackgroundTransparencyPercent}}%</span>
+    </template>
+
     <label></label>
     <span><label><input type="checkbox" v-model="showTrayIcon">Show icon in system tray</label></span>
 
@@ -236,6 +257,10 @@ export class AppearanceSettingsUi extends Vue {
 
   terminalVisualConfig: TerminalVisualConfig;
 
+  windowBackgroundMode: WindowBackgroundMode;
+  windowBackgroundModeOptions: WindowBackgroundModeOption[];
+  windowBackgroundTransparencyPercent: number;
+
   constructor() {
     super();
     this.cursorStyle = "block";
@@ -287,6 +312,17 @@ export class AppearanceSettingsUi extends Vue {
     this.themeSyntaxPreviewContents = 0;
     this.themeSyntaxPreviewContentOptions = ThemeSyntaxPreviewContents;
     this.terminalVisualConfig = null;
+
+    this.windowBackgroundMode = "opaque";
+    this.windowBackgroundTransparencyPercent = 50;
+    this.windowBackgroundModeOptions = [
+      { id: "opaque", name: "Opaque" },
+      { id: "blur", name: "Transparent and Blur" },
+    ];
+  }
+
+  get isWindows(): boolean {
+    return isWindows;
   }
 
   get themeTerminalOptions(): ThemeTypes.ThemeInfo[] {
@@ -367,5 +403,13 @@ export class AppearanceSettingsUi extends Vue {
 
   getThemeSyntaxPreviewWrapLines(): boolean {
     return this.themeSyntaxPreviewContents === 0;
+  }
+
+  get windowBackgroundTransparency10Percent(): number {
+    return Math.round(this.windowBackgroundTransparencyPercent / 10);
+  }
+
+  set windowBackgroundTransparency10Percent(tensPercent: number) {
+    this.windowBackgroundTransparencyPercent = 10 * tensPercent;
   }
 }

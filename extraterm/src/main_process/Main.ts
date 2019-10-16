@@ -815,7 +815,9 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
   globalVariables.set("extraterm-gpu-driver-workaround", generalConfig.gpuDriverWorkaround);
   globalVariables.set("extraterm-titlebar-style", generalConfig.titleBarStyle);
   globalVariables.set("extraterm-platform", process.platform);
-  globalVariables.set("extarterm-margin-style", generalConfig.terminalMarginStyle);
+  globalVariables.set("extraterm-margin-style", generalConfig.terminalMarginStyle);
+  globalVariables.set("extraterm-window-background-mode", generalConfig.windowBackgroundMode);
+  globalVariables.set("extraterm-window-background-transparency-percent", generalConfig.windowBackgroundTransparencyPercent);
 
   try {
     const renderResult = await themeManager.render(msg.themeType, globalVariables);

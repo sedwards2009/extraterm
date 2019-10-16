@@ -596,6 +596,8 @@ async function asyncSetupConfiguration(): Promise<void> {
 
     if (oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI ||
         oldGeneralConfig.terminalMarginStyle !== newGeneralConfig.terminalMarginStyle ||
+        oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode ||
+        oldGeneralConfig.windowBackgroundTransparencyPercent !== newGeneralConfig.windowBackgroundTransparencyPercent ||
         oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
       refreshThemeTypeList.push("gui");
     }
