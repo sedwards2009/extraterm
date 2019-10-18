@@ -43,6 +43,10 @@ const LOG_FINE = false;
 
 SourceMapSupport.install();
 
+const isWindows = process.platform === "win32";
+const isLinux = process.platform === "linux";
+const isDarwin = process.platform === "darwin";
+
 // crashReporter.start(); // Report crashes
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -80,7 +84,7 @@ function main(): void {
   app.commandLine.appendSwitch("high-dpi-support", "true");
   app.commandLine.appendSwitch("disable-color-correct-rendering");
 
-  if (process.platform === "darwin") {
+  if (isDarwin) {
     setupOSX();
   }
 
@@ -192,9 +196,9 @@ function createTrayIcon(): void {
   if (generalConfig.showTrayIcon) {
     if (tray == null) {
       let iconFilename = "";
-      if (process.platform === "darwin") {
+      if (isDarwin) {
         iconFilename = path.join(__dirname, "../../resources/tray/macOSTrayIconTemplate.png");
-      } else if (process.platform === "linux") {
+      } else if (isLinux) {
         iconFilename = path.join(__dirname, "../../resources/tray/extraterm_tray.png");
       } else {
         iconFilename = path.join(__dirname, "../../resources/tray/extraterm_small_logo.ico");
@@ -203,7 +207,7 @@ function createTrayIcon(): void {
       tray = new Tray(iconFilename);
       tray.setToolTip("Extraterm");
 
-      if (process.platform === "darwin") {
+      if (isDarwin) {
         tray.setPressedImage(path.join(__dirname, "../../resources/tray/macOSTrayIconHighlight.png"));
       }
 
@@ -245,7 +249,7 @@ function maximizeAllWindows(): void {
   for (const window of BrowserWindow.getAllWindows()) {
     window.show();
     window.maximize();
-    if (process.platform !== "linux") {
+    if ( ! isLinux) {
       window.moveTop();
     }
   }
@@ -267,7 +271,7 @@ function restoreAllWindows(): void {
     const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
 
     const bounds = generalConfig.windowConfiguration[0];
-    if (process.platform === "linux") {
+    if (isLinux) {
       // On Linux, if a window is the width or height of the screen then
       // Electron (2.0.13) resizes them (!) to be smaller for some annoying
       // reason. This is a hack to make sure that windows are restored with
@@ -331,7 +335,7 @@ function openWindow(parsedArgs: Command): void {
     backgroundColor: themeInfo.loadingBackgroundColor,
   };
 
-  if (process.platform === "darwin") {
+  if (isDarwin) {
     if (generalConfig.titleBarStyle === "native") {
       options.frame = true;
     } else {
@@ -355,9 +359,9 @@ function openWindow(parsedArgs: Command): void {
     options.height = dimensions.height;
   }
 
-  if (process.platform === "win32") {
+  if (isWindows) {
     options.icon = path.join(__dirname, ICO_ICON_PATH);
-  } else if (process.platform === "linux") {
+  } else if (isLinux) {
     options.icon = path.join(__dirname, PNG_ICON_PATH);
   }
   mainWindow = new BrowserWindow(options);
@@ -608,7 +612,7 @@ function getBundledFonts(): FontInfo[] {
 }
 
 function pathToUrl(path: string): string {
-  if (process.platform === "win32") {
+  if (isWindows) {
     return path.replace(/\\/g, "/");
   }
   return path;
@@ -1074,7 +1078,7 @@ function deleteKeybindings(targetName: string): void {
 
   const generalConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
   if (generalConfig.keybindingsName === targetName) {
-    generalConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+    generalConfig.keybindingsName = isDarwin ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
     configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
   }
 
