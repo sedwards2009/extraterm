@@ -23,9 +23,9 @@
   background-color: var(--terminal-background-color);
 }
 
-$style-margin-size: if($extarterm-margin-style == "none", 0px,
-if($extarterm-margin-style == "thin", 0.5rem,
-  if($extarterm-margin-style == "normal", 1rem,
+$style-margin-size: if($extraterm-margin-style == "none", 0px,
+if($extraterm-margin-style == "thin", 0.5rem,
+  if($extraterm-margin-style == "normal", 1rem,
   2rem)));
 
 #ID_SCROLL_CONTAINER {
