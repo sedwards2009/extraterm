@@ -72,6 +72,13 @@ let packageJson: any = null;
 let keybindingsIOManager: KeybindingsIOManager = null;
 let globalKeybindingsManager: GlobalKeybindingsManager = null;
 
+let SetWindowCompositionAttribute: any = null;
+let AccentState: any = null;
+
+if (isWindows) {
+  SetWindowCompositionAttribute = require("windows-swca").SetWindowCompositionAttribute;
+  AccentState = require("windows-swca").ACCENT_STATE;
+}
 
 function main(): void {
   let failed = false;
@@ -332,7 +339,7 @@ function openWindow(parsedArgs: Command): void {
       nodeIntegration: true
     },
     title: "Extraterm",
-    backgroundColor: themeInfo.loadingBackgroundColor,
+    show: false,
   };
 
   if (isDarwin) {
@@ -384,7 +391,7 @@ function openWindow(parsedArgs: Command): void {
   mainWindow.on("maximize", saveAllWindowDimensions);
   mainWindow.on("unmaximize", saveAllWindowDimensions);
 
-  checkWindowBoundsLater(mainWindow, dimensions);
+  setupTransparentBackground();
 
   const params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
     "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
@@ -529,6 +536,30 @@ function setupLogging(): void {
   const logWriter = new FileLogWriter(logFilePath);
   addLogWriter(logWriter);
   _log.info("Recording logs to ", logFilePath);
+}
+
+function setupTransparentBackground(): void {
+  if (isWindows) {
+    const setWindowComposition = () => {
+      const generalConfig = <GeneralConfig> configDatabase.getConfig("general");
+      const accent = generalConfig.windowBackgroundMode === "opaque"
+                      ? AccentState.ACCENT_DISABLED
+                      : AccentState.ACCENT_ENABLE_BLURBEHIND;
+      SetWindowCompositionAttribute(mainWindow.getNativeWindowHandle(), accent, 0);
+    };
+
+    configDatabase.onChange(event => {
+      if (event.key === "general" &&
+          event.oldConfig.windowBackgroundMode !== event.newConfig.windowBackgroundMode) {
+        setWindowComposition();
+      }
+    });
+
+    mainWindow.once("ready-to-show", () => {
+      setWindowComposition();
+      mainWindow.show();
+    });
+  }
 }
 
 const _log = getLogger("main");
