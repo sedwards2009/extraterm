@@ -13,6 +13,7 @@ export interface TerminalVisualConfig {
   fontSizePx: number;
   devicePixelRatio: number;
   terminalTheme: TerminalTheme;
+  transparentBackground: boolean;
 }
 
 export interface AcceptsTerminalVisualConfig {

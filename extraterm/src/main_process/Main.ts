@@ -309,7 +309,7 @@ function restoreAllWindows(): void {
         window.moveTop();
         window.focus();
       });
-  }
+    }
   }
 }
 
@@ -338,6 +338,7 @@ function openWindow(parsedArgs: Command): void {
       nodeIntegration: true
     },
     title: "Extraterm",
+    backgroundColor: "#00000000",
     show: false,
   };
 

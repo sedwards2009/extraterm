@@ -304,11 +304,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _extractPalette(terminalVisualConfig: TerminalVisualConfig): number[] {
-    if (terminalVisualConfig == null) {
-      return this._fallbackPalette();
-    } else {
-      return this._extractPaletteFromTerminalVisualConfig(terminalVisualConfig);
+    const palette = terminalVisualConfig == null
+                    ? this._fallbackPalette()
+                    : this._extractPaletteFromTerminalVisualConfig(terminalVisualConfig);
+    if (terminalVisualConfig.transparentBackground) {
+      palette[256] = 0x00000000;
     }
+    return palette;
   }
 
   private _fallbackPalette(): number[] {
