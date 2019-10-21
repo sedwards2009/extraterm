@@ -60,7 +60,6 @@ const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
 const PACKAGE_JSON_PATH = "../../../package.json";
 
-
 let themeManager: ThemeManager;
 let ptyManager: PtyManager;
 let configDatabase: ConfigDatabaseImpl;
@@ -392,6 +391,7 @@ function openWindow(parsedArgs: Command): void {
   mainWindow.on("unmaximize", saveAllWindowDimensions);
 
   setupTransparentBackground();
+  checkWindowBoundsLater(mainWindow, dimensions);
 
   const params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
     "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
@@ -409,7 +409,7 @@ function openWindow(parsedArgs: Command): void {
 }
 
 function checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWindowConfiguration): void {
-  doLater(() => {
+  window.once("ready-to-show", () => {
     const windowBounds = window.getNormalBounds();
 
     // Figure out which Screen this window is meant to be on.
