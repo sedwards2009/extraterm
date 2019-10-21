@@ -438,26 +438,34 @@ export class CharRenderCanvas implements Disposable {
   render(): void {
     this._updateCharGridFlags();
 
-    if (this._renderer === Renderer.ImageBitmap) {
-      this._renderCharacters();
-    } else {
-      this._renderCharactersUsingImageData();
-    }
-
     const renderCursor = this._cursorStyle === CursorStyle.BLOCK;
     this._fgColorPatchCanvas.setRenderCursor(renderCursor);
     this._fgColorPatchCanvas.render();
     this._bgColorPatchCanvas.setRenderCursor(renderCursor);
     this._bgColorPatchCanvas.render();
 
-    this._canvasCtx.globalCompositeOperation = "copy";
-    this._canvasCtx.drawImage(this._charCanvas, 0, 0);
+    if (this._renderer === Renderer.ImageBitmap) {
+      this._renderCharacters();
+      this._canvasCtx.globalCompositeOperation = "copy";
+      this._canvasCtx.drawImage(this._charCanvas, 0, 0);
 
-    this._canvasCtx.globalCompositeOperation = "source-in";
-    this._canvasCtx.drawImage(this._fgColorPatchCanvas.getCanvas(), 0, 0);
+      this._canvasCtx.globalCompositeOperation = "source-in";
+      this._canvasCtx.drawImage(this._fgColorPatchCanvas.getCanvas(), 0, 0);
+  
+      this._canvasCtx.globalCompositeOperation = "destination-over";
+      this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
 
-    this._canvasCtx.globalCompositeOperation = "destination-over";
-    this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
+    } else {
+      this._renderCharactersUsingImageData();
+
+      this._fgColorPatchCanvas.pasteAlphaChannel(this._charCanvasImageData);
+
+      this._canvasCtx.globalCompositeOperation = "copy";
+      this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
+
+      this._canvasCtx.globalCompositeOperation = "source-over";
+      this._canvasCtx.drawImage(this._fgColorPatchCanvas.getCanvas(), 0, 0);
+    }
 
     this._renderColorCharacters(this._canvasCtx);
     this._renderCursors(this._canvasCtx);

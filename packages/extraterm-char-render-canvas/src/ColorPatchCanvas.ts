@@ -37,6 +37,7 @@ export class ColorPatchCanvas {
     this._fullSizeBackgroundCanvas.width = this._canvasWidthPx;
     this._fullSizeBackgroundCanvas.height = this._canvasHeightPx;
     this._fullSizeBackgroundCtx = this._fullSizeBackgroundCanvas.getContext("2d", { alpha: true });
+    this._fullSizeBackgroundCtx.globalCompositeOperation = "copy";
     // parentElement.appendChild(this._fullSizeBackgroundCanvas);
   }
 
@@ -110,5 +111,20 @@ export class ColorPatchCanvas {
     this._fullSizeBackgroundCtx.imageSmoothingEnabled = false;
     this._fullSizeBackgroundCtx.setTransform(cellWidth, 0, 0, cellHeight, 0, 0);
     this._fullSizeBackgroundCtx.drawImage(this._backgroundCanvas, 0, 0);
+  }
+
+  pasteAlphaChannel(imageData: ImageData): void {
+    const patchImageData = this._fullSizeBackgroundCtx.getImageData(0, 0, this._canvasWidthPx, this._canvasHeightPx);
+    const effectiveWidth = Math.min(patchImageData.width, imageData.width) * 4;
+    const patchImageDataArray = patchImageData.data;
+    const imageDataArray = imageData.data;
+    for (let j=0; j < Math.min(patchImageData.height, imageData.height); j++) {
+      const patchOffset = j * patchImageData.width * 4 + 3;
+      const imageDataOffset = j * imageData.width * 4 + 3;
+      for (let i=0; i < effectiveWidth; i+=4) {
+        patchImageDataArray[i + patchOffset] = imageDataArray[i + imageDataOffset];
+      }
+    }
+    this._fullSizeBackgroundCtx.putImageData(patchImageData, 0, 0);
   }
 }
