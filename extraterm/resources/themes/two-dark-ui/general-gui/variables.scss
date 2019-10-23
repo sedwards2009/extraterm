@@ -299,8 +299,8 @@ $badge-vertical-align:          1/$badge-font-ratio * $badge-vertical-padding !d
 
 //-------------------------------------------------------------------------
 // Scrollbars
-$scrollbar-background-color: $level-3-color !default;
-$scrollbar-track-background-color: $level-3-color !default;
+$scrollbar-background-color: if($extraterm-window-background-mode == "opaque", $level-3-color, rgba(0,0,0,0)) !default;
+$scrollbar-track-background-color: if($extraterm-window-background-mode == "opaque", $level-3-color, rgba(0,0,0,0)) !default;
 $scrollbar-thumb-background-color: lighten($ui-syntax-color, 16%) !default;
 $scrollbar-thumb-hover-background-color: lighten($background-color, 40%) !default;
 $scrollbar-size: pxToRem(10px) !default;

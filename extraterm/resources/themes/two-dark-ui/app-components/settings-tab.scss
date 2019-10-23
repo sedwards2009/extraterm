@@ -27,7 +27,8 @@ $tab-background-color-active: $background-color;
   -webkit-user-select: none;
   user-select: none;
   padding-top: $component-padding-vertical;
-  background-color: $background-color;
+  background-color: if($extraterm-window-background-mode == "opaque", $background-color, $root-background-color);
+
   border-right: 1px solid $base-border-color;
   overflow-x: auto;
   

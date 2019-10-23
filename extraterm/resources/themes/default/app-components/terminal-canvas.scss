@@ -11,6 +11,10 @@
   position: relative;
 }
 
+:host(:focus) {
+  outline: 0 solid transparent;
+}
+
 #ID_CONTAINER {
   position: relative;
 
