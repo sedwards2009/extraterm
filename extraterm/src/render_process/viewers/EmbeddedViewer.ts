@@ -291,7 +291,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   // See VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     const {top, bottom} = this._borderSize();
-    const result = top + bottom;
+    const result = Math.floor(top + bottom);
       
     if (DEBUG_SIZE) {
       this._log.debug("getReserveViewportHeight() => ", result);
@@ -323,7 +323,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const headerHeightOrNull = this._getHeaderHeight();
-    const headerHeight = headerHeightOrNull == null ? 0 : Math.ceil(headerHeightOrNull);
+    const headerHeight = headerHeightOrNull == null ? 0 : Math.floor(headerHeightOrNull);
 
     headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - headerHeight) + 'px';
 
@@ -731,8 +731,8 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       return { top: this._headerTop, bottom: this._headerBottom };
     }
 
-    const top = Math.ceil(headerHeight + DomUtils.pixelLengthToFloat(outputContainerStyle.borderTopWidth));
-    const bottom = Math.ceil(DomUtils.pixelLengthToFloat(outputContainerStyle.borderBottomWidth));
+    const top = headerHeight + DomUtils.pixelLengthToFloat(outputContainerStyle.borderTopWidth);
+    const bottom = DomUtils.pixelLengthToFloat(outputContainerStyle.borderBottomWidth);
 
     this._headerTop = top;
     this._headerBottom = bottom;
