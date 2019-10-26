@@ -506,6 +506,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
         if (fontPropertiesChanged ||
             previousConfig.cursorStyle !== terminalVisualConfig.cursorStyle ||
+            previousConfig.transparentBackground !== terminalVisualConfig.transparentBackground ||
             ! this._isTerminalThemeEqual(previousConfig.terminalTheme, terminalVisualConfig.terminalTheme)) {
           this._aceRenderer.setTerminalCanvasRendererConfig(config);
         }
