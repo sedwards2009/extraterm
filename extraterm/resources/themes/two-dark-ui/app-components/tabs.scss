@@ -22,9 +22,7 @@ $tab-max-width: 20rem;
   list-style: none;
   margin: 0;
 
-  box-shadow: inset 0 -1px 0 $tab-border-color;
-  background: $tab-bar-background-color;
-  
+
   padding: 0 0 0 1px;
 
   overflow-x: auto;
@@ -53,7 +51,7 @@ $tab-max-width: 20rem;
     height: inherit;
     font-size: inherit;
     line-height: $ui-tab-height;
-    color: $tab-text-color;
+    color: $tab-text-color;    
     background-color: $tab-background-color;
     box-shadow: inherit;
 
@@ -64,12 +62,14 @@ $tab-max-width: 20rem;
 
     max-width: $tab-max-width;
 
+    box-shadow: inset 0 -1px 0 $tab-border-color;
+
     &.active {
       color: $tab-text-color-active;
       background-color: $tab-background-color-active;
       box-shadow: none;
     }
-    
+
     &.active:before {
       content: "";
       position: absolute;
@@ -89,5 +89,10 @@ $tab-max-width: 20rem;
     &.active:last-of-type {
       box-shadow: 1px 0 0 $base-border-color;
     }
+  }
+
+  & > LI.remainder {
+    box-shadow: inset 0 -1px 0 $tab-border-color;
+    background-color: $tab-background-color;
   }
 }

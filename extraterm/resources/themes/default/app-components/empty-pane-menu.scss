@@ -13,8 +13,7 @@
   font-family: $font-family;
   font-size: $input-font-size;
   color: $text-color;
-
-  background-color: if($extraterm-window-background-mode == "opaque", $background-color, $root-background-color);
+  background-color: $dropdown-bg-color;
 
   width: 100%;
   height: 100%;

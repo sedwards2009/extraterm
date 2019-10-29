@@ -99,6 +99,8 @@ $ui-saturation: if($ui-s-h <= 80, min($ui-s-s,  5%),
   if(($ui-s-h >= 160) and ($ui-s-l < $ui-inv), min($ui-s-s, 48%),
   $ui-s-s)));
 
+$ui-bg-is-syntax: if($ui-s-l >= $ui-inv and $ui-s-l <= 20%, true, false);
+
 $ui-lightness: if($ui-s-l <  $ui-inv, $ui-s-l + 8%, min($ui-s-l, 20%));
 $ui-lightness-border: if($ui-s-l <  $ui-inv, $ui-lightness*0.3, $ui-lightness*0.6);
 
@@ -325,7 +327,15 @@ $progress-value-bg-color:   $accent-color;
 $hr-border-color:             $base-border-color !default;
 $panel-body-padding:          pxToRem(15px) !default;
 $padding-xs-horizontal:       pxToRem(5px) !default;
-$dropdown-bg-color:           $level-3-color !default;
+
+$background-alpha: (100 - $extraterm-window-background-transparency-percent) / 100;
+
+$root-background-color: if($extraterm-window-background-mode == "opaque",
+                          var(--terminal-background-color),
+                          rgba(var(--terminal-background-color-rgb), $background-alpha));
+
+$dropdown-bg-color: if($extraterm-window-background-mode == "opaque", $level-3-color, $root-background-color);
+
 $dropdown-link-hover-color:   $text-selected-color !default;
 $dropdown-link-hover-bg:      $background-selected-color !default;
 $dropdown-border:             $base-border-color !default;
@@ -340,7 +350,6 @@ $ui-tab-height: 2.6rem;
 $tab-bar-background-color:         $level-3-color;
 $tab-bar-border-color:             $base-border-color;
 $tab-background-color:             $level-3-color;
-$tab-background-color-active:      $level-2-color;
 $tab-border-color:                 $base-border-color;
 
 $tab-text-color:                   $text-color-subtle;
@@ -348,8 +357,6 @@ $tab-text-color-active:            $text-highlight-color;
 $tab-text-color-editor:            contrast($ui-syntax-color, darken($ui-syntax-color, 50%), $text-highlight-color, 50%);
 $tab-height: $ui-tab-height;
 
-$root-background-color: if($extraterm-window-background-mode == "opaque",
-                          $tab-bar-background-color,
-                          change_color($tab-bar-background-color, $alpha: 
-                          ((100 - $extraterm-window-background-transparency-percent) / 100)));
 $settings-bg-selected-color: lighten($background-color, 8%) !default;
+
+$tab-background-color-active: if($ui-bg-is-syntax, #00000000, $level-2-color);

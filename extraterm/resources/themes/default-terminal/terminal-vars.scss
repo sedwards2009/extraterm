@@ -8,5 +8,6 @@
 
 body {
   --terminal-background-color: #{$terminal-background-color};
+  --terminal-background-color-rgb: #{$terminal-background-color-rgb};
   --terminal-foreground-color: #{$terminal-foreground-color};
 }

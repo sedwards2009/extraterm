@@ -41,19 +41,13 @@
     flex-direction: column;
   }  
 
-  #ID_TITLE_BAR {
-    background: $tab-bar-background-color;
-  }
-  
+
   #ID_MAIN_CONTENTS {
     flex-grow: 1;
   }
 }
 
 @if($extraterm-titlebar-style == "compact") {
-  #ID_TITLE_BAR {
-    background: $tab-bar-background-color;
-  }
 
   #ID_TITLE_BAR {
     position: absolute;
