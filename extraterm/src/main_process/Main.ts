@@ -540,27 +540,29 @@ function setupLogging(): void {
 }
 
 function setupTransparentBackground(): void {
-  if (isWindows) {
-    const setWindowComposition = () => {
-      const generalConfig = <GeneralConfig> configDatabase.getConfig("general");
-      const accent = generalConfig.windowBackgroundMode === "opaque"
-                      ? AccentState.ACCENT_DISABLED
-                      : AccentState.ACCENT_ENABLE_BLURBEHIND;
-      SetWindowCompositionAttribute(mainWindow.getNativeWindowHandle(), accent, 0);
-    };
+  const setWindowComposition = () => {
+    if ( ! isWindows) {
+      return;
+    }
 
-    configDatabase.onChange(event => {
-      if (event.key === "general" &&
-          event.oldConfig.windowBackgroundMode !== event.newConfig.windowBackgroundMode) {
-        setWindowComposition();
-      }
-    });
+    const generalConfig = <GeneralConfig> configDatabase.getConfig("general");
+    const accent = generalConfig.windowBackgroundMode === "opaque"
+                    ? AccentState.ACCENT_DISABLED
+                    : AccentState.ACCENT_ENABLE_BLURBEHIND;
+    SetWindowCompositionAttribute(mainWindow.getNativeWindowHandle(), accent, 0);
+  };
 
-    mainWindow.once("ready-to-show", () => {
+  configDatabase.onChange(event => {
+    if (event.key === "general" &&
+        event.oldConfig.windowBackgroundMode !== event.newConfig.windowBackgroundMode) {
       setWindowComposition();
-      mainWindow.show();
-    });
-  }
+    }
+  });
+
+  mainWindow.once("ready-to-show", () => {
+    setWindowComposition();
+    mainWindow.show();
+  });
 }
 
 const _log = getLogger("main");
