@@ -415,6 +415,10 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
     injectTerminalVisualConfig(el, this._effectiveTerminalVisualConfig);
 
+    const visualState = this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED;
+    el.setMode(this._mode);
+    el.setVisualState(visualState);
+
     this._childElementList.push( { element: el, needsRefresh: false, refreshLevel: RefreshLevel.RESIZE } );
     this._scrollArea.appendChild(el);
     this._virtualScrollArea.appendScrollable(el);

@@ -270,6 +270,10 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       aceElement.addEventListener("mouseup", ev => this._handleMouseUpEvent(ev), true);
       aceElement.addEventListener("mousemove", ev => this._handleMouseMoveEvent(ev), true);
       aceElement.addEventListener("wheel", ev => this._handleMouseWheelEvent(ev), true);
+
+      if (this._visualState != null) {
+        this._forceSetVisualState(this._visualState);
+      }
     }
 
     this._updateCssVars();
@@ -439,34 +443,40 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
   setVisualState(newVisualState: VisualState): void {
     if (newVisualState !== this._visualState) {
-      const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-      if (containerDiv !== null) {
-        if (this._showAsFocussed(newVisualState)) {
-          containerDiv.classList.add(CLASS_FOCUSED);
-          containerDiv.classList.remove(CLASS_UNFOCUSED);
-
-          this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
-
-          if (this._emulator != null && this._terminalVisualConfig != null) {
-            this._emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
-          }
-
-        } else {
-          containerDiv.classList.add(CLASS_UNFOCUSED);
-          containerDiv.classList.remove(CLASS_FOCUSED);
-
-          this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToHollowRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
-
-          if (this._emulator !== null && this._terminalVisualConfig != null) {
-            this._emulator.setCursorBlink(false);
-          }
-        }
-      }
+      this._forceSetVisualState(newVisualState);
       this._visualState = newVisualState;
     }
   }
 
-  private _showAsFocussed(visualState: VisualState): boolean {
+  private _forceSetVisualState(newVisualState: VisualState): void {
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    if (containerDiv == null) {
+      return;
+    }
+
+    if (this._isShowAsFocussed(newVisualState)) {
+      containerDiv.classList.add(CLASS_FOCUSED);
+      containerDiv.classList.remove(CLASS_UNFOCUSED);
+
+      this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
+
+      if (this._emulator != null && this._terminalVisualConfig != null) {
+        this._emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
+      }
+
+    } else {
+      containerDiv.classList.add(CLASS_UNFOCUSED);
+      containerDiv.classList.remove(CLASS_FOCUSED);
+
+      this._aceRenderer.setRenderCursorStyle(this._configCursorStyleToHollowRendererCursorStyle(this._terminalVisualConfig.cursorStyle));
+
+      if (this._emulator !== null && this._terminalVisualConfig != null) {
+        this._emulator.setCursorBlink(false);
+      }
+    }
+  }
+
+  private _isShowAsFocussed(visualState: VisualState): boolean {
     return (visualState === VisualState.AUTO && this.hasFocus()) ||
       visualState === VisualState.FOCUSED;
   }
@@ -480,7 +490,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._terminalVisualConfig = terminalVisualConfig;
     if (this._aceRenderer != null) {
 
-      const cursorStyle = (this._showAsFocussed(this._visualState)
+      const cursorStyle = (this._isShowAsFocussed(this._visualState)
                             ? this._configCursorStyleToRendererCursorStyle(terminalVisualConfig.cursorStyle)
                             : this._configCursorStyleToHollowRendererCursorStyle(terminalVisualConfig.cursorStyle));
 
