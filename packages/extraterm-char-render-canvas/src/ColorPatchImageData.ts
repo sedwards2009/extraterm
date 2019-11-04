@@ -39,28 +39,7 @@ export class ColorPatchImageData {
 
   render(): void {
     const renderCursor = this._renderCursor;
-
-    let getRGBA: (x: number, y: number) => number = null;
-    if (this._fgOrBg === "foreground") {
-      getRGBA = (x: number, y: number): number => {
-        const style = this._cellGrid.getStyle(x, y);
-        if ((style & STYLE_MASK_CURSOR) && renderCursor) {
-          return this._cursorColor;
-        } else {
-          return (style & STYLE_MASK_INVERSE) ? this._cellGrid.getBgRGBA(x, y) : this._cellGrid.getFgRGBA(x, y);
-        }
-      };
-    } else {
-      getRGBA = (x: number, y: number): number => {
-        const style = this._cellGrid.getStyle(x, y);
-        if ((style & STYLE_MASK_CURSOR) && renderCursor) {
-          return this._cursorColor;
-        } else {
-          return (style & STYLE_MASK_INVERSE) ? this._cellGrid.getFgRGBA(x, y) : this._cellGrid.getBgRGBA(x, y);
-        }
-      };
-    }
-
+    const isBackground = this._fgOrBg === "background";
     const widthChars = this._cellGrid.width;
     const heightChars = this._cellGrid.height;
     const imageData = this._imageData;
@@ -72,7 +51,16 @@ export class ColorPatchImageData {
       for (let cy=0; cy<cellHeight; cy++) {
         let offset = (((cellHeight * j) + cy) * imageData.width) * 4;
         for (let i=0; i<widthChars; i++) {
-          const rgba = getRGBA(i, j);
+
+          let rgba = 0;
+          const style = this._cellGrid.getStyle(i, j);
+          if ((style & STYLE_MASK_CURSOR) && renderCursor) {
+            rgba = this._cursorColor;
+          } else {
+            rgba = (((style & STYLE_MASK_INVERSE) !==0) !== isBackground
+                    ? this._cellGrid.getBgRGBA(i, j)
+                    : this._cellGrid.getFgRGBA(i, j));
+          }
 
           const red = (rgba >> 24) & 0xff; // Red
           const green = (rgba >> 16) & 0xff; // Green
