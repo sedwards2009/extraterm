@@ -17,7 +17,7 @@ import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME, FALLBACK_SYNTAX_THEME } 
 import { EventEmitter } from '../utils/EventEmitter';
 import {CommandLineAction, SystemConfig, ConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG,
   SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, FontInfo,
-  ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle } from '../Config';
+  ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle, WindowBackgroundMode } from '../Config';
 import * as Messages from '../WindowMessages';
 import { ThemeManager } from '../theme/ThemeManager';
 import { KeybindingsIOManager } from './KeybindingsIOManager';
@@ -291,6 +291,13 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
 
   sanitizeField(userStoredConfig, "uiScalePercent", 100);
   userStoredConfig.uiScalePercent = Math.min(500, Math.max(5, userStoredConfig.uiScalePercent || 100));
+
+  const windowBackgroundModes: WindowBackgroundMode[] = ["opaque", "blur"];
+  sanitizeStringEnumField(userStoredConfig, "windowBackgroundMode", windowBackgroundModes, "opaque");
+
+  sanitizeField(userStoredConfig, "windowBackgroundTransparencyPercent", 50);
+  userStoredConfig.windowBackgroundTransparencyPercent = Math.max(Math.min(100,
+    userStoredConfig.windowBackgroundTransparencyPercent), 0);
 }
 
 function sanitizeField<T, K extends keyof T>(object: T, key: K, defaultValue: T[K]): void {

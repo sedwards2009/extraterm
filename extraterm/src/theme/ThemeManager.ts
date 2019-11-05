@@ -45,7 +45,8 @@ const DEBUG_SASS_FINE = false;
 const DEBUG_SCAN = false;
 
 export interface Color {
-  hex: string;
+  hex?: string;
+  variableRGB?: number | string;
 }
 
 export type GlobalVariableMap = Map<string, number|boolean|string|Color>;
@@ -650,6 +651,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
     result.set("terminal-foreground-color", {hex: terminalTheme.foregroundColor});
     result.set("terminal-background-color", {hex: terminalTheme.backgroundColor});
+    result.set("terminal-background-color-rgb", {variableRGB: terminalTheme.backgroundColor});
     result.set("terminal-cursor-foreground-color", {hex: terminalTheme.cursorForegroundColor});
     result.set("terminal-cursor-background-color", {hex: terminalTheme.cursorBackgroundColor});
     result.set("terminal-selection-background-color", {hex: terminalTheme.selectionBackgroundColor});
@@ -760,8 +762,22 @@ export class ThemeManager implements AcceptsConfigDatabase {
           let formattedValue = "";
           if (typeof(value) === "string") {
             formattedValue = `"${value}"`;
-          } else if (typeof(value) === "object" && value.hex != null) {
-            formattedValue = value.hex;
+          } else if (typeof(value) === "object") {
+            if (value.hex != null) {
+              formattedValue = value.hex;
+            } else if(value.variableRGB != null) {
+              let rgba = 0;
+              if (typeof(value.variableRGB) === "string") {
+                const color = new UtilColor(value.variableRGB);
+                rgba = color.toRGBA();
+              } else if (typeof(value.variableRGB) === "number") {
+                rgba = value.variableRGB;
+              }
+              const red = (rgba >> 24) & 0xff;
+              const green = (rgba >> 16) & 0xff;
+              const blue = (rgba >> 8) & 0xff;
+              formattedValue = `${red}, ${green}, ${blue}`;
+            }
           } else {
             formattedValue = "" + value;
           }

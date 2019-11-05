@@ -37,6 +37,7 @@ export class ColorPatchCanvas {
     this._fullSizeBackgroundCanvas.width = this._canvasWidthPx;
     this._fullSizeBackgroundCanvas.height = this._canvasHeightPx;
     this._fullSizeBackgroundCtx = this._fullSizeBackgroundCanvas.getContext("2d", { alpha: true });
+    this._fullSizeBackgroundCtx.globalCompositeOperation = "copy";
     // parentElement.appendChild(this._fullSizeBackgroundCanvas);
   }
 

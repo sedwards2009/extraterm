@@ -11,6 +11,10 @@
   position: relative;
 }
 
+:host(:focus) {
+  outline: 0 solid transparent;
+}
+
 #ID_CONTAINER {
   position: relative;
 
@@ -19,13 +23,11 @@
   width: 100%;
   height: 100%;
   contain: strict;
-
-  background-color: var(--terminal-background-color);
 }
 
-$style-margin-size: if($extarterm-margin-style == "none", 0px,
-if($extarterm-margin-style == "thin", 0.5rem,
-  if($extarterm-margin-style == "normal", 1rem,
+$style-margin-size: if($extraterm-margin-style == "none", 0px,
+if($extraterm-margin-style == "thin", 0.5rem,
+  if($extraterm-margin-style == "normal", 1rem,
   2rem)));
 
 #ID_SCROLL_CONTAINER {
@@ -36,7 +38,6 @@ if($extarterm-margin-style == "thin", 0.5rem,
   overflow-y: hidden;
 
   position: relative;
-  background-color: var(--terminal-background-color);
 
   box-sizing: border-box;
   border: $style-margin-size solid transparent;
@@ -48,7 +49,6 @@ if($extarterm-margin-style == "thin", 0.5rem,
   left: 0;
   width: 100%;
 
-  background-color: var(--terminal-background-color);
 
   & > * {
     position: absolute;

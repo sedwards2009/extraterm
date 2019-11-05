@@ -10,6 +10,7 @@ import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { computeFontMetrics, debugFontMetrics } from "./FontMeasurement";
 import { FontAtlasRepository } from "./FontAtlasRepository";
 import { Disposable } from "./Disposable";
+import { ColorPatchImageData } from "./ColorPatchImageData";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -253,7 +254,8 @@ export class CharRenderCanvas implements Disposable {
 
   private _bgColorPatchCanvas: ColorPatchCanvas = null;
   private _fgColorPatchCanvas: ColorPatchCanvas = null;
-
+  private _fgColorPatchImageData: ColorPatchImageData = null;
+  
   private _palette: number[] = null;
   private _fontAtlasRepository: FontAtlasRepository = null;
   
@@ -334,8 +336,14 @@ export class CharRenderCanvas implements Disposable {
     this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts, fontMetrics);
     this._bgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "background",
                                                     this._palette[PALETTE_CURSOR_INDEX], debugParentElement);
-    this._fgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "foreground",
-                                                    this._palette[0], debugParentElement);
+
+    if (this._renderer === Renderer.ImageBitmap) {
+      this._fgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx,
+                                                      "foreground", this._palette[0], debugParentElement);
+    } else {
+      this._fgColorPatchImageData = new ColorPatchImageData(this._cellGrid, this.cellWidthPx, this.cellHeightPx,
+        "foreground", this._palette[0]);
+    }
   }
 
   dispose(): void {
@@ -438,26 +446,43 @@ export class CharRenderCanvas implements Disposable {
   render(): void {
     this._updateCharGridFlags();
 
-    if (this._renderer === Renderer.ImageBitmap) {
-      this._renderCharacters();
-    } else {
-      this._renderCharactersUsingImageData();
-    }
-
     const renderCursor = this._cursorStyle === CursorStyle.BLOCK;
-    this._fgColorPatchCanvas.setRenderCursor(renderCursor);
-    this._fgColorPatchCanvas.render();
-    this._bgColorPatchCanvas.setRenderCursor(renderCursor);
-    this._bgColorPatchCanvas.render();
 
-    this._canvasCtx.globalCompositeOperation = "copy";
-    this._canvasCtx.drawImage(this._charCanvas, 0, 0);
+    if (this._renderer === Renderer.ImageBitmap) {
+      // This path uses gfx APIs mostly
+      this._fgColorPatchCanvas.setRenderCursor(renderCursor);
+      this._fgColorPatchCanvas.render();
+      this._bgColorPatchCanvas.setRenderCursor(renderCursor);
+      this._bgColorPatchCanvas.render();
 
-    this._canvasCtx.globalCompositeOperation = "source-in";
-    this._canvasCtx.drawImage(this._fgColorPatchCanvas.getCanvas(), 0, 0);
+      this._renderCharacters();
+      this._canvasCtx.globalCompositeOperation = "copy";
+      this._canvasCtx.drawImage(this._charCanvas, 0, 0);
 
-    this._canvasCtx.globalCompositeOperation = "destination-over";
-    this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
+      this._canvasCtx.globalCompositeOperation = "source-in";
+      this._canvasCtx.drawImage(this._fgColorPatchCanvas.getCanvas(), 0, 0);
+  
+      this._canvasCtx.globalCompositeOperation = "destination-over";
+      this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
+
+    } else {
+      // This path uses the CPU for most of the work.
+      this._fgColorPatchImageData.setRenderCursor(renderCursor);
+      this._fgColorPatchImageData.render();
+
+      this._bgColorPatchCanvas.setRenderCursor(renderCursor);
+      this._bgColorPatchCanvas.render();
+  
+      this._renderCharactersToImageData(this._charCanvasCtx, this._charCanvasImageData);
+
+      this._fgColorPatchImageData.pasteAlphaChannel(this._charCanvasImageData);
+
+      this._canvasCtx.globalCompositeOperation = "copy";
+      this._canvasCtx.putImageData(this._fgColorPatchImageData.getImageData(), 0, 0);
+
+      this._canvasCtx.globalCompositeOperation = "destination-over";
+      this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
+    }
 
     this._renderColorCharacters(this._canvasCtx);
     this._renderCursors(this._canvasCtx);
@@ -537,12 +562,7 @@ export class CharRenderCanvas implements Disposable {
     }
   }
 
-  private _renderCharactersUsingImageData(): void {
-    const ctx = this._charCanvasCtx;
-
-    // const imageData = this._charCanvasCtx.getImageData(0, 0, this._charCanvas.width, this._charCanvas.height);
-    const imageData = this._charCanvasImageData;
-
+  private _renderCharactersToImageData(ctx: CanvasRenderingContext2D, imageData: ImageData): void {
     ctx.fillStyle = "#ffffffff";
     ctx.globalCompositeOperation = "copy";
 
@@ -610,8 +630,6 @@ export class CharRenderCanvas implements Disposable {
         renderedCharWidthCounter--;
       }
     }
-
-    ctx.putImageData(imageData, 0, 0);
   }
 
   private _renderColorCharacters(ctx: CanvasRenderingContext2D): void {

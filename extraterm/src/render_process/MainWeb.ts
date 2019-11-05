@@ -170,7 +170,8 @@ async function asyncLoadTerminalTheme(): Promise<void> {
     fontFamily: fontLoader.cssNameFromFontName(config.terminalFont),
     fontSizePx: config.terminalFontSize,
     devicePixelRatio: window.devicePixelRatio,
-    terminalTheme: themeMsg.terminalTheme
+    terminalTheme: themeMsg.terminalTheme,
+    transparentBackground: config.windowBackgroundMode !== "opaque",
   };
 }
 
@@ -596,6 +597,8 @@ async function asyncSetupConfiguration(): Promise<void> {
 
     if (oldGeneralConfig.themeGUI !== newGeneralConfig.themeGUI ||
         oldGeneralConfig.terminalMarginStyle !== newGeneralConfig.terminalMarginStyle ||
+        oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode ||
+        oldGeneralConfig.windowBackgroundTransparencyPercent !== newGeneralConfig.windowBackgroundTransparencyPercent ||
         oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
       refreshThemeTypeList.push("gui");
     }
@@ -617,7 +620,8 @@ async function asyncSetupConfiguration(): Promise<void> {
     if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
         oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize ||
         oldGeneralConfig.cursorStyle !== newGeneralConfig.cursorStyle ||
-        oldGeneralConfig.blinkingCursor !== newGeneralConfig.blinkingCursor) {
+        oldGeneralConfig.blinkingCursor !== newGeneralConfig.blinkingCursor ||
+        oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode) {
 
       terminalVisualConfig = {
         cursorStyle: newGeneralConfig.cursorStyle,
@@ -626,6 +630,7 @@ async function asyncSetupConfiguration(): Promise<void> {
         fontSizePx: newGeneralConfig.terminalFontSize,
         devicePixelRatio: window.devicePixelRatio,
         terminalTheme: terminalVisualConfig.terminalTheme,
+        transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
       }
       terminalVisualConfigChanged = true;
     }

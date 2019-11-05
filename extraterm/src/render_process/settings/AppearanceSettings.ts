@@ -81,6 +81,8 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
       ui.minimizeToTray = generalConfig.minimizeToTray;
       ui.uiScalePercent = generalConfig.uiScalePercent;
       ui.terminalMarginStyle = generalConfig.terminalMarginStyle;
+      ui.windowBackgroundMode = generalConfig.windowBackgroundMode;
+      ui.windowBackgroundTransparencyPercent = generalConfig.windowBackgroundTransparencyPercent;
     }
   }
 
@@ -100,6 +102,8 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.themeTerminal = ui.themeTerminal;
     newConfig.uiScalePercent = ui.uiScalePercent;
     newConfig.terminalMarginStyle = ui.terminalMarginStyle;
+    newConfig.windowBackgroundMode = ui.windowBackgroundMode;
+    newConfig.windowBackgroundTransparencyPercent = ui.windowBackgroundTransparencyPercent;
     this._updateConfig(GENERAL_CONFIG, newConfig);
   }
 
