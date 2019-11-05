@@ -354,10 +354,10 @@ abbrev@1:
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
   integrity sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
 
-"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.14.0/ace-ts-v0.14.0.tgz":
-  version "0.14.0"
-  uid "652275f0371a614e94d1727ecb1d3237f29a93c2"
-  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.14.0/ace-ts-v0.14.0.tgz#652275f0371a614e94d1727ecb1d3237f29a93c2"
+"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz":
+  version "0.16.0"
+  uid "92da755f731b6cb435aca01dd011dd846bf220a6"
+  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz#92da755f731b6cb435aca01dd011dd846bf220a6"
 
 acorn-dynamic-import@^2.0.0:
   version "2.0.2"
@@ -2183,10 +2183,10 @@ electron-rebuild@1.8.5:
     spawn-rx "^3.0.0"
     yargs "^13.2.2"
 
-electron@5.0.6:
-  version "5.0.6"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-5.0.6.tgz#e3ca4a58b5716fceef3fb64e1fd2222dd9c51de0"
-  integrity sha512-0L53lv26eDhaaNxL6DqXGQrQOEAYbrQg40stRSb2pzrY06kwPbABzXEiaCvEsBuKUQ+9OQBbVyyvXRbLJlun/A==
+electron@5.0.11:
+  version "5.0.11"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-5.0.11.tgz#764eb460aa84fbfcb3dc30385f5f9509cb724751"
+  integrity sha512-2QVVycTmvMmKC3S9XV7zSvouYBooHRTOBx1r64nBwtMh44gPydR3HzUbyVYjjxsw+4vIuH6AqNuY48KtWRpajg==
   dependencies:
     "@types/node" "^10.12.18"
     electron-download "^4.1.0"
@@ -8222,6 +8222,13 @@ window-size@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/window-size/-/window-size-0.1.4.tgz#f8e1aa1ee5a53ec5bf151ffa09742a6ad7697876"
   integrity sha1-+OGqHuWlPsW/FR/6CXQqatdpeHY=
+
+windows-swca@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/windows-swca/-/windows-swca-2.0.2.tgz#66807012f73f5d3c0f0cb49bfa61be297aaabb50"
+  integrity sha512-9935KGV1gH3EBy7re9UEfDrxY3fbXBcwrUgEZk1exxe6swcGKFhO82ECh4QXVBjIhq+ROIVW3SBF/OUnZFSNGw==
+  dependencies:
+    "@types/node" "^10.12.18"
 
 wordwrap@0.0.2:
   version "0.0.2"
