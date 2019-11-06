@@ -377,7 +377,12 @@ export class CharRenderCanvas implements Disposable {
     this._palette = palette;
     this._cellGrid.setPalette(this._palette);
     this._bgColorPatchCanvas.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
-    this._fgColorPatchCanvas.setCursorColor(this._palette[0]);
+    if (this._fgColorPatchCanvas != null) {
+      this._fgColorPatchCanvas.setCursorColor(this._palette[0]);
+    }
+    if (this._fgColorPatchImageData != null) {
+      this._fgColorPatchImageData.setCursorColor(this._palette[0]);
+    }
   }
 
   private _setupExtraFontSlices(extraFonts: FontSlice[], metrics: MonospaceFontMetrics): ExtraFontSlice[] {
