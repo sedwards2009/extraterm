@@ -118,6 +118,10 @@ function main(): void {
   const systemConfig = systemConfiguration(userStoredConfig, null);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 
+  if ( ! userStoredConfig.isHardwareAccelerated) {
+    app.disableHardwareAcceleration();
+  }
+
   if ( ! setupPtyManager()) {
     failed = true;
   }
@@ -582,7 +586,8 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     availableFonts: getFonts(),
     titleBarStyle,
     userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
-    userSyntaxThemeDirectory: getUserSyntaxThemeDirectory()
+    userSyntaxThemeDirectory: getUserSyntaxThemeDirectory(),
+    isHardwareAccelerated: config.isHardwareAccelerated,
   };
 }
 

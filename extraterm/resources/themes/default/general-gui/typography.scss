@@ -54,3 +54,26 @@ hr {
 p.minor, span.minor {
   color: $text-minor-color;
 }
+
+.highlight-success, .highlight-info, .highlight-warning, .highlight-error, .highlight-danger {
+  color: $text-highlight-color;
+  font-weight: bold;
+  border-radius: 2px;
+  padding: 1px 3px;
+}
+
+.highlight-success {
+  background-color: change_color($brand-success, $alpha: 0.5);
+}
+
+.highlight-info {
+  background-color: change_color($brand-info, $alpha: 0.5);
+}
+
+.highlight-warning {
+  background-color: change_color($brand-warning, $alpha: 0.5);
+}
+
+.highlight-danger {
+  background-color: change_color($brand-danger, $alpha: 0.5);
+}

@@ -232,6 +232,7 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
   sanitizeStringEnumField(userStoredConfig, "frameRule", frameRules, "frame_if_lines");
   sanitizeField(userStoredConfig, "frameRuleLines", 10);
   sanitizeStringEnumField(userStoredConfig, "gpuDriverWorkaround", ["none", "no_blend"], "none");
+  sanitizeField(userStoredConfig, "isHardwareAccelerated", true);
   sanitizeField(userStoredConfig, "keybindingsName", process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC);
   sanitizeField(userStoredConfig, "minimizeToTray", false);
   sanitizeField(userStoredConfig, "scrollbackMaxFrames", 100);

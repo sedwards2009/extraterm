@@ -50,6 +50,7 @@ export interface GeneralConfig {
   autoCopySelectionToClipboard?: boolean;
 
   gpuDriverWorkaround?: GpuDriverWorkaround;
+  isHardwareAccelerated?: boolean;
 }
 
 // This is the format of the user config JSON file as stored on the filesystem.
@@ -106,6 +107,8 @@ export interface SystemConfig {
 
   userTerminalThemeDirectory: string;
   userSyntaxThemeDirectory: string;
+
+  isHardwareAccelerated: boolean;
 }
 
 export interface FontInfo {

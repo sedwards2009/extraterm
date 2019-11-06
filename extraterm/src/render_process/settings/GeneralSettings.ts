@@ -5,7 +5,7 @@
 import { WebComponent } from 'extraterm-web-component-decorators';
 
 import { GeneralSettingsUi } from './GeneralSettingsUi';
-import { GeneralConfig, ConfigKey, GENERAL_CONFIG } from '../../Config';
+import { GeneralConfig, SystemConfig, ConfigKey, GENERAL_CONFIG, SYSTEM_CONFIG } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
@@ -17,13 +17,13 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
   private _log: Logger = null;
 
   constructor() {
-    super(GeneralSettingsUi, [GENERAL_CONFIG]);
+    super(GeneralSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
     this._log = getLogger(GENERAL_SETTINGS_TAG, this);
   }
 
   protected _setConfig(key: ConfigKey, config: any): void {
+    const ui = this._getUi();
     if (key === GENERAL_CONFIG) {
-      const ui = this._getUi();
       const generalConfig = <GeneralConfig> config;
 
       if (ui.showTips !== generalConfig.showTips) {
@@ -45,6 +45,9 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
       if ((ui.gpuDriverWorkaroundFlag ? "no_blend" : "none") !== generalConfig.gpuDriverWorkaround) {
         ui.gpuDriverWorkaroundFlag = generalConfig.gpuDriverWorkaround === "no_blend";
       }
+    } else if (key === SYSTEM_CONFIG) {
+      const systemConfig = <SystemConfig> config;
+      ui.systemIsHardwareAccelerated = systemConfig.isHardwareAccelerated;
     }
   }
 
@@ -57,6 +60,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     newGeneralConfig.scrollbackMaxFrames = ui.maxScrollbackFrames;
     newGeneralConfig.autoCopySelectionToClipboard = ui.autoCopySelectionToClipboard;
     newGeneralConfig.gpuDriverWorkaround = ui.gpuDriverWorkaroundFlag ? "no_blend" : "none";
+    newGeneralConfig.isHardwareAccelerated = ui.isHardwareAccelerated;
 
     this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
   }

@@ -46,6 +46,18 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
     <label></label>
     <span>Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors.</span>
+
+    <label></label>
+    <span><label><input type="checkbox" v-model="isHardwareAccelerated">Hardware Acceleration</label></span>
+
+    <template v-if="isHardwareAccelerated !== systemIsHardwareAccelerated">
+      <label></label>
+      <span class="highlight-warning"><label>Extraterm must be restarted before this takes effect.</label></span>
+    </template>
+
+    <label></label>
+    <span>Some graphics hardware and driver combinations can give incorrect rendering. Turning off this option may avoid this problem.</span>
+
   </div>
 </div>
 `)
@@ -59,6 +71,8 @@ export class GeneralSettingsUi extends Vue {
   maxScrollbackFrames: number;
   autoCopySelectionToClipboard: boolean;
   gpuDriverWorkaroundFlag: boolean;
+  isHardwareAccelerated: boolean;
+  systemIsHardwareAccelerated: boolean;
 
   constructor() {
     super();
@@ -68,5 +82,7 @@ export class GeneralSettingsUi extends Vue {
     this.maxScrollbackFrames = 100;
     this.autoCopySelectionToClipboard = true;
     this.gpuDriverWorkaroundFlag = false;
+    this.isHardwareAccelerated = true;
+    this.systemIsHardwareAccelerated = true;
   }
 }
