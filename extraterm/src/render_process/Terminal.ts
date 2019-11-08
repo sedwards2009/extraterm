@@ -1169,7 +1169,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._disconnectActiveTerminalViewer();
       
       // Extract the output of the failed command.
-      this._lastCommandTerminalViewer.deleteLines(this._lastCommandTerminalLine);
+      if (moveTextLines != null && moveTextLines.length > 0) {
+        this._lastCommandTerminalViewer.deleteLines(this._lastCommandTerminalLine);
+      }
       this._lastCommandTerminalViewer = null;
       
       // Append our new embedded viewer.
@@ -1187,7 +1189,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       outputTerminalViewer.setReturnCode(returnCode);
       outputTerminalViewer.setCommandLine(this._lastCommandLine);
       outputTerminalViewer.setUseVPad(false);
-      if (moveTextLines !== null) {
+      if (moveTextLines !== null && moveTextLines.length > 0) {
         outputTerminalViewer.setTerminalLines(moveTextLines);
       }
       outputTerminalViewer.setEditable(true);
