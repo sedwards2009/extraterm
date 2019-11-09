@@ -1,10 +1,18 @@
+#!/usr/bin/env xdg-open
 [Desktop Entry]
-Type=Application
-TryExec=extraterm
-Exec=extraterm
-Icon=extraterm
-Terminal=false
 Categories=System;TerminalEmulator;
-Name=Extraterm
-GenericName=Terminal
+Comment[en_US]=Command line access
 Comment=Command line access
+Exec=bash -c '"$(dirname "%k")/extraterm"'
+GenericName[en_US]=Terminal
+GenericName=Terminal
+Icon=utilities-terminal
+MimeType=
+Name[en_US]=Extraterm
+Name=Extraterm
+Terminal=false
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=

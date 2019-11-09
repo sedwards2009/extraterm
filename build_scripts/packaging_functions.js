@@ -187,6 +187,11 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   log("Zipping up the package");
 
   mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
+
+  if (platform === "linux") {
+    cp(path.join(SRC_DIR, "extraterm", "resources", "extraterm.desktop"), versionedOutputDir);
+  }
+
   cp(path.join(SRC_DIR, "README.md"), versionedOutputDir);
   cp(path.join(SRC_DIR, "LICENSE.txt"), versionedOutputDir);
   
