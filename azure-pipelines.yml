@@ -61,7 +61,8 @@ jobs:
         displayName: "install zip"
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
-      - script: yarn run electron-rebuild
+      - script: dir node_modules
+      - script: yarn run electron-rebuild-win32
         displayName: "yarn run electron-rebuild-win32"
       - script: yarn run build
         displayName: "yarn run build"
