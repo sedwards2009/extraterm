@@ -65,7 +65,6 @@
     "extraterm-extension-api": "0.1.0",
     "finalhandler": "0.4.0",
     "jest": "23.6.0",
-    "modclean": "2.1.0",
     "nodeunit": "0.11.0",
     "performance-now": "2.1.0",
     "serve-static": "1.10.0",
