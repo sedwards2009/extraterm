@@ -86,7 +86,7 @@ function pruneNodeModules(versionedOutputDir, platform) {
   const prevDir = pwd();
   
   cd(path.join(versionedOutputDir, appDir(platform)));
-  exec("modclean -n default:safe -r --ignore=windows-swca");
+  exec("modclean -n default:safe -r --ignore windows-swca");
   pruneSpecificNodeModules();
 
   cd(prevDir);
