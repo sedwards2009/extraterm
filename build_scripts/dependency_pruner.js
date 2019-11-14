@@ -97,7 +97,11 @@ function objectToDependencyList(dependencies) {
 
 function readPrimaryDependencies(pkgPath) /*: Dependency[] */ {
   const pkg = readPackageJson(pkgPath);
-  return objectToDependencyList(pkg.dependencies);
+  let deps = objectToDependencyList(pkg.dependencies);
+  if (pkg.optionalDependencies !== undefined) {
+    deps = [...deps, ...objectToDependencyList(pkg.optionalDependencies)];
+  }
+  return deps;
 }
 
 function findPrimaryDependencies(sourceRootPath) /*: Dependency[] */ {
