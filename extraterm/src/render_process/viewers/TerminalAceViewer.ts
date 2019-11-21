@@ -888,19 +888,37 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._log.warn(`Invalid arguments to deleteLines(). Resolved startLine=${startLine}, endLine=${endLine}.`);
       return;
     }
-    
+
     this._deleteLines(startLine, endLine);
     emitResizeEvent(this);
   }
 
   getTerminalLinesToEnd(startLineOrBookmark: number | BookmarkRef): TermApi.Line[] {
+    return this.getTerminalLinesBetweenBookmarks(startLineOrBookmark, this.lineCount());
+  }
+
+  /**
+   * Get a range of lines.
+   * 
+   * Note the end of the range is inclusive of the end row.
+   * 
+   * @param startLineOrBookmark Start end of the range.
+   * @param endLineOrBookmark Optional. Defines the end of the range inclusive.
+   * @return The lines or `null` if the range was invalid.
+   */
+  getTerminalLinesBetweenBookmarks(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark: number | BookmarkRef):
+      TermApi.Line[] {
+
     const startRow = this._getLineNumberFromBookmark(startLineOrBookmark);
     if (startRow < 0) {
       return null;
     }
+    const endRow = this._getLineNumberFromBookmark(endLineOrBookmark);
+    if (endRow < 0) {
+      return null;
+    }
 
     const result: TermApi.Line[] = [];
-    const endRow = this.lineCount();
     for (let i = startRow; i < endRow; i++) {
       result.push(this._aceEditor.getTerminalLine(i));
     }
@@ -926,6 +944,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._bookmarkIndex.set(ref, textBookmark);
     
     return ref;
+  }
+
+  bookmarkCursorLine(): BookmarkRef {
+    if (this._emulator != null) {
+      return this.bookmarkLine(this._terminalFirstRow + this._emulator.getCursorRow());
+    }
+    return null;
   }
 
   private __updateHasTerminalClass(): void {
