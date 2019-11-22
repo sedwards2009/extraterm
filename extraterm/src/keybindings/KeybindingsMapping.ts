@@ -60,18 +60,33 @@ export class KeyStroke {
     }
 
     const parts: string[] = [];
-    if (this.ctrlKey) {
-      parts.push(isDarwin ? "^" : "Ctrl");
-    }
-    if (this.metaKey) {
-      parts.push("\u2318"); // Mac style 'pretzel' symbol
-    }
+    if (isDarwin) {
+      if (this.ctrlKey) {
+        parts.push("^");
+      }
+      if (this.altKey) {
+        parts.push("\u2325");
+      }
+      if (this.shiftKey) {
+        parts.push("\u21E7");
+      }
+      if (this.metaKey) {
+        parts.push("\u2318"); // Mac style 'pretzel' symbol
+      }
+    } else {
+      if (this.ctrlKey) {
+        parts.push("Ctrl");
+      }
+      if (this.metaKey) {
+        parts.push("\u2318"); // Mac style 'pretzel' symbol
+      }
 
-    if (this.altKey) {
-      parts.push(isDarwin ? "\u2325" : "Alt");
-    }
-    if (this.shiftKey) {
-      parts.push(isDarwin ? "\u21E7" : "Shift");
+      if (this.altKey) {
+        parts.push("Alt");
+      }
+      if (this.shiftKey) {
+        parts.push("Shift");
+      }
     }
     
     if (eventKeyToHumanMapping[this.configKey.toLowerCase()] !== undefined) {
