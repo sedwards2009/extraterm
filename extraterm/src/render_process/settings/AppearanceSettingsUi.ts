@@ -39,6 +39,7 @@ interface WindowBackgroundModeOption {
 }
 
 const isWindows = process.platform === "win32";
+const isDarwin = process.platform === "darwin";
 
 
 @Component(
@@ -147,7 +148,7 @@ const isWindows = process.platform === "win32";
       </option>
     </select>
 
-    <template v-if="isWindows">
+    <template v-if="isWindows || isDarwin">
     <label>Window Background:</label>
     <select id="window-background" v-model="windowBackgroundMode" class="char-width-12">
       <option v-for="option in windowBackgroundModeOptions" v-bind:value="option.id">
@@ -324,7 +325,9 @@ export class AppearanceSettingsUi extends Vue {
   get isWindows(): boolean {
     return isWindows;
   }
-
+  get isDarwin(): boolean {
+    return isDarwin;
+  }
   get themeTerminalOptions(): ThemeTypes.ThemeInfo[] {
     return this.getThemesByType("terminal");
   }

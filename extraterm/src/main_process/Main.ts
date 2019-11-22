@@ -545,15 +545,19 @@ function setupLogging(): void {
 
 function setupTransparentBackground(): void {
   const setWindowComposition = () => {
-    if ( ! isWindows) {
-      return;
-    }
-
     const generalConfig = <GeneralConfig> configDatabase.getConfig("general");
-    const accent = generalConfig.windowBackgroundMode === "opaque"
-                    ? AccentState.ACCENT_DISABLED
-                    : AccentState.ACCENT_ENABLE_BLURBEHIND;
-    SetWindowCompositionAttribute(mainWindow.getNativeWindowHandle(), accent, 0);
+    const isWindowOpaque = generalConfig.windowBackgroundMode === "opaque";
+    if (isWindows) {
+      const accent = isWindowOpaque
+                      ? AccentState.ACCENT_DISABLED
+                      : AccentState.ACCENT_ENABLE_BLURBEHIND;
+      SetWindowCompositionAttribute(mainWindow.getNativeWindowHandle(), accent, 0);
+    }
+    if (isDarwin) {
+      if ( ! isWindowOpaque) {
+        mainWindow.setVibrancy("dark");
+      }
+    }
   };
 
   configDatabase.onChange(event => {
