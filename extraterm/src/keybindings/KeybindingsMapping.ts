@@ -80,7 +80,6 @@ export class KeyStroke {
       if (this.metaKey) {
         parts.push("\u2318"); // Mac style 'pretzel' symbol
       }
-
       if (this.altKey) {
         parts.push("Alt");
       }
@@ -88,7 +87,7 @@ export class KeyStroke {
         parts.push("Shift");
       }
     }
-    
+
     if (eventKeyToHumanMapping[this.configKey.toLowerCase()] !== undefined) {
       parts.push(eventKeyToHumanMapping[this.configKey.toLowerCase()]);
     } else {
