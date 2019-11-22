@@ -48,7 +48,7 @@ export class ContextMenu extends TemplatedElementBase {
     cover.addEventListener('contextmenu', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
-      this._dismiss();
+      this._moveContainerTo(ev.clientX, ev.clientY);
     }, true);
     
     const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
@@ -195,25 +195,29 @@ export class ContextMenu extends TemplatedElementBase {
     container.classList.remove(CLASS_CONTAINER_CLOSED);
     container.classList.add(CLASS_CONTAINER_OPEN);
 
+    this._moveContainerTo(x, y);
+    this._openCover();
+    this.selectMenuItem(this.childNodes, null);
+
+    container.focus();
+  }
+
+  private _moveContainerTo(x: number, y: number): void {
+    const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
     const rect = container.getBoundingClientRect();
 
-    var sx = x;
+    let sx = x;
     if (sx+rect.width > window.innerWidth) {
       sx = window.innerWidth - rect.width;
     }
 
-    var sy = y;
+    let sy = y;
     if (sy+rect.height > window.innerHeight) {
       sy = window.innerHeight - rect.height;
     }
 
     container.style.left = "" + sx + "px";
     container.style.top = "" + sy + "px";
-
-    this._openCover();
-    this.selectMenuItem(this.childNodes, null);
-
-    container.focus();
   }
 
   private _openCover(): void {
