@@ -387,7 +387,11 @@ export class Emulator implements EmulatorApi {
   hasFocus(): boolean {
     return this._hasFocus;
   }
-  
+
+  getCursorRow(): number {
+    return this.y;
+  }
+
   blur(): void {
     if (!this._hasFocus) {
       return;

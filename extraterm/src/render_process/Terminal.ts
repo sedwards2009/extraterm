@@ -1005,7 +1005,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._emulator.moveRowsAboveCursorToScrollback();
       this._emulator.flushRenderQueue();
 
-      this._lastCommandTerminalLine = this._terminalViewer.bookmarkLine(this._terminalViewer.lineCount() -1);
+      this._lastCommandTerminalLine = this._terminalViewer.bookmarkCursorLine();
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
     this._lastCommandLine = cleancommand;
@@ -1107,99 +1107,101 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   private _closeLastEmbeddedViewer(returnCode: string): void {
-    // Find the terminal viewer which has no return code set on it.
-    let startElement: ViewerElement = null;
+    const startElement = this._findEmptyEmbeddedViewer();
+    if (startElement != null) {
+      this._frameWithExistingEmbeddedViewer(startElement, returnCode);
+    } else {  
+      this._frameWithoutEmbeddedViewer(returnCode);
+    }
+  }
+
+  private _findEmptyEmbeddedViewer(): EmbeddedViewer {
+    let lastEmptyEmbeddedViewer: EmbeddedViewer = null;
     for (const el of this._terminalCanvas.getViewerElements()) {
       if (el instanceof EmbeddedViewer && el.children.length === 0) {
-        startElement = el;
+        lastEmptyEmbeddedViewer = el;
         break;
       }
     }
+    return lastEmptyEmbeddedViewer;
+  }
+
+  private _frameWithExistingEmbeddedViewer(embeddedViewerElement: EmbeddedViewer, returnCode: string): void {
+    const activeTerminalViewer = this._terminalViewer;
+    this._disconnectActiveTerminalViewer();
     
-    if (startElement != null) {
-      // Finish framing an already existing Embedded viewer bar.
-      const embeddedViewerElement = <EmbeddedViewer> startElement;
-      
-      const activeTerminalViewer = this._terminalViewer;
-      this._disconnectActiveTerminalViewer();
-      
-      activeTerminalViewer.setCommandLine(this._lastCommandLine);
-      activeTerminalViewer.setReturnCode(returnCode);
-      activeTerminalViewer.setUseVPad(false);
-      
-      // Hang the terminal viewer under the Embedded viewer.
-      embeddedViewerElement.className = "extraterm_output";
-      
-      // Some focus management to make sure that activeTerminalViewer still keeps
-      // the focus after we remove it from the DOM and place it else where.
-      const restoreFocus = this._terminalCanvas.hasFocus();
-      
-      embeddedViewerElement.setViewerElement(activeTerminalViewer);
-      activeTerminalViewer.setEditable(true);
-      this._terminalCanvas.removeViewerElement(activeTerminalViewer);
+    activeTerminalViewer.setCommandLine(this._lastCommandLine);
+    activeTerminalViewer.setReturnCode(returnCode);
+    activeTerminalViewer.setUseVPad(false);
+    
+    // Hang the terminal viewer under the Embedded viewer.
+    embeddedViewerElement.className = "extraterm_output";
+    
+    // Some focus management to make sure that activeTerminalViewer still keeps
+    // the focus after we remove it from the DOM and place it else where.
+    const restoreFocus = this._terminalCanvas.hasFocus();
+    
+    embeddedViewerElement.setViewerElement(activeTerminalViewer);
+    activeTerminalViewer.setEditable(true);
+    this._terminalCanvas.removeViewerElement(activeTerminalViewer);
 
-      this._terminalCanvas.updateSize(embeddedViewerElement);
-      this._appendNewTerminalViewer();
-      
-      if (restoreFocus) {
-        this._terminalCanvas.focus();
-      }
-    } else {
-      
-      if (this._lastCommandTerminalViewer === null) {
-        // Nothing to frame.
-        return;
-      }
-      
-      let moveTextLines = this._lastCommandTerminalViewer.getTerminalLinesToEnd(this._lastCommandTerminalLine);
-      if (returnCode === "0" && ! this._commandNeedsFrame(this._lastCommandLine, moveTextLines.length)) {
-        // No need to frame anything.
-        this._lastCommandLine = null;
-        this._lastCommandTerminalViewer = null;
-        return;
-      }
-
-      this._moveCursorToFreshLine();
-      moveTextLines = this._lastCommandTerminalViewer.getTerminalLinesToEnd(this._lastCommandTerminalLine);
-      moveTextLines = moveTextLines.slice(0,-1);
-
-      // Insert a frame where there was none because this command returned an error code.
-      
-      // Close off the current terminal viewer.
-      this._disconnectActiveTerminalViewer();
-      
-      // Extract the output of the failed command.
-      if (moveTextLines != null && moveTextLines.length > 0) {
-        this._lastCommandTerminalViewer.deleteLines(this._lastCommandTerminalLine);
-      }
-      this._lastCommandTerminalViewer = null;
-      
-      // Append our new embedded viewer.
-      const newEmbeddedViewer = this._createEmbeddedViewerElement();
-
-        // Hang the terminal viewer under the Embedded viewer.
-      newEmbeddedViewer.className = "extraterm_output";
-
-      this._terminalCanvas.appendViewerElement(newEmbeddedViewer);
-      
-      // Create a terminal viewer to display the output of the last command.
-      const outputTerminalViewer = this._createTerminalViewer();
-      newEmbeddedViewer.setViewerElement(outputTerminalViewer);
-      
-      outputTerminalViewer.setReturnCode(returnCode);
-      outputTerminalViewer.setCommandLine(this._lastCommandLine);
-      outputTerminalViewer.setUseVPad(false);
-      if (moveTextLines !== null && moveTextLines.length > 0) {
-        outputTerminalViewer.setTerminalLines(moveTextLines);
-      }
-      outputTerminalViewer.setEditable(true);
-      this._emitDidAppendViewer(newEmbeddedViewer);
-      
-      this._appendNewTerminalViewer();
-      this._refocus();
-      const activeTerminalViewer = this._terminalViewer;
-      this._terminalCanvas.updateSize(activeTerminalViewer);
+    this._terminalCanvas.updateSize(embeddedViewerElement);
+    this._appendNewTerminalViewer();
+    
+    if (restoreFocus) {
+      this._terminalCanvas.focus();
     }
+  }
+
+  private _frameWithoutEmbeddedViewer(returnCode: string): void {
+    if (this._lastCommandTerminalViewer === null) {
+      // Nothing to frame.
+      return;
+    }
+
+    this._moveCursorToFreshLine();
+
+    const candidateMoveTextLines = this._lastCommandTerminalViewer.getTerminalLinesBetweenBookmarks(
+      this._lastCommandTerminalLine, this._terminalViewer.bookmarkCursorLine());
+    const commandShouldBeFramed = returnCode !== "0" || this._commandNeedsFrame(this._lastCommandLine, candidateMoveTextLines.length); 
+    if ( ! commandShouldBeFramed) {
+      this._lastCommandLine = null;
+      this._lastCommandTerminalViewer = null;
+      return;
+    }
+
+    const viewerWithOutput = this._lastCommandTerminalViewer;
+
+    // Close off the current terminal viewer.
+    this._disconnectActiveTerminalViewer();
+
+    const moveTextLines = viewerWithOutput.getTerminalLinesToEnd(this._lastCommandTerminalLine);
+    if (candidateMoveTextLines != null && candidateMoveTextLines.length > 0) {
+      viewerWithOutput.deleteLines(this._lastCommandTerminalLine);
+    }
+    this._lastCommandTerminalViewer = null;
+
+    const newEmbeddedViewer = this._createEmbeddedViewerElement();
+    newEmbeddedViewer.className = "extraterm_output";
+    this._terminalCanvas.appendViewerElement(newEmbeddedViewer);
+    
+    // Create a terminal viewer to display the output of the last command.
+    const outputTerminalViewer = this._createTerminalViewer();
+    newEmbeddedViewer.setViewerElement(outputTerminalViewer);
+    outputTerminalViewer.setReturnCode(returnCode);
+    outputTerminalViewer.setCommandLine(this._lastCommandLine);
+    outputTerminalViewer.setUseVPad(false);
+    if (candidateMoveTextLines !== null && candidateMoveTextLines.length > 0) {
+      outputTerminalViewer.setTerminalLines(moveTextLines);
+    }
+    outputTerminalViewer.setEditable(true);
+    this._emitDidAppendViewer(newEmbeddedViewer);
+
+    this._appendNewTerminalViewer();
+    this._refocus();
+
+    const activeTerminalViewer = this._terminalViewer;
+    this._terminalCanvas.updateSize(activeTerminalViewer);
   }
 
   /**

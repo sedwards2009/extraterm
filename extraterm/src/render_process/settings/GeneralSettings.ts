@@ -45,6 +45,9 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
       if ((ui.gpuDriverWorkaroundFlag ? "no_blend" : "none") !== generalConfig.gpuDriverWorkaround) {
         ui.gpuDriverWorkaroundFlag = generalConfig.gpuDriverWorkaround === "no_blend";
       }
+      if (ui.isHardwareAccelerated !== generalConfig.isHardwareAccelerated) {
+        ui.isHardwareAccelerated = generalConfig.isHardwareAccelerated;
+      }
     } else if (key === SYSTEM_CONFIG) {
       const systemConfig = <SystemConfig> config;
       ui.systemIsHardwareAccelerated = systemConfig.isHardwareAccelerated;

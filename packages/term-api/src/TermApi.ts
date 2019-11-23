@@ -203,7 +203,14 @@ export interface EmulatorApi {
   keyDown(ev: KeyboardEvent): boolean;
   keyPress(ev: KeyboardEvent): boolean;
   destroy(): void;
-  
+
+  /**
+   * Get the row the cursor is in.
+   * 
+   * @return The row the cursor is in. 0 based.
+   */
+  getCursorRow(): number;
+
   /**
    *
    * @return true if the event has been fully handled.
