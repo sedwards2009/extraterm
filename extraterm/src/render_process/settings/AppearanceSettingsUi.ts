@@ -148,6 +148,16 @@ const isDarwin = process.platform === "darwin";
       </option>
     </select>
 
+    <template v-if="titleBarStyle != currentTitleBarStyle">
+      <label></label>
+      <div>
+        <p class="minor">
+          <i class="fa fa-info-circle"></i>
+          A restart is requred before this change takes effect.
+        </p>
+      </div>
+    </template>
+
     <template v-if="isWindows || isDarwin">
     <label>Window Background:</label>
     <select id="window-background" v-model="windowBackgroundMode" class="char-width-12">
@@ -167,16 +177,6 @@ const isDarwin = process.platform === "darwin";
 
     <label></label>
     <span><label><input type="checkbox" v-bind:disabled="!showTrayIcon" v-model="minimizeToTray">Minimize window to tray</label></span>
-
-    <template v-if="titleBarStyle != currentTitleBarStyle">
-      <label></label>
-      <div>
-        <p class="minor">
-          <i class="fa fa-info-circle"></i>
-          A restart is requred before this change takes effect.
-        </p>
-      </div>
-    </template>
 
   </div>
 
