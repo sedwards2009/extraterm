@@ -8,6 +8,8 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { KeybindingsFile, KeybindingsFileBinding } from './KeybindingsFile';
 import { Category } from '../ExtensionMetadata';
 
+const isDarwin = process.platform === "darwin";
+
 export interface KeyStrokeOptions {
   altKey: boolean;
   ctrlKey: boolean;
@@ -58,26 +60,41 @@ export class KeyStroke {
     }
 
     const parts: string[] = [];
-    if (this.ctrlKey) {
-      parts.push("Ctrl");
+    if (isDarwin) {
+      if (this.ctrlKey) {
+        parts.push("^");
+      }
+      if (this.altKey) {
+        parts.push("\u2325");
+      }
+      if (this.shiftKey) {
+        parts.push("\u21E7");
+      }
+      if (this.metaKey) {
+        parts.push("\u2318"); // Mac style 'pretzel' symbol
+      }
+    } else {
+      if (this.ctrlKey) {
+        parts.push("Ctrl");
+      }
+      if (this.metaKey) {
+        parts.push("\u2318"); // Mac style 'pretzel' symbol
+      }
+      if (this.altKey) {
+        parts.push("Alt");
+      }
+      if (this.shiftKey) {
+        parts.push("Shift");
+      }
     }
-    if (this.metaKey) {
-      parts.push("\u2318"); // Mac style 'pretzel' symbol
-    }
-    if (this.altKey) {
-      parts.push("Alt");
-    }
-    if (this.shiftKey) {
-      parts.push("Shift");
-    }
-  
+
     if (eventKeyToHumanMapping[this.configKey.toLowerCase()] !== undefined) {
       parts.push(eventKeyToHumanMapping[this.configKey.toLowerCase()]);
     } else {
       parts.push(_.capitalize(this.configKey));
     }
-  
-    this._humanReadableString = parts.join("+");
+
+    this._humanReadableString = parts.join(isDarwin ? "" : "+");
     return this._humanReadableString;
   }
     
