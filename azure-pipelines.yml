@@ -59,9 +59,11 @@ jobs:
         displayName: "install nsis"
       - script: choco install zip -y
         displayName: "install zip"
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '12.x'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
-      - script: dir node_modules
       - script: yarn run electron-rebuild-win32
         displayName: "yarn run electron-rebuild-win32"
       - script: yarn run build
