@@ -215,3 +215,11 @@ $tab-border-color:          $base-border-color;
 
 $root-background-color: $tab-bar-background-color;
 $empty-pane-menu-bg-color: $dropdown-bg-color;
+
+$extraterm-mainwebui-top: if($extraterm-titlebar-style == "native",
+                            pxToRem(5px),
+                            if($extraterm-platform == darwin,
+                            if($extraterm-titlebar-style == "theme",
+                                22px,
+                                calc(22px - #{$tab-height * 37 / 59})),
+                            0));

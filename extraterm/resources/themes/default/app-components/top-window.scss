@@ -43,13 +43,7 @@ BODY {
 EXTRATERM-MAINWEBUI {
   position: absolute;
   left: 0;
-  top: if($extraterm-titlebar-style == "native",
-         pxToRem(5px),
-         if($extraterm-platform == darwin,
-           if($extraterm-titlebar-style == "theme",
-             22px,
-             calc(22px - #{$tab-height * 37 / 59})),
-           0));
+  top: $extraterm-mainwebui-top;
   right: 0;
   bottom: 0;
 }
