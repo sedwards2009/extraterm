@@ -365,7 +365,9 @@ $tab-background-color-active: if($ui-bg-is-syntax, #00000000, $level-2-color);
 $empty-pane-menu-bg-color: if($extraterm-window-background-mode == "opaque", $level-3-color, $root-background-color);
 
 $extraterm-mainwebui-top: if($extraterm-titlebar-style == "native",
-                            pxToRem(5px),
+                            if($extraterm-platform == darwin,
+                              0px,
+                              pxToRem(5px)),
                             if($extraterm-platform == darwin,
                             if($extraterm-titlebar-style == "theme",
                                 22px,
