@@ -151,7 +151,7 @@ const isDarwin = process.platform === "darwin";
     <template v-if="titleBarStyle != currentTitleBarStyle">
       <label></label>
       <div>
-        <p class="minor">
+        <p class="highlight-warning">
           <i class="fa fa-info-circle"></i>
           A restart is requred before this change takes effect.
         </p>

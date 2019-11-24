@@ -50,14 +50,18 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     <label></label>
     <span><label><input type="checkbox" v-model="isHardwareAccelerated">Hardware Acceleration</label></span>
 
-    <template v-if="isHardwareAccelerated !== systemIsHardwareAccelerated">
-      <label></label>
-      <span class="highlight-warning"><label>Extraterm must be restarted before this takes effect.</label></span>
-    </template>
-
     <label></label>
     <span>Some graphics hardware and driver combinations can give incorrect rendering. Turning off this option may avoid this problem.</span>
 
+    <template v-if="isHardwareAccelerated !== systemIsHardwareAccelerated">
+      <label></label>
+      <div>
+        <p class="highlight-warning">
+          <i class="fa fa-info-circle"></i>
+          A restart is requred before this change takes effect.
+        </p>
+      </div>
+    </template>
   </div>
 </div>
 `)
