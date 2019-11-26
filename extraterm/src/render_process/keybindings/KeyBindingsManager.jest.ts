@@ -172,19 +172,38 @@ describe.each([
   });
 });
 
-describe.each([
-  ["open", "Ctrl+O"],
-  ["smeg", "Alt+Shift+S"],
-  ["sleep", "Shift+Z"],
-  ["pageup", "Page Up"],
-  ["gohome", "Home"],
-  ["dedent", "Alt+Tab"],
-  ["finish", "End"],
-  ["up", "Up"],
-  ["rename", "F2"],
-])("", (input, output) => {
-  test(`mapCommandToReadableKeyStroke("${input}")`, () => {
-    const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
-    expect(editorKeybindings.mapCommandToReadableKeyStrokes(input)).toEqual([output]);
+if (process.platform === "darwin") {
+  describe.each([
+    ["open", "^O"],
+    ["smeg", "\u2325\u21E7S"],
+    ["sleep", "\u21E7Z"],
+    ["pageup", "Page Up"],
+    ["gohome", "Home"],
+    ["dedent", "\u2325Tab"],
+    ["finish", "End"],
+    ["up", "Up"],
+    ["rename", "F2"],
+  ])("", (input, output) => {
+    test(`mapCommandToReadableKeyStroke("${input}")`, () => {
+      const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
+      expect(editorKeybindings.mapCommandToReadableKeyStrokes(input)).toEqual([output]);
+    });
   });
-});
+} else {
+  describe.each([
+    ["open", "Ctrl+O"],
+    ["smeg", "Alt+Shift+S"],
+    ["sleep", "Shift+Z"],
+    ["pageup", "Page Up"],
+    ["gohome", "Home"],
+    ["dedent", "Alt+Tab"],
+    ["finish", "End"],
+    ["up", "Up"],
+    ["rename", "F2"],
+  ])("", (input, output) => {
+    test(`mapCommandToReadableKeyStroke("${input}")`, () => {
+      const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
+      expect(editorKeybindings.mapCommandToReadableKeyStrokes(input)).toEqual([output]);
+    });
+  });
+}

@@ -34,6 +34,9 @@ jobs:
     pool:
       vmImage: 'Ubuntu-16.04'
     steps:
+      - task: NodeTool@0
+        inputs:
+          versionSpec: '10.11.0'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: yarn run electron-rebuild
@@ -99,7 +102,7 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '>=8.11.0'
+          versionSpec: '10.11.0'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: yarn run electron-rebuild
