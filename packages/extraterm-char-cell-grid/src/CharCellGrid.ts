@@ -14,6 +14,7 @@ import { stringToCodePointArray, isWide, utf16LengthOfCodePoint } from "extrater
  *            * 0x2 (bit 1) - true if using background CLUT
  *            * 0x4 (bit 2) - true if extra fonts are used.
  *            * 0x18 (bit 3,4) - width of the char in cells-1, 0=normal 1 cell width, 1=2 cells.
+ *            * 0x20 (bit 5) - true if this is the start of a ligature
  * 2 byte   - Style
  *            * 0x0003 (bit 0, 1) - 2 bit underline style, See UNDERLINE_STYLE_* constants.
  *            * 0x0004 (bit 2) - true if bold style
@@ -37,8 +38,7 @@ export const FLAG_MASK_EXTRA_FONT = 4;
 export const FLAG_MASK_WIDTH = 0x18;
 export const FLAG_WIDTH_SHIFT = 3;
 
-const FLAG_MASK_LIGATURE = 0x38;
-const FLAG_RSHIFT_LIGATURE = 3;
+const FLAG_MASK_LIGATURE = 0x20;
 
 export const STYLE_MASK_UNDERLINE = 3;
 export const STYLE_MASK_BOLD = 4;
@@ -284,6 +284,15 @@ export class CharCellGrid {
     return size;
   }
 
+  getRowCodePoints(y: number, destinationArray?: Uint32Array): Uint32Array {
+    const width = this.width;
+    const destArray = destinationArray == null ? new Uint32Array(width) : destinationArray;
+    for (let i=0; i<width; i++) {
+      destArray[i] = this.getCodePoint(i, y);
+    }
+    return destArray;
+  }
+
   setBgRGBA(x: number, y: number, rgba: number): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     this._dataView.setUint32(offset + OFFSET_BG, rgba);
@@ -400,6 +409,31 @@ export class CharCellGrid {
       flags = flags & ~FLAG_MASK_EXTRA_FONT;
     }
     this._dataView.setUint16(offset + OFFSET_FLAGS, flags);
+  }
+
+  setLigature(x: number, y: number, ligatureLength: number): void {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    const flags = this._dataView.getUint16(offset + OFFSET_FLAGS);
+    if (ligatureLength <= 1) {
+      if (flags & FLAG_MASK_LIGATURE) {
+        // Clear ligature flag and set width to 1 (normal)
+        this._dataView.setUint16(offset + OFFSET_FLAGS, flags & ~(FLAG_MASK_LIGATURE|FLAG_MASK_WIDTH));
+      }
+    } else {
+      const widthBits = (ligatureLength-1) << FLAG_WIDTH_SHIFT;
+      const newFlags = (flags & ~FLAG_MASK_WIDTH) | FLAG_MASK_LIGATURE | widthBits;
+      this._dataView.setUint16(offset + OFFSET_FLAGS, newFlags);
+    }
+  }
+
+  getLigature(x: number, y: number): number {
+    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+    const flags = this._dataView.getUint16(offset + OFFSET_FLAGS);
+    if ((flags & FLAG_MASK_LIGATURE) !== 0) {
+      return this.getCharExtraWidth(x, y) + 1;
+    } else {
+      return 0;
+    }
   }
 
   shiftCellsRight(x: number, y: number, shiftCount: number): void {

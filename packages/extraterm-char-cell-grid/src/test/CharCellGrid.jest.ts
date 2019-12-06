@@ -492,6 +492,25 @@ test("character width", () => {
   expect(grid.getCharExtraWidth(0, 0)).toBe(0);
 });
 
+test("ligature length", () => {
+  const grid = new CharCellGrid(20, 5);
+  grid.setString(0, 0, "Foo --> Bar");
+  expect(grid.getLigature(0, 0)).toBe(0);
+  expect(grid.getLigature(4, 0)).toBe(0);
+  grid.setLigature(4, 0, 3);
+  expect(grid.getLigature(0, 0)).toBe(0);
+  expect(grid.getLigature(4, 0)).toBe(3);
+});
+
+test("ligature length reset", () => {
+  const grid = new CharCellGrid(20, 5);
+  grid.setString(0, 0, "Foo --> Bar");
+  grid.setLigature(4, 0, 3);
+  expect(grid.getLigature(4, 0)).toBe(3);
+  grid.setLigature(4, 0, 0);
+  expect(grid.getLigature(4, 0)).toBe(0);
+});
+
 function printHorizontalBorder(width: number): string {
   const chars = [];
   for (let x=0; x<width; x++) {
