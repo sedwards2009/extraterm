@@ -1,0 +1,24 @@
+{
+  "name": "extraterm-array-key-trie",
+  "version": "1.0.0",
+  "description": "Trie which takes arrays as keys",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/ArrayKeyTrie.js",
+  "types": "dist/ArrayKeyTrie.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "devDependencies": {
+    "@types/jest": "23.3.13",
+    "jest": "23.6.0",
+    "ts-jest": "23.10.5",
+    "typescript": "3.5.3"
+  },
+  "scripts": {
+    "run": "false",
+    "build": "tsc",
+    "test": "yarn run build && jest"
+  }
+}
