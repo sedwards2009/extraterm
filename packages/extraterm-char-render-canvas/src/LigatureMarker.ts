@@ -3,51 +3,27 @@
  */
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { stringToCodePointArray } from "extraterm-unicode-utilities";
+import { ArrayKeyTrie } from "extraterm-array-key-trie";
 
-
-interface SearchTreeNode {
-  isTerminal: boolean;
-  branch: Map<number, SearchTreeNode | null>;
-}
 
 /**
  * Class for detecting and marking ligatures in CharCellGrid objects.
  */
 export class LigatureMarker {
 
-  private _searchTreeRoot: SearchTreeNode;
+  private _searchTreeRoot: ArrayKeyTrie<number, number>;
 
   constructor(ligatures: string[]) {
     this._searchTreeRoot = this._buildLigatureTree(ligatures);
   }
 
-  private _buildLigatureTree(ligatures: string[]): SearchTreeNode {
-    const rootNode: SearchTreeNode = {
-      branch: new Map<number, SearchTreeNode>(),
-      isTerminal: false
-    };
+  private _buildLigatureTree(ligatures: string[]): ArrayKeyTrie<number, number> {
+    const rootNode = new ArrayKeyTrie<number, number>();
     for (const str of ligatures) {
-      this._insertIntoTree(0, stringToCodePointArray(str), rootNode);
+      const key = stringToCodePointArray(str);
+      rootNode.insert(key, key.length);
     }
     return rootNode;
-  }
-
-  private _insertIntoTree(index: number, codePoints: Uint32Array, searchTreeNode: SearchTreeNode): void {
-    if (index === codePoints.length) {
-      searchTreeNode.isTerminal = true;
-      return;
-    }
-
-    const codePoint = codePoints[index];
-    if ( ! searchTreeNode.branch.has(codePoint)) {
-      const newNode: SearchTreeNode = {
-        branch: new Map<number, SearchTreeNode>(),
-        isTerminal: false
-      };
-      searchTreeNode.branch.set(codePoint, newNode);
-    }
-
-    this._insertIntoTree(index+1, codePoints, searchTreeNode.branch.get(codePoint));
   }
 
   /**
@@ -58,23 +34,12 @@ export class LigatureMarker {
    */
   getLigatureLength(codePoints: string | Uint32Array, index=0): number {
     const uint32CodePoints = typeof codePoints === "string" ? stringToCodePointArray(codePoints) : codePoints;
-    return this._getLigatureLength(index, uint32CodePoints, this._searchTreeRoot, 0);
-  }
 
-  private _getLigatureLength(index: number, codePoints: Uint32Array, searchTreeNode: SearchTreeNode, accu: number): number {
-    if (index >= codePoints.length) {
+    const result = this._searchTreeRoot.getPrefix(uint32CodePoints, index);
+    if (result.value == null) {
       return 0;
     }
-    const codePoint = codePoints[index];
-    const node = searchTreeNode.branch.get(codePoint);
-    if (node == null) {
-      return 0;
-    }
-    if (node.isTerminal) {
-      return accu+1;
-    }
-
-    return this._getLigatureLength(index+1, codePoints, node, accu+1);
+    return result.value;
   }
 
   /**
