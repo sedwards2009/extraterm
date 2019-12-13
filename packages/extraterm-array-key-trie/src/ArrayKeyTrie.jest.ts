@@ -29,3 +29,10 @@ describe.each([...TEST_ITEMS, [[575], null]])("Insert/get cases", (key: number[]
     done();
   });
 });
+
+test(`prefix length 3`, done => {
+  const data = testData();
+  expect(data.getPrefix([1, 4, 5]).value).toBe(null);
+  expect(data.getPrefix([1, 4, 5]).length).toBe(3);
+  done();
+});

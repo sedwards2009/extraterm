@@ -4,11 +4,16 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+interface Indexable<T> {
+  length: number;
+  [index: number]: T;
+}
+
 class TrieNode<K, V> {
   private children = new Map<K, TrieNode<K, V> | null>();
   private value: V = null;
 
-  insert(index: number, key: ReadonlyArray<K>, value: V): void {
+  insert(index: number, key: Indexable<K>, value: V): void {
     if (index >= key.length) {
       this.value = value;
       return;
@@ -26,7 +31,7 @@ class TrieNode<K, V> {
     childNode.insert(index+1, key, value);
   }
 
-  get(index: number, key: ReadonlyArray<K>): V | null {
+  get(index: number, key: Indexable<K>): V | null {
     if (index >= key.length) {
       return this.value;
     }
@@ -39,7 +44,22 @@ class TrieNode<K, V> {
 
     return childNode.get(index+1, key);
   }
+
+  getPrefix(index: number, key: Indexable<K>): { value: V | null, length: number } {
+    if (index >= key.length) {
+      return { value: this.value, length: index };
+    }
+
+    const subkey = key[index];
+    const childNode = this.children.get(subkey);
+    if (childNode == null) {
+      return { value: this.value, length: index };
+    }
+
+    return childNode.getPrefix(index+1, key);
+  }
 }
+
 
 /**
  * Trie data structure for mapping variable length arrays to data.
@@ -54,7 +74,7 @@ export class ArrayKeyTrie<K, V> {
    * @param key Array-like object of ordered keys
    * @param value Value to associate with the key
    */
-  insert(key: ReadonlyArray<K>, value: V): void {
+  insert(key: Indexable<K>, value: V): void {
     if (key.length === 0) {
       return;
     }
@@ -67,10 +87,23 @@ export class ArrayKeyTrie<K, V> {
    * @param key the key to look up with.
    * @return The corresponding value for the key or null if one was not found.
    */
-  get(key: ReadonlyArray<K>): V | null {
+  get(key: Indexable<K>): V | null {
     if (key.length === 0) {
       return null;
     }
     return this._root.get(0, key);
+  }
+
+  /**
+   * Match as much as possible using the given key
+   * 
+   * @param key the key to look up with.
+   * @param index the index into the key to start matching at.
+   * @return the value found and how much of the key was matched.
+   */
+  getPrefix(key: Indexable<K>, index=0): { value: V | null, length: number } {
+    const result = this._root.getPrefix(index, key);
+    result.length -= index;
+    return result;
   }
 }
