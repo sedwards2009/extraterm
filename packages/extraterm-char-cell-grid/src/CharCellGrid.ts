@@ -37,8 +37,7 @@ export const FLAG_MASK_BG_CLUT = 2;
 export const FLAG_MASK_EXTRA_FONT = 4;
 export const FLAG_MASK_WIDTH = 0x18;
 export const FLAG_WIDTH_SHIFT = 3;
-
-const FLAG_MASK_LIGATURE = 0x20;
+export const FLAG_MASK_LIGATURE = 0x20;
 
 export const STYLE_MASK_UNDERLINE = 3;
 export const STYLE_MASK_BOLD = 4;
