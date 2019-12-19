@@ -626,8 +626,19 @@ export class CharRenderCanvas implements Disposable {
           renderedCharWidthCounter = Math.max(renderedCharWidthCounter,
                                               ((renderedFlags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT)+1);          
           if (mustRender) {
-            const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : codePoint;
-            this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, i * cellWidth, j * cellHeight);
+
+            if (flags & FLAG_MASK_LIGATURE) {
+              const codePoints = [];
+              for (let k=0; k<charWidthCounter; k++) {
+                codePoints[k] = cellGrid.getCodePoint(i+k, j);
+              }
+              this._fontAtlas.drawCodePointsToImageData(imageData, codePoints, style, i * cellWidth,
+                j * cellHeight);
+            } else {
+              const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : codePoint;
+              this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, i * cellWidth,
+                j * cellHeight);
+            }
           }
         }
 
