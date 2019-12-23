@@ -18,6 +18,7 @@ export interface TerminalCanvasRendererConfig {
   devicePixelRatio: number;
   fontFamily: string;
   fontSizePx: number;
+  ligatures: string[];
 }
 
 export class TerminalCanvasRenderer extends Renderer {
@@ -45,7 +46,8 @@ export class TerminalCanvasRenderer extends Renderer {
   protected createTextLayer(contentDiv: HTMLDivElement): TextLayer {
     this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._terminalCanvasRendererConfig.palette,
       this._terminalCanvasRendererConfig.fontFamily, this._terminalCanvasRendererConfig.fontSizePx,
-      this._terminalCanvasRendererConfig.devicePixelRatio, this._terminalCanvasRendererConfig.cursorStyle);
+      this._terminalCanvasRendererConfig.devicePixelRatio, this._terminalCanvasRendererConfig.cursorStyle,
+      this._terminalCanvasRendererConfig.ligatures);
     return this._canvasTextLayer;
   }
   
@@ -62,6 +64,7 @@ export class TerminalCanvasRenderer extends Renderer {
       this._canvasTextLayer.setFontFamily(terminalCanvasRendererConfig.fontFamily);
       this._canvasTextLayer.setFontSizePx(terminalCanvasRendererConfig.fontSizePx);
       this._canvasTextLayer.setDevicePixelRatio(terminalCanvasRendererConfig.devicePixelRatio);
+      this._canvasTextLayer.setLigatures(terminalCanvasRendererConfig.ligatures);
     }
     if (this._canvasFontMetricsMonitor != null) {
       this._canvasFontMetricsMonitor.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);

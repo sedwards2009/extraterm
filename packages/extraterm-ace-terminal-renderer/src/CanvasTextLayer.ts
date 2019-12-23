@@ -3,7 +3,7 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer, LigatureMarker } from "extraterm-char-render-canvas";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
@@ -22,6 +22,7 @@ export class CanvasTextLayer implements TextLayer {
   private _canvasWidthCssPx = 0;
   private _canvasHeightCssPx = 0;
   private _currentCanvasRawWidthPx = 0;
+  private _ligatureMarker: LigatureMarker = null;
 
   private _editSession: TerminalCanvasEditSession = null;
 
@@ -39,7 +40,7 @@ export class CanvasTextLayer implements TextLayer {
   private _clipDiv: HTMLDivElement = null;
 
   constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
-              devicePixelRatio: number, cursorStyle: CursorStyle) {
+              devicePixelRatio: number, cursorStyle: CursorStyle, ligatures: string[]) {
 
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
@@ -48,7 +49,8 @@ export class CanvasTextLayer implements TextLayer {
     this._fontSizePx = fontSizePx; 
     this._devicePixelRatio = devicePixelRatio;
     this._cursorStyle = cursorStyle;
-    
+    this.setLigatures(ligatures);
+
     this._clipDiv = <HTMLDivElement> document.createElement("DIV");
     this._clipDiv.classList.add("ace_layer");
     this._clipDiv.classList.add("ace_text_layer");
@@ -110,6 +112,13 @@ export class CanvasTextLayer implements TextLayer {
     this._deleteCanvasElement();
   }
 
+  setLigatures(ligatures: string[]): void {
+    if (ligatures == null || ligatures.length === 0) {
+      this._ligatureMarker = null;
+    }
+    this._ligatureMarker = new LigatureMarker(ligatures);
+  }
+
   setCursorStyle(cursorStyle: CursorStyle): void {
     this._cursorStyle = cursorStyle;
     if (this._charRenderCanvas != null) {
@@ -169,7 +178,7 @@ export class CanvasTextLayer implements TextLayer {
     const visibleRows = this._getVisibleRows(config);
     this._setUpRenderCanvas(config, viewPortSize, visibleRows.length);
 
-    this._writeLinesToGrid(this._charRenderCanvas.getCellGrid(), visibleRows);
+    this._writeLinesToGrid(this._charRenderCanvas.getCellGrid(), visibleRows, this._ligatureMarker);
     this._charRenderCanvas.render();
   }
 
@@ -272,7 +281,7 @@ export class CanvasTextLayer implements TextLayer {
     };
   }
 
-  private _writeLinesToGrid(grid: CharCellGrid, rows: number[]): void {
+  private _writeLinesToGrid(grid: CharCellGrid, rows: number[], ligatureMarker: LigatureMarker): void {
     let canvasRow = 0;
     for (const docRow of rows) {
       const terminalLine = this._editSession.getTerminalLine(docRow);
@@ -283,6 +292,10 @@ export class CanvasTextLayer implements TextLayer {
           for (let i = terminalLine.width; i < grid.width; i++) {
             grid.clearCell(i, canvasRow);
           }
+        }
+
+        if (ligatureMarker != null) {
+          ligatureMarker.markLigatures(grid, canvasRow);
         }
       } else {
         // Just clear the row

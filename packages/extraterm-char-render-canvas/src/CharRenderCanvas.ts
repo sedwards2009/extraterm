@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
-import { CharCellGrid, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE } from "extraterm-char-cell-grid";
+import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { ColorPatchCanvas } from "./ColorPatchCanvas";
 import { FontAtlas } from "./FontAtlas";
@@ -599,15 +599,18 @@ export class CharRenderCanvas implements Disposable {
             // Erase the char in the char canvas and make room for
             // the glyph from the extrafont which will be drawn later.
             this._fontAtlas.drawCodePointToImageData(imageData, spaceCodePoint, 0, i * cellWidth, j * cellHeight);
-
           }
         } else {
           const codePoint = cellGrid.getCodePoint(i, j);
+          const ligature = cellGrid.getLigature(i, j);
           const style = cellGrid.getStyle(i, j);
           const renderedCodePoint = renderedCellGrid.getCodePoint(i, j);
+          const renderedLigature = renderedCellGrid.getLigature(i, j);
           const renderedStyle = renderedCellGrid.getStyle(i, j);
 
-          const cellChanged = codePoint !== renderedCodePoint || style !== renderedStyle
+          const cellChanged = (codePoint !== renderedCodePoint ||
+                              style !== renderedStyle ||
+                              ligature !== renderedLigature);
 
           let mustRender = false;
           if (cellChanged) {

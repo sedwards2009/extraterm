@@ -175,6 +175,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         fontFamily: this._terminalVisualConfig.fontFamily,
         fontSizePx: this._terminalVisualConfig.fontSizePx,
         devicePixelRatio: this._terminalVisualConfig.devicePixelRatio,
+        ligatures: this._terminalVisualConfig.ligatures,
       });
       this._aceRenderer.init();
       this._aceRenderer.setShowGutter(false);
@@ -502,6 +503,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         fontFamily: terminalVisualConfig.fontFamily,
         fontSizePx: terminalVisualConfig.fontSizePx,
         devicePixelRatio: terminalVisualConfig.devicePixelRatio,
+        ligatures: terminalVisualConfig.ligatures,
       };
 
       let requestResize = false;

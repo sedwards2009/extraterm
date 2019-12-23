@@ -14,6 +14,7 @@ export interface TerminalVisualConfig {
   devicePixelRatio: number;
   terminalTheme: TerminalTheme;
   transparentBackground: boolean;
+  ligatures: string[];
 }
 
 export interface AcceptsTerminalVisualConfig {

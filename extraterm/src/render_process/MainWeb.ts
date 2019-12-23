@@ -172,6 +172,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme,
     transparentBackground: config.windowBackgroundMode !== "opaque",
+    ligatures: ["-->", "***"],
   };
 }
 
@@ -631,6 +632,7 @@ async function asyncSetupConfiguration(): Promise<void> {
         devicePixelRatio: window.devicePixelRatio,
         terminalTheme: terminalVisualConfig.terminalTheme,
         transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
+        ligatures: ["-->", "***"],
       }
       terminalVisualConfigChanged = true;
     }
