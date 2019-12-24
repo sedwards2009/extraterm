@@ -9,35 +9,38 @@
  *
  * This file is the main entry point for the node process and the whole application.
  */
-import * as SourceMapSupport from 'source-map-support';
+import * as SourceMapSupport from "source-map-support";
 
-import * as child_process from 'child_process';
-import { Command } from 'commander';
-import {app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu} from 'electron';
-import { BulkFileState } from 'extraterm-extension-api';
-import fontInfo = require('fontinfo');
-import * as fs from 'fs';
-import * as _ from 'lodash';
-import * as path from 'path';
-import * as os from 'os';
+import * as child_process from "child_process";
+import { Command } from "commander";
+import { app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu } from "electron";
+import fontInfo = require("fontinfo");
+import * as fs from "fs";
+import * as _ from "lodash";
+import * as path from "path";
+import * as os from "os";
 
-import {BulkFileStorage, BufferSizeEvent, CloseEvent} from './bulk_file_handling/BulkFileStorage';
-import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent, SingleWindowConfiguration, UserStoredConfig } from '../Config';
-import {FileLogWriter, getLogger, addLogWriter} from "extraterm-logging";
-import { PtyManager } from './pty/PtyManager';
-import * as ResourceLoader from '../ResourceLoader';
-import * as ThemeTypes from '../theme/Theme';
-import {ThemeManager, GlobalVariableMap} from '../theme/ThemeManager';
-import * as Messages from '../WindowMessages';
-import { MainExtensionManager } from './extension/MainExtensionManager';
-import { log } from "extraterm-logging";
-import { KeybindingsIOManager } from './KeybindingsIOManager';
+import { BulkFileState } from "extraterm-extension-api";
+import { doLater } from "extraterm-later";
+import { extractLigaturesFromFile } from "extraterm-ligature-extractor";
+import { FileLogWriter, getLogger, addLogWriter, log } from "extraterm-logging";
 
-import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory, getUserKeybindingsDirectory, readAndInitializeConfigs, setupAppData, KEYBINDINGS_OSX, KEYBINDINGS_PC } from './MainConfig';
-import { GlobalKeybindingsManager } from './GlobalKeybindings';
-import { doLater } from 'extraterm-later';
-import { getAvailableFontsSync } from './FontList';
-import { bestOverlap } from './RectangleMatch';
+import {BulkFileStorage, BufferSizeEvent, CloseEvent} from "./bulk_file_handling/BulkFileStorage";
+import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent, SingleWindowConfiguration, UserStoredConfig } from "../Config";
+import { PtyManager } from "./pty/PtyManager";
+import * as ResourceLoader from "../ResourceLoader";
+import * as ThemeTypes from "../theme/Theme";
+import {ThemeManager, GlobalVariableMap} from "../theme/ThemeManager";
+import * as Messages from "../WindowMessages";
+import { MainExtensionManager } from "./extension/MainExtensionManager";
+import { KeybindingsIOManager } from "./KeybindingsIOManager";
+
+import { getAvailableFontsSync } from "./FontList";
+import { GlobalKeybindingsManager } from "./GlobalKeybindings";
+import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory,
+  getUserTerminalThemeDirectory, getUserKeybindingsDirectory, readAndInitializeConfigs, setupAppData,
+  KEYBINDINGS_OSX, KEYBINDINGS_PC } from "./MainConfig";
+import { bestOverlap } from "./RectangleMatch";
 
 const LOG_FINE = false;
 
@@ -70,6 +73,7 @@ let extensionManager: MainExtensionManager = null;
 let packageJson: any = null;
 let keybindingsIOManager: KeybindingsIOManager = null;
 let globalKeybindingsManager: GlobalKeybindingsManager = null;
+let availableFonts: FontInfo[] = null;
 
 let SetWindowCompositionAttribute: any = null;
 let AccentState: any = null;
@@ -112,10 +116,12 @@ function main(): void {
   setupKeybindingsIOManager();
   setupThemeManager();
 
-  const userStoredConfig = readAndInitializeConfigs(themeManager, configDatabase, keybindingsIOManager, getFonts());
+  availableFonts = getFonts();
+  const userStoredConfig = readAndInitializeConfigs(themeManager, configDatabase, keybindingsIOManager,
+    availableFonts);
   titleBarStyle = userStoredConfig.titleBarStyle;
   packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
-  const systemConfig = systemConfiguration(userStoredConfig, null);
+  const systemConfig = systemConfiguration(userStoredConfig, availableFonts);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 
   if ( ! userStoredConfig.isHardwareAccelerated) {
@@ -578,7 +584,7 @@ const _log = getLogger("main");
 /**
  * Extra information about the system configuration and platform.
  */
-function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig): SystemConfig {
+function systemConfiguration(config: GeneralConfig, availableFonts: FontInfo[]): SystemConfig {
   let homeDir = app.getPath('home');
   
   const keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(config.keybindingsName);
@@ -587,7 +593,7 @@ function systemConfiguration(config: GeneralConfig, systemConfig: SystemConfig):
     applicationVersion: packageJson.version,
     keybindingsFile,
     keybindingsInfoList: keybindingsIOManager.getInfoList(),
-    availableFonts: getFonts(),
+    availableFonts: availableFonts,
     titleBarStyle,
     userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
     userSyntaxThemeDirectory: getUserSyntaxThemeDirectory(),
@@ -820,6 +826,10 @@ function handleIpc(event: Electron.Event, arg: any): void {
       handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
       break;
 
+    case Messages.MessageType.FONT_LIGATURES_REQUEST:
+      handleFontLigaturesRequest(event.sender, <Messages.FontLigaturesRequestMessage>msg);
+      break;
+
     default:
       break;
   }
@@ -908,6 +918,21 @@ function handleTerminalThemeRequest(webContents: Electron.WebContents, msg: Mess
   const reply: Messages.TerminalThemeMessage = {
     type: Messages.MessageType.TERMINAL_THEME,
     terminalTheme
+  };
+
+  webContents.send(Messages.CHANNEL_NAME, reply);
+}
+
+async function handleFontLigaturesRequest(webContents: Electron.WebContents,
+    msg: Messages.FontLigaturesRequestMessage): Promise<void> {
+
+  const foundFont = availableFonts.find((fontInfo: FontInfo) => fontInfo.postscriptName === msg.fontFamily);
+  const ligatures = await extractLigaturesFromFile(foundFont.path);
+
+  const reply: Messages.FontLigaturesMessage = {
+    type: Messages.MessageType.FONT_LIGATURES,
+    fontFamily: msg.fontFamily,
+    ligatures
   };
 
   webContents.send(Messages.CHANNEL_NAME, reply);

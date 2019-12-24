@@ -163,6 +163,7 @@ function startUpWebIpc(): void {
 async function asyncLoadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
+  const ligatureMsg = await WebIpc.requestFontLigatures(config.terminalFont);
 
   terminalVisualConfig = {
     cursorStyle: config.cursorStyle,
@@ -172,7 +173,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme,
     transparentBackground: config.windowBackgroundMode !== "opaque",
-    ligatures: ["-->", "***"],
+    ligatures: ligatureMsg.ligatures,
   };
 }
 
@@ -624,6 +625,9 @@ async function asyncSetupConfiguration(): Promise<void> {
         oldGeneralConfig.blinkingCursor !== newGeneralConfig.blinkingCursor ||
         oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode) {
 
+
+      const ligatureMsg = await WebIpc.requestFontLigatures(newGeneralConfig.terminalFont);
+
       terminalVisualConfig = {
         cursorStyle: newGeneralConfig.cursorStyle,
         cursorBlink: newGeneralConfig.blinkingCursor,
@@ -632,7 +636,7 @@ async function asyncSetupConfiguration(): Promise<void> {
         devicePixelRatio: window.devicePixelRatio,
         terminalTheme: terminalVisualConfig.terminalTheme,
         transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
-        ligatures: ["-->", "***"],
+        ligatures: ligatureMsg.ligatures,
       }
       terminalVisualConfigChanged = true;
     }

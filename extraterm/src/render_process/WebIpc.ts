@@ -259,3 +259,11 @@ export function requestTerminalTheme(id: string): Promise<Messages.TerminalTheme
   };
   return <Promise<Messages.TerminalThemeMessage>> request(msg, Messages.MessageType.TERMINAL_THEME);
 }
+
+export function requestFontLigatures(fontFamily: string): Promise<Messages.FontLigaturesMessage> {
+  const msg: Messages.FontLigaturesRequestMessage = {
+    type: Messages.MessageType.FONT_LIGATURES_REQUEST,
+    fontFamily
+  };
+  return <Promise<Messages.FontLigaturesMessage>> request(msg, Messages.MessageType.FONT_LIGATURES);
+}
