@@ -102,7 +102,7 @@ interface CachedGlyph {
 
 
 abstract class FontAtlasPageBase<CG extends CachedGlyph> {
-  // private _log: Logger = null;
+  private _log: Logger = null;
 
   protected _pageCanvas: HTMLCanvasElement = null;
   protected _pageCtx: CanvasRenderingContext2D = null;
