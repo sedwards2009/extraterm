@@ -1,6 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
+import { isEqual } from "lodash";
 
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition, TerminalTheme } from 'extraterm-extension-api';
@@ -514,7 +515,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
         const fontPropertiesChanged = previousConfig.fontFamily !== terminalVisualConfig.fontFamily ||
           previousConfig.fontSizePx !== terminalVisualConfig.fontSizePx ||
-          previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio;
+          previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio ||
+          (! isEqual(previousConfig.ligatures, terminalVisualConfig.ligatures));
 
         if (fontPropertiesChanged ||
             previousConfig.cursorStyle !== terminalVisualConfig.cursorStyle ||

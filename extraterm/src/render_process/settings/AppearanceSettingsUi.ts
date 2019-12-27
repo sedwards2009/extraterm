@@ -62,6 +62,9 @@ const isDarwin = process.platform === "darwin";
     <span class="group"><input id="${ID_TERMINAL_FONT_SIZE}" type="number" class="char-width-4"
         v-model.number="terminalFontSize" min='1' max='1024' debounce="100" /><span>pixels</span></span>
 
+    <label></label>
+    <span><label><input type="checkbox" v-model="terminalDisplayLigatures">Enable ligatures</label></span>
+
     <label for="theme-terminal">Theme:</label>
     <select id="theme-terminal" v-model="themeTerminal" class="char-width-20">
       <option v-for="option in themeTerminalOptions" v-bind:value="option.id">
@@ -230,6 +233,7 @@ export class AppearanceSettingsUi extends Vue {
   cursorStyle: ConfigCursorStyle;
   cursorBlink: boolean;
   terminalFontSize: number;
+  terminalDisplayLigatures: boolean;
   themes: ThemeTypes.ThemeInfo[];
 
   themeTerminal: string;
@@ -267,6 +271,7 @@ export class AppearanceSettingsUi extends Vue {
     this.cursorStyle = "block";
     this.cursorBlink = false;
     this.terminalFontSize = 13;
+    this.terminalDisplayLigatures = true;
     this.themes = [];
     this.themeTerminal = "";
     this.themeSyntax = "";

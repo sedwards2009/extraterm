@@ -22,6 +22,7 @@ export interface GeneralConfig {
   themeGUI?: string;
   terminalFont?: string;
   terminalFontSize?: number;  // px
+  terminalDisplayLigatures?: boolean;
   uiScalePercent?: number;
   terminalMarginStyle?: TerminalMarginStyle;
 

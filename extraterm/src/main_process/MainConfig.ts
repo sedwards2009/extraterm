@@ -266,6 +266,8 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
   sanitizeField(userStoredConfig, "terminalFontSize", 13);
   userStoredConfig.terminalFontSize = Math.max(Math.min(1024, userStoredConfig.terminalFontSize), 4);
 
+  sanitizeField(userStoredConfig, "terminalDisplayLigatures", true);
+
   sanitizeField(userStoredConfig, "themeTerminal", FALLBACK_TERMINAL_THEME);
   if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), "terminal")) {
     userStoredConfig.themeTerminal = FALLBACK_TERMINAL_THEME;

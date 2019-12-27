@@ -73,6 +73,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
       ui.cursorBlink = generalConfig.blinkingCursor;
       ui.terminalFont = generalConfig.terminalFont;
       ui.terminalFontSize = generalConfig.terminalFontSize;
+      ui.terminalDisplayLigatures = generalConfig.terminalDisplayLigatures;
       ui.themeGUI = generalConfig.themeGUI;
       ui.themeSyntax = generalConfig.themeSyntax;
       ui.themeTerminal = generalConfig.themeTerminal;
@@ -97,6 +98,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.blinkingCursor = ui.cursorBlink;
     newConfig.terminalFont = ui.terminalFont;
     newConfig.terminalFontSize = ui.terminalFontSize;
+    newConfig.terminalDisplayLigatures = ui.terminalDisplayLigatures;
     newConfig.themeGUI = ui.themeGUI;
     newConfig.themeSyntax = ui.themeSyntax;
     newConfig.themeTerminal = ui.themeTerminal;

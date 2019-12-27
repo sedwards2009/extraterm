@@ -163,7 +163,12 @@ function startUpWebIpc(): void {
 async function asyncLoadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
-  const ligatureMsg = await WebIpc.requestFontLigatures(config.terminalFont);
+
+  let ligatures: string[] = [];
+  if (config.terminalDisplayLigatures) {
+    const ligatureMsg = await WebIpc.requestFontLigatures(config.terminalFont);
+    ligatures = ligatureMsg.ligatures;
+  }
 
   terminalVisualConfig = {
     cursorStyle: config.cursorStyle,
@@ -173,7 +178,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme,
     transparentBackground: config.windowBackgroundMode !== "opaque",
-    ligatures: ligatureMsg.ligatures,
+    ligatures,
   };
 }
 
@@ -623,10 +628,14 @@ async function asyncSetupConfiguration(): Promise<void> {
         oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize ||
         oldGeneralConfig.cursorStyle !== newGeneralConfig.cursorStyle ||
         oldGeneralConfig.blinkingCursor !== newGeneralConfig.blinkingCursor ||
-        oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode) {
+        oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode ||
+        oldGeneralConfig.terminalDisplayLigatures !== newGeneralConfig.terminalDisplayLigatures) {
 
-
-      const ligatureMsg = await WebIpc.requestFontLigatures(newGeneralConfig.terminalFont);
+      let ligatures: string[] = [];
+      if (newGeneralConfig.terminalDisplayLigatures) {
+        const ligatureMsg = await WebIpc.requestFontLigatures(newGeneralConfig.terminalFont);
+        ligatures = ligatureMsg.ligatures;
+      }
 
       terminalVisualConfig = {
         cursorStyle: newGeneralConfig.cursorStyle,
@@ -636,7 +645,7 @@ async function asyncSetupConfiguration(): Promise<void> {
         devicePixelRatio: window.devicePixelRatio,
         terminalTheme: terminalVisualConfig.terminalTheme,
         transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
-        ligatures: ligatureMsg.ligatures,
+        ligatures,
       }
       terminalVisualConfigChanged = true;
     }
