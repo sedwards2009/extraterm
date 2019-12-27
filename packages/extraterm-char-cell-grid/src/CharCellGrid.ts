@@ -230,6 +230,22 @@ export class CharCellGrid {
     this.setCell(x, y, SpaceCell);
   }
 
+  formatCellDebug(x: number, y: number): string {
+    return (`{ char: '${String.fromCodePoint(this.getCodePoint(x, y))}', ` +
+      `codePoint: ${this.getCodePoint(x, y)}, ` +
+      `extraWidth: ${this.getCharExtraWidth(x, y)}, ` +
+      `ligature: ${this.getLigature(x, y)}, ` + 
+      `}`);
+  }
+
+  formatRowDebug(y: number): string {
+    const result = [];
+    for (let i=0; i<this.width; i++) {
+      result.push("" + i + ": " + this.formatCellDebug(i, y));
+    }
+    return result.join("\n");
+  }
+
   setCodePoint(x: number, y: number, codePoint: number): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
 
