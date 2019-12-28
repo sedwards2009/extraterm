@@ -78,6 +78,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _commandLine: string = null;
   private _returnCode: string = null;
 
+  private _earlyTerminalLines: TermApi.Line[] = null;
   private _aceEditor: TerminalCanvasAceEditor = null;
   private _aceEditSession: TerminalCanvasEditSession = null;
   private _aceRenderer: TerminalCanvasRenderer = null;
@@ -184,6 +185,10 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._aceRenderer.setDisplayIndentGuides(false);
 
       this._aceEditor = new TerminalCanvasAceEditor(this._aceRenderer, this._aceEditSession);
+      if (this._earlyTerminalLines != null) {
+        this._aceEditor.setTerminalLines(0, this._earlyTerminalLines);
+        this._earlyTerminalLines = null;
+      }
       this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setAutoscroll(false);
@@ -430,10 +435,16 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   focus(): void {
+    if (this._aceEditor == null) {
+      return;
+    }
     this._aceEditor.focus();
   }
 
   hasFocus(): boolean {
+    if (this._aceEditor == null) {
+      return false;
+    }
     return this._aceEditor.isFocused();
   }
 
@@ -931,7 +942,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   setTerminalLines(lines: TermApi.Line[]): void {
-    this._aceEditor.setTerminalLines(0, lines);
+    if (this._aceEditor == null) {
+      this._earlyTerminalLines = lines;
+    } else {
+      this._aceEditor.setTerminalLines(0, lines);
+    }
     this._isEmpty = false;
     emitResizeEvent(this);
   }
