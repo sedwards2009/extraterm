@@ -31,7 +31,7 @@ const USER_THEMES_DIR = "themes"
 const USER_SYNTAX_THEMES_DIR = "syntax";
 const USER_TERMINAL_THEMES_DIR = "terminal";
 
-const DEFAULT_TERMINALFONT = "DejaVuSansMono";
+const DEFAULT_TERMINALFONT = "LigaDejaVuSansMono";
 
 export const KEYBINDINGS_OSX = "Mac OS X bindings";
 export const KEYBINDINGS_PC = "PC style bindings";
