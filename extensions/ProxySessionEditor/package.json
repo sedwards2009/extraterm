@@ -4,7 +4,7 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "src/ProxySessionEditorExtension.js",
+  "main": "dist/ProxySessionEditorExtension.js",
   "scripts": {
     "build": "tsc"
   },

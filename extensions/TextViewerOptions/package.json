@@ -8,7 +8,7 @@
     "typescript": "3.5.3",
     "extraterm-extension-api": "0.1.0"
   },
-  "main": "src/TextViewerOptionsExtension.js",
+  "main": "dist/TextViewerOptionsExtension.js",
   "scripts": {
     "build": "tsc"
   },

@@ -1,22 +1,10 @@
 {
+    "extends": "../../tsconfig",
     "compilerOptions": {
-        "target": "es6",
-        "module": "commonjs",
-        "declaration": false,
-        "noImplicitAny": false,
-        "noImplicitThis": true,
-        "noImplicitReturns": true,
-        "removeComments": false,
-        "sourceMap": true,
-        "noLib": false,
         "outDir": "dist",
-        "jsx": "react",
-        "experimentalDecorators": true,
-        "baseUrl": "."
+        "rootDir": "src"
     },
-    "filesGlob": [
-        "./src/*.ts",
-        "./src/test/*.ts"
-    ],
-    "exclude": []
+    "include": [
+        "./src/**/*.ts"
+    ]
 }

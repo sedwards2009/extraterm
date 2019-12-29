@@ -4,7 +4,7 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "src/AudioViewerExtension.js",
+  "main": "dist/AudioViewerExtension.js",
   "scripts": {
     "build": "tsc"
   },

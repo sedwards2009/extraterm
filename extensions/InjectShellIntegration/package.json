@@ -4,7 +4,7 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "src/InjectShellIntegrationExtension.js",
+  "main": "dist/InjectShellIntegrationExtension.js",
   "scripts": {
     "build": "tsc",
     "test": "yarn run build && jest"
