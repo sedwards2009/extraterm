@@ -4,8 +4,8 @@
   "description": "Parse Shell String Arguments",
   "author": "Nick Shanny",
   "license": "MIT",
-  "main": "main.js",
-  "types": "main.d.ts",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"

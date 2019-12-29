@@ -4,8 +4,8 @@
   "description": "TypeScript decorators for Web Components from the Extraterm project",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "Decorators.js",
-  "types": "Decorators.d.ts",
+  "main": "dist/Decorators.js",
+  "types": "dist/Decorators.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
@@ -20,7 +20,7 @@
   "scripts": {
     "run": "false",
     "build-all": "yarn run build",
-    "build": "tsc && webpack test/TestCode.js test/bundle.js",
+    "build": "tsc && webpack dist/test/TestCode.js dist/test/bundle.js",
     "server": "http-server ."
   },
   "dependencies": {
