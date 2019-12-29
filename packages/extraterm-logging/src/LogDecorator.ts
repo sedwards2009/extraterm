@@ -17,18 +17,19 @@ import {Logger, objectName} from './Logger';
 export function log(target: Object, key: string, descriptor: any) {
   const originalMethod = descriptor.value; 
 
-  descriptor.value =  function (this: any, ...args: any[]) {
-      var formatArgs = args.map(repr).join(", ");
+  descriptor.value = function (this: any, ...args: any[]) {
+      const formatArgs = args.map(repr).join(", ");
+      let result: any;
 
       if ("_log" in this) {
         const logger = <Logger>this._log;
         logger.debug(`\u2b9e Entering ${key}(${formatArgs})`);
-        var result = originalMethod.apply(this, args);
+        result = originalMethod.apply(this, args);
         logger.debug(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
          
       } else {
         console.log(`\u2b9e Entering ${key}(${formatArgs})`);
-        var result = originalMethod.apply(this, args);
+        result = originalMethod.apply(this, args);
         console.log(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
       }
       return result;
