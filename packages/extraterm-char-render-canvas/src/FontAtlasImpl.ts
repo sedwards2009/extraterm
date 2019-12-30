@@ -166,7 +166,7 @@ abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     }
 
     let widthPx = this._metrics.widthPx;
-    let widthInCells = 0;
+    let widthInCells = 1;
     if (isBoxCharacter(codePoint)) {
       drawBoxCharacter(this._pageCtx, codePoint, xPixels, yPixels, this._metrics.widthPx, this._metrics.heightPx);
     } else {
