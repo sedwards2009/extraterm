@@ -28,7 +28,7 @@
   },
   "resolutions": {
     "@types/node": "12.6.2",
-    "typescript": "3.5.3",
+    "typescript": "3.7.4",
     "node-abi": "2.9.0"
   },
   "private": true,

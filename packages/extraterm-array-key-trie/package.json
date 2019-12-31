@@ -14,7 +14,7 @@
     "@types/jest": "23.3.13",
     "jest": "23.6.0",
     "ts-jest": "23.10.5",
-    "typescript": "3.5.3"
+    "typescript": "3.7.4"
   },
   "scripts": {
     "run": "false",

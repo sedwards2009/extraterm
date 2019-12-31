@@ -5,7 +5,7 @@
   "license": "MIT",
   "version": "1.0.0",
   "devDependencies": {
-    "typescript": "3.5.3",
+    "typescript": "3.7.4",
     "extraterm-extension-api": "0.1.0"
   },
   "main": "dist/TextViewerOptionsExtension.js",

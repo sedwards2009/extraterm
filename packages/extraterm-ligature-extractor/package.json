@@ -11,7 +11,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
-    "typescript": "3.5.3"
+    "typescript": "3.7.4"
   },
   "scripts": {
     "build-all": "yarn run build",
