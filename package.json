@@ -4,13 +4,12 @@
   "description": "A terminal",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "extraterm/main.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "electron extraterm/src/main_process/Main.js --dev-tools",
+    "run": "electron extraterm/dist/main_process/Main.js --dev-tools",
     "run-release": "electron extraterm/src/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 5.0.6",
