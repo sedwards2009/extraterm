@@ -16,8 +16,9 @@
     "shx": "^0.3.2"
   },
   "scripts": {
-    "run": "false",
+    "clean": "shx rm -rf dist",
     "build": "shx mkdir -p dist && jison src/grammar.jison -o dist/parser.js && shx cp -r src/* dist/",
+    "run": "false",
     "test": "yarn run build && jest dist/test/parser.test.js"
   }
 }

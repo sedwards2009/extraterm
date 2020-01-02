@@ -11,11 +11,13 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
+    "shx": "^0.3.2",
     "typescript": "3.7.4"
   },
   "scripts": {
-    "run": "false",
     "build-all": "yarn run build",
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "shx rm -rf dist",
+    "run": "false"
   }
 }

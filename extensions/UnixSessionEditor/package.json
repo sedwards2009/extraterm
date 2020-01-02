@@ -6,7 +6,8 @@
   "version": "1.0.0",
   "main": "dist/UnixSessionEditorExtension.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
   },
   "dependencies": {
     "extraterm-trim-between-tags": "1.0.0",
@@ -19,6 +20,7 @@
     "@types/fs-extra": "^5.0.2",
     "@types/node": "^12.6.2",
     "extraterm-extension-api": "0.1.0",
+    "shx": "^0.3.2",
     "typescript": "3.7.4"
   },
   "excludePlatform": [

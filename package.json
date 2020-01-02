@@ -12,6 +12,7 @@
     "run": "electron extraterm/dist/main_process/Main.js --dev-tools",
     "run-release": "electron extraterm/src/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
+    "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 5.0.6",
     "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 5.0.6",
     "package": "node build_scripts/build_packages.js",

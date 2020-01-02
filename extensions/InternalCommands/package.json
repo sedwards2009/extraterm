@@ -216,7 +216,7 @@
         "order": 1400,
         "icon": "extraicon-#xea08",
         "when": ""
-      },      
+      },
       {
         "command": "extraterm:window.verticalSplit",
         "title": "Vertical Split",

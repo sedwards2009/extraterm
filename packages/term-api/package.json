@@ -14,9 +14,11 @@
     "extraterm-char-cell-grid": "1.0.0"
   },
   "devDependencies": {
+    "shx": "^0.3.2",
     "typescript": "3.7.4"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
   }
 }

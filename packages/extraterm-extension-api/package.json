@@ -11,9 +11,14 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
   },
   "devDependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz"
+    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz",
+    "shx": "^0.3.2"
+  },
+  "dependencies": {
+    "@types/node": "^13.1.2"
   }
 }
