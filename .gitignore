@@ -1,11 +1,4 @@
 *~
-*.map
-packages/**/*.js
-!packages/**/webpack*.js
-extensions/**/*.js
-extraterm/src/**/*.js
-!jest.config.js
-
 dist/
 
 .vscode/
@@ -15,24 +8,4 @@ __pycache__/
 build_tmp/
 docs/_site
 node_modules/
-
-!extraterm/src/main_process/pty/PtyConnectorFactory.js
-!extraterm/src/dirname.js
-!extraterm/resources/extra_icons/build.js
-!packages/extraterm-boolean-expression-parser/src/*.js
-!packages/extraterm-boolean-expression-parser/src/test/*.js
-
-packages/extraterm-extension-api/main.d.ts
-packages/extraterm-web-component-decorators/Decorators.d.ts
-packages/extraterm-event-emitter/main.d.ts
-packages/extraterm-readonly-toolbox/main.d.ts
-packages/extraterm-uuid/main.d.ts
-packages/extraterm-shell-string-parser/main.d.ts
-packages/extraterm-shell-string-parser/test/MainTest.d.ts
-
-
-packages/extraterm-readonly-toolbox/test/MainTest.d.ts
-packages/extraterm-web-component-decorators/test/DecoratorsTest.d.ts
-packages/extraterm-web-component-decorators/test/TestCode.d.ts
-packages/extraterm-trim-between-tags/main.d.ts
-packages/extraterm-resize-notifier/main.d.ts
+docs/.sass-cache
