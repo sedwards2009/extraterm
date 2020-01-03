@@ -4,18 +4,20 @@
   "description": "Simple wrapper around the browser ResizeObserver",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "main.js",
-  "types": "main.d.ts",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
-    "typescript": "3.5.3"
+    "shx": "^0.3.2",
+    "typescript": "3.7.4"
   },
   "scripts": {
-    "run": "false",
+    "build": "tsc",
     "build-all": "yarn run build",
-    "build": "tsc"
+    "clean": "shx rm -rf dist",
+    "run": "false"
   }
 }

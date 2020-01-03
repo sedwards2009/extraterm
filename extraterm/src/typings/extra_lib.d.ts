@@ -92,10 +92,6 @@ interface KeyboardEventInit {
   which?: number;
 }
 
-interface KeyboardEvent {
-  isComposing: boolean;
-}
-
 interface Event {
   path: Node[]; // <- obsolete. Removed from later the Shadow DOM spec.
   encapsulated: boolean;

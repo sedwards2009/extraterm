@@ -4,19 +4,21 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "src/ProxySessionBackendExtension.js",
+  "main": "dist/ProxySessionBackendExtension.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
   },
   "dependencies": {
-    "lodash": "^4.17.13",
-    "extraterm-event-emitter": "1.0.0"
+    "extraterm-event-emitter": "1.0.0",
+    "lodash": "^4.17.13"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.121",
     "@types/node": "^12.6.2",
     "extraterm-extension-api": "0.1.0",
-    "typescript": "3.5.3"
+    "shx": "^0.3.2",
+    "typescript": "3.7.4"
   },
   "includePlatform": [
     {

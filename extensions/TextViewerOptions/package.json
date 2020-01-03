@@ -5,12 +5,14 @@
   "license": "MIT",
   "version": "1.0.0",
   "devDependencies": {
-    "typescript": "3.5.3",
-    "extraterm-extension-api": "0.1.0"
+    "extraterm-extension-api": "0.1.0",
+    "shx": "^0.3.2",
+    "typescript": "3.7.4"
   },
-  "main": "src/TextViewerOptionsExtension.js",
+  "main": "dist/TextViewerOptionsExtension.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
   },
   "contributes": {
     "commands": [

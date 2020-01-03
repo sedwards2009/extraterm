@@ -5,11 +5,12 @@
   "license": "MIT",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc ; shx cp src/render_process/*.html dist/render_process/ ; shx cp src/*.js dist/",
     "build-icons": "node resources/extra_icons/build.js",
     "build-test-css": "node build_scripts/build_theme_css_test_page.js",
+    "clean": "shx rm -rf dist",
     "test": "jest",
-    "testsplitlayout": "yarn run build && nodeunit src/render_process/SplitLayoutTest.js",
+    "testsplitlayout": "yarn run build && nodeunit dist/render_process/SplitLayoutTest.js",
     "typedoc": "node build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
     "serve-test": "node src/test/httpserver.js"
   },
@@ -58,9 +59,9 @@
     "@types/node-sass": "3.10.32",
     "@types/nodeunit": "0.0.30",
     "@types/qs": "6.2.30",
-    "@types/xregexp": "3.0.29",
     "@types/source-map-support": "0.2.28",
     "@types/utf8": "2.1.5",
+    "@types/xregexp": "3.0.29",
     "cajon": "0.2.10",
     "electron": "5.0.11",
     "extraterm-extension-api": "0.1.0",
@@ -70,9 +71,10 @@
     "performance-now": "2.1.0",
     "serve-static": "1.10.0",
     "shelljs": "0.8.3",
+    "shx": "^0.3.2",
     "ts-jest": "23.10.5",
     "typedoc": "0.14.2",
-    "typescript": "3.5.3",
+    "typescript": "3.7.4",
     "webfont": "^4.0.0"
   },
   "jshintConfig": {

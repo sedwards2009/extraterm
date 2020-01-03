@@ -7,6 +7,7 @@
   "main": "dist/ITermColorsTerminalThemeProviderExtension.js",
   "scripts": {
     "build": "tsc",
+    "clean": "shx rm -rf dist",
     "test": "yarn run build && jest"
   },
   "dependencies": {
@@ -17,8 +18,9 @@
     "@types/jest": "23.3.13",
     "extraterm-extension-api": "0.1.0",
     "jest": "23.6.0",
+    "shx": "^0.3.2",
     "ts-jest": "23.10.5",
-    "typescript": "3.5.3"
+    "typescript": "3.7.4"
   },
   "contributes": {
     "terminalThemeProviders": [

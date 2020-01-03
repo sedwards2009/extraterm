@@ -5,7 +5,7 @@
  */
 import 'jest';
 
-import { freezeDeep } from '../main';
+import { freezeDeep } from './main';
 
 test("", () => {
   const testObject = {

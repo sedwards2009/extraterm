@@ -4,19 +4,21 @@
   "description": "Parse a JS style boolean expression",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "src/parser.js",
-  "types": "src/parser.d.ts",
+  "main": "dist/parser.js",
+  "types": "dist/parser.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
     "jest": "23.6.0",
-    "jison": "^0.4.18"
+    "jison": "^0.4.18",
+    "shx": "^0.3.2"
   },
   "scripts": {
+    "clean": "shx rm -rf dist",
+    "build": "shx mkdir -p dist && jison src/grammar.jison -o dist/parser.js && shx cp -r src/* dist/",
     "run": "false",
-    "build": "jison src/grammar.jison -o src/parser.js",
-    "test": "yarn run build && jest"
+    "test": "yarn run build && jest dist/test/parser.test.js"
   }
 }
