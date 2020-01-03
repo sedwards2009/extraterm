@@ -6,7 +6,7 @@
   "version": "1.0.0",
   "main": "dist/ProxySessionBackendExtension.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && shx cp -r src/python dist/python",
     "clean": "shx rm -rf dist"
   },
   "dependencies": {
