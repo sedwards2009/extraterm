@@ -139,7 +139,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       this._scrollArea.style.top = "-" + offset + "px";
     });
     this._virtualScrollArea.setScrollbar(this._scrollBar);
-    this._virtualScrollArea.setSetTopFunction((vsa, top) => this._setTopFunction(vsa,top));
+    this._virtualScrollArea.setSetTopFunction((vsa, top) => this._setTopFunction(vsa, top));
     this._virtualScrollArea.setMarkVisibleFunction(
       (virtualScrollable: VirtualScrollable, visible:boolean) => this._markVisible(virtualScrollable, visible));
 
