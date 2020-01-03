@@ -5,7 +5,7 @@
   "license": "MIT",
   "version": "1.0.0",
   "scripts": {
-    "build": "tsc ; shx cp src/render_process/*.html dist/render_process/ ; shx cp src/*.js dist/",
+    "build": "tsc && shx cp src/render_process/*.html dist/render_process/ && shx cp src/*.js dist/",
     "build-icons": "node resources/extra_icons/build.js",
     "build-test-css": "node build_scripts/build_theme_css_test_page.js",
     "clean": "shx rm -rf dist",
