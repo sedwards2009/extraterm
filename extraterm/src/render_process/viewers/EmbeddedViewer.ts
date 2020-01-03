@@ -291,7 +291,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   // See VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     const {top, bottom} = this._borderSize();
-    const result = Math.floor(top + bottom);
+    const result = top + bottom;
       
     if (DEBUG_SIZE) {
       this._log.debug("getReserveViewportHeight() => ", result);
@@ -323,7 +323,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const headerHeightOrNull = this._getHeaderHeight();
-    const headerHeight = headerHeightOrNull == null ? 0 : Math.floor(headerHeightOrNull);
+    const headerHeight = headerHeightOrNull == null ? 0 : headerHeightOrNull;
 
     headerDiv.style.top = Math.min(Math.max(setterState.physicalTop, 0), setterState.height - headerHeight) + 'px';
 
@@ -740,15 +740,24 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _getHeaderHeight(): number | null {
+    const headerRectHeight = this._getHeaderHeightFromBoundingClientRect();
+    if (headerRectHeight === null) {
+      return null;
+    }
+
+    const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
+    const headerStyle = window.getComputedStyle(headerDiv);
+    const marginBottom = Math.min(0, DomUtils.pixelLengthToFloat(headerStyle.marginBottom));
+    return headerRectHeight + marginBottom;
+  }
+
+  private _getHeaderHeightFromBoundingClientRect(): number | null {
     const headerDiv = <HTMLDivElement>this._getById(ID_HEADER);
     const headerRect = headerDiv.getBoundingClientRect();
     if (headerRect.width === 0) {
       return null;
     }
-
-    const headerStyle = window.getComputedStyle(headerDiv);
-    const marginBottom = Math.min(0, DomUtils.pixelLengthToFloat(headerStyle.marginBottom));
-    return headerRect.height + marginBottom;
+    return headerRect.height;
   }
 
   private _getViewerElement(): ViewerElement {

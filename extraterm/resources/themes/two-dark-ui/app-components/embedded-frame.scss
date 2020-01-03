@@ -88,9 +88,6 @@ $TEAR_BORDER_HEIGHT: 2px;
 
   & > #ID_HEADER {
     border-color: $neutral-bg-color;
-    border-radius: $corner-radius;
-    border-bottom-width: $border-width;
-    box-shadow: none;
   }
 
   & > #ID_OUTPUT_CONTAINER {
