@@ -20,6 +20,7 @@ import { VUE_TEXT_ACE_VIEWER_ELEMENT_TAG } from './VueTextAceViewerElement';
 import { VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG } from './VueTerminalAceViewerElement';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { EXTENSION_SETTINGS_TAG } from './extensions/ExtensionSettings';
 
 
 for (const el of [
@@ -28,6 +29,7 @@ for (const el of [
     FRAME_SETTINGS_TAG,
     KEY_BINDINGS_SETTINGS_TAG,
     SESSION_SETTINGS_TAG,
+    EXTENSION_SETTINGS_TAG,
     VUE_TEXT_ACE_VIEWER_ELEMENT_TAG,
     VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG
   ]) {
@@ -36,7 +38,7 @@ for (const el of [
   }
 }
 
-type MenuItemId = "general" | "appearance" | "frame" | "keybindings" | "session";
+type MenuItemId = "general" | "appearance" | "frame" | "keybindings" | "session" | "extension";
 
 interface MenuItem {
   id: MenuItemId;
@@ -82,7 +84,7 @@ interface MenuItem {
         v-bind:extensionManager.prop="getExtensionManager()">
       </et-session-settings>
     </template>
-    
+
     <template v-if="firstShowComplete || selectedTab == 'frame'">
       <et-frame-settings v-show="selectedTab == 'frame'"
         v-bind:configDatabase.prop="getConfigDatabase()">
@@ -95,6 +97,12 @@ interface MenuItem {
         v-bind:keybindingsManager.prop="getKeybindingsManager()"
         v-bind:extensionManager.prop="getExtensionManager()">
       </et-key-bindings-settings>
+    </template>
+
+    <template v-if="firstShowComplete || selectedTab == 'extension'">
+      <et-extension-settings v-show="selectedTab == 'extension'">
+
+      </et-extension-settings>
     </template>
   </div>
 </div>
@@ -121,7 +129,8 @@ export class SettingsUi extends Vue {
       { id: "appearance", icon: "fa fa-paint-brush", title: "Appearance"},
       { id: "session", icon: "fa fa-terminal", title: "Session Types"},
       { id: "keybindings", icon: "far fa-keyboard", title: "Keybindings"},
-      { id: "frame", icon: "far fa-window-maximize", title: "Frames"}
+      { id: "frame", icon: "far fa-window-maximize", title: "Frames"},
+      { id: "extension", icon: "fas fa-puzzle-piece", title: "Extensions"},
     ];
   }
 
@@ -156,14 +165,14 @@ export class SettingsUi extends Vue {
   getKeybindingsManager(): KeybindingsManager {
     return this._keybindingsManager;
   }
-  
+
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
     this.$forceUpdate();
   }
 
   getExtensionManager(): ExtensionManager {
-    return this._extensionManager;    
+    return this._extensionManager;
   }
 
   getTerminalVisualConfig(): TerminalVisualConfig {
