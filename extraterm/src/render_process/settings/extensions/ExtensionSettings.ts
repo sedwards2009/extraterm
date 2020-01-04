@@ -8,12 +8,15 @@ import { SettingsBase } from '../SettingsBase';
 import { GeneralConfig, SystemConfig, ConfigKey, GENERAL_CONFIG, SYSTEM_CONFIG } from '../../../Config';
 
 import { ExtensionSettingsUi } from './ExtensionSettingsUi';
+import { ExtensionManager } from "../../extension/InternalTypes";
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
 
 @WebComponent({tag: EXTENSION_SETTINGS_TAG})
 export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
   private _log: Logger = null;
+
+  private _extensionManager: ExtensionManager = null;
 
   constructor() {
     super(ExtensionSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
@@ -27,5 +30,18 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
 
   protected _dataChanged(): void {
     // const newGeneralConfig = this._getConfigCopy(GENERAL_CONFIG);
+  }
+
+  get extensionManager(): ExtensionManager {
+    return this._extensionManager;
+  }
+
+  set extensionManager(extensionManager: ExtensionManager) {
+    this._extensionManager = extensionManager;
+
+    // if (this._commandChangedDisposable != null) {
+    //   this._commandChangedDisposable.dispose()
+    //   this._commandChangedDisposable = null;
+    // }
   }
 }

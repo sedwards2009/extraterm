@@ -90,6 +90,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
   }
 
+  getAllExtensions(): ExtensionMetadata[] {
+    return [...this._extensionMetadata];
+  }
+
   getExtensionContextByName(name: string): InternalExtensionContext {
     for (const ext of this._activeExtensions) {
 this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.name}`);
@@ -127,7 +131,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       } catch(ex) {
         this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
         return;
-      }      
+      }
     }
 
     this._activeExtensions.push({metadata, publicApi, contextImpl, module});
@@ -400,7 +404,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       this._log.warn(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
       return null;
     }
-    
+
     let extensionName = parts[0];
     if (extensionName === "extraterm") {
       extensionName = "internal-commands";
@@ -460,7 +464,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
       state.activeViewerElement = newState.focusViewerElement;
       state.focusViewerElement = newState.focusViewerElement;
     }
-    
+
     state.activeTabsWidget = newState.activeTabsWidget;
     state.activeTabContent = newState.activeTabContent;
     state.isInputFieldFocus = newState.isInputFieldFocus;

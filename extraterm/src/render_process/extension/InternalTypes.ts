@@ -30,8 +30,10 @@ export interface CommandQueryOptions {
 export interface ExtensionManager {
   startUp(): void;
 
+  getAllExtensions(): ExtensionMetadata[];
+
   extensionUiUtils: ExtensionUiUtils;
-  
+
   getExtensionContextByName(name: string): InternalExtensionContext;
 
   findViewerElementTagByMimeType(mimeType: string): string;
@@ -51,7 +53,7 @@ export interface ExtensionManager {
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
-  
+
   executeCommand(command: string, args?: any): any;
   executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
 
@@ -108,7 +110,7 @@ export interface InternalWindow extends ExtensionApi.Window {
 
 /**
  * Holds internal accounting needed to support an Extension.
- * 
+ *
  * It also provides methods for the core application to interact with an
  * Extension and all the different things it may have registered and
  * provided.
@@ -165,7 +167,7 @@ export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean 
       return false;
     }
   }
-  return true;    
+  return true;
 }
 
 function _platformMatches(platform: ExtensionPlatform): boolean {
