@@ -688,7 +688,7 @@ function handleIpc(event: Electron.Event, arg: any): void {
   let reply: Messages.Message = null;
   
   if (LOG_FINE) {
-    _log.debug("Main IPC incoming: ",msg);
+    _log.debug(`Main IPC incoming: ${Messages.MessageType[msg.type]} => `,msg);
   }
   
   switch(msg.type) {

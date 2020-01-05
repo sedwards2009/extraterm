@@ -133,13 +133,13 @@ function startUpTheming(): void {
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
     setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {      
-      (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent =
+      const styleText =
         cssMap.get(ThemeTypes.CssFile.GENERAL_GUI) + "\n" + 
         cssMap.get(ThemeTypes.CssFile.FONT_AWESOME) + "\n" + 
         cssMap.get(ThemeTypes.CssFile.TOP_WINDOW) + "\n" +
         cssMap.get(ThemeTypes.CssFile.TERMINAL_VARS) + "\n" +
-        cssMap.get(ThemeTypes.CssFile.THEME_VARS)
-        ;
+        cssMap.get(ThemeTypes.CssFile.THEME_VARS);
+      (<HTMLStyleElement> document.getElementById('THEME_STYLE')).textContent = styleText;
     }
   };
   ThemeConsumer.registerThemeable(topThemeable);

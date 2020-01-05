@@ -356,9 +356,13 @@ function broadcastConfigToWindows(event: ConfigChangeEvent): void {
 }
 
 function sendMessageToAllWindows(msg: Messages.Message): void {
+  if (LOG_FINE) {
+    _log.debug("Broadcasting message to all windows");
+  }
+
   for (const window of BrowserWindow.getAllWindows()) {
     if (LOG_FINE) {
-      _log.debug("Broadcasting message to all windows");
+      _log.debug(`Broadcasting message to window ${window.id}`);
     }
     window.webContents.send(Messages.CHANNEL_NAME, msg);
   }
