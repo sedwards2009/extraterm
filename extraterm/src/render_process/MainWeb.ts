@@ -99,6 +99,8 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   const themeListMsg = await WebIpc.requestThemeList()
   handleThemeListMessage(themeListMsg);
 
+  startUpWebIpcConfigHandling();
+  
   await asyncLoadTerminalTheme();
 
   const doc = window.document;
@@ -147,10 +149,7 @@ function startUpTheming(): void {
 
 function startUpWebIpc(): void {
   WebIpc.start();
-  
-  // Default handling for config messages.
-  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, asyncHandleConfigMessage);
-  
+
   // Default handling for theme messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_CONTENTS, handleThemeContentsMessage);
@@ -159,6 +158,15 @@ function startUpWebIpc(): void {
   
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
 }  
+
+function startUpWebIpcConfigHandling(): void {
+  // Default handling for config messages.
+  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, asyncHandleConfigMessage);
+
+  // Fetch a fresh version of the config in case 
+  // we missed an pushed update from main process.
+  WebIpc.requestConfig("*");
+}
 
 async function asyncLoadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
@@ -515,14 +523,12 @@ function handleDpiChange(dpi: number): void {
   mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 }
 
-function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
+async function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
   const configMessage = <Messages.ConfigMessage> msg;
   const key = configMessage.key;
   configDatabase.setConfigFromMainProcess(key, configMessage.config);
   if ([GENERAL_CONFIG, SYSTEM_CONFIG, "*"].indexOf(key) !== -1) {
-    return asyncSetupConfiguration();
-  } else {
-    return new Promise<void>( (resolve, cancel) => { resolve(); } );
+    await asyncSetupConfiguration();
   }
 }
 
