@@ -50,7 +50,7 @@ export function registerDefaultHandler(type: Messages.MessageType, handler: Hand
 function handleAsyncIpc(senderInfo: any, detail: any): void {
   const msg: Messages.Message = detail;
   if (DEBUG_INCOMING) {
-    _log.debug("incoming: ", msg);
+    _log.debug(`incoming: ${Messages.MessageType[msg.type]} => `, msg);
   }
 
   const matchingPromises = promiseQueue.filter( p => p.messageType === msg.type );
@@ -71,7 +71,7 @@ function handleAsyncIpc(senderInfo: any, detail: any): void {
 
 function request(msg: Messages.Message, replyType: Messages.MessageType): Promise<Messages.Message> {
   if (DEBUG_OUTGOING) {
-    _log.debug("request: ", msg);
+    _log.debug("request: ${Messages.MessageType[msg.type]} => ", msg);
   }
   ipc.send(Messages.CHANNEL_NAME, msg);
   return new Promise<Messages.Message>( (resolve,cancel) => {

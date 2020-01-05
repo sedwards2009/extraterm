@@ -25,7 +25,7 @@ export const CHANNEL_NAME = "async-message";
 /**
  * Every message has a `type` field which identifies the type of message. It is one of the values from this enum.
  */
-export const enum MessageType {
+export enum MessageType {
   CONFIG_REQUEST,
   CONFIG,
   FRAME_DATA_REQUEST,

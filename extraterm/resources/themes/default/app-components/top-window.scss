@@ -48,9 +48,8 @@ EXTRATERM-MAINWEBUI {
   bottom: 0;
 }
 
-*:unresolved {
-  background-color: red;
-  border: pxToRem(1px) dashed red;
+*:not(:defined) {
+  display: none;
 }
 
 #ID_MENU_BUTTON {
