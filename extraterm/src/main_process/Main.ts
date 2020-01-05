@@ -683,7 +683,7 @@ function setupIpc(): void {
   ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
-function handleIpc(event: Electron.Event, arg: any): void {
+function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
