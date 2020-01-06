@@ -10,7 +10,7 @@
   },
   "scripts": {
     "run": "electron extraterm/dist/main_process/Main.js --dev-tools",
-    "run-release": "electron extraterm/src/main_process/Main.js",
+    "run-release": "electron extraterm/dist/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 7.1.7",
