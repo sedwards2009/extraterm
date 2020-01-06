@@ -2,7 +2,7 @@ FROM debian:jessie
 
 RUN apt-get update && apt-get install -y --no-install-recommends g++ curl make ca-certificates git python
 
-ENV NODE_VERSION 12.0.0
+ENV NODE_VERSION 12.1.8
 RUN cd /root && curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" \
     && tar zxvf node-v$NODE_VERSION-linux-x64.tar.gz -C /usr/local --strip-components=1
 

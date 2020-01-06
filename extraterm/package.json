@@ -63,7 +63,7 @@
     "@types/utf8": "2.1.5",
     "@types/xregexp": "3.0.29",
     "cajon": "0.2.10",
-    "electron": "5.0.11",
+    "electron": "7.1.7",
     "extraterm-extension-api": "0.1.0",
     "finalhandler": "0.4.0",
     "jest": "23.6.0",

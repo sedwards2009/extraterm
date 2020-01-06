@@ -10,11 +10,11 @@
   },
   "scripts": {
     "run": "electron extraterm/dist/main_process/Main.js --dev-tools",
-    "run-release": "electron extraterm/src/main_process/Main.js",
+    "run-release": "electron extraterm/dist/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 5.0.6",
-    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 5.0.6",
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 7.1.7",
+    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 7.1.7",
     "package": "node build_scripts/build_packages.js",
     "package-commands-zip": "node build_scripts/package_commands_zip.js",
     "package-linux": "node build_scripts/package_linux.js",
@@ -29,7 +29,7 @@
   "resolutions": {
     "@types/node": "12.6.2",
     "typescript": "3.7.4",
-    "node-abi": "2.9.0"
+    "node-abi": "2.13.0"
   },
   "private": true,
   "workspaces": {
@@ -41,22 +41,22 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "node-abi": "2.9.0"
+    "node-abi": "2.13.0"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
-    "node-pty": "0.9.0-beta19",
+    "node-pty": "0.10.0-beta2",
     "windows-swca": "2.0.2"
   },
   "devDependencies": {
     "@yarnpkg/lockfile": "^1.1.0",
-    "electron": "5.0.11",
-    "electron-packager": "14.0.1",
-    "electron-rebuild": "1.8.5",
+    "electron": "7.1.7",
+    "electron-packager": "14.1.1",
+    "electron-rebuild": "1.8.8",
     "git-repo-info": "^1.4.1",
     "jest": "23.6.0",
     "modclean": "3.0.0-beta.1",
     "shelljs": "0.8.3",
-    "wsrun": "3.6.2"
+    "wsrun": "5.2.0"
   }
 }

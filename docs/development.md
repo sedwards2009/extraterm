@@ -43,7 +43,7 @@ Extraterm also uses a couple of native code based modules. To successfully insta
 Once the requirements above are in place, execute these steps:
 
 * Clone the repository from github to your local machine.
-* Use node version 10.15.1.
+* Use node version 12.8.1.
 * Install the modules: `yarn install`.
 * Fix up the binary modules to work inside Electron: `yarn run electron-rebuild` or if you are on Windows `yarn run electron-rebuild-win32`
 * Build it: `yarn run build`

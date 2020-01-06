@@ -36,7 +36,7 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '10.11.0'
+          versionSpec: '12.8.1'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: yarn run electron-rebuild
@@ -64,7 +64,7 @@ jobs:
         displayName: "install zip"
       - task: NodeTool@0
         inputs:
-          versionSpec: '10.11.0'
+          versionSpec: '12.8.1'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: yarn run electron-rebuild-win32
@@ -102,7 +102,7 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '10.11.0'
+          versionSpec: '12.8.1'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: yarn run electron-rebuild

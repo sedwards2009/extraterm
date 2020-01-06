@@ -683,12 +683,12 @@ function setupIpc(): void {
   ipc.on(Messages.CHANNEL_NAME, handleIpc);
 }
 
-function handleIpc(event: Electron.Event, arg: any): void {
+function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
   
   if (LOG_FINE) {
-    _log.debug("Main IPC incoming: ",msg);
+    _log.debug(`Main IPC incoming: ${Messages.MessageType[msg.type]} => `,msg);
   }
   
   switch(msg.type) {
