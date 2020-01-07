@@ -100,7 +100,7 @@ interface MenuItem {
     </template>
 
     <template v-if="firstShowComplete || selectedTab == 'extension'">
-      <et-extension-settings v-show="selectedTab == 'extension'">
+      <et-extension-settings v-show="selectedTab == 'extension'"
         v-bind:extensionManager.prop="getExtensionManager()">
       </et-extension-settings>
     </template>

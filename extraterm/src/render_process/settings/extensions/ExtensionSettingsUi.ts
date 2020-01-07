@@ -8,6 +8,7 @@ import Vue from 'vue';
 
 import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
 
 
 @Component(
@@ -15,12 +16,20 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
+
+  <div v-for="extension in allExtensions" v-bind:key="extension.path" class="card">
+    name: {{ extension.name }}
+  </div>
+
 </div>
 `)
 })
 export class ExtensionSettingsUi extends Vue {
 
+  allExtensions: ExtensionMetadata[];
+  
   constructor() {
     super();
+    this.allExtensions = [];
   }
 }

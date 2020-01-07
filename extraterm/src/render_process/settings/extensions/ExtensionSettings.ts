@@ -38,6 +38,8 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
 
   set extensionManager(extensionManager: ExtensionManager) {
     this._extensionManager = extensionManager;
+    
+    this._getUi().allExtensions = this._extensionManager.getAllExtensions();
 
     // if (this._commandChangedDisposable != null) {
     //   this._commandChangedDisposable.dispose()
