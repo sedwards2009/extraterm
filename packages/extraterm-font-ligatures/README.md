@@ -1,15 +1,16 @@
-# font-ligatures
+# Fork of font-ligatures
 
-[![Travis CI build status](https://travis-ci.org/princjef/font-ligatures.svg?branch=master)](https://travis-ci.org/princjef/font-ligatures)
-[![codecov](https://codecov.io/gh/princjef/font-ligatures/branch/master/graph/badge.svg)](https://codecov.io/gh/princjef/font-ligatures)
-[![npm version](https://img.shields.io/npm/v/font-ligatures.svg)](https://npmjs.org/package/font-ligatures)
+Original code: https://github.com/princjef/font-ligatures
+
+This package is a fork of Jeff Principe's `font-ligatures`. It adds support
+for marking ligatures directly using Extraterm's internal data structures.
+
+
+# font-ligatures
 
 Find ligature replacements for any system font. Useful for determining glyph
 substitutions and ranges where ligatures exist within a string of input text.
 
-```
-npm install font-ligatures
-```
 
 ## Usage
 
