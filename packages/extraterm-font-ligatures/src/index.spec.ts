@@ -306,7 +306,7 @@ const otherCases = [
 ];
 
 for (const { font, input, glyphs, ranges } of [
-    ...firaCases,
+    // ...firaCases,
     ...iosevkaCases,
     ...monoidCases,
     ...otherCases
