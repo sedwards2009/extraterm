@@ -1,3 +1,5 @@
+import { CharCellGrid } from "extraterm-char-cell-grid";
+
 export interface SubstitutionResult {
     index: number;
     contextRange: [number, number];
@@ -41,6 +43,8 @@ export interface Font {
      * @param text String to search for ligatures
      */
     findLigatureRanges(text: string): [number, number][];
+
+    markLigaturesCharCellGridRow(grid: CharCellGrid, row: number): void;
 }
 
 export interface Options {

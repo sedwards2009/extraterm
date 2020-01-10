@@ -3,6 +3,8 @@ import test from 'ava';
 import * as sinon from 'sinon';
 import * as fontFinder from 'font-finder';
 
+import { CharCellGrid } from "extraterm-char-cell-grid";
+
 import { load } from './';
 
 test.before(t => {
@@ -374,4 +376,19 @@ test('throws if the font is not found', async t => {
     } catch (e) {
         t.true(e instanceof Error);
     }
+});
+
+test("Mark ligatures", async t => {
+    const grid = new CharCellGrid(10, 5);
+    grid.setString(0, 0, "Foo --> Bar");
+
+    const font = await load("Monoid");
+    font.markLigaturesCharCellGridRow(grid, 0);
+
+    t.is(grid.getLigature(0, 0), 0);
+    t.is(grid.getLigature(1, 0), 0);
+    t.is(grid.getLigature(2, 0), 0);
+    t.is(grid.getLigature(3, 0), 0);
+    t.is(grid.getLigature(4, 0), 3);
+    t.is(grid.getLigature(5, 0), 0);
 });

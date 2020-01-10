@@ -24,6 +24,7 @@
   "author": "Jeff Principe <princjef@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "extraterm-char-cell-grid": "1.0.0",
     "font-finder": "^1.0.3",
     "lru-cache": "^4.1.3",
     "opentype.js": "^0.8.0"

@@ -2,6 +2,7 @@ import * as util from 'util';
 import * as opentype from 'opentype.js';
 import * as fontFinder from 'font-finder';
 import * as lru from 'lru-cache';
+import { CharCellGrid } from "extraterm-char-cell-grid";
 
 import { Font, LigatureData, FlattenedLookupTree, LookupTree, Options } from './types';
 import mergeTrees from './merge';
@@ -245,6 +246,38 @@ class FontImpl implements Font {
         }
 
         return result;
+    }
+
+    markLigaturesCharCellGridRow(grid: CharCellGrid, row: number): void {
+        // Short circuit the process if there are no possible ligatures in the
+        // font
+        if (this._lookupTrees.length === 0) {
+            return;
+        }
+
+        const glyphIds: number[] = [];
+        const width = grid.width;
+        for (let i=0; i<width; i++) {
+            const char = grid.getString(i, row, 1);
+            glyphIds.push(this._font.charToGlyphIndex(char));
+        }
+
+        const result = this._findInternal(glyphIds);
+        let i = 0;
+        for (const range of result.ranges) {
+            while (i < range[0]) {
+                grid.setLigature(i, row, 0);
+                i++;
+            }
+            const ligatureLength = range[1] - range[0];
+            grid.setLigature(range[0], row, ligatureLength);
+            i += ligatureLength;
+        }
+
+        while (i < width) {
+            grid.setLigature(i, row, 0);
+            i++;
+        }
     }
 }
 
