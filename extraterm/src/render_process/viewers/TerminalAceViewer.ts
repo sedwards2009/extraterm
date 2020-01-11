@@ -176,8 +176,9 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         palette: this._extractPalette(this._terminalVisualConfig),
         fontFamily: this._terminalVisualConfig.fontFamily,
         fontSizePx: this._terminalVisualConfig.fontSizePx,
+        fontFilePath: this._terminalVisualConfig.fontFilePath,
         devicePixelRatio: this._terminalVisualConfig.devicePixelRatio,
-        ligatures: this._terminalVisualConfig.ligatures,
+        useLigatures: this._terminalVisualConfig.useLigatures,
       });
       this._aceRenderer.init();
       this._aceRenderer.setShowGutter(false);
@@ -514,8 +515,9 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         palette: this._extractPalette(terminalVisualConfig),
         fontFamily: terminalVisualConfig.fontFamily,
         fontSizePx: terminalVisualConfig.fontSizePx,
+        fontFilePath: terminalVisualConfig.fontFilePath,
         devicePixelRatio: terminalVisualConfig.devicePixelRatio,
-        ligatures: terminalVisualConfig.ligatures,
+        useLigatures: terminalVisualConfig.useLigatures,
       };
 
       let requestResize = false;
@@ -527,7 +529,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         const fontPropertiesChanged = previousConfig.fontFamily !== terminalVisualConfig.fontFamily ||
           previousConfig.fontSizePx !== terminalVisualConfig.fontSizePx ||
           previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio ||
-          (! isEqual(previousConfig.ligatures, terminalVisualConfig.ligatures));
+          previousConfig.fontFilePath !== terminalVisualConfig.fontFilePath ||
+          previousConfig.useLigatures !== terminalVisualConfig.useLigatures;
 
         if (fontPropertiesChanged ||
             previousConfig.cursorStyle !== terminalVisualConfig.cursorStyle ||

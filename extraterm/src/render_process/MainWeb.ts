@@ -16,7 +16,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
 
-import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
+import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import * as DomUtils from './DomUtils';
 import {DropDown} from './gui/DropDown';
@@ -170,23 +170,19 @@ function startUpWebIpcConfigHandling(): void {
 
 async function asyncLoadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
-
-  let ligatures: string[] = [];
-  if (config.terminalDisplayLigatures) {
-    const ligatureMsg = await WebIpc.requestFontLigatures(config.terminalFont);
-    ligatures = ligatureMsg.ligatures;
-  }
 
   terminalVisualConfig = {
     cursorStyle: config.cursorStyle,
     cursorBlink: config.blinkingCursor,
     fontFamily: fontLoader.cssNameFromFontName(config.terminalFont),
     fontSizePx: config.terminalFontSize,
+    fontFilePath: getFontFilePath(systemConfig.availableFonts, config.terminalFont),
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme,
     transparentBackground: config.windowBackgroundMode !== "opaque",
-    ligatures,
+    useLigatures: config.terminalDisplayLigatures,
   };
 }
 
@@ -637,21 +633,16 @@ async function asyncSetupConfiguration(): Promise<void> {
         oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode ||
         oldGeneralConfig.terminalDisplayLigatures !== newGeneralConfig.terminalDisplayLigatures) {
 
-      let ligatures: string[] = [];
-      if (newGeneralConfig.terminalDisplayLigatures) {
-        const ligatureMsg = await WebIpc.requestFontLigatures(newGeneralConfig.terminalFont);
-        ligatures = ligatureMsg.ligatures;
-      }
-
       terminalVisualConfig = {
         cursorStyle: newGeneralConfig.cursorStyle,
         cursorBlink: newGeneralConfig.blinkingCursor,
         fontFamily: fontLoader.cssNameFromFontName(newGeneralConfig.terminalFont),
+        fontFilePath: getFontFilePath(newSystemConfig.availableFonts, newGeneralConfig.terminalFont),
         fontSizePx: newGeneralConfig.terminalFontSize,
         devicePixelRatio: window.devicePixelRatio,
         terminalTheme: terminalVisualConfig.terminalTheme,
         transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
-        ligatures,
+        useLigatures: newGeneralConfig.terminalDisplayLigatures,
       }
       terminalVisualConfigChanged = true;
     }
@@ -662,6 +653,15 @@ async function asyncSetupConfiguration(): Promise<void> {
 
   oldGeneralConfig = newGeneralConfig;
   oldSystemConfig = newSystemConfig;
+}
+
+function getFontFilePath(availableFonts: FontInfo[], fontFamily: string): string {
+  for (const fontInfo of availableFonts) {
+    if (fontFamily === fontInfo.postscriptName) {
+      return fontInfo.path;
+    }
+  }
+  return null;
 }
 
 async function asyncRequestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {

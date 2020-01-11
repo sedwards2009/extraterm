@@ -11,10 +11,11 @@ export interface TerminalVisualConfig {
   cursorBlink: boolean;
   fontFamily: string;
   fontSizePx: number;
+  fontFilePath: string;
   devicePixelRatio: number;
   terminalTheme: TerminalTheme;
   transparentBackground: boolean;
-  ligatures: string[];
+  useLigatures: boolean;
 }
 
 export interface AcceptsTerminalVisualConfig {

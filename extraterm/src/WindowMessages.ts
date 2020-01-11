@@ -79,9 +79,6 @@ export enum MessageType {
 
   TERMINAL_THEME_REQUEST,
   TERMINAL_THEME,
-
-  FONT_LIGATURES_REQUEST,
-  FONT_LIGATURES,
 }
 
 /**
@@ -511,13 +508,4 @@ export interface TerminalThemeRequestMessage extends Message {
 
 export interface TerminalThemeMessage extends Message {
   terminalTheme: TerminalTheme;
-}
-
-export interface FontLigaturesRequestMessage extends Message {
-  fontFamily: string;
-}
-
-export interface FontLigaturesMessage extends Message {
-  fontFamily: string;
-  ligatures: string[];
 }
