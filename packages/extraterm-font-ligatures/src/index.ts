@@ -152,24 +152,26 @@ class FontImpl implements Font {
                 for (let i = nextLookup.first; i < lastGlyphIndex; i++) {
                     const result = walkTree(lookup.tree, sequence, i, i);
                     if (result) {
+                        let didSubstitute = false;
                         for (let j = 0; j < result.substitutions.length; j++) {
                             const sub = result.substitutions[j];
                             if (sub !== null) {
                                 sequence[i + j] = sub;
+                                didSubstitute = true;
                             }
                         }
+                        if (didSubstitute) {
+                            mergeRange(
+                                ranges,
+                                result.contextRange[0] + i,
+                                result.contextRange[1] + i
+                            );
 
-                        mergeRange(
-                            ranges,
-                            result.contextRange[0] + i,
-                            result.contextRange[1] + i
-                        );
-
-                        // Substitutions can end up extending the search range
-                        if (i + result.length >= lastGlyphIndex) {
-                            lastGlyphIndex = i + result.length + 1;
+                            // Substitutions can end up extending the search range
+                            if (i + result.length >= lastGlyphIndex) {
+                                lastGlyphIndex = i + result.length + 1;
+                            }
                         }
-
                         i += result.length - 1;
                     }
                 }
