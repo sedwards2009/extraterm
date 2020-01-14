@@ -3,10 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, CustomizedCommand, SessionConfiguration} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
+
+import { Event, CustomizedCommand, SessionConfiguration} from 'extraterm-extension-api';
+import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
 const ElectronMenu = Electron.remote.Menu;
 
@@ -52,6 +54,7 @@ import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
 import { FontLoader, DpiWatcher } from './gui/Util';
 import { doLater } from 'extraterm-later';
+import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -173,16 +176,24 @@ async function asyncLoadTerminalTheme(): Promise<void> {
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
 
+  const fontFilePath = getFontFilePath(systemConfig.availableFonts, config.terminalFont);
+
+  let ligatureMarker: LigatureMarker = null;
+  if (config.terminalDisplayLigatures) {
+    ligatureMarker = await loadFontFile(fontFilePath);
+  }
+
   terminalVisualConfig = {
     cursorStyle: config.cursorStyle,
     cursorBlink: config.blinkingCursor,
     fontFamily: fontLoader.cssNameFromFontName(config.terminalFont),
     fontSizePx: config.terminalFontSize,
-    fontFilePath: getFontFilePath(systemConfig.availableFonts, config.terminalFont),
+    fontFilePath,
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme,
     transparentBackground: config.windowBackgroundMode !== "opaque",
     useLigatures: config.terminalDisplayLigatures,
+    ligatureMarker
   };
 }
 
@@ -633,6 +644,17 @@ async function asyncSetupConfiguration(): Promise<void> {
         oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode ||
         oldGeneralConfig.terminalDisplayLigatures !== newGeneralConfig.terminalDisplayLigatures) {
 
+      let ligatureMarker = terminalVisualConfig ? terminalVisualConfig.ligatureMarker : null;
+      if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
+          oldGeneralConfig.terminalDisplayLigatures !== newGeneralConfig.terminalDisplayLigatures) {
+        if (newGeneralConfig.terminalDisplayLigatures) {
+          const fontFilePath = getFontFilePath(newSystemConfig.availableFonts, newGeneralConfig.terminalFont);
+          ligatureMarker = await loadFontFile(fontFilePath);
+        } else {
+          ligatureMarker = null;
+        }
+      }
+
       terminalVisualConfig = {
         cursorStyle: newGeneralConfig.cursorStyle,
         cursorBlink: newGeneralConfig.blinkingCursor,
@@ -642,6 +664,7 @@ async function asyncSetupConfiguration(): Promise<void> {
         devicePixelRatio: window.devicePixelRatio,
         terminalTheme: terminalVisualConfig.terminalTheme,
         transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
+        ligatureMarker,
         useLigatures: newGeneralConfig.terminalDisplayLigatures,
       }
       terminalVisualConfigChanged = true;

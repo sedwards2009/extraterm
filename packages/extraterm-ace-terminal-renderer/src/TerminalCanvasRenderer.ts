@@ -9,6 +9,7 @@ import { Event } from 'extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { CursorStyle } from "extraterm-char-render-canvas";
+import { LigatureMarker } from "./LigatureMarker";
 export { CursorStyle } from "extraterm-char-render-canvas";
 
 
@@ -19,7 +20,7 @@ export interface TerminalCanvasRendererConfig {
   fontFamily: string;
   fontSizePx: number;
   fontFilePath: string;
-  useLigatures: boolean;
+  ligatureMarker: LigatureMarker;
 }
 
 export class TerminalCanvasRenderer extends Renderer {
@@ -48,7 +49,7 @@ export class TerminalCanvasRenderer extends Renderer {
     this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._terminalCanvasRendererConfig.palette,
       this._terminalCanvasRendererConfig.fontFamily, this._terminalCanvasRendererConfig.fontSizePx,
       this._terminalCanvasRendererConfig.devicePixelRatio, this._terminalCanvasRendererConfig.cursorStyle,
-      this._terminalCanvasRendererConfig.fontFilePath, this._terminalCanvasRendererConfig.useLigatures);
+      this._terminalCanvasRendererConfig.ligatureMarker);
     return this._canvasTextLayer;
   }
   
@@ -65,8 +66,7 @@ export class TerminalCanvasRenderer extends Renderer {
       this._canvasTextLayer.setFontFamily(terminalCanvasRendererConfig.fontFamily);
       this._canvasTextLayer.setFontSizePx(terminalCanvasRendererConfig.fontSizePx);
       this._canvasTextLayer.setDevicePixelRatio(terminalCanvasRendererConfig.devicePixelRatio);
-      this._canvasTextLayer.setFontFilePath(terminalCanvasRendererConfig.fontFilePath);
-      this._canvasTextLayer.setLigatures(terminalCanvasRendererConfig.useLigatures);
+      this._canvasTextLayer.setLigatureMarker(terminalCanvasRendererConfig.ligatureMarker);
     }
     if (this._canvasFontMetricsMonitor != null) {
       this._canvasFontMetricsMonitor.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);

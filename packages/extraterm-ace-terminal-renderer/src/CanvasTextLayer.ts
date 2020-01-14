@@ -9,14 +9,12 @@ import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";
+import { LigatureMarker } from "./LigatureMarker";
 
 const PROVISION_HEIGHT_FACTOR = 1.5;
 
 const fontAtlasRepository = new FontAtlasRepository();
 
-export interface LigatureMarker {
-  markLigaturesCharCellGridRow(grid: CharCellGrid, row: number): void;
-}
 
 export class CanvasTextLayer implements TextLayer {
 
@@ -26,7 +24,6 @@ export class CanvasTextLayer implements TextLayer {
   private _canvasWidthCssPx = 0;
   private _canvasHeightCssPx = 0;
   private _currentCanvasRawWidthPx = 0;
-  private _useLigatures = false;
   private _ligatureMarker: LigatureMarker = null;
 
   private _editSession: TerminalCanvasEditSession = null;
@@ -38,7 +35,6 @@ export class CanvasTextLayer implements TextLayer {
   private _palette: number[] = null;
   private _fontFamily: string = null;
   private _fontSizePx: number = 0;
-  private _fontFilePath: string = null;
   private _devicePixelRatio = 1;
 
   private _cursorStyle = CursorStyle.BLOCK;
@@ -46,18 +42,16 @@ export class CanvasTextLayer implements TextLayer {
   private _clipDiv: HTMLDivElement = null;
 
   constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
-              devicePixelRatio: number, cursorStyle: CursorStyle, fontFilePath: string, useLigatures: boolean) {
+              devicePixelRatio: number, cursorStyle: CursorStyle, ligatureMarker: LigatureMarker) {
 
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
 
     this._fontFamily = fontFamily;
     this._fontSizePx = fontSizePx; 
-    this._fontFilePath = fontFilePath;
     this._devicePixelRatio = devicePixelRatio;
     this._cursorStyle = cursorStyle;
-    this._useLigatures = useLigatures;
-    this._loadLigatures();
+    this._ligatureMarker = ligatureMarker;
 
     this._clipDiv = <HTMLDivElement> document.createElement("DIV");
     this._clipDiv.classList.add("ace_layer");
@@ -120,32 +114,9 @@ export class CanvasTextLayer implements TextLayer {
     this._deleteCanvasElement();
   }
 
-  setFontFilePath(filePath: string): void {
-    if (this._fontFilePath === filePath) {
-      return;
-    }
-    this._fontFilePath = filePath;
-    this._loadLigatures();
-  }
-
-  setLigatures(useLigatures: boolean): void {
-    if (this._useLigatures === useLigatures) {
-      return;
-    }
-
-    this._useLigatures = useLigatures;
-    this._loadLigatures();
-  }
-
-  private _loadLigatures(): void {
-    if (this._useLigatures && this._fontFilePath != null) {
-      loadFontFile(this._fontFilePath).then(fontInfo => {
-        this._log.debug("Done reading font file");
-        this._ligatureMarker = fontInfo;
-      });
-    } else {
-      this._ligatureMarker = null;
-    }
+  setLigatureMarker(marker: LigatureMarker): void {
+    this._ligatureMarker = marker;
+    this._deleteCanvasElement();
   }
 
   setCursorStyle(cursorStyle: CursorStyle): void {
