@@ -20,6 +20,7 @@ class FontImpl implements Font {
     private _lookupTrees: { tree: FlattenedLookupTree; processForward: boolean; }[] = [];
     private _glyphLookups: { [glyphId: string]: number[] } = {};
     private _cache?: lru.Cache<string, LigatureData | [number, number][]>;
+    private _codePointToGlyphIndexCache = new Map<number, number>();
 
     constructor(font: opentype.Font, options: Required<Options>) {
         this._font = font;
@@ -260,8 +261,14 @@ class FontImpl implements Font {
         const glyphIds: number[] = [];
         const width = grid.width;
         for (let i=0; i<width; i++) {
-            const char = grid.getString(i, row, 1);
-            glyphIds.push(this._font.charToGlyphIndex(char));
+            const codePoint = grid.getCodePoint(i, row);
+            let glyphIndex = this._codePointToGlyphIndexCache.get(codePoint);
+            if (glyphIndex === undefined) {
+                const char = String.fromCodePoint(codePoint);
+                glyphIndex = this._font.charToGlyphIndex(char);
+                this._codePointToGlyphIndexCache.set(codePoint, glyphIndex);
+            }
+            glyphIds.push(glyphIndex);
         }
 
         const result = this._findInternal(glyphIds);
