@@ -199,14 +199,7 @@ const firaCases: Context[] = [
     fira('::=', [1614, 1614, 1054], [[0, 3]]),
     fira('.?', [1614, 1086], [[0, 2]]),
 
-    // TODO: this replacement should be possible with only a context of 0-3, but
-    // there is a zero-length substitution for all four characters to prevent
-    // the ==> sequence from becoming a ligature before we get to the
-    // replacement for the ===. What's unclear is whether it's safe to exclude
-    // zero-length substitutions from the context without breaking certain
-    // glyphs. Leaving this as is for now because it should always yield the
-    // right result (even if it's a little conservative).
-    fira('===>', [1614, 1614, 1486, 1148], [[0, 4]])
+    fira('====', [1146, 1146, 1146, 1146], []), // Expect: No matches
 ];
 
 const iosevkaCases: Context[] = [
