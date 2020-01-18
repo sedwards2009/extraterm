@@ -13,7 +13,7 @@ import { processLookaheadPosition, processBacktrackPosition, EntryMeta } from '.
  */
 export default function buildTree(table: ReverseChainingContextualSingleSubstitutionTable, tableIndex: number): LookupTree {
     const result: LookupTree = {
-        individual: {},
+        individual: new Map<number, LookupTreeEntry>(),
         range: []
     };
 
@@ -27,7 +27,7 @@ export default function buildTree(table: ReverseChainingContextualSingleSubstitu
                 range: glyphId
             });
         } else {
-            result.individual[glyphId] = initialEntry;
+            result.individual.set(glyphId, initialEntry);
         }
 
         let currentEntries: EntryMeta[] = [{

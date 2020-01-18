@@ -18,7 +18,7 @@ export function processInputPosition(
     const nextEntries: EntryMeta[] = [];
     for (const currentEntry of currentEntries) {
         currentEntry.entry.forward = {
-            individual: {},
+            individual: new Map<number, LookupTreeEntry>(),
             range: []
         };
         for (const glyph of glyphs) {
@@ -48,7 +48,7 @@ export function processLookaheadPosition(
             const entry: LookupTreeEntry = {};
             if (!currentEntry.entry.forward) {
                 currentEntry.entry.forward = {
-                    individual: {},
+                    individual: new Map<number, LookupTreeEntry>(),
                     range: []
                 };
             }
@@ -63,7 +63,7 @@ export function processLookaheadPosition(
                     range: glyph
                 });
             } else {
-                currentEntry.entry.forward.individual[glyph] = entry;
+                currentEntry.entry.forward.individual.set(glyph, entry);
             }
         }
     }
@@ -81,7 +81,7 @@ export function processBacktrackPosition(
             const entry: LookupTreeEntry = {};
             if (!currentEntry.entry.reverse) {
                 currentEntry.entry.reverse = {
-                    individual: {},
+                    individual: new Map<number, LookupTreeEntry>(),
                     range: []
                 };
             }
@@ -96,7 +96,7 @@ export function processBacktrackPosition(
                     range: glyph
                 });
             } else {
-                currentEntry.entry.reverse.individual[glyph] = entry;
+                currentEntry.entry.reverse.individual.set(glyph, entry);
             }
         }
     }
@@ -107,9 +107,9 @@ export function processBacktrackPosition(
 export function getInputTree(tree: LookupTree, substitutions: SubstitutionLookupRecord[], lookups: Lookup[], inputIndex: number, glyphId: number | [number, number]): { entry: LookupTreeEntry; substitution: number | null; }[] {
     const result: { entry: LookupTreeEntry; substitution: number | null; }[] = [];
     if (!Array.isArray(glyphId)) {
-        tree.individual[glyphId] = {};
+        tree.individual.set(glyphId, {});
         result.push({
-            entry: tree.individual[glyphId],
+            entry: tree.individual.get(glyphId),
             substitution: getSubstitutionAtPosition(substitutions, lookups, inputIndex, glyphId)
         });
     } else {
@@ -119,7 +119,7 @@ export function getInputTree(tree: LookupTree, substitutions: SubstitutionLookup
             if (Array.isArray(range)) {
                 tree.range.push({ range, entry });
             } else {
-                tree.individual[range] = {};
+                tree.individual.set(range, {});
             }
             result.push({ entry, substitution });
         }

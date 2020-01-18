@@ -2,7 +2,7 @@ import { LookupTree, FlattenedLookupTree, LookupTreeEntry, FlattenedLookupTreeEn
 
 export default function flatten(tree: LookupTree): FlattenedLookupTree {
     const result: FlattenedLookupTree = {};
-    for (const [glyphId, entry] of Object.entries(tree.individual)) {
+    for (const [glyphId, entry] of tree.individual.entries()) {
         result[glyphId] = flattenEntry(entry);
     }
 

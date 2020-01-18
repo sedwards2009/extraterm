@@ -1,5 +1,5 @@
 import { ChainingContextualSubstitutionTable, Lookup } from '../tables';
-import { LookupTree } from '../types';
+import { LookupTree, LookupTreeEntry } from '../types';
 import mergeTrees from '../merge';
 
 import { listGlyphsByIndex } from './coverage';
@@ -36,7 +36,7 @@ export default function buildTree(table: ChainingContextualSubstitutionTable.For
 
             for (const [subIndex, subTable] of classSet.entries()) {
                 const result: LookupTree = {
-                    individual: {},
+                    individual: new Map<number, LookupTreeEntry>(),
                     range: []
                 };
 

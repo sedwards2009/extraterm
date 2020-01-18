@@ -1,7 +1,7 @@
-import test from 'ava';
+import test, { GenericTestContext, Context } from 'ava';
 
 import mergeTrees from './merge';
-import { LookupResult } from './types';
+import { LookupResult, LookupTreeEntry, LookupTree } from './types';
 
 function lookup(substitutionGlyph: number, index?: number, subIndex?: number): LookupResult {
     return {
@@ -13,29 +13,68 @@ function lookup(substitutionGlyph: number, index?: number, subIndex?: number): L
     };
 }
 
+function lookupTreeEquals(t: GenericTestContext<Context<any>>, a: LookupTree, b: LookupTree): void {
+    t.true((a == null) == (b == null));
+    if (a == null) {
+        return;
+    }
+
+    mapDeepEquals(t, a.individual, b.individual);
+    t.deepEqual(a.range, b.range);
+}
+
+function lookupTreeListEquals(t: GenericTestContext<Context<any>>, a: LookupTree[], b: LookupTree[]): void {
+    t.true((a == null) == (b == null));
+    if (a == null) {
+        return;
+    }
+
+    for (let i=0; i<a.length; i++) {
+        lookupTreeEquals(t, a[i], b[i]);
+    }
+}
+
+function mapDeepEquals(t: GenericTestContext<Context<any>>, a: Map<any, any>, b: Map<any, any>): void {
+    t.true((a == null) == (b == null));
+    if (a == null) {
+        return;
+    }
+
+    const aKeys = Array.from(a.keys());
+    aKeys.sort();
+    const bKeys = Array.from(b.keys());
+    bKeys.sort();
+    t.deepEqual(aKeys, bKeys);
+
+    for (let i=0; i<aKeys.length; i++) {
+        t.deepEqual(a.get(aKeys[i]), b.get(bKeys[i]));
+    }
+}
+
+
 test('combines disjoint trees', t => {
     const result = mergeTrees([
         {
-            individual: {
-                '1': { lookup: lookup(1) }
-            },
+            individual: new Map<number, LookupTreeEntry>([
+                [1, { lookup: lookup(1) }],
+            ]),
             range: []
         },
         {
-            individual: {},
+            individual: new Map<number, LookupTreeEntry>(),
             range: [{
                 entry: { lookup: lookup(2) },
                 range: [2, 4]
             }]
         },
         {
-            individual: {
-                '5': { lookup: lookup(3) }
-            },
+            individual: new Map<number, LookupTreeEntry>([
+                [5, { lookup: lookup(3) }],
+            ]),
             range: []
         },
         {
-            individual: {},
+            individual: new Map<number, LookupTreeEntry>(),
             range: [{
                 entry: { lookup: lookup(4) },
                 range: [8, 10]
@@ -43,11 +82,11 @@ test('combines disjoint trees', t => {
         }
     ]);
 
-    t.deepEqual(result, {
-        individual: {
-            '1': { lookup: lookup(1) },
-            '5': { lookup: lookup(3) }
-        },
+    lookupTreeEquals(t, result, {
+        individual: new Map<number, LookupTreeEntry>([
+            [1, { lookup: lookup(1) }],
+            [5, { lookup: lookup(3) }],
+        ]),
         range: [{
             entry: { lookup: lookup(2) },
             range: [2, 4]
@@ -61,29 +100,29 @@ test('combines disjoint trees', t => {
 test('merges matching individual glyphs', t => {
     const result = mergeTrees([
         {
-            individual: {
-                '1': { lookup: lookup(1, 1) }
-            },
+            individual: new Map<number, LookupTreeEntry>([
+                [1, { lookup: lookup(1, 1) }]
+            ]),
             range: []
         },
         {
-            individual: {
-                '1': { lookup: lookup(2, 0) }
-            },
+            individual: new Map<number, LookupTreeEntry>([
+                [1, { lookup: lookup(2, 0) }]
+            ]),
             range: []
         },
         {
-            individual: {
-                '1': { lookup: lookup(3, 2) }
-            },
+            individual: new Map<number, LookupTreeEntry>([
+                [1, { lookup: lookup(3, 2) }]
+            ]),
             range: []
         }
     ]);
 
-    t.deepEqual(result, {
-        individual: {
-            '1': { lookup: lookup(2, 0) }
-        },
+    lookupTreeEquals(t, result, {
+        individual: new Map<number, LookupTreeEntry>([
+            [1, { lookup: lookup(2, 0) }]
+        ]),
         range: []
     });
 });
@@ -91,13 +130,13 @@ test('merges matching individual glyphs', t => {
 test('merges range glyphs overlapping individual glyphs', t => {
     const result = mergeTrees([
         {
-            individual: {
-                '1': { lookup: lookup(1, 0) }
-            },
+            individual: new Map<number, LookupTreeEntry>([
+                [1, { lookup: lookup(1, 0) }]
+            ]),
             range: []
         },
         {
-            individual: {},
+            individual: new Map<number, LookupTreeEntry>(),
             range: [{
                 entry: { lookup: lookup(2, 1) },
                 range: [0, 4]
@@ -105,11 +144,11 @@ test('merges range glyphs overlapping individual glyphs', t => {
         }
     ]);
 
-    t.deepEqual(result, {
-        individual: {
-            '0': { lookup: lookup(2, 1) },
-            '1': { lookup: lookup(1, 0) }
-        },
+    lookupTreeEquals(t, result, {
+        individual: new Map<number, LookupTreeEntry>([
+            [0, { lookup: lookup(2, 1) }],
+            [1, { lookup: lookup(1, 0) }]
+        ]),
         range: [{
             entry: { lookup: lookup(2, 1) },
             range: [2, 4]
@@ -120,25 +159,25 @@ test('merges range glyphs overlapping individual glyphs', t => {
 test('merges individual glyphs overlapping range glyphs', t => {
     const result = mergeTrees([
         {
-            individual: {},
+            individual: new Map<number, LookupTreeEntry>(),
             range: [{
                 entry: { lookup: lookup(2, 1) },
                 range: [0, 4]
             }]
         },
         {
-            individual: {
-                '1': { lookup: lookup(1, 0) }
-            },
+            individual: new Map<number, LookupTreeEntry>([
+                [1, { lookup: lookup(1, 0) }]
+            ]),
             range: []
         }
     ]);
 
-    t.deepEqual(result, {
-        individual: {
-            '0': { lookup: lookup(2, 1) },
-            '1': { lookup: lookup(1, 0) }
-        },
+    lookupTreeEquals(t, result, {
+        individual: new Map<number, LookupTreeEntry>([
+            [0, { lookup: lookup(2, 1) }],
+            [1, { lookup: lookup(1, 0) }]
+        ]),
         range: [{
             entry: { lookup: lookup(2, 1) },
             range: [2, 4]
@@ -149,7 +188,7 @@ test('merges individual glyphs overlapping range glyphs', t => {
 test('merges multiple overlapping ranges', t => {
     const result = mergeTrees([
         {
-            individual: {},
+            individual: new Map<number, LookupTreeEntry>(),
             range: [{
                 entry: { lookup: lookup(1, 2) },
                 range: [0, 3]
@@ -165,7 +204,7 @@ test('merges multiple overlapping ranges', t => {
             }]
         },
         {
-            individual: {},
+            individual: new Map<number, LookupTreeEntry>(),
             range: [{
                 entry: { lookup: lookup(3, 0) },
                 range: [2, 8]
@@ -179,14 +218,14 @@ test('merges multiple overlapping ranges', t => {
         }
     ]);
 
-    t.deepEqual(result, {
-        individual: {
-            '2': { lookup: lookup(3, 0) },
-            '12': { lookup: lookup(4, 0) },
-            '15': { lookup: lookup(5, 3) },
-            '20': { lookup: lookup(6, 0) },
-            '21': { lookup: lookup(7, 4) }
-        },
+    lookupTreeEquals(t, result, {
+        individual: new Map<number, LookupTreeEntry>([
+            [2, { lookup: lookup(3, 0) }],
+            [12, { lookup: lookup(4, 0) }],
+            [15, { lookup: lookup(5, 3) }],
+            [20, { lookup: lookup(6, 0) }],
+            [21, { lookup: lookup(7, 4) }]
+        ]),
         range: [{
             entry: { lookup: lookup(1, 2) },
             range: [0, 2]

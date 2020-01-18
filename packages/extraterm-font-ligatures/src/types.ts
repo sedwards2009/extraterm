@@ -56,9 +56,7 @@ export interface Options {
 }
 
 export interface LookupTree {
-    individual: {
-        [glyphId: string]: LookupTreeEntry;
-    };
+    individual: Map<number, LookupTreeEntry>;
     range: {
         range: [number, number];
         entry: LookupTreeEntry;

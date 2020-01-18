@@ -1,5 +1,5 @@
 import { ChainingContextualSubstitutionTable, Lookup } from '../tables';
-import { LookupTree } from '../types';
+import { LookupTree, LookupTreeEntry } from '../types';
 
 import { listGlyphsByIndex } from './coverage';
 import { processInputPosition, processLookaheadPosition, processBacktrackPosition, getInputTree, EntryMeta } from './helper';
@@ -14,7 +14,7 @@ import { processInputPosition, processLookaheadPosition, processBacktrackPositio
  */
 export default function buildTree(table: ChainingContextualSubstitutionTable.Format3, lookups: Lookup[], tableIndex: number): LookupTree {
     const result: LookupTree = {
-        individual: {},
+        individual: new Map<number, LookupTreeEntry>(),
         range: []
     };
 
