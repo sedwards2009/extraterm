@@ -18,7 +18,7 @@ import flatten from './flatten';
 class FontImpl implements Font {
     private _font: opentype.Font;
     private _lookupTrees: { tree: FlattenedLookupTree; processForward: boolean; }[] = [];
-    private _glyphLookups: { [glyphId: string]: number[] } = {};
+    private _glyphLookups = new Map<number, number[]>();
     private _cache?: lru.Cache<string, LigatureData | [number, number][]>;
     private _codePointToGlyphIndexCache = new Map<number, number>();
 
@@ -73,11 +73,12 @@ class FontImpl implements Font {
             });
 
             for (const glyphId of Object.keys(tree)) {
-                if (!this._glyphLookups[glyphId]) {
-                    this._glyphLookups[glyphId] = [];
+                const glyphIdInt = Number.parseInt(glyphId, 10);
+                if (!this._glyphLookups.get(glyphIdInt)) {
+                    this._glyphLookups.set(glyphIdInt, []);
                 }
 
-                this._glyphLookups[glyphId].push(index);
+                this._glyphLookups.get(glyphIdInt).push(index);
             }
         }
     }
@@ -220,10 +221,11 @@ class FontImpl implements Font {
             first: Infinity,
             last: -1
         };
+        const glyphLookups = this._glyphLookups;
 
         // Loop through each glyph and find the first valid lookup for it
         for (let i = 0; i < sequence.length; i++) {
-            const lookups = this._glyphLookups[sequence[i]];
+            const lookups = glyphLookups.get(sequence[i]);
             if (!lookups) {
                 continue;
             }
