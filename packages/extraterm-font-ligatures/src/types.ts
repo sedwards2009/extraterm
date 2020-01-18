@@ -77,9 +77,7 @@ export interface LookupResult {
     contextRange: [number, number];
 }
 
-export interface FlattenedLookupTree {
-    [glyphId: string]: FlattenedLookupTreeEntry;
-}
+export type FlattenedLookupTree = Map<number, FlattenedLookupTreeEntry>;
 
 export interface FlattenedLookupTreeEntry {
     lookup?: LookupResult;

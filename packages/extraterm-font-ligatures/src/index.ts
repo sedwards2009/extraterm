@@ -72,13 +72,12 @@ class FontImpl implements Font {
                 processForward: lookup.lookupType !== 8
             });
 
-            for (const glyphId of Object.keys(tree)) {
-                const glyphIdInt = Number.parseInt(glyphId, 10);
-                if (!this._glyphLookups.get(glyphIdInt)) {
-                    this._glyphLookups.set(glyphIdInt, []);
+            for (const glyphId of tree.keys()) {
+                if (!this._glyphLookups.get(glyphId)) {
+                    this._glyphLookups.set(glyphId, []);
                 }
 
-                this._glyphLookups.get(glyphIdInt).push(index);
+                this._glyphLookups.get(glyphId).push(index);
             }
         }
     }

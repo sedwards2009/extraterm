@@ -2,7 +2,7 @@ import { FlattenedLookupTree, LookupResult } from './types';
 
 export default function walkTree(tree: FlattenedLookupTree, sequence: number[], startIndex: number, index: number): LookupResult | undefined {
     const glyphId = sequence[index];
-    let subtree = tree[glyphId];
+    let subtree = tree.get(glyphId);
     if (!subtree) {
         return undefined;
     }
@@ -46,7 +46,8 @@ export default function walkTree(tree: FlattenedLookupTree, sequence: number[], 
 }
 
 function walkReverse(tree: FlattenedLookupTree, sequence: number[], index: number): LookupResult | undefined {
-    let subtree = tree[sequence[--index]];
+    --index;
+    let subtree = tree.get(sequence[index]);
     let lookup: LookupResult | undefined = subtree && subtree.lookup;
     while (subtree) {
         if (
@@ -60,7 +61,7 @@ function walkReverse(tree: FlattenedLookupTree, sequence: number[], index: numbe
             break;
         }
 
-        subtree = subtree.reverse[sequence[index]];
+        subtree = subtree.reverse.get(sequence[index]);
     }
 
     return lookup;

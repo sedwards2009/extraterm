@@ -1,15 +1,15 @@
 import { LookupTree, FlattenedLookupTree, LookupTreeEntry, FlattenedLookupTreeEntry } from './types';
 
 export default function flatten(tree: LookupTree): FlattenedLookupTree {
-    const result: FlattenedLookupTree = {};
+    const result: FlattenedLookupTree = new Map<number, FlattenedLookupTreeEntry>();
     for (const [glyphId, entry] of tree.individual.entries()) {
-        result[glyphId] = flattenEntry(entry);
+        result.set(glyphId, flattenEntry(entry));
     }
 
     for (const { range, entry } of tree.range) {
         const flattened = flattenEntry(entry);
         for (let glyphId = range[0]; glyphId < range[1]; glyphId++) {
-            result[glyphId] = flattened;
+            result.set(glyphId, flattened);
         }
     }
 
