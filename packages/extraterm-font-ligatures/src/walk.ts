@@ -1,48 +1,39 @@
 import { FlattenedLookupTree, LookupResult } from './types';
 
 export default function walkTree(tree: FlattenedLookupTree, sequence: number[], startIndex: number, index: number): LookupResult | undefined {
-    const glyphId = sequence[index];
-    let subtree = tree.get(glyphId);
-    if (!subtree) {
-        return undefined;
-    }
+    let bestLookup: LookupResult = undefined;
 
-    let lookup = subtree.lookup;
-    if (subtree.reverse) {
-        const reverseLookup = walkReverse(subtree.reverse, sequence, startIndex);
-
-        if (
-            (!lookup && reverseLookup) ||
-            (
-                reverseLookup && lookup && (
-                    lookup.index > reverseLookup.index ||
-                    (lookup.index === reverseLookup.index && lookup.subIndex > reverseLookup.subIndex)
-                )
-            )
-        ) {
-            lookup = reverseLookup;
+    while (true) {
+        const subtree = tree.get(sequence[index]);
+        if (!subtree) {
+            return bestLookup;
         }
+    
+        bestLookup = chooseBestLookup(bestLookup, subtree.lookup);
+        if (subtree.reverse) {
+            const reverseLookup = walkReverse(subtree.reverse, sequence, startIndex);
+            bestLookup = chooseBestLookup(bestLookup, reverseLookup);
+        }    
+
+        index++;
+        if (index >= sequence.length || !subtree.forward) {
+            return bestLookup;
+        }
+        tree = subtree.forward;
     }
+}
 
-    if (++index >= sequence.length || !subtree.forward) {
-        return lookup;
+function chooseBestLookup(aLookup: LookupResult, bLookup: LookupResult): LookupResult {
+    if (bLookup == null) {
+        return aLookup;
     }
-
-    const forwardLookup = walkTree(subtree.forward, sequence, startIndex, index);
-
-    if (
-        (!lookup && forwardLookup) ||
-        (
-            forwardLookup && lookup && (
-                lookup.index > forwardLookup.index ||
-                (lookup.index === forwardLookup.index && lookup.subIndex > forwardLookup.subIndex)
-            )
-        )
-    ) {
-        lookup = forwardLookup;
+    if (aLookup == null) {
+        return bLookup;
     }
-
-    return lookup;
+    if ((aLookup.index > bLookup.index) || (aLookup.index === bLookup.index && aLookup.subIndex > bLookup.subIndex)) {
+        return bLookup;
+    }
+    return aLookup;
 }
 
 function walkReverse(tree: FlattenedLookupTree, sequence: number[], index: number): LookupResult | undefined {
@@ -50,14 +41,10 @@ function walkReverse(tree: FlattenedLookupTree, sequence: number[], index: numbe
     let subtree = tree.get(sequence[index]);
     let lookup: LookupResult | undefined = subtree && subtree.lookup;
     while (subtree) {
-        if (
-            (!lookup && subtree.lookup) ||
-            (subtree.lookup && lookup && lookup.index > subtree.lookup.index)
-        ) {
-            lookup = subtree.lookup;
-        }
+        lookup = chooseBestLookup(lookup, subtree.lookup);
 
-        if (--index < 0 || !subtree.reverse) {
+        --index;
+        if (index < 0 || !subtree.reverse) {
             break;
         }
 
