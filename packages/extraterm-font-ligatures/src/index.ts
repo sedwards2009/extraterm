@@ -252,9 +252,37 @@ class FontImpl implements Font {
         return result;
     }
 
-
     private _fastFindInternal(sequence: number[]): { sequence: number[]; ranges: [number, number][]; } {
+        const ranges: [number, number][] = [];
 
+        const orderedLookups = this._findRelevantLookupsForSequence(sequence);
+        for (let orderedLookupIndex = 0; orderedLookupIndex < orderedLookups.length; orderedLookupIndex++) {
+            this._applyLookupToSequence(orderedLookups[orderedLookupIndex], sequence, ranges);
+        }
+
+        return { sequence, ranges };
+    }
+
+    private _applyLookupToSequence(currentLookupIndex: number, sequence: number[],ranges: [number, number][]): void {
+        const sequenceLength = sequence.length;
+        const glyphLookups = this._glyphLookups;
+        const currentLookup = this._lookupTrees[currentLookupIndex];
+
+        for (let i = 0; i < sequenceLength; i++) {
+            const currentLookups = glyphLookups.get(sequence[i]);
+            if (currentLookups == null || currentLookups.indexOf(currentLookupIndex) === -1) {
+                continue;
+            }
+
+            const result = walkTree(currentLookup.tree, sequence, i, i);
+            if (result && this._applySubstitutionsToSequence(sequence, result.substitutions, i)) {
+                mergeRange(ranges, result.contextRange[0] + i, result.contextRange[1] + i);
+                i+= result.length - 1;
+            }
+        }
+    }
+
+    private _findRelevantLookupsForSequence(sequence: number[]): number[] {
         // Determine which lookups we should extamine.
         const glyphLookups = this._glyphLookups;
         const sequenceLength = sequence.length;
@@ -270,72 +298,20 @@ class FontImpl implements Font {
 
         const orderedLookups = Array.from(seenLookups);
         orderedLookups.sort();
-
-        const ranges: [number, number][] = [];
-
-        for (let orderedLookupIndex = 0; orderedLookupIndex < orderedLookups.length; orderedLookupIndex++) {
-            const currentLookupIndex = orderedLookups[orderedLookupIndex];
-            const currentLookup = this._lookupTrees[currentLookupIndex];
-
-            for (let i = 0; i < sequenceLength; i++) {
-                const currentLookups = glyphLookups.get(sequence[i]);
-                if (currentLookups != null) {
-
-                    if (currentLookups.indexOf(currentLookupIndex) !== -1) {
-
-                        if (currentLookup.processForward) {
-                            const result = walkTree(currentLookup.tree, sequence, i, i);
-                            if (result) {
-                                let didSubstitute = false;
-                                for (let j = 0; j < result.substitutions.length; j++) {
-                                    const sub = result.substitutions[j];
-                                    if (sub !== null) {
-                                        sequence[i + j] = sub;
-                                        didSubstitute = true;
-                                    }
-                                }
-                                if (didSubstitute) {
-                                    mergeRange(
-                                        ranges,
-                                        result.contextRange[0] + i,
-                                        result.contextRange[1] + i
-                                    );
-                                    i+= result.length -1;
-                                }
-                            }
-                        } else {
-                            // We don't need to do the lastGlyphIndex tracking here because
-                            // reverse processing isn't allowed to replace more than one
-                            // character at a time.
-                            const result = walkTree(currentLookup.tree, sequence, i, i);
-                            if (result) {
-                                let didSubstitute = false;
-                                for (let j = 0; j < result.substitutions.length; j++) {
-                                    const sub = result.substitutions[j];
-                                    if (sub !== null) {
-                                        sequence[i + j] = sub;
-                                        didSubstitute = true;
-                                    }
-                                }
-
-                                if (didSubstitute) {
-                                    mergeRange(
-                                        ranges,
-                                        result.contextRange[0] + i,
-                                        result.contextRange[1] + i
-                                    );
-                                    i+= result.length -1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return { sequence, ranges };
+        return orderedLookups;
     }
 
+    private _applySubstitutionsToSequence(sequence: number[], substitutions: number[], startIndex: number): boolean {
+        let didSubstitute = false;
+        for (let j = 0; j < substitutions.length; j++) {
+            const sub = substitutions[j];
+            if (sub !== null) {
+                sequence[startIndex + j] = sub;
+                didSubstitute = true;
+            }
+        }
+        return didSubstitute;
+    }
 
     markLigaturesCharCellGridRow(grid: CharCellGrid, row: number): void {
         // Short circuit the process if there are no possible ligatures in the
@@ -357,7 +333,7 @@ class FontImpl implements Font {
             glyphIds.push(glyphIndex);
         }
 
-        const result = this._findInternal(glyphIds);
+        const result = this._fastFindInternal(glyphIds);
         let i = 0;
         for (const range of result.ranges) {
             while (i < range[0]) {
