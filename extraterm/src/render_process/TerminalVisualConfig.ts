@@ -5,16 +5,19 @@
  */
 import { TerminalTheme } from 'extraterm-extension-api';
 import { ConfigCursorStyle } from '../Config';
+import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 
 export interface TerminalVisualConfig {
   cursorStyle: ConfigCursorStyle;
   cursorBlink: boolean;
   fontFamily: string;
   fontSizePx: number;
+  fontFilePath: string;
   devicePixelRatio: number;
   terminalTheme: TerminalTheme;
   transparentBackground: boolean;
-  ligatures: string[];
+  useLigatures: boolean;
+  ligatureMarker: LigatureMarker;
 }
 
 export interface AcceptsTerminalVisualConfig {

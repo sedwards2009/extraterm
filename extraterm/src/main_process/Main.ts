@@ -22,7 +22,6 @@ import * as os from "os";
 
 import { BulkFileState } from "extraterm-extension-api";
 import { doLater } from "extraterm-later";
-import { extractLigaturesFromFile } from "extraterm-ligature-extractor";
 import { FileLogWriter, getLogger, addLogWriter, log } from "extraterm-logging";
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from "./bulk_file_handling/BulkFileStorage";
@@ -826,10 +825,6 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
       break;
 
-    case Messages.MessageType.FONT_LIGATURES_REQUEST:
-      handleFontLigaturesRequest(event.sender, <Messages.FontLigaturesRequestMessage>msg);
-      break;
-
     default:
       break;
   }
@@ -918,21 +913,6 @@ function handleTerminalThemeRequest(webContents: Electron.WebContents, msg: Mess
   const reply: Messages.TerminalThemeMessage = {
     type: Messages.MessageType.TERMINAL_THEME,
     terminalTheme
-  };
-
-  webContents.send(Messages.CHANNEL_NAME, reply);
-}
-
-async function handleFontLigaturesRequest(webContents: Electron.WebContents,
-    msg: Messages.FontLigaturesRequestMessage): Promise<void> {
-
-  const foundFont = availableFonts.find((fontInfo: FontInfo) => fontInfo.postscriptName === msg.fontFamily);
-  const ligatures = await extractLigaturesFromFile(foundFont.path);
-
-  const reply: Messages.FontLigaturesMessage = {
-    type: Messages.MessageType.FONT_LIGATURES,
-    fontFamily: msg.fontFamily,
-    ligatures
   };
 
   webContents.send(Messages.CHANNEL_NAME, reply);
