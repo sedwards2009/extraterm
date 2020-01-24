@@ -3,10 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, CustomizedCommand, SessionConfiguration} from 'extraterm-extension-api';
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
+
+import { Event, CustomizedCommand, SessionConfiguration} from 'extraterm-extension-api';
+import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
 const ElectronMenu = Electron.remote.Menu;
 
@@ -16,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
 
-import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent} from '../Config';
+import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
 import {ContextMenu} from './gui/ContextMenu';
 import * as DomUtils from './DomUtils';
 import {DropDown} from './gui/DropDown';
@@ -52,6 +54,7 @@ import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
 import { FontLoader, DpiWatcher } from './gui/Util';
 import { doLater } from 'extraterm-later';
+import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -170,12 +173,14 @@ function startUpWebIpcConfigHandling(): void {
 
 async function asyncLoadTerminalTheme(): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
 
-  let ligatures: string[] = [];
+  const fontFilePath = getFontFilePath(systemConfig.availableFonts, config.terminalFont);
+
+  let ligatureMarker: LigatureMarker = null;
   if (config.terminalDisplayLigatures) {
-    const ligatureMsg = await WebIpc.requestFontLigatures(config.terminalFont);
-    ligatures = ligatureMsg.ligatures;
+    ligatureMarker = await loadFontFile(fontFilePath);
   }
 
   terminalVisualConfig = {
@@ -183,10 +188,12 @@ async function asyncLoadTerminalTheme(): Promise<void> {
     cursorBlink: config.blinkingCursor,
     fontFamily: fontLoader.cssNameFromFontName(config.terminalFont),
     fontSizePx: config.terminalFontSize,
+    fontFilePath,
     devicePixelRatio: window.devicePixelRatio,
     terminalTheme: themeMsg.terminalTheme,
     transparentBackground: config.windowBackgroundMode !== "opaque",
-    ligatures,
+    useLigatures: config.terminalDisplayLigatures,
+    ligatureMarker
   };
 }
 
@@ -637,21 +644,28 @@ async function asyncSetupConfiguration(): Promise<void> {
         oldGeneralConfig.windowBackgroundMode !== newGeneralConfig.windowBackgroundMode ||
         oldGeneralConfig.terminalDisplayLigatures !== newGeneralConfig.terminalDisplayLigatures) {
 
-      let ligatures: string[] = [];
-      if (newGeneralConfig.terminalDisplayLigatures) {
-        const ligatureMsg = await WebIpc.requestFontLigatures(newGeneralConfig.terminalFont);
-        ligatures = ligatureMsg.ligatures;
+      let ligatureMarker = terminalVisualConfig ? terminalVisualConfig.ligatureMarker : null;
+      if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
+          oldGeneralConfig.terminalDisplayLigatures !== newGeneralConfig.terminalDisplayLigatures) {
+        if (newGeneralConfig.terminalDisplayLigatures) {
+          const fontFilePath = getFontFilePath(newSystemConfig.availableFonts, newGeneralConfig.terminalFont);
+          ligatureMarker = await loadFontFile(fontFilePath);
+        } else {
+          ligatureMarker = null;
+        }
       }
 
       terminalVisualConfig = {
         cursorStyle: newGeneralConfig.cursorStyle,
         cursorBlink: newGeneralConfig.blinkingCursor,
         fontFamily: fontLoader.cssNameFromFontName(newGeneralConfig.terminalFont),
+        fontFilePath: getFontFilePath(newSystemConfig.availableFonts, newGeneralConfig.terminalFont),
         fontSizePx: newGeneralConfig.terminalFontSize,
         devicePixelRatio: window.devicePixelRatio,
         terminalTheme: terminalVisualConfig.terminalTheme,
         transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
-        ligatures,
+        ligatureMarker,
+        useLigatures: newGeneralConfig.terminalDisplayLigatures,
       }
       terminalVisualConfigChanged = true;
     }
@@ -662,6 +676,15 @@ async function asyncSetupConfiguration(): Promise<void> {
 
   oldGeneralConfig = newGeneralConfig;
   oldSystemConfig = newSystemConfig;
+}
+
+function getFontFilePath(availableFonts: FontInfo[], fontFamily: string): string {
+  for (const fontInfo of availableFonts) {
+    if (fontFamily === fontInfo.postscriptName) {
+      return fontInfo.path;
+    }
+  }
+  return null;
 }
 
 async function asyncRequestThemeContents(refreshThemeTypeList: ThemeTypes.ThemeType[] = []): Promise<void> {

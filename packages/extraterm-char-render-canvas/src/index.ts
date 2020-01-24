@@ -7,4 +7,3 @@ export { computeFontMetrics, computeDpiFontMetrics, debugFontMetrics } from "./F
 export { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 export { FontAtlasRepository } from "./FontAtlasRepository";
 export { Disposable } from "./Disposable";
-export { LigatureMarker } from "./LigatureMarker";

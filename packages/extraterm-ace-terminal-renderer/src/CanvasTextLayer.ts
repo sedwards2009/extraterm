@@ -3,11 +3,13 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer, LigatureMarker } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer } from "extraterm-char-render-canvas";
+import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";
+import { LigatureMarker } from "./LigatureMarker";
 
 const PROVISION_HEIGHT_FACTOR = 1.5;
 
@@ -40,7 +42,7 @@ export class CanvasTextLayer implements TextLayer {
   private _clipDiv: HTMLDivElement = null;
 
   constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
-              devicePixelRatio: number, cursorStyle: CursorStyle, ligatures: string[]) {
+              devicePixelRatio: number, cursorStyle: CursorStyle, ligatureMarker: LigatureMarker) {
 
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
@@ -49,7 +51,7 @@ export class CanvasTextLayer implements TextLayer {
     this._fontSizePx = fontSizePx; 
     this._devicePixelRatio = devicePixelRatio;
     this._cursorStyle = cursorStyle;
-    this.setLigatures(ligatures);
+    this._ligatureMarker = ligatureMarker;
 
     this._clipDiv = <HTMLDivElement> document.createElement("DIV");
     this._clipDiv.classList.add("ace_layer");
@@ -112,11 +114,9 @@ export class CanvasTextLayer implements TextLayer {
     this._deleteCanvasElement();
   }
 
-  setLigatures(ligatures: string[]): void {
-    if (ligatures == null || ligatures.length === 0) {
-      this._ligatureMarker = null;
-    }
-    this._ligatureMarker = new LigatureMarker(ligatures);
+  setLigatureMarker(marker: LigatureMarker): void {
+    this._ligatureMarker = marker;
+    this._deleteCanvasElement();
   }
 
   setCursorStyle(cursorStyle: CursorStyle): void {
@@ -295,7 +295,7 @@ export class CanvasTextLayer implements TextLayer {
         }
 
         if (ligatureMarker != null) {
-          ligatureMarker.markLigatures(grid, canvasRow);
+          ligatureMarker.markLigaturesCharCellGridRow(grid, canvasRow);
         }
       } else {
         // Just clear the row
