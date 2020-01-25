@@ -28,7 +28,6 @@
     "build-all": "yarn run build",
     "build": "tsc",
     "clean": "shx rm -rf dist",
-    "run": "false",
-    "test": "yarn run build && jest"
+    "run": "false"
   }
 }
