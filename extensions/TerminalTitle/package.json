@@ -1,6 +1,7 @@
 {
   "name": "terminal-title",
-  "description": "Terminal Title",
+  "description": "Terminal title and tab editing and configuration",
+  "displayName": "Terminal Title",
   "version": "1.0.0",
   "main": "dist/TerminalTitleExtension.js",
   "license": "MIT",

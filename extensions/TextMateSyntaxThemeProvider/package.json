@@ -1,6 +1,7 @@
 {
   "name": "textmate-syntax-theme-provider",
-  "description": "TextMate Syntax Theme Provider",
+  "displayName": "TextMate Syntax Theme Support",
+  "description": "Adds support for TextMate syntax themes in the embedded text viewer.",
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",

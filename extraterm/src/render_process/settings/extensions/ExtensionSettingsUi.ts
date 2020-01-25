@@ -18,16 +18,16 @@ import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
   <h2><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
 
   <div v-for="extension in allExtensions" v-bind:key="extension.path" class="card">
-    name: {{ extension.name }}
+    <h3>{{ extension.displayName || extension.name }}&nbsp;<span class="extension-version">{{ extension.version }}</span></h3>
+    <div>{{ extension.description}}</div>
   </div>
-
 </div>
 `)
 })
 export class ExtensionSettingsUi extends Vue {
 
   allExtensions: ExtensionMetadata[];
-  
+
   constructor() {
     super();
     this.allExtensions = [];

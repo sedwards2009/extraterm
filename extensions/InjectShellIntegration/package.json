@@ -1,6 +1,7 @@
 {
   "name": "inject-shell-integration",
-  "description": "Inject Shell Integration extension for Extraterm",
+  "displayName": "Inject Shell Integration",
+  "description": "Command to inject the Extraterm shell integration directly into the current terminal tab.",
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",

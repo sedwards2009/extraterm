@@ -1,6 +1,7 @@
 {
   "name": "audio-viewer",
-  "description": "Audio viewer",
+  "displayName": "Audio Preview",
+  "description": "Previews and plays downloaded audio files.",
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",

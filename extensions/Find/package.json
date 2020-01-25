@@ -1,5 +1,6 @@
 {
   "name": "find",
+  "displayName": "Find",
   "description": "Find in text",
   "author": "Simon Edwards",
   "license": "MIT",

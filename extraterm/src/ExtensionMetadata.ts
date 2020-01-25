@@ -10,6 +10,9 @@ export interface ExtensionMetadata {
   main?: string;
   version?: string;
   description?: string;
+  homepage?: string;
+  keywords?: string[];
+  displayName?: string;
   contributes: ExtensionContributes;
   includePlatform?: ExtensionPlatform[];
   excludePlatform?: ExtensionPlatform[];

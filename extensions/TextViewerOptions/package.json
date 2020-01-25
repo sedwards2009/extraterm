@@ -1,6 +1,7 @@
 {
   "name": "text-viewer-options",
-  "description": "Text Viewer options extension for extraterm",
+  "displayName": "Text Viewer Options",
+  "description": "Configuration options for the embedded text viewer.",
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
