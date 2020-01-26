@@ -12,6 +12,7 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 * Images in terminal
 * 24 bit color
 * Color emoji on all platforms
+* Font ligatures
 * Keyboard friendly "Command Palette"
 * Text selection using cursor/keyboard, block selections, multi-cursor selections
 * Text zoom
