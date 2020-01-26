@@ -39,7 +39,7 @@ class FindWidget {
       this._findBackwards();
     });
     this._ui.$on("findPrevious", () => {
-      this._findForewards();
+      this._findForwards();
     });
     this._ui.$on("close", () => {
       this._close();
@@ -141,7 +141,7 @@ class FindWidget {
     }
   }
 
-  private _findForewards(): void {
+  private _findForwards(): void {
     this._applyHighlight();
 
     const termViewers = this._getViewers();
