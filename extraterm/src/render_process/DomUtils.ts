@@ -349,7 +349,7 @@ export function isNodeInDom(node: Node): boolean {
     currentNode = nextNode;
     if (currentNode.parentNode != null) {
       nextNode = currentNode.parentNode;
-    } else if (currentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE && (<ShadowRoot> currentNode).host != null) {
+    } else if (currentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE && (<ShadowRoot> currentNode).host != null) {
       nextNode = (<ShadowRoot> currentNode).host;
     } else {
       break;
@@ -387,7 +387,7 @@ export function nodePathToRoot(node: Node): Node[] {
     if (currentNode.parentNode != null) {
       nextNode = currentNode.parentNode;
       path.push(nextNode);
-    } else if (currentNode.nodeType == Node.DOCUMENT_FRAGMENT_NODE && (<ShadowRoot> currentNode).host != null) {
+    } else if (currentNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE && (<ShadowRoot> currentNode).host != null) {
       nextNode = (<ShadowRoot> currentNode).host;
       path.push(nextNode);
     } else {

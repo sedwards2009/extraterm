@@ -391,8 +391,8 @@ export class VirtualScrollArea {
     for (let i=this._currentState.scrollableStates.length-1; i>=0; i--) {
       const ss = this._currentState.scrollableStates[i];
       if (ss.scrollable === virtualScrollable) {
-        if (ss.virtualHeight == newVirtualHeight && ss.minHeight == newMinHeight &&
-            ss.reserveViewportHeight == newReserveViewportHeight) {
+        if (ss.virtualHeight === newVirtualHeight && ss.minHeight === newMinHeight &&
+            ss.reserveViewportHeight === newReserveViewportHeight) {
           return; // Nothing needs to be done.
         } else {
           break;  // Get to work.

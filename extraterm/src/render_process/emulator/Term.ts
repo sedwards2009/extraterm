@@ -2318,7 +2318,9 @@ export class Emulator implements EmulatorApi {
   }
 
   private error(...args: string[]): void {
-    if (!this.debug) return;
+    if (!this.debug) {
+      return;
+    }
     console.error.apply(console, args);
     console.trace();
   }
@@ -2439,14 +2441,24 @@ export class Emulator implements EmulatorApi {
   }
 
   private prevStop(x?: number): number {
-    if (x === undefined) x = this.x;
-    while (!this.tabs[--x] && x > 0);
+    if (x === undefined) {
+      x = this.x;
+    }
+    x--;
+    while (!this.tabs[x] && x > 0) {
+      x--;
+    }
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
   }
 
   private nextStop(x?: number): number {
-    if (x === undefined) x = this.x;
-    while (!this.tabs[++x] && x < this.cols);
+    if (x === undefined) {
+      x = this.x;
+    }
+    x++;
+    while (!this.tabs[x] && x < this.cols) {
+      x++;
+    }
     return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
   }
 
@@ -3817,7 +3829,7 @@ export class Emulator implements EmulatorApi {
     let param = params[0].intValue || 1;
     const line = this._getRow(this.y);
 
-    const cell = this.x == 0 ? Emulator.defAttr : line.getCell(this.x-1, 0);
+    const cell = this.x === 0 ? Emulator.defAttr : line.getCell(this.x-1, 0);
     const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : line.getCodePoint(this.x-1, 0);
 
     while (param--) {
@@ -3965,7 +3977,9 @@ export class Emulator implements EmulatorApi {
   }
 
   private removeListener(type: string, listener): void {
-    if (!this._events[type]) return;
+    if (!this._events[type]) {
+      return;
+    }
 
     var obj = this._events[type];
     var i = obj.length;
@@ -3979,7 +3993,9 @@ export class Emulator implements EmulatorApi {
   }
 
   private _emit(type, ...args: any[]): void {
-    if (!this._events[type]) return;
+    if (!this._events[type]) {
+      return;
+    }
 
     var obj = this._events[type];
     var l = obj.length;
@@ -4003,9 +4019,13 @@ export class Emulator implements EmulatorApi {
  */
 
 function cancelEvent(ev) {
-  if (ev.preventDefault) ev.preventDefault();
+  if (ev.preventDefault) {
+    ev.preventDefault();
+  }
   ev.returnValue = false;
-  if (ev.stopPropagation) ev.stopPropagation();
+  if (ev.stopPropagation) {
+    ev.stopPropagation();
+  }
   ev.cancelBubble = true;
   return false;
 }

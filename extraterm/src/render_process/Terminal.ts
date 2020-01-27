@@ -740,7 +740,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
   
   private _exitCursorMode(): void {
-    if (this._mode == Mode.DEFAULT) {
+    if (this._mode === Mode.DEFAULT) {
       return;
     }
     this._terminalCanvas.setModeAndVisualState(Mode.DEFAULT, VisualState.FOCUSED);

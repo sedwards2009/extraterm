@@ -105,7 +105,7 @@ export class SnapDropContainer extends TemplatedElementBase {
   private _handleDragLeave(ev: DragEvent): void {
     if (this._isSupportedDropMimeType(ev)) {
       ev.stopPropagation();
-      if (ev.target == DomUtils.getShadowId(this, ID_DRAG_COVER)) {
+      if (ev.target === DomUtils.getShadowId(this, ID_DRAG_COVER)) {
         this._hideDragCover();
       }
     }

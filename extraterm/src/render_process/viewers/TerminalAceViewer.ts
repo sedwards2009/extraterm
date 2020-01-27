@@ -201,7 +201,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
       this.__updateHasTerminalClass();
       this._aceEditor.on("keyPress", ev => {
-        if (this._emulator != null && this._mode == Mode.DEFAULT) {
+        if (this._emulator != null && this._mode === Mode.DEFAULT) {
           if (this._emulator.plainKeyPress(ev.text)) {
             this._emitKeyboardActivityEvent();
           }
@@ -1296,7 +1296,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _onCompositionStart(): void {
-    if (this._mode == Mode.DEFAULT) {
+    if (this._mode === Mode.DEFAULT) {
       this._aceEditor.selection.setSelectionRange({
         start: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn},
         end: {row: this._cursorRow + this._terminalFirstRow, column: this._cursorColumn}

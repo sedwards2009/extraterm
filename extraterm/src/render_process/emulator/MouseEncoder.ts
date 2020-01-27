@@ -317,7 +317,7 @@ export class MouseEncoder {
 }
 
 function DuplicateString(str: string, count: number): string {
-  if (count == 1) {
+  if (count === 1) {
     return str;
   }
   let result = "";

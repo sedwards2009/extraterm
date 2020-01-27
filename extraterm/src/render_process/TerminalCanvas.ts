@@ -425,7 +425,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   }
 
   removeViewerElement(el: ViewerElement): void {
-    if (this._lastChildWithFocus == el) {
+    if (this._lastChildWithFocus === el) {
       this._lastChildWithFocus = null;
     }
     

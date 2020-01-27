@@ -192,7 +192,7 @@ export class Color {
    * @return the color as a CSS formatted string.
    */
   toString(): string {
-    if (this._opacity == 255) {
+    if (this._opacity === 255) {
       // Use a hex representation.
       return this.toHexString();
     } else {

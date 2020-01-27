@@ -174,11 +174,11 @@ function _platformMatches(platform: ExtensionPlatform): boolean {
   if (platform.os == null && platform.arch == null) {
     return false;
   }
-  if (platform.os == process.platform && platform.arch == null) {
+  if (platform.os === process.platform && platform.arch == null) {
     return true;
   }
-  if (platform.arch == process.arch && platform.os == null) {
+  if (platform.arch === process.arch && platform.os == null) {
     return true;
   }
-  return platform.arch == process.arch && platform.os == process.platform;
+  return platform.arch === process.arch && platform.os === process.platform;
 }

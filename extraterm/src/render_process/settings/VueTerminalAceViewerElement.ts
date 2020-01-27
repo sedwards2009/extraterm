@@ -65,7 +65,7 @@ function demoContents(): string {
   let result = newline;
 
   for (let i=0; i<16; i++) {
-    if (i==8) {
+    if (i === 8) {
       result += "\n\r ";
     }
     result += " ";

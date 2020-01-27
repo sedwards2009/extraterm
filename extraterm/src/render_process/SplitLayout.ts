@@ -736,7 +736,7 @@ export class SplitLayout {
 
     // Compute the correct thing to place on the left side.
     let leftSpaceElement = infoNode.leftSpaceDefaultElement;
-    if ((position === RelativePosition.TOP_LEFT || position == RelativePosition.TOP_WIDE) && this._topLeftElement != null) {
+    if ((position === RelativePosition.TOP_LEFT || position === RelativePosition.TOP_WIDE) && this._topLeftElement != null) {
       leftSpaceElement = this._topLeftElement;
     } else {
       if (this._leftSpaceDefaultElementFactory != null && infoNode.leftSpaceDefaultElement == null) {
@@ -747,7 +747,7 @@ export class SplitLayout {
 
     // Compute the correct thing to place on the right side.
     let rightSpaceElement = infoNode.rightSpaceDefaultElement;
-    if ((position === RelativePosition.TOP_RIGHT || position == RelativePosition.TOP_WIDE) && this._topRightElement != null) {
+    if ((position === RelativePosition.TOP_RIGHT || position === RelativePosition.TOP_WIDE) && this._topRightElement != null) {
       rightSpaceElement = this._topRightElement;
     } else {
       if (this._rightSpaceDefaultElementFactory != null && infoNode.rightSpaceDefaultElement == null) {
