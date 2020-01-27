@@ -15,6 +15,8 @@
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 7.1.7",
     "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 7.1.7",
+    "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
+    "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
     "package": "node build_scripts/build_packages.js",
     "package-commands-zip": "node build_scripts/package_commands_zip.js",
     "package-linux": "node build_scripts/package_linux.js",
