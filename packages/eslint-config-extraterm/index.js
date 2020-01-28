@@ -17,6 +17,7 @@ module.exports = {
     "no-tabs": "warn",
     "no-unreachable": "warn",
     "no-unsafe-negation": "warn",
+    "no-var": "warn",
     "no-with": "warn",
     "semi": "warn",
     "use-isnan": "warn",

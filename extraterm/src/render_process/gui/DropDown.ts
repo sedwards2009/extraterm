@@ -46,7 +46,7 @@ export class DropDown extends TemplatedElementBase {
 
     this.addEventListener('click', clickHandler);
     this.addEventListener('selected', (ev: MouseEvent) => {
-      var event = new CustomEvent('selected', { detail: ev.detail });
+      const event = new CustomEvent('selected', { detail: ev.detail });
       this.dispatchEvent(event);
     });
   }

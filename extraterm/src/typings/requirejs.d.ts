@@ -2,6 +2,6 @@
  * Extra declarations for cutting edge DOM APIs.
  */
 
-declare var requirejs: {
+declare const requirejs: {
   toUrl(name: string): string;
 };

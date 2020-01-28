@@ -3981,8 +3981,8 @@ export class Emulator implements EmulatorApi {
       return;
     }
 
-    var obj = this._events[type];
-    var i = obj.length;
+    const obj = this._events[type];
+    let i = obj.length;
 
     while (i--) {
       if (obj[i] === listener /*  || obj[i].listener === listener */ )  {
@@ -3997,9 +3997,9 @@ export class Emulator implements EmulatorApi {
       return;
     }
 
-    var obj = this._events[type];
-    var l = obj.length;
-    var i = 0;
+    const obj = this._events[type];
+    const l = obj.length;
+    let i = 0;
 
     for (; i < l; i++) {
       obj[i].apply(this, args);

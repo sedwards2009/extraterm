@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-declare var fontinfo: fontinfo.Parse;
+declare const fontinfo: fontinfo.Parse;
 export = fontinfo;
 
 declare namespace fontinfo {

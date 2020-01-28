@@ -5,7 +5,7 @@
  */
 
 declare module 'markdown' {
-  var markdown: {
+  const markdown: {
     toHTML(markdownString: string): string;
   };
 }

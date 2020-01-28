@@ -394,7 +394,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _createClone(): Node {
-    var template = <HTMLTemplateElement>window.document.getElementById(ID);
+    let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;

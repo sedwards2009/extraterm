@@ -13,10 +13,10 @@ import * as Util from './gui/Util';
  * @return {Array} A real array object with the elements as fakeArray.
  */
 export function toArray<T>(fakeArray: { [key: number]: T; length: number; }): T[] {
-  var result: T[] = [];
+  const result: T[] = [];
 
-  var len = fakeArray.length;
-  for (var i=0; i<len; i++) {
+  const len = fakeArray.length;
+  for (let i=0; i<len; i++) {
     result.push(fakeArray[i]);
   }
   return result;
