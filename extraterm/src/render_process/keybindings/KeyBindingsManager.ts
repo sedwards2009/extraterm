@@ -50,7 +50,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
     }
 
     const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
-    for (let keybinding of this.keyStrokeList) {
+    for (const keybinding of this.keyStrokeList) {
       if (keybinding.configKeyLowercase === lowerKey &&
           keybinding.altKey === ev.altKey &&
           keybinding.ctrlKey === ev.ctrlKey &&

@@ -61,7 +61,7 @@ export class PopDownListPicker<T extends { id: string; }> extends TemplatedEleme
     
     const resultsDiv = this._elementById(ID_RESULTS);
     resultsDiv.addEventListener('click', (ev: Event) => {
-      for (let node of ev.path) {
+      for (const node of ev.path) {
         if (node instanceof HTMLElement) {
           const dataId = node.attributes.getNamedItem(PopDownListPicker.ATTR_DATA_ID);
           if (dataId !== undefined && dataId !== null) {

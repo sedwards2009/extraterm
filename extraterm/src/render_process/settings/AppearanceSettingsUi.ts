@@ -351,7 +351,7 @@ export class AppearanceSettingsUi extends Vue {
   }
 
   get themeTerminalComment(): string {
-    for (let option of this.themeTerminalOptions) {
+    for (const option of this.themeTerminalOptions) {
       if (option.id === this.themeTerminal) {
         return option.comment;
       }
@@ -360,7 +360,7 @@ export class AppearanceSettingsUi extends Vue {
   }
 
   get themeSyntaxComment(): string {
-    for (let option of this.themeSyntaxOptions) {
+    for (const option of this.themeSyntaxOptions) {
       if (option.id === this.themeSyntax) {
         return option.comment;
       }
@@ -369,7 +369,7 @@ export class AppearanceSettingsUi extends Vue {
   }
 
   get themeGUIComment(): string {
-    for (let option of this.themeGUIOptions) {
+    for (const option of this.themeGUIOptions) {
       if (option.id === this.themeGUI) {
         return option.comment;
       }

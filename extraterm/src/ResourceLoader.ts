@@ -13,6 +13,6 @@
  * @return a URL which points to the resource.
  */
 export function toUrl(resourceName: string): string {
-  let mainPath = __dirname;
+  const mainPath = __dirname;
   return "file://" + mainPath.replace(/\\/g, "/") + "/" + resourceName;
 }

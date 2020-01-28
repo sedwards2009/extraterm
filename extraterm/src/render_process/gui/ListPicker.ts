@@ -53,7 +53,7 @@ const ID_RESULTS = "ID_RESULTS";
     
     const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
     resultsDiv.addEventListener('click', (ev: Event) => {
-      for (let node of ev.path) {
+      for (const node of ev.path) {
         if (node instanceof HTMLElement) {
           const dataId = node.attributes.getNamedItem(ListPicker.ATTR_DATA_ID);
           if (dataId !== undefined && dataId !== null) {

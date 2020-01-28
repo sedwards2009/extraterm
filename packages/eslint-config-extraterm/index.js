@@ -19,6 +19,9 @@ module.exports = {
     "no-unsafe-negation": "warn",
     "no-var": "warn",
     "no-with": "warn",
+    "prefer-const": ["warn", {
+      "destructuring": "all"
+    }],
     "semi": "warn",
     "use-isnan": "warn",
     "valid-typeof": "warn",

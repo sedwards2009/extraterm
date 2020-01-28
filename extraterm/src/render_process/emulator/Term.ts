@@ -564,7 +564,7 @@ export class Emulator implements EmulatorApi {
       return null;
     }
 
-    let line = this._getRow(row);
+    const line = this._getRow(row);
 
     // Place the cursor in the row.
     if (row === this.y &&
@@ -1797,7 +1797,7 @@ export class Emulator implements EmulatorApi {
       // test: echo -e '\eP$q"p\e\\'
       case '$q':
         const pt = params[0].stringValue;
-        let valid = false;
+        const valid = false;
         let replyPt = "";
 
         switch (pt) {

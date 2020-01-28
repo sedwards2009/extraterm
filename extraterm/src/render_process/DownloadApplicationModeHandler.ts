@@ -245,7 +245,7 @@ class DownloadSession {
     newLineIndex = newLineIndex === -1 ? Number.MAX_SAFE_INTEGER : newLineIndex;
     crIndex = crIndex === -1 ? Number.MAX_SAFE_INTEGER : crIndex;
 
-    let splitIndex = Math.min(newLineIndex, crIndex);
+    const splitIndex = Math.min(newLineIndex, crIndex);
     if (splitIndex !== Number.MAX_SAFE_INTEGER) {
       return Math.min(splitIndex, MAX_ENCODED_LINE_LENGTH);
     } else if (this._encodedDataBuffer.length >= MAX_ENCODED_LINE_LENGTH) {

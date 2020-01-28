@@ -219,7 +219,7 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
     ];
     userStoredConfig.commandLineActions = defaultCLA;
   } else {
-    for (let action of userStoredConfig.commandLineActions) {
+    for (const action of userStoredConfig.commandLineActions) {
       sanitizeStringEnumField(action, "frameRule", frameRules, "never_frame");
       sanitizeField(action, "frameRuleLines", 5);
       sanitizeField(action, "match", "");
@@ -240,7 +240,7 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
 
   sanitizeField(userStoredConfig, "sessions", []);
   // Ensure that when reading a config file where args is not defined, we define it as an empty string
-  for (let sessionConfiguration of userStoredConfig.sessions) {
+  for (const sessionConfiguration of userStoredConfig.sessions) {
     sanitizeField(sessionConfiguration, "name", "");
     sanitizeField(sessionConfiguration, "uuid", createUuid());
 

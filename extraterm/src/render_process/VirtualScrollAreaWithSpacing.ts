@@ -78,7 +78,7 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
     let lastScrollableType = ScrollableType.NOTHING;
 
     const newStateList: VirtualScrollableState[] = [];
-    for (let vss of scrollableStates) {
+    for (const vss of scrollableStates) {
       if (vss.scrollable instanceof Spacer) {
         continue;
       }
@@ -145,7 +145,7 @@ export class VirtualScrollAreaWithSpacing extends VirtualScrollArea {
 
     const result: VirtualScrollableHeight[] = [];
     let lastHeightInfo: VirtualScrollableHeight = null;
-    for (let heightInfo of heights) {
+    for (const heightInfo of heights) {
       if (heightInfo.scrollable instanceof Spacer) {
         lastHeightInfo.height += this._spacing;
       } else {

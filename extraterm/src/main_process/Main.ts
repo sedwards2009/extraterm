@@ -584,7 +584,7 @@ const _log = getLogger("main");
  * Extra information about the system configuration and platform.
  */
 function systemConfiguration(config: GeneralConfig, availableFonts: FontInfo[]): SystemConfig {
-  let homeDir = app.getPath('home');
+  const homeDir = app.getPath('home');
   
   const keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(config.keybindingsName);
   return {

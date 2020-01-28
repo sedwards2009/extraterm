@@ -220,7 +220,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
   private __addCommands(commands: Command<Editor>[]): void {
     const commandsWithoutKeys: Command<Editor>[] = [];
-    for (let cmd of commands) {
+    for (const cmd of commands) {
       commandsWithoutKeys.push({
         name:cmd.name,
         exec:cmd.exec,

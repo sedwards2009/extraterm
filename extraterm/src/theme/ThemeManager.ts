@@ -341,7 +341,7 @@ const DEFAULT_TERMINAL_THEME: TerminalTheme = {
 };
 
 export class ThemeManager implements AcceptsConfigDatabase {
-  
+
   private _log: Logger = null;
   private _configDatabase: ConfigDatabase = null;
   private _themes: Map<string, ThemeInfo> = null;
@@ -405,7 +405,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
   /**
    * Scan for themes.
-   * 
+   *
    * @param themesdir The directory to scan for themes.
    * @returns Map of found theme config objects.
    */
@@ -422,11 +422,11 @@ export class ThemeManager implements AcceptsConfigDatabase {
             themeInfo.path = path.join(themePath, item);
             themeInfo.id = item;
             this._fillThemeInfoDefaults(themeInfo);
-            
+
             if (this._validateThemeInfo(themeInfo)) {
               themes.push(themeInfo);
             }
-            
+
             if (DEBUG_SCAN) {
               this._log.debug(`ThemeInfo<name=${themeInfo.name}, id=${themeInfo.id}, type=${themeInfo.type}, path=${themeInfo.path}, provider=${themeInfo.provider}>`);
             }
@@ -443,7 +443,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _fillThemeInfoDefaults(themeInfo: ThemeInfo): void {
     themeInfo.comment = themeInfo.comment === undefined ? "" : themeInfo.comment;
     themeInfo.debug = themeInfo.debug === undefined ? false : themeInfo.debug;
-    
+
     const lbc = themeInfo.loadingBackgroundColor;
     themeInfo.loadingBackgroundColor = lbc === undefined ? "#ffffff" : lbc;
 
@@ -512,7 +512,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   getTheme(themeId: string): ThemeInfo {
     return this._themes.get(themeId) || null;
   }
-  
+
   getAllThemes(): ThemeInfo[] {
     const result: ThemeInfo[] = [];
     this._themes.forEach( themeInfo => {
@@ -539,7 +539,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
   async renderGui(themeGUI: string, themeTerminal: string=null, globalVariables: GlobalVariableMap=null): Promise<RenderResult> {
     let terminalGlobalVariables: GlobalVariableMap = null;
-    if (themeTerminal != null) {    
+    if (themeTerminal != null) {
       const terminalThemeInfo = this._themes.get(themeTerminal);
       terminalGlobalVariables = this._getTerminalThemeVariablesFromInfo(terminalThemeInfo);
     } else {
@@ -592,7 +592,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   private _getTerminalThemeVariablesFromInfo(terminalThemeInfo: ThemeInfo): GlobalVariableMap {
     const contents = this._getTerminalThemeContentsFromInfo(terminalThemeInfo);
     const completeTheme = this._mergeTerminalThemeDefaults(contents, DEFAULT_TERMINAL_THEME);
-    
+
     if (completeTheme.findHighlightBackgroundColor == null) {
       // Mix up a find highlight color.
       const backgroundColor = new UtilColor(completeTheme.backgroundColor);
@@ -642,7 +642,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     for (const key of keys) {
       result[key] = terminalTheme[key] != null ? terminalTheme[key] : defaultTerminalTheme[key];
     }
-  
+
     return result;
   }
 
@@ -686,7 +686,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     const themeInfoList = this._themeIdListToThemeInfoList(themeStack);
     return this._renderCssFiles(themeInfoList, cssFileList, globalVariables);
   }
-  
+
   private _themeIdListToThemeInfoList(themeIdList: string[]): ThemeInfo[] {
     // Convert the list of theme IDs to a list of ThemeInfos
     const themeInfoList = themeIdList.map( themeId => {
@@ -700,7 +700,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     }).filter( themeInfo => themeInfo !== null );
     return themeInfoList;
   }
-  
+
   private async _renderCssFiles(cssDirectoryStack: CssDirectory[], cssFileList: {id: string, cssFile: CssFile;}[],
       globalVariables: GlobalVariableMap): Promise<RenderResult> {
 
@@ -734,11 +734,11 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
   private async _renderCssFile(sassFileName: CssFile, dirPathStack: string[], variables: GlobalVariableMap
     ): Promise<{cssText: string, errorMessage: string}> {
-        
+
     if (DEBUG_SASS) {
       this._log.debug("Compiling _recursiveRenderThemeStackContents: " + sassFileName);
     }
-    
+
     if (DEBUG_SASS) {
       this._log.debug("Compiling " + sassFileName);
       this._log.startTime("Compiling " + sassFileName);
@@ -752,7 +752,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
       return {cssText, errorMessage: null};
     } catch(ex) {
       return {cssText: null, errorMessage: ex.message + " (Directories: " + dirPathStack.join(", ") +" )"};
-    } 
+    }
   }
 
   private _loadSassFile(dirPathStack: string[], sassFileName: string, variables?: GlobalVariableMap): Promise<string> {
@@ -788,26 +788,26 @@ export class ThemeManager implements AcceptsConfigDatabase {
     if (DEBUG_SASS) {
       this._log.debug("Formatted SASS variables: ", formattedVariables);
     }
-    
+
     return new Promise<string>( (resolve, cancel) => {
       if (DEBUG_SASS) {
         this._log.debug("Processing " + sassFileName);
       }
       try {
         const importer: NodeSass.Importer = (url: string, prev: string, done: (data: NodeSass.ImporterReturnType)=> void) => {
-          
+
           const basePath = url;
           const contextBaseDir = path.dirname(prev);
           const dirName = path.join(contextBaseDir, path.dirname(basePath));
           const baseName = path.basename(basePath);
-          
+
           if (DEBUG_SASS_FINE) {
             this._log.debug(`Import request: URL: ${url} prev: ${prev}`);
             this._log.debug("dirName:", dirName);
             this._log.debug("baseName:", baseName);
             this._log.debug("contextBaseDir:", contextBaseDir);
           }
-          
+
           const candidates = [basePath,
             path.join(dirName, '_' + baseName + '.scss'),
             path.join(dirName, '_' + baseName + '.sass'),
@@ -816,8 +816,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
             basePath + '.sass',
             basePath + '.css'
           ];
-          
-          for (let candidate of candidates) {
+
+          for (const candidate of candidates) {
             const candidateFileName = this._findFile(dirPathStack, candidate);
             if (candidateFileName) {
               if (DEBUG_SASS_FINE) {
@@ -835,10 +835,10 @@ export class ThemeManager implements AcceptsConfigDatabase {
               return;
             }
           }
-          
+
           done(new Error("Unable to find " + basePath));
         };
-        
+
         // Start the compile using a small virtual 'boot' file.
         const scssText = formattedVariables + '\n@import "' + sassFileName + '";\n';
         if (DEBUG_SASS_FINE) {
@@ -867,16 +867,16 @@ export class ThemeManager implements AcceptsConfigDatabase {
       }
     });
   }
-  
+
   private _findFile(dirStack: string[], fileName: string): string {
     if (DEBUG_SASS_FINE) {
       this._log.debug(`findFile(): Looking for ${fileName} in dirs ${dirStack}`);
-    }    
+    }
     for (const dir of dirStack) {
       const candidateFileName = path.join(dir, fileName);
       if (DEBUG_SASS_FINE) {
         this._log.debug(`findFile(): Checking ${candidateFileName}`);
-      }    
+      }
       if (fs.existsSync(candidateFileName) && fs.statSync(candidateFileName).isFile()) {
         return candidateFileName;
       }
@@ -886,7 +886,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
   private async _renderAllExtensionCss(themeNameStack: string[], globalVariables: GlobalVariableMap): Promise<RenderResult> {
     const cssDirectoryStack = this._themeIdListToThemeInfoList(themeNameStack);
-    
+
     const renderResult: RenderResult = {
       success: true,
       themeContents: {
@@ -906,12 +906,12 @@ export class ThemeManager implements AcceptsConfigDatabase {
       for (const metadata of extensionMetadata.contributes.tabTitleWidgets) {
         extensionCssList.push(metadata.css);
       }
-      
+
       for (const extensionCss of extensionCssList) {
         if (extensionCss.cssFile.length === 0) {
           continue;
         }
-        
+
         const nextResult = await this._renderExtensionCss(cssDirectoryStack, globalVariables, extensionMetadata,
           extensionCss);
 
@@ -1005,7 +1005,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 .ace_gutter-active-line {
   background-color: ${lineHighlightColor};
 }
-`);    
+`);
 
     const selectionColor = syntaxTheme.selection != null ? syntaxTheme.selection : "#005CCC";
     lines.push(`

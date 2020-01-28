@@ -658,7 +658,7 @@ export class SplitLayout {
     const len = infoNode.children.length;
     for (let i=0; i<len; i++) {
       const kidInfo = infoNode.children[i];
-      let newPosition = infoNode.orientation === SplitOrientation.VERTICAL ?
+      const newPosition = infoNode.orientation === SplitOrientation.VERTICAL ?
                           this._computeNewPositionForVerticalSplits(position, i, len) :
                           this._computeNewPositionForHorizontalSplits(position, i, len);
 

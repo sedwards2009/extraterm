@@ -105,7 +105,7 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {
-    for (let extension of this._activeExtensions) {
+    for (const extension of this._activeExtensions) {
       const tag = extension.contextImpl.findViewerElementTagByMimeType(mimeType);
       if (tag !== null) {
         return tag;
@@ -532,25 +532,25 @@ this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.n
 
   newTerminalCreated(newTerminal: EtTerminal): void {
     newTerminal.addEventListener(EtTerminal.EVENT_APPENDED_VIEWER, (ev: CustomEvent) => {
-      for (let extension of this._activeExtensions) {
+      for (const extension of this._activeExtensions) {
         extension.contextImpl.internalWindow.terminalAppendedViewer(newTerminal, ev.detail.viewer);
       }
     });
 
     newTerminal.environment.onChange((changeList: string[]) => {
-      for (let extension of this._activeExtensions) {
+      for (const extension of this._activeExtensions) {
         extension.contextImpl.internalWindow.terminalEnvironmentChanged(newTerminal, changeList);
       }
     });
 
-    for (let extension of this._activeExtensions) {
+    for (const extension of this._activeExtensions) {
       extension.contextImpl.internalWindow.newTerminalCreated(newTerminal);
     }
   }
 
   createNewTerminalTabTitleWidgets(newTerminal: EtTerminal): HTMLElement[] {
     let result: HTMLElement[] = [];
-    for (let extension of this._activeExtensions) {
+    for (const extension of this._activeExtensions) {
       result = [...result, ...extension.contextImpl. _createTabTitleWidgets(newTerminal)];
     }
     return result;

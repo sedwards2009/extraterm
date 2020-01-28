@@ -128,7 +128,7 @@ class FakeSplitter extends FakeElement {
     const equalSize = ((this._orientation === SplitOrientation.VERTICAL ? this._width : this._height)
       - (this.children.length-1) * this._dividerSize) / this.children.length;
 
-    let result = [];
+    const result = [];
     for (let i=0; i<this.children.length; i++) {
       result.push(equalSize);
     }

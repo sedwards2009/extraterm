@@ -441,7 +441,7 @@ export class VirtualScrollArea {
    */  
   scrollIntoView(topY: number, bottomY: number): number {
     const intersectedScrollable = this._currentState.scrollableStates[this._currentState.intersectIndex];
-    let viewPortTop = this._currentState.virtualScrollYOffset + intersectedScrollable.reserveViewportHeight;
+    const viewPortTop = this._currentState.virtualScrollYOffset + intersectedScrollable.reserveViewportHeight;
 
     let yOffset = this._currentState.virtualScrollYOffset;
     if (topY < viewPortTop) {

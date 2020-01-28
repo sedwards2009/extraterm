@@ -126,7 +126,7 @@ function commandPaletteFormatEntriesWithGroups(entries: CommandAndShortcut[], se
   let currentGroup: string = null;
   const htmlParts: string[] = [];
 
-  for (let entry of entries) {
+  for (const entry of entries) {
     let extraClass = "";
     if (entry.category !== undefined && entry.category !== currentGroup && currentGroup !== null) {
       extraClass = CLASS_RESULT_GROUP_HEAD;

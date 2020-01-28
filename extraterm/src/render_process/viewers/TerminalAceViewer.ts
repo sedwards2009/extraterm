@@ -45,12 +45,6 @@ const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
 
-let cssText: string = null;
-
-function getCssText(): string {
-  return cssText;
-}
-
 
 @WebComponent({tag: "et-terminal-ace-viewer"})
 export class TerminalViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
@@ -384,7 +378,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
   private __addCommands(commands: Command<Editor>[]): void {
     const commandsWithoutKeys: Command<Editor>[] = [];
-    for (let cmd of commands) {
+    for (const cmd of commands) {
       commandsWithoutKeys.push({
         name:cmd.name,
         exec:cmd.exec,
@@ -893,7 +887,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   deleteLines(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark?: number | BookmarkRef): void {
-    let startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
+    const startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
 
     let endLine = 0;
     if (endLineOrBookmark === undefined) {
@@ -1000,7 +994,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
           font-family: sans-serif, ${NO_STYLE_HACK};
         }
 
-        ${getCssText()}
         </style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <style id="${ThemeableElementBase.ID_THEME}"></style>
