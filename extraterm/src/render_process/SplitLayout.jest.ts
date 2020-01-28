@@ -31,7 +31,7 @@ class FakeChildrenArray {
 
   item(x) {
     return this._children[x];
-  }  
+  }
 
   push(kid) {
     this._children.push(kid);
@@ -148,10 +148,10 @@ class FakeSplitter extends FakeElement {
       width: this._width,
       top: 300,
       bottom: 300 + this._height,
-      height:  + this._height
+      height: this._height
     };
   }
-  
+
   update() {
 
   }
@@ -182,7 +182,7 @@ class FakeTab extends FakeElement {
   constructor() {
     super("Tab " + tabCounter);
     tabCounter++;
-  }  
+  }
 }
 
 let divCounter = 0;
@@ -194,7 +194,7 @@ class FakeDiv extends FakeElement {
       super(name);
     }
     divCounter++;
-  }  
+  }
 }
 
 function flattenSplitLayout(layout) {
@@ -673,7 +673,7 @@ test("Split 2 With Fallback", () => {
 
   const tabWidget = splitLayout.splitAfterTabContent(tabContents, SplitOrientation.VERTICAL);
   splitLayout.update();
- 
+
   splitLayout.splitAfterTabWidget(tabWidget, SplitOrientation.VERTICAL);
   splitLayout.update();
 

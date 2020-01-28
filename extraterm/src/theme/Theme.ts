@@ -70,7 +70,7 @@ export const CssFile = {
   GUI_DIVIDER_MENU_ITEM: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-dividermenuitem.scss",
   TERMINAL_CANVAS: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/terminal-canvas.scss",
   GUI_SIDEBAR_LAYOUT: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-sidebar-layout.scss"
-}
+};
 
 export function cssFileToFilename(cssFile: CssFile): string {
   const parts = cssFile.split(":");

@@ -229,7 +229,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   setViewerElement(element: ViewerElement): void {
-    const oldViewer = this._getViewerElement()
+    const oldViewer = this._getViewerElement();
     if (oldViewer != null) {
       oldViewer.removeEventListener('focus', this._boundFocusHandler);
     }

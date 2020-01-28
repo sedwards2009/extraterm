@@ -126,7 +126,7 @@ export class SplitLayout {
   setTopRightElement(el: Element): void {
     this._topRightElement = el;
   }
-  
+
   getTopRightElement(): Element {
     return this._topRightElement;
   }
@@ -134,7 +134,7 @@ export class SplitLayout {
   setLeftSpaceDefaultElementFactory(el: ElementFactory): void {
     this._leftSpaceDefaultElementFactory = el;
   }
-  
+
   getLeftSpaceDefaultElementFactory(): ElementFactory {
     return this._leftSpaceDefaultElementFactory;
   }
@@ -149,7 +149,7 @@ export class SplitLayout {
 
   /**
    * Add a new tab to a Tab widget.
-   * 
+   *
    * @param tabWidget the tab widget which receives the new tab.
    * @param tab the new tab object.
    * @param tabContent the contents of the new tab.
@@ -166,7 +166,7 @@ export class SplitLayout {
 
   /**
    * Remove a tab and its contents.
-   * 
+   *
    * @param tabContent the tab content which is used to find the tab to remove.
    */
   removeTabContent(tabContent: Element): void {
@@ -185,7 +185,7 @@ export class SplitLayout {
   }
 
   getTabContentsByTabWidget(tabWidget: TabWidget): Element[] {
-    const info = findTabWidgetInfoByTabWidget(this._rootInfoNode, tabWidget)
+    const info = findTabWidgetInfoByTabWidget(this._rootInfoNode, tabWidget);
     if (info == null) {
       this._log.severe("Unable to find the info for TabWidget ", TabWidget);
       return null;
@@ -200,7 +200,7 @@ export class SplitLayout {
 
   /**
    * Get the tab which matches the tab content.
-   * 
+   *
    * @param tabContent the tab content to search by.
    * @return the tab which holds the given tab content or null if it could
    *        not be found.
@@ -216,7 +216,7 @@ export class SplitLayout {
 
   /**
    * Get the Tab widget which holds the tab content.
-   * 
+   *
    * @param tabContent the tab content used to find the Tab widget.
    * @return the Tab widget which holds the given tab content, or null if
    *          it could not be found.
@@ -232,7 +232,7 @@ export class SplitLayout {
 
   /**
    * Get the tab content element which is paired with the tab.
-   * 
+   *
    * @param tab the tab object to search by.
    * @return the tab content element or null if it could not be found.
    */
@@ -256,7 +256,7 @@ export class SplitLayout {
 
   /**
    * Get the first tab widget.
-   * 
+   *
    * @return the first tab widget.
    */
   firstTabWidget(): TabWidget {
@@ -265,9 +265,9 @@ export class SplitLayout {
 
   /**
    * Show a tab identified by the given tab content.
-   * 
+   *
    * Selects the tab which is identified by the given tab content.
-   * 
+   *
    * @param tabContent the tab content which identifies the tab to select.
    */
   showTabByTabContent(tabContent: Element): void {
@@ -324,7 +324,7 @@ export class SplitLayout {
     const newTabWidgetPath = findPathToTabWidget(this._rootInfoNode, newTabWidget);
     const splitterInfo = newTabWidgetPath[newTabWidgetPath.length-2];
     const newTabWidgetInfo = newTabWidgetPath[newTabWidgetPath.length-1];
-    
+
     if (splitterInfo.type === "splitter" && newTabWidgetInfo.type === "tabwidget") {
 
       const tabWidgetPath = findPathToTabWidget(splitterInfo, tabWidget);
@@ -342,7 +342,7 @@ export class SplitLayout {
       this._log.severe("Unable to find the info for tab contents ", tabContent);
       return null;
     }
-    
+
     const pathLen = path.length;
     if (pathLen === 1) {
       const tabWidgetInfo = path[0];
@@ -382,7 +382,7 @@ export class SplitLayout {
             if (splitterInfo.orientation === orientation) {
               const newTabWidgetInfo = this._splitTabWidgetAtTabContent(tabWidgetInfo, tabContent)[1];
               const tabWidgetIndex = splitterInfo.children.indexOf(tabWidgetInfo);
-              splitterInfo.children.splice(tabWidgetIndex+1,0, newTabWidgetInfo);          
+              splitterInfo.children.splice(tabWidgetIndex+1,0, newTabWidgetInfo);
               return newTabWidgetInfo.tabWidget;
             } else {
               // Different orientation needed
@@ -408,7 +408,7 @@ export class SplitLayout {
   moveTabToTabWidget(tabElement: Tab, targetTabWidget: TabWidget, tabIndex: number): void {
     const {tabWidgetInfo: sourceTabWidgetInfo, tabInfo} = findTabWidgetInfoByTab(this._rootInfoNode, tabElement);
     const targetTabWidgetInfo = findTabWidgetInfoByTabWidget(this._rootInfoNode, targetTabWidget);
-    
+
     tabIndex = Math.min(tabIndex, targetTabWidgetInfo.children.length);
 
     if (sourceTabWidgetInfo === targetTabWidgetInfo) {
@@ -619,7 +619,7 @@ export class SplitLayout {
 
   /**
    * Update the DOM to match the desired new state.
-   * 
+   *
    * This should be called after mutation methods to update the DOM with the new changes.
    */
   update(): void {
@@ -669,7 +669,7 @@ export class SplitLayout {
         // Tab widget
         this._updateTabWidget(kidInfo, newPosition);
         targetChildrenList.push(kidInfo.tabWidget);
-      } 
+      }
     }
 
     DomUtils.setElementChildren(infoNode.splitter, targetChildrenList);

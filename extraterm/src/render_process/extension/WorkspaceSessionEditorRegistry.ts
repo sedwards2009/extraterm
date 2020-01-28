@@ -130,7 +130,7 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
 
   protected _themeCssFiles(): CssFile[] {
     const extensionContext = this._getExtensionContext();
-    const name = extensionContext.extensionMetadata.name
+    const name = extensionContext.extensionMetadata.name;
     const cssDecl = this._getExtensionSessionEditorContribution().css;
     const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + cf);
 

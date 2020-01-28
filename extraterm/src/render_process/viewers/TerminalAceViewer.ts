@@ -61,7 +61,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
   /**
    * Type guard for detecting a EtTerminalViewer instance.
-   * 
+   *
    * @param  node the node to test
    * @return      True if the node is a EtTerminalViewer.
    */
@@ -93,7 +93,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _terminalVisualConfig: TerminalVisualConfig = null;
 
   private _needEmulatorResize: boolean = false;
-  
+
   // Emulator dimensions
   private _rows = -1;
   private _columns = -1;
@@ -120,7 +120,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._rerenderLater = new DebouncedDoLater(() => this._handleDelayedRerender());
 
     this._renderEventListener = this._handleRenderEvent.bind(this);
-    
+
     this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
@@ -153,7 +153,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     return metadata;
   }
-  
+
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) === null) {
@@ -161,7 +161,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
       const clone = this.createClone();
       shadow.appendChild(clone);
-      
+
       this.installThemeCss();
 
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
@@ -212,7 +212,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         if (this._mode !== Mode.CURSOR) {
           return;
         }
-        
+
         const heightRows = this._aceEditSession.getLength();
         if (heightRows !== this._documentHeightRows) {
           this._documentHeightRows = heightRows;
@@ -230,12 +230,12 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
           this.dispatchEvent(event);
         }
       });
-      
+
       this._aceEditor.on("focus", () => {
         if (this._emulator !== null) {
           this._emulator.focus();
         }
-        
+
         if (this._visualState === VisualState.AUTO) {
           const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
           containerDiv.classList.add(CLASS_FOCUSED);
@@ -249,13 +249,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         if (this._emulator !== null) {
           this._emulator.blur();
         }
-        
+
         if (this._visualState === VisualState.AUTO) {
           containerDiv.classList.add(CLASS_UNFOCUSED);
           containerDiv.classList.remove(CLASS_FOCUSED);
         }
       });
-      
+
       this._aceEditor.on("changeSelection", (event: SelectionChangeEvent) => {
         this._emitBeforeSelectionChangeEvent(event.origin === Origin.USER_MOUSE);
       });
@@ -269,7 +269,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       });
 
       this._exitCursorMode();
-      
+
       // Filter the keyboard events before they reach Ace.
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
 
@@ -285,7 +285,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
 
     this._updateCssVars();
-    
+
     if (this._needEmulatorResize) {
       this._needEmulatorResize = false;
     }
@@ -351,7 +351,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     return result;
   }
-  
+
   private _configCursorStyleToRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {
     switch (configCursorStyle) {
       case "block":
@@ -394,7 +394,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         readOnly:cmd.readOnly,
         scrollIntoView:cmd.scrollIntoView,
         isAvailable:cmd.isAvailable,
-      });  
+      });
     }
     this._aceEditor.commands.addCommands(commandsWithoutKeys);
   }
@@ -403,18 +403,18 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._commandLine = commandLine;
     this._metadataEventDoLater.trigger();
   }
-  
+
   setReturnCode(returnCode: string): void {
     this._returnCode = returnCode;
     this._metadataEventDoLater.trigger();
   }
 
-  getSelectionText(): string {    
+  getSelectionText(): string {
     if (this._aceEditor.selection.isEmpty()) {
       return null;
     }
 
-    const selection = this._aceEditSession.getSelection()
+    const selection = this._aceEditSession.getSelection();
     if (selection.inMultiSelectMode) {
       return selection.getAllRanges().map(range => this._aceEditSession.getUnwrappedTextRange(range)).join("\n");
     } else {
@@ -577,18 +577,18 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     const text =  this._isEmpty ? "" : this._aceEditor.getValue();
     return new BlobBulkFileHandle(this.getMimeType()+";charset=utf8", {}, Buffer.from(text, 'utf8'));
   }
-  
+
   isEmpty(): boolean {
     return this._isEmpty;
   }
 
-  setEmulator(emulator: Term.Emulator): void {    
+  setEmulator(emulator: Term.Emulator): void {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
       this._emulator.removeRenderEventListener(this._renderEventListener);
       this._emulator = null;
     }
-    
+
     if (emulator !== null) {
       emulator.addRenderEventListener(this._renderEventListener);
     }
@@ -600,24 +600,24 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   getEmulator(): Term.Emulator {
     return this._emulator;
   }
-  
+
   setMode(newMode: Mode): void {
     if (newMode !== this._mode) {
       this._mode = newMode;
       this._applyMode();
     }
   }
-  
+
   getMode(): Mode {
     return this._mode;
   }
-  
+
   setEditable(editable: boolean): void {
     this._editable = editable;
 
     this._applyMode();
   }
-  
+
   getEditable(): boolean {
     return this._editable;
   }
@@ -628,7 +628,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         // Enter cursor mode.
         this._enterCursorMode();
         break;
-        
+
       case Mode.DEFAULT:
         this._exitCursorMode();
         break;
@@ -636,7 +636,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   find(needle: string, options?: FindOptions): boolean {
-    const result = this._aceEditor.find(needle, this._findOptionsToSearchOptions(options))
+    const result = this._aceEditor.find(needle, this._findOptionsToSearchOptions(options));
     if (result) {
       const event = new CustomEvent(ViewerElement.EVENT_CURSOR_MOVE, { bubbles: true });
       this.dispatchEvent(event);
@@ -689,7 +689,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this.dispatchEvent(event);
     }
     return result != null;
-  } 
+  }
 
   highlight(re: RegExp): void {
     this._aceEditor.highlight(re);
@@ -697,7 +697,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
   /**
    * Gets the height of this element.
-   * 
+   *
    * @return {number} [description]
    */
   getHeight(): number {
@@ -714,7 +714,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this.scrollTo(0, setterState.yOffset);
     }
   }
-  
+
   // VirtualScrollable
   getMinHeight(): number {
     return 0;
@@ -732,7 +732,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
     return result;
   }
-  
+
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     let reserve = 0;
@@ -827,7 +827,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
 
     if (DEBUG_RESIZE) {
-      this._log.debug("resizeEmulatorToBox() calculated charWidth: ",charWidth);    
+      this._log.debug("resizeEmulatorToBox() calculated charWidth: ",charWidth);
       this._log.debug("resizeEmulatorToBox() calculated charHeight: ",charHeight);
       this._log.debug("resizeEmulatorToBox() element width: ",width);
     }
@@ -843,11 +843,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   lineCount(): number {
     return this._isEmpty ? 0 : this._aceEditSession.getLength();
   }
-  
+
   deleteScreen(): void {
     this._deleteScreen();
   }
-  
+
   getCursorPosition(): CursorMoveDetail {
     const cursorPos = this._aceEditor.getCursorPositionScreen();
     const charHeight = this._aceEditor.renderer.charHeightPx;
@@ -865,12 +865,12 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   clearSelection(): void {
     this._aceEditor.clearSelection();
   }
-  
+
   setCursorPositionTop(ch: number): boolean {
     this._aceEditor.moveCursorTo(0, ch, false);
     return true;
   }
-  
+
   setCursorPositionBottom(ch: number): boolean {
     this._aceEditor.moveCursorTo(this._aceEditSession.getLength()-1 , ch, false);
     return true;
@@ -891,17 +891,17 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._terminalFirstRow -= linesToDelete;
     emitResizeEvent(this);
   }
-  
+
   deleteLines(startLineOrBookmark: number | BookmarkRef, endLineOrBookmark?: number | BookmarkRef): void {
     let startLine = this._getLineNumberFromBookmark(startLineOrBookmark);
-    
+
     let endLine = 0;
     if (endLineOrBookmark === undefined) {
       endLine = this.lineCount()-1;
     } else {
       endLine = this._getLineNumberFromBookmark(endLineOrBookmark);
     }
-    
+
     if (startLine < 0 || endLine < 0) {
       this._log.warn(`Invalid arguments to deleteLines(). Resolved startLine=${startLine}, endLine=${endLine}.`);
       return;
@@ -917,9 +917,9 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
   /**
    * Get a range of lines.
-   * 
+   *
    * Note the end of the range is inclusive of the end row.
-   * 
+   *
    * @param startLineOrBookmark Start end of the range.
    * @param endLineOrBookmark Optional. Defines the end of the range inclusive.
    * @return The lines or `null` if the range was invalid.
@@ -958,13 +958,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     const textBookmark = new Anchor(this._aceEditor.getSession().doc, lineNumber, 0);
     const bookmarkCounter = this._bookmarkCounter;
     this._bookmarkCounter++;
-    
+
     const ref: BookmarkRef = {
       bookmarkRefId: bookmarkCounter,
       backupRow: 0,
     };
     this._bookmarkIndex.set(ref, textBookmark);
-    
+
     return ref;
   }
 
@@ -992,23 +992,23 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
       template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-        
+
         /* The idea is that this rule will be quickly applied. We can then monitor
            the computed style to see when the proper theme font is applied and
            NO_STYLE_HACK disappears from the reported computed style. */
         .terminal {
           font-family: sans-serif, ${NO_STYLE_HACK};
         }
-        
+
         ${getCssText()}
         </style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <style id="${ThemeableElementBase.ID_THEME}"></style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`
+        <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`;
 
       window.document.body.appendChild(template);
     }
-    
+
     return window.document.importNode(template.content, true);
   }
 
@@ -1061,14 +1061,14 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     if (this._aceEditor == null) {
       return;
     }
-    
+
     this._aceEditor.setReadOnly(true);
     this._aceEditor.setRelayInput(this._emulator != null);
 
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
   }
-  
+
   private _emitKeyboardActivityEvent(): void {
     const event = new CustomEvent(TerminalViewer.EVENT_KEYBOARD_ACTIVITY, { bubbles: true });
     this.dispatchEvent(event);
@@ -1097,7 +1097,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     if (this._aceEditSession == null) {
       return;
     }
-    
+
     let xCoord = 0;
     let yCoord = 0;
 
@@ -1114,11 +1114,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._aceEditSession.setScrollLeftPx(xCoord);
     this._aceEditSession.setScrollTopPx(yCoord);
   }
-  
+
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => boolean): boolean {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
-    if (ev.ctrlKey) { 
+    if (ev.ctrlKey) {
       return false;
     }
     const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
@@ -1141,7 +1141,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       row: pos.row - this._terminalFirstRow,
       column: pos.column
     };
-    
+
     if (emulatorHandler(options)) {
       // The emulator consumed the event. Stop Ace from processing it too.
       ev.stopPropagation();
@@ -1150,7 +1150,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
     return false;
   }
-  
+
   private _handleMouseDownEvent(ev: MouseEvent): void {
     const isRightMouseButton = (ev.buttons & 2) !== 0;
     if (isRightMouseButton) {
@@ -1172,7 +1172,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       this._handleContextMenu(ev);
     }
   }
-  
+
   private _handleMouseUpEvent(ev: MouseEvent): void {
     const isRightMouseButton = (ev.buttons & 2) !== 0;
     if (isRightMouseButton) {
@@ -1185,7 +1185,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseUp.bind(this._emulator));
   }
-  
+
   private _handleMouseMoveEvent(ev: MouseEvent): void {
     if (this._emulator === null) {
       return;
@@ -1230,7 +1230,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       return false;
     }
 
-    if (ev.ctrlKey) { 
+    if (ev.ctrlKey) {
       return false;
     }
     const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
@@ -1265,7 +1265,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
     this._aceEditor.commands.exec(aceCommand, this._aceEditor);
   }
-  
+
   private _handleContainerKeyDownCapture(ev: KeyboardEvent): void {
     if (this._mode === Mode.DEFAULT) {
       if (this._emulator !== null && this._emulator.keyDown(ev)) {
@@ -1282,7 +1282,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     ev.preventDefault();
     dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
-  
+
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
     const sizeResized = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
     const refreshResized = this._refreshScreen(event.refreshStartRow, event.refreshEndRow);
@@ -1310,7 +1310,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     if (this._rows === newRows && this._columns === newColumns && currentRealizedRows <= realizedRows) {
       return false; // Nothing to do.
     }
-    
+
     if (currentRealizedRows > realizedRows) {
       // Trim off the extra lines.
       const startPos = this._terminalFirstRow + realizedRows === 0
@@ -1321,7 +1321,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
       this._realizedRows = realizedRows;
     }
-    
+
     this._rows = newRows;
     this._columns = newColumns;
     return true;
@@ -1346,7 +1346,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._saveBookmarks();
     this._insertLinesOnScreen(refreshStartRow, endRow, lines);
     this._restoreBookmarks();
-    
+
     // Update our realised rows var if needed.
     const lineCount = this._aceEditSession.getLength();
     const currentRealizedRows = lineCount - this._terminalFirstRow;
@@ -1393,7 +1393,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     // Mark sure there are enough rows inside Ace.
     if (lineCount < endRow + this._terminalFirstRow) {
       const pos = { row: this._terminalFirstRow + lineCount, column: 0 };
-      
+
       let emptyText = "";
       const extraCrCount = endRow + this._terminalFirstRow - lineCount;
       for (let j = 0; j < extraCrCount; j++) {
@@ -1405,20 +1405,20 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._aceEditor.setTerminalLines(startRow + this._terminalFirstRow, lines);
     this._isEmpty = false;
   }
-  
+
   private _deleteScreen(): void {
     this._realizedRows = -1;
     if (this._isEmpty) {
       return;
     }
-    
+
     const lineCount = this._aceEditSession.getLength();
     this._deleteLines(this._terminalFirstRow, lineCount-1);
   }
-  
+
   /**
    * Deletes the given inclusive range of lines.
-   * 
+   *
    * @param {number} startLine [description]
    * @param {number} endLine   [description]
    */
@@ -1429,7 +1429,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     if (startLine === 0) {
       const startPos = { row: startLine, column: 0 };
-      this._aceEditSession.replace({start: startPos, end: endPos}, "")
+      this._aceEditSession.replace({start: startPos, end: endPos}, "");
       this._isEmpty = lineCount-1 === endLine;
     } else {
       // Start deleting from the end of the row before the top of the terminal.
@@ -1437,11 +1437,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       doc.replace({start: startPos, end: endPos}, "");
     }
   }
-  
+
   private getVirtualTextHeight(): number {
     return this._isEmpty ? 0 : this._aceEditor.renderer.layerConfig.charHeightPx * this.lineCount();
   }
-  
+
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
     if (this.parentNode === null || this._aceEditor == null) {
@@ -1455,7 +1455,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       // the lines up and align them with the top of the viewport.
       aceEditorHeight = elementHeight - (elementHeight % this._aceEditor.renderer.layerConfig.charHeightPx);
     } else {
-      aceEditorHeight = elementHeight;        
+      aceEditorHeight = elementHeight;
     }
     const reserveHeight = this.getReserveViewportHeight(elementHeight);
 

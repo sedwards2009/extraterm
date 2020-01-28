@@ -22,10 +22,10 @@ export type BorderSide = "north" | "south" | "east" | "west";
 
 @WebComponent({tag: "et-sidebar-layout"})
 export class SidebarLayout extends TemplatedElementBase {
-   
+
   static TAG_NAME = "ET-SIDEBAR-LAYOUT";
   private _log: Logger;
-  
+
   constructor() {
     super({ delegatesFocus: true });
     this._log = getLogger(SidebarLayout.TAG_NAME, this);
@@ -34,9 +34,9 @@ export class SidebarLayout extends TemplatedElementBase {
       slotElement.addEventListener("slotchange", (ev) => {
         const slot = <HTMLSlotElement> ev.target;
         if (slot.assignedNodes().length === 0) {
-          slot.parentElement.classList.add("empty")
+          slot.parentElement.classList.add("empty");
         } else {
-          slot.parentElement.classList.remove("empty")
+          slot.parentElement.classList.remove("empty");
         }
       });
     }

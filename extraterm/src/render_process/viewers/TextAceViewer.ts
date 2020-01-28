@@ -56,23 +56,23 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     TextEditor, Disposable {
 
   static TAG_NAME = "ET-TEXT-VIEWER";
-  
+
   /**
    * Type guard for detecting a EtTerminalViewer instance.
-   * 
+   *
    * @param  node the node to test
    * @return      True if the node is a EtTerminalViewer.
    */
   static is(node: Node): node is TextViewer {
     return node !== null && node !== undefined && node instanceof TextViewer;
   }
-  
+
   private _log: Logger;
   private _title = "";
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
-  
+
   private _aceEditor: ExtratermAceEditor = null;
   private _aceEditSession: EditSession = null;
   private _height = 0;
@@ -98,11 +98,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
       this.dispatchEvent(event);
     });
-    
+
     const shadow = this.attachShadow( { mode: 'open', delegatesFocus: true } );
     const clone = this.createClone();
     shadow.appendChild(clone);
-    
+
     this._initFontLoading();
     this.installThemeCss();
 
@@ -120,7 +120,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     aceRenderer.setShowLineNumbers(true);
     aceRenderer.setShowFoldWidgets(false);
     aceRenderer.setDisplayIndentGuides(false);
-    
+
     this._aceEditor = new ExtratermAceEditor(aceRenderer, this._aceEditSession);
 
     this.__addCommands(DefaultCommands);
@@ -134,12 +134,12 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
         this._emitVirtualResizeEvent();
       });
     });
-    
+
     this._aceEditor.on("change", (data, editor) => {
       if (this._mode !== ViewerElementTypes.Mode.CURSOR) {
         return;
       }
-      
+
       doLater( () => {
         this._emitVirtualResizeEvent();
       });
@@ -153,7 +153,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
         this.dispatchEvent(event);
       }
     });
-    
+
     this._aceEditor.on("focus", (): void => {
       if (this._visualState === VisualState.AUTO) {
         const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
@@ -168,7 +168,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
         containerDiv.classList.remove(CLASS_FOCUSED);
       }
     });
-    
+
     this._aceEditor.on("changeSelection", (): void => {
       this._emitBeforeSelectionChangeEvent(true);
     });
@@ -192,16 +192,16 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
     containerDiv.addEventListener('contextmenu', (ev) => this._handleContextMenu(ev));
 
-    this._updateCssVars(); 
+    this._updateCssVars();
     this._applyVisualState(this._visualState);
     this._adjustHeight(this._height);
   }
 
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
-    
+
     if (this._title !== "") {
-      metadata.title = this._title;     
+      metadata.title = this._title;
     } else {
       metadata.title = "Text";
     }
@@ -230,11 +230,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
         readOnly:cmd.readOnly,
         scrollIntoView:cmd.scrollIntoView,
         isAvailable:cmd.isAvailable,
-      });  
+      });
     }
     this._aceEditor.commands.addCommands(commandsWithoutKeys);
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TEXT_VIEWER];
   }
@@ -256,12 +256,12 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     super.dispose();
   }
 
-  getSelectionText(): string {    
+  getSelectionText(): string {
     if (this._aceEditor.selection.isEmpty()) {
       return null;
     }
 
-    const selection = this._aceEditSession.getSelection()
+    const selection = this._aceEditSession.getSelection();
     if (selection.inMultiSelectMode) {
       return selection.getAllRanges().map(range => this._aceEditSession.getTextRange(range)).join("\n");
     } else {
@@ -289,21 +289,21 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     if (newVisualState !== this._visualState) {
       if (DomUtils.getShadowRoot(this) !== null) {
         this._applyVisualState(newVisualState);
-      }    
+      }
       this._visualState = newVisualState;
     }
   }
-  
+
   getVisualState(): VisualState {
     return this._visualState;
   }
-  
+
   private _setText(newText: string): void {
     this._aceEditor.setValue(newText);
     this._aceEditor.selection.clearSelection();
     this._isEmpty = false;
   }
-  
+
   // From SupportsClipboardPaste interface.
   canPaste(): boolean {
     return this._mode === ViewerElementTypes.Mode.CURSOR;
@@ -332,7 +332,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       });
     }
   }
-  
+
   getMimeType(): string {
     return this._mimeType;
   }
@@ -363,7 +363,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
   setWrapLines(wrap: boolean): void {
     this._aceEditSession.setUseWrapMode(wrap);
   }
-  
+
   getWrapLines(): boolean {
     return this._aceEditSession.getUseWrapMode();
   }
@@ -399,7 +399,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     this._metadataEventDoLater.trigger();
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     this.setMimeType(mimeType);
-    const data = await BulkFileUtils.readDataAsArrayBuffer(handle)
+    const data = await BulkFileUtils.readDataAsArrayBuffer(handle);
     const decodedText = Buffer.from(data).toString(charset == null ? "utf8" : charset);
     this._setText(decodedText);
     this._bulkFileHandle = handle;
@@ -408,11 +408,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     // short while before it fully updates itself and is ready to correctly
     // handle sizing and scroll commands. Thus, we wait a short time before
     // triggering the resizing events and activities.
-// FIXME this might not be needed anymore    
+// FIXME this might not be needed anymore
     await newImmediateResolvePromise();
     this._emitVirtualResizeEvent();
   }
-  
+
   setMode(newMode: ViewerElementTypes.Mode): void {
     if (newMode !== this._mode) {
       switch (newMode) {
@@ -420,7 +420,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
           // Enter cursor mode.
           this._enterCursorMode();
           break;
-          
+
         case ViewerElementTypes.Mode.DEFAULT:
           this._exitCursorMode();
           break;
@@ -428,19 +428,19 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       this._mode = newMode;
     }
   }
-  
+
   getMode(): ViewerElementTypes.Mode {
     return this._mode;
   }
-  
+
   setEditable(editable: boolean): void {
     this._editable = editable;
     this._aceEditor.setReadOnly(! editable);
   }
-  
+
   getEditable(): boolean {
     return this._editable;
-  }  
+  }
 
   find(needle: string, options?: FindOptions): boolean {
     return this._aceEditor.find(needle, this._findOptionsToSearchOptions(options)) != null;
@@ -481,7 +481,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
   findPrevious(needle: string): boolean {
     return this._aceEditor.findPrevious(needle) != null;
-  } 
+  }
 
   highlight(re: RegExp): void {
     this._aceEditor.highlight(re);
@@ -489,7 +489,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
   /**
    * Gets the height of this element.
-   * 
+   *
    * @return {number} [description]
    */
   getHeight(): number {
@@ -509,7 +509,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     }
     return result;
   }
-  
+
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     if (DEBUG_RESIZE) {
@@ -517,7 +517,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     }
     return OVERSIZE_LINE_HEIGHT_COMPENSATION_HACK;
   }
-  
+
   // VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
     if (setterState.heightChanged || setterState.yOffsetChanged) {
@@ -534,9 +534,9 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
       this._adjustHeight(setterState.height);
       this.scrollTo(0, setterState.yOffset);
-    }    
+    }
   }
-  
+
   isFontLoaded(): boolean {
     return this._effectiveFontFamily().indexOf(NO_STYLE_HACK) === -1;
   }
@@ -567,18 +567,18 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     this._aceEditor.moveCursorTo(0, ch, false);
     return true;
   }
-  
+
   setCursorPositionBottom(ch: number): boolean {
     this._aceEditor.moveCursorTo(this._aceEditSession.getLength()-1 , ch, false);
     return true;
   }
-  
+
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
     const mode = ModeList.getModeByMimeType(mimeType);
     return mode !== null && mode !== undefined;
   }
-  
+
   deleteTopLines(topLines: number): void {
     const linesToDelete = Math.min(topLines, this.lineCount());
 
@@ -631,11 +631,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
         </style>
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <style id="${ThemeableElementBase.ID_THEME}"></style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`
+        <div id="${ID_CONTAINER}" class="terminal_viewer ${CLASS_UNFOCUSED}"></div>`;
 
       window.document.body.appendChild(template);
     }
-    
+
     return window.document.importNode(template.content, true);
   }
 
@@ -671,7 +671,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       containerDiv.classList.remove(CLASS_FOCUSED);
     }
   }
-  
+
   private _enterCursorMode(): void {
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
@@ -691,7 +691,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.classList.add(CLASS_HIDE_CURSOR);
   }
-  
+
   private _emitVirtualResizeEvent(): void {
     if (DEBUG_RESIZE) {
       this._log.debug("_emitVirtualResizeEvent");
@@ -699,7 +699,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
     VirtualScrollAreaEmitResizeEvent(this);
   }
-  
+
   private _emitBeforeSelectionChangeEvent(originMouse: boolean): void {
     const event = new CustomEvent(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE, { detail: { originMouse: originMouse },
       bubbles: true });
@@ -735,7 +735,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       return super.dispatchEvent(ev);
     }
   }
-  
+
   private _handleContextMenu(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();
@@ -744,20 +744,20 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
   private _initFontLoading(): void {
     this._mainStyleLoaded = false;
-    
+
     DomUtils.getShadowId(this, ID_MAIN_STYLE).addEventListener('load', () => {
       this._mainStyleLoaded = true;
       this._handleStyleLoad();
     });
   }
-  
+
   private _handleStyleLoad(): void {
     if (this._mainStyleLoaded) {
       // Start polling the term for application of the font.
       this._resizePollHandle = doLaterFrame(this._resizePoll.bind(this));
     }
   }
-  
+
   private _effectiveFontFamily(): string {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     const cs = window.getComputedStyle(containerDiv, null);
@@ -788,7 +788,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     lineHeight = this._aceEditor.renderer.layerConfig.charHeightPx;
     return this._isEmpty ? 0 : lineHeight * this._aceEditSession.getScreenLength();
   }
-  
+
   private _adjustHeight(newHeight: number): void {
     this._height = newHeight;
     if (this.parentNode === null || DomUtils.getShadowRoot(this) === null) {

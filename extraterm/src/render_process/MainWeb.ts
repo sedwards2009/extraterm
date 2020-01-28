@@ -98,12 +98,12 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
 
   const configMsg = await WebIpc.requestConfig("*");
   await asyncHandleConfigMessage(configMsg);
-  
-  const themeListMsg = await WebIpc.requestThemeList()
+
+  const themeListMsg = await WebIpc.requestThemeList();
   handleThemeListMessage(themeListMsg);
 
   startUpWebIpcConfigHandling();
-  
+
   await asyncLoadTerminalTheme();
 
   const doc = window.document;
@@ -137,10 +137,10 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
 function startUpTheming(): void {
   // Theme control for the window level.
   const topThemeable: ThemeTypes.Themeable = {
-    setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {      
+    setThemeCssMap(cssMap: Map<ThemeTypes.CssFile, string>): void {
       const styleText =
-        cssMap.get(ThemeTypes.CssFile.GENERAL_GUI) + "\n" + 
-        cssMap.get(ThemeTypes.CssFile.FONT_AWESOME) + "\n" + 
+        cssMap.get(ThemeTypes.CssFile.GENERAL_GUI) + "\n" +
+        cssMap.get(ThemeTypes.CssFile.FONT_AWESOME) + "\n" +
         cssMap.get(ThemeTypes.CssFile.TOP_WINDOW) + "\n" +
         cssMap.get(ThemeTypes.CssFile.TERMINAL_VARS) + "\n" +
         cssMap.get(ThemeTypes.CssFile.THEME_VARS);
@@ -156,17 +156,17 @@ function startUpWebIpc(): void {
   // Default handling for theme messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_CONTENTS, handleThemeContentsMessage);
-  
+
   WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
-  
+
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
-}  
+}
 
 function startUpWebIpcConfigHandling(): void {
   // Default handling for config messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, asyncHandleConfigMessage);
 
-  // Fetch a fresh version of the config in case 
+  // Fetch a fresh version of the config in case
   // we missed an pushed update from main process.
   WebIpc.requestConfig("*");
 }
@@ -226,7 +226,7 @@ function startUpMainWebUi(): void {
       WebIpc.windowCloseRequest();
     }
   });
-  
+
   // Update the window title on request.
   mainWebUi.addEventListener(MainWebUi.EVENT_TITLE, (ev: CustomEvent) => {
     window.document.title = "Extraterm - " + ev.detail.title;
@@ -345,7 +345,7 @@ function startUpMainMenu(): void {
         <${MenuItem.TAG_NAME} icon="far fa-lightbulb" data-command="extraterm:window.openAbout">About</${MenuItem.TAG_NAME}>
     </${ContextMenu.TAG_NAME}>
   `));
-  window.document.body.appendChild(contextMenuFragment)
+  window.document.body.appendChild(contextMenuFragment);
 
   const mainMenu = window.document.getElementById(ID_MAIN_MENU);
   mainMenu.addEventListener('selected', (ev: CustomEvent) => {
@@ -366,17 +366,17 @@ function startUpWindowEvents(): void {
       mainWebUi.focus();
     }
   });
-  
+
   window.document.addEventListener('mousedown', (ev: MouseEvent) => {
     if (ev.which === 2) {
       WebIpc.clipboardReadRequest();
-      
+
       // This is needed to stop the autoscroll blob from appearing on Windows.
       ev.preventDefault();
       ev.stopPropagation();
     }
   });
-  
+
   window.document.addEventListener('dragover', (ev: DragEvent) => {
     ev.preventDefault();
     ev.stopPropagation();
@@ -596,7 +596,7 @@ async function asyncSetupConfiguration(): Promise<void> {
 
   if (oldGeneralConfig === null || oldGeneralConfig.terminalFontSize !== newGeneralConfig.terminalFontSize ||
       oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont) {
-        
+
     const matchingFonts = newSystemConfig.availableFonts.filter(
       (font) => font.postscriptName === newGeneralConfig.terminalFont);
 
@@ -666,7 +666,7 @@ async function asyncSetupConfiguration(): Promise<void> {
         transparentBackground: newGeneralConfig.windowBackgroundMode !== "opaque",
         ligatureMarker,
         useLigatures: newGeneralConfig.terminalDisplayLigatures,
-      }
+      };
       terminalVisualConfigChanged = true;
     }
     if (terminalVisualConfigChanged) {
@@ -791,7 +791,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
     }
     return _.cloneDeep(data);
   }
-  
+
   setConfig(key: ConfigKey, newConfig: any): void {
     if ( ! this._setConfigNoWrite(key, newConfig)) {
       return;
@@ -821,7 +821,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
     if (_.isEqual(oldConfig, newConfig)) {
       return false;
   }
-  
+
     if (Object.isFrozen(newConfig)) {
       this._configDb.set(key, newConfig);
     } else {
@@ -848,7 +848,7 @@ class KeybindingsManagerImpl implements KeybindingsManager {
   getKeybindingsMapping(): TermKeybindingsMapping {
     return this._keybindingsMapping;
   }
-  
+
   setKeybindingsMapping(newKeybindingContexts: TermKeybindingsMapping): void {
     this._keybindingsMapping = newKeybindingContexts;
     this._keybindingsMapping.setEnabled(this._enabled);

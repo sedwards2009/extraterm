@@ -75,7 +75,7 @@ function demoContents(): string {
 
     result += charBG(i);
     if (i < 10) {
-      result += " "
+      result += " ";
     }
     result += " " + i + " " + defaultColor;
   }

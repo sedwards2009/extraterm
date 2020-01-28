@@ -105,7 +105,7 @@ class ExtensionViewerProxy extends SimpleViewerElement {
 
   protected _themeCssFiles(): CssFile[] {
     const extensionContext = this._getExtensionContext();
-    const name = extensionContext.extensionMetadata.name
+    const name = extensionContext.extensionMetadata.name;
     const cssDecl = this._getExtensionViewerContribution().css;
     const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + cf);
 

@@ -32,7 +32,7 @@ describe.each([
 ])("", (name: string, filename: string, mimeType: string) => {
   test(`${name} => ${mimeType}`, () => {
     const result = MimeTypeDetector.detect(null, readTestFile(filename));
-    expect(result).not.toBe(null)
+    expect(result).not.toBe(null);
     expect(result.mimeType).toBe(mimeType);
   });
 });

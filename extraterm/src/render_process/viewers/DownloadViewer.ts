@@ -45,7 +45,7 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
     metadata.title = "Download";
     metadata.icon = "fa fa-download";
     if (this._bulkFileHandle != null) {
-      const fileMetadata = this._bulkFileHandle.getMetadata()
+      const fileMetadata = this._bulkFileHandle.getMetadata();
       const filename = fileMetadata["filename"] != null ? fileMetadata["filename"] : "(unknown)";
 
       switch (this._bulkFileHandle.getState()) {
@@ -70,7 +70,7 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
           break;
       }
     }
-    
+
     return metadata;
   }
 
@@ -103,15 +103,15 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
         () => {
           this._fileTransferProgress.transferred = this._bulkFileHandle.getAvailableSize();
         });
-        
+
       this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
         this._fileTransferProgress.finished = true;
         this._updateLater.trigger();
         resolve();
       });
 
-      this._fileTransferProgress.transferred = handle.getAvailableSize()
-      this._fileTransferProgress.total = handle.getTotalSize()
+      this._fileTransferProgress.transferred = handle.getAvailableSize();
+      this._fileTransferProgress.total = handle.getTotalSize();
 
       const metadata = handle.getMetadata();
       if (metadata["filename"] !== undefined) {

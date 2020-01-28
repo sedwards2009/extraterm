@@ -120,7 +120,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     super.disconnectedCallback();
     this._needsCompleteRefresh = true;
   }
-  
+
   dispose(): void {
     const element = this.getViewerElement();
     if (element !== null) {
@@ -131,7 +131,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
       this._resizePollHandle = null;
     }
   }
-  
+
   focus(): void {
     if (this._dialogStack.length !== 0) {
       this._dialogStack[this._dialogStack.length-1].focus();
@@ -143,7 +143,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
       element.focus();
     }
   }
-  
+
   /**
    * Returns true if this terminal has the input focus.
    *
@@ -156,27 +156,27 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     }
     return shadowRoot.activeElement !== null;
   }
-  
+
   setViewerElement(element: ViewerElement): void {
     if (this.childNodes.length !== 0) {
       this.innerHTML = "";
     }
-    
+
     if (element !== null) {
       this._appendScrollableElement(element);
     }
   }
-  
+
   getViewerElement(): ViewerElement {
     return this._getViewerElement();
   }
-  
+
   getFontAdjust(): number {
     return this._fontSizeAdjustment;
   }
 
   setFontAdjust(delta: number): void {
-    this._adjustFontSize(delta)
+    this._adjustFontSize(delta);
   }
 
   scrollContentsTo(offset: number): void {
@@ -200,14 +200,14 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     }
 
     const viewerElement = this._getViewerElement();
-    if (viewerElement != null) {        
+    if (viewerElement != null) {
       const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
       for (const kid of scrollerArea.children) {
         if (kid instanceof ViewerElement) {
           kid.refresh(level);
         }
       }
-      
+
       const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
       this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
@@ -249,16 +249,16 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
     const scale = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3][adjustment-MINIMUM_FONT_SIZE];
     return `--terminal-font-size: calc(var(--default-terminal-font-size) * ${scale});`;
   }
-  
+
   private _getViewerElement(): ViewerElement {
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);    
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea.firstElementChild !== null && scrollerArea.firstElementChild instanceof ViewerElement) {
       return <ViewerElement> scrollerArea.firstElementChild;
     } else {
       return null;
     }
   }
-  
+
   private _appendScrollableElement(el: ScrollableElement): void {
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(el);
@@ -273,7 +273,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    this._updateVirtualScrollableSize(<any> ev.target); 
+    this._updateVirtualScrollableSize(<any> ev.target);
       // ^ We know this event only comes from VirtualScrollable elements.
   }
 
@@ -287,7 +287,7 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
       const pos = node.getCursorPosition();
       const nodeTop = this._virtualScrollArea.getScrollableTop(node);
       const top = pos.top + nodeTop;
-      const bottom = pos.bottom;      
+      const bottom = pos.bottom;
       this._virtualScrollArea.scrollIntoView(top, bottom);
     }
   }

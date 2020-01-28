@@ -31,12 +31,12 @@ export class ApplicationContextMenu {
 
   constructor(private extensionManager: ExtensionManager, private keybindingsManager: KeybindingsManager) {
     this._log = getLogger("ApplicationContextMenu", this);
-    
+
     const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
     <${ContextMenu.TAG_NAME} id="${ID_APPLICATION_CONTEXT_MENU}">
     </${ContextMenu.TAG_NAME}>
     `));
-    window.document.body.appendChild(contextMenuFragment)
+    window.document.body.appendChild(contextMenuFragment);
     this._contextMenuElement = <ContextMenu> window.document.getElementById(ID_APPLICATION_CONTEXT_MENU);
 
     this._contextMenuElement.addEventListener("selected", (ev: CustomEvent) => {

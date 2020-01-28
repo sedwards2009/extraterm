@@ -80,7 +80,7 @@ import { ControlSequenceParameters } from "./ControlSequenceParameters";
 import { MouseEncoder } from "./MouseEncoder";
 
 const DEBUG_RESIZE = false;
-  
+
 const REFRESH_START_NULL = 100000000;
 const REFRESH_END_NULL = -100000000;
 const MAX_BATCH_TIME = 16;  // 16 ms = 60Hz
@@ -176,7 +176,7 @@ export class Emulator implements EmulatorApi {
   private _log: Logger = null;
   private cols = 80;
   private rows = 24
-  
+
   private state = ParserState.NORMAL;
 
   private _mouseEncoder = new MouseEncoder();
@@ -185,11 +185,11 @@ export class Emulator implements EmulatorApi {
   private y = 0;      // Cursor y position
   private savedX = 0;
   private savedY = 0;
-  
+
   private oldy = 0;
 
   private _cursorBlinkState = false;
-  
+
   private cursorHidden = false;
   private _hasFocus = false;
 
@@ -244,7 +244,7 @@ export class Emulator implements EmulatorApi {
     fgRGBA: 0xffffffff,
     bgRGBA: 0x00000000,
   };
-  
+
   private _params = new ControlSequenceParameters();
   private _blinkIntervalId: null | number = null;
   private lines: LineImpl[] = [];
@@ -258,7 +258,7 @@ export class Emulator implements EmulatorApi {
   private _platform: Platform = "linux";
 
   private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
-  private _processWriteChunkTimer: NodeJS.Timer = null; // Timer ID for our write chunk timer.  
+  private _processWriteChunkTimer: NodeJS.Timer = null; // Timer ID for our write chunk timer.
   private _paused = false;
   private _refreshTimer: NodeJS.Timer = null;           // Timer ID for triggering an on scren refresh.
   private _performanceNow: () => number = null;
@@ -270,12 +270,12 @@ export class Emulator implements EmulatorApi {
   private tabs: { [key: number]: boolean };
   private sendFocus = false;
 
-  
+
   private _events: { [type: string]: EventListener[]; } = {};
   private _blinker: Function = null;
   private savedCols: number;
   private title: string = "";
-  
+
   constructor(options: Options) {
     this._log = getLogger("Emulator", this);
     this.termName = options.termName === undefined ? 'xterm-256color' : options.termName;
@@ -298,22 +298,22 @@ export class Emulator implements EmulatorApi {
 
     this._writeBuffers = [];  // Buffer for incoming data waiting to be processed.
     this._processWriteChunkTimer = null;  // Timer ID for our write chunk timer.
-    
+
     this._refreshTimer = null;  // Timer ID for triggering an on scren refresh.
 
     this._startBlink();
   }
-  
+
   destroy(): void {
     if (this._processWriteChunkTimer !== null) {
       clearTimeout(this._processWriteChunkTimer);
       this._processWriteChunkTimer = null;
     }
-    
+
     if (this._refreshTimer !== null) {
       clearTimeout(this._refreshTimer);
     }
-    
+
     this._events = {};
     this.handler = function() {};
     this.write = () => ( { bufferSize: 0 } );
@@ -325,12 +325,12 @@ export class Emulator implements EmulatorApi {
     this.oldy = 0;
 
     this._cursorBlinkState = true;       // Cursor blink state.
-    
+
     this.cursorHidden = false;
     this._hasFocus = false;
-    
+
   //  this.convertEol;
-    
+
     this.queue = '';
     this.scrollTop = 0;
     this.scrollBottom = this.rows - 1;
@@ -369,16 +369,16 @@ export class Emulator implements EmulatorApi {
   eraseAttr(): Cell {
     return this.curAttr;
   }
-  
+
   focus(): void {
     if (this.sendFocus) {
       this.send('\x1b[I');
     }
-    this._hasFocus = true;    
+    this._hasFocus = true;
     this._showCursor();
     this._dispatchEvents();
   }
-  
+
   /**
    * Returns true if this terminal has the input focus.
    *
@@ -404,7 +404,7 @@ export class Emulator implements EmulatorApi {
     this._hasFocus = false;
     this._dispatchEvents();
   }
-  
+
   mouseDown(ev: MouseEventOptions): boolean {
     const sequence = this._mouseEncoder.mouseDown(ev);
     if (sequence != null) {
@@ -525,7 +525,7 @@ export class Emulator implements EmulatorApi {
 
   /**
    * Schedule a screen refresh and update.
-   * 
+   *
    * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
    */
   private _scheduleRefresh(immediate: boolean): void {
@@ -539,7 +539,7 @@ export class Emulator implements EmulatorApi {
 
   /**
    * Refresh and update the screen.
-   * 
+   *
    * Usually call via a timer.
    */
   private _refreshFrame(): void {
@@ -550,7 +550,7 @@ export class Emulator implements EmulatorApi {
 
   /**
    * Marks a range of rows to be refreshed on the screen.
-   * 
+   *
    * @param {number} start start row to refresh
    * @param {number} end   end row (INCLUSIVE!) to refresh
    */
@@ -558,12 +558,12 @@ export class Emulator implements EmulatorApi {
     this._refreshStart = Math.min(start, this._refreshStart);
     this._refreshEnd = Math.max(end + 1, this._refreshEnd);
   }
-  
+
   lineAtRow(row: number): Line {
     if (row < 0 || row >= this.rows) {
       return null;
     }
-    
+
     let line = this._getRow(row);
 
     // Place the cursor in the row.
@@ -606,7 +606,7 @@ export class Emulator implements EmulatorApi {
 
   /**
    * Set cursor blinking on or off.
-   * 
+   *
    * @param {boolean} blink True if the cursor should blink.
    */
   setCursorBlink(blink: boolean): void {
@@ -638,7 +638,7 @@ export class Emulator implements EmulatorApi {
   private scroll(): void {
     // Drop the oldest line into the scrollback buffer.
     if (this.scrollTop === 0) {
-      this._scrollbackLineQueue.push(this.lines[0]);        
+      this._scrollbackLineQueue.push(this.lines[0]);
     }
 
     // last line
@@ -648,7 +648,7 @@ export class Emulator implements EmulatorApi {
     const insertRow = lastline - this.rows + 1 + this.scrollBottom;
 
     this.lines.splice(this.scrollTop, 1);
-    
+
     // add our new line
     this.lines.splice(insertRow, 0, this.blankLine());
 
@@ -692,7 +692,7 @@ export class Emulator implements EmulatorApi {
     if (this._processWriteChunkTimer === null) {
       clearTimeout(this._processWriteChunkTimer);
       this._processWriteChunkTimer = null;
-    }    
+    }
   }
 
   resumeProcessing(): void {
@@ -715,20 +715,20 @@ export class Emulator implements EmulatorApi {
   private _processWriteChunkRealTime(): void {
     const starttime = this._performanceNow();
   //console.log("++++++++ _processWriteChunk() start time: " + starttime);
-    
-    // Schedule a call back just in case. setTimeout(.., 0) still carries a ~4ms delay. 
+
+    // Schedule a call back just in case. setTimeout(.., 0) still carries a ~4ms delay.
     this._scheduleProcessWriteChunk();
 
     while (! this._paused) {
       if (this._processOneWriteChunk() === false) {
         clearTimeout(this._processWriteChunkTimer);
         this._processWriteChunkTimer = null;
-        
+
         this._scheduleRefresh(true);
         this._emitWriteBufferSizeEvent();
         break;
       }
-      
+
       const nowtime = this._performanceNow();
       if ((nowtime - starttime) > MAX_BATCH_TIME) {
         this._scheduleRefresh(false);
@@ -741,14 +741,14 @@ export class Emulator implements EmulatorApi {
 
   /**
    * Process one chunk of written data.
-   * 
+   *
    * @returns {boolean} True if there are extra chunks available which need processing.
    */
   private _processOneWriteChunk(): boolean {
     if (this._writeBuffers.length === 0) {
       return false; // Nothing to do.
     }
-    
+
     let chunk = this._writeBuffers[0];
     if (chunk.length <= MAX_PROCESS_WRITE_SIZE) {
       this._writeBuffers.splice(0, 1);
@@ -783,7 +783,7 @@ export class Emulator implements EmulatorApi {
   //console.log("write() start time: " + starttime);
 
     this.oldy = this.y;
-    
+
     let i = 0;
     for (i=0; i < data.length && ! this._paused; i++) {
       let ch = data[i];
@@ -933,7 +933,7 @@ export class Emulator implements EmulatorApi {
         case ParserState.IGNORE:
           i = this._processDataIgnore(ch, i);
           break;
-          
+
         case ParserState.APPLICATION_START:
           this._processDataApplicationStart(ch);
           break;
@@ -941,12 +941,12 @@ export class Emulator implements EmulatorApi {
         case ParserState.APPLICATION_END:
           [data, i] = this._processDataApplicationEnd(data, i);
           break;
-          
+
         case ParserState.DEC_HASH:
           this._processDataDecHash(ch);
           break;
       }
-      
+
       if (this.y !== this.oldy) {
         this.markRowForRefresh(this.oldy);
         this.markRowForRefresh(this.y);
@@ -954,7 +954,7 @@ export class Emulator implements EmulatorApi {
       }
     }
     this.markRowForRefresh(this.y);
-  
+
   //  endtime = window.performance.now();
   //console.log("write() end time: " + endtime);
   //  console.log("duration: " + (endtime - starttime) + "ms");
@@ -963,7 +963,7 @@ export class Emulator implements EmulatorApi {
     }
     return null;
 }
-        
+
   private _processDataCSI(ch: string, i: number): number {
     switch (this.state) {
       case ParserState.CSI_START:
@@ -998,7 +998,7 @@ export class Emulator implements EmulatorApi {
         if (ch === ':') {
           this._params.startSubparameter();
           return i;
-        }    
+        }
 
         this._executeCSICommand(this._params, ch);
         this.state = ParserState.NORMAL;
@@ -1429,7 +1429,7 @@ export class Emulator implements EmulatorApi {
         break;
     }
   }
-  
+
   private _processDataEscape(ch: string, i: number): number {
     switch (ch) {
       // ESC [ Control Sequence Introducer ( CSI is 0x9b).
@@ -1443,13 +1443,13 @@ export class Emulator implements EmulatorApi {
         this._params = new ControlSequenceParameters();
         this.state = ParserState.OSC;
         break;
-        
+
       // ESC & Application mode
       case '&':
         this._params = new ControlSequenceParameters();
         this.state = ParserState.APPLICATION_START;
         break;
-        
+
       // ESC P Device Control String ( DCS is 0x90).
       case 'P':
         this._params = new ControlSequenceParameters();
@@ -1605,14 +1605,14 @@ export class Emulator implements EmulatorApi {
         this.applicationKeypad = false;
         this.state = ParserState.NORMAL;
         break;
-        
+
       default:
         this.state = ParserState.NORMAL;
         this.error('Unknown ESC control: %s.', ch);
         break;
     }
     return i;
-  }  
+  }
 
   private _processDataCharset(ch: string, i: number): number {
     let cs;
@@ -1672,7 +1672,7 @@ export class Emulator implements EmulatorApi {
     this.state = ParserState.NORMAL;
     return i;
   }
-  
+
   private _processDataOSC(ch: string, i: number): number {
     // OSC Ps ; Pt ST
     // OSC Ps ; Pt BEL
@@ -1755,7 +1755,7 @@ export class Emulator implements EmulatorApi {
     }
     return i;
   }
-  
+
   private _processDataDCS(ch: string, i: number): number {
     switch (this.state) {
       case ParserState.DCS_START:
@@ -1778,7 +1778,7 @@ export class Emulator implements EmulatorApi {
 
           this._params = new ControlSequenceParameters();
           this.state = ParserState.NORMAL;
-        }      
+        }
         break;
 
       default:
@@ -1799,7 +1799,7 @@ export class Emulator implements EmulatorApi {
         const pt = params[0].stringValue;
         let valid = false;
         let replyPt = "";
-        
+
         switch (pt) {
           // DECSCA
           case '"q':
@@ -1852,7 +1852,7 @@ export class Emulator implements EmulatorApi {
         break;
     }
   }
-  
+
   private _processDataIgnore(ch: string, i: number): number {
     // For PM and APC.
     if (ch === '\x1b' || ch === '\x07') {
@@ -1874,11 +1874,11 @@ export class Emulator implements EmulatorApi {
 
       // Add to the current parameter.
       this._params.appendString(ch);  // FIXME don't absorb infinite data here.
-      
+
     } else if (ch === ';') {
       // Parameter separator.
       this._params.nextParameter();
-      
+
     } else if (ch === '\x07') {
       // End of parameters.
       this._params.nextParameter();
@@ -1903,7 +1903,7 @@ export class Emulator implements EmulatorApi {
       this.log("Invalid application mode start command.");
     }
   }
-  
+
   private _processDataApplicationEnd(data: string, i: number): [string, number] {
     // Efficiently look for an end-mode character.
     const nextzero = data.indexOf('\x00', i);
@@ -1927,7 +1927,7 @@ export class Emulator implements EmulatorApi {
         }
       }
       i = data.length - 1;
-      
+
     } else if (nextzero === i) {
       // We are already at the end-mode character.
       this._dispatchEvents();
@@ -1941,10 +1941,10 @@ export class Emulator implements EmulatorApi {
         }
       }
       this.state = ParserState.NORMAL;
-      
+
     } else {
       // Incoming end-mode character. Send the last piece of data.
-      this._dispatchEvents();      
+      this._dispatchEvents();
       if (this._applicationModeHandler != null) {
         const response = this._applicationModeHandler.data(data.slice(i, nextzero));
         if (response.action === ApplicationModeResponseAction.ABORT) {
@@ -1957,7 +1957,7 @@ export class Emulator implements EmulatorApi {
     }
     return [data, i];
   }
-  
+
   // ESC # variations
   private _processDataDecHash(ch: string): void {
     switch(ch) {
@@ -1970,14 +1970,14 @@ export class Emulator implements EmulatorApi {
       default:
         break;
     }
-    
+
     this.state = ParserState.NORMAL;
   }
-  
+
   writeln(data: string): void {
     this.write(data + '\r\n');
   };
-  
+
   static isKeySupported(platform: Platform, ev: MinimalKeyboardEvent): boolean {
 
     if (ev.shiftKey) {
@@ -2022,7 +2022,7 @@ export class Emulator implements EmulatorApi {
 
     let altKey = ev.altKey;
     let ctrlKey = ev.ctrlKey;
-    
+
     if (platform === "win32" && altKey && ctrlKey) {
       // This looks like AltGr on Windows being sent with Ctrl+Alt.
       altKey = false;
@@ -2033,7 +2033,7 @@ export class Emulator implements EmulatorApi {
     // Modifiers keys are often encoded using this scheme.
     const mod = (ev.shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4: 0) + 1;
     const modStr = mod === 1 ? "" : ";" + mod;
-    
+
     switch (ev.key) {
       // backspace
       case 'Backspace':
@@ -2115,7 +2115,7 @@ export class Emulator implements EmulatorApi {
           }
         }
         break;
-        
+
       // home
       case 'Home':
         if (applicationKeypad) {
@@ -2191,7 +2191,7 @@ export class Emulator implements EmulatorApi {
           default: break;
         }
         break;
-        
+
       default:
         // Control codes
         if (ev.key.length === 1) {
@@ -2250,7 +2250,7 @@ export class Emulator implements EmulatorApi {
 
     this._showCursor();
     this.handler(key);
-    
+
     cancelEvent(ev);
     return true;
   }
@@ -2271,7 +2271,7 @@ export class Emulator implements EmulatorApi {
 
     this.queue += data;
   }
-  
+
   private bell(): void {
     this._emit(BELL_EVENT, this);
   }
@@ -2312,7 +2312,7 @@ export class Emulator implements EmulatorApi {
     if (!this.debug) {
       return;
     }
-    
+
     console.log.apply(console, ["[TERM] ", ...args]);
     console.log.apply(console, ["[TERM] "+ args]);
   }
@@ -2345,19 +2345,19 @@ export class Emulator implements EmulatorApi {
 
       this.lines[i] = newLine;
     }
-    
+
     this.setupStops(newcols);
     this.cols = newcols;
 
     // resize rows
     if (this.rows < newrows) {
-      
+
     } else if (this.rows > newrows) {
-      
+
       // Remove rows to match the new smaller rows value.
       while (this.lines.length > newrows) {
         this._scrollbackLineQueue.push(this.lines.shift());
-      }      
+      }
     }
     this.rows = newrows;
 
@@ -2371,7 +2371,7 @@ export class Emulator implements EmulatorApi {
 
     this.scrollTop = 0;
     this.scrollBottom = newrows - 1;
-    
+
     // it's a real nightmare trying
     // to resize the original
     // screen buffer. just set it
@@ -2380,39 +2380,39 @@ export class Emulator implements EmulatorApi {
     this._mouseEncoder.sendCursorKeysForWheel = false;
 
     this.markRowRangeForRefresh(0, this.lines.length-1);
-    
+
     this._dispatchEvents();
   }
-  
+
   private _dispatchEvents(): void {
     let checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
     let checkedRefreshStart = this._refreshStart;
-    
+
     if (checkedRefreshEnd === REFRESH_END_NULL || checkedRefreshStart === checkedRefreshEnd) {
       // Don't signal to refresh anything. This can happen when there are no realized rows yet.
       checkedRefreshEnd = -1;
       checkedRefreshStart = -1;
     }
-    
+
     const event: RenderEvent = {
       rows: this.rows,
       columns: this.cols,
       realizedRows: this.lines.length,
-      
+
       refreshStartRow: checkedRefreshStart,
       refreshEndRow: checkedRefreshEnd,
       scrollbackLines: this._scrollbackLineQueue,
       cursorRow: this.y,
       cursorColumn: this.x
     };
-    
+
     this._refreshStart = REFRESH_START_NULL;
     this._refreshEnd = REFRESH_END_NULL;
     this._scrollbackLineQueue = [];
-    
-    this._emit(RENDER_EVENT, this, event);    
+
+    this._emit(RENDER_EVENT, this, event);
   }
-  
+
   private markRowForRefresh(y: number): void {
     this.markRowRangeForRefresh(y, y);
   }
@@ -2427,7 +2427,7 @@ export class Emulator implements EmulatorApi {
     this.y = newY;
     this.markRowRangeForRefresh(newY, newY);
   }
-  
+
   private markAllRowsForRefresh(): void {
     this.markRowRangeForRefresh(0, this.rows-1);
   }
@@ -2487,7 +2487,7 @@ export class Emulator implements EmulatorApi {
       this.fillRight(0, j, fillChar);
     }
   }
-  
+
   private eraseLeft(x: number, y: number): void {
     const line = this._getRow(y);
 
@@ -2560,7 +2560,7 @@ export class Emulator implements EmulatorApi {
     this._fullReset();
     this.x = 0;
     this._setCursorY(0);
-    this._dispatchEvents()
+    this._dispatchEvents();
   }
 
   // ESC c Full Reset (RIS).
@@ -2585,7 +2585,7 @@ export class Emulator implements EmulatorApi {
     if (param < 1) {
       param = 1;
     }
-    
+
     if (this.y-param < this.scrollTop) {
       this._setCursorY(this.scrollTop);
     } else {
@@ -2600,7 +2600,7 @@ export class Emulator implements EmulatorApi {
     if (param < 1) {
       param = 1;
     }
-    
+
     const bottom = this.scrollBottom !== 0  ? this.scrollBottom : this.rows -1;
     if (this.y+param > bottom) {
       this._setCursorY(bottom);
@@ -2640,7 +2640,7 @@ export class Emulator implements EmulatorApi {
   private cursorPos(params: ControlSequenceParameters): void {
     let y = params[0].intValue - 1 + (this.originMode ? this.scrollTop : 0);
     let x = (params.length >= 2) ? params[1].intValue - 1 : 0;
-    
+
     if (y < 0) {
       y = 0;
     } else if (y >= this.rows) {
@@ -2882,23 +2882,23 @@ export class Emulator implements EmulatorApi {
       } else if (p === 9) {
         // Crossed-out characters (ISO 6429).
         this.curAttr.style |= STYLE_MASK_STRIKETHROUGH;
-        
+
       } else if (p >= 10 && p <= 20) {
         // Font setting. Ignore
 
       } else if (p === 21) {
         // Double underline
         this.curAttr.style |= UNDERLINE_STYLE_DOUBLE;
-        
+
       } else if (p === 22) {
         // not bold and not faint.
         this.curAttr.style &= ~STYLE_MASK_BOLD;
         this.curAttr.style &= ~STYLE_MASK_FAINT;
-        
+
       } else if (p === 23) {
         // not italic
         this.curAttr.style &= ~STYLE_MASK_ITALIC;
-  
+
       } else if (p === 24) {
         // not underlined
         this.curAttr.style &= ~STYLE_MASK_UNDERLINE;
@@ -2914,11 +2914,11 @@ export class Emulator implements EmulatorApi {
       } else if (p === 28) {
         // not invisible
         this.curAttr.style &= ~STYLE_MASK_INVISIBLE;
-        
+
       } else if (p === 29) {
         // not strike through
         this.curAttr.style &= ~STYLE_MASK_STRIKETHROUGH;
-        
+
       } else if (p === 39) {
         // reset fg
         this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
@@ -3228,7 +3228,7 @@ export class Emulator implements EmulatorApi {
       this.x = this.cols - 1;
     }
   }
-  
+
   // 141 61 a * HPR -
   // Horizontal Position Relative
   // reuse CSI Ps C ?
@@ -3524,25 +3524,25 @@ export class Emulator implements EmulatorApi {
                 scrollBottom: this.scrollBottom,
                 tabs: this.tabs,
               };
-              
+
               // Preserve these variables during the reset().
               const previousCharset = this.charset;
               const previousGlevel = this.glevel;
               const previousCharsets = this.charsets;
-              
+
               this._fullReset();
               this._mouseEncoder.sendCursorKeysForWheel = true;
 
               this.charset = previousCharset;
               this.glevel = previousGlevel;
               this.charsets = previousCharsets;
-              
+
               // Materialize the same number of rows as the normal lines array to ensure that
               // the new screen buffer is rendered over all of the previous screen.
               while (this.lines.length < normalSavedState.lines.length) {
                 this._getRow(this.lines.length);
               }
-              
+
               this.normalSavedState = normalSavedState;
               this.markRowRangeForRefresh(0, this.rows - 1);
 
@@ -3655,13 +3655,13 @@ export class Emulator implements EmulatorApi {
           case 1:
             this.applicationCursorKeys = false;
             break;
-            
+
           // 80 Column Mode (DECCOLM).
           case 3:
             this.fillScreen();
             this.x = 0;
             this._setCursorY(0);
-          
+
             if (this.cols === 132 && this.savedCols) {
               this.resize( { rows: this.rows, columns: this.savedCols } );
             }
@@ -3711,7 +3711,7 @@ export class Emulator implements EmulatorApi {
             if (this.normalSavedState != null) {
               const currentcols = this.cols;
               const currentrows = this.rows;
-              
+
               this.lines = this.normalSavedState.lines;
               this.cols = this.normalSavedState.cols;
               this.rows = this.normalSavedState.rows;
@@ -3720,7 +3720,7 @@ export class Emulator implements EmulatorApi {
               this.scrollTop = this.normalSavedState.scrollTop;
               this.scrollBottom = this.normalSavedState.scrollBottom;
               this.tabs = this.normalSavedState.tabs;
-              
+
               this.normalSavedState = null;
               this._mouseEncoder.sendCursorKeysForWheel = false;
 
@@ -3941,7 +3941,7 @@ export class Emulator implements EmulatorApi {
     "Swiss": null, // (=
     "ISOLatin": null // /A
   };
-  
+
   /*************************************************************************/
   /**
    * EventEmitter
@@ -3950,7 +3950,7 @@ export class Emulator implements EmulatorApi {
   addRenderEventListener(eventHandler: RenderEventHandler): void {
     this.addListener(RENDER_EVENT, eventHandler);
   }
-  
+
   removeRenderEventListener(eventHandler: RenderEventHandler): void {
     this.removeListener(RENDER_EVENT, eventHandler);
   }
@@ -4005,7 +4005,7 @@ export class Emulator implements EmulatorApi {
       obj[i].apply(this, args);
     }
   }
-  
+
   dumpLines(): void {
     for (let y=0; y<this.lines.length; y++) {
       this.log(""+y+": "+this.getLineText(y));

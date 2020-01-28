@@ -131,7 +131,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     this._extensionManager = extensionManager;
 
     if (this._commandChangedDisposable != null) {
-      this._commandChangedDisposable.dispose()
+      this._commandChangedDisposable.dispose();
       this._commandChangedDisposable = null;
     }
 

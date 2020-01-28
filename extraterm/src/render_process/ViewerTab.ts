@@ -53,7 +53,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
 
   private _log: Logger;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
-  
+
   private _title = "New Tab";
   private _tag: string = null;
 
@@ -82,13 +82,13 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       }
     });
   }
-  
+
   constructor() {
     super();
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
     this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
   }
-   
+
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = this._title;
@@ -104,7 +104,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       return;
     }
     this._elementAttached = true;
-    
+
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
 
     const clone = this._createClone();
@@ -161,7 +161,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     super.disconnectedCallback();
     this._needsCompleteRefresh = true;
   }
-  
+
   dispose(): void {
     this._copyToClipboardLater.cancel();
     const element = this.getViewerElement();
@@ -182,15 +182,15 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   setTitle(newTitle: string): void {
     this._title = newTitle;
   }
-  
+
   getTag(): string {
     return this._tag;
   }
-  
+
   setTag(tag: string): void {
     this._tag = tag;
   }
-  
+
   focus(): void {
     if (this._dialogStack.length !== 0) {
       this._dialogStack[this._dialogStack.length-1].focus();
@@ -203,7 +203,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       element.focus();
     }
   }
-  
+
   /**
    * Returns true if this terminal has the input focus.
    *
@@ -216,23 +216,23 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     }
     return shadowRoot.activeElement !== null;
   }
-  
+
   setViewerElement(element: ViewerElement): void {
     if (this.childNodes.length !== 0) {
       this.innerHTML = "";
     }
-    
+
     if (element !== null) {
       // element.visualState = ViewerElementTypes. this._visualState; FIXME
       element.setMode(Mode.CURSOR);
       this._appendScrollableElement(element);
     }
   }
-  
+
   getViewerElement(): ViewerElement {
     return this._getViewerElement();
   }
-  
+
   getFrameContents(frameId: string): BulkFileHandle {
     return this._tag === frameId ? this.getBulkFileHandle() : null;
   }
@@ -248,13 +248,13 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   getMode(): Mode {
     return Mode.CURSOR;
   }
-  
+
   getFontAdjust(): number {
     return this._fontSizeAdjustment;
   }
 
   setFontAdjust(delta: number): void {
-    this._adjustFontSize(delta)
+    this._adjustFontSize(delta);
   }
 
   protected _themeCssFiles(): CssFile[] {
@@ -269,14 +269,14 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     }
 
     const viewerElement = this._getViewerElement();
-    if (viewerElement != null) {        
+    if (viewerElement != null) {
       const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
       for (const kid of scrollerArea.children) {
         if (kid instanceof ViewerElement) {
           kid.refresh(level);
         }
       }
-      
+
       const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
       this._virtualScrollArea.updateContainerHeight(scrollContainer.getBoundingClientRect().height);
 
@@ -300,7 +300,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       }
     };
   }
-  
+
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -342,7 +342,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       }
     });
   }
-  
+
   private _handleBlur(event: FocusEvent): void {
     // Forcefully set the visual state of each thing in the terminal to appear unfocused.
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
@@ -352,16 +352,16 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       }
     });
   }
-  
+
   private _getViewerElement(): ViewerElement {
-    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);    
+    const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     if (scrollerArea.firstElementChild !== null && scrollerArea.firstElementChild instanceof ViewerElement) {
       return <ViewerElement> scrollerArea.firstElementChild;
     } else {
       return null;
     }
   }
-  
+
   private _appendScrollableElement(el: ScrollableElement): void {
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
     scrollerArea.appendChild(el);
@@ -375,16 +375,16 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       this._pasteFromClipboard();
     }
   }
-  
+
   // ----------------------------------------------------------------------
   //
-  //    #####                                                          ##        #####                           
-  //   #     #  ####  #####   ####  #      #      # #    #  ####      #  #      #     # # ###### # #    #  ####  
-  //   #       #    # #    # #    # #      #      # ##   # #    #      ##       #       #     #  # ##   # #    # 
-  //    #####  #      #    # #    # #      #      # # #  # #          ###        #####  #    #   # # #  # #      
-  //         # #      #####  #    # #      #      # #  # # #  ###    #   # #          # #   #    # #  # # #  ### 
-  //   #     # #    # #   #  #    # #      #      # #   ## #    #    #    #     #     # #  #     # #   ## #    # 
-  //    #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####  
+  //    #####                                                          ##        #####
+  //   #     #  ####  #####   ####  #      #      # #    #  ####      #  #      #     # # ###### # #    #  ####
+  //   #       #    # #    # #    # #      #      # ##   # #    #      ##       #       #     #  # ##   # #    #
+  //    #####  #      #    # #    # #      #      # # #  # #          ###        #####  #    #   # # #  # #
+  //         # #      #####  #    # #      #      # #  # # #  ###    #   # #          # #   #    # #  # # #  ###
+  //   #     # #    # #   #  #    # #      #      # #   ## #    #    #    #     #     # #  #     # #   ## #    #
+  //    #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####
   //
   // ----------------------------------------------------------------------
   private _handleMouseWheel(ev: WheelEvent): void {
@@ -395,7 +395,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   }
 
   private _handleVirtualScrollableResize(ev: CustomEvent): void {
-    this._updateVirtualScrollableSize(<any> ev.target); 
+    this._updateVirtualScrollableSize(<any> ev.target);
       // ^ We know this event only comes from VirtualScrollable elements.
   }
 
@@ -421,7 +421,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       const pos = node.getCursorPosition();
       const nodeTop = this._virtualScrollArea.getScrollableTop(node);
       const top = pos.top + nodeTop;
-      const bottom = pos.bottom;      
+      const bottom = pos.bottom;
       this._virtualScrollArea.scrollIntoView(top, bottom);
     }
   }
@@ -469,7 +469,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     if (viewerElement != null && SupportsClipboardPaste.isSupportsClipboardPaste(viewerElement)) {
       viewerElement.pasteText(text);
     }
-  }  
+  }
 
   /**
    * Copy the selection to the clipboard.
@@ -489,7 +489,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
       }
     }
   }
-  
+
   /**
    * Paste text from the clipboard.
    *

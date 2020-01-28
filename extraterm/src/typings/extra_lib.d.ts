@@ -166,4 +166,4 @@ interface ResizeObserver {
 
 declare const ResizeObserver: {
   new(callback: ResizeObserverCallback): ResizeObserver;
-}
+};

@@ -15,7 +15,7 @@ export const ThemeSyntaxPreviewContents: ThemeSyntaxPreviewContents[] = [
 
 Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
   ` },
-  
+
   { name: "Batch file", mimeType: "application/bat", text: `:: batch file highlighting in Ace!
 @echo off
 
@@ -59,7 +59,7 @@ REM that's all
    domain(c9.io), regexp("https:.*") /**/
 {
     /**/
-    img[title]:before 
+    img[title]:before
     {
         content: attr(title) "\AImage \
             retrieved from"
@@ -87,13 +87,13 @@ index 23fc3fc..ed3b273 100644
  var Document = require("./document").Document;
  var BackgroundTokenizer = require("./background_tokenizer").BackgroundTokenizer;
 +var SearchHighlight = require("./search_highlight").SearchHighlight;
- 
+
  /**
   * class EditSession
 @@ -307,6 +308,13 @@ var EditSession = function(text, mode) {
          return token;
      };
- 
+
 +    this.highlight = function(re) {
 +        if (!this.$searchHighlight) {
 +            var highlight = new SearchHighlight(null, "ace_selected-word", "text");
@@ -112,7 +112,7 @@ index 23fc3fc..ed3b273 100644
 +            inFront: !!inFront,
 +            id: id
          }
- 
+
          if (inFront) {
 diff --git a/lib/ace/editor.js b/lib/ace/editor.js
 index 834e603..b27ec73 100644
@@ -124,13 +124,13 @@ index 834e603..b27ec73 100644
      this.onSelectionChange = function(e) {
 -        var session = this.getSession();
 +        var session = this.session;
- 
+
          if (session.$selectionMarker) {
              session.removeMarker(session.$selectionMarker);
 @@ -509,12 +509,40 @@ var Editor = function(renderer, session) {
              this.$updateHighlightActiveLine();
          }
- 
+
 -        var self = this;
 -        if (this.$highlightSelectedWord && !this.$wordHighlightTimer)
 -            this.$wordHighlightTimer = setTimeout(function() {
@@ -156,7 +156,7 @@ FROM ubuntu
 MAINTAINER SvenDowideit@docker.com
 
 # Add the PostgreSQL PGP key to verify their Debian packages.
-# It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc 
+# It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
 
 # Add PostgreSQL's repository. It contains the most recent stable release
@@ -173,7 +173,7 @@ RUN apt-get -y -q install python-software-properties software-properties-common
 RUN apt-get -y -q install postgresql-9.3 postgresql-client-9.3 postgresql-contrib-9.3
 
 # Note: The official Debian and Ubuntu images automatically \`\`apt-get clean\`\`
-# after each \`\`apt-get\`\` 
+# after each \`\`apt-get\`\`
 
 # Run the rest of the commands as the \`\`postgres\`\` user created by the \`\`postgres-9.3\`\` package when it was \`\`apt-get installed\`\`
 USER postgres
@@ -187,7 +187,7 @@ RUN    /etc/init.d/postgresql start &&\\
     createdb -O docker docker
 
 # Adjust PostgreSQL configuration so that remote connections to the
-# database are possible. 
+# database are possible.
 RUN echo "host all  all    0.0.0.0/0  md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 
 # And add \`\`listen_addresses\`\` to \`\`/etc/postgresql/9.3/main/postgresql.conf\`\`
@@ -197,7 +197,7 @@ RUN echo "listen_addresses='*'" >> /etc/postgresql/9.3/main/postgresql.conf
 EXPOSE 5432
 
 # Add VOLUMEs to allow backup of config, logs and databases
-VOLUME	["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
+VOLUME ["/etc/postgresql", "/var/log/postgresql", "/var/lib/postgresql"]
 
 # Set the default command to run when starting the container
 CMD ["/usr/lib/postgresql/9.3/bin/postgres", "-D", "/var/lib/postgresql/9.3/main", "-c", "config_file=/etc/postgresql/9.3/main/postgresql.conf"]`},
@@ -299,7 +299,7 @@ fi
         <user-time>26</user-time>
         <service-time>25</service-time>
         <build-version>21978</build-version>
-    </diagnostics> 
+    </diagnostics>
     <results>
         <place xmlns="http://where.yahooapis.com/v1/schema.rng"
             xml:lang="en-US" yahoo:uri="http://where.yahooapis.com/v1/place/24865670">

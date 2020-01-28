@@ -27,7 +27,7 @@ const PATHS_CONFIG_FILENAME = "application_paths.json";
 const PATHS_USER_SETTINGS_KEY = "userSettingsPath";
 
 const USER_KEYBINDINGS_DIR = "keybindings";
-const USER_THEMES_DIR = "themes"
+const USER_THEMES_DIR = "themes";
 const USER_SYNTAX_THEMES_DIR = "syntax";
 const USER_TERMINAL_THEMES_DIR = "terminal";
 
@@ -65,7 +65,7 @@ export function setupAppData(): void {
       return;
     }
   }
-  
+
   const userThemesDir = getUserThemeDirectory();
   if ( ! fs.existsSync(userThemesDir)) {
     fs.mkdirSync(userThemesDir);
@@ -109,7 +109,7 @@ function getUserSettingsDirectory(): string {
     if (overridePath != null) {
       userSettingsPath = overridePath;
     } else {
-      userSettingsPath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR)    
+      userSettingsPath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR);
     }
   }
   return userSettingsPath;
@@ -183,7 +183,7 @@ export function readAndInitializeConfigs(themeManager: ThemeManager, configDatab
 
 /**
  * Read the configuration.
- * 
+ *
  * @returns The configuration object.
  */
 function readUserStoredConfigFile(): UserStoredConfig {
@@ -443,7 +443,7 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
       this._writeConfigurationFile();
     }
   }
-  
+
   private _writeConfigurationFile(): void {
     const cleanConfig = <UserStoredConfig> this.getConfigCopy(GENERAL_CONFIG);
     cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
