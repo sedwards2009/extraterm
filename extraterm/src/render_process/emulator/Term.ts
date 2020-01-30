@@ -501,7 +501,7 @@ export class Emulator implements EmulatorApi {
       materializedRows: this.lines.length,
       cursorX: this.x,
       cursorY: this.y
-      };
+    };
   }
 
   getLineText(y: number): string {
@@ -962,7 +962,7 @@ export class Emulator implements EmulatorApi {
       return data.slice(i);
     }
     return null;
-}
+  }
 
   private _processDataCSI(ch: string, i: number): number {
     switch (this.state) {

@@ -13,23 +13,23 @@ const _log = getLogger("VirtualScrollableArea");
 export interface VirtualScrollable {
   /**
    * Gets the minimum height which this object can be set to.
-   * 
+   *
    * @return the minimum height
    */
   getMinHeight(): number;
 
   /**
    * Gets the height of the scrollable contents on this element.
-   * 
+   *
    * @param containerHeight the current height of the container holding this
    *                            VirtualScrollable object
    * @return the virtual height
    */
   getVirtualHeight(containerHeight: number): number;
-  
+
   /**
    * Gets the height of reserved vertial space inside the object's viewport.
-   * 
+   *
    * @param  containerHeight the current height of the container holding this
    *                            VirtualScrollable object
    * @return the reserved height
@@ -38,14 +38,14 @@ export interface VirtualScrollable {
 
   /**
    * Set the dimensions and scroll for this scrollable.
-   * 
+   *
    * @param setterState information about the new state and context
    */
   setDimensionsAndScroll(setterState: SetterState): void;
 
   /**
    * Signal to this scrollable that it has been made (in)visible.
-   * 
+   *
    * @param visible true if this has been made visible, or false to indicate been not visible.
    */
   markVisible(visible: boolean): void;
@@ -69,9 +69,9 @@ export const EVENT_RESIZE = "scrollable-resize";
 
 /**
  * Emit a resize event.
- * 
+ *
  * This utility function is meant for use by VirtualScrollable objects.
- * 
+ *
  * @param el The element and VirtualScrollable object which needs to be resized.
  */
 export function emitResizeEvent(el: VirtualScrollable & HTMLElement): void {
@@ -103,10 +103,10 @@ export interface VirtualAreaState {
   markVisibleFunction: (scrollable: VirtualScrollable, visible: boolean) => void;
   visibleBottomOffset: number;
 
-  // Output - 
+  // Output -
   containerScrollYOffset: number;
   scrollableStates: VirtualScrollableState[];
-  
+
   intersectIndex: number;
   realScrollYOffset: number;
 }
@@ -122,7 +122,7 @@ export interface VirtualScrollableHeight {
   height: number;
 }
 
-export interface Mutator { 
+export interface Mutator {
   (newState: VirtualAreaState): void;
 }
 
@@ -137,30 +137,30 @@ const emptyState: VirtualAreaState = {
 
   containerScrollYOffset: 0,
   scrollableStates: [],
-  
+
   intersectIndex: -1,
   realScrollYOffset: 0
 };
 
 export class VirtualScrollArea {
-  
+
   protected _currentState: VirtualAreaState = null;
-  
+
   private _log: Logger = null;
-  
+
   constructor() {
     this._log = getLogger("VirtualScrollArea", this);
     this._currentState = emptyState;
   }
-  
+
   getScrollYOffset(): number {
     return this._currentState.virtualScrollYOffset;
   }
-  
+
   getScrollContainerHeight(): number {
     return this._currentState.containerHeight;
   }
-  
+
   getScrollableTop(scrollable: VirtualScrollable): number {
     for (const s of this._currentState.scrollableStates) {
       if (s.scrollable === scrollable) {
@@ -169,7 +169,7 @@ export class VirtualScrollArea {
     }
     return null;
   }
-  
+
   getScrollableVisible(scrollable: VirtualScrollable): boolean {
     for (const s of this._currentState.scrollableStates) {
       if (s.scrollable === scrollable) {
@@ -187,7 +187,7 @@ export class VirtualScrollArea {
     }
     return null;
   }
-  
+
   getVirtualHeight(): number {
     return this._totalVirtualHeight(this._currentState);
   }
@@ -195,7 +195,7 @@ export class VirtualScrollArea {
   getScrollableHeights(): VirtualScrollableHeight[] {
     return this._computeScrollableHeights(this._currentState.scrollableStates);
   }
-  
+
   protected _computeScrollableHeights(vssList: VirtualScrollableState[]): VirtualScrollableHeight[] {
     return vssList.map<VirtualScrollableHeight>( (state): VirtualScrollableHeight => {
       const smallState: VirtualScrollableHeight = {
@@ -208,13 +208,13 @@ export class VirtualScrollArea {
 
   //-----------------------------------------------------------------------
   //
-  //  #####                                
-  // #     # ###### #####    #    # #####  
-  // #       #        #      #    # #    # 
-  //  #####  #####    #      #    # #    # 
-  //       # #        #      #    # #####  
-  // #     # #        #      #    # #      
-  //  #####  ######   #       ####  #      
+  //  #####
+  // #     # ###### #####    #    # #####
+  // #       #        #      #    # #    #
+  //  #####  #####    #      #    # #    #
+  //       # #        #      #    # #####
+  // #     # #        #      #    # #
+  //  #####  ######   #       ####  #
   //
   //-----------------------------------------------------------------------
 
@@ -238,18 +238,18 @@ export class VirtualScrollArea {
       } );
     });
   }
-  
+
   removeScrollable(scrollable: VirtualScrollable): void {
     this._updateAutoscrollBottom( (newState) => {
-      
+
       let currentYOffset = newState.virtualScrollYOffset;
       let accu = 0;
       for (let i=0; i<newState.scrollableStates.length; i++) {
         const currentScrollableState = newState.scrollableStates[i];
         const currentHeight = currentScrollableState.virtualHeight + currentScrollableState.reserveViewportHeight;
-        
+
         if (currentScrollableState.scrollable === scrollable) {
-          
+
           if (currentYOffset >= accu) {
             if (currentYOffset < accu + currentHeight) {
               // currentYOffset is inside the scrollable we need to remove.
@@ -261,32 +261,32 @@ export class VirtualScrollArea {
           }
           break;
         }
-          
+
         accu += currentHeight;
       }
-      
+
       newState.scrollableStates = newState.scrollableStates.filter( (state) => state.scrollable !== scrollable);
     });
   }
-  
+
   replaceScrollable(oldScrollable: VirtualScrollable, newScrollable: VirtualScrollable): void {
     const minHeight = newScrollable.getMinHeight();
     const virtualHeight = newScrollable.getVirtualHeight(this.getScrollContainerHeight());
     const reserveViewportHeight = newScrollable.getReserveViewportHeight(this.getScrollContainerHeight());
 
     this._updateAutoscrollBottom( (newState) => {
-        newState.scrollableStates.filter( (state) => state.scrollable === oldScrollable )
-          .forEach( (state) => {
-            state.scrollable = newScrollable;
-            state.virtualHeight = virtualHeight;
-            state.minHeight = minHeight;
-            state.reserveViewportHeight = reserveViewportHeight;
-            state.realHeight = 0;
-            state.virtualScrollYOffset = 0;
-          });
+      newState.scrollableStates.filter( (state) => state.scrollable === oldScrollable )
+        .forEach( (state) => {
+          state.scrollable = newScrollable;
+          state.virtualHeight = virtualHeight;
+          state.minHeight = minHeight;
+          state.reserveViewportHeight = reserveViewportHeight;
+          state.realHeight = 0;
+          state.virtualScrollYOffset = 0;
+        });
     });
   }
-  
+
   setScrollFunction(scrollFunction: (offset: number) => void): void {
     this._update( (newState) => {
       newState.scrollFunction = scrollFunction;
@@ -301,7 +301,7 @@ export class VirtualScrollArea {
 
   /**
    * Set a function to be used for positioning the top of a scrollable.
-   * 
+   *
    * @param func function which should return a BulkDOMOperation which
    *              positions the given scrollable's top at the new top.
    */
@@ -328,19 +328,19 @@ export class VirtualScrollArea {
 
   //-----------------------------------------------------------------------
   //
-  //    #                                        
-  //   # #    ####  ##### #  ####  #    #  ####  
-  //  #   #  #    #   #   # #    # ##   # #      
-  // #     # #        #   # #    # # #  #  ####  
-  // ####### #        #   # #    # #  # #      # 
-  // #     # #    #   #   # #    # #   ## #    # 
-  // #     #  ####    #   #  ####  #    #  ####  
+  //    #
+  //   # #    ####  ##### #  ####  #    #  ####
+  //  #   #  #    #   #   # #    # ##   # #
+  // #     # #        #   # #    # # #  #  ####
+  // ####### #        #   # #    # #  # #      #
+  // #     # #    #   #   # #    # #   ## #    #
+  // #     #  ####    #   #  ####  #    #  ####
   //
   //-----------------------------------------------------------------------
-  
+
   /**
    * Sets a new height for the container.
-   * 
+   *
    * @param containerHeight the new height of the container.
    */
   updateContainerHeight(containerHeight: number): void {
@@ -369,7 +369,7 @@ export class VirtualScrollArea {
    * Scroll down to the extreme bottom.
    *
    * @return the actual offset used after clamping it into the valid range of offsets
-   */  
+   */
   scrollToBottom(): number {
     if (this._currentState.scrollableStates.length === 0) {
       return 0;
@@ -431,14 +431,14 @@ export class VirtualScrollArea {
         });
     } );
   }
-  
+
   /**
    * Scroll the view such that a range is visible.
-   * 
+   *
    * @param topY the Y offset of the top of the range
    * @param bottomY the Y offset of the bottom of the range
    * @return the actual offset used after clamping it into the valid range of offsets
-   */  
+   */
   scrollIntoView(topY: number, bottomY: number): number {
     const intersectedScrollable = this._currentState.scrollableStates[this._currentState.intersectIndex];
     const viewPortTop = this._currentState.virtualScrollYOffset + intersectedScrollable.reserveViewportHeight;
@@ -447,7 +447,7 @@ export class VirtualScrollArea {
     if (topY < viewPortTop) {
       yOffset -= viewPortTop - topY;
     }
-    
+
     const viewPortBottom = this._currentState.virtualScrollYOffset + this._currentState.containerHeight;
     if (bottomY > viewPortBottom) {
       yOffset += bottomY - viewPortBottom;
@@ -474,7 +474,7 @@ export class VirtualScrollArea {
       visibleBottomOffset: 0,
       containerScrollYOffset: -1,
       scrollableStates: [],
-      
+
       intersectIndex: -1,
       realScrollYOffset: -1
     };
@@ -485,22 +485,22 @@ export class VirtualScrollArea {
   dumpState(): void {
     DumpState(this._currentState);
   }
-  
+
   //-----------------------------------------------------------------------
   //
-  // ######                                      
-  // #     # #####  # #    #   ##   ##### ###### 
-  // #     # #    # # #    #  #  #    #   #      
-  // ######  #    # # #    # #    #   #   #####  
-  // #       #####  # #    # ######   #   #      
-  // #       #   #  #  #  #  #    #   #   #      
-  // #       #    # #   ##   #    #   #   ###### 
+  // ######
+  // #     # #####  # #    #   ##   ##### ######
+  // #     # #    # # #    #  #  #    #   #
+  // ######  #    # # #    # #    #   #   #####
+  // #       #####  # #    # ######   #   #
+  // #       #   #  #  #  #  #    #   #   #
+  // #       #    # #   ##   #    #   #   ######
   //
   //-----------------------------------------------------------------------
 
   /**
    * Update the state and apply it to the DOM.
-   * 
+   *
    * @param  {VirtualAreaState} mutator [description]
    * @return {[type]}                   [description]
    */
@@ -509,12 +509,12 @@ export class VirtualScrollArea {
     // Carefully clone our state without jumping into any references to external objects.
     const newState = _.clone(this._currentState);
     newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
-    
+
     mutator.forEach( (m) => {
       m(newState);
       this._compute(newState);
     });
-    
+
     this._applyState(this._currentState, newState, this._log);
     // DumpState(newState);
     this._currentState = newState;
@@ -525,18 +525,18 @@ export class VirtualScrollArea {
     const newState = _.clone(this._currentState);
     newState.scrollableStates = this._currentState.scrollableStates.map<VirtualScrollableState>(_.clone.bind(_));
 
-    const virtualHeight = this._totalVirtualHeight(this._currentState);   
+    const virtualHeight = this._totalVirtualHeight(this._currentState);
     const TOLERANCE = 4;
     const isAtBottom = (this._currentState.virtualScrollYOffset + TOLERANCE) >= virtualHeight - this._currentState.containerHeight;
-    
+
     for (let i=0; i<mutator.length; i++) {
       mutator[i](newState);
       this._compute(newState);
     }
-    
+
     if (isAtBottom) {
-        newState.virtualScrollYOffset = Math.max(0, this._totalVirtualHeight(newState) - newState.containerHeight);
-        this._compute(newState);
+      newState.virtualScrollYOffset = Math.max(0, this._totalVirtualHeight(newState) - newState.containerHeight);
+      this._compute(newState);
     }
 
     this._applyState(this._currentState, newState, this._log);
@@ -545,7 +545,7 @@ export class VirtualScrollArea {
 
   /**
    * Compute the scroll positions in a Scroll the contents of the terminal to the given position.
-   * 
+   *
    * @param state the state which needs to be recomputed
    */
   protected _compute(state: VirtualAreaState): void {
@@ -583,7 +583,7 @@ export class VirtualScrollArea {
     const pos = state.virtualScrollYOffset;
     let realScrollableTop = 0;    // As we loop below we keep track of where we are inside the 'real' container
     let virtualScrollableTop = 0; // As we loop below we keep track of where wa are inside the virtual space
-    
+
     // Loop through each scrollable and up its virtual scroll Y offset and also
     // compute the 'real' scroll Y offset for the container.
     for (let i=0; i<state.scrollableStates.length; i++) {
@@ -598,10 +598,10 @@ export class VirtualScrollArea {
         // This scrollable fits completely inside the viewport. It may actually be much smaller than the viewport.
         const realHeight = Math.max(scrollable.minHeight, scrollable.virtualHeight + scrollable.reserveViewportHeight);
         scrollable.realHeight = realHeight;
-        
+
         // No virtual scrolling is ever needed if the scrollable fits entirely inside the viewport.
-        scrollable.virtualScrollYOffset = 0;  
-        
+        scrollable.virtualScrollYOffset = 0;
+
         const virtualScrollableBottom = virtualScrollableTop + realHeight;
         if (pos >= virtualScrollableTop && pos <  virtualScrollableBottom) {
           // We can now compute the container scroll offset if the top of the viewport intersects the scrollable.
@@ -613,7 +613,7 @@ export class VirtualScrollArea {
           const posBottom = pos + viewPortHeight;
           scrollable.visible = ! (pos >= virtualScrollableBottom || posBottom < virtualScrollableTop);
         }
-        
+
       } else {
         // This scrollable is big enough to cover the viewport and needs to do virtual scrolling.
         const virtualScrollableHeight = Math.max(scrollable.minHeight,
@@ -623,7 +623,7 @@ export class VirtualScrollArea {
 
         if (pos < virtualScrollableBottom) {
           // The end of the current scrollable is lower/after the point we want to scroll to.
-          
+
     // log(`1. heightInfo ${i}, element scrollTo=${scrollOffset}, el.scrollTop=${realYBase}`);
           if (pos >= virtualScrollableTop) {
             // +------------+
@@ -645,7 +645,7 @@ export class VirtualScrollArea {
               state.containerScrollYOffset = realScrollableTop + (pos + viewPortHeight - virtualScrollableBottom);
 
               scrollable.visible = pos < virtualScrollableBottom;
-              
+
             } else {
               // +------------+
               // |            | ---+  <-- Viewport
@@ -654,7 +654,7 @@ export class VirtualScrollArea {
               // +------------+
               scrollable.virtualScrollYOffset = pos - virtualScrollableTop;
               // The top of the scrollable is aligned with the top of the viewport.
-              state.containerScrollYOffset = realScrollableTop; 
+              state.containerScrollYOffset = realScrollableTop;
               scrollable.visible = true;
             }
           } else {
@@ -663,17 +663,17 @@ export class VirtualScrollArea {
             // |            |    | <-- Viewport
             // | Scrollable |    |
             // |            | ---+
-            // +------------+    
+            // +------------+
             scrollable.virtualScrollYOffset = 0;
 
             const posBottom = pos + viewPortHeight;
             scrollable.visible = posBottom >= virtualScrollableTop;
           }
-          
+
         } else {
             // +------------+
-            // | Scrollable |    
-            // +------------+    
+            // | Scrollable |
+            // +------------+
             //                ---+
             //                   | <-- Viewport
           scrollable.virtualScrollYOffset = virtualScrollableHeight - (viewPortHeight - scrollable.reserveViewportHeight);
@@ -704,7 +704,7 @@ export class VirtualScrollArea {
 
   private _applyState(oldState: VirtualAreaState, newState: VirtualAreaState, log: Logger): void {
     this._applyScrollbarState(oldState, newState, log);
-    
+
     // Index the list of previous Scrollables.
     const oldMap = new Map<VirtualScrollable, VirtualScrollableState>();
     oldState.scrollableStates.forEach( (scrollableState: VirtualScrollableState): void => {
@@ -716,7 +716,7 @@ export class VirtualScrollArea {
     // Update each Scrollable if needed.
     newState.scrollableStates.forEach( (newScrollableState: VirtualScrollableState): void => {
       const oldScrollableState = oldMap.get(newScrollableState.scrollable);
-      
+
       const heightChanged = oldScrollableState === undefined ||
                               oldScrollableState.realHeight !== newScrollableState.realHeight;
       const yOffsetChanged = oldScrollableState === undefined ||
@@ -767,14 +767,14 @@ export class VirtualScrollArea {
 
     // Update the Y offset for the container.
     if (oldState.containerScrollYOffset !== newState.containerScrollYOffset) {
-        newState.scrollFunction(newState.containerScrollYOffset);
+      newState.scrollFunction(newState.containerScrollYOffset);
     }
   }
 
   private _applyScrollbarState(oldState: VirtualAreaState, newState: VirtualAreaState, log: Logger): void {
     const oldTotalHeight = this._totalVirtualHeight(oldState);
     const newTotalHeight = this._totalVirtualHeight(newState);
-    
+
     // Update the scrollbar.
     if (newState.scrollbar !== null) {
       if (oldState.scrollbar !== newState.scrollbar || oldTotalHeight !== newTotalHeight) {
@@ -787,7 +787,7 @@ export class VirtualScrollArea {
   }
 }
 
-export function DumpState(state: VirtualAreaState): void {  
+export function DumpState(state: VirtualAreaState): void {
   console.log(VirtualAreaStateToString(state));
 }
 

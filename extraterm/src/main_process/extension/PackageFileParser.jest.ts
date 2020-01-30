@@ -40,43 +40,42 @@ test("contributes", () => {
 
 test("viewers", () => {
   const parsed = parsePackageJsonString(JSON.stringify(
-{
-  "name": "audio-viewer",
-  "description": "Audio viewer",
-  "version": "1.0.0",
-  "main": "src/AudioViewerExtension.js",
-  "scripts": {
-    "build": "tsc"
-  },
-  "dependencies": {
-    "vue": "2.5.9",
-    "vue-class-component": "6.1.0"
-  },
-  "devDependencies": {
-    "@types/node": "7.0.5",
-    "extraterm-extension-api": "0.1.0",
-    "typescript": "3.1.6"
-  },
-  "contributes": {
-    "viewers": [
-      {
-        "name": "AudioViewer",
-        "mimeTypes": [
-          "audio/vorbis",
-          "audio/mpeg"
-        ],
-        "css": {
-          "directory": "resources/sass",
-          "cssFile": [
-            "audio-viewer.scss"
-          ],
-          "fontAwesome": true
-        }
+    {
+      "name": "audio-viewer",
+      "description": "Audio viewer",
+      "version": "1.0.0",
+      "main": "src/AudioViewerExtension.js",
+      "scripts": {
+        "build": "tsc"
+      },
+      "dependencies": {
+        "vue": "2.5.9",
+        "vue-class-component": "6.1.0"
+      },
+      "devDependencies": {
+        "@types/node": "7.0.5",
+        "extraterm-extension-api": "0.1.0",
+        "typescript": "3.1.6"
+      },
+      "contributes": {
+        "viewers": [
+          {
+            "name": "AudioViewer",
+            "mimeTypes": [
+              "audio/vorbis",
+              "audio/mpeg"
+            ],
+            "css": {
+              "directory": "resources/sass",
+              "cssFile": [
+                "audio-viewer.scss"
+              ],
+              "fontAwesome": true
+            }
+          }
+        ]
       }
-    ]
-  }
-}
-), "");
+    }), "");
   expect(parsed.name).toBe("audio-viewer");
   expect(parsed.version).toBe("1.0.0");
   expect(parsed.main).toBe("src/AudioViewerExtension.js");

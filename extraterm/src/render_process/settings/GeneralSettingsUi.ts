@@ -65,7 +65,8 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
   </div>
 </div>
 `)
-})
+  }
+)
 export class GeneralSettingsUi extends Vue {
 
   showTips: ShowTipsStrEnum;

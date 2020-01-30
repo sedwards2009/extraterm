@@ -23,7 +23,8 @@ import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
   </div>
 </div>
 `)
-})
+  }
+)
 export class ExtensionSettingsUi extends Vue {
 
   allExtensions: ExtensionMetadata[];

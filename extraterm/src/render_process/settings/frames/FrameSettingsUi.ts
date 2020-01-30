@@ -72,7 +72,8 @@ export function nextId(): string {
   </p>
 </div>
 `)
-})
+  }
+)
 export class FrameSettingsUi extends Vue {
 
   frameByDefault: "true" | "false" = "true";

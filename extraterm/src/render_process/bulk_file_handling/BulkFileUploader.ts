@@ -190,7 +190,7 @@ export class BulkFileUploader implements Disposable {
 
   private _responseOnEnd(): void {
     if (this._stringChunkBuffer.length !== 0) {
-        this._isEnding = true;
+      this._isEnding = true;
     } else {
       this._onFinishedEmitter.fire(undefined);
     }

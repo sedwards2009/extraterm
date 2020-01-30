@@ -820,7 +820,7 @@ class ConfigDatabaseImpl implements ConfigDatabase {
     const oldConfig = this._getConfigNoWarnings(key);
     if (_.isEqual(oldConfig, newConfig)) {
       return false;
-  }
+    }
 
     if (Object.isFrozen(newConfig)) {
       this._configDb.set(key, newConfig);

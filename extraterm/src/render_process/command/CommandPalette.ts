@@ -115,7 +115,7 @@ export function commandPaletteFilterEntries(entries: CommandAndShortcut[], filte
 }
 
 export function commandPaletteFormatEntries(entries: CommandAndShortcut[], selectedId: string, filterInputValue: string): string {
-    return (filterInputValue.trim() === "" ? commandPaletteFormatEntriesWithGroups : commandPaletteFormatEntriesAsList)(entries, selectedId);
+  return (filterInputValue.trim() === "" ? commandPaletteFormatEntriesWithGroups : commandPaletteFormatEntriesAsList)(entries, selectedId);
 }
 
 function commandPaletteFormatEntriesAsList(entries: CommandAndShortcut[], selectedId: string): string {

@@ -463,12 +463,11 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
         searchOptions.start = { start: {row: 0, column: 0}, end: {row: 0, column: 0}};
         break;
 
-      case FindStartPosition.DOCUMENT_END: {
+      case FindStartPosition.DOCUMENT_END:
         const doc = this._aceEditor.getSession().doc;
         const row = doc.getLength() - 1;
         const column = doc.getLine(row).length;
         searchOptions.start = { start: {row, column}, end: {row, column}};
-        }
         break;
     }
 
@@ -677,7 +676,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     containerDiv.classList.remove(CLASS_HIDE_CURSOR);
 
     this._aceEditor.clearSelection();
-      this._aceEditor.selection.moveCursorToPosition({ row: this._aceEditSession.getLength()-1, column: 0 });
+    this._aceEditor.selection.moveCursorToPosition({ row: this._aceEditSession.getLength()-1, column: 0 });
     if (this._editable) {
       this._aceEditor.setReadOnly(false);
     }

@@ -39,7 +39,7 @@ const defaultHandlers: { messageType: Messages.MessageType, handler: Handler }[]
 
 /**
  * Register a default handler for a message type
- * 
+ *
  * @param type    the message type this handler should be used for.
  * @param handler the handler itself.
  */
@@ -56,11 +56,11 @@ function handleAsyncIpc(senderInfo: any, detail: any): void {
   const matchingPromises = promiseQueue.filter( p => p.messageType === msg.type );
   const nonMatchingPromises = promiseQueue.filter( p => p.messageType !== msg.type );
   promiseQueue = nonMatchingPromises;
-  
+
   matchingPromises.forEach( tup => {
     tup.promiseResolve(msg);
   });
-  
+
   if (matchingPromises.length === 0) {
     // Fall back on the default handlers.
     defaultHandlers.filter( tup => tup.messageType === msg.type ).forEach( tup => {
@@ -105,9 +105,9 @@ export function rescanThemes(): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function requestPtyCreate(sessionUuid: string, extraEnv: EnvironmentMap, columns: number, rows: number
-    ): Promise<Messages.CreatedPtyMessage> {
-      
+export function requestPtyCreate(sessionUuid: string, extraEnv: EnvironmentMap, columns: number,
+    rows: number): Promise<Messages.CreatedPtyMessage> {
+
   const msg: Messages.CreatePtyRequestMessage = {
     type: Messages.MessageType.PTY_CREATE,
     sessionUuid,
@@ -145,22 +145,22 @@ export function devToolsRequest(open: boolean): void {
 
 export function clipboardWrite(text: string): void {
   const msg: Messages.ClipboardWriteMessage = { type: Messages.MessageType.CLIPBOARD_WRITE, text: text };
-  ipc.send(Messages.CHANNEL_NAME, msg);    
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
 export function clipboardReadRequest(): void {
   const msg: Messages.ClipboardReadRequestMessage = { type: Messages.MessageType.CLIPBOARD_READ_REQUEST };
-  ipc.send(Messages.CHANNEL_NAME, msg);      
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
 export function windowCloseRequest(): void {
   const msg: Messages.WindowCloseRequestMessage = { type: Messages.MessageType.WINDOW_CLOSE_REQUEST };
-  ipc.send(Messages.CHANNEL_NAME, msg);  
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
 export function sendConfig(key: config.ConfigKey, config: any): void {
   const msg: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, key, config };
-  ipc.send(Messages.CHANNEL_NAME, msg);  
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
 export function requestNewTag(): Promise<Messages.NewTagMessage> {
@@ -177,12 +177,12 @@ export function requestNewTagSync(): string {
 
 export function windowMinimizeRequest(): void {
   const msg: Messages.WindowMinimizeRequestMessage = { type: Messages.MessageType.WINDOW_MINIMIZE_REQUEST };
-  ipc.send(Messages.CHANNEL_NAME, msg);  
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
 export function windowMaximizeRequest(): void {
   const msg: Messages.WindowMaximizeRequestMessage = { type: Messages.MessageType.WINDOW_MAXIMIZE_REQUEST };
-  ipc.send(Messages.CHANNEL_NAME, msg);  
+  ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
 export function createBulkFileSync(metadata: BulkFileMetadata, size: number): {identifier: BulkFileIdentifier, url: string} {

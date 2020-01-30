@@ -43,7 +43,8 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   </div>
 </div>
 `)
-})
+  }
+)
 export class SessionSettingsUi extends Vue {
   private _extensionManager: ExtensionManager = null;
   sessions: SessionConfiguration[] = [];

@@ -77,7 +77,7 @@ class EtMarkdownViewer extends ViewerElement {
     let i = 0;
     for (i=0; i<kids.length; i++) {
       if (kids[i].nodeName === '#text') {
-         text = text + kids[i].textContent;
+        text = text + kids[i].textContent;
       }
     }
     

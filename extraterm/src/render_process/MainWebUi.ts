@@ -77,7 +77,7 @@ const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 @WebComponent({tag: "extraterm-mainwebui"})
 export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
     config.AcceptsConfigDatabase {
-  
+
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
   static EVENT_TAB_CLOSED = 'mainwebui-tab-closed';
@@ -105,10 +105,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     super();
     this._log = getLogger("ExtratermMainWebUI", this);
   }
-  
+
   connectedCallback(): void {
     super.connectedCallback();
-    this._setUpShadowDom();   
+    this._setUpShadowDom();
     this._setUpMainContainer();
     this._setUpSplitLayout();
     if (this._showWindowControls()) {
@@ -128,11 +128,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       }
     }
   }
-  
+
   setConfigDatabase(configManager: ConfigDatabase): void {
     this._configManager = configManager;
   }
-  
+
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
     this._keybindingsManager = keyBindingManager;
   }
@@ -162,11 +162,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       settingsTab.setThemes(this._themes);
     }
   }
-  
+
   getTabCount(): number {
     return this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu)).length;
   }
-  
+
   private _setUpShadowDom(): void {
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
     const clone = this._createClone();
@@ -201,7 +201,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _handleElementDroppedEvent(targetTabWidget: TabWidget, tabIndex: number, dropData: string): void {
     if (ElementMimeType.tagNameFromData(dropData) === Tab.TAG_NAME) {
       const tabElement = <Tab> DomUtils.getShadowId(this, ElementMimeType.elementIdFromData(dropData));
-      
+
       this._splitLayout.moveTabToTabWidget(tabElement, targetTabWidget, tabIndex);
       this._splitLayout.update();
 
@@ -281,7 +281,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
         this._handleFrameDroppedEvent(newTabWidget, 0, detail.dropData);
       }
-    }    
+    }
   }
 
   private _handleDragStartedEvent(ev: CustomEvent): void {
@@ -311,7 +311,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
             this._extensionManager.newTerminalCreated(newTerminal);
           }
         }
-      } 
+      }
     }
   }
 
@@ -414,7 +414,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (this._showWindowControls()) {
       windowControls = this._windowControlsHtml();
     }
-  
+
     return trimBetweenTags(`
       <style id="${ThemeableElementBase.ID_THEME}"></style>
       <div id="${ID_TOP_LAYOUT}">
@@ -463,7 +463,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     newTab.setAttribute('id', "tab_id_" + newId);
     newTab.tabIndex = -1;
 
-    const contentsHtml = isTerminal ? 
+    const contentsHtml = isTerminal ?
       `<div id="tab_title_extensions_${newId}" class="tab_title_extensions"></div>` :
       `<div class="${CLASS_TAB_HEADER_ICON}"></div>
       <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
@@ -487,7 +487,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     const tabHeader = DomUtils.getShadowRoot(this).getElementById("tab_id_" + newId);
     tabHeader.addEventListener('contextmenu', ev => {
-this._log.debug("tab RMB");
       ev.stopImmediatePropagation();
       ev.preventDefault();
 
@@ -502,7 +501,7 @@ this._log.debug("tab RMB");
     if (isTerminal) {
       const extensionsDiv = <HTMLDivElement> DomUtils.getShadowRoot(this).getElementById("tab_title_extensions_" + newId);
       this._addTabTitleWidgets(extensionsDiv, <EtTerminal> tabContentElement);
-    }    
+    }
 
     return newTab;
   }
@@ -590,11 +589,11 @@ this._log.debug("tab RMB");
       this._updateTabTitle(newTerminal);
       this._sendTitleEvent(ev.detail.title);
     });
-    
+
     newTerminal.addEventListener(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
       this._handleEmbeddedViewerPopOutEvent.bind(this));
   }
-  
+
   private _handleEmbeddedViewerPopOutEvent(ev: CustomEvent): void {
     this._popOutEmbeddedViewer(ev.detail.embeddedViewer, ev.detail.terminal);
   }
@@ -614,7 +613,7 @@ this._log.debug("tab RMB");
     injectConfigDatabase(viewerTab, this._configManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
-    
+
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
     this._openViewerTab(this._firstTabWidget(), viewerTab);
@@ -623,7 +622,7 @@ this._log.debug("tab RMB");
     this._updateTabTitle(viewerTab);
     return viewerTab;
   }
-  
+
   private _openViewerTab(tabWidget: TabWidget, viewerElement: ViewerElement): void {
     viewerElement.setFocusable(true);
     this._addTab(tabWidget, viewerElement);
@@ -635,19 +634,19 @@ this._log.debug("tab RMB");
     this._updateTabTitle(viewerElement);
     this._sendTabOpenedEvent();
   }
-  
+
   private _updateTabTitle(el: HTMLElement): void {
     if (el instanceof EtTerminal) {
       return;
     }
 
     const tab = this._splitLayout.getTabByTabContent(el);
-     
+
     let title = "";
     let htmlTitle = "";
     let icon = null;
     let tag = "";
-    
+
     if (el instanceof EtViewerTab) {
       title = el.getMetadata().title;
       htmlTitle = he.escape(title);
@@ -667,7 +666,7 @@ this._log.debug("tab RMB");
 
     const iconDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
     iconDiv.innerHTML = icon !== null ? '<i class="' + icon + '"></i>' : "";
-    
+
     const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
     middleDiv.title = title;
     middleDiv.innerHTML = htmlTitle;
@@ -704,7 +703,7 @@ this._log.debug("tab RMB");
       this._switchToTab(settingsTabElement);
     }
   }
-  
+
   commandOpenAboutTab(): void {
     const aboutTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
@@ -717,7 +716,7 @@ this._log.debug("tab RMB");
       this._switchToTab(viewerElement);
     }
   }
-  
+
   closeTab(tabContentElement: Element): void {
     const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
     const tabWidgetContents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
@@ -732,7 +731,7 @@ this._log.debug("tab RMB");
         pty.destroy();
       }
     }
-    
+
     if (DisposableUtils.isDisposable(tabContentElement)) {
       tabContentElement.dispose();
     }
@@ -758,7 +757,7 @@ this._log.debug("tab RMB");
     if (len === 0) {
       return;
     }
-    
+
     let i = tabWidget.getSelectedIndex();
     i = i + direction;
     if (i < 0) {
@@ -828,7 +827,7 @@ this._log.debug("tab RMB");
       targetTabWidget.focus();
       if (elementSupportsFocus(tabElement)) {
         tabElement.focus();
-      }      
+      }
     }
   }
 
@@ -924,7 +923,7 @@ this._log.debug("tab RMB");
       }
     }
   }
-  
+
   /**
    * Pastes text into the terminal which has the input focus.
    *
@@ -941,17 +940,17 @@ this._log.debug("tab RMB");
     const event = new CustomEvent(MainWebUi.EVENT_TAB_OPENED, { detail: null });
     this.dispatchEvent(event);
   }
-  
+
   private _sendTabClosedEvent(): void {
     const event = new CustomEvent(MainWebUi.EVENT_TAB_CLOSED, { detail: null });
-    this.dispatchEvent(event);    
+    this.dispatchEvent(event);
   }
 
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(MainWebUi.EVENT_TITLE, { detail: {title: title} });
     this.dispatchEvent(event);
   }
-  
+
   private _sendWindowRequestEvent(eventName: string): void {
     const event = new CustomEvent(eventName, {  });
     this.dispatchEvent(event);
@@ -1015,7 +1014,7 @@ this._log.debug("tab RMB");
   private _commandFocusTabLeft(): void {
     this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), -1);
   }
-    
+
   private _commandFocusTabRight(): void {
     this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), 1);
   }

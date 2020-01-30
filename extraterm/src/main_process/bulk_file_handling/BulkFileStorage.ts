@@ -276,7 +276,7 @@ export class BulkFile {
     if (availableDelta !== 0) {
       const totalBufferSize = BULK_FILE_MAXIMUM_BUFFER_SIZE;
       this._onWriteBufferSizeChangeEventEmitter.fire({totalBufferSize, availableDelta});
-      }
+    }
   }
 
   close(success: boolean): void {

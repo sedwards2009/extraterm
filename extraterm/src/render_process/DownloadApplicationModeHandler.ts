@@ -20,7 +20,7 @@ export class DownloadApplicationModeHandler /* implements ApplicationModeHandler
 
   onCreatedBulkFile: Event<BulkFileHandle>;
   private _onCreatedBulkFileEventEmitter = new EventEmitter<BulkFileHandle>();
-  
+
   constructor(private _emulator: TermApi.EmulatorApi, private _broker: BulkFileBroker) {
     this._log = getLogger("DownloadApplicationModeHandler", this);
     this.onCreatedBulkFile = this._onCreatedBulkFileEventEmitter.event;
@@ -88,7 +88,7 @@ class DownloadSession {
     switch (this._state) {
       case DownloadHandlerState.METADATA:
         return this._handleMetadata(data);
-    
+
       case DownloadHandlerState.BODY:
         return this._handleBody(data);
 
@@ -98,7 +98,7 @@ class DownloadSession {
 
       case DownloadHandlerState.ERROR:
         break;
-        
+
       default:
         this._log.warn("handleDownloadData called while in state ", DownloadHandlerState[this._state]);
         break;
@@ -150,7 +150,7 @@ class DownloadSession {
   }
 
   private _closeFileHandle(success: boolean): void {
-     if (this._fileHandle !== null) {
+    if (this._fileHandle !== null) {
       this._fileHandle.close(success);
       this._availableWriteBufferSizeChangedDisposable.dispose();
       this._fileHandle.deref();
@@ -182,7 +182,7 @@ class DownloadSession {
       } else {
         this._encodedDataBuffer = tail;
       }
-      
+
       if (chunk.length !== 0) {
         const lastColonIndex = chunk.length - HASH_LENGTH - 1;
         const commandChar = chunk.charAt(0);
@@ -193,7 +193,7 @@ class DownloadSession {
           this._closeFileHandle(false);
           return {action: TermApi.ApplicationModeResponseAction.ABORT, remainingData: this._encodedDataBuffer};
         }
-        
+
         const base64Data = chunk.slice(2, lastColonIndex);
         const hashHex = chunk.slice(lastColonIndex+1);
 
@@ -235,10 +235,10 @@ class DownloadSession {
 
   private _determineBufferSplitPosition(): number {
     const MAX_ENCODED_LENGTH = MAX_CHUNK_BYTES * 4 / 3;
-    
+
     // MAX_ENCODED_LENGTH + : + <sha256.length>
     const MAX_ENCODED_LINE_LENGTH = 2 + MAX_ENCODED_LENGTH + 1 + 64;
-    
+
     let newLineIndex = this._encodedDataBuffer.indexOf("\n");
     let crIndex = this._encodedDataBuffer.indexOf("\r");
 
@@ -269,7 +269,7 @@ class DownloadSession {
   private _flushBuffer(): void {
     while (this._decodedDataBuffers.length !== 0 && this._fileHandle.getAvailableWriteBufferSize() > 0) {
       const availableSize = this._fileHandle.getAvailableWriteBufferSize();
-      
+
       const nextBuffer = this._decodedDataBuffers[0];
       this._decodedDataBuffers.splice(0, 1);
 

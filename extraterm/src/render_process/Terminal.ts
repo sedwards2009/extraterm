@@ -86,7 +86,7 @@ type InputStreamFilter = (input: string) => string;
 
 /**
  * An Extraterm terminal.
- * 
+ *
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
@@ -94,7 +94,7 @@ type InputStreamFilter = (input: string) => string;
 export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindingsManager,
   AcceptsConfigDatabase, Disposable, SupportsClipboardPaste.SupportsClipboardPaste,
   SupportsDialogStack.SupportsDialogStack {
-  
+
   static TAG_NAME = "ET-TERMINAL";
   static EVENT_TITLE = "title";
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
@@ -108,11 +108,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _containerElement: HTMLElement = null;
   private _terminalCanvas: TerminalCanvas = null;
   private _terminalViewer: TerminalViewer = null;
-  
+
   private _emulator: Term.Emulator = null;
   private _cookie = null;
   private _htmlData: string = null;
-  
+
   private _fileBroker: BulkFileBroker = null;
   private _downloadHandler: DownloadApplicationModeHandler = null;
   private _terminalVisualConfig: TerminalVisualConfig = null;
@@ -122,22 +122,22 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   // The command line string of the last command started.
   private _lastCommandLine: string = null;
-  
+
   // The terminal viewer containing the start output of the last command started.
   private _lastCommandTerminalViewer: TerminalViewer = null;
-  
+
   // The line number of the start of output of the last command started.
   private _lastCommandTerminalLine: BookmarkRef = null;
-  
+
   private _mode: Mode = Mode.DEFAULT;
-  
+
   private _configDatabase: ConfigDatabase = null;
   private _keyBindingManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
 
   private _title = "New Tab";
   private _frameFinder: FrameFinder = null;
-  
+
   private _nextTag: string = null;
 
   private _resizePollHandle: Disposable = null;
@@ -174,14 +174,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     commands.registerCommand("extraterm:terminal.typeSelection", (args: any) => extensionManager.getActiveTerminal().commandTypeSelection());
     commands.registerCommand("extraterm:terminal.typeSelectionAndCr", (args: any) => extensionManager.getActiveTerminal().commandTypeSelectionAndCr());
   }
-  
+
   constructor() {
     super();
     this._log = getLogger(EtTerminal.TAG_NAME, this);
     this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
     this._fetchNextTag();
   }
-   
+
   connectedCallback(): void {
     super.connectedCallback();
     if ( ! this._elementAttached) {
@@ -190,7 +190,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this._createClone();
       shadow.appendChild(clone);
-      
+
       this.addEventListener('focus', this._handleFocus.bind(this));
       this.addEventListener('blur', this._handleBlur.bind(this));
 
@@ -209,10 +209,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
       this._initEmulator(this._cookie);
       this._appendNewTerminalViewer();
-      
+
       this.updateThemeCss();
 
-      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDownCapture(ev));     
+      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDownCapture(ev));
       this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
         this.sendToPty(detail.text);
@@ -225,7 +225,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._terminalCanvas.scheduleResize();
     }
   }
-  
+
   /**
    * Custom Element 'disconnected' life cycle hook.
    */
@@ -233,7 +233,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     super.disconnectedCallback();
     this._terminalCanvas.disconnectedCallback();
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TERMINAL];
   }
@@ -283,7 +283,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
     this._keyBindingManager = keyBindingManager;
   }
-  
+
   setBulkFileBroker(fileBroker: BulkFileBroker): void {
     this._fileBroker = fileBroker;
 
@@ -313,8 +313,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     if (commandLine.trim() === "" || this._configDatabase === null) {
       return false;
     }
-    
-    const commandLineActions: DeepReadonly<CommandLineAction[]> = 
+
+    const commandLineActions: DeepReadonly<CommandLineAction[]> =
       this._configDatabase.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
     for (const cla of commandLineActions) {
       if (this._commandLineActionMatches(commandLine, cla)) {
@@ -332,11 +332,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
     switch (generalConfig.frameRule) {
       case "always_frame":
-          return true;
-        case "never_frame":
-          return false;
-        case "frame_if_lines":
-          return linesOfOutput !== -1 && linesOfOutput > generalConfig.frameRuleLines;
+        return true;
+      case "never_frame":
+        return false;
+      case "frame_if_lines":
+        return linesOfOutput !== -1 && linesOfOutput > generalConfig.frameRuleLines;
     }
   }
 
@@ -354,11 +354,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
           return false;
         }
       }
-      return true;        
+      return true;
     } else {
       // regexp
       return (new RegExp(cla.match)).test(cleanCommandLine);
-    }   
+    }
   }
 
   /**
@@ -370,7 +370,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   getTerminalTitle(): string {
     return this._title;
   }
-  
+
   setTerminalTitle(title: string): void {
     this._title = title;
     this._sendTitleEvent(title);
@@ -396,7 +396,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
     this._terminalCanvas.focus();
   }
-  
+
   hasFocus(): boolean {
     const shadowRoot = DomUtils.getShadowRoot(this);
     if (shadowRoot === null) {
@@ -404,16 +404,16 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
     return shadowRoot.activeElement !== null;
   }
-  
+
   /**
    * Write VT data to the terminal screen.
-   * 
+   *
    * @param text the stream of text and VT codes to write.
    */
   write(text: string): WriteBufferStatus {
     return this._emulator.write(text);
   }
-  
+
   /**
    * Send data to the pty and process connected to the terminal.
    * @param text the data to send.
@@ -421,15 +421,15 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   sendToPty(text: string): void {
     this._pty.write(text);
   }
-    
+
   resizeToContainer(): void {
     this._terminalCanvas.scheduleResize();
   }
-  
+
   setFrameFinder(func: FrameFinder): void {
     this._frameFinder = func;
   }
-  
+
   getFrameContents(frameId: string): BulkFileHandle {
     const embeddedViewer = this.getEmbeddedViewerByFrameId(frameId);
     if (embeddedViewer === null) {
@@ -443,7 +443,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     if (/[^0-9]/.test(frameId)) {
       return null;
     }
-    
+
     for (const element of this._terminalCanvas.getViewerElements()) {
       if (EmbeddedViewer.is(element) && element.getTag() === frameId) {
         return element;
@@ -463,7 +463,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   getViewerElements(): ViewerElement[] {
     return this._terminalCanvas.getViewerElements();
   }
-    
+
   getExtratermCookieValue(): string {
     return this._cookie;
   }
@@ -504,13 +504,13 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   /**
    * Get the window which this terminal is on.
-   * 
+   *
    * @returns {Window} The window object.
    */
   private _getWindow(): Window {
-    return this.ownerDocument.defaultView;  
+    return this.ownerDocument.defaultView;
   }
-  
+
   private _showTip(): void {
     const config = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
     switch (config.showTips) {
@@ -530,12 +530,12 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
     this._appendMimeViewer(TipViewer.MIME_TYPE, null);
   }
-  
+
   private _handleFocus(event: FocusEvent): void {
     this._terminalCanvas.setModeAndVisualState(this._mode,
       this._mode === Mode.CURSOR ? VisualState.AUTO : VisualState.FOCUSED);
   }
-  
+
   private _refocus(): void {
     if (this.hasFocus() && this._mode === Mode.DEFAULT &&
         this._terminalViewer != null && ! this._terminalViewer.hasFocus()) {
@@ -553,12 +553,12 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       applicationModeCookie: cookie,
       debug: true
     });
-    
+
     emulator.debug = true;
     emulator.addTitleChangeEventListener(this._handleTitle.bind(this));
     emulator.addDataEventListener(this._handleTermData.bind(this));
     emulator.addRenderEventListener(this._handleTermSize.bind(this));
-    
+
     // Application mode handlers
     const applicationModeHandler: TermApi.ApplicationModeHandler = {
       start: this._handleApplicationModeStart.bind(this),
@@ -583,7 +583,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const terminalViewer = this._createTerminalViewer();
     terminalViewer.setEmulator(this._emulator);
 
-    this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea 
+    this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea
                                             // removing it from the DOM in the next method call.
     this._terminalCanvas.appendViewerElement(terminalViewer);
     this._terminalCanvas.setTerminalViewer(terminalViewer);
@@ -605,13 +605,13 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   /**
    * Handler for window title change events from the pty.
-   * 
+   *
    * @param title The new window title for this terminal.
    */
   private _handleTitle(emulator: Term.Emulator, title: string): void {
     this.setTerminalTitle(title);
   }
-  
+
   private _disconnectActiveTerminalViewer(): void {
     this._moveCursorToFreshLine();
     this._emulator.moveRowsAboveCursorToScrollback();
@@ -624,12 +624,12 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._terminalViewer = null;
     }
   }
-  
+
   private _appendViewerElement(el: ViewerElement): void {
     this._emulator.moveRowsAboveCursorToScrollback();
     this._emulator.flushRenderQueue();
     let currentTerminalViewer = this._terminalViewer;
-    
+
     let currentTerminalViewerHadFocus = false;
     if (currentTerminalViewer !== null) {
       currentTerminalViewer.deleteScreen();
@@ -688,7 +688,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   /**
    * Handle data coming from the user.
-   * 
+   *
    * This just pushes the keys from the user through to the pty.
    * @param {string} data The data to process.
    */
@@ -703,7 +703,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this.sendToPty(filteredData);
     }
   }
-  
+
   private _handleTermSize(emulator: Term.Emulator, event: TermApi.RenderEvent): void {
     const newColumns = event.columns;
     const newRows = event.rows;
@@ -722,10 +722,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       ]);
     }
   }
-  
+
   private _sendTitleEvent(title: string): void {
     const event = new CustomEvent(EtTerminal.EVENT_TITLE, { detail: {title: title } });
-    this.dispatchEvent(event);    
+    this.dispatchEvent(event);
 
     this.environment.set(TerminalEnvironment.TERM_TITLE, title);
   }
@@ -738,7 +738,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._terminalCanvas.setModeAndVisualState(Mode.CURSOR, VisualState.AUTO);
     this._mode = Mode.CURSOR;
   }
-  
+
   private _exitCursorMode(): void {
     if (this._mode === Mode.DEFAULT) {
       return;
@@ -773,11 +773,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   commandExitCursorMode(): void {
     this._exitCursorMode();
   }
-  
+
   commandScrollPageUp(): void {
     this._terminalCanvas.scrollPageUp();
   }
-    
+
   commandScrollPageDown(): void {
     this._terminalCanvas.scrollPageDown();
   }
@@ -819,7 +819,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   commandFontSizeDecrease(): void {
-  this._terminalCanvas.setFontSizeAdjustment(-1);
+    this._terminalCanvas.setFontSizeAdjustment(-1);
   }
 
   commandFontSizeReset(): void {
@@ -843,7 +843,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   /**
    * Handle when the embedded term.js enters start of application mode.
-   * 
+   *
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
@@ -853,50 +853,50 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
 
     this._htmlData = "";
-    
+
     // Check security cookie
     if (params.length === 0) {
       this._log.warn("Received an application mode sequence with no parameters.");
       return {action: TermApi.ApplicationModeResponseAction.ABORT};
     }
-    
+
     if (params[0] !== this._cookie) {
       this._log.warn("Received the wrong cookie at the start of an application mode sequence.");
       return {action: TermApi.ApplicationModeResponseAction.ABORT};
     }
-  
+
     if (params.length === 1) {
       // Normal HTML mode.
       this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
-  
+
     } else if(params.length >= 2) {
       switch ("" + params[1]) {
         case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
           this._bracketStyle = params[2];
           break;
-  
+
         case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
           if (DEBUG_APPLICATION_MODE) {
             this._log.debug("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
           }
           break;
-          
+
         case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
           this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
           if (DEBUG_APPLICATION_MODE) {
             this._log.debug("Starting APPLICATION_MODE_REQUEST_FRAME");
           }
           break;
-          
+
         case "" + ApplicationMode.APPLICATION_MODE_SHOW_FILE:
           if (DEBUG_APPLICATION_MODE) {
             this._log.debug("Starting APPLICATION_MODE_SHOW_FILE");
           }
           this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_FILE;
           return this._downloadHandler.handleStart(params.slice(2));
-        
+
         default:
           this._log.warn("Unrecognized application escape parameters.");
           break;
@@ -907,7 +907,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   /**
    * Handle incoming data while in application mode.
-   * 
+   *
    * @param {string} data The new data.
    */
   private _handleApplicationModeData(data: string): TermApi.ApplicationModeResponse {
@@ -920,16 +920,16 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
         this._htmlData = this._htmlData + data;
         break;
-        
+
       case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
         return this._downloadHandler.handleData(data);
-        
+
       default:
         break;
     }
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
-  
+
   /**
    * Handle the exit from application mode.
    */
@@ -940,27 +940,27 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         // el.innerHTML = this._htmlData;
         // this._appendElementToScrollArea(el);
         break;
-  
+
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
         this._handleApplicationModeBracketStart();
         break;
-  
+
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
         this._handleApplicationModeBracketEnd();
         break;
-  
+
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
         this.handleRequestFrame(this._htmlData);
         break;
-        
+
       case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
         return this._downloadHandler.handleStop();
-        
+
       default:
         break;
     }
     this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
-  
+
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("html-mode end!",this._htmlData);
     }
@@ -975,7 +975,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         return;  // Don't open a new frame.
       }
     }
-    
+
     // Fetch the command line.
     let cleancommand = this._htmlData;
     if (this._bracketStyle === "bash") {
@@ -983,7 +983,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       const trimmed = this._htmlData.trim();
       cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
     }
-    
+
     if (this._commandNeedsFrame(cleancommand)) {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement();
@@ -997,7 +997,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         toolTip: null
       };
       el.setDefaultMetadata(defaultMetadata);
-      
+
       this._appendViewerElement(el);
     } else {
 
@@ -1015,7 +1015,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       { key: TerminalEnvironment.COMMAND_EXIT_CODE, value: "" },
     ]);
   }
-  
+
   private _moveCursorToFreshLine(): void {
     const dims = this._emulator.getDimensions();
     if (dims.cursorX !== 0 && this._emulator.getLineText(dims.cursorY).trim() !== '') {
@@ -1051,7 +1051,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this.focus();
     }
   }
-  
+
   private _createEmbeddedViewerElement(): EmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
@@ -1067,12 +1067,12 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       if (detail.mode !== this._mode) {
         switch (this._mode) {
           case Mode.DEFAULT:
-              this._enterCursorMode();
-              break;
+            this._enterCursorMode();
+            break;
 
           case Mode.CURSOR:
-              this._exitCursorMode();
-              break;
+            this._exitCursorMode();
+            break;
         }
       }
     });
@@ -1088,7 +1088,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     el.setTag("" + this._getNextTag());
     return el;
   }
-  
+
   private _handleApplicationModeBracketEnd(): void {
     this._terminalCanvas.enforceScrollbackLengthAfter( () => {
       const returnCode = this._htmlData;
@@ -1110,7 +1110,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const startElement = this._findEmptyEmbeddedViewer();
     if (startElement != null) {
       this._frameWithExistingEmbeddedViewer(startElement, returnCode);
-    } else {  
+    } else {
       this._frameWithoutEmbeddedViewer(returnCode);
     }
   }
@@ -1129,25 +1129,25 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _frameWithExistingEmbeddedViewer(embeddedViewerElement: EmbeddedViewer, returnCode: string): void {
     const activeTerminalViewer = this._terminalViewer;
     this._disconnectActiveTerminalViewer();
-    
+
     activeTerminalViewer.setCommandLine(this._lastCommandLine);
     activeTerminalViewer.setReturnCode(returnCode);
     activeTerminalViewer.setUseVPad(false);
-    
+
     // Hang the terminal viewer under the Embedded viewer.
     embeddedViewerElement.className = "extraterm_output";
-    
+
     // Some focus management to make sure that activeTerminalViewer still keeps
     // the focus after we remove it from the DOM and place it else where.
     const restoreFocus = this._terminalCanvas.hasFocus();
-    
+
     embeddedViewerElement.setViewerElement(activeTerminalViewer);
     activeTerminalViewer.setEditable(true);
     this._terminalCanvas.removeViewerElement(activeTerminalViewer);
 
     this._terminalCanvas.updateSize(embeddedViewerElement);
     this._appendNewTerminalViewer();
-    
+
     if (restoreFocus) {
       this._terminalCanvas.focus();
     }
@@ -1163,7 +1163,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
     const candidateMoveTextLines = this._lastCommandTerminalViewer.getTerminalLinesBetweenBookmarks(
       this._lastCommandTerminalLine, this._terminalViewer.bookmarkCursorLine());
-    const commandShouldBeFramed = returnCode !== "0" || this._commandNeedsFrame(this._lastCommandLine, candidateMoveTextLines.length); 
+    const commandShouldBeFramed = returnCode !== "0" || this._commandNeedsFrame(this._lastCommandLine, candidateMoveTextLines.length);
     if ( ! commandShouldBeFramed) {
       this._lastCommandLine = null;
       this._lastCommandTerminalViewer = null;
@@ -1184,7 +1184,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const newEmbeddedViewer = this._createEmbeddedViewerElement();
     newEmbeddedViewer.className = "extraterm_output";
     this._terminalCanvas.appendViewerElement(newEmbeddedViewer);
-    
+
     // Create a terminal viewer to display the output of the last command.
     const outputTerminalViewer = this._createTerminalViewer();
     newEmbeddedViewer.setViewerElement(outputTerminalViewer);
@@ -1213,7 +1213,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       WebIpc.clipboardWrite(text);
     }
   }
-  
+
   canPaste(): boolean {
     return true;
   }
@@ -1248,13 +1248,13 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _pasteFromClipboard(): void {
     WebIpc.clipboardReadRequest();
   }
-  
+
   private _embeddedViewerPopOutEvent(viewerElement: EmbeddedViewer): void {
     const event = new CustomEvent(EtTerminal.EVENT_EMBEDDED_VIEWER_POP_OUT,
       { detail: { terminal: this, embeddedViewer: viewerElement} });
     this.dispatchEvent(event);
   }
-  
+
   private handleRequestFrame(frameId: string): void {
     if (this._frameFinder === null) {
       return;
@@ -1268,7 +1268,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
     const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
     const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
-    
+
     if ("filename" in bulkFileHandle.getMetadata()) {
       uploadProgressBar.filename = <string> bulkFileHandle.getMetadata()["filename"];
     }
@@ -1331,7 +1331,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   private _emitDidAppendViewer(viewer: ViewerElement): void {
     const event = new CustomEvent(EtTerminal.EVENT_APPENDED_VIEWER, { detail: { viewer } });
-    this.dispatchEvent(event);    
+    this.dispatchEvent(event);
   }
 
   private _createMimeViewer(mimeType: string, bulkFileHandle: BulkFileHandle): ViewerElement {
@@ -1347,7 +1347,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._log.debug("Unknown mime type: " + mimeType);
       return null;
     }
-    
+
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(tag);
     injectKeybindingsManager(dataViewer, this._keyBindingManager);
     injectConfigDatabase(dataViewer, this._configDatabase);
@@ -1389,7 +1389,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._fetchNextTag();
     return tag;
   }
-  
+
   private _fetchNextTag(): void {
     WebIpc.requestNewTag().then( (msg: Messages.NewTagMessage) => {
       this._nextTag = msg.tag;
@@ -1427,7 +1427,7 @@ class TerminalEnvironmentImpl implements TerminalEnvironment {
   get(key: string): string {
     return this._map.get(key);
   }
-  
+
   has(key: string): boolean {
     return this._map.has(key);
   }

@@ -31,8 +31,7 @@ for (const el of [
     SESSION_SETTINGS_TAG,
     EXTENSION_SETTINGS_TAG,
     VUE_TEXT_ACE_VIEWER_ELEMENT_TAG,
-    VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG
-  ]) {
+    VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG]) {
   if (Vue.config.ignoredElements.indexOf(el) === -1) {
     Vue.config.ignoredElements.push(el);
   }
@@ -106,8 +105,7 @@ interface MenuItem {
     </template>
   </div>
 </div>
-`)
-})
+`)})
 export class SettingsUi extends Vue {
   private _configDatabase: ConfigDatabase = null;
   private _keybindingsManager: KeybindingsManager = null;

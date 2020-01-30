@@ -224,8 +224,8 @@ export class BulkFileBroker {
     this._log = getLogger("BulkFileBroker", this);
     WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_BUFFER_SIZE,
       this._handleBufferSizeMessage.bind(this));
-      WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_STATE,
-        this._handleBufferStateMessage.bind(this));        
+    WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_STATE,
+      this._handleBufferStateMessage.bind(this));        
   }
 
   createWriteableBulkFileHandle(metadata: BulkFileMetadata, size: number): WriteableBulkFileHandle {

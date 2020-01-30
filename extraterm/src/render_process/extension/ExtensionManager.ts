@@ -96,7 +96,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   getExtensionContextByName(name: string): InternalExtensionContext {
     for (const ext of this._activeExtensions) {
-this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.name}`);
+      this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.name}`);
       if (ext.metadata.name === name) {
         return ext.contextImpl;
       }

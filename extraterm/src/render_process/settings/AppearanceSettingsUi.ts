@@ -228,7 +228,8 @@ const isDarwin = process.platform === "darwin";
   </div>
 </div>
 `)
-})
+  }
+)
 export class AppearanceSettingsUi extends Vue {
   cursorStyle: ConfigCursorStyle;
   cursorBlink: boolean;

@@ -181,7 +181,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
       // Remove the anti-flicker style.
       DomUtils.getShadowId(this, ID_CONTAINER).setAttribute('style', '');
-        this._connectSetupDone = true;
+      this._connectSetupDone = true;
     }
     this._handleResize();
   }
@@ -302,7 +302,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   // See VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
     if (DEBUG_SIZE) {
-        this._log.debug(`setDimensionsAndScroll(): height=${setterState.height}, ` +
+      this._log.debug(`setDimensionsAndScroll(): height=${setterState.height}, ` +
         `heightChanged=${setterState.heightChanged}, yOffset=${setterState.yOffset}, ` +
         `yOffsetChanged=${setterState.yOffsetChanged}, physicalTop=${setterState.physicalTop}, ` +
         `containerHeight=${setterState.containerHeight}`);

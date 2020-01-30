@@ -109,7 +109,8 @@ export const EVENT_RENAME = "rename";
   </keybindings-category-list>
 </div>
 `)
-})
+  }
+)
 export class KeybindingsSettingsUi extends Vue {
   keybindingsInfoList: KeybindingsInfo[] = [];
 

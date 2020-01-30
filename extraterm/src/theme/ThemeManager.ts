@@ -476,7 +476,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
           this._log.debug(`themeInfo<id=${themeInfo.id}, type=${themeInfo.type}>`);
         }
 
-      result.push(themeInfo);
+        result.push(themeInfo);
       }
     }
     return result;
@@ -503,7 +503,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
           this._log.debug(`themeInfo<id=${themeInfo.id}, type=${themeInfo.type}>`);
         }
 
-      result.push(themeInfo);
+        result.push(themeInfo);
       }
     }
     return result;
@@ -732,8 +732,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
     return renderResult;
   }
 
-  private async _renderCssFile(sassFileName: CssFile, dirPathStack: string[], variables: GlobalVariableMap
-    ): Promise<{cssText: string, errorMessage: string}> {
+  private async _renderCssFile(sassFileName: CssFile, dirPathStack: string[],
+      variables: GlobalVariableMap): Promise<{cssText: string, errorMessage: string}> {
 
     if (DEBUG_SASS) {
       this._log.debug("Compiling _recursiveRenderThemeStackContents: " + sassFileName);
@@ -759,31 +759,31 @@ export class ThemeManager implements AcceptsConfigDatabase {
     let formattedVariables = "";
     if (variables !== undefined) {
       variables.forEach( (value, key) => {
-          let formattedValue = "";
-          if (typeof(value) === "string") {
-            formattedValue = `"${value}"`;
-          } else if (typeof(value) === "object") {
-            if (value.hex != null) {
-              formattedValue = value.hex;
-            } else if(value.variableRGB != null) {
-              let rgba = 0;
-              if (typeof(value.variableRGB) === "string") {
-                const color = new UtilColor(value.variableRGB);
-                rgba = color.toRGBA();
-              } else if (typeof(value.variableRGB) === "number") {
-                rgba = value.variableRGB;
-              }
-              const red = (rgba >> 24) & 0xff;
-              const green = (rgba >> 16) & 0xff;
-              const blue = (rgba >> 8) & 0xff;
-              formattedValue = `${red}, ${green}, ${blue}`;
+        let formattedValue = "";
+        if (typeof(value) === "string") {
+          formattedValue = `"${value}"`;
+        } else if (typeof(value) === "object") {
+          if (value.hex != null) {
+            formattedValue = value.hex;
+          } else if(value.variableRGB != null) {
+            let rgba = 0;
+            if (typeof(value.variableRGB) === "string") {
+              const color = new UtilColor(value.variableRGB);
+              rgba = color.toRGBA();
+            } else if (typeof(value.variableRGB) === "number") {
+              rgba = value.variableRGB;
             }
-          } else {
-            formattedValue = "" + value;
+            const red = (rgba >> 24) & 0xff;
+            const green = (rgba >> 16) & 0xff;
+            const blue = (rgba >> 8) & 0xff;
+            formattedValue = `${red}, ${green}, ${blue}`;
           }
-          formattedVariables += `$${key}: ${formattedValue};
+        } else {
+          formattedValue = "" + value;
+        }
+        formattedVariables += `$${key}: ${formattedValue};
 `;
-        });
+      });
     }
     if (DEBUG_SASS) {
       this._log.debug("Formatted SASS variables: ", formattedVariables);
@@ -1022,8 +1022,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 .ace_gutter {
   background: ${backgroundColor};
   border-right: 1px solid ${foregroundColor};
-}`
-);
+}`);
 
     for (const rule of syntaxTheme.syntaxTokenRule) {
       const cssSelector = ".ace_" + rule.scope.split(".").join(".ace_");

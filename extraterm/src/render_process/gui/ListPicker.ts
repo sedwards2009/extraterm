@@ -22,7 +22,7 @@ const ID_RESULTS = "ID_RESULTS";
  * A List Picker.
  */
 @WebComponent({tag: "et-listpicker"})
- export class ListPicker<T extends { id: string; }> extends TemplatedElementBase {
+export class ListPicker<T extends { id: string; }> extends TemplatedElementBase {
   
   static TAG_NAME = "ET-LISTPICKER";
   static ATTR_DATA_ID = "data-id";
@@ -42,7 +42,7 @@ const ID_RESULTS = "ID_RESULTS";
     this._log = getLogger(ListPicker.TAG_NAME, this);
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string => 
-    filteredEntries.map(entry => `<div ${ListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
+      filteredEntries.map(entry => `<div ${ListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
 
     const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
     filterInput.addEventListener('input', (ev: Event) => {

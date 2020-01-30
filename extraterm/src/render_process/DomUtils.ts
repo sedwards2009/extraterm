@@ -114,7 +114,7 @@ function nextDocumentOrderNodeUp(currentNode: Node): Node {
 }
 
 export function getShadowRoot(self: Element): ShadowRoot {
-    return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
+  return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
 }
 
 export function getShadowId(el: HTMLElement, id: string): HTMLElement {

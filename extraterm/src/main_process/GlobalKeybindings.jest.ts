@@ -25,7 +25,7 @@ describe.each([
   ["Down", "Down"],
   ["Escape", "Escape"],
   ["F1", "F1"],
-  ])("map to Electron accelerator string", (in_: string, out: string) => {
+])("map to Electron accelerator string", (in_: string, out: string) => {
   test(`map '${in_}' to Electron accelerator string '${out}'`, () => {
     const keyStroke = KeyStroke.parseConfigString(in_);
     expect(keyStrokeToAccelerator(keyStroke)).toBe(out);

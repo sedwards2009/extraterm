@@ -74,15 +74,15 @@ export class ProxyFactoryImpl implements ProxyFactory {
   }
 
   private _createViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer {
-      if (viewer instanceof TerminalViewer) {
-        return new TerminalOutputProxy(this._internalExtensionContext, viewer);
-      }
-      if (viewer instanceof TextViewer) {
-        return new TextViewerProxy(this._internalExtensionContext, viewer);
-      }
-      if (viewer instanceof EmbeddedViewer) {
-        return new FrameViewerProxy(this._internalExtensionContext, viewer);
-      }
-      return null;
+    if (viewer instanceof TerminalViewer) {
+      return new TerminalOutputProxy(this._internalExtensionContext, viewer);
+    }
+    if (viewer instanceof TextViewer) {
+      return new TextViewerProxy(this._internalExtensionContext, viewer);
+    }
+    if (viewer instanceof EmbeddedViewer) {
+      return new FrameViewerProxy(this._internalExtensionContext, viewer);
+    }
+    return null;
   }
 }

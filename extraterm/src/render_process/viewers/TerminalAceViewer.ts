@@ -561,7 +561,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     for (const key in objectKeys) {
       if (themeA[key] !== themeB[key]) {
-          return false;
+        return false;
       }
     }
     return true;
@@ -655,12 +655,11 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         searchOptions.start = { start: {row: 0, column: 0}, end: {row: 0, column: 0}};
         break;
 
-      case FindStartPosition.DOCUMENT_END: {
+      case FindStartPosition.DOCUMENT_END:
         const doc = this._aceEditor.getSession().doc;
         const row = doc.getLength() - 1;
         const column = doc.getLine(row).length;
         searchOptions.start = { start: {row, column}, end: {row, column}};
-        }
         break;
     }
 

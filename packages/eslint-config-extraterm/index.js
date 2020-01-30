@@ -7,6 +7,18 @@ module.exports = {
   rules: {
     "curly": "warn",
     "eqeqeq": ["warn", "smart"],
+    "indent": ["warn", 2, {
+      "SwitchCase": 1,
+      "MemberExpression": "off",
+      "FunctionDeclaration": {"parameters": "off"},
+      "FunctionExpression": {"parameters": "off"},
+      "CallExpression": {"arguments": "off"},
+      "ArrayExpression": "off",
+      "ObjectExpression": "off",
+      "ImportDeclaration": "off",
+      "ignoreComments": true,
+      "ignoredNodes": ["ConditionalExpression"]
+    }],
     "no-cond-assign": ["warn", "always"],
     "no-dupe-keys": "warn",
     "no-duplicate-case": "warn",
@@ -19,6 +31,8 @@ module.exports = {
     "no-unsafe-negation": "warn",
     "no-var": "warn",
     "no-with": "warn",
+    "one-var": ["warn", "never"],
+    "one-var-declaration-per-line": ["warn", "always"],
     "prefer-const": ["warn", {
       "destructuring": "all"
     }],

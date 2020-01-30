@@ -11,7 +11,7 @@ import { doLater } from 'extraterm-later';
 
 @WebComponent({tag: "et-upload-progress-bar"})
 export class UploadProgressBar extends FileTransferProgress {
-  
+
   static TAG_NAME = "ET-UPLOAD-PROGRESS-BAR";
 
   connectedCallback(): void {
@@ -29,7 +29,7 @@ export class UploadProgressBar extends FileTransferProgress {
     } else {
       doLater(() => {
         this.getContainerNode().classList.remove("upload_hide");
-        }, delayMs);
+      }, delayMs);
     }
   }
 
