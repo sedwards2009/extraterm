@@ -54,7 +54,7 @@ function jsTypeToPropertyType(name: string): PropertyType {
 
 /**
  * Class decorator for web components.
- * 
+ *
  * This should appear at the top of classes which implement Custom Elements.
  */
 export function WebComponent(options: WebComponentOptions): (target: any) => any {
@@ -82,7 +82,7 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
       // Set up `observedAttributes` and `attributeChangedCallback()`
       Object.defineProperty(constructor, "observedAttributes", {
         get: function() {
-          let observedAttributeNames = new Set<string>();
+          const observedAttributeNames = new Set<string>();
 
           if (attributeRegistrations != null) {
             // We observe our own attributes for update purposes.
@@ -228,7 +228,7 @@ function validateObservers(observerRegistrations: ObserverRegistration[], constr
     attributeRegistrations: AttributeRegistrationsMapping): void {
 
   const acceptableAttributes = new Set<string>();
-      
+
   if (attributeRegistrations != null) {
     for (const [key, registration] of attributeRegistrations.entries()) {
       acceptableAttributes.add(registration.attributeName);
@@ -255,16 +255,16 @@ export interface AttributeOptions {
 
 /**
  * Mark a property as being a HTML attribute.
- * 
+ *
  * The property will exposed as an HTML attribute. The name of the attribute
  * is in kebab-case. i.e. the words of the property lower case and separated
  * be dashes. For example "someString" become attribute "some-string".
- * 
+ *
  * This decorator can be used in two ways. The direct way is with no
  * arguments, and the second way is with an options object as the single argument.
  * The options object can be used to specify a default (internal) value for
  * the attribute/property.
- * 
+ *
  * See also `Observer` and `Filter`
  */
 export function Attribute(protoOrOptions: AttributeOptions | any, key?: string): any {
@@ -299,7 +299,7 @@ export function applyAttribute(proto: any, key: string, defaultValue: any): void
 
     return valueMap.get(this);
   };
-  
+
   const setter = function (this: any, newValue: any): void {
     if ( ! valueMap.has(this)) {
       valueMap.set(this, defaultValue);
@@ -318,7 +318,7 @@ export function applyAttribute(proto: any, key: string, defaultValue: any): void
     }
     valueMap.set(this, newValue);
   };
-  
+
   if (delete proto[key]) {
     Object.defineProperty(proto, key, {
       get: getter,
@@ -371,11 +371,11 @@ function validateAttributeDefaultValue(key: string, propertyType: PropertyType, 
 
 /**
  * Method decorator for observing changes to a HTML attribute.
- * 
+ *
  * The decorated method is called with one parameter; the name of the
  * attribute which changed. Note: The name is actually that of the
  * property. i.e. "someString" not "some-string".
- * 
+ *
  * @param targets variable number of parameters naming the attributes which
  *          this method observes.
  */
@@ -387,7 +387,7 @@ export function Observe(...targets: string[]) {
       proto.constructor[OBSERVERS_REGISTRATION_KEY] = [];
     }
     const attributes: ObserverRegistration[] = proto.constructor[OBSERVERS_REGISTRATION_KEY];
-  
+
     for (const target of targets) {
       const metadata: ObserverRegistration = {
         name: target,
@@ -403,17 +403,17 @@ export function Observe(...targets: string[]) {
 
 /**
  * Method decorator to apply a filter to the value set on a HTML attribute.
- * 
+ *
  * The method can have one or two parameters. The first is the value which
  * needs to be filtered. The second optional parameter is the name of the
  * attribute the value is for. The method must return the new filtered value,
- * or `undefined` to indicate that the 
- * 
+ * or `undefined` to indicate that the
+ *
  * Note that the filter doesn't affect the value of the HTML attribute set,
  * but it does affect the internal value directly accessible via the JS field.
  * Also these filters can only be used for attributes which have been created
  * using the `Attribute` decorator.
- * 
+ *
  * @param targets variable number of parameters naming the attributes which
  *          this method filters.
  */
@@ -425,7 +425,7 @@ export function Filter(...targets: string[]) {
       proto.constructor[ATTRIBUTES_REGISTRATION_KEY] = new Map();
     }
     const attributes: AttributeRegistrationsMapping = proto.constructor[ATTRIBUTES_REGISTRATION_KEY];
-  
+
     for (const target of targets) {
       if ( ! attributes.has(target)) {
         const metadata: AttributeRegistration = {name: target, attributeName: null, dataType: 'any', directSetter: null, filterRegistrations: []};

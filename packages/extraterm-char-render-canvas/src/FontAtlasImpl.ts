@@ -27,7 +27,7 @@ export class FontAtlasImpl implements FontAtlas {
   drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode,
                 xPixel: number, yPixel: number): void {
 
-    for (let page of this._imageBitmapPages) {
+    for (const page of this._imageBitmapPages) {
       if (page.drawCodePoint(ctx, codePoint, style, xPixel, yPixel)) {
         return;
       }
@@ -38,7 +38,7 @@ export class FontAtlasImpl implements FontAtlas {
   }
 
   drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): void {
-    for (let page of this._cpuRenderedPages) {
+    for (const page of this._cpuRenderedPages) {
       if (page.drawCodePointToImageData(destImageData, codePoint, style, xPixel, yPixel)) {
         return;
       }
@@ -51,7 +51,7 @@ export class FontAtlasImpl implements FontAtlas {
   drawCodePoints(ctx: CanvasRenderingContext2D, codePoints: number[], style: StyleCode,
     xPixel: number, yPixel: number): void {
 
-    for (let page of this._imageBitmapPages) {
+    for (const page of this._imageBitmapPages) {
       if (page.drawCodePoints(ctx, codePoints, style, xPixel, yPixel)) {
         return;
       }
@@ -64,7 +64,7 @@ export class FontAtlasImpl implements FontAtlas {
   drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode, xPixel: number,
       yPixel: number): void {
 
-    for (let page of this._cpuRenderedPages) {
+    for (const page of this._cpuRenderedPages) {
       if (page.drawCodePointsToImageData(destImageData, codePoints, style, xPixel, yPixel)) {
         return;
       }
@@ -126,7 +126,7 @@ abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     this._pageCanvas = document.createElement("canvas");
     this._pageCanvas.width = FONT_ATLAS_PAGE_WIDTH_CELLS * (this._metrics.widthPx + this._safetyPadding * 2);
     this._pageCanvas.height = FONT_ATLAS_PAGE_HEIGHT_CELLS * (this._metrics.heightPx + this._safetyPadding * 2);
-  
+
     // document.body.appendChild(this._pageCanvas);
 
     this._pageCtx = this._pageCanvas.getContext("2d");
@@ -146,7 +146,7 @@ abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   }
 
   protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
-    let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
+    const cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
     if (cachedGlyph != null) {
       return cachedGlyph;
     }
@@ -155,7 +155,7 @@ abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     }
     return this._insertChar(codePoint, alternateCodePoints, style);
   }
-  
+
   protected _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
     const xPixels = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
     const yPixels = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
@@ -241,7 +241,7 @@ abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     for (let i=0; i<widthInCells; i++) {
       this._incrementNextEmptyCell();
     }
-    
+
     this._pageCtx.restore();
     return cachedGlyph;
   }
@@ -332,9 +332,9 @@ class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCachedGlyph>
   }
 
   drawCodePoints(ctx: CanvasRenderingContext2D, codePoints: number[], style: StyleCode, xPixel: number,
-    yPixel: number): boolean {
-return false;
-    }
+      yPixel: number): boolean {
+    return false;
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -345,14 +345,14 @@ interface CPURenderedCachedGlyph extends CachedGlyph {
 /**
  * Font atlas based glyph renderer which uses the CPU to copy glyphs into a
  * target ImageData object.
- * 
+ *
  * This renderer is based around pushing bytes using the CPU only. It doesn't
  * incur the overhead of the graphics APIs and for large numbers of small
  * glyphs it can be significantly faster.
  */
 class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph> {
 
-  private _proxyCodePointMapping = new ArrayKeyTrie<number, number>();  
+  private _proxyCodePointMapping = new ArrayKeyTrie<number, number>();
   private _nextFreeCodePoint = 0x11000000;
 
   protected _createCachedGlyphStruct(cg: CachedGlyph): CPURenderedCachedGlyph {
@@ -361,7 +361,7 @@ class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph>
 
   protected _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): CPURenderedCachedGlyph {
     const cg = super._insertChar(codePoint, alternateCodePoints, style);
-    cg.imageData = this._pageCtx.getImageData(cg.xPixels, cg.yPixels, cg.widthPx, this._metrics.heightPx)
+    cg.imageData = this._pageCtx.getImageData(cg.xPixels, cg.yPixels, cg.widthPx, this._metrics.heightPx);
     return cg;
   }
 
@@ -405,20 +405,20 @@ class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph>
       let destOffset = ((yPixel+y) * destImageData.width + xPixel) * 4;
       for (let x=0; x<widthPx; x++) {
         destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
+        destOffset++;
+        glyphOffset++;
 
         destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
+        destOffset++;
+        glyphOffset++;
 
         destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
+        destOffset++;
+        glyphOffset++;
 
         destData[destOffset] = glyphData[glyphOffset];
-        destOffset++
-        glyphOffset++
+        destOffset++;
+        glyphOffset++;
       }
       glyphOffset += glyphRowStride;
     }
@@ -427,19 +427,19 @@ class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph>
   drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode, xPixel: number,
         yPixel: number): boolean {
 
-      let proxyCodePoint = this._proxyCodePointMapping.get(codePoints);
-      if (proxyCodePoint == null) {
-        proxyCodePoint = this._nextFreeCodePoint;
-        this._nextFreeCodePoint++;
-        this._proxyCodePointMapping.insert(codePoints, proxyCodePoint);
-      }
+    let proxyCodePoint = this._proxyCodePointMapping.get(codePoints);
+    if (proxyCodePoint == null) {
+      proxyCodePoint = this._nextFreeCodePoint;
+      this._nextFreeCodePoint++;
+      this._proxyCodePointMapping.insert(codePoints, proxyCodePoint);
+    }
 
-      const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style);
-      if (cachedGlyph === null) {
-        return false;
-      }
-  
-      this._drawCachedGlyph(destImageData, cachedGlyph, xPixel, yPixel);
-      return true;
+    const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style);
+    if (cachedGlyph === null) {
+      return false;
+    }
+
+    this._drawCachedGlyph(destImageData, cachedGlyph, xPixel, yPixel);
+    return true;
   }
 }

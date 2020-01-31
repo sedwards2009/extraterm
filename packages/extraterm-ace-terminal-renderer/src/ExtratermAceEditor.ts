@@ -55,13 +55,13 @@ export class ExtratermAceEditor extends Editor {
     const lastRow = this.session.getLength()-1;
     if (oldCursorRow === lastRow && selection.getCursor().row === lastRow) {
       this._onCursorBottomHitEventEmitter.fire(oldCursorColumn);
-    }    
+    }
   }
 
   protected resetCursorStyle(): void {
     const cursorLayer = this.renderer.cursorLayer;
     if (!cursorLayer) {
-        return;
+      return;
     }
   }
 }

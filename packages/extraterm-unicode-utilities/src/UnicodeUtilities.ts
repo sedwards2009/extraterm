@@ -50,7 +50,7 @@ export function isWide(codePoint: number): boolean {
   const ch = String.fromCodePoint(codePoint);
   switch (easta(ch)) {
     case 'Na': //Narrow
-     return false;
+      return false;
     case 'F': //FullWidth
       return true;
     case 'W': // Wide

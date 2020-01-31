@@ -8,32 +8,32 @@ import {Logger, objectName} from './Logger';
 
 /**
  * Decorator to log method calls.
- * 
+ *
  * @param  {Object} target     [description]
  * @param  {string} key        [description]
  * @param  {any}    descriptor [description]
  * @return {[type]}            [description]
  */
 export function log(target: Object, key: string, descriptor: any) {
-  const originalMethod = descriptor.value; 
+  const originalMethod = descriptor.value;
 
   descriptor.value = function (this: any, ...args: any[]) {
-      const formatArgs = args.map(repr).join(", ");
-      let result: any;
+    const formatArgs = args.map(repr).join(", ");
+    let result: any;
 
-      if ("_log" in this) {
-        const logger = <Logger>this._log;
-        logger.debug(`\u2b9e Entering ${key}(${formatArgs})`);
-        result = originalMethod.apply(this, args);
-        logger.debug(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
-         
-      } else {
-        console.log(`\u2b9e Entering ${key}(${formatArgs})`);
-        result = originalMethod.apply(this, args);
-        console.log(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
-      }
-      return result;
-  }
+    if ("_log" in this) {
+      const logger = <Logger>this._log;
+      logger.debug(`\u2b9e Entering ${key}(${formatArgs})`);
+      result = originalMethod.apply(this, args);
+      logger.debug(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
+
+    } else {
+      console.log(`\u2b9e Entering ${key}(${formatArgs})`);
+      result = originalMethod.apply(this, args);
+      console.log(`\u2b9c Exiting ${key}(${formatArgs}) => ${repr(result)}`);
+    }
+    return result;
+  };
   return descriptor;
 }
 
@@ -49,7 +49,7 @@ function repr(obj: any): string {
   if (name != null) {
     return name;
   }
-  
+
   try {
     if (HTMLElement !== undefined) {
       if (obj instanceof HTMLElement) {

@@ -32,7 +32,7 @@ export class LineDataEditor {
   private _updateInsert(delta: Delta): void {
     if (delta.start.row === delta.end.row && delta.start.column === delta.end.column) {
       // Simple insert with no deletion.
-      if (delta.lines.length == 1) {
+      if (delta.lines.length === 1) {
         const newLine = this._insertIntoLine(this._lineData.getLine(delta.start.row), delta.start.column,
                           this._getLineFromDeltaLine(delta.lines[0]));
         this._lineData.setLine(delta.start.row, newLine);

@@ -16,7 +16,7 @@ export class TerminalRenderer extends Renderer {
   }
 
   protected createHScrollBar(container: HTMLElement): HScrollBar {
-      return new InsetHScrollBar(container, this);
+    return new InsetHScrollBar(container, this);
   }
 }
 

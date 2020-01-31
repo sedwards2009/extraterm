@@ -71,7 +71,7 @@ function xtermPalette(): number[] {
 
   const out = (r: number, g: number, b: number) => {
     colors.push( (r << 24) | (g << 16) | (b << 8) | 0xff);
-  }
+  };
 
   let i;
 
@@ -110,14 +110,14 @@ describe.each([
 
     test(`set/get (${x}, ${y}) = ${codePoint}`, () => {
       const grid = makeGrid();
-  
+
       grid.setCodePoint(x, y, codePoint);
       expect(grid.getCodePoint(x, y)).toBe(codePoint);
     });
 
     test(`clear (${x}, ${y}) = ${codePoint}`, () => {
       const grid = makeGrid();
-  
+
       grid.setCodePoint(x, y, codePoint);
       grid.clear();
       expect(grid.getCodePoint(x, y)).toBe(" ".codePointAt(0));
@@ -136,7 +136,7 @@ describe.each([
     });
 
     test(`BG (${x}, ${y}) = ${color}`, () => {
-      const grid = makeGrid();  
+      const grid = makeGrid();
       grid.setBgRGBA(x, y, color);
       expect(grid.getBgRGBA(x, y)).toBe(color);
     });
@@ -155,7 +155,7 @@ describe.each([
     });
 
     test(`BG CLUT (${x}, ${y}) = ${color}`, () => {
-      const grid = makeGrid();  
+      const grid = makeGrid();
       grid.setBgClutIndex(x, y, color);
       expect(grid.getBgClutIndex(x, y)).toBe(color);
     });
@@ -236,7 +236,7 @@ test("clearCell()", () => {
   grid.setCodePoint(5,4, "C".codePointAt(0));
 
   grid.clearCell(4,4);
-  
+
   expect(grid.getCodePoint(3,4)).toBe("A".codePointAt(0));
   expect(grid.getCodePoint(4,4)).toBe(" ".codePointAt(0));
   expect(grid.getCodePoint(5,4)).toBe("C".codePointAt(0));
@@ -257,7 +257,7 @@ test("shiftCellsRight()", () => {
   expect(grid.getCodePoint(5, 4)).toBe("B".codePointAt(0));
   expect(grid.getCodePoint(6, 4)).toBe("C".codePointAt(0));
 
-  expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));  
+  expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));
 });
 
 test("shiftCellsLeft()", () => {
@@ -280,7 +280,7 @@ test("shiftCellsLeft()", () => {
   expect(grid.getCodePoint(6, 4)).toBe("F".codePointAt(0));
   expect(grid.getCodePoint(7, 4)).toBe("G".codePointAt(0));
 
-  expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));  
+  expect(grid.getCodePoint(0, 5)).toBe("X".codePointAt(0));
 });
 
 test("clone()", () => {

@@ -48,7 +48,7 @@ export function xtermPalette(): number[] {
 
   const out = (r: number, g: number, b: number) => {
     colors.push( (r << 24) | (g << 16) | (b << 8) | 0xff);
-  }
+  };
 
   let i;
 
@@ -419,7 +419,7 @@ export class CharRenderCanvas implements Disposable {
         }
       }
 
-      return { ...extraFont, fontAtlas, codePointSet }
+      return { ...extraFont, fontAtlas, codePointSet };
     });
   }
 
@@ -537,7 +537,7 @@ export class CharRenderCanvas implements Disposable {
           const renderedCodePoint = renderedCellGrid.getCodePoint(i, j);
           const renderedStyle = renderedCellGrid.getStyle(i, j);
 
-          const cellChanged = codePoint !== renderedCodePoint || style !== renderedStyle
+          const cellChanged = codePoint !== renderedCodePoint || style !== renderedStyle;
 
           let mustRender = false;
           if (cellChanged) {

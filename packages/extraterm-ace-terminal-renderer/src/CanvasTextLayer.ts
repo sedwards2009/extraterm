@@ -48,7 +48,7 @@ export class CanvasTextLayer implements TextLayer {
     this._palette = palette == null ? this._fallbackPalette() : palette;
 
     this._fontFamily = fontFamily;
-    this._fontSizePx = fontSizePx; 
+    this._fontSizePx = fontSizePx;
     this._devicePixelRatio = devicePixelRatio;
     this._cursorStyle = cursorStyle;
     this._ligatureMarker = ligatureMarker;
@@ -76,7 +76,7 @@ export class CanvasTextLayer implements TextLayer {
 
   /**
    * Reduce memory use by freeing the canvas
-   * 
+   *
    * See `rerender()`
    */
   reduceMemory(): void {
@@ -163,11 +163,11 @@ export class CanvasTextLayer implements TextLayer {
   scrollRows(config: LayerConfig, viewPortSize: ViewPortSize): void {
     if (this._charRenderCanvas != null) {
       if (Math.abs(config.firstRow - this._lastConfig.firstRow) < this._charRenderCanvas.getCellGrid().height) {
-        // Scroll the existing contents      
+        // Scroll the existing contents
         this._charRenderCanvas.scrollVertical(config.firstRow - this._lastConfig.firstRow);
       }
     }
-    
+
     this.update(config, viewPortSize);
   }
 
@@ -199,7 +199,7 @@ export class CanvasTextLayer implements TextLayer {
     // Over-provision
     const provisionCanvasHeight = Math.ceil((Math.round(numOfVisibleRows * PROVISION_HEIGHT_FACTOR) + 1)
                                     * config.charHeightPx);
-    
+
     const allocRawCanvasWidthPx = Math.max(rawCanvasWidthPx, this._currentCanvasRawWidthPx);
     this._currentCanvasRawWidthPx = allocRawCanvasWidthPx;
     this._createCanvas(allocRawCanvasWidthPx, provisionCanvasHeight);
@@ -321,21 +321,21 @@ export class CanvasTextLayer implements TextLayer {
 
     const visibleRows: number[] = [];
     while (true) {
-        if (row > foldStart) {
-            if (foldLine) {
-                row = foldLine.end.row + 1;
-                foldLine = this._editSession.getNextFoldLine(row, foldLine);
-                foldStart = foldLine ? foldLine.start.row : Infinity;
-            }
+      if (row > foldStart) {
+        if (foldLine) {
+          row = foldLine.end.row + 1;
+          foldLine = this._editSession.getNextFoldLine(row, foldLine);
+          foldStart = foldLine ? foldLine.start.row : Infinity;
         }
+      }
 
-        visibleRows.push(row);
+      visibleRows.push(row);
 
-        if (row > lastRow) {
-            break;
-        }
+      if (row > lastRow) {
+        break;
+      }
 
-        row++;
+      row++;
     }
     return visibleRows;
   }

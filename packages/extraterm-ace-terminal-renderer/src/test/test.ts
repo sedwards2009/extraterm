@@ -11,7 +11,7 @@ import { TerminalDocument } from "../TerminalDocument";
 import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
 
 function createEditSession(text, mode?): EditSession {
-  var doc = new EditSession(text, mode);
+  const doc = new EditSession(text, mode);
   doc.setUndoManager(new UndoManager());
   return doc;
 };
@@ -19,47 +19,50 @@ function createEditSession(text, mode?): EditSession {
 function terminalEditor(elementOrString: HTMLElement | string): TerminalCanvasAceEditor {
   let el: Element = null;
   let value = "";
+  let oldNode: HTMLInputElement | HTMLTextAreaElement = null;
   if (typeof elementOrString == "string") {
-      const _id = elementOrString;
-      el = document.getElementById(_id);
-      if (!el)
-          throw new Error("ace.edit can't find div #" + _id);
+    const _id = elementOrString;
+    el = document.getElementById(_id);
+    if (!el) {
+      throw new Error("ace.edit can't find div #" + _id);
+    }
   } else {
-
-      if (elementOrString && /input|textarea/i.test(elementOrString.tagName)) {
-          var oldNode = elementOrString as HTMLInputElement | HTMLTextAreaElement;
-          value = oldNode.value;
-          el = dom.createElement("pre") as HTMLPreElement;
-          oldNode.parentNode.replaceChild(el, oldNode);
-      }
+    if (elementOrString && /input|textarea/i.test(elementOrString.tagName)) {
+      oldNode = elementOrString as HTMLInputElement | HTMLTextAreaElement;
+      value = oldNode.value;
+      el = dom.createElement("pre") as HTMLPreElement;
+      oldNode.parentNode.replaceChild(el, oldNode);
+    }
   }
   if (el) {
-      value = el.textContent;
-      el.innerHTML = "";
+    value = el.textContent;
+    el.innerHTML = "";
   }
 
-  var editSession = new TerminalCanvasEditSession(new TerminalDocument(value));
+  const editSession = new TerminalCanvasEditSession(new TerminalDocument(value));
   editSession.setUndoManager(new UndoManager());
 
-  var editor = new TerminalCanvasAceEditor(new Renderer(el as HTMLElement), editSession);
+  const editor = new TerminalCanvasAceEditor(new Renderer(el as HTMLElement), editSession);
   editor.addCommand({
       name: "pasteSomething",
       bindKey: {win: "Ctrl-V", mac: "Command-V"},
       exec: function (editor: Editor) {
-          editor.insert("abc\ndef\nghi");
+        editor.insert("abc\ndef\nghi");
       }
   });
 
-  var env = {
+  const env = {
       document: editSession,
       editor: editor,
       onResize: editor.resize.bind(editor, null),
       textarea: null
   };
-  if (oldNode) env.textarea = oldNode;
+  if (oldNode) {
+    env.textarea = oldNode;
+  }
   event.addListener(window, "resize", env.onResize);
   editor.on("destroy", function() {
-      event.removeListener(window, "resize", env.onResize);
+    event.removeListener(window, "resize", env.onResize);
   });
   return editor;
 }
@@ -114,7 +117,7 @@ function start(): void {
     const line = getLine();
     editor.appendTerminalLine(line);
   });
-  
+
   document.getElementById("replace_text").addEventListener('click', () => {
     const line = getLine();
     editor.setTerminalLines(0, [line]);

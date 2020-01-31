@@ -14,11 +14,15 @@
     "extraterm-char-cell-grid": "1.0.0"
   },
   "devDependencies": {
+    "eslint": "6.8.0",
+    "eslint-config-extraterm": "1.0.0",
     "shx": "^0.3.2",
     "typescript": "3.7.4"
   },
   "scripts": {
     "build": "tsc",
-    "clean": "shx rm -rf dist"
+    "clean": "shx rm -rf dist",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'"
   }
 }

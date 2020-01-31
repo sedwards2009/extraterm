@@ -6,19 +6,19 @@
 
 /**
  * Parse an argument string into an array of args following these simple rules:
- * 
- * Split spaces into an array, and supporting double and single quotes and nothing else, just the minimum. 
+ *
+ * Split spaces into an array, and supporting double and single quotes and nothing else, just the minimum.
  * Then people can quote their strings which contain spaces and it will mostly work as they expect.
- * Single and double quotes will not be removed. 
+ * Single and double quotes will not be removed.
  *
  * @return string[] of arguments.
  */
 
 export function ShellStringParser(args: string): string[] {
-  let arr: string[] = [];
+  const arr: string[] = [];
 
   if (args !== undefined && args.length > 0) {
-    let splitArgs = args.split (" ");
+    const splitArgs = args.split (" ");
     let joiningElements = false;
     let joinedArg = '';
 

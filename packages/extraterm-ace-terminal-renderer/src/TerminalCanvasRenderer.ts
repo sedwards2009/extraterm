@@ -52,7 +52,7 @@ export class TerminalCanvasRenderer extends Renderer {
       this._terminalCanvasRendererConfig.ligatureMarker);
     return this._canvasTextLayer;
   }
-  
+
   protected createFontMetricsMonitor(): FontMetricsMonitor {
     this._canvasFontMetricsMonitor = new CanvasFontMetricsMonitor(this._terminalCanvasRendererConfig);
     return this._canvasFontMetricsMonitor;
@@ -73,7 +73,7 @@ export class TerminalCanvasRenderer extends Renderer {
     }
     this.rerenderText();
   }
-  
+
   setRenderCursorStyle(cursorStyle: CursorStyle): void {
     if (this._canvasTextLayer != null) {
       this._canvasTextLayer.setCursorStyle(cursorStyle);
@@ -154,10 +154,10 @@ class CanvasFontMetricsMonitor implements FontMetricsMonitor {
     const newMetrics = this._computeAceFontMetrics();
     if (this._fontMetrics != null) {
       if (this._fontMetrics.charHeightPx === newMetrics.charHeightPx &&
-        this._fontMetrics.charWidthPx === newMetrics.charWidthPx &&
-        this._fontMetrics.isBoldCompatible === newMetrics.isBoldCompatible) {
-          return;
-        }
+          this._fontMetrics.charWidthPx === newMetrics.charWidthPx &&
+          this._fontMetrics.isBoldCompatible === newMetrics.isBoldCompatible) {
+        return;
+      }
     }
     this._fontMetrics = newMetrics;
     this._onChangeEventEmitter.fire(newMetrics);

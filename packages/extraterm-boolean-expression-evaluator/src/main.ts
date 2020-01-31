@@ -25,13 +25,12 @@ export class BooleanExpressionEvaluator {
 
   private _evaluateTree(ast: AST): boolean {
     switch (ast.type) {
-      case "symbol": {
-          const value =  this._values[ast.name];
-          if (value === undefined) {
-            throw Error("Undefined value '${ast.name}'");
-          }
-          return value;
+      case "symbol":
+        const value =  this._values[ast.name];
+        if (value === undefined) {
+          throw Error("Undefined value '${ast.name}'");
         }
+        return value;
       case "||":
         return this._evaluateTree(ast.left) || this._evaluateTree(ast.right);
       case "&&":

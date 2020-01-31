@@ -40,13 +40,13 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
   const cssFontMetrics: MonospaceFontMetrics = {
     fontSizePx: renderFontMetrics.fontSizePx / devicePixelRatio,
     fontFamily,
-  
+
     fillTextYOffset: renderFontMetrics.fillTextYOffset / devicePixelRatio,
     fillTextXOffset: renderFontMetrics.fillTextYOffset / devicePixelRatio,
-  
+
     widthPx: renderFontMetrics.widthPx / devicePixelRatio,
     heightPx: renderFontMetrics.heightPx / devicePixelRatio,
-  
+
     strikethroughY: renderFontMetrics.strikethroughY / devicePixelRatio,
     strikethroughHeight: renderFontMetrics.strikethroughHeight / devicePixelRatio,
     underlineY: renderFontMetrics.underlineY / devicePixelRatio,
@@ -92,7 +92,7 @@ class FontMeasurement {
     const ctx = canvas.getContext("2d", { alpha: false });
     ctx.font = "" + fontSizePx + "px " + fontFamily;
     ctx.textBaseline = "top";
- 
+
     // Note: most of the properties on a TextMetrics object are behind Blink's experimental flag. 1/5/2019
     const metrics = ctx.measureText(sampleChars[0]);
     // logFontMetrics(sampleChars[0], metrics);
@@ -144,7 +144,7 @@ class FontMeasurement {
 
       curlyHeight,
       curlyThickness,
-      curlyY,    
+      curlyY,
     };
   }
 
@@ -164,7 +164,7 @@ class FontMeasurement {
     const topRowY = this._findTopRowInImageData(imageData);
     const bottomRowY = this._findBottomRowInImageData(imageData);
     ctx.restore();
-    return { topY: topRowY-textXY, bottomY: bottomRowY-textXY }
+    return { topY: topRowY-textXY, bottomY: bottomRowY-textXY };
   }
 
   private _findTopRowInImageData(imageData: ImageData): number {

@@ -13,8 +13,8 @@ export class ResizeNotifier {
   private _observedElementsMap = new WeakMap<Element, ResizeCallback>();
 
   constructor() {
-     this._resizeObserver = new ResizeObserver(entries => {
-       for (const entry of entries) {
+    this._resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
         const callback = this._observedElementsMap.get(entry.target);
         if (callback != null) {
           callback(entry.target, entry.contentRect);

@@ -6,9 +6,9 @@ const ERROR = 0.01;
 
 /**
  * Given a real number r compute the fraction a/b such that a/b ~= r
- * 
+ *
  * a/b/ approximately equals r.
- * 
+ *
  * Note: This is biased towards real numbers with few decimal digits.
  */
 export function ratioToFraction(n: number): [number, number] {
@@ -28,9 +28,9 @@ export function ratioToFraction(n: number): [number, number] {
 }
 
 function gcd(a: number, b: number): number {
-  if (a == 0)  {
-    return b; 
+  if (a === 0)  {
+    return b;
   }
 
   return gcd(b % a, a);
-} 
+}

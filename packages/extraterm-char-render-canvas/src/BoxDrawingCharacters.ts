@@ -51,7 +51,7 @@ export function isBoxCharacter(codePoint: number): boolean {
 export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
     width: number, height: number): void {
 
-  const thisGlyphData = glyphData[codePoint-FIRST_BOX_CODE_POINT]
+  const thisGlyphData = glyphData[codePoint-FIRST_BOX_CODE_POINT];
   switch (thisGlyphData.glyphRenderer) {
     case GlyphRenderer.FIVE_BY_FIVE:
       draw5x5BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
@@ -68,7 +68,7 @@ export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: numbe
     case GlyphRenderer.EIGHT_BY_FIVE:
       draw8x5BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
       break;
-    
+
     case GlyphRenderer.DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT:
       drawDiagonalUpperRightToLowerLeft(ctx, dx, dy, width, height);
       break;
@@ -174,7 +174,7 @@ function drawNxMGlyph(ctx: CanvasRenderingContext2D, glyphString: string, dx: nu
 
   const { gridWidth, gridHeight, horizontalGridLines, verticalGridLines, horizontalThickness,
     verticalThickness } = metrics;
-  
+
   let pixelOffset = 0;
   for (let y=0; y < gridHeight; y++) {
     for (let x=0; x < gridWidth; x++) {
@@ -456,7 +456,7 @@ const glyphData: GlyphData[] = [
       ".#..#.#." +
       ".#..#.#." +
       "........",
-},
+  },
   {
     // 0x2506 BOX DRAWINGS LIGHT TRIPLE DASH VERTICAL
     glyphRenderer: GlyphRenderer.FIVE_BY_EIGHT,
@@ -1215,7 +1215,7 @@ const glyphData: GlyphData[] = [
       ".###." +
       "....." +
       ".....",
-  },  
+  },
   {
     // 0x2550 BOX DRAWINGS DOUBLE HORIZONTAL
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1325,7 +1325,7 @@ const glyphData: GlyphData[] = [
       ".#..." +
       ".####" +
       ".....",
-  },  
+  },
   {
     // 0x255B BOX DRAWINGS UP SINGLE AND LEFT DOUBLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1335,7 +1335,7 @@ const glyphData: GlyphData[] = [
       "..#.." +
       "###.." +
       ".....",
-  },  
+  },
   {
     // 0x255C BOX DRAWINGS UP DOUBLE AND LEFT SINGLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1345,7 +1345,7 @@ const glyphData: GlyphData[] = [
       "####." +
       "....." +
       ".....",
-  },  
+  },
   {
     // 0x255D BOX DRAWINGS DOUBLE UP AND LEFT
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1355,7 +1355,7 @@ const glyphData: GlyphData[] = [
       "...#." +
       "####." +
       ".....",
-  },  
+  },
   {
     // 0x255E BOX DRAWINGS VERTICAL SINGLE AND RIGHT DOUBLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1365,7 +1365,7 @@ const glyphData: GlyphData[] = [
       "..#.." +
       "..###" +
       "..#..",
-  },  
+  },
   {
     // 0x255F BOX DRAWINGS VERTICAL DOUBLE AND RIGHT SINGLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1375,7 +1375,7 @@ const glyphData: GlyphData[] = [
       ".#.##" +
       ".#.#." +
       ".#.#.",
-  },  
+  },
   {
     // 0x2560 BOX DRAWINGS DOUBLE VERTICAL AND RIGHT
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1385,7 +1385,7 @@ const glyphData: GlyphData[] = [
       ".#..." +
       ".#.##" +
       ".#.#.",
-  },  
+  },
   {
     // 0x2561 BOX DRAWINGS VERTICAL SINGLE AND LEFT DOUBLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1395,7 +1395,7 @@ const glyphData: GlyphData[] = [
       "..#.." +
       "###.." +
       "..#..",
-  },  
+  },
   {
     // 0x2562 BOX DRAWINGS VERTICAL DOUBLE AND LEFT SINGLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1425,7 +1425,7 @@ const glyphData: GlyphData[] = [
       "....." +
       "#####" +
       "..#..",
-  },  
+  },
   {
     // 0x2565 BOX DRAWINGS DOWN DOUBLE AND HORIZONTAL SINGLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1435,7 +1435,7 @@ const glyphData: GlyphData[] = [
       "#####" +
       ".#.#." +
       ".#.#.",
-  },  
+  },
   {
     // 0x2566 BOX DRAWINGS DOUBLE DOWN AND HORIZONTAL
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1445,7 +1445,7 @@ const glyphData: GlyphData[] = [
       "....." +
       "##.##" +
       ".#.#.",
-  },  
+  },
   {
     // 0x2567 BOX DRAWINGS UP SINGLE AND HORIZONTAL DOUBLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1455,7 +1455,7 @@ const glyphData: GlyphData[] = [
       "....." +
       "#####" +
       ".....",
-  },  
+  },
   {
     // 0x2568 BOX DRAWINGS UP DOUBLE AND HORIZONTAL SINGLE
     glyphRenderer: GlyphRenderer.FIVE_BY_FIVE,
@@ -1530,7 +1530,7 @@ const glyphData: GlyphData[] = [
     // 0x2571 BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT
     glyphRenderer: GlyphRenderer.DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT,
     glyphString: null,
-  },  
+  },
   {
     // 0x2572 BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT
     glyphRenderer: GlyphRenderer.DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT,

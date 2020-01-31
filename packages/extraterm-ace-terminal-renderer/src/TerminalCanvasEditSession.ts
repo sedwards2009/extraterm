@@ -63,7 +63,7 @@ export class TerminalCanvasEditSession extends EditSession {
       insertLinesBeforeRow: (row: number, lines: TermApi.Line[]): void => {
         this._lineData.splice(row, 0, ...lines);
       },
-    
+
       deleteLines: (startRow: number, endRow: number): void => {
         this._lineData.splice(startRow, endRow-startRow);
       }
@@ -76,7 +76,7 @@ export class TerminalCanvasEditSession extends EditSession {
   }
 
   /**
-   * 
+   *
    * @return True if the text changed.
    */
   setTerminalLines(startRow: number, sourceLines: TermApi.Line[]): boolean {
@@ -135,7 +135,7 @@ export class TerminalCanvasEditSession extends EditSession {
 
     this.replace(range, [...lines.map(this._createHeavyString), ""]);
   }
-  
+
   protected _updateInternalDataOnChange(delta: Delta): Fold[] {
     const folds = super._updateInternalDataOnChange(delta);
     this._lineDataEditor.update(delta);
@@ -199,7 +199,7 @@ function maxNormalWidthCodePoint(): number {
 
 /**
  * Return true if a code point has a normal monospace width of one cell.
- * 
+ *
  * @param the unicode code point to test
  * @return true if the code point has a normal monospace width of one cell.
  */
@@ -209,7 +209,7 @@ function isCodePointNormalWidth(codePoint: number): boolean {
   }
 
   if (codePoint <= 0x1cc) {// Croatian digraphs can be a problem.
-    return false; 
+    return false;
   }
 
   if (codePoint < 0x1f1) {  // Up to Latin leter DZ.
@@ -224,5 +224,5 @@ function isCodePointNormalWidth(codePoint: number): boolean {
 
 function isFirstSurogate(s: string): boolean {
   const codePoint = s.codePointAt(0);
-  return (codePoint & 0xFC00) == 0xD800;
+  return (codePoint & 0xFC00) === 0xD800;
 }

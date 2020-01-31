@@ -7,7 +7,7 @@ import { stringToCodePointArray, isWide, utf16LengthOfCodePoint } from "extrater
 
 /**
  * Cell schema:
- * 
+ *
  * 4 bytes  - Unicode code point
  * 2 byte   - Flags
  *            * 0x1 (bit 0) - true if using foreground CLUT
@@ -123,14 +123,14 @@ const SpaceCell: Cell = {
   bgClutIndex: BG_COLOR_INDEX,
   fgRGBA: 0xffffffff,
   bgRGBA: 0x00000000,
-}
+};
 
 /**
  * Represents a grid of character cells
- * 
+ *
  * Each cell holds a single unicode codepoint and can have multiple styles
  * and foreground/background colors applied.
- * 
+ *
  * This code uses a fast and compact representation of the data.
  */
 export class CharCellGrid {
@@ -234,7 +234,7 @@ export class CharCellGrid {
     return (`{ char: '${String.fromCodePoint(this.getCodePoint(x, y))}', ` +
       `codePoint: ${this.getCodePoint(x, y)}, ` +
       `extraWidth: ${this.getCharExtraWidth(x, y)}, ` +
-      `ligature: ${this.getLigature(x, y)}, ` + 
+      `ligature: ${this.getLigature(x, y)}, ` +
       `}`);
   }
 
@@ -318,7 +318,7 @@ export class CharCellGrid {
 
   getBgRGBA(x: number, y: number): number {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-    return this._dataView.getUint32(offset + OFFSET_BG)
+    return this._dataView.getUint32(offset + OFFSET_BG);
   }
 
   setFgRGBA(x: number, y: number, rgba: number): void {
@@ -465,16 +465,16 @@ export class CharCellGrid {
 
   /**
    * Scroll part of a row to the left
-   * 
+   *
    * The region to be scrolled to the left is the row of cells starting from
    * (x,y) and extending to the right edge of the grid. The region is then
    * scrolled `shiftCount` number of cells to the left inside the region.
    * Cells on the left side of the region are removed and empty cells are
    * shifted in from the right side.
-   * 
-   * @param x 
-   * @param y 
-   * @param shiftCount 
+   *
+   * @param x
+   * @param y
+   * @param shiftCount
    */
   shiftCellsLeft(x: number, y: number, shiftCount: number): void {
     const offsetCell = y * this.width;
@@ -511,7 +511,7 @@ export class CharCellGrid {
         uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
         destOffset++;
         sourceOffset++;
-        
+
         uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
         destOffset++;
         sourceOffset++;
@@ -537,16 +537,16 @@ export class CharCellGrid {
           if (this.isFgClut(h, v)) {
             this.setFgClutIndex(h, v, this.getFgClutIndex(h, v));
           }
-        
+
           destOffset += CELL_SIZE_UINT32;
-        }  
+        }
       }
     }
   }
 
   /**
    * Scroll the whole grid N rows downwards
-   * 
+   *
    * @param verticalOffset number of rows to scroll downs. Accepts
    *                       negative values to scroll upwards.
    */
@@ -567,8 +567,8 @@ export class CharCellGrid {
     const rowWidthUint32 = this.width * CELL_SIZE_UINT32;
 
     for(let srcY=absOffset, destY=0; srcY<this.height; srcY++, destY++) {
-      let sourceOffset = srcY * rowWidthUint32;
-      let destOffset =  destY * rowWidthUint32;
+      const sourceOffset = srcY * rowWidthUint32;
+      const destOffset =  destY * rowWidthUint32;
       this._copyRow(sourceOffset, destOffset);
     }
   }
@@ -578,8 +578,8 @@ export class CharCellGrid {
     const rowWidthUint32 = this.width * CELL_SIZE_UINT32;
 
     for(let srcY=this.height-1-absOffset, destY=this.height-1; srcY>=0; srcY--, destY--) {
-      let sourceOffset = srcY * rowWidthUint32;
-      let destOffset =  destY * rowWidthUint32;
+      const sourceOffset = srcY * rowWidthUint32;
+      const destOffset =  destY * rowWidthUint32;
       this._copyRow(sourceOffset, destOffset);
     }
   }
@@ -594,7 +594,7 @@ export class CharCellGrid {
       uint32Array[destOffset] = uint32Array[sourceOffset];
       destOffset++;
       sourceOffset++;
-      
+
       uint32Array[destOffset] = uint32Array[sourceOffset];
       destOffset++;
       sourceOffset++;

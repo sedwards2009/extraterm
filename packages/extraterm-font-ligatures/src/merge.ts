@@ -9,16 +9,16 @@ import { LookupTree, LookupTreeEntry } from './types';
  *              over those in later trees when there is a choice.
  */
 export default function mergeTrees(trees: LookupTree[]): LookupTree {
-    const result: LookupTree = {
-        individual: new Map<number, LookupTreeEntry>(),
-        range: []
-    };
+  const result: LookupTree = {
+    individual: new Map<number, LookupTreeEntry>(),
+    range: []
+  };
 
-    for (const tree of trees) {
-        mergeSubtree(result, tree);
-    }
+  for (const tree of trees) {
+    mergeSubtree(result, tree);
+  }
 
-    return result;
+  return result;
 }
 
 /**
@@ -28,163 +28,163 @@ export default function mergeTrees(trees: LookupTree[]): LookupTree {
  * @param mergeTree The tree to be merged into the mainTree
  */
 function mergeSubtree(mainTree: LookupTree, mergeTree: LookupTree): void {
-    // Need to fix this recursively (and handle lookups)
-    const allEntries = mergeTree.individual.entries();
-    for (const [glyphId, value] of allEntries) {
-        // The main tree is guaranteed to have no overlaps between the
-        // individual and range values, so if we match an invididual, there
-        // must not be a range
-        if (mainTree.individual.get(glyphId)) {
-            mergeTreeEntry(mainTree.individual.get(glyphId), value);
-        } else {
-            let matched = false;
-            for (const [index, { range, entry }] of mainTree.range.entries()) {
-                const overlap = getIndividualOverlap(Number(glyphId), range);
+  // Need to fix this recursively (and handle lookups)
+  const allEntries = mergeTree.individual.entries();
+  for (const [glyphId, value] of allEntries) {
+    // The main tree is guaranteed to have no overlaps between the
+    // individual and range values, so if we match an invididual, there
+    // must not be a range
+    if (mainTree.individual.get(glyphId)) {
+      mergeTreeEntry(mainTree.individual.get(glyphId), value);
+    } else {
+      let matched = false;
+      for (const [index, { range, entry }] of mainTree.range.entries()) {
+        const overlap = getIndividualOverlap(Number(glyphId), range);
 
-                // Don't overlap
-                if (overlap.both === null) {
-                    continue;
-                }
-
-                matched = true;
-
-                // If they overlap, we have to split the range and then
-                // merge the overlap
-                mainTree.individual.set(glyphId, value);
-                mergeTreeEntry(mainTree.individual.get(glyphId), cloneEntry(entry));
-
-                // When there's an overlap, we also have to fix up the range
-                // that we had already processed
-                mainTree.range.splice(index, 1);
-                for (const glyph of overlap.second) {
-                    if (Array.isArray(glyph)) {
-                        mainTree.range.push({
-                            range: glyph,
-                            entry: cloneEntry(entry)
-                        });
-                    } else {
-                        mainTree.individual.set(glyph, cloneEntry(entry));
-                    }
-                }
-            }
-
-            if (!matched) {
-                mainTree.individual.set(glyphId, value);
-            }
+        // Don't overlap
+        if (overlap.both === null) {
+          continue;
         }
+
+        matched = true;
+
+        // If they overlap, we have to split the range and then
+        // merge the overlap
+        mainTree.individual.set(glyphId, value);
+        mergeTreeEntry(mainTree.individual.get(glyphId), cloneEntry(entry));
+
+        // When there's an overlap, we also have to fix up the range
+        // that we had already processed
+        mainTree.range.splice(index, 1);
+        for (const glyph of overlap.second) {
+          if (Array.isArray(glyph)) {
+            mainTree.range.push({
+              range: glyph,
+              entry: cloneEntry(entry)
+            });
+          } else {
+            mainTree.individual.set(glyph, cloneEntry(entry));
+          }
+        }
+      }
+
+      if (!matched) {
+        mainTree.individual.set(glyphId, value);
+      }
     }
+  }
 
-    for (const { range, entry } of mergeTree.range) {
-        // Ranges are more complicated, because they can overlap with
-        // multiple things, individual and range alike. We start by
-        // eliminating ranges that are already present in another range
-        let remainingRanges: (number | [number, number])[] = [range];
+  for (const { range, entry } of mergeTree.range) {
+    // Ranges are more complicated, because they can overlap with
+    // multiple things, individual and range alike. We start by
+    // eliminating ranges that are already present in another range
+    let remainingRanges: (number | [number, number])[] = [range];
 
-        for (let index = 0; index < mainTree.range.length; index++) {
-            const { range, entry: resultEntry } = mainTree.range[index];
-            for (const [remainingIndex, remainingRange] of remainingRanges.entries()) {
-                if (Array.isArray(remainingRange)) {
-                    const overlap = getRangeOverlap(remainingRange, range);
-                    if (overlap.both === null) {
-                        continue;
-                    }
+    for (let index = 0; index < mainTree.range.length; index++) {
+      const { range, entry: resultEntry } = mainTree.range[index];
+      for (const [remainingIndex, remainingRange] of remainingRanges.entries()) {
+        if (Array.isArray(remainingRange)) {
+          const overlap = getRangeOverlap(remainingRange, range);
+          if (overlap.both === null) {
+            continue;
+          }
 
-                    mainTree.range.splice(index, 1);
-                    index--;
+          mainTree.range.splice(index, 1);
+          index--;
 
-                    const entryToMerge: LookupTreeEntry = cloneEntry(resultEntry);
-                    if (Array.isArray(overlap.both)) {
-                        mainTree.range.push({
-                            range: overlap.both,
-                            entry: entryToMerge
-                        });
-                    } else {
-                        mainTree.individual.set(overlap.both, entryToMerge);
-                    }
+          const entryToMerge: LookupTreeEntry = cloneEntry(resultEntry);
+          if (Array.isArray(overlap.both)) {
+            mainTree.range.push({
+              range: overlap.both,
+              entry: entryToMerge
+            });
+          } else {
+            mainTree.individual.set(overlap.both, entryToMerge);
+          }
 
-                    mergeTreeEntry(entryToMerge, cloneEntry(entry));
+          mergeTreeEntry(entryToMerge, cloneEntry(entry));
 
-                    for (const second of overlap.second) {
-                        if (Array.isArray(second)) {
-                            mainTree.range.push({
-                                range: second,
-                                entry: cloneEntry(resultEntry)
-                            });
-                        } else {
-                            mainTree.individual.set(second, cloneEntry(resultEntry));
-                        }
-                    }
-
-                    remainingRanges = overlap.first;
-                } else {
-                    const overlap = getIndividualOverlap(remainingRange, range);
-                    if (overlap.both === null) {
-                        continue;
-                    }
-
-                    // If they overlap, we have to split the range and then
-                    // merge the overlap
-                    mainTree.individual.set(remainingRange, cloneEntry(entry));
-                    mergeTreeEntry(mainTree.individual.get(remainingRange), cloneEntry(resultEntry));
-
-                    // When there's an overlap, we also have to fix up the range
-                    // that we had already processed
-                    mainTree.range.splice(index, 1);
-                    index--;
-
-                    for (const glyph of overlap.second) {
-                        if (Array.isArray(glyph)) {
-                            mainTree.range.push({
-                                range: glyph,
-                                entry: cloneEntry(resultEntry)
-                            });
-                        } else {
-                            mainTree.individual.set(glyph, cloneEntry(resultEntry));
-                        }
-                    }
-
-                    remainingRanges.splice(remainingIndex, 1, ...overlap.first);
-                    break;
-                }
-            }
-        }
-
-        // Next, we run the same against any individual glyphs
-        for (const glyphId of mainTree.individual.keys()) {
-            for (const [remainingIndex, remainingRange] of remainingRanges.entries()) {
-                if (Array.isArray(remainingRange)) {
-                    const overlap = getIndividualOverlap(Number(glyphId), remainingRange);
-                    if (overlap.both === null) {
-                        continue;
-                    }
-
-                    // If they overlap, we have to merge the overlap
-                    mergeTreeEntry(mainTree.individual.get(glyphId), cloneEntry(entry));
-
-                    // Update the remaining ranges
-                    remainingRanges.splice(remainingIndex, 1, ...overlap.second);
-                    break;
-                } else {
-                    if (Number(glyphId) === remainingRange) {
-                        mergeTreeEntry(mainTree.individual.get(glyphId), cloneEntry(entry));
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Any remaining ranges should just be added directly
-        for (const remainingRange of remainingRanges) {
-            if (Array.isArray(remainingRange)) {
-                mainTree.range.push({
-                    range: remainingRange,
-                    entry: cloneEntry(entry)
-                });
+          for (const second of overlap.second) {
+            if (Array.isArray(second)) {
+              mainTree.range.push({
+                range: second,
+                entry: cloneEntry(resultEntry)
+              });
             } else {
-                mainTree.individual.set(remainingRange, cloneEntry(entry));
+              mainTree.individual.set(second, cloneEntry(resultEntry));
             }
+          }
+
+          remainingRanges = overlap.first;
+        } else {
+          const overlap = getIndividualOverlap(remainingRange, range);
+          if (overlap.both === null) {
+            continue;
+          }
+
+          // If they overlap, we have to split the range and then
+          // merge the overlap
+          mainTree.individual.set(remainingRange, cloneEntry(entry));
+          mergeTreeEntry(mainTree.individual.get(remainingRange), cloneEntry(resultEntry));
+
+          // When there's an overlap, we also have to fix up the range
+          // that we had already processed
+          mainTree.range.splice(index, 1);
+          index--;
+
+          for (const glyph of overlap.second) {
+            if (Array.isArray(glyph)) {
+              mainTree.range.push({
+                range: glyph,
+                entry: cloneEntry(resultEntry)
+              });
+            } else {
+              mainTree.individual.set(glyph, cloneEntry(resultEntry));
+            }
+          }
+
+          remainingRanges.splice(remainingIndex, 1, ...overlap.first);
+          break;
         }
+      }
     }
+
+    // Next, we run the same against any individual glyphs
+    for (const glyphId of mainTree.individual.keys()) {
+      for (const [remainingIndex, remainingRange] of remainingRanges.entries()) {
+        if (Array.isArray(remainingRange)) {
+          const overlap = getIndividualOverlap(Number(glyphId), remainingRange);
+          if (overlap.both === null) {
+            continue;
+          }
+
+          // If they overlap, we have to merge the overlap
+          mergeTreeEntry(mainTree.individual.get(glyphId), cloneEntry(entry));
+
+          // Update the remaining ranges
+          remainingRanges.splice(remainingIndex, 1, ...overlap.second);
+          break;
+        } else {
+          if (Number(glyphId) === remainingRange) {
+            mergeTreeEntry(mainTree.individual.get(glyphId), cloneEntry(entry));
+            break;
+          }
+        }
+      }
+    }
+
+    // Any remaining ranges should just be added directly
+    for (const remainingRange of remainingRanges) {
+      if (Array.isArray(remainingRange)) {
+        mainTree.range.push({
+          range: remainingRange,
+          entry: cloneEntry(entry)
+        });
+      } else {
+        mainTree.individual.set(remainingRange, cloneEntry(entry));
+      }
+    }
+  }
 }
 
 /**
@@ -194,37 +194,37 @@ function mergeSubtree(mainTree: LookupTree, mergeTree: LookupTree): void {
  * @param mergeTree The entry to merge into the mainTree
  */
 function mergeTreeEntry(mainTree: LookupTreeEntry, mergeTree: LookupTreeEntry): void {
-    if (
-        mergeTree.lookup && (
-            !mainTree.lookup ||
-            mainTree.lookup.index > mergeTree.lookup.index ||
-            (mainTree.lookup.index === mergeTree.lookup.index && mainTree.lookup.subIndex > mergeTree.lookup.subIndex)
-        )
-    ) {
-        mainTree.lookup = mergeTree.lookup;
-    }
+  if (
+    mergeTree.lookup && (
+      !mainTree.lookup ||
+      mainTree.lookup.index > mergeTree.lookup.index ||
+      (mainTree.lookup.index === mergeTree.lookup.index && mainTree.lookup.subIndex > mergeTree.lookup.subIndex)
+    )
+  ) {
+    mainTree.lookup = mergeTree.lookup;
+  }
 
-    if (mergeTree.forward) {
-        if (!mainTree.forward) {
-            mainTree.forward = mergeTree.forward;
-        } else {
-            mergeSubtree(mainTree.forward, mergeTree.forward);
-        }
+  if (mergeTree.forward) {
+    if (!mainTree.forward) {
+      mainTree.forward = mergeTree.forward;
+    } else {
+      mergeSubtree(mainTree.forward, mergeTree.forward);
     }
+  }
 
-    if (mergeTree.reverse) {
-        if (!mainTree.reverse) {
-            mainTree.reverse = mergeTree.reverse;
-        } else {
-            mergeSubtree(mainTree.reverse, mergeTree.reverse);
-        }
+  if (mergeTree.reverse) {
+    if (!mainTree.reverse) {
+      mainTree.reverse = mergeTree.reverse;
+    } else {
+      mergeSubtree(mainTree.reverse, mergeTree.reverse);
     }
+  }
 }
 
 interface Overlap {
-    first: (number | [number, number])[];
-    second: (number | [number, number])[];
-    both: number | [number, number] | null;
+  first: (number | [number, number])[];
+  second: (number | [number, number])[];
+  both: number | [number, number] | null;
 }
 
 /**
@@ -235,42 +235,42 @@ interface Overlap {
  * @param second Second range
  */
 function getRangeOverlap(first: [number, number], second: [number, number]): Overlap {
-    const result: Overlap = {
-        first: [],
-        second: [],
-        both: null
-    };
+  const result: Overlap = {
+    first: [],
+    second: [],
+    both: null
+  };
 
-    // Both
-    if (first[0] < second[1] && second[0] < first[1]) {
-        const start = Math.max(first[0], second[0]);
-        const end = Math.min(first[1], second[1]);
-        result.both = rangeOrIndividual(start, end);
-    }
+  // Both
+  if (first[0] < second[1] && second[0] < first[1]) {
+    const start = Math.max(first[0], second[0]);
+    const end = Math.min(first[1], second[1]);
+    result.both = rangeOrIndividual(start, end);
+  }
 
-    // Before
-    if (first[0] < second[0]) {
-        const start = first[0];
-        const end = Math.min(second[0], first[1]);
-        result.first.push(rangeOrIndividual(start, end));
-    } else if (second[0] < first[0]) {
-        const start = second[0];
-        const end = Math.min(second[1], first[0]);
-        result.second.push(rangeOrIndividual(start, end));
-    }
+  // Before
+  if (first[0] < second[0]) {
+    const start = first[0];
+    const end = Math.min(second[0], first[1]);
+    result.first.push(rangeOrIndividual(start, end));
+  } else if (second[0] < first[0]) {
+    const start = second[0];
+    const end = Math.min(second[1], first[0]);
+    result.second.push(rangeOrIndividual(start, end));
+  }
 
-    // After
-    if (first[1] > second[1]) {
-        const start = Math.max(first[0], second[1]);
-        const end = first[1];
-        result.first.push(rangeOrIndividual(start, end));
-    } else if (second[1] > first[1]) {
-        const start = Math.max(first[1], second[0]);
-        const end = second[1];
-        result.second.push(rangeOrIndividual(start, end));
-    }
+  // After
+  if (first[1] > second[1]) {
+    const start = Math.max(first[0], second[1]);
+    const end = first[1];
+    result.first.push(rangeOrIndividual(start, end));
+  } else if (second[1] > first[1]) {
+    const start = Math.max(first[1], second[0]);
+    const end = second[1];
+    result.second.push(rangeOrIndividual(start, end));
+  }
 
-    return result;
+  return result;
 }
 
 /**
@@ -282,30 +282,30 @@ function getRangeOverlap(first: [number, number], second: [number, number]): Ove
  * @param second Range
  */
 function getIndividualOverlap(first: number, second: [number, number]): Overlap {
-    // Disjoint
-    if (first < second[0] || first > second[1]) {
-        return {
-            first: [first],
-            second: [second],
-            both: null
-        };
-    }
-
-    const result: Overlap = {
-        first: [],
-        second: [],
-        both: first
+  // Disjoint
+  if (first < second[0] || first > second[1]) {
+    return {
+      first: [first],
+      second: [second],
+      both: null
     };
+  }
 
-    if (second[0] < first) {
-        result.second.push(rangeOrIndividual(second[0], first));
-    }
+  const result: Overlap = {
+    first: [],
+    second: [],
+    both: first
+  };
 
-    if (second[1] > first) {
-        result.second.push(rangeOrIndividual(first + 1, second[1]));
-    }
+  if (second[0] < first) {
+    result.second.push(rangeOrIndividual(second[0], first));
+  }
 
-    return result;
+  if (second[1] > first) {
+    result.second.push(rangeOrIndividual(first + 1, second[1]));
+  }
+
+  return result;
 }
 
 /**
@@ -316,11 +316,11 @@ function getIndividualOverlap(first: number, second: [number, number]): Overlap 
  * @param end End of the range (exclusive)
  */
 function rangeOrIndividual(start: number, end: number): number | [number, number] {
-    if (end - start === 1) {
-        return start;
-    } else {
-        return [start, end];
-    }
+  if (end - start === 1) {
+    return start;
+  } else {
+    return [start, end];
+  }
 }
 
 /**
@@ -329,27 +329,27 @@ function rangeOrIndividual(start: number, end: number): number | [number, number
  * @param entry Lookup tree entry to clone
  */
 function cloneEntry(entry: LookupTreeEntry): LookupTreeEntry {
-    const result: LookupTreeEntry = {};
+  const result: LookupTreeEntry = {};
 
-    if (entry.forward) {
-        result.forward = cloneTree(entry.forward);
-    }
+  if (entry.forward) {
+    result.forward = cloneTree(entry.forward);
+  }
 
-    if (entry.reverse) {
-        result.reverse = cloneTree(entry.reverse);
-    }
+  if (entry.reverse) {
+    result.reverse = cloneTree(entry.reverse);
+  }
 
-    if (entry.lookup) {
-        result.lookup = {
-            contextRange: entry.lookup.contextRange.slice() as [number, number],
-            index: entry.lookup.index,
-            length: entry.lookup.length,
-            subIndex: entry.lookup.subIndex,
-            substitutions: entry.lookup.substitutions.slice()
-        };
-    }
+  if (entry.lookup) {
+    result.lookup = {
+      contextRange: entry.lookup.contextRange.slice() as [number, number],
+      index: entry.lookup.index,
+      length: entry.lookup.length,
+      subIndex: entry.lookup.subIndex,
+      substitutions: entry.lookup.substitutions.slice()
+    };
+  }
 
-    return result;
+  return result;
 }
 
 /**
@@ -358,16 +358,16 @@ function cloneEntry(entry: LookupTreeEntry): LookupTreeEntry {
  * @param tree Lookup tree to clone
  */
 function cloneTree(tree: LookupTree): LookupTree {
-    const individual = new Map<number, LookupTreeEntry>();
-    for (const [glyphId, entry] of tree.individual.entries()) {
-        individual.set(glyphId, cloneEntry(entry));
-    }
+  const individual = new Map<number, LookupTreeEntry>();
+  for (const [glyphId, entry] of tree.individual.entries()) {
+    individual.set(glyphId, cloneEntry(entry));
+  }
 
-    return {
-        individual,
-        range: tree.range.map(({ range, entry }) => ({
-            range: range.slice() as [number, number],
-            entry: cloneEntry(entry)
-        }))
-    };
+  return {
+    individual,
+    range: tree.range.map(({ range, entry }) => ({
+      range: range.slice() as [number, number],
+      entry: cloneEntry(entry)
+    }))
+  };
 }
