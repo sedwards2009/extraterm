@@ -8,12 +8,12 @@ import * as net from 'net';
  */
 declare module 'node-pty' {
 
-	export interface IPty {
-		on(event: 'drain', listener: () => void): void;
+  export interface IPty {
+    on(event: 'drain', listener: () => void): void;
 
-		pause(): void;
-		resume(): void;
-		destroy(): void;
-		_socket: net.Socket;
-	}
+    pause(): void;
+    resume(): void;
+    destroy(): void;
+    _socket: net.Socket;
+  }
 }

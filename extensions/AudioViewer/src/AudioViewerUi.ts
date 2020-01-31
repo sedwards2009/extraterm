@@ -45,7 +45,8 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
         </et-compact-file-transfer-progress>
       </div>
     </div>`)
-})
+  }
+)
 export class AudioViewerUi extends Vue {
   title = "-";
   playing = false;

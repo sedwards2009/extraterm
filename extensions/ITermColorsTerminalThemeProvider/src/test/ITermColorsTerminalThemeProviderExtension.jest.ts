@@ -29,5 +29,5 @@ test("read", () => {
 
   expect(themeContents[0]).toBe("#000000");
   expect(themeContents[1]).toBe("#ff5555");
-	expect(themeContents.foregroundColor).toBe("#f8f8f2");
+  expect(themeContents.foregroundColor).toBe("#f8f8f2");
 });

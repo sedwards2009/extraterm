@@ -95,7 +95,7 @@ export class TemplateString {
   private _processTextStateTokens(): Segment[] {
     const textTokens = [TokenType.STRING, TokenType.ESCAPE_DOLLAR];
 
-    let textSegment: TextSegment = { text: "", type: "text", startColumn: 0, endColumn: 0 };
+    const textSegment: TextSegment = { text: "", type: "text", startColumn: 0, endColumn: 0 };
 
     while (textTokens.indexOf(this._peekTokenType()) !== -1) {
       const token = this._takeToken();
@@ -192,7 +192,7 @@ export class TemplateString {
 
   private _detectErrors(segments: Segment[]): void {
     for (const segment of segments) {
-      if (segment.type == "field") {
+      if (segment.type === "field") {
         const namespace = segment.namespace.toLowerCase();
         const formatter = this._formatterMap.get(namespace);
         if (formatter == null) {
@@ -274,7 +274,7 @@ const FieldParseRules: LexMatcher[] = [
 const LexerStateRules: { [key: string]: LexMatcher[]; } = {
   [LexerState.NORMAL]: NormalParseRules,
   [LexerState.FIELD]: FieldParseRules,
-}
+};
 
 function lex(input: string): Token[] {
   const result: Token[] = [];

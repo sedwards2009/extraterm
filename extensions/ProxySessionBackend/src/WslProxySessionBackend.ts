@@ -65,14 +65,14 @@ export class WslProxySessionBackend implements SessionBackend {
     const sessionConfig = <WslProxySessionConfiguration> sessionConfiguration;
 
     const defaultShell = "/bin/bash";
-    let shell = sessionConfig.useDefaultShell ? defaultShell : sessionConfig.shell;
+    const shell = sessionConfig.useDefaultShell ? defaultShell : sessionConfig.shell;
     const args = ["-l"].concat(ShellStringParser(sessionConfig.args));
 
     const extraPtyEnv = {
       TERM: "xterm-256color"
     };
 
-    for (let prop in extraEnv) {
+    for (const prop in extraEnv) {
       extraPtyEnv[prop] = extraEnv[prop];
     }
 

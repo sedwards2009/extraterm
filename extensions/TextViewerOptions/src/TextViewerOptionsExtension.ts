@@ -52,9 +52,9 @@ function getMimeTypeName(textViewer: TextViewer): string {
 }
 
 async function syntaxHighlightingCommandExecutor(textViewer: TextViewer): Promise<any> {
-  const modesByNameObject = extensionContext.aceModule.ModeList.modesByName
+  const modesByNameObject = extensionContext.aceModule.ModeList.modesByName;
   const mimeList: {name: string, nameLower: string, mime: string}[] =  [];
-  for (let key in modesByNameObject) {
+  for (const key in modesByNameObject) {
     const mode = modesByNameObject[key];
     mimeList.push({name: mode.friendlyName, nameLower: mode.friendlyName.toLowerCase(), mime: mode.mimeTypes[0]});
   }

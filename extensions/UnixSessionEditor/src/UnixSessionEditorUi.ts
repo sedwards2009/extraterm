@@ -49,7 +49,8 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     <option v-for="item in etcShells" :value="item"></option>
   </datalist>
 </div>`)
-})
+  }
+)
 export class UnixSessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";

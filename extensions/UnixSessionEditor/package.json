@@ -7,7 +7,9 @@
   "main": "dist/UnixSessionEditorExtension.js",
   "scripts": {
     "build": "tsc",
-    "clean": "shx rm -rf dist"
+    "clean": "shx rm -rf dist",
+    "lint": "eslint 'src/**/*.ts'",
+    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'"
   },
   "dependencies": {
     "extraterm-trim-between-tags": "1.0.0",
@@ -19,6 +21,8 @@
   "devDependencies": {
     "@types/fs-extra": "^5.0.2",
     "@types/node": "^12.6.2",
+    "eslint": "6.8.0",
+    "eslint-config-extraterm": "1.0.0",
     "extraterm-extension-api": "0.1.0",
     "shx": "^0.3.2",
     "typescript": "3.7.4"

@@ -191,9 +191,9 @@ class CygwinProxyPtyConnector extends ProxyPtyConnector {
   }
 
   protected _spawnServer(): child_process.ChildProcess {
-    let serverEnv = _.clone(process.env);
+    const serverEnv = _.clone(process.env);
     serverEnv["PYTHONIOENCODING"] = "utf-8:ignore";
-_log.debug(`this._pythonExe: ${this._pythonExe}`);
+    _log.debug(`this._pythonExe: ${this._pythonExe}`);
     return child_process.spawn(this._pythonExe, [path.join(SourceDir.path, "python/ptyserver2.py")], {env: serverEnv});
   }
 }

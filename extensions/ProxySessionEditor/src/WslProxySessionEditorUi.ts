@@ -45,7 +45,8 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   <input type="text" name="initialDirectory" v-model="initialDirectory">
 </div>
 `)
-})
+  }
+)
 export class WslProxySessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";

@@ -114,7 +114,7 @@ export class BashScriptBuilder extends ScriptBuilder {
       {type: 'text', text: EOT},
       {type: 'wait', durationMilliseconds: 300},
       {type: 'text', text: 'stty echo\n'},
-  ];
+    ];
   }
 
   protected _buildCookie(): string {

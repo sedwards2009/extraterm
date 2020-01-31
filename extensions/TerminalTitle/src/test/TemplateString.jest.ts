@@ -58,8 +58,7 @@ describe.each([
       { type: "text", text: "foo " },
       { type: "error", text: "TER"},
     ]],
-
-  ])("Test", (input: string, output: Segment[]) => {
+])("Test", (input: string, output: Segment[]) => {
 
   test(`parse ${input}`, () => {
     const ts = new TemplateString();
@@ -75,7 +74,7 @@ describe.each([
         expect(seg.startColumn).toBe(outSeg.startColumn);
       }
       if (outSeg.endColumn !== undefined) {
-          expect(seg.endColumn).toBe(outSeg.endColumn);
+        expect(seg.endColumn).toBe(outSeg.endColumn);
       }
       if (seg.type === "text") {
         expect((<TextSegment> seg).text).toBe((<TextSegment> outSeg).text);

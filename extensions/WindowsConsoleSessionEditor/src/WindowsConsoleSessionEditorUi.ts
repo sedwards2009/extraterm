@@ -37,7 +37,8 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   </template>
 </div>
 `)
-})
+  }
+)
 export class WindowsConsoleSessionEditorUi extends Vue {
   name: string = "";
   exe: string = "";

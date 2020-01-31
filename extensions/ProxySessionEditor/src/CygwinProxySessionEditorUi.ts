@@ -47,7 +47,8 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   <label for="initialDirectory">Initial Directory:</label>
   <input type="text" name="initialDirectory" v-model="initialDirectory">
 </div>`)
-})
+  }
+)
 export class CygwinProxySessionEditorUi extends Vue {
   name: string = "";
   shell: string = "";
