@@ -282,6 +282,10 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     const target = ev.target;
+    if (this._mode === Mode.DEFAULT && ! (<ViewerElement> target).hasSelection()) {
+      return;
+    }
+
     this._childElementList.forEach( (nodeInfo): void => {
       const node = nodeInfo.element;
       if (node !== target) {

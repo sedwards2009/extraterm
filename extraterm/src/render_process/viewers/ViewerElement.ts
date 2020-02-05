@@ -49,7 +49,11 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   getSelectionText(): string {
     return null;
   }
-  
+
+  hasSelection(): boolean {
+    return false;
+  }
+
   clearSelection(): void {
   }
  
