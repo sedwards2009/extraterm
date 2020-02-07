@@ -28,6 +28,7 @@ export class TerminalCanvasRenderer extends Renderer {
   private _canvasTextLayer: CanvasTextLayer;
   private _terminalCanvasRendererConfig: TerminalCanvasRendererConfig = null;
   private _canvasFontMetricsMonitor: CanvasFontMetricsMonitor = null;
+  private _isLowMemoryMode = false;
 
   constructor(container: HTMLElement, terminalCanvasRendererConfig: TerminalCanvasRendererConfig) {
     super(container, { injectCss: false, fontSize: null });
@@ -71,7 +72,9 @@ export class TerminalCanvasRenderer extends Renderer {
     if (this._canvasFontMetricsMonitor != null) {
       this._canvasFontMetricsMonitor.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);
     }
-    this.rerenderText();
+    if ( ! this._isLowMemoryMode) {
+      this.rerenderText();
+    }
   }
 
   setRenderCursorStyle(cursorStyle: CursorStyle): void {
@@ -80,13 +83,21 @@ export class TerminalCanvasRenderer extends Renderer {
     }
   }
 
+  /**
+   * Free up the canvas memory
+   *
+   * The canvas memory will remain freed until an explicit request to
+   * rerender the text is given.
+   */
   reduceMemory(): void {
+    this._isLowMemoryMode = true;
     if (this._canvasTextLayer != null) {
       this._canvasTextLayer.reduceMemory();
     }
   }
 
   rerenderText(): void {
+    this._isLowMemoryMode = false;
     if (this._canvasTextLayer != null) {
       this._canvasTextLayer.rerender();
     }

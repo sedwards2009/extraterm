@@ -7,7 +7,7 @@ import "jest";
 import * as SourceMapSupport from 'source-map-support';
 
 import {Emulator, Platform} from './Term';
-import {RenderEvent, Line} from 'term-api';
+import {RenderEvent, Line, EmulatorApi, MinimalKeyboardEvent} from 'term-api';
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 const performanceNow = require('performance-now');
 
@@ -150,6 +150,64 @@ test("Move rows above cursor to scrollback", done => {
     done();
   }
   testMoveRowsAboveCursorToScrollback();
+});
+
+describe.each([
+  [{key: "a", altKey: false, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: false}, "a"],
+])("Keyboard input keyPress()", (ev: MinimalKeyboardEvent, output: string) => {
+
+  test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
+    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20 });
+    let collectedData = "";
+    emulator.addDataEventListener( (instance: EmulatorApi, data: string): void => {
+      collectedData = collectedData + data;
+    });
+
+    emulator.keyPress(ev);
+    expect(collectedData).toBe(output);
+
+    done();
+  });
+});
+
+describe.each([
+  [{key: "d", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x04"],
+
+  [{key: "2", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x00"],
+  [{key: "`", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x00"],
+
+  [{key: "[", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1b"],
+  [{key: "3", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1b"],
+
+  [{key: "4", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1c"],
+  [{key: "\\", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1c"],
+  [{key: "|", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: true}, "\x1c"],
+
+  [{key: "]", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1d"],
+  [{key: "5", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1d"],
+
+  // RS char
+  [{key: "6", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1e"],
+  [{key: "^", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: true}, "\x1e"],
+  [{key: "~", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: true}, "\x1e"],
+
+  [{key: "_", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1f"],
+  [{key: "?", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: true}, "\x1f"],
+  [{key: "8", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\xf7"],
+])("Keyboard input keyDown()", (ev: MinimalKeyboardEvent, output: string) => {
+
+  test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
+    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20 });
+    let collectedData = "";
+    emulator.addDataEventListener( (instance: EmulatorApi, data: string): void => {
+      collectedData = collectedData + data;
+    });
+
+    emulator.keyDown(ev);
+    expect(collectedData).toBe(output);
+
+    done();
+  });
 });
 
 function waitOnEmulator(emulator: Emulator): Promise<void> {

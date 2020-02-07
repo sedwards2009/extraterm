@@ -403,12 +403,12 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._metadataEventDoLater.trigger();
   }
 
-  getSelectionText(): string {
-    if (this._aceEditor.selection.isEmpty()) {
+  getSelectionText(): string {    
+    const selection = this._aceEditSession.getSelection()
+    if (selection.isEmpty()) {
       return null;
     }
 
-    const selection = this._aceEditSession.getSelection();
     if (selection.inMultiSelectMode) {
       return selection.getAllRanges().map(range => this._aceEditSession.getUnwrappedTextRange(range)).join("\n");
     } else {

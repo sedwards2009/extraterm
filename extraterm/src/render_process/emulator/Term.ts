@@ -2200,9 +2200,21 @@ export class Emulator implements EmulatorApi {
               key = String.fromCodePoint(ev.key.codePointAt(0)-'@'.codePointAt(0));
             } else if (ev.key >= 'a' && ev.key <= 'z') {
               key = String.fromCodePoint(ev.key.codePointAt(0)-'a'.codePointAt(0)+1);
-            } else if (ev.key === ' ') {
+            } else if (ev.key === ' ' || ev.key === '`' || ev.key === '2') {
               // Ctrl space
               key = '\x00';
+            } else if (ev.key === '3') {
+              key = '\x1b';
+            } else if (ev.key === '|' || ev.key === '4') {
+              key = '\x1c';
+            } else if (ev.key === '5') {
+              key = '\x1d';
+            } else if (ev.key === '8') {
+              key = '\xf7';
+            } else if (ev.key === '?') {
+              key = '\x1f';
+            } else if (ev.key === "~" || ev.key === '6') {
+              key = '\x1e';
             }
 
           } else if ((!isMac && altKey) || (isMac && ev.metaKey)) {  // Alt modifier handling.
@@ -2216,7 +2228,7 @@ export class Emulator implements EmulatorApi {
     return key;
   }
 
-  keyDown(ev: KeyboardEvent): boolean {
+  keyDown(ev: MinimalKeyboardEvent): boolean {
     const key = Emulator._translateKey(this._platform, ev, this.applicationKeypad, this.applicationCursorKeys);
 
     if (key === null) {
@@ -2242,7 +2254,7 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  keyPress(ev: KeyboardEvent): boolean {
+  keyPress(ev: MinimalKeyboardEvent): boolean {
     const key = ev.key;
     if ( ! key || key.length !== 1) {
       return false;

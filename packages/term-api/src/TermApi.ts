@@ -200,8 +200,8 @@ export interface EmulatorApi {
   reset(): void;
 
   // Sending input events into the emulator
-  keyDown(ev: KeyboardEvent): boolean;
-  keyPress(ev: KeyboardEvent): boolean;
+  keyDown(ev: MinimalKeyboardEvent): boolean;
+  keyPress(ev: MinimalKeyboardEvent): boolean;
   destroy(): void;
 
   /**

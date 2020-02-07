@@ -379,6 +379,11 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     const viewerElement = this.getViewerElement();
     return viewerElement === null ? null : viewerElement.getSelectionText();
   }
+
+  hasSelection(): boolean {
+    const viewerElement = this.getViewerElement();
+    return viewerElement === null ? false : viewerElement.hasSelection();
+  }
   
   getBulkFileHandle(): BulkFileHandle {
     const viewerElement = this.getViewerElement();
