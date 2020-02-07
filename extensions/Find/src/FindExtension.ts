@@ -88,7 +88,7 @@ class FindWidget {
     const termViewers = this._getViewers();
     const needleRegExp = this._needleRegExp();
 
-    for (let i=termViewers.length-1; i> 0; i--) {
+    for (let i=termViewers.length-1; i>=0; i--) {
       if (termViewers[i].find(needleRegExp, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
         break;
       }
@@ -180,7 +180,7 @@ class FindWidget {
     }
     i--;
 
-    for ( ; i > 0; i--) {
+    for ( ; i >= 0; i--) {
       if (termViewers[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_END, backwards: true })) {
         return;
       }
