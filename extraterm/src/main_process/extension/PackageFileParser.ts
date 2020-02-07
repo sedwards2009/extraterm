@@ -63,7 +63,8 @@ class PackageParser {
         includePlatform: this.parsePlatformsJson(packageJson, "includePlatform"),
         excludePlatform: this.parsePlatformsJson(packageJson, "excludePlatform"),
         description: getJsonStringField(packageJson, "description"),
-        contributes: this.parseContributesJson(packageJson)
+        contributes: this.parseContributesJson(packageJson),
+        isInternal: getJsonBooleanField(packageJson, "isInternal", false),
       };
       return result;
     } catch(ex) {
@@ -102,7 +103,7 @@ class PackageParser {
         result.push(this.parsePlatformJson(value.children[i]));
       }
       return result;
-    }    
+    }
 
     return throwJsonError(`Field '${fieldName}' is not an array.`, value);
   }
@@ -279,13 +280,13 @@ class PackageParser {
     if (prop == null) {
       return [];
     }
-    
+
     const knownKeys: (keyof ExtensionMenu)[] = [
       "command",
       "show",
     ];
 
-    return parseObjectListJson(menusObject, fieldName, 
+    return parseObjectListJson(menusObject, fieldName,
       (node: JsonNode): ExtensionMenu => {
         assertKnownJsonObjectKeys(node, knownKeys);
         const jsonObject = assertIsJsonObject(node);

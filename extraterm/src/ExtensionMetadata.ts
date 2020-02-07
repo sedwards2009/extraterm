@@ -16,6 +16,7 @@ export interface ExtensionMetadata {
   contributes: ExtensionContributes;
   includePlatform?: ExtensionPlatform[];
   excludePlatform?: ExtensionPlatform[];
+  isInternal?: boolean;
 }
 
 export interface ExtensionPlatform {

@@ -19,6 +19,17 @@ test("metadata", () => {
   expect(parsed.contributes.viewers.length).toBe(0);
 });
 
+test("isInternal", () => {
+  const parsed = parsePackageJsonString(JSON.stringify({
+    name: "Foo", version: "1.0.0", description: "Foobar", isInternal: true
+  }), "");
+  expect(parsed.name).toBe("Foo");
+  expect(parsed.version).toBe("1.0.0");
+  expect(parsed.description).toBe("Foobar");
+  expect(parsed.contributes.viewers.length).toBe(0);
+  expect(parsed.isInternal).toBe(true);
+});
+
 test("contributes", () => {
   const parsed = parsePackageJsonString(JSON.stringify({
     name: "Foo",
