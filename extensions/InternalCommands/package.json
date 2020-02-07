@@ -2,6 +2,7 @@
   "name": "internal-commands",
   "description": "Command definitions for all internal commands",
   "version": "1.0.0",
+  "isInternal": true,
   "contributes": {
     "commands": [
       {

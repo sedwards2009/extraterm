@@ -2,6 +2,7 @@
   "name": "default-terminal-theme",
   "description": "Extraterm Default Terminal theme",
   "version": "1.0.0",
+  "isInternal": true,
   "contributes": {
     "terminalThemes": [
       {
