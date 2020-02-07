@@ -20,8 +20,8 @@
   "scripts": {
     "clean": "shx rm -rf dist",
     "build": "shx mkdir -p dist && jison src/grammar.jison -o dist/parser.js && shx cp -r src/* dist/",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "run": "false",
     "test": "yarn run build && jest dist/test/parser.test.js"
   }

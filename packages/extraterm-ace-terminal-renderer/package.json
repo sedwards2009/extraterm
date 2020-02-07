@@ -26,8 +26,8 @@
     "build": "tsc",
     "build-test": "tsc && webpack --config webpack.test.config.js",
     "clean": "shx rm -rf dist",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "test": "yarn run build && jest"
   },
   "dependencies": {

@@ -13,8 +13,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'"
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
   "devDependencies": {
     "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz",

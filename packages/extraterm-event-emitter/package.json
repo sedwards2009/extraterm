@@ -21,8 +21,8 @@
     "build-all": "yarn run build",
     "build": "tsc",
     "clean": "shx rm -rf dist",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "run": "false"
   }
 }

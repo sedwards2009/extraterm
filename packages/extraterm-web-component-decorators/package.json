@@ -24,8 +24,8 @@
     "build-all": "yarn run build",
     "build": "tsc && webpack dist/test/TestCode.js dist/test/bundle.js",
     "clean": "shx rm -rf dist",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "run": "false",
     "server": "http-server ."
   },

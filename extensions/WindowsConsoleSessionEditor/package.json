@@ -8,8 +8,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'"
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
   "dependencies": {
     "extraterm-trim-between-tags": "1.0.0",

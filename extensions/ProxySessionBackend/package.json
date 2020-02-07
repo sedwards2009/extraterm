@@ -8,8 +8,8 @@
   "scripts": {
     "build": "tsc && shx cp -r src/python dist/python",
     "clean": "shx rm -rf dist",
-    "lint": "eslint 'src/**/*.ts'",
-    "lint-strict": "eslint --max-warnings 1 'src/**/*.ts'"
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
   "dependencies": {
     "extraterm-event-emitter": "1.0.0",
