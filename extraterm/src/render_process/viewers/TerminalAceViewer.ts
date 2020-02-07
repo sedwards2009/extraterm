@@ -404,7 +404,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   getSelectionText(): string {    
-    const selection = this._aceEditSession.getSelection()
+    const selection = this._aceEditSession.getSelection();
     if (selection.isEmpty()) {
       return null;
     }
