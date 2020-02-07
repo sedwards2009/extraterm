@@ -5,9 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "lint": "tslint --project tsconfig.json --fix",
     "clean": "rimraf dist",
-    "build": "tsc",
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "watch": "tsc -w",

@@ -6,7 +6,8 @@
   "version": "1.0.0",
   "main": "dist/WindowsConsoleSessionEditorExtension.js",
   "scripts": {
-    "build": "tsc",
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""

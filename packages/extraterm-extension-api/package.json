@@ -11,7 +11,8 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""

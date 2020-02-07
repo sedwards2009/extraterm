@@ -18,8 +18,8 @@
     "typescript": "3.7.4"
   },
   "scripts": {
-    "build-all": "yarn run build",
-    "build": "tsc",
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
