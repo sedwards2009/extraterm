@@ -9,6 +9,7 @@ import Vue from 'vue';
 import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
+import { isSupportedOnThisPlatform } from '../../extension/InternalTypes';
 
 
 @Component(
@@ -17,7 +18,7 @@ import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
 <div class="settings-page">
   <h2><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
 
-  <div v-for="extension in allExtensions" v-bind:key="extension.path" class="card">
+  <div v-for="extension in allUserExtensions" v-bind:key="extension.path" class="card">
     <h3>{{ extension.displayName || extension.name }}&nbsp;<span class="extension-version">{{ extension.version }}</span></h3>
     <div>{{ extension.description}}</div>
   </div>
@@ -32,5 +33,9 @@ export class ExtensionSettingsUi extends Vue {
   constructor() {
     super();
     this.allExtensions = [];
+  }
+
+  get allUserExtensions(): ExtensionMetadata[] {
+    return this.allExtensions.filter(ex => ! ex.isInternal && isSupportedOnThisPlatform(ex));
   }
 }
