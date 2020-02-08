@@ -17,7 +17,7 @@ import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalW
   isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions, InternalTabTitleWidget } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
-import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution } from '../../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution, ExtensionDesiredState } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { CommandsRegistry, CommandMenuEntry } from './CommandsRegistry';
 import { CommonExtensionWindowState } from './CommonExtensionState';
@@ -54,6 +54,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
   private _extensionMetadata: ExtensionMetadata[] = [];
   private _activeExtensions: ActiveExtension[] = [];
+  private _extensionDesiredState: ExtensionDesiredState;
 
   extensionUiUtils: ExtensionUiUtils = null;
 
@@ -82,10 +83,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   startUp(): void {
     this._extensionMetadata = WebIpc.requestExtensionMetadataSync();
+    this._extensionDesiredState = WebIpc.requestExtensionDesiredStateSync();
 
     for (const extensionInfo of this._extensionMetadata) {
-      if ( ! isMainProcessExtension(extensionInfo) && isSupportedOnThisPlatform(extensionInfo)) {
-        this._startExtension(extensionInfo);
+      if (this._extensionDesiredState[extensionInfo.name]) {
+
+        if ( ! isMainProcessExtension(extensionInfo)) {
+          this._startExtension(extensionInfo);
+        }
       }
     }
   }
@@ -96,7 +101,6 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   getExtensionContextByName(name: string): InternalExtensionContext {
     for (const ext of this._activeExtensions) {
-      this._log.debug(`getExtensionContextByName() ext.metadata.name: ${ext.metadata.name}`);
       if (ext.metadata.name === name) {
         return ext.contextImpl;
       }

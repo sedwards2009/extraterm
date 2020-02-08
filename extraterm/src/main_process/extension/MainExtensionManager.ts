@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
+import { ExtensionMetadata, ExtensionSessionBackendContribution, ExtensionDesiredState } from "../../ExtensionMetadata";
 import { parsePackageJsonString } from './PackageFileParser';
 import { ExtensionContext, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from 'extraterm-extension-api';
 import { log } from "extraterm-logging";
@@ -45,43 +45,29 @@ export class MainExtensionManager {
   private _log: Logger = null;
   private _extensionMetadata: ExtensionMetadata[] = [];
   private _activeExtensions: ActiveExtension[] = [];
+  private _extensionDesiredState: ExtensionDesiredState = {};
 
   constructor(private extensionPaths: string[]) {
     this._log = getLogger("MainExtensionManager", this);
   }
 
-  scan(): void {
-    this._extensionMetadata = _.flatten(this.extensionPaths.map(p => this._scanPath(p)));
-  }
+  startUp(): void {
+    this._extensionMetadata = this._scan(this.extensionPaths);
+    
+    for (const extensionInfo of this._extensionMetadata) {
+      this._extensionDesiredState[extensionInfo.name] = isSupportedOnThisPlatform(extensionInfo);
+    }
 
-  getExtensionMetadata(): ExtensionMetadata[] {
-    return this._extensionMetadata;
-  }
-
-  getSessionBackendContributions(): LoadedSessionBackendContribution[] {
-    return _.flatten(this._activeExtensions.map(
-      ae => ae.contextImpl.backend.__BackendImpl__sessionBackends));
-  }
-
-  getSessionBackend(type: string): ExtensionApi.SessionBackend {
-    for (const extension of this._activeExtensions) {
-      for (const backend of extension.contextImpl.backend.__BackendImpl__sessionBackends) {
-        if (backend.sessionBackendMetadata.type === type) {
-          return backend.sessionBackend;
-        }
+    for (const extensionName of Object.keys(this._extensionDesiredState)) {
+      const extensionInfo = this._getExtensionMetadataByName(extensionName);
+      if (isMainProcessExtension(extensionInfo)) {
+        this._startExtension(extensionInfo);
       }
     }
-    return null;
   }
 
-  getSyntaxThemeProviderContributions(): LoadedSyntaxThemeProviderContribution[] {
-    return _.flatten(this._activeExtensions.map(
-      ae => ae.contextImpl.backend.__BackendImpl__syntaxThemeProviders));
-  }
-
-  getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
-    return _.flatten(this._activeExtensions.map(
-      ae => ae.contextImpl.backend.__BackendImpl__terminalThemeProviders));
+  private _scan(extensionPaths: string[]): ExtensionMetadata[] {
+    return _.flatten(extensionPaths.map(p => this._scanPath(p)));
   }
 
   private _scanPath(extensionPath: string): ExtensionMetadata[] {
@@ -121,12 +107,13 @@ export class MainExtensionManager {
     }
   }
 
-  startUp(): void {
+  private _getExtensionMetadataByName(name: string): ExtensionMetadata {
     for (const extensionInfo of this._extensionMetadata) {
-      if (isMainProcessExtension(extensionInfo) && isSupportedOnThisPlatform(extensionInfo)) {
-        this._startExtension(extensionInfo);
+      if (extensionInfo.name === name) {
+        return extensionInfo;
       }
     }
+    return null;
   }
 
   private _startExtension(metadata: ExtensionMetadata): void {
@@ -161,7 +148,40 @@ export class MainExtensionManager {
       return null;
     }
   }
-  
+
+  getExtensionMetadata(): ExtensionMetadata[] {
+    return this._extensionMetadata;
+  }
+
+  getDesiredState(): ExtensionDesiredState {
+    return this._extensionDesiredState;
+  }
+
+  getSessionBackendContributions(): LoadedSessionBackendContribution[] {
+    return _.flatten(this._activeExtensions.map(
+      ae => ae.contextImpl.backend.__BackendImpl__sessionBackends));
+  }
+
+  getSessionBackend(type: string): ExtensionApi.SessionBackend {
+    for (const extension of this._activeExtensions) {
+      for (const backend of extension.contextImpl.backend.__BackendImpl__sessionBackends) {
+        if (backend.sessionBackendMetadata.type === type) {
+          return backend.sessionBackend;
+        }
+      }
+    }
+    return null;
+  }
+
+  getSyntaxThemeProviderContributions(): LoadedSyntaxThemeProviderContribution[] {
+    return _.flatten(this._activeExtensions.map(
+      ae => ae.contextImpl.backend.__BackendImpl__syntaxThemeProviders));
+  }
+
+  getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
+    return _.flatten(this._activeExtensions.map(
+      ae => ae.contextImpl.backend.__BackendImpl__terminalThemeProviders));
+  }
 }
 
 class ExtensionContextImpl implements ExtensionContext {

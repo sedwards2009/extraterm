@@ -19,6 +19,10 @@ export interface ExtensionMetadata {
   isInternal?: boolean;
 }
 
+export interface ExtensionDesiredState {
+  [extensionName: string]: boolean;
+}
+
 export interface ExtensionPlatform {
   os?: string;
   arch?: string;

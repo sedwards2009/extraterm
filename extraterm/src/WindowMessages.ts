@@ -13,7 +13,7 @@ import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme } from '
 import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
-import { ExtensionMetadata } from './ExtensionMetadata';
+import { ExtensionMetadata, ExtensionDesiredState } from './ExtensionMetadata';
 import { KeybindingsFile } from './keybindings/KeybindingsFile';
 
 
@@ -65,6 +65,8 @@ export enum MessageType {
 
   EXTENSION_METADATA_REQUEST,
   EXTENSION_METADATA,
+  EXTENSION_DESIRED_STATE_REQUEST,
+  EXTENSION_DESIRED_STATE,
 
   THEME_RESCAN,
 
@@ -466,6 +468,13 @@ export interface ExtensionMetadataRequestMessage extends Message {
 
 export interface ExtensionMetadataMessage extends Message {
   extensionMetadata: ExtensionMetadata[];
+}
+
+export interface ExtensionDesiredStateRequestMesssage extends Message {
+}
+
+export interface ExtensionDesiredStateMessage extends Message {
+  desiredState: ExtensionDesiredState;
 }
 
 // Keybindings

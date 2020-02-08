@@ -12,7 +12,7 @@ import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileSto
 import * as Messages from '../WindowMessages';
 import * as config from '../Config';
 import {Logger, getLogger} from "extraterm-logging";
-import { ExtensionMetadata } from '../ExtensionMetadata';
+import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
 import { KeybindingsFile } from '../keybindings/KeybindingsFile';
 
@@ -217,6 +217,13 @@ export function requestExtensionMetadataSync(): ExtensionMetadata[] {
   const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
   const extensionMetadataMessage = <Messages.ExtensionMetadataMessage> event;
   return extensionMetadataMessage.extensionMetadata;
+}
+
+export function requestExtensionDesiredStateSync(): ExtensionDesiredState {
+  const msg: Messages.ExtensionDesiredStateRequestMesssage = {type: Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST};
+  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
+  const extensionDesriedStateMessage = <Messages.ExtensionDesiredStateMessage> event;
+  return extensionDesriedStateMessage.desiredState;
 }
 
 export function keybindingsCopy(sourceName: string, destName: string): void {

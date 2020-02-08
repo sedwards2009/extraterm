@@ -158,7 +158,6 @@ function main(): void {
 
 function setupExtensionManager(): void {
   extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
-  extensionManager.scan();
   extensionManager.startUp();
 }
 
@@ -797,6 +796,10 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       event.returnValue = handleExtensionMetadataRequest();
       return;
 
+    case Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST:
+      event.returnValue = handleExtensionDesiredStateRequest();
+      return;
+
     case Messages.MessageType.COPY_KEYBINDINGS:
       handleKeybindingsCopy(<Messages.KeybindingsCopyMessage> msg);
       break;
@@ -1107,6 +1110,10 @@ function handleDerefBulkFile(msg: Messages.BulkFileDerefMessage): void {
 
 function handleExtensionMetadataRequest(): Messages.ExtensionMetadataMessage {
   return {type: Messages.MessageType.EXTENSION_METADATA, extensionMetadata: extensionManager.getExtensionMetadata()};
+}
+
+function handleExtensionDesiredStateRequest(): Messages.ExtensionDesiredStateMessage {
+  return {type: Messages.MessageType.EXTENSION_DESIRED_STATE, desiredState: extensionManager.getDesiredState()};
 }
 
 function handleKeybindingsCopy(msg: Messages.KeybindingsCopyMessage): void {
