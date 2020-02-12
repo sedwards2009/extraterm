@@ -15,6 +15,8 @@ jobs:
     pool:
       vmImage: 'Ubuntu-16.04'
     steps:
+      - script: env
+      - script: echo Build.SourceBranch $(Build.SourceBranch)
       - script: yarn install --frozen-lockfile
         displayName: 'Yarn install'
       - script: yarn run package-commands-zip --version=$(git describe --tags)
