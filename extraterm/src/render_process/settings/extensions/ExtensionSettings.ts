@@ -7,7 +7,7 @@ import { SettingsBase } from '../SettingsBase';
 
 import { GeneralConfig, SystemConfig, ConfigKey, GENERAL_CONFIG, SYSTEM_CONFIG } from '../../../Config';
 
-import { ExtensionSettingsUi } from './ExtensionSettingsUi';
+import { ExtensionSettingsUi, ExtensionMetadataAndState } from './ExtensionSettingsUi';
 import { ExtensionManager } from "../../extension/InternalTypes";
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
@@ -39,11 +39,20 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
   set extensionManager(extensionManager: ExtensionManager) {
     this._extensionManager = extensionManager;
     
-    this._getUi().allExtensions = this._extensionManager.getAllExtensions();
+    this._getUi().allExtensions = this._combineExtensionMetadataAndState(this._extensionManager);
 
     // if (this._commandChangedDisposable != null) {
     //   this._commandChangedDisposable.dispose()
     //   this._commandChangedDisposable = null;
     // }
+  }
+
+  private _combineExtensionMetadataAndState(extensionManager: ExtensionManager): ExtensionMetadataAndState[] {
+    const result: ExtensionMetadataAndState[] = [];
+
+    for (const extension of extensionManager.getAllExtensions()) {
+      result.push({ metadata: extension, running: extensionManager.isExtensionRunning(extension.name) });
+    }
+    return result;
   }
 }

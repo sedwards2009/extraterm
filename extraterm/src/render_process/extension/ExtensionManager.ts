@@ -99,6 +99,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
     return [...this._extensionMetadata];
   }
 
+  isExtensionRunning(name: string): boolean {
+    return this._extensionDesiredState[name] === true;
+  }
+
   getExtensionContextByName(name: string): InternalExtensionContext {
     for (const ext of this._activeExtensions) {
       if (ext.metadata.name === name) {

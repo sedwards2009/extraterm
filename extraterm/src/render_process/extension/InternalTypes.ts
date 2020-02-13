@@ -31,6 +31,7 @@ export interface ExtensionManager {
   startUp(): void;
 
   getAllExtensions(): ExtensionMetadata[];
+  isExtensionRunning(name: string):boolean;
 
   extensionUiUtils: ExtensionUiUtils;
 

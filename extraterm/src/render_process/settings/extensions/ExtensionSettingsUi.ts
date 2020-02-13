@@ -12,6 +12,11 @@ import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
 import { isSupportedOnThisPlatform } from '../../extension/InternalTypes';
 
 
+export interface ExtensionMetadataAndState {
+  metadata: ExtensionMetadata;
+  running: boolean;
+}
+
 @Component(
   {
     template: trimBetweenTags(`
@@ -19,8 +24,15 @@ import { isSupportedOnThisPlatform } from '../../extension/InternalTypes';
   <h2><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
 
   <div v-for="extension in allUserExtensions" v-bind:key="extension.path" class="card">
-    <h3>{{ extension.displayName || extension.name }}&nbsp;<span class="extension-version">{{ extension.version }}</span></h3>
-    <div>{{ extension.description}}</div>
+    <h3>{{ extension.metadata.displayName || extension.metadata.name }}&nbsp;<span class="extension-version">{{ extension.metadata.version }}</span></h3>
+    <div>{{ extension.metadata.description}}</div>
+    <div class="extension-controls">
+      <span :class="{'traffic-light-running': extension.running, 'traffic-light-stopped': !extension.running}"></span>
+      <span class="group">
+        <button v-if="!extension.running" class="inline"><i class="fas fa-play"></i>&nbsp;Enable</button>
+        <button v-if="extension.running" class="inline"><i class="fas fa-pause"></i>&nbsp;Disable</button>
+      </span>
+    </div>
   </div>
 </div>
 `)
@@ -28,14 +40,14 @@ import { isSupportedOnThisPlatform } from '../../extension/InternalTypes';
 )
 export class ExtensionSettingsUi extends Vue {
 
-  allExtensions: ExtensionMetadata[];
+  allExtensions: ExtensionMetadataAndState[];
 
   constructor() {
     super();
     this.allExtensions = [];
   }
 
-  get allUserExtensions(): ExtensionMetadata[] {
-    return this.allExtensions.filter(ex => ! ex.isInternal && isSupportedOnThisPlatform(ex));
+  get allUserExtensions(): ExtensionMetadataAndState[] {
+    return this.allExtensions.filter(ex => ! ex.metadata.isInternal && isSupportedOnThisPlatform(ex.metadata));
   }
 }

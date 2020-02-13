@@ -155,3 +155,11 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
   left: 0;
   right: 0;
 }
+
+.traffic-light-running, .traffic-light-stopped {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border-radius: 0.5em;
+  background-color: red;
+}
