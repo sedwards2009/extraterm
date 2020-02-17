@@ -4,11 +4,11 @@
 import { Logger, getLogger } from "extraterm-logging";
 import { WebComponent } from 'extraterm-web-component-decorators';
 import { SettingsBase } from '../SettingsBase';
+import { ConfigKey } from '../../../Config';
 
-import { GeneralConfig, SystemConfig, ConfigKey, GENERAL_CONFIG, SYSTEM_CONFIG } from '../../../Config';
-
-import { ExtensionSettingsUi, ExtensionMetadataAndState } from './ExtensionSettingsUi';
+import { ExtensionSettingsUi, ExtensionMetadataAndState, EVENT_ENABLE_EXTENSION, EVENT_DISABLE_EXTENSION } from './ExtensionSettingsUi';
 import { ExtensionManager } from "../../extension/InternalTypes";
+import { Disposable } from "extraterm-extension-api";
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
 
@@ -17,19 +17,25 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
   private _log: Logger = null;
 
   private _extensionManager: ExtensionManager = null;
-
+  private _stateChangedDisposable: Disposable = null;
+  
   constructor() {
-    super(ExtensionSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
+    super(ExtensionSettingsUi, []);
     this._log = getLogger(EXTENSION_SETTINGS_TAG, this);
+
+    this._getUi().$on(EVENT_ENABLE_EXTENSION, (extensionName: string): void => {
+      this._extensionManager.enableExtension(extensionName);
+    });
+
+    this._getUi().$on(EVENT_DISABLE_EXTENSION, (extensionName: string): void => {
+      this._extensionManager.disableExtension(extensionName);
+    });
   }
 
   protected _setConfig(key: ConfigKey, config: any): void {
-    // const ui = this._getUi();
-    // if (key === GENERAL_CONFIG) {
   }
 
   protected _dataChanged(): void {
-    // const newGeneralConfig = this._getConfigCopy(GENERAL_CONFIG);
   }
 
   get extensionManager(): ExtensionManager {
@@ -39,12 +45,15 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
   set extensionManager(extensionManager: ExtensionManager) {
     this._extensionManager = extensionManager;
     
-    this._getUi().allExtensions = this._combineExtensionMetadataAndState(this._extensionManager);
-
-    // if (this._commandChangedDisposable != null) {
-    //   this._commandChangedDisposable.dispose()
-    //   this._commandChangedDisposable = null;
-    // }
+    if (this._stateChangedDisposable != null) {
+      this._stateChangedDisposable.dispose();
+      this._stateChangedDisposable = null;
+    }
+    const updateExtensionInfo = () => {
+      this._getUi().allExtensions = this._combineExtensionMetadataAndState(this._extensionManager);
+    };
+    this._stateChangedDisposable = this._extensionManager.onStateChanged(updateExtensionInfo);
+    updateExtensionInfo();
   }
 
   private _combineExtensionMetadataAndState(extensionManager: ExtensionManager): ExtensionMetadataAndState[] {

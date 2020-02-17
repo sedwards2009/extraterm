@@ -226,6 +226,16 @@ export function requestExtensionDesiredStateSync(): ExtensionDesiredState {
   return extensionDesriedStateMessage.desiredState;
 }
 
+export function enableExtension(extensionName: string): void {
+  const msg: Messages.ExtensionEnableMessage = {type: Messages.MessageType.EXTENSION_ENABLE, extensionName};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function disableExtension(extensionName: string): void {
+  const msg: Messages.ExtensionDisableMessage = {type: Messages.MessageType.EXTENSION_DISABLE, extensionName};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
 export function keybindingsCopy(sourceName: string, destName: string): void {
   const msg: Messages.KeybindingsCopyMessage = {type: Messages.MessageType.COPY_KEYBINDINGS, sourceName, destName};
   ipc.send(Messages.CHANNEL_NAME, msg);

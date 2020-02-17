@@ -138,11 +138,11 @@ function main(): void {
     process.exit(1);
     return;
   }
-  
+
   _log.stopRecording();
 
   setupDefaultSessions();
-  
+
   // Quit when all windows are closed.
   app.on('window-all-closed', function() {
     if (bulkFileStorage !== null) {
@@ -159,6 +159,9 @@ function main(): void {
 function setupExtensionManager(): void {
   extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
   extensionManager.startUp();
+  extensionManager.onDesiredStateChanged(() => {
+    sendMessageToAllWindows(handleExtensionDesiredStateRequest());
+  });
 }
 
 function setupKeybindingsIOManager(): void {
@@ -296,7 +299,7 @@ function restoreAllWindows(): void {
         window.show();
       }
       window.restore();
-  
+
       doLater(() => {
         window.setMinimumSize(10, 10);
       }, 100);
@@ -312,7 +315,7 @@ function restoreAllWindows(): void {
         window.show();
       }
       window.restore();
-      
+
       doLater(() => {
         window.moveTop();
         window.focus();
@@ -393,7 +396,7 @@ function openWindow(parsedArgs: Command): void {
     cleanUpPtyWindow(mainWindowWebContentsId);
     mainWindow = null;
   });
-  
+
   mainWindow.on("close", saveAllWindowDimensions);
   mainWindow.on("resize", saveAllWindowDimensions);
   mainWindow.on("maximize", saveAllWindowDimensions);
@@ -411,7 +414,7 @@ function openWindow(parsedArgs: Command): void {
   mainWindow.webContents.on('devtools-closed', () => {
     sendDevToolStatus(mainWindow, false);
   });
-  
+
   mainWindow.webContents.on('devtools-opened', () => {
     sendDevToolStatus(mainWindow, true);
   });
@@ -505,7 +508,7 @@ function matchWindowToDisplay(window: BrowserWindow): Electron.Display {
 }
 
 function saveAllWindowDimensions(): void {
-  const windowId = 0; 
+  const windowId = 0;
   const rect = mainWindow.getNormalBounds();
   const isMaximized = mainWindow.isMaximized();
 
@@ -584,7 +587,7 @@ const _log = getLogger("main");
  */
 function systemConfiguration(config: GeneralConfig, availableFonts: FontInfo[]): SystemConfig {
   const homeDir = app.getPath('home');
-  
+
   const keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(config.keybindingsName);
   return {
     homeDir,
@@ -631,7 +634,7 @@ function getFonts(): FontInfo[] {
     };
     return fontInfo;
   } );
-  
+
   const allFonts = [...getBundledFonts(), ...systemFonts];
   const fonts = _.uniqBy(allFonts, x => x.postscriptName);
   return fonts;
@@ -654,7 +657,7 @@ function getBundledFonts(): FontInfo[] {
       }
     });
   }
-  
+
   return result;
 }
 
@@ -666,14 +669,14 @@ function pathToUrl(path: string): string {
 }
 
 //-------------------------------------------------------------------------
-// 
-//  ### ######   #####  
-//   #  #     # #     # 
-//   #  #     # #       
-//   #  ######  #       
-//   #  #       #       
-//   #  #       #     # 
-//  ### #        #####  
+//
+//  ### ######   #####
+//   #  #     # #     #
+//   #  #     # #
+//   #  ######  #
+//   #  #       #
+//   #  #       #     #
+//  ### #        #####
 //
 //-------------------------------------------------------------------------
 
@@ -684,32 +687,32 @@ function setupIpc(): void {
 function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   const msg: Messages.Message = arg;
   let reply: Messages.Message = null;
-  
+
   if (LOG_FINE) {
     _log.debug(`Main IPC incoming: ${Messages.MessageType[msg.type]} => `,msg);
   }
-  
+
   switch(msg.type) {
     case Messages.MessageType.CONFIG_REQUEST:
       reply = handleConfigRequest(<Messages.ConfigRequestMessage> msg);
       break;
-      
+
     case Messages.MessageType.CONFIG:
       handleConfig(<Messages.ConfigMessage> msg);
       break;
-      
+
     case Messages.MessageType.FRAME_DATA_REQUEST:
       _log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
       break;
-      
+
     case Messages.MessageType.THEME_LIST_REQUEST:
       reply = handleThemeListRequest();
       break;
-      
+
     case Messages.MessageType.THEME_CONTENTS_REQUEST:
       handleThemeContentsRequest(event.sender, <Messages.ThemeContentsRequestMessage> msg);
       break;
-      
+
     case Messages.MessageType.THEME_RESCAN:
       reply = handleThemeRescan();
       break;
@@ -717,19 +720,19 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
     case Messages.MessageType.PTY_CREATE:
       reply = handlePtyCreate(event.sender, <Messages.CreatePtyRequestMessage> msg);
       break;
-      
+
     case Messages.MessageType.PTY_RESIZE:
       handlePtyResize(<Messages.PtyResize> msg);
       break;
-      
+
     case Messages.MessageType.PTY_INPUT:
       handlePtyInput(<Messages.PtyInput> msg);
       break;
-      
+
     case Messages.MessageType.PTY_CLOSE_REQUEST:
       handlePtyCloseRequest(<Messages.PtyClose> msg);
       break;
-      
+
     case Messages.MessageType.PTY_OUTPUT_BUFFER_SIZE:
       handlePtyOutputBufferSize(<Messages.PtyOutputBufferSize> msg);
       break;
@@ -737,19 +740,19 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
     case Messages.MessageType.DEV_TOOLS_REQUEST:
       handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
       break;
-      
+
     case Messages.MessageType.CLIPBOARD_WRITE:
       handleClipboardWrite(<Messages.ClipboardWriteMessage> msg);
       break;
-      
+
     case Messages.MessageType.CLIPBOARD_READ_REQUEST:
       reply = handleClipboardReadRequest(<Messages.ClipboardReadRequestMessage> msg);
       break;
-      
+
     case Messages.MessageType.WINDOW_CLOSE_REQUEST:
       mainWindow.close();
       break;
-      
+
     case Messages.MessageType.WINDOW_MINIMIZE_REQUEST:
       minimizeAllWindows();
       break;
@@ -800,6 +803,14 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       event.returnValue = handleExtensionDesiredStateRequest();
       return;
 
+    case Messages.MessageType.EXTENSION_ENABLE:
+      extensionManager.enableExtension((<Messages.ExtensionEnableMessage>msg).extensionName);
+      break;
+
+    case Messages.MessageType.EXTENSION_DISABLE:
+      extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
+      break;
+  
     case Messages.MessageType.COPY_KEYBINDINGS:
       handleKeybindingsCopy(<Messages.KeybindingsCopyMessage> msg);
       break;
@@ -831,7 +842,7 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
     default:
       break;
   }
-  
+
   if (reply !== null) {
     if (LOG_FINE) {
       _log.debug("Replying: ", reply);
@@ -861,7 +872,7 @@ function handleThemeListRequest(): Messages.ThemeListMessage {
   return reply;
 }
 
-async function handleThemeContentsRequest(webContents: Electron.WebContents, 
+async function handleThemeContentsRequest(webContents: Electron.WebContents,
   msg: Messages.ThemeContentsRequestMessage): Promise<void> {
 
   const globalVariables: GlobalVariableMap = new Map();
@@ -889,7 +900,7 @@ async function handleThemeContentsRequest(webContents: Electron.WebContents,
 
   } catch(err) {
     const reply: Messages.ThemeContentsMessage = {
-      type: Messages.MessageType.THEME_CONTENTS, 
+      type: Messages.MessageType.THEME_CONTENTS,
       themeType: msg.themeType,
       themeContents: null,
       success: false,
@@ -1105,7 +1116,7 @@ function handleRefBulkFile(msg: Messages.BulkFileRefMessage): void {
 }
 
 function handleDerefBulkFile(msg: Messages.BulkFileDerefMessage): void {
-  bulkFileStorage.deref(msg.identifier); 
+  bulkFileStorage.deref(msg.identifier);
 }
 
 function handleExtensionMetadataRequest(): Messages.ExtensionMetadataMessage {

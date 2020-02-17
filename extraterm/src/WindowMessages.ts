@@ -67,6 +67,8 @@ export enum MessageType {
   EXTENSION_METADATA,
   EXTENSION_DESIRED_STATE_REQUEST,
   EXTENSION_DESIRED_STATE,
+  EXTENSION_ENABLE,
+  EXTENSION_DISABLE,
 
   THEME_RESCAN,
 
@@ -103,7 +105,7 @@ export interface ConfigRequestMessage extends Message {
 
 /**
  * The current configuration.
- * 
+ *
  * This message sent from the main process to a render process and is often a
  * response to a ConfigRequestMessage.
  */
@@ -136,7 +138,7 @@ export interface FrameDataMessage extends Message {
  * See `ThemeListRequestMessage`.
  */
 export interface ThemeListRequestMessage extends Message {
-  
+
 }
 
 /**
@@ -195,7 +197,7 @@ export interface CreatePtyRequestMessage extends Message {
    * The width of the terminal screen/area in characters.
    */
   columns: number;
-  
+
   /**
    * The height of the terminal screen/area in charactors or rows.
    */
@@ -224,12 +226,12 @@ export interface PtyResize extends Message {
    * The ID of the PTY this message refers to.
    */
   id: number;
-  
+
   /**
    * The new number of columns in the terminal screen.
-   */  
+   */
   columns: number;
-  
+
   /**
    * The new height of the terminal screen in rows.
    */
@@ -246,7 +248,7 @@ export interface PtyOutput extends Message {
    * The ID of the PTY this message refers to.
    */
   id: number;
-  
+
   /**
    * The output data from the PTY.
    */
@@ -255,7 +257,7 @@ export interface PtyOutput extends Message {
 
 /**
  * Notification regarding the amount of data from the PTY which can be accepted.
- * 
+ *
  * This message is sent from the render process to the main process. This is
  * more of an advisory than a hard limit.
  */
@@ -281,9 +283,9 @@ export interface PtyInput extends Message {
    * The ID of the PTY this message refers to.
    */
   id: number;
-  
+
   /**
-   * The data to send to the PTY as input.  
+   * The data to send to the PTY as input.
    */
   data: string;
 }
@@ -381,7 +383,7 @@ export interface ClipboardReadMessage extends Message {
  *
  * This is sent from a render process (and window) to the main process.
  */
-export interface WindowCloseRequestMessage extends Message {  
+export interface WindowCloseRequestMessage extends Message {
 }
 
 /**
@@ -389,7 +391,7 @@ export interface WindowCloseRequestMessage extends Message {
  *
  * This is sent from a render process (and window) to the main process.
  */
-export interface WindowMinimizeRequestMessage extends Message {  
+export interface WindowMinimizeRequestMessage extends Message {
 }
 
 /**
@@ -397,7 +399,7 @@ export interface WindowMinimizeRequestMessage extends Message {
  *
  * This is sent from a render process (and window) to the main process.
  */
-export interface WindowMaximizeRequestMessage extends Message {  
+export interface WindowMaximizeRequestMessage extends Message {
 }
 
 /**
@@ -454,7 +456,7 @@ export interface BulkFileRefMessage extends Message {
 }
 
 export interface BulkFileDerefMessage extends Message {
-  identifier: BulkFileIdentifier;  
+  identifier: BulkFileIdentifier;
 }
 
 export interface BulkFileStateMessage extends Message {
@@ -475,6 +477,14 @@ export interface ExtensionDesiredStateRequestMesssage extends Message {
 
 export interface ExtensionDesiredStateMessage extends Message {
   desiredState: ExtensionDesiredState;
+}
+
+export interface ExtensionEnableMessage extends Message {
+  extensionName: string;
+}
+
+export interface ExtensionDisableMessage extends Message {
+  extensionName: string;
 }
 
 // Keybindings

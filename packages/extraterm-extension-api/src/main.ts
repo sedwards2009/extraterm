@@ -832,10 +832,17 @@ export interface Logger {
 export interface ExtensionModule {
 
   /**
-   * Each extension module must export a functioncalled `activate()` with signature below.
+   * Each extension module must export a function called `activate()` with the signature below.
    * 
    * @param context The extension context which this extension is running in.
    * @return The public API of this extension, or null or undefined.
    */
   activate(context: ExtensionContext): any;
+
+  /**
+   * Option function which is called if the extension is disabled or the application shutdown.
+   * 
+   * @param manual True if the user manually disabled the extension.
+   */
+  deactivate?(manual: boolean): void;
 }

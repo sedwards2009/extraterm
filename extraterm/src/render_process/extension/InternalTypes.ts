@@ -31,7 +31,10 @@ export interface ExtensionManager {
   startUp(): void;
 
   getAllExtensions(): ExtensionMetadata[];
+  onStateChanged: ExtensionApi.Event<void>;
   isExtensionRunning(name: string):boolean;
+  enableExtension(name: string): void;
+  disableExtension(name: string): void;
 
   extensionUiUtils: ExtensionUiUtils;
 

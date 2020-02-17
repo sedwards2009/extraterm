@@ -17,6 +17,10 @@ export interface ExtensionMetadataAndState {
   running: boolean;
 }
 
+export const EVENT_ENABLE_EXTENSION = "enable-extension";
+export const EVENT_DISABLE_EXTENSION = "disable-extension";
+
+
 @Component(
   {
     template: trimBetweenTags(`
@@ -29,8 +33,18 @@ export interface ExtensionMetadataAndState {
     <div class="extension-controls">
       <span :class="{'traffic-light-running': extension.running, 'traffic-light-stopped': !extension.running}"></span>
       <span class="group">
-        <button v-if="!extension.running" class="inline"><i class="fas fa-play"></i>&nbsp;Enable</button>
-        <button v-if="extension.running" class="inline"><i class="fas fa-pause"></i>&nbsp;Disable</button>
+        <button
+          v-if="!extension.running"
+          v-on:click="$emit('${EVENT_ENABLE_EXTENSION}', extension.metadata.name)"
+          class="inline">
+          <i class="fas fa-play"></i>&nbsp;Enable
+        </button>
+        <button
+          v-if="extension.running"
+          v-on:click="$emit('${EVENT_DISABLE_EXTENSION}', extension.metadata.name)"
+          class="inline">
+          <i class="fas fa-pause"></i>&nbsp;Disable
+        </button>
       </span>
     </div>
   </div>

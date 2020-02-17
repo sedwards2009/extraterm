@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from 'extraterm-extension-api';
+import { EventEmitter } from 'extraterm-event-emitter';
 import * as fs from 'fs';
 import * as _ from 'lodash';
 import * as path from 'path';
@@ -11,7 +12,7 @@ import * as path from 'path';
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionSessionBackendContribution, ExtensionDesiredState } from "../../ExtensionMetadata";
 import { parsePackageJsonString } from './PackageFileParser';
-import { ExtensionContext, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from 'extraterm-extension-api';
+import { ExtensionContext, Event, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from 'extraterm-extension-api';
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
 
@@ -46,23 +47,23 @@ export class MainExtensionManager {
   private _extensionMetadata: ExtensionMetadata[] = [];
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionDesiredState: ExtensionDesiredState = {};
+  private _desiredStateChangeEventEmitter = new EventEmitter<void>();
+  onDesiredStateChanged: Event<void>;
 
   constructor(private extensionPaths: string[]) {
     this._log = getLogger("MainExtensionManager", this);
+    this.onDesiredStateChanged = this._desiredStateChangeEventEmitter.event;
   }
 
   startUp(): void {
     this._extensionMetadata = this._scan(this.extensionPaths);
-    
+
     for (const extensionInfo of this._extensionMetadata) {
       this._extensionDesiredState[extensionInfo.name] = isSupportedOnThisPlatform(extensionInfo);
     }
 
     for (const extensionName of Object.keys(this._extensionDesiredState)) {
-      const extensionInfo = this._getExtensionMetadataByName(extensionName);
-      if (isMainProcessExtension(extensionInfo)) {
-        this._startExtension(extensionInfo);
-      }
+      this._startExtension(this._getExtensionMetadataByName(extensionName));
     }
   }
 
@@ -116,26 +117,30 @@ export class MainExtensionManager {
     return null;
   }
 
-  private _startExtension(metadata: ExtensionMetadata): void {
-    this._log.info(`Starting extension '${metadata.name}' in the main process.`);
-
+  private _startExtension(metadata: ExtensionMetadata): ActiveExtension {
     let module = null;
     let publicApi = null;
-    const contextImpl = new ExtensionContextImpl(metadata);
-    if (metadata.main != null) {
-      module = this._loadExtensionModule(metadata);
-      if (module == null) {
-        return;
-      }
-      try {
-        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-      } catch(ex) {
-        this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
-        return;
+    let contextImpl: ExtensionContextImpl = null;
+    if (isMainProcessExtension(metadata)) {
+      this._log.info(`Starting extension '${metadata.name}' in the main process.`);
+
+      contextImpl = new ExtensionContextImpl(metadata);
+      if (metadata.main != null) {
+        module = this._loadExtensionModule(metadata);
+        if (module == null) {
+          return null;
+        }
+        try {
+          publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+        } catch(ex) {
+          this._log.warn(`Exception occurred while activating extension ${metadata.name}. ${ex}`);
+          return null;
+        }
       }
     }
-
-    this._activeExtensions.push({metadata, publicApi, contextImpl, module});
+    const activeExtension: ActiveExtension = {metadata, publicApi, contextImpl, module};
+    this._activeExtensions.push(activeExtension);
+    return activeExtension;
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {
@@ -149,21 +154,85 @@ export class MainExtensionManager {
     }
   }
 
+  private _stopExtension(activeExtension: ActiveExtension): void {
+    if (activeExtension.module != null) {
+      try {
+        const extratermModule = (<ExtensionApi.ExtensionModule> activeExtension.module);
+        if (extratermModule.deactivate != null) {
+          extratermModule.deactivate(true);
+        }
+      } catch(ex) {
+        this._log.warn(`Exception occurred while deactivating extension ${activeExtension.metadata.name}. ${ex}`);
+      }
+    }
+
+    this._activeExtensions = this._activeExtensions.filter(ex => ex !== activeExtension);
+  }
+
   getExtensionMetadata(): ExtensionMetadata[] {
     return this._extensionMetadata;
+  }
+
+  enableExtension(name: string): void {
+    const metadata = this._getExtensionMetadataByName(name);
+    if (metadata == null) {
+      this._log.warn(`Unable to find extensions metadata for name '${name}'.`);
+      return;
+    }
+
+    const activeExtension = this._getActiveExtension(name);
+    if (activeExtension != null) {
+      this._log.warn(`Tried to enable active extension '${name}'.`);
+      return;
+    }
+
+    this._startExtension(metadata);
+    this._extensionDesiredState[metadata.name] = true;
+    this._desiredStateChangeEventEmitter.fire();
+  }
+
+  private _getActiveExtension(name: string): ActiveExtension {
+    for (const extension of this._activeExtensions) {
+      if (extension.metadata.name === name) {
+        return extension;
+      }
+    }
+    return null;
+  }
+
+  disableExtension(name: string): void {
+    const metadata = this._getExtensionMetadataByName(name);
+    if (metadata == null) {
+      this._log.warn(`Unable to find extensions metadata for name '${name}'.`);
+      return;
+    }
+
+    const activeExtension = this._getActiveExtension(name);
+    if (activeExtension == null) {
+      this._log.warn(`Tried to disable inactive extension '${name}'.`);
+      return;
+    }
+
+    this._stopExtension(activeExtension);
+    this._extensionDesiredState[metadata.name] = false;
+    this._desiredStateChangeEventEmitter.fire();
   }
 
   getDesiredState(): ExtensionDesiredState {
     return this._extensionDesiredState;
   }
 
+  private _getActiveBackendExtensions(): ActiveExtension[] {
+    return this._activeExtensions.filter(ae => ae.contextImpl != null);
+  }
+
   getSessionBackendContributions(): LoadedSessionBackendContribution[] {
-    return _.flatten(this._activeExtensions.map(
+    return _.flatten(this._getActiveBackendExtensions().map(
       ae => ae.contextImpl.backend.__BackendImpl__sessionBackends));
   }
 
   getSessionBackend(type: string): ExtensionApi.SessionBackend {
-    for (const extension of this._activeExtensions) {
+    for (const extension of this._getActiveBackendExtensions()) {
       for (const backend of extension.contextImpl.backend.__BackendImpl__sessionBackends) {
         if (backend.sessionBackendMetadata.type === type) {
           return backend.sessionBackend;
@@ -174,12 +243,12 @@ export class MainExtensionManager {
   }
 
   getSyntaxThemeProviderContributions(): LoadedSyntaxThemeProviderContribution[] {
-    return _.flatten(this._activeExtensions.map(
+    return _.flatten(this._getActiveBackendExtensions().map(
       ae => ae.contextImpl.backend.__BackendImpl__syntaxThemeProviders));
   }
 
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
-    return _.flatten(this._activeExtensions.map(
+    return _.flatten(this._getActiveBackendExtensions().map(
       ae => ae.contextImpl.backend.__BackendImpl__terminalThemeProviders));
   }
 }
@@ -197,10 +266,10 @@ class ExtensionContextImpl implements ExtensionContext {
     this.logger = getLogger("[Main]" + this.__extensionMetadata.name);
     this.backend = new BackendImpl(this.__extensionMetadata);
   }
-  
+
   get window(): never {
     this.logger.warn("'ExtensionContext.window' is only available from a window process, not the main process.");
-    throw Error("'ExtensionContext.window' is only available from a window process, not the main process.");    
+    throw Error("'ExtensionContext.window' is only available from a window process, not the main process.");
   }
 
   get aceModule(): never {

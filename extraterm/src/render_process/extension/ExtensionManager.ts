@@ -30,6 +30,7 @@ import { TabWidget } from '../gui/TabWidget';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { DebouncedDoLater } from 'extraterm-later';
 import { WidgetProxy } from './WidgetProxy';
+import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages";
 
 
 interface ActiveExtension {
@@ -55,6 +56,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _extensionMetadata: ExtensionMetadata[] = [];
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionDesiredState: ExtensionDesiredState;
+  private _onStateChangedEventEmitter = new EventEmitter<void>();
+  onStateChanged: ExtensionApi.Event<void>;
 
   extensionUiUtils: ExtensionUiUtils = null;
 
@@ -76,6 +79,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   constructor() {
     this._log = getLogger("ExtensionManager", this);
+    this.onStateChanged = this._onStateChangedEventEmitter.event;
     this.onCommandsChanged = this._onCommandsChangedEventEmitter.event;
     this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire(undefined));
     this.extensionUiUtils = new ExtensionUiUtilsImpl();
@@ -83,43 +87,38 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   startUp(): void {
     this._extensionMetadata = WebIpc.requestExtensionMetadataSync();
-    this._extensionDesiredState = WebIpc.requestExtensionDesiredStateSync();
+
+    this._extensionDesiredState = {};
+    this._goToNewDesiredState(WebIpc.requestExtensionDesiredStateSync());
+
+    WebIpc.registerDefaultHandler(MessageType.EXTENSION_DESIRED_STATE, (msg: ExtensionDesiredStateMessage) => {
+      this._goToNewDesiredState(msg.desiredState);
+    });
+  }
+
+  private _goToNewDesiredState(newExtensionDesiredState: ExtensionDesiredState): void {
+    const desiredKeys = Object.keys(this._extensionDesiredState).filter(key => this._extensionDesiredState[key]);
+    const newDesiredKeys = Object.keys(newExtensionDesiredState).filter(key => newExtensionDesiredState[key]);
+
+    const disableList = _.difference(desiredKeys, newDesiredKeys);
+    const enableList = _.difference(newDesiredKeys, desiredKeys);
+
+    for (const activeExtension of this._getActiveRenderExtensions()) {
+      if (disableList.indexOf(activeExtension.metadata.name) !== -1) {
+        this._stopExtension(activeExtension);
+      }
+    }
 
     for (const extensionInfo of this._extensionMetadata) {
-      if (this._extensionDesiredState[extensionInfo.name]) {
-
+      if (enableList.indexOf(extensionInfo.name) !== -1) {
         if ( ! isMainProcessExtension(extensionInfo)) {
           this._startExtension(extensionInfo);
         }
       }
     }
-  }
 
-  getAllExtensions(): ExtensionMetadata[] {
-    return [...this._extensionMetadata];
-  }
-
-  isExtensionRunning(name: string): boolean {
-    return this._extensionDesiredState[name] === true;
-  }
-
-  getExtensionContextByName(name: string): InternalExtensionContext {
-    for (const ext of this._activeExtensions) {
-      if (ext.metadata.name === name) {
-        return ext.contextImpl;
-      }
-    }
-    return null;
-  }
-
-  findViewerElementTagByMimeType(mimeType: string): string {
-    for (const extension of this._activeExtensions) {
-      const tag = extension.contextImpl.findViewerElementTagByMimeType(mimeType);
-      if (tag !== null) {
-        return tag;
-      }
-    }
-    return null;
+    this._extensionDesiredState = newExtensionDesiredState;
+    this._onStateChangedEventEmitter.fire();
   }
 
   private _startExtension(metadata: ExtensionMetadata): void {
@@ -127,18 +126,22 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
     let module = null;
     let publicApi = null;
-    const contextImpl = new InternalExtensionContextImpl(this, metadata, this._commonExtensionWindowState);
-    if (metadata.main != null) {
-      module = this._loadExtensionModule(metadata);
-      if (module == null) {
-        return;
-      }
+    let contextImpl: InternalExtensionContextImpl = null;
 
-      try {
-        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-      } catch(ex) {
-        this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
-        return;
+    if ( ! isMainProcessExtension(metadata)) {
+      contextImpl = new InternalExtensionContextImpl(this, metadata, this._commonExtensionWindowState);
+      if (metadata.main != null) {
+        module = this._loadExtensionModule(metadata);
+        if (module == null) {
+          return;
+        }
+
+        try {
+          publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+        } catch(ex) {
+          this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
+          return;
+        }
       }
     }
 
@@ -156,9 +159,65 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
   }
 
+  private _stopExtension(activeExtension: ActiveExtension): void {
+    this._log.info(`Stopping extension '${activeExtension.metadata.name}' in the render process.`);
+
+    if (activeExtension.module != null) {
+      try {
+        const extratermModule = (<ExtensionApi.ExtensionModule> activeExtension.module);
+        if (extratermModule.deactivate != null) {
+          extratermModule.deactivate(true);
+        }
+      } catch(ex) {
+        this._log.warn(`Exception occurred while deactivating extension ${activeExtension.metadata.name}. ${ex}`);
+      }
+    }
+
+    this._activeExtensions = this._activeExtensions.filter(ex => ex !== activeExtension);
+  }
+
+  private _getActiveRenderExtensions(): ActiveExtension[] {
+    return this._activeExtensions.filter(ae => ae.contextImpl != null);
+  }
+
+  getAllExtensions(): ExtensionMetadata[] {
+    return [...this._extensionMetadata];
+  }
+
+  isExtensionRunning(name: string): boolean {
+    return this._extensionDesiredState[name] === true;
+  }
+
+  enableExtension(name: string): void {
+    WebIpc.enableExtension(name);
+  }
+
+  disableExtension(name: string): void {
+    WebIpc.disableExtension(name);
+  }
+
+  getExtensionContextByName(name: string): InternalExtensionContext {
+    for (const ext of this._activeExtensions) {
+      if (ext.metadata.name === name) {
+        return ext.contextImpl;
+      }
+    }
+    return null;
+  }
+
+  findViewerElementTagByMimeType(mimeType: string): string {
+    for (const extension of this._getActiveRenderExtensions()) {
+      const tag = extension.contextImpl.findViewerElementTagByMimeType(mimeType);
+      if (tag !== null) {
+        return tag;
+      }
+    }
+    return null;
+  }
+
   getAllSessionTypes(): { name: string, type: string }[] {
     return _.flatten(
-      this._activeExtensions.map(activeExtension => {
+      this._getActiveRenderExtensions().map(activeExtension => {
         if (activeExtension.metadata.contributes.sessionEditors != null) {
           return activeExtension.metadata.contributes.sessionEditors.map(se => ({name: se.name, type: se.type}));
         } else {
@@ -169,7 +228,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   getSessionEditorTagForType(sessionType: string): string {
-    const seExtensions = this._activeExtensions.filter(ae => ae.metadata.contributes.sessionEditors != null);
+    const seExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionEditors != null);
     for (const extension of seExtensions) {
       const tag = extension.contextImpl.internalWindow.getSessionEditorTagForType(sessionType);
       if (tag != null) {
@@ -294,7 +353,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     const whenPredicate = options.when ? this._createWhenPredicate(context) : truePredicate;
 
     const entries: ExtensionCommandContribution[] = [];
-    for (const activeExtension  of this._activeExtensions) {
+    for (const activeExtension  of this._getActiveRenderExtensions()) {
       for (const [command, commandEntryList] of activeExtension.contextImpl.commands._commandToMenuEntryMap) {
         for (const commandEntry of commandEntryList) {
           if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) &&
@@ -426,7 +485,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     }
 
-    for (const ext of this._activeExtensions) {
+    for (const ext of this._getActiveRenderExtensions()) {
       if (ext.metadata.name === extensionName) {
         const commandFunc = ext.contextImpl.commands.getCommandFunction(commandName);
         if (commandFunc == null) {
@@ -540,25 +599,25 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   newTerminalCreated(newTerminal: EtTerminal): void {
     newTerminal.addEventListener(EtTerminal.EVENT_APPENDED_VIEWER, (ev: CustomEvent) => {
-      for (const extension of this._activeExtensions) {
+      for (const extension of this._getActiveRenderExtensions()) {
         extension.contextImpl.internalWindow.terminalAppendedViewer(newTerminal, ev.detail.viewer);
       }
     });
 
     newTerminal.environment.onChange((changeList: string[]) => {
-      for (const extension of this._activeExtensions) {
+      for (const extension of this._getActiveRenderExtensions()) {
         extension.contextImpl.internalWindow.terminalEnvironmentChanged(newTerminal, changeList);
       }
     });
 
-    for (const extension of this._activeExtensions) {
+    for (const extension of this._getActiveRenderExtensions()) {
       extension.contextImpl.internalWindow.newTerminalCreated(newTerminal);
     }
   }
 
   createNewTerminalTabTitleWidgets(newTerminal: EtTerminal): HTMLElement[] {
     let result: HTMLElement[] = [];
-    for (const extension of this._activeExtensions) {
+    for (const extension of this._getActiveRenderExtensions()) {
       result = [...result, ...extension.contextImpl. _createTabTitleWidgets(newTerminal)];
     }
     return result;
