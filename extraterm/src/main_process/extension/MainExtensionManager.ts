@@ -15,6 +15,7 @@ import { parsePackageJsonString } from './PackageFileParser';
 import { ExtensionContext, Event, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from 'extraterm-extension-api';
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
+import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from '../../Config';
 
 
 interface ActiveExtension {
@@ -41,9 +42,10 @@ export interface LoadedTerminalThemeProviderContribution {
 }
 
 
-export class MainExtensionManager {
+export class MainExtensionManager implements AcceptsConfigDatabase {
 
   private _log: Logger = null;
+  private _configDatabase: ConfigDatabase = null;
   private _extensionMetadata: ExtensionMetadata[] = [];
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionDesiredState: ExtensionDesiredState = {};
@@ -53,17 +55,31 @@ export class MainExtensionManager {
   constructor(private extensionPaths: string[]) {
     this._log = getLogger("MainExtensionManager", this);
     this.onDesiredStateChanged = this._desiredStateChangeEventEmitter.event;
+    this._extensionMetadata = this._scan(this.extensionPaths);
   }
 
-  startUp(): void {
-    this._extensionMetadata = this._scan(this.extensionPaths);
+  setConfigDatabase(newConfigDatabase: ConfigDatabase): void {
+    this._configDatabase = newConfigDatabase;
+  }
 
+  startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}): void {
     for (const extensionInfo of this._extensionMetadata) {
       this._extensionDesiredState[extensionInfo.name] = isSupportedOnThisPlatform(extensionInfo);
     }
 
+    // Merge in the explicitly enabled/disabled extensions from the config.
+    if (activeExtensionsConfig != null) {
+      for (const key of Object.keys(activeExtensionsConfig)) {
+        if (this._getExtensionMetadataByName(key) != null) {
+          this._extensionDesiredState[key] = activeExtensionsConfig[key];
+        }
+      }
+    }
+
     for (const extensionName of Object.keys(this._extensionDesiredState)) {
-      this._startExtension(this._getExtensionMetadataByName(extensionName));
+      if (this._extensionDesiredState[extensionName]) {
+        this._startExtension(this._getExtensionMetadataByName(extensionName));
+      }
     }
   }
 
@@ -188,6 +204,11 @@ export class MainExtensionManager {
 
     this._startExtension(metadata);
     this._extensionDesiredState[metadata.name] = true;
+
+    const generalConfig = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
+    generalConfig.activeExtensions[metadata.name] = true;
+    this._configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+
     this._desiredStateChangeEventEmitter.fire();
   }
 
@@ -215,6 +236,11 @@ export class MainExtensionManager {
 
     this._stopExtension(activeExtension);
     this._extensionDesiredState[metadata.name] = false;
+
+    const generalConfig = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
+    generalConfig.activeExtensions[metadata.name] = false;
+    this._configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+
     this._desiredStateChangeEventEmitter.fire();
   }
 

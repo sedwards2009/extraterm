@@ -172,11 +172,10 @@ export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean
   return themeInfo.type === themeType;
 }
 
-export function readAndInitializeConfigs(themeManager: ThemeManager, configDatabase: ConfigDatabaseImpl,
+export function sanitizeAndIinitializeConfigs(userStoredConfig: UserStoredConfig, themeManager: ThemeManager, configDatabase: ConfigDatabaseImpl,
     keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[]): UserStoredConfig {
-
-  const userStoredConfig = readUserStoredConfigFile();
-  sanitizeUserStoredConfig(userStoredConfig, themeManager, availableFonts);
+  sanitizeUserStoredConfig(userStoredConfig, availableFonts);
+  sanitizeUserStoredConfigThemes(userStoredConfig, themeManager);
   distributeUserStoredConfig(userStoredConfig, configDatabase, keybindingsIOManager);
   return userStoredConfig;
 }
@@ -186,7 +185,7 @@ export function readAndInitializeConfigs(themeManager: ThemeManager, configDatab
  *
  * @returns The configuration object.
  */
-function readUserStoredConfigFile(): UserStoredConfig {
+export function readUserStoredConfigFile(): UserStoredConfig {
   const filename = getConfigurationFilename();
   let config: UserStoredConfig = { };
 
@@ -204,9 +203,7 @@ function readUserStoredConfigFile(): UserStoredConfig {
   return config;
 }
 
-function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManager: ThemeManager,
-    availableFonts: FontInfo[]): void {
-
+function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, availableFonts: FontInfo[]): void {
   const configCursorStyles: ConfigCursorStyle[] = ["block", "underscore", "beam"];
   const frameRules: FrameRule[] = ["always_frame", "frame_if_lines", "never_frame"];
 
@@ -268,23 +265,8 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
 
   sanitizeField(userStoredConfig, "terminalDisplayLigatures", true);
 
-  sanitizeField(userStoredConfig, "themeTerminal", FALLBACK_TERMINAL_THEME);
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), "terminal")) {
-    userStoredConfig.themeTerminal = FALLBACK_TERMINAL_THEME;
-  }
-
   const marginStyles: TerminalMarginStyle[] = ["normal", "none", "thick", "thin"];
   sanitizeStringEnumField(userStoredConfig, "terminalMarginStyle", marginStyles, "normal");
-
-  sanitizeField(userStoredConfig, "themeSyntax", FALLBACK_SYNTAX_THEME);
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), "syntax")) {
-    userStoredConfig.themeSyntax = FALLBACK_SYNTAX_THEME;
-  }
-
-  sanitizeField(userStoredConfig, "themeGUI", "two-dark-ui");
-  if (userStoredConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(userStoredConfig.themeGUI), 'gui')) {
-    userStoredConfig.themeGUI = "two-dark-ui";
-  }
 
   sanitizeField(userStoredConfig, "tipCounter", 0);
   sanitizeField(userStoredConfig, "tipTimestamp", 0);
@@ -301,6 +283,24 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, themeManag
   sanitizeField(userStoredConfig, "windowBackgroundTransparencyPercent", 50);
   userStoredConfig.windowBackgroundTransparencyPercent = Math.max(Math.min(100,
     userStoredConfig.windowBackgroundTransparencyPercent), 0);
+
+  sanitizeField(userStoredConfig, "activeExtensions", {});
+}
+
+function sanitizeUserStoredConfigThemes(userStoredConfig: UserStoredConfig, themeManager: ThemeManager): void {
+  sanitizeField(userStoredConfig, "themeTerminal", FALLBACK_TERMINAL_THEME);
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), "terminal")) {
+    userStoredConfig.themeTerminal = FALLBACK_TERMINAL_THEME;
+  }
+  sanitizeField(userStoredConfig, "themeSyntax", FALLBACK_SYNTAX_THEME);
+  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), "syntax")) {
+    userStoredConfig.themeSyntax = FALLBACK_SYNTAX_THEME;
+  }
+
+  sanitizeField(userStoredConfig, "themeGUI", "two-dark-ui");
+  if (userStoredConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(userStoredConfig.themeGUI), 'gui')) {
+    userStoredConfig.themeGUI = "two-dark-ui";
+  }
 }
 
 function sanitizeField<T, K extends keyof T>(object: T, key: K, defaultValue: T[K]): void {

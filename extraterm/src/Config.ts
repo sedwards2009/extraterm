@@ -52,6 +52,8 @@ export interface GeneralConfig {
 
   gpuDriverWorkaround?: GpuDriverWorkaround;
   isHardwareAccelerated?: boolean;
+
+  activeExtensions?: {[extensionName:string]: boolean;};
 }
 
 // This is the format of the user config JSON file as stored on the filesystem.
@@ -102,7 +104,7 @@ export interface SystemConfig {
   applicationVersion: string;
   keybindingsInfoList: KeybindingsInfo[];
   keybindingsFile: KeybindingsFile;
-  
+
   availableFonts: FontInfo[];
   titleBarStyle: TitleBarStyle;
 
@@ -155,7 +157,7 @@ export interface ConfigDatabase {
    * otherwise this connect may keep your listener object alive.
    */
   onChange: Event<ConfigChangeEvent>;
-  
+
   /**
    * Set a new application wide config.
    *

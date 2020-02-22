@@ -25,7 +25,7 @@ import { doLater } from "extraterm-later";
 import { FileLogWriter, getLogger, addLogWriter, log } from "extraterm-logging";
 
 import {BulkFileStorage, BufferSizeEvent, CloseEvent} from "./bulk_file_handling/BulkFileStorage";
-import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent, SingleWindowConfiguration, UserStoredConfig } from "../Config";
+import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, TitleBarStyle, ConfigChangeEvent, SingleWindowConfiguration, UserStoredConfig, ConfigDatabase } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import * as ResourceLoader from "../ResourceLoader";
 import * as ThemeTypes from "../theme/Theme";
@@ -37,8 +37,8 @@ import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { getAvailableFontsSync } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory,
-  getUserTerminalThemeDirectory, getUserKeybindingsDirectory, readAndInitializeConfigs, setupAppData,
-  KEYBINDINGS_OSX, KEYBINDINGS_PC } from "./MainConfig";
+  getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupAppData,
+  KEYBINDINGS_OSX, KEYBINDINGS_PC, sanitizeAndIinitializeConfigs, readUserStoredConfigFile } from "./MainConfig";
 import { bestOverlap } from "./RectangleMatch";
 
 const LOG_FINE = false;
@@ -69,10 +69,8 @@ let tagCounter = 1;
 let titleBarStyle: TitleBarStyle = "compact";
 let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;
-let packageJson: any = null;
 let keybindingsIOManager: KeybindingsIOManager = null;
 let globalKeybindingsManager: GlobalKeybindingsManager = null;
-let availableFonts: FontInfo[] = null;
 
 let SetWindowCompositionAttribute: any = null;
 let AccentState: any = null;
@@ -111,16 +109,22 @@ function main(): void {
     .option('--force-device-scale-factor []', '(This option is used by Electron)')
     .parse(normalizedArgv);
 
-  setupExtensionManager();
-  setupKeybindingsIOManager();
-  setupThemeManager();
+  const availableFonts = getFonts();
 
-  availableFonts = getFonts();
-  const userStoredConfig = readAndInitializeConfigs(themeManager, configDatabase, keybindingsIOManager,
+  const userStoredConfig = readUserStoredConfigFile();
+
+  // We have to start up the extension manager before we can scan themes (with the help of extensions)
+  // and properly sanitize the config.
+  extensionManager = setupExtensionManager(configDatabase, userStoredConfig.activeExtensions);
+
+  keybindingsIOManager = setupKeybindingsIOManager(extensionManager);
+  themeManager = setupThemeManager(configDatabase, extensionManager);
+
+  sanitizeAndIinitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
     availableFonts);
   titleBarStyle = userStoredConfig.titleBarStyle;
-  packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
-  const systemConfig = systemConfiguration(userStoredConfig, availableFonts);
+  const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
+  const systemConfig = systemConfiguration(userStoredConfig, keybindingsIOManager, availableFonts, packageJson);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 
   if ( ! userStoredConfig.isHardwareAccelerated) {
@@ -156,27 +160,33 @@ function main(): void {
   app.on('ready', () => electronReady(parsedArgs));
 }
 
-function setupExtensionManager(): void {
-  extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
-  extensionManager.startUp();
+function setupExtensionManager(configDatabase: ConfigDatabase,
+    initialActiveExtensions: {[name: string]: boolean;}): MainExtensionManager {
+
+  const extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
+  injectConfigDatabase(extensionManager, configDatabase);
+  extensionManager.startUpExtensions(initialActiveExtensions);
   extensionManager.onDesiredStateChanged(() => {
     sendMessageToAllWindows(handleExtensionDesiredStateRequest());
   });
+  return extensionManager;
 }
 
-function setupKeybindingsIOManager(): void {
-  keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
+function setupKeybindingsIOManager(extensionManager: MainExtensionManager): KeybindingsIOManager {
+  const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
   keybindingsIOManager.scan();
+  return keybindingsIOManager;
 }
 
-function setupThemeManager(): void {
+function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: MainExtensionManager): ThemeManager {
   // Themes
   const themesDir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
-  themeManager = new ThemeManager({
+  const themeManager = new ThemeManager({
     css: [themesDir],
     syntax: [getUserSyntaxThemeDirectory()],
     terminal: [getUserTerminalThemeDirectory()]}, extensionManager);
   injectConfigDatabase(themeManager, configDatabase);
+  return themeManager;
 }
 
 function electronReady(parsedArgs: Command): void {
@@ -585,7 +595,7 @@ const _log = getLogger("main");
 /**
  * Extra information about the system configuration and platform.
  */
-function systemConfiguration(config: GeneralConfig, availableFonts: FontInfo[]): SystemConfig {
+function systemConfiguration(config: GeneralConfig, keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[], packageJson: any): SystemConfig {
   const homeDir = app.getPath('home');
 
   const keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(config.keybindingsName);
@@ -810,7 +820,7 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
     case Messages.MessageType.EXTENSION_DISABLE:
       extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
       break;
-  
+
     case Messages.MessageType.COPY_KEYBINDINGS:
       handleKeybindingsCopy(<Messages.KeybindingsCopyMessage> msg);
       break;
