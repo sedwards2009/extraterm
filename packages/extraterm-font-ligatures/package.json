@@ -38,7 +38,7 @@
     "@types/sinon": "^4.3.1",
     "ava": "^0.25.0",
     "chalk": "^2.4.1",
-    "codecov": "^3.0.1",
+    "codecov": "^3.6.5",
     "columnify": "^1.5.4",
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
