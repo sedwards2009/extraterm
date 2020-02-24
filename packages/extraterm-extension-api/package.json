@@ -15,7 +15,9 @@
     "build-fast": "tsc",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
+    "prepublish": "yarn run clean && yarn run build",
+    "publish-pkg": "yarn publish --access public"
   },
   "devDependencies": {
     "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz",
