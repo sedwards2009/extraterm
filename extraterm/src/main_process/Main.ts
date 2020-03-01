@@ -163,7 +163,14 @@ function main(): void {
 function setupExtensionManager(configDatabase: ConfigDatabase,
     initialActiveExtensions: {[name: string]: boolean;}): MainExtensionManager {
 
-  const extensionManager = new MainExtensionManager([path.join(__dirname, "../../../extensions" )]);
+  const extensionPaths = [path.join(__dirname, "../../../extensions" )];
+  const userExtensionDirectory = getUserExtensionDirectory();
+  _log.info(`User extension directory is: ${userExtensionDirectory}`);
+  if (fs.existsSync(userExtensionDirectory)) {
+    extensionPaths.push(userExtensionDirectory);
+  }
+
+  const extensionManager = new MainExtensionManager(extensionPaths);
   injectConfigDatabase(extensionManager, configDatabase);
   extensionManager.startUpExtensions(initialActiveExtensions);
   extensionManager.onDesiredStateChanged(() => {

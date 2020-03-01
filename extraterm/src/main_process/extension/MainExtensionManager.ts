@@ -95,10 +95,11 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
         const packageJsonPath = path.join(extensionPath, item, "package.json");
 
         if (fs.existsSync(packageJsonPath)) {
-          const extensionInfo = this._loadPackageJson(path.join(extensionPath, item));
+          const extensionInfoPath = path.join(extensionPath, item);
+          const extensionInfo = this._loadPackageJson(extensionInfoPath);
           if (extensionInfo !== null) {
             result.push(extensionInfo);
-            this._log.info(`Read extension metadata from '${extensionInfo.name}'.`);
+            this._log.info(`Read extension metadata from '${extensionInfoPath}'.`);
           }
         } else {
           this._log.warn(`Unable to read ${packageJsonPath}, skipping`);

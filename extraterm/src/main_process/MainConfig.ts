@@ -37,6 +37,7 @@ export const KEYBINDINGS_OSX = "Mac OS X bindings";
 export const KEYBINDINGS_PC = "PC style bindings";
 
 const MAIN_CONFIG = "extraterm.json";
+const EXTENSION_DIRECTORY = "extensions";
 
 const LOG_FINE = false;
 
@@ -164,6 +165,9 @@ function getConfigurationFilename(): string {
   return path.join(getUserSettingsDirectory(), MAIN_CONFIG);
 }
 
+export function getUserExtensionDirectory(): string {
+  return path.join(getUserSettingsDirectory(), EXTENSION_DIRECTORY);
+}
 
 export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean {
   if (themeInfo === null) {
