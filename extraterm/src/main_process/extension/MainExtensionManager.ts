@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ExtensionApi from 'extraterm-extension-api';
+import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 import * as fs from 'fs';
 import * as _ from 'lodash';
@@ -12,7 +12,7 @@ import * as path from 'path';
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionSessionBackendContribution, ExtensionDesiredState } from "../../ExtensionMetadata";
 import { parsePackageJsonString } from './PackageFileParser';
-import { ExtensionContext, Event, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from 'extraterm-extension-api';
+import { ExtensionContext, Event, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from '@extraterm/extraterm-extension-api';
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
 import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from '../../Config';

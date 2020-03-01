@@ -11,7 +11,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { app } from 'electron';
 
-import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
+import {ExtensionContext, Logger, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import {CygwinProxySessionEditorUi} from './CygwinProxySessionEditorUi';
 
 

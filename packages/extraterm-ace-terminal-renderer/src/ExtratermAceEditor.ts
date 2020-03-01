@@ -2,7 +2,7 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 import { Editor, Renderer, EditSession } from "ace-ts";
-import { Event} from 'extraterm-extension-api';
+import { Event} from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 
 export class ExtratermAceEditor extends Editor {

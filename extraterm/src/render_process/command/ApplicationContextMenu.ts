@@ -6,7 +6,7 @@
 import * as he from "he";
 
 import { getLogger } from "extraterm-logging";
-import { Logger } from "extraterm-extension-api";
+import { Logger } from '@extraterm/extraterm-extension-api';
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from "../DomUtils";

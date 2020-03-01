@@ -5,7 +5,7 @@
 import { Renderer, HScrollBar, HScrollTracking, VScrollBar, TextLayer, FontMetricsMonitor, FontMetrics } from "ace-ts";
 import { CanvasTextLayer } from "./CanvasTextLayer";
 import { computeDpiFontMetrics } from "extraterm-char-render-canvas";
-import { Event } from 'extraterm-extension-api';
+import { Event } from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { CursorStyle } from "extraterm-char-render-canvas";

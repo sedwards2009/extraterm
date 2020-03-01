@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { FieldFormatter } from "./TemplateString";
-import { TerminalEnvironment } from "extraterm-extension-api";
+import { TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import he = require("he");
 
 

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable} from '@extraterm/extraterm-extension-api';
 
 /**
  * Type guard to detecting objects which support the Disposable interface.

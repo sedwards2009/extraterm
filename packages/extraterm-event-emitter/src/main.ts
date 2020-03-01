@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable, Event} from 'extraterm-extension-api';
+import {Disposable, Event} from '@extraterm/extraterm-extension-api';
 
 
 /**

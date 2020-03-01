@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 import * as fse from 'fs-extra';
 import * as constants from 'constants';
 
-import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
+import {ExtensionContext, Logger, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import {WindowsConsoleSessionEditorUi} from './WindowsConsoleSessionEditorUi';
 
 

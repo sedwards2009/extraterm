@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as child_process from 'child_process';
-import {Event, BufferSizeChange, Pty, Logger} from 'extraterm-extension-api';
+import {Event, BufferSizeChange, Pty, Logger} from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 
 export interface EnvironmentMap {

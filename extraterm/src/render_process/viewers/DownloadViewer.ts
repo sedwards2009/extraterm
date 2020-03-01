@@ -2,7 +2,7 @@
  * Copyright 2017 Simon Edwards <simon@simonzone.com>
  */
 
-import {BulkFileHandle, BulkFileState, Disposable, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileState, Disposable, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {DebouncedDoLater} from 'extraterm-later';

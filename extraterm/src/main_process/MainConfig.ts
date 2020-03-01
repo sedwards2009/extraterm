@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import {app, BrowserWindow } from 'electron';
 import { createUuid } from 'extraterm-uuid';
 
-import { Event } from 'extraterm-extension-api';
+import { Event } from '@extraterm/extraterm-extension-api';
 import { Logger, getLogger } from "extraterm-logging";
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 

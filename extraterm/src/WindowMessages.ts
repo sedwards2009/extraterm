@@ -8,7 +8,7 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
-import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme } from 'extraterm-extension-api';
+import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme } from '@extraterm/extraterm-extension-api';
 
 import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';

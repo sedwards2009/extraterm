@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ExtensionApi from 'extraterm-extension-api';
+import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 
 import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
@@ -15,7 +15,7 @@ import { EtViewerTab } from '../ViewerTab';
 import { CommonExtensionWindowState } from './CommonExtensionState';
 import { WidgetProxy } from './WidgetProxy';
 import { ExtensionTerminalBorderContribution } from '../../ExtensionMetadata';
-import { Viewer } from 'extraterm-extension-api';
+import { Viewer } from '@extraterm/extraterm-extension-api';
 import { ViewerElement } from '../viewers/ViewerElement';
 
 export class WindowProxy implements InternalWindow {

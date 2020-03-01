@@ -1,7 +1,7 @@
 /**
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
-import { Disposable } from 'extraterm-extension-api';
+import { Disposable } from '@extraterm/extraterm-extension-api';
 import { ConfigKey, ConfigDatabase, ConfigChangeEvent } from '../../Config';
 
 /**

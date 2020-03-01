@@ -2,7 +2,7 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable} from '@extraterm/extraterm-extension-api';
 
 
 export interface SupportsDialogStack {

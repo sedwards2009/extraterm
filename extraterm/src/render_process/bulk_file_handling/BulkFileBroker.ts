@@ -3,12 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {BulkFileHandle, BulkFileState, BulkFileMetadata, Disposable} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileState, BulkFileMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 import {BulkFileIdentifier} from '../../main_process/bulk_file_handling/BulkFileStorage';
 import {getLogger, Logger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as WebIpc from '../WebIpc';
-import {Event} from 'extraterm-extension-api';
+import {Event} from '@extraterm/extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
 import { SmartBuffer } from 'smart-buffer';
 import * as Messages from '../../WindowMessages';

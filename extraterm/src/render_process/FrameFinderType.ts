@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { BulkFileHandle } from "extraterm-extension-api";
+import { BulkFileHandle } from '@extraterm/extraterm-extension-api';
 
 
 /**

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Event, EnvironmentMap} from 'extraterm-extension-api';
+import {Event, EnvironmentMap} from '@extraterm/extraterm-extension-api';
 
 import {Pty, BufferSizeChange} from '../pty/Pty';
 import {EventEmitter} from '../utils/EventEmitter';

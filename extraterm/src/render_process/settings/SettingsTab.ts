@@ -3,7 +3,7 @@
  */
 
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
+import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';

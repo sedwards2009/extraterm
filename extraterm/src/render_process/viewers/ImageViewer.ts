@@ -4,7 +4,7 @@
 
 "use strict";
 import { WebComponent } from 'extraterm-web-component-decorators';
-import { BulkFileHandle, ViewerMetadata } from 'extraterm-extension-api';
+import { BulkFileHandle, ViewerMetadata } from '@extraterm/extraterm-extension-api';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";

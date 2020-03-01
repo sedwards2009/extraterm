@@ -12,7 +12,7 @@ import { MainExtensionManager } from './extension/MainExtensionManager';
 import { KeybindingsInfo } from '../Config';
 import { KeybindingsFile } from '../keybindings/KeybindingsFile';
 import { EventEmitter } from '../utils/EventEmitter';
-import { Event } from 'extraterm-extension-api';
+import { Event } from '@extraterm/extraterm-extension-api';
 
 
 export class KeybindingsIOManager {

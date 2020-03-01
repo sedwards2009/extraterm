@@ -6,7 +6,7 @@
 import { EtTerminal } from '../Terminal';
 import { TextViewer } from'../viewers/TextAceViewer';
 import { ViewerElement } from '../viewers/ViewerElement';
-import * as ExtensionApi from 'extraterm-extension-api';
+import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from '../../ExtensionMetadata';
 import { EtViewerTab } from '../ViewerTab';
 import { SupportsDialogStack } from '../SupportsDialogStack';

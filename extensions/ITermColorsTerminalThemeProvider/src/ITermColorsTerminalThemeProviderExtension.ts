@@ -7,7 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as plist from "plist";
 
-import { ExtensionContext, Logger, TerminalThemeProvider, TerminalThemeInfo, TerminalTheme } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, TerminalThemeProvider, TerminalThemeInfo, TerminalTheme } from '@extraterm/extraterm-extension-api';
 import { log } from "extraterm-logging";
 
 

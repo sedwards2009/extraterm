@@ -5,7 +5,7 @@
  */
 import {Logger, getLogger, log} from "extraterm-logging";
 import { ResizeNotifier } from "extraterm-resize-notifier";
-import { Disposable, Event } from 'extraterm-extension-api';
+import { Disposable, Event } from '@extraterm/extraterm-extension-api';
 
 import * as DisposableUtils from '../utils/DisposableUtils';
 import { ScrollBar } from "./gui/ScrollBar";

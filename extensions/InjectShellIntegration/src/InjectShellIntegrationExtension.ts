@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal } from '@extraterm/extraterm-extension-api';
 import {BashScriptBuilder, FishScriptBuilder, ScriptCommand, ZshScriptBuilder} from './ScriptBuilders';
 
 let log: Logger = null;

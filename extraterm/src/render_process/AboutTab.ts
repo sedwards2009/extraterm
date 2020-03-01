@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata} from 'extraterm-extension-api';
+import {ViewerMetadata} from '@extraterm/extraterm-extension-api';
 
 import * as ThemeTypes from '../theme/Theme';
 import {ViewerElement} from './viewers/ViewerElement';

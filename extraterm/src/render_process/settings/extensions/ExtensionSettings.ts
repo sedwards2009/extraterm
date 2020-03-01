@@ -8,7 +8,7 @@ import { ConfigKey } from '../../../Config';
 
 import { ExtensionSettingsUi, ExtensionMetadataAndState, EVENT_ENABLE_EXTENSION, EVENT_DISABLE_EXTENSION } from './ExtensionSettingsUi';
 import { ExtensionManager } from "../../extension/InternalTypes";
-import { Disposable } from "extraterm-extension-api";
+import { Disposable } from '@extraterm/extraterm-extension-api';
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
 

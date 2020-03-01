@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as DomUtils from '../DomUtils';
-import * as ExtensionApi from 'extraterm-extension-api';
+import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { InternalExtensionContext } from './InternalTypes';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {EtTerminal} from '../Terminal';

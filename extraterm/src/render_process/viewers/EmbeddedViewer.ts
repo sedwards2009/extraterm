@@ -8,7 +8,7 @@ import * as path from 'path';
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from 'extraterm-extension-api';
+import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
 
 import {guessMimetype} from '../bulk_file_handling/BulkFileUtils';

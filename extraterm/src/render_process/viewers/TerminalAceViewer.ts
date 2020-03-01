@@ -4,7 +4,7 @@
 import { isEqual } from "lodash";
 
 import {WebComponent} from 'extraterm-web-component-decorators';
-import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition, TerminalTheme } from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition, TerminalTheme } from '@extraterm/extraterm-extension-api';
 import * as XRegExp from "xregexp";
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';

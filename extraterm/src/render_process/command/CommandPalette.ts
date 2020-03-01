@@ -5,7 +5,7 @@
  */
 import * as he from 'he';
 
-import { Disposable, Logger } from 'extraterm-extension-api';
+import { Disposable, Logger } from '@extraterm/extraterm-extension-api';
 import { doLater } from 'extraterm-later';
 import { PopDownListPicker } from '../gui/PopDownListPicker';
 import { CssFile } from '../../theme/Theme';

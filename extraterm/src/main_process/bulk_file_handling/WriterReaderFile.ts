@@ -5,7 +5,7 @@
 */
 import * as fs from 'fs';
 import {Readable, ReadableOptions, Transform} from 'stream';
-import {Disposable} from 'extraterm-extension-api';
+import {Disposable} from '@extraterm/extraterm-extension-api';
 
 import {getLogger, Logger} from "extraterm-logging";
 import { log } from "extraterm-logging";

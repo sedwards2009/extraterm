@@ -7,7 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as plist from "plist";
 
-import { ExtensionContext, Logger, SyntaxThemeProvider, SyntaxThemeInfo, SyntaxTheme, TextStyle, SyntaxTokenRule } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, SyntaxThemeProvider, SyntaxThemeInfo, SyntaxTheme, TextStyle, SyntaxTokenRule } from '@extraterm/extraterm-extension-api';
 import { log } from "extraterm-logging";
 
 interface TmThemeBlockSettings {

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { WebComponent } from 'extraterm-web-component-decorators';
-import { Logger } from 'extraterm-extension-api';
+import { Logger } from '@extraterm/extraterm-extension-api';
 import { getLogger, log } from 'extraterm-logging';
 import { dispatchContextMenuRequest, ContextMenuType } from './command/CommandUtils';
 

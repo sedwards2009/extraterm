@@ -11,7 +11,7 @@ import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
 import { ExtensionManager } from '../extension/InternalTypes';
-import { SessionConfiguration } from 'extraterm-extension-api';
+import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 
 export const SESSION_SETTINGS_TAG = "et-session-settings";
 

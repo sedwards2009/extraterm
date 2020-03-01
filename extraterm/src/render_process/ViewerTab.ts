@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {BulkFileHandle, Disposable, ViewerMetadata} from 'extraterm-extension-api';
+import {BulkFileHandle, Disposable, ViewerMetadata} from '@extraterm/extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {doLater, DebouncedDoLater} from 'extraterm-later';

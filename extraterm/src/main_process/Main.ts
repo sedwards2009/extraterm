@@ -20,7 +20,7 @@ import * as _ from "lodash";
 import * as path from "path";
 import * as os from "os";
 
-import { BulkFileState } from "extraterm-extension-api";
+import { BulkFileState } from '@extraterm/extraterm-extension-api';
 import { doLater } from "extraterm-later";
 import { FileLogWriter, getLogger, addLogWriter, log } from "extraterm-logging";
 
@@ -38,7 +38,7 @@ import { getAvailableFontsSync } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory,
   getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupAppData,
-  KEYBINDINGS_OSX, KEYBINDINGS_PC, sanitizeAndIinitializeConfigs, readUserStoredConfigFile } from "./MainConfig";
+  KEYBINDINGS_OSX, KEYBINDINGS_PC, sanitizeAndIinitializeConfigs, readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
 import { bestOverlap } from "./RectangleMatch";
 
 const LOG_FINE = false;

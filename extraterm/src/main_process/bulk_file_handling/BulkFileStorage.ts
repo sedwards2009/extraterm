@@ -11,7 +11,7 @@ import * as net from 'net';
 import {SmartBuffer} from 'smart-buffer';
 import {Transform} from 'stream';
 
-import {BulkFileMetadata, Disposable, Event} from 'extraterm-extension-api';
+import {BulkFileMetadata, Disposable, Event} from '@extraterm/extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
 import {getLogger, Logger} from "extraterm-logging";
 import { log } from "extraterm-logging";

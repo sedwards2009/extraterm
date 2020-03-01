@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 "use strict";
-import { BulkFileHandle, Disposable, ViewerMetadata, FindOptions, FindStartPosition } from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, ViewerMetadata, FindOptions, FindStartPosition } from '@extraterm/extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Position,

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { Disposable } from 'extraterm-extension-api';
+import { Disposable } from '@extraterm/extraterm-extension-api';
 import {WebComponent} from 'extraterm-web-component-decorators';
 
 import {doLater} from 'extraterm-later';

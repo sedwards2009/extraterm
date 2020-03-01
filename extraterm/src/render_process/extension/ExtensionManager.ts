@@ -5,7 +5,7 @@
  */
 import * as path from 'path';
 import * as _ from 'lodash';
-import * as ExtensionApi from 'extraterm-extension-api';
+import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import * as Ace from 'ace-ts';
 import { BooleanExpressionEvaluator } from 'extraterm-boolean-expression-evaluator';
 

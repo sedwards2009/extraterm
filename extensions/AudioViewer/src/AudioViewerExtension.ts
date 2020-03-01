@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { BulkFileHandle, BulkFileState, ExtensionContext, Logger } from 'extraterm-extension-api';
+import { BulkFileHandle, BulkFileState, ExtensionContext, Logger } from '@extraterm/extraterm-extension-api';
 import { AudioViewerUi } from './AudioViewerUi';
 
 

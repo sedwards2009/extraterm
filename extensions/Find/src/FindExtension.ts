@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition, TextViewer, Viewer } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition, TextViewer, Viewer } from '@extraterm/extraterm-extension-api';
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as he from 'he';
-import { BulkFileHandle } from 'extraterm-extension-api';
+import { BulkFileHandle } from '@extraterm/extraterm-extension-api';
 import { WebComponent } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";

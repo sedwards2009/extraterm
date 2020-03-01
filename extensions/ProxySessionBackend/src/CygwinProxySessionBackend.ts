@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import { app } from 'electron';
 
-import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap} from 'extraterm-extension-api';
+import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap} from '@extraterm/extraterm-extension-api';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import * as SourceDir from './SourceDir';

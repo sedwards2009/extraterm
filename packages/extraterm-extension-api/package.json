@@ -23,9 +23,10 @@
     "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz",
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
-    "shx": "^0.3.2"
+    "shx": "^0.3.2",
+    "typedoc": "^0.16.10"
   },
-  "dependencies": {
-    "@types/node": "^13.1.2"
+  "peerDependencies": {
+    "@types/node": "^12.6.2"
   }
 }

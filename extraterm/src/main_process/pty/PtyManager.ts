@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, SessionConfiguration, EnvironmentMap} from 'extraterm-extension-api';
+import { Event, SessionConfiguration, EnvironmentMap} from '@extraterm/extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';

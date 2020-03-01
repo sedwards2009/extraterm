@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ExtensionContext, TextViewer, CustomizedCommand, Viewer} from 'extraterm-extension-api';
+import {ExtensionContext, TextViewer, CustomizedCommand, Viewer} from '@extraterm/extraterm-extension-api';
 
 let extensionContext: ExtensionContext = null;
 

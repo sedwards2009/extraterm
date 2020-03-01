@@ -5,7 +5,7 @@
  */
 
 import * as crypto from 'crypto';
-import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment } from 'extraterm-extension-api';
+import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { log as LogDecorator, Logger, getLogger } from "extraterm-logging";

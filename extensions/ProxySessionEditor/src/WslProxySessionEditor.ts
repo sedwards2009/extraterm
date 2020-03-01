@@ -8,7 +8,7 @@ import * as fse from 'fs-extra';
 import * as constants from 'constants';
 import * as child_process from 'child_process';
 
-import {ExtensionContext, Logger, SessionConfiguration} from 'extraterm-extension-api';
+import {ExtensionContext, Logger, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import {WslProxySessionEditorUi} from './WslProxySessionEditorUi';
 
 

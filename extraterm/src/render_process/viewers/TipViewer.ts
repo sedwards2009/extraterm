@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as he from 'he';
 import * as SourceDir from '../../SourceDir';
 import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata, Disposable} from 'extraterm-extension-api';
+import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 import {Logger, getLogger} from "extraterm-logging";
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ResizeNotifier } from 'extraterm-resize-notifier';

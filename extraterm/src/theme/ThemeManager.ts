@@ -35,7 +35,7 @@ import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, C
 import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
-import { SyntaxTheme, TerminalTheme } from 'extraterm-extension-api';
+import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
 import { Color as UtilColor } from '../render_process/gui/Util';
 
 const THEME_CONFIG = "theme.json";

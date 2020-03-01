@@ -5,7 +5,7 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 import { TemplateString, Segment } from './TemplateString';

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { TerminalTheme } from 'extraterm-extension-api';
+import { TerminalTheme } from '@extraterm/extraterm-extension-api';
 import { ConfigCursorStyle } from '../Config';
 import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 

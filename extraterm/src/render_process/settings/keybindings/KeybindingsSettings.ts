@@ -15,7 +15,7 @@ import { KeybindingsManager } from '../../keybindings/KeyBindingsManager';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { ExtensionManager } from '../../extension/InternalTypes';
 import { ExtensionCommandContribution } from '../../../ExtensionMetadata';
-import { Disposable } from 'extraterm-extension-api';
+import { Disposable } from '@extraterm/extraterm-extension-api';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 

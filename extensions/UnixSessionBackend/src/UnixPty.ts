@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {EventEmitter} from 'extraterm-event-emitter';
-import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from 'extraterm-extension-api';
+import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from '@extraterm/extraterm-extension-api';
 import * as pty from 'node-pty';
 import * as _ from 'lodash';
 

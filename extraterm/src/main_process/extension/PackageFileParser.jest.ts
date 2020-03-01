@@ -65,7 +65,7 @@ test("viewers", () => {
       },
       "devDependencies": {
         "@types/node": "7.0.5",
-        "extraterm-extension-api": "0.1.0",
+        '@extraterm/extraterm-extension-api': "0.1.0",
         "typescript": "3.1.6"
       },
       "contributes": {

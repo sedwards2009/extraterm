@@ -3,7 +3,7 @@
  */
 
 import Component from 'vue-class-component';
-import { Disposable } from 'extraterm-extension-api';
+import { Disposable } from '@extraterm/extraterm-extension-api';
 import Vue from 'vue';
 import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorators';
 

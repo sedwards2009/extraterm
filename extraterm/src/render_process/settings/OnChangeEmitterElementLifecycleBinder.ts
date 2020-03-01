@@ -1,7 +1,7 @@
 /**
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
-import { Disposable, Event } from 'extraterm-extension-api';
+import { Disposable, Event } from '@extraterm/extraterm-extension-api';
 
 interface OnChangeEmitter {
   onChange: Event<void>;

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ExtensionApi from 'extraterm-extension-api';
+import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 
 import { ProxyFactory, InternalExtensionContext } from './InternalTypes';
 import {TerminalProxy, TerminalTabProxy, ViewerTabProxy} from './Proxies';

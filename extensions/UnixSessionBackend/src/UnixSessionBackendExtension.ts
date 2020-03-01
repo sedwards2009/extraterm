@@ -7,7 +7,7 @@ import * as child_process from 'child_process';
 import * as constants from 'constants';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from 'extraterm-extension-api';
+import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from '@extraterm/extraterm-extension-api';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import { UnixPty, PtyOptions } from './UnixPty';

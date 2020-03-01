@@ -5,7 +5,7 @@
  */
 
 import * as crypto from 'crypto';
-import {BulkFileHandle, Event, Disposable} from 'extraterm-extension-api';
+import {BulkFileHandle, Event, Disposable} from '@extraterm/extraterm-extension-api';
 import {EventEmitter} from '../utils/EventEmitter';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";

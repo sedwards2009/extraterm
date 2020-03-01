@@ -5,7 +5,7 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import { SessionConfiguration } from 'extraterm-extension-api';
+import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
 import { ExtensionManager } from '../extension/InternalTypes';
