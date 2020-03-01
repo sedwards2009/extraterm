@@ -14,7 +14,6 @@
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "test": "jest",
     "testsplitlayout": "yarn run build && nodeunit dist/render_process/SplitLayoutTest.js",
-    "typedoc": "node build_scripts/prepare_typedoc.js && cd src && typedoc --target ES5 --name Extraterm --mode file --module amd --out typedocs build_tmp",
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
@@ -78,7 +77,6 @@
     "shelljs": "0.8.3",
     "shx": "^0.3.2",
     "ts-jest": "23.10.5",
-    "typedoc": "0.14.2",
     "typescript": "3.7.4",
     "webfont": "^4.0.0"
   },

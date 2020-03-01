@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -31,7 +31,7 @@ export interface Tab {
 
   /**
    * Show an input box requesting a number.
-   * 
+   *
    * @return a promise which resolves to the entered number or undefined if
    *          it was canceled.
    */
@@ -39,7 +39,7 @@ export interface Tab {
 
   /**
    * Show a list picker requesting an item from the list.
-   * 
+   *
    * @return a promise which resolves to the selected item index or
    *          undefined if it was canceled.
    */
@@ -63,14 +63,14 @@ export interface TerminalEnvironment {
 
   [Symbol.iterator](): IterableIterator<[string, string]>;
   entries(): IterableIterator<[string, string]>;
-  
+
   onChange: Event<string[]>;
 }
 
 export interface Terminal {
   /**
    * Type a string of text into the terminal.
-   * 
+   *
    * This is effectively the same as though the user typed into the terminal.
    * Note that the enter key should be represented as \r.
    */
@@ -108,7 +108,7 @@ export interface TerminalBorderWidget {
   getContainerElement(): HTMLElement;
   close(): void;
   isOpen(): boolean;
-  
+
   onDidOpen: Event<void>;
   onDidClose: Event<void>;
 }
@@ -166,7 +166,7 @@ export interface ViewerBase {
 
   /**
    * Get the terminal which contains this viewer.
-   * 
+   *
    * This may be null if the viewer is not inside a terminal.
    */
   getOwningTerminal(): Terminal;
@@ -199,7 +199,7 @@ export interface TerminalOutputViewer extends ViewerBase {
 
   /**
    * Returns true if this output viewer is connected to a live PTY and emulator.
-   * 
+   *
    * @return true if this output viewer is connected to a live PTY and emulator.
    */
   isLive(): boolean;
@@ -248,7 +248,7 @@ export interface TextViewer extends ViewerBase {
    * Set whether long lines should be wrapped.
    */
   setWrapLines(wrap: boolean): void;
-  
+
   /**
    * Return true if long lines are set to be wrapped.
    */
@@ -272,7 +272,7 @@ export interface CustomizedCommand {
 export interface Commands {
   /**
    * Register the function to handle a command.
-   * 
+   *
    * @param name the name of the command as specified in the `package.json` contributes/commands section.
    * @param commandFunc the function to execute when the command is selected.
    * @param customizer an optional function to customize the title or state of the command.
@@ -281,7 +281,7 @@ export interface Commands {
 
   /**
    * Execute a command by name.
-   * 
+   *
    * @param name the full name of the command.
    * @param args arguments for the command.
    * @returns an optional return value.
@@ -346,30 +346,30 @@ export interface BulkFileHandle {
 
   /**
    * The number of bytes of the file which are available.
-   * 
+   *
    * This value can change when a file is being downloaded. See the event
    * `onAvailableSizeChange`.
    */
   getAvailableSize(): number;
   onAvailableSizeChange: Event<number>;
-    
+
   /**
    * Get the complete size of the file.
-   * 
+   *
    * This may be -1 if the total size is unknown.
    */
   getTotalSize(): number;
 
   /**
    * Get the metadata associated with the file.
-   * 
+   *
    * The keys are simply strings and are specific to the file type.
    */
   getMetadata(): BulkFileMetadata;
 
   /**
    * Get the first 1KB of the file contents.
-   * 
+   *
    * @return The first 1KB of file or less if the available size and/or total
    *          size is less than 1024.
    */
@@ -377,12 +377,12 @@ export interface BulkFileHandle {
 
   /**
    * Reference the file and increment its internal reference count.
-   * 
+   *
    * Files are managed and deleted when unneeded by using a simple reference
    * counting scheme. When a file handle is held it must also be referenced
    * by calling this method. When a file handle is no longer needed, then the
    * matching `deref()` method must be called.
-   * 
+   *
    * When a file's internal reference count transitions to zero, then the file
    * may be cleaned up and removed on the next process tick.
    */
@@ -390,7 +390,7 @@ export interface BulkFileHandle {
 
   /**
    * Dereference this file.
-   * 
+   *
    * See `ref()` above.
    */
   deref(): void;
@@ -422,7 +422,7 @@ export type ViewerMetadataChange = { [K in keyof ViewerMetadata]?: ViewerMetadat
 
 /**
  * Extensions which implement Viewer must subclass this.
- * 
+ *
  * Note that TypeScript subclasses should not provide a constructor. Pure
  * JavaScript subclasses can have a constructor but it must pass all of
  * its arguments to the super class.
@@ -478,7 +478,7 @@ export interface SessionConfiguration {
 
 /**
  * Extensions which implement Session Editor must subclass this.
- * 
+ *
  * Note that TypeScript subclasses should not provide a constructor. Pure
  * JavaScript subclasses can have a constructor but it must pass all of
  * its arguments to the super class.
@@ -551,22 +551,22 @@ export interface Pty {
    * Destroy the pty and shut down the attached process
    */
   destroy(): void;
-  
+
   onData: Event<string>;
-  
+
   onExit: Event<void>;
 }
 
 /**
  * A Terminal Theme Provider supplies terminal themes to Extraterm.
- * 
+ *
  * It exposes its list of terminal themes and a method to fetch the contents
  * of a requested theme..
  */
 export interface TerminalThemeProvider {
   /**
    * Scan for themes and return a list.
-   * 
+   *
    * @param paths a list of directories which may be used to scan for themes.
    * @return the list of themes found which this provider can also read.
    */
@@ -574,7 +574,7 @@ export interface TerminalThemeProvider {
 
   /**
    * Read in the contents of request theme.
-   * 
+   *
    * @param paths a list of directories which may contain themes. This is the same list as in `scanThemes()`
    * @return the theme contents.
    */
@@ -613,14 +613,14 @@ export interface TerminalTheme {
 
 /**
  * A Syntax Theme Provider supplies syntax themes to Extraterm.
- * 
+ *
  * It exposes its list of syntax themes and a method to fetch the contents
  * of a requested theme..
  */
 export interface SyntaxThemeProvider {
   /**
    * Scan for themes and return a list.
-   * 
+   *
    * @param paths a list of directories which may be used to scan for themes.
    * @return the list of themes found which this provider can also read.
    */
@@ -628,7 +628,7 @@ export interface SyntaxThemeProvider {
 
   /**
    * Read in the contents of request theme.
-   * 
+   *
    * @param paths a list of directories which may contain themes. This is the same list as in `scanThemes()`
    * @return the theme contents.
    */
@@ -641,7 +641,7 @@ export interface SyntaxThemeInfo extends TerminalThemeInfo {
 
 /**
  * The contents of a syntax theme.
- * 
+ *
  * Note: All color strings must be of the form #RRGGBB.
  */
 export interface SyntaxTheme {
@@ -674,7 +674,7 @@ export interface SyntaxTheme {
    * Selection color.
    */
   selection: string;
-  
+
   /**
    * List of token coloring rules.
    */
@@ -684,7 +684,7 @@ export interface SyntaxTheme {
 export interface SyntaxTokenRule {
   /**
    * Scope of the rule.
-   * 
+   *
    * This string follows the naming convention for syntax token as described
    * in https://www.sublimetext.com/docs/3/scope_naming.html
    * Note that only one scope rule can be put in this field.
@@ -738,7 +738,7 @@ export interface Backend {
 
 /**
  * This interface grants the extension at load and activtion time.
- * 
+ *
  * It provides access to the whole Extraterm extension API, as well as some
  * convenience class and objects.
  */
@@ -776,23 +776,23 @@ export interface ExtensionContext {
 export interface Logger {
   /**
    * Log a debug message.
-   * 
+   *
    * @param msg     the log message
    * @param ...opts extra values to log with the message
    */
   debug(msg: any, ...opts: any[]): void;
-  
+
   /**
    * Log an info message.
-   * 
+   *
    * @param msg     the log message
    * @param ...opts extra values to log with the message
    */
   info(msg: any, ...opts: any[]): void;
-  
+
   /**
    * Log a warning message.
-   * 
+   *
    * @param msg     the log message
    * @param ...opts extra values to log with the message
    */
@@ -800,12 +800,12 @@ export interface Logger {
 
   /**
    * Log a severe message.
-   * 
+   *
    * @param msg     the log message
    * @param ...opts extra values to log with the message
    */
   severe(msg: any, ...opts: any[]): void;
-    
+
   /**
    * Starts timing.
    *
@@ -814,7 +814,7 @@ export interface Logger {
    * @param label identifying label for this timer
    */
   startTime(label: string): void;
-  
+
   /**
    * Ends timing.
    *
@@ -833,7 +833,7 @@ export interface ExtensionModule {
 
   /**
    * Each extension module must export a function called `activate()` with the signature below.
-   * 
+   *
    * @param context The extension context which this extension is running in.
    * @return The public API of this extension, or null or undefined.
    */
@@ -841,7 +841,7 @@ export interface ExtensionModule {
 
   /**
    * Option function which is called if the extension is disabled or the application shutdown.
-   * 
+   *
    * @param manual True if the user manually disabled the extension.
    */
   deactivate?(manual: boolean): void;
