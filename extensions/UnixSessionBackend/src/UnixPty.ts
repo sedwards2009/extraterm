@@ -24,8 +24,9 @@ export interface PtyOptions {
 export class UnixPty implements Pty {
 
   private realPty: pty.IPty;
-  private _permittedDataSize = 0; 
+  private _permittedDataSize = 0;
   private _paused = true;
+  private _waitingExitConfirmation = false;
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
@@ -52,7 +53,8 @@ export class UnixPty implements Pty {
     });
 
     this.realPty.on('exit', () => {
-      this._onExitEventEmitter.fire(undefined);
+      this._waitingExitConfirmation = true;
+      this._onDataEventEmitter.fire("\n\n[Process exited. Press Enter to close terminal.]");
     });
 
     this.realPty.on("drain", () => {
@@ -74,13 +76,20 @@ export class UnixPty implements Pty {
       });
     }
   }
-  
+
   write(data: string): void {
-    if (this.realPty._socket.write(data)) { // FIXME try to avoid using _socket directly. Upgraded node-pty is needed.
-      this._directWrittenDataCount += data.length;
-      this._emitBufferSizeLater();
+    if ( ! this._waitingExitConfirmation) {
+      if (this.realPty._socket.write(data)) { // FIXME try to avoid using _socket directly. Upgraded node-pty is needed.
+        this._directWrittenDataCount += data.length;
+        this._emitBufferSizeLater();
+      } else {
+        this._outstandingWriteDataCount += data.length;
+      }
     } else {
-      this._outstandingWriteDataCount += data.length;
+      // See if the user hit the Enter key to fully close the terminal.
+      if (data.indexOf("\r") !== -1) {
+        this._onExitEventEmitter.fire(undefined);
+      }
     }
   }
 
@@ -102,7 +111,7 @@ export class UnixPty implements Pty {
   resize(cols: number, rows: number): void {
     this.realPty.resize(cols, rows);
   }
-  
+
   destroy(): void {
     this._emitBufferSizeLater.cancel();
     this.realPty.destroy();
