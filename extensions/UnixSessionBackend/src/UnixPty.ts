@@ -54,7 +54,7 @@ export class UnixPty implements Pty {
 
     this.realPty.on('exit', () => {
       this._waitingExitConfirmation = true;
-      this._onDataEventEmitter.fire("\n\n[Process exited. Press Enter to close terminal.]");
+      this._onDataEventEmitter.fire("\n\n[Process exited. Press Enter to close this terminal.]");
     });
 
     this.realPty.on("drain", () => {
