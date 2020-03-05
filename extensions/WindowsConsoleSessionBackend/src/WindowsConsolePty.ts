@@ -25,8 +25,9 @@ export interface PtyOptions {
 export class WindowsConsolePty implements Pty {
 
   private realPty: pty.IPty;
-  private _permittedDataSize = 0; 
+  private _permittedDataSize = 0;
   private _paused = true;
+  private _waitingExitConfirmation = false;
   private _destroyed = false;
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
@@ -53,7 +54,8 @@ export class WindowsConsolePty implements Pty {
     });
 
     this.realPty.on('exit', () => {
-      this._onExitEventEmitter.fire(undefined);
+      this._waitingExitConfirmation = true;
+      this._onDataEventEmitter.fire("\n\n[Process exited. Press Enter to close this terminal.]");
     });
 
     this._emitBufferSizeLater = _.throttle(this._emitAvailableWriteBufferSizeChange.bind(this), 0, {leading: false});
@@ -66,12 +68,19 @@ export class WindowsConsolePty implements Pty {
       });
     }
   }
-  
-  write(data: string): void {
-    this.realPty.write(data);
 
-    this._directWrittenDataCount += data.length;
-    this._emitBufferSizeLater();
+  write(data: string): void {
+    if ( ! this._waitingExitConfirmation) {
+      this.realPty.write(data);
+
+      this._directWrittenDataCount += data.length;
+      this._emitBufferSizeLater();
+    } else {
+      // See if the user hit the Enter key to fully close the terminal.
+      if (data.indexOf("\r") !== -1) {
+        this._onExitEventEmitter.fire(undefined);
+      }
+    }
   }
 
   private _emitAvailableWriteBufferSizeChange(): void {
@@ -92,7 +101,7 @@ export class WindowsConsolePty implements Pty {
   resize(cols: number, rows: number): void {
     this.realPty.resize(cols, rows);
   }
-  
+
   destroy(): void {
     if (this._destroyed) {
       return;
