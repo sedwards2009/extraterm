@@ -158,8 +158,15 @@ $TEAR_BORDER_HEIGHT: 2px;
 }
  
 /* Block of controls top left/right */
-.left_block, .right_block {
+.left_block {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.right_block {
   flex: 0 0 auto;
+}
+.left_block, .right_block {
   display: flex;
   padding-left: 0.5em;
   padding-right: 0.5em;
@@ -179,9 +186,10 @@ $TEAR_BORDER_HEIGHT: 2px;
  
 /* *** Comand line DIV *** */
 #ID_COMMAND_LINE {
-  flex: auto 0 1;
+  flex: auto 1 1;
+  white-space: nowrap;
 }
- 
+
 .right_block BUTTON {
   &:hover {
     color: $text-highlight-color;

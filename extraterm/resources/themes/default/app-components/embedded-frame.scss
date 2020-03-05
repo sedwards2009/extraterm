@@ -91,8 +91,15 @@ $ICON_FAIL_COLOR: $brand-text-danger;
 // }
 
 /* Block of controls top left/right */
-.left_block, .right_block {
+.left_block {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+.right_block {
   flex: 0 0 auto;
+}
+.left_block, .right_block {
   display: flex;
   padding-top: pxToRem(1px);
   padding-left: 0.5em;
@@ -127,6 +134,7 @@ $ICON_FAIL_COLOR: $brand-text-danger;
 /* *** Comand line DIV *** */
 #ID_COMMAND_LINE {
   flex: auto 0 1;
+  white-space: nowrap;
   border-bottom-right-radius: 0.5em;
   padding-top: pxToRem(1px);
   padding-left: 0.5em;
