@@ -114,21 +114,21 @@ class EditTabTitleWidget {
 
       <div class="gui-packed-row width-100pc">
         <label class="compact"><i class="fas fa-pen"></i></label>
-        <div>
+        <div class="expand">
           <div class="gui-packed-row width-100pc">
-            <input ref="template" type="text" class="char-width-40"
+            <input ref="template" type="text" class="char-max-width-40 expand"
               v-model="template"
               v-on:input="onTemplateChange"
               v-on:keydown.capture="onTemplateKeyDown"
               v-on:keypress.capture="onTemplateKeyPress"  
               />
             
-            <div class="group">
+            <div class="group compact">
               <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
               <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
             </div>
 
-            <div class="group">
+            <div class="group compact">
               <button title="Accept" class="inline success char-width-2" v-on:click="onOk">
                 <i class="fas fa-check"></i>
               </button>
@@ -136,8 +136,6 @@ class EditTabTitleWidget {
                 <i class="fas fa-times"></i>
               </button>
             </div>
-
-            <span class="expand"></span>
           </div>
           <div class="width-100pc">
             &nbsp;
