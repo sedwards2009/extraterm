@@ -626,6 +626,13 @@
         "title": "Toggle Show/Hide Window",
         "category": "global",
         "when": ""
+      },
+      {
+        "command": "extraterm:application.quit",
+        "title": "Quit",
+        "category": "window",
+        "icon": "fas fa-sign-out-alt",
+        "when": ""
       }
     ],
     "menus": {

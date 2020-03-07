@@ -259,3 +259,8 @@ export function requestTerminalTheme(id: string): Promise<Messages.TerminalTheme
   };
   return <Promise<Messages.TerminalThemeMessage>> request(msg, Messages.MessageType.TERMINAL_THEME);
 }
+
+export function requestQuitApplication(): void {
+  const msg: Messages.QuitApplicationRequestMessage = {type: Messages.MessageType.QUIT_APPLICATION_REQUEST};
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}

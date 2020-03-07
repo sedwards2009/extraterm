@@ -79,6 +79,9 @@ export enum MessageType {
 
   TERMINAL_THEME_REQUEST,
   TERMINAL_THEME,
+
+  QUIT_APPLICATION_REQUEST,
+  QUIT_APPLICATION,
 }
 
 /**
@@ -509,3 +512,13 @@ export interface TerminalThemeRequestMessage extends Message {
 export interface TerminalThemeMessage extends Message {
   terminalTheme: TerminalTheme;
 }
+
+/**
+ * Sent to the main process to indicate that the user wants to quit the whole app.
+ */
+export interface QuitApplicationRequestMessage extends Message {}
+
+/**
+ * Sent to each window telling it to quit and close immediately.
+ */
+export interface QuitApplicationMessage extends Message {}
