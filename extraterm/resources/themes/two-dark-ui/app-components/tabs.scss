@@ -51,7 +51,7 @@ $tab-max-width: 20rem;
     height: inherit;
     font-size: inherit;
     line-height: $ui-tab-height;
-    color: $tab-text-color;    
+    color: $tab-text-color;
     background-color: $tab-background-color;
     box-shadow: inherit;
 
@@ -91,7 +91,7 @@ $tab-max-width: 20rem;
     }
   }
 
-  & > LI.remainder {
+  & > DIV.remainder {
     box-shadow: inset 0 -1px 0 $tab-border-color;
     background-color: $tab-background-color;
   }

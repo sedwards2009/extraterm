@@ -66,7 +66,7 @@ $tab-background-color: #e8e8e8;
     padding: 0;
     margin: 0 pxToRem(20px) 0 pxToRem(5px);
     border: none;
-    
+
     box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
     transition: color .1s ease-in;
 
@@ -101,7 +101,7 @@ $tab-background-color: #e8e8e8;
       border-top-right-radius: $tab-radius;
       border-right: $tab-border;
       box-shadow: inset pxToRem(-1px) pxToRem(-1px) pxToRem(1px) rgba(0,0,0, .05);
-      -webkit-transform: skewX($tab-skew);       
+      -webkit-transform: skewX($tab-skew);
     }
 
     .close-icon {
@@ -138,7 +138,7 @@ $tab-background-color: #e8e8e8;
     &, &:before, &:after {
       background: $tab-background-color-active;
       height: $tab-height + pxToRem(1px);
-      box-shadow: none;       
+      box-shadow: none;
     }
   }
 
@@ -154,11 +154,11 @@ $tab-background-color: #e8e8e8;
     }
   }
 
-  & > LI.remainder-left {
+  & > DIV.remainder-left {
     margin: 0 pxToRem(20px) 0 pxToRem(5px);
   }
 
-  & > LI.remainder {
+  & > DIV.remainder {
     padding-bottom: $tab-bottom-border-height;
   }
 

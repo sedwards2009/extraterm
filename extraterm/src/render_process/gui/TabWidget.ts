@@ -10,6 +10,8 @@ import {doLater} from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import { log } from "extraterm-logging";
 import {Logger, getLogger} from "extraterm-logging";
+import { ResizeNotifier } from "extraterm-resize-notifier";
+
 import * as ThemeTypes from '../../theme/Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
@@ -29,11 +31,19 @@ const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_SNAP_DROP_CONTAINER = "ID_SNAP_DROP_CONTAINER";
 const ID_CONTENTS = "ID_CONTENTS";
 const ID_DROP_INDICATOR = "ID_DROP_INDICATOR";
+const ID_BUTTON_CONTAINER = "ID_BUTTON_CONTAINER";
+const ID_BUTTON_LEFT = "ID_BUTTON_LEFT";
+const ID_BUTTON_RIGHT=  "ID_BUTTON_RIGHT";
 
 const CLASS_REMAINDER_LEFT = "remainder-left";
 const CLASS_REMAINDER_RIGHT = "remainder";
 const CLASS_ACTIVE = "active";
 const CLASS_TAB = "tab";
+const CLASS_SHOW_BUTTONS = "show-buttons";
+const CLASS_HIDE_BUTTONS = "hide-buttons";
+
+const SCROLL_STEP = 40;
+const MOUSEWHEEL_SCALE = 1;
 
 
 export interface DroppedEventDetail {
@@ -57,6 +67,8 @@ export class TabWidget extends TemplatedElementBase {
 
   private _log: Logger;
   private _mutationObserver: MutationObserver = null;
+  private static _resizeNotifier = new ResizeNotifier();
+  private _showButtonsFlag = false;
 
   constructor() {
     super({ delegatesFocus: false });
@@ -72,7 +84,44 @@ export class TabWidget extends TemplatedElementBase {
     });
     this._mutationObserver.observe(this, { childList: true });
 
+    const tabbar = this._getTabbar();
+    this._elementById(ID_BUTTON_LEFT).addEventListener('click', () => this._scrollTabbar(-SCROLL_STEP));
+    this._elementById(ID_BUTTON_RIGHT).addEventListener('click', () => this._scrollTabbar(SCROLL_STEP));
+    tabbar.addEventListener('wheel', this._handleTabbarMouseWheel.bind(this), true);
+    TabWidget._resizeNotifier.observe(tabbar, this._handleTabbarResize.bind(this));
+
     this._setupDragAndDrop();
+  }
+
+  private _scrollTabbar(delta: number): void {
+    const tabbar = this._getTabbar();
+    tabbar.scrollBy({
+      left: delta,
+    });
+  }
+
+  private _handleTabbarMouseWheel(ev: WheelEvent): void {
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    this._scrollTabbar(Math.round(ev.deltaY * MOUSEWHEEL_SCALE));
+  }
+
+  private _handleTabbarResize(target: Element, contentRect: DOMRectReadOnly): void {
+    this._setShowButtons(target.clientWidth !== target.scrollWidth);
+  }
+
+  private _setShowButtons(show: boolean): void {
+    if (this._showButtonsFlag === show) {
+      return;
+    }
+
+    const buttonContainer = this._elementById(ID_BUTTON_CONTAINER);
+    buttonContainer.classList.remove(CLASS_SHOW_BUTTONS);
+    buttonContainer.classList.remove(CLASS_HIDE_BUTTONS);
+    buttonContainer.classList.add(show ? CLASS_SHOW_BUTTONS : CLASS_HIDE_BUTTONS);
+
+    this._showButtonsFlag = show;
   }
 
   @Attribute({default: true}) showTabs: boolean;
@@ -94,7 +143,17 @@ export class TabWidget extends TemplatedElementBase {
     return trimBetweenTags(`
       <div id='${ID_TOP}'>
         <div id='${ID_TABBAR_CONTAINER}'>
+          <div class='${CLASS_REMAINDER_LEFT}'><slot name='${ATTR_TAG_REST_LEFT}'></slot></div>
           <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
+          <div id='${ID_BUTTON_CONTAINER}' class='${CLASS_HIDE_BUTTONS}'>
+            <button id='${ID_BUTTON_LEFT}' class='microtool primary'>
+              <i class="fas fa-caret-left"></i>
+            </button>
+            <button id='${ID_BUTTON_RIGHT}' class='microtool primary'>
+              <i class="fas fa-caret-right"></i>
+            </button>
+          </div>
+          <div class='${CLASS_REMAINDER_RIGHT}'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></div>
         </div>
         <div id='${ID_CONTENTS}'>
           <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'>
@@ -160,15 +219,12 @@ export class TabWidget extends TemplatedElementBase {
 
   private _updateTabBarHTML(tabbar: HTMLDivElement, tabCount: number, selectedTabIndex: number): void {
     const parts: string[] = [];
-    parts.push(`<li class='${CLASS_REMAINDER_LEFT}'><slot name='${ATTR_TAG_REST_LEFT}'></slot></li>`);
     if (this.showTabs) {
       for (let i=0; i<tabCount; i++) {
         const activeClass = i === selectedTabIndex ? 'active' : '';
         parts.push(`<li class='${CLASS_TAB} ${activeClass}'><slot name='tab_${i}'></slot></li>`);
       }
     }
-    parts.push(`<li class='${CLASS_REMAINDER_RIGHT}'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></li>`);
-
     tabbar.innerHTML = parts.join('');
   }
 
