@@ -116,12 +116,14 @@ export class TabWidget extends TemplatedElementBase {
       return;
     }
 
-    const buttonContainer = this._elementById(ID_BUTTON_CONTAINER);
-    buttonContainer.classList.remove(CLASS_SHOW_BUTTONS);
-    buttonContainer.classList.remove(CLASS_HIDE_BUTTONS);
-    buttonContainer.classList.add(show ? CLASS_SHOW_BUTTONS : CLASS_HIDE_BUTTONS);
+    window.queueMicrotask(() => {
+      const buttonContainer = this._elementById(ID_BUTTON_CONTAINER);
+      buttonContainer.classList.remove(CLASS_SHOW_BUTTONS);
+      buttonContainer.classList.remove(CLASS_HIDE_BUTTONS);
+      buttonContainer.classList.add(show ? CLASS_SHOW_BUTTONS : CLASS_HIDE_BUTTONS);
 
-    this._showButtonsFlag = show;
+      this._showButtonsFlag = show;
+    });
   }
 
   @Attribute({default: true}) showTabs: boolean;
