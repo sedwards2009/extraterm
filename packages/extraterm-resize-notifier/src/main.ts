@@ -23,11 +23,22 @@ export class ResizeNotifier {
     });
   }
 
+  /**
+   * Start observing resizes of an element
+   * 
+   * @param element the element to observe
+   * @param callback the callback function to call when the element resizes.
+   */
   observe(element: Element, callback: ResizeCallback): void {
     this._resizeObserver.observe(element);
     this._observedElementsMap.set(element, callback);
   }
 
+  /**
+   * Stop observing an element
+   * 
+   * @param element the element to stop observing
+   */
   unobserve(element: Element): void {
     this._resizeObserver.unobserve(element);
     this._observedElementsMap.delete(element);
