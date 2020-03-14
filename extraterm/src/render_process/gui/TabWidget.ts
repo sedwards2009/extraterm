@@ -285,6 +285,7 @@ export class TabWidget extends TemplatedElementBase {
     }
     this._getContentsStack().currentIndex = index;
     this._showTab(index);
+    this._scrollTabIntoView(index);
   }
 
   getSelectedIndex(): number {
@@ -342,6 +343,14 @@ export class TabWidget extends TemplatedElementBase {
         }
       }
     }
+  }
+
+  private _scrollTabIntoView(index: number): void {
+    const tabbar = this._getTabbar();
+    const item = <HTMLElement> tabbar.children.item(index);
+    item.scrollIntoView({
+      inline: "nearest"
+    });
   }
 
   private _sendSwitchEvent(): void {
