@@ -148,10 +148,10 @@ export class TabWidget extends TemplatedElementBase {
           <div class='${CLASS_REMAINDER_LEFT}'><slot name='${ATTR_TAG_REST_LEFT}'></slot></div>
           <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
           <div id='${ID_BUTTON_CONTAINER}' class='${CLASS_HIDE_BUTTONS}'>
-            <button id='${ID_BUTTON_LEFT}' class='microtool primary'>
+            <button id='${ID_BUTTON_LEFT}' class='microtool quiet primary'>
               <i class="fas fa-caret-left"></i>
             </button>
-            <button id='${ID_BUTTON_RIGHT}' class='microtool primary'>
+            <button id='${ID_BUTTON_RIGHT}' class='microtool quiet primary'>
               <i class="fas fa-caret-right"></i>
             </button>
           </div>

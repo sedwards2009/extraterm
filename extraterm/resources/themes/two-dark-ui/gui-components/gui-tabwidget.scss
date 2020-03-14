@@ -57,12 +57,6 @@ $tab-background-color-active: $background-color;
   }
 }
 
-button.microtool.primary.primary.primary:focus {
-  background-color: inherit;
-  color: $text-color;
-
-}
-
 #ID_CONTENTSTACK, #ID_SNAP_DROP_CONTAINER {
   /* This and the pos:relative above are needed to get this at the correct height. */
   /* See: https://stackoverflow.com/questions/15381172/css-flexbox-child-height-100 */
