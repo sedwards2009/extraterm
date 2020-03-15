@@ -49,7 +49,7 @@ async function main() {
     replaceModuleDirs: false
   });
 
-  await packaging_functions.makeDmg({
+  await makeDmg({
       version,
       outputDir: BUILD_TMP_DIR,
       useDocker: false
