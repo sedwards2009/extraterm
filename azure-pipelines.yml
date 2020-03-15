@@ -13,7 +13,7 @@ jobs:
   - job: commands_zip
     displayName: "Build commands.zip"
     pool:
-      vmImage: 'Ubuntu-16.04'
+      vmImage: 'Ubuntu-18.04'
     steps:
       - script: env
       - script: echo Build.SourceBranch $(Build.SourceBranch)
@@ -34,7 +34,7 @@ jobs:
   - job: package_linux
     displayName: "Build Linux packages"
     pool:
-      vmImage: 'Ubuntu-16.04'
+      vmImage: 'Ubuntu-18.04'
     steps:
       - task: NodeTool@0
         inputs:
