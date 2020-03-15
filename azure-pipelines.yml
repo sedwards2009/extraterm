@@ -50,6 +50,7 @@ jobs:
       - script: yarn run package-linux --version=$(git describe --tags)
         displayName: "yarn run package-linux"
       - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
+      - script: cp $(Build.SourcesDirectory)/build_tmp/*.deb $(Build.ArtifactStagingDirectory)
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'Linux build output'
