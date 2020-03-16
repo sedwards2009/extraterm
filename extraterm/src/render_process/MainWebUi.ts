@@ -85,6 +85,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   static EVENT_MINIMIZE_WINDOW_REQUEST = "mainwebui-minimize-window-request";
   static EVENT_MAXIMIZE_WINDOW_REQUEST = "mainwebui-maximize-window-request";
   static EVENT_CLOSE_WINDOW_REQUEST = "mainwebui-close-window-request";
+  static EVENT_QUIT_APPLICATION_REQUEST = "mainwebui-quit-application-request";
 
   //-----------------------------------------------------------------------
   // WARNING: Fields like this will not be initialised automatically. See _initProperties().
@@ -165,6 +166,13 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   getTabCount(): number {
     return this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu)).length;
+  }
+
+  closeAllTabs(): void {
+    const elements = this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu));
+    for (const element of elements) {
+      this.closeTab(element);
+    }
   }
 
   private _setUpShadowDom(): void {
@@ -704,6 +712,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
+  private _commandApplicationQuit(): void {
+    this._sendWindowRequestEvent(MainWebUi.EVENT_QUIT_APPLICATION_REQUEST);
+  }
+
   commandOpenAboutTab(): void {
     const aboutTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
@@ -990,6 +1002,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     commands.registerCommand("extraterm:window.moveTabDown", (args: any) => this._commandMoveTabDown());
     commands.registerCommand("extraterm:window.openAbout", (args: any) => this.commandOpenAboutTab());
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
+    commands.registerCommand("extraterm:application.quit", (args: any) => this._commandApplicationQuit());
   }
 
   private _getActiveTabElement(): HTMLElement {

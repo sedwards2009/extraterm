@@ -350,19 +350,13 @@ export class Emulator implements EmulatorApi {
     this.glevel = 0;
     this.charsets = [null];
 
-    // misc
-  //  this.element;
-  //  this.children;
-  //  this.savedX;
-  //  this.savedY;
-  //  this.savedCols;
-
     copyCell(Emulator.defAttr, this.curAttr); // Current character style.
 
     this._params = new ControlSequenceParameters();
     this.lines = [];
-  //  this.tabs;
     this.setupStops();
+
+    this._mouseEncoder = new MouseEncoder();
   }
 
   // back_color_erase feature for xterm.

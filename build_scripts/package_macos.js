@@ -49,14 +49,47 @@ async function main() {
     replaceModuleDirs: false
   });
 
-  await packaging_functions.makeDmg({
+  await makeDmg({
       version,
       outputDir: BUILD_TMP_DIR,
       useDocker: false
   });
-  
+
   echo("");
   echo("Done.");
+}
+
+function makeDmg( { version, outputDir, useDocker } ) {
+  echo("");
+  echo("---------------------------------------------------");
+  echo("Building dmg file for macOS");
+  echo("---------------------------------------------------");
+
+  const BUILD_TMP_DIR = outputDir;
+  const SRC_DIR = "" + pwd();
+
+  const darwinPath = path.join(BUILD_TMP_DIR, `extraterm-${version}-darwin-x64`);
+  for (const f of ls(darwinPath)) {
+    if ( ! f.endsWith(".app")) {
+      echo(`Deleting ${f}`);
+      rm(path.join(darwinPath, f));
+    }
+  }
+
+  cp(path.join(SRC_DIR, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
+  cp(path.join(SRC_DIR, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
+  mkdir(path.join(darwinPath,".background"));
+  cp(path.join(SRC_DIR, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
+
+  ln("-s", "/Applications", path.join(darwinPath, "Applications"));
+
+  if (useDocker) {
+    exec(`docker run --rm -v "${BUILD_TMP_DIR}:/files" sporsh/create-dmg Extraterm /files/extraterm-${version}-darwin-x64/ /files/extraterm_${version}.dmg`);
+  } else {
+    exec(`hdiutil create -volname Extraterm -srcfolder ${darwinPath} -ov -format UDZO ${BUILD_TMP_DIR}/extraterm_${version}.dmg`);
+  }
+
+  return true;
 }
 
 main().catch(ex => {

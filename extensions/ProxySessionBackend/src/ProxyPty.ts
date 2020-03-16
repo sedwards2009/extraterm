@@ -85,22 +85,23 @@ interface OutputWrittenMessage extends ProxyMessage {
 interface ClosedMessage extends ProxyMessage {
 }
 
-interface TerminateMessage extends ProxyMessage {  
+interface TerminateMessage extends ProxyMessage {
 }
 
 const NULL_ID = -1;
 
 
 class ProxyPty implements Pty {
-  
+
   private _id: number = NULL_ID;
   private _writeFunc: (id: number, msg: ProxyMessage) => void = null;
-  
+  private _waitingExitConfirmation = false;
+
   // Pre-open write queue.
   private _writeQueue: ProxyMessage[] = [];
   private _live = true;
   private _outstandingWriteDataCount = 0;
-  
+
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
@@ -116,11 +117,11 @@ class ProxyPty implements Pty {
     this.onExit = this._onExitEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
   }
-  
+
   getId(): number {
     return this._id;
   }
-  
+
   setId(id: number): void {
     this._id = id;
     if (this._live) {
@@ -131,7 +132,7 @@ class ProxyPty implements Pty {
       this._writeQueue = [];
     }
   }
-  
+
   private _writeMessage(id: number, msg: ProxyMessage): void {
     if (this._live) {
       if (this._id === -1) {
@@ -143,7 +144,7 @@ class ProxyPty implements Pty {
       }
     }
   }
-  
+
   _charsWritten(chars: number): void {
     this._outstandingWriteDataCount -= chars;
     this._onAvailableWriteBufferSizeChangeEventEmitter.fire(
@@ -151,9 +152,16 @@ class ProxyPty implements Pty {
   }
 
   write(data: string): void {
-    this._outstandingWriteDataCount += data.length;
-    const msg: WriteMessage = { type: TYPE_WRITE, id: this._id, data: data };
-    this._writeMessage(this._id, msg);
+    if ( ! this._waitingExitConfirmation) {
+      this._outstandingWriteDataCount += data.length;
+      const msg: WriteMessage = { type: TYPE_WRITE, id: this._id, data: data };
+      this._writeMessage(this._id, msg);
+    } else {
+      // See if the user hit the Enter key to fully close the terminal.
+      if (data.indexOf("\r") !== -1) {
+        this._onExitEventEmitter.fire(undefined);
+      }
+    }
   }
 
   getAvailableWriteBufferSize(): number {
@@ -164,7 +172,7 @@ class ProxyPty implements Pty {
     const msg: ResizeMessage = { type: TYPE_RESIZE, id: this._id, rows: rows, columns: cols };
     this._writeMessage(this._id, msg);
   }
-  
+
   permittedDataSize(size: number): void {
     const msg: PermitDataSizeMessage = { type: TYPE_PERMIT_DATA_SIZE, id: this._id, size: size };
     this._writeMessage(this._id, msg);
@@ -175,13 +183,14 @@ class ProxyPty implements Pty {
       this._onDataEventEmitter.fire(data);
     }
   }
-  
+
   exit(): void {
-    this._onExitEventEmitter.fire(undefined);
+    this._waitingExitConfirmation = true;
+    this._onDataEventEmitter.fire("\n\n[Process exited. Press Enter to close this terminal.]");
     this._live = false;
   }
-  
-  destroy(): void {    
+
+  destroy(): void {
     const msg: CloseMessage = { type: TYPE_CLOSE, id: this._id };
     this._writeMessage(this._id, msg);
   }
@@ -215,13 +224,13 @@ export abstract class ProxyPtyConnector {
         this._log.debug('bridge process closed with code: ', code);
       }
     });
-    
+
     this._proxy.on('exit', code => {
       if (DEBUG_FINE) {
         this._log.debug('bridge process exited with code: ', code);
       }
     });
-    
+
     this._proxy.on('error', (err) => {
       this._log.severe("Failed to start server process. ", err);
     });
@@ -234,7 +243,7 @@ export abstract class ProxyPtyConnector {
     let columns = 80;
     const file = options.exe;
     const args = options.args;
-    
+
     if (DEBUG_FINE) {
       this._log.debug("ptyproxy spawn file: ", file);
     }
@@ -249,7 +258,7 @@ export abstract class ProxyPtyConnector {
     this._sendMessage(null, msg);
     return pty;
   }
-  
+
   destroy(): void {
     const msg: TerminateMessage = { type: TYPE_TERMINATE, id: -1 };
     this._sendMessage(null, msg);
@@ -271,7 +280,7 @@ export abstract class ProxyPtyConnector {
 
   private _processMessage(msg: ProxyMessage): void {
     const msgType = msg.type;
-    
+
     if (msgType === TYPE_CREATED) {
       const createdPtyMsg = <CreatedPtyMessage> msg;
       for (let i=0; i<this._ptys.length; i++) {
@@ -283,7 +292,7 @@ export abstract class ProxyPtyConnector {
       }
       return;
     }
-    
+
     if (msgType === TYPE_OUTPUT) {
       const outputMsg = <OutputMessage> msg;
       const pty = this._findPtyById(outputMsg.id);
@@ -292,7 +301,7 @@ export abstract class ProxyPtyConnector {
       }
       return;
     }
-    
+
     if (msgType === TYPE_CLOSED) {
       const closedMsg = <ClosedMessage> msg;
       const pty = this._findPtyById(closedMsg.id);
@@ -307,10 +316,10 @@ export abstract class ProxyPtyConnector {
       const pty = this._findPtyById(outputWrittenMsg.id);
       if (pty !== null) {
         pty._charsWritten(outputWrittenMsg.chars);
-      }      
+      }
     }
   }
-  
+
   private _findPtyById(id: number): ProxyPty {
     for (let i=0; i<this._ptys.length; i++) {
       if (this._ptys[i].getId() === id) {
@@ -319,7 +328,7 @@ export abstract class ProxyPtyConnector {
     }
     return null;
   }
-  
+
   private _sendMessage(id: number, msg: ProxyMessage): void {
     const msgText = JSON.stringify(msg);
     if (DEBUG_FINE) {
@@ -327,5 +336,5 @@ export abstract class ProxyPtyConnector {
     }
     this._proxy.stdin.write(msgText + "\n", 'utf8');
   }
-  
+
 }

@@ -856,6 +856,10 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
       break;
 
+    case Messages.MessageType.QUIT_APPLICATION_REQUEST:
+      handleQuitApplicationRequest();
+      break;
+
     default:
       break;
   }
@@ -882,6 +886,13 @@ function handleConfig(msg: Messages.ConfigMessage): void {
     _log.debug("Incoming new config: ", msg);
   }
   configDatabase.setConfig(msg.key, msg.config);
+}
+
+function handleQuitApplicationRequest(): void {
+  const msg: Messages.QuitApplicationMessage = {
+    type: Messages.MessageType.QUIT_APPLICATION,
+  };
+  sendMessageToAllWindows(msg);
 }
 
 function handleThemeListRequest(): Messages.ThemeListMessage {

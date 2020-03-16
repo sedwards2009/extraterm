@@ -60,7 +60,7 @@ $tab-max-width: 20rem;
     padding: 0;
     margin: 0 pxToRem(20px) 0 pxToRem(5px);
     border: none;
-    
+
     box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
     transition: color .1s ease-in;
 
@@ -151,7 +151,7 @@ $tab-max-width: 20rem;
     }
   }
 
-  & > LI.remainder-left {
+  & > DIV.remainder-left {
     margin: 0 pxToRem(20px) 0 pxToRem(5px);
   }
 

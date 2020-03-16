@@ -153,6 +153,8 @@ function startUpTheming(): void {
 function startUpWebIpc(): void {
   WebIpc.start();
 
+  WebIpc.registerDefaultHandler(Messages.MessageType.QUIT_APPLICATION, handleQuitApplication);
+
   // Default handling for theme messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_CONTENTS, handleThemeContentsMessage);
@@ -246,6 +248,10 @@ function startUpMainWebUi(): void {
 
   mainWebUi.addEventListener(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST, () => {
     WebIpc.windowCloseRequest();
+  });
+
+  mainWebUi.addEventListener(MainWebUi.EVENT_QUIT_APPLICATION_REQUEST, () => {
+    WebIpc.requestQuitApplication();
   });
 
   mainWebUi.addEventListener(EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
@@ -537,6 +543,10 @@ async function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
   if ([GENERAL_CONFIG, SYSTEM_CONFIG, "*"].indexOf(key) !== -1) {
     await asyncSetupConfiguration();
   }
+}
+
+function handleQuitApplication(msg: Messages.Message): void {
+  mainWebUi.closeAllTabs();
 }
 
 function handleThemeListMessage(msg: Messages.Message): void {

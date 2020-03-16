@@ -3,6 +3,7 @@
  */
 @import "general-gui/variables";
 @import "fonts/extraicons-fontface";
+@import "fonts/font-awesome";
 
 $tab-background-color-active: $background-color;
 
@@ -20,7 +21,7 @@ $tab-background-color-active: $background-color;
 
 #ID_TABBAR {
   flex: 0 auto;
-  
+
   cursor: default;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -31,10 +32,21 @@ $tab-background-color-active: $background-color;
   white-space: nowrap;
 }
 
-#ID_TABBAR > li.remainder {
+#ID_TABBAR > DIV.remainder {
   flex-shrink: 0;
   flex-grow: 1;
   height: $tab-height + pxToRem(1px);
+}
+
+#ID_BUTTON_CONTAINER {
+  flex-shrink: 0;
+  flex-grow: 0;
+  align-self: center;
+  padding-left: ($ui-tab-height - 1.5rem) / 2;
+
+  &.hide-buttons {
+    display: none;
+  }
 }
 
 #ID_CONTENTS {
@@ -49,13 +61,13 @@ $tab-background-color-active: $background-color;
   position: absolute;
   height: 100%;
   width: 100%;
-  
+
   display: block;
 }
 
 DIV.wrapper {
   height: 100%;
-  width: 100%;  
+  width: 100%;
 }
 
 DIV.catch_all {

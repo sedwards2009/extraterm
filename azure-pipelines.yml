@@ -13,8 +13,10 @@ jobs:
   - job: commands_zip
     displayName: "Build commands.zip"
     pool:
-      vmImage: 'Ubuntu-16.04'
+      vmImage: 'Ubuntu-18.04'
     steps:
+      - script: env
+      - script: echo Build.SourceBranch $(Build.SourceBranch)
       - script: yarn install --frozen-lockfile
         displayName: 'Yarn install'
       - script: yarn run package-commands-zip --version=$(git describe --tags)
@@ -32,7 +34,7 @@ jobs:
   - job: package_linux
     displayName: "Build Linux packages"
     pool:
-      vmImage: 'Ubuntu-16.04'
+      vmImage: 'Ubuntu-18.04'
     steps:
       - task: NodeTool@0
         inputs:
@@ -50,6 +52,7 @@ jobs:
       - script: yarn run package-linux --version=$(git describe --tags)
         displayName: "yarn run package-linux"
       - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
+      - script: cp $(Build.SourcesDirectory)/build_tmp/*.deb $(Build.ArtifactStagingDirectory)
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'Linux build output'
@@ -102,7 +105,7 @@ jobs:
   - job: package_macos
     displayName: "Build macOS packages"
     pool:
-      vmImage: 'macOS-10.13'
+      vmImage: 'macOS-10.14'
     steps:
       - task: NodeTool@0
         inputs:

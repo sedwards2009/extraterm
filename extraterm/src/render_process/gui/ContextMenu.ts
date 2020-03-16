@@ -195,8 +195,8 @@ export class ContextMenu extends TemplatedElementBase {
     container.classList.remove(CLASS_CONTAINER_CLOSED);
     container.classList.add(CLASS_CONTAINER_OPEN);
 
-    this._moveContainerTo(x, y);
     this._openCover();
+    this._moveContainerTo(x, y);
     this.selectMenuItem(this.childNodes, null);
 
     container.focus();
@@ -206,14 +206,17 @@ export class ContextMenu extends TemplatedElementBase {
     const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
     const rect = container.getBoundingClientRect();
 
+    const coverElement = <HTMLDivElement>this._elementById(ID_COVER);
+    const coverRect = coverElement.getBoundingClientRect();
+
     let sx = x;
-    if (sx+rect.width > window.innerWidth) {
-      sx = window.innerWidth - rect.width;
+    if (sx+rect.width > coverRect.right) {
+      sx = coverRect.right - rect.width;
     }
 
     let sy = y;
-    if (sy+rect.height > window.innerHeight) {
-      sy = window.innerHeight - rect.height;
+    if (sy+rect.height > coverRect.bottom) {
+      sy = coverRect.bottom - rect.height;
     }
 
     container.style.left = "" + sx + "px";
@@ -248,13 +251,17 @@ export class ContextMenu extends TemplatedElementBase {
     container.classList.add(CLASS_CONTAINER_OPEN);  
     const containerRect = container.getBoundingClientRect();
 
+    this._openCover();
+    const coverElement = <HTMLDivElement>this._elementById(ID_COVER);
+    const coverRect = coverElement.getBoundingClientRect();
+
     let containerX = targetElementRect.left;
-    if (containerX + containerRect.width > window.innerWidth) {
-      containerX = window.innerWidth - containerRect.width;
+    if (containerX + containerRect.width > coverRect.right) {
+      containerX = coverRect.right - containerRect.width;
     }
 
     let containerY = targetElementRect.bottom;
-    if (containerY+containerRect.height > window.innerHeight) {
+    if (containerY+containerRect.height > coverRect.bottom) {
       containerY = targetElementRect.top - containerRect.height;
     }
 
@@ -265,7 +272,6 @@ export class ContextMenu extends TemplatedElementBase {
     container.style.left = "" + containerX + "px";
     container.style.top = "" + containerY + "px";
 
-    this._openCover();
     this.selectMenuItem(this.childNodes, null);
     container.focus();
   }

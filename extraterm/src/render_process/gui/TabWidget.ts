@@ -10,6 +10,8 @@ import {doLater} from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import { log } from "extraterm-logging";
 import {Logger, getLogger} from "extraterm-logging";
+import { ResizeNotifier } from "extraterm-resize-notifier";
+
 import * as ThemeTypes from '../../theme/Theme';
 import {StackedWidget} from './StackedWidget';
 import {Tab} from './Tab';
@@ -29,11 +31,19 @@ const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_SNAP_DROP_CONTAINER = "ID_SNAP_DROP_CONTAINER";
 const ID_CONTENTS = "ID_CONTENTS";
 const ID_DROP_INDICATOR = "ID_DROP_INDICATOR";
+const ID_BUTTON_CONTAINER = "ID_BUTTON_CONTAINER";
+const ID_BUTTON_LEFT = "ID_BUTTON_LEFT";
+const ID_BUTTON_RIGHT=  "ID_BUTTON_RIGHT";
 
 const CLASS_REMAINDER_LEFT = "remainder-left";
 const CLASS_REMAINDER_RIGHT = "remainder";
 const CLASS_ACTIVE = "active";
 const CLASS_TAB = "tab";
+const CLASS_SHOW_BUTTONS = "show-buttons";
+const CLASS_HIDE_BUTTONS = "hide-buttons";
+
+const SCROLL_STEP = 40;
+const MOUSEWHEEL_SCALE = 1;
 
 
 export interface DroppedEventDetail {
@@ -50,29 +60,70 @@ export interface DroppedEventDetail {
  */
 @WebComponent({tag: "et-tabwidget"})
 export class TabWidget extends TemplatedElementBase {
-  
+
   static TAG_NAME = "ET-TABWIDGET";
   static EVENT_TAB_SWITCH = "tab-switch";
   static EVENT_DROPPED = "tabwidget-dropped";
 
   private _log: Logger;
   private _mutationObserver: MutationObserver = null;
+  private static _resizeNotifier = new ResizeNotifier();
+  private _showButtonsFlag = false;
 
   constructor() {
     super({ delegatesFocus: false });
 
     this._log = getLogger(TabWidget.TAG_NAME, this);
-    
+
     this.createTabHolders();
     this.setSelectedIndex(0);
     this._showFrame(this.showFrame);
-    
+
     this._mutationObserver = new MutationObserver( (mutations) => {
       this.createTabHolders();
     });
     this._mutationObserver.observe(this, { childList: true });
 
+    const tabbar = this._getTabbar();
+    this._elementById(ID_BUTTON_LEFT).addEventListener('click', () => this._scrollTabbar(-SCROLL_STEP));
+    this._elementById(ID_BUTTON_RIGHT).addEventListener('click', () => this._scrollTabbar(SCROLL_STEP));
+    tabbar.addEventListener('wheel', this._handleTabbarMouseWheel.bind(this), true);
+    TabWidget._resizeNotifier.observe(tabbar, this._handleTabbarResize.bind(this));
+
     this._setupDragAndDrop();
+  }
+
+  private _scrollTabbar(delta: number): void {
+    const tabbar = this._getTabbar();
+    tabbar.scrollBy({
+      left: delta,
+    });
+  }
+
+  private _handleTabbarMouseWheel(ev: WheelEvent): void {
+    ev.stopPropagation();
+    ev.preventDefault();
+
+    this._scrollTabbar(Math.round(ev.deltaY * MOUSEWHEEL_SCALE));
+  }
+
+  private _handleTabbarResize(target: Element, contentRect: DOMRectReadOnly): void {
+    this._setShowButtons(target.clientWidth !== target.scrollWidth);
+  }
+
+  private _setShowButtons(show: boolean): void {
+    if (this._showButtonsFlag === show) {
+      return;
+    }
+
+    window.queueMicrotask(() => {
+      const buttonContainer = this._elementById(ID_BUTTON_CONTAINER);
+      buttonContainer.classList.remove(CLASS_SHOW_BUTTONS);
+      buttonContainer.classList.remove(CLASS_HIDE_BUTTONS);
+      buttonContainer.classList.add(show ? CLASS_SHOW_BUTTONS : CLASS_HIDE_BUTTONS);
+
+      this._showButtonsFlag = show;
+    });
   }
 
   @Attribute({default: true}) showTabs: boolean;
@@ -85,16 +136,26 @@ export class TabWidget extends TemplatedElementBase {
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.GUI_TABWIDGET, ThemeTypes.CssFile.TABS];
   }
-  
+
   update(): void {
     this.createTabHolders();
-  }  
-  
+  }
+
   protected _html(): string {
     return trimBetweenTags(`
       <div id='${ID_TOP}'>
         <div id='${ID_TABBAR_CONTAINER}'>
+          <div class='${CLASS_REMAINDER_LEFT}'><slot name='${ATTR_TAG_REST_LEFT}'></slot></div>
           <ul id='${ID_TABBAR}' class="extraterm-tabs"></ul>
+          <div id='${ID_BUTTON_CONTAINER}' class='${CLASS_HIDE_BUTTONS}'>
+            <button id='${ID_BUTTON_LEFT}' class='microtool quiet primary'>
+              <i class="fas fa-caret-left"></i>
+            </button>
+            <button id='${ID_BUTTON_RIGHT}' class='microtool quiet primary'>
+              <i class="fas fa-caret-right"></i>
+            </button>
+          </div>
+          <div class='${CLASS_REMAINDER_RIGHT}'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></div>
         </div>
         <div id='${ID_CONTENTS}'>
           <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'>
@@ -108,21 +169,34 @@ export class TabWidget extends TemplatedElementBase {
   private _getTop(): HTMLDivElement {
     return <HTMLDivElement> this._elementById(ID_TOP);
   }
-  
+
   private _getTabbar(): HTMLDivElement {
     return <HTMLDivElement> this._elementById(ID_TABBAR);
   }
-  
+
   private _getContentsStack(): StackedWidget {
     return <StackedWidget> this._elementById(ID_CONTENTSTACK);
   }
-  
+
   private createTabHolders(): void {
     const tabbar = this._getTabbar();
-    const contentsStack = this._getContentsStack();
+    const tabCount = this._applySlotAttributes();
+    let selectedTabIndex = this.getSelectedIndex();
+    this._updateTabBarHTML(tabbar, tabCount, selectedTabIndex);
+    this._applyTabClickHandlers(tabbar);
+    this._createContentHolders(tabCount);
+
+    if (tabCount > 0) {
+      selectedTabIndex = Math.min(Math.max(selectedTabIndex, 0), tabCount-1);
+      this.setSelectedIndex(selectedTabIndex);
+      this._showTab(selectedTabIndex);
+    }
+  }
+
+  private _applySlotAttributes(): number {
     let tabCount = 0;
     let stateInTab = false;
-    
+
     // Tag the source content as tabs or content so that we can distribute it over our shadow DOM.
     let restAttr = ATTR_TAG_REST_LEFT;
     for (let i=0; i<this.children.length; i++) {
@@ -131,7 +205,7 @@ export class TabWidget extends TemplatedElementBase {
         tabCount++;
         kid.slot = 'tab_' + (tabCount-1);
         stateInTab = true;
-        
+
       } else if (kid.nodeName === "DIV" && stateInTab) {
         kid.slot = 'content_' + (tabCount-1);
         stateInTab = false;
@@ -142,60 +216,30 @@ export class TabWidget extends TemplatedElementBase {
         restAttr = ATTR_TAG_REST_RIGHT;
       }
     }
-    
-    // Make sure that there is 'rest' element at the front.
-    if (tabbar.firstElementChild === null || ! tabbar.firstElementChild.classList.contains(CLASS_REMAINDER_LEFT)) {
-      const restAllLi = <HTMLLIElement> this.ownerDocument.createElement('LI');
-      restAllLi.classList.add(CLASS_REMAINDER_LEFT);
+    return tabCount;
+  }
 
-      const catchAll = this.ownerDocument.createElement('slot');
-      catchAll.setAttribute('name', ATTR_TAG_REST_LEFT);
-      restAllLi.appendChild(catchAll);
-      tabbar.insertAdjacentElement('afterbegin', restAllLi);
-    }
-
-    // Make sure that there is a catch all element at the end.
-    const catchAlls = tabbar.querySelectorAll("." + CLASS_REMAINDER_RIGHT);
-    let catchAllLi: HTMLLIElement = null;
-    if (catchAlls.length === 0) {
-      catchAllLi = <HTMLLIElement> this.ownerDocument.createElement('LI');
-      catchAllLi.classList.add(CLASS_REMAINDER_RIGHT);
-            
-      const catchAll = this.ownerDocument.createElement('slot');
-      catchAll.setAttribute('name', ATTR_TAG_REST_RIGHT);
-      catchAllLi.appendChild(catchAll);
-      tabbar.appendChild(catchAllLi);
-    } else {
-      catchAllLi = <HTMLLIElement> catchAlls[0];
-    }
+  private _updateTabBarHTML(tabbar: HTMLDivElement, tabCount: number, selectedTabIndex: number): void {
+    const parts: string[] = [];
     if (this.showTabs) {
-      // Create tabs.
-      let tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
-      while (tabElementCount < tabCount) {
-        // The tab part.
-        const tabLi = this.ownerDocument.createElement('li');
-        tabLi.classList.add(CLASS_TAB);
-
-        const contentElement = this.ownerDocument.createElement('slot');
-        contentElement.setAttribute('name', 'tab_' + tabElementCount);
-        
-        tabLi.appendChild(contentElement);
-        tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, tabElementCount));
-        tabbar.insertBefore(tabLi, catchAllLi);
-
-        tabElementCount = tabbar.querySelectorAll("." + CLASS_TAB).length;
+      for (let i=0; i<tabCount; i++) {
+        const activeClass = i === selectedTabIndex ? 'active' : '';
+        parts.push(`<li class='${CLASS_TAB} ${activeClass}'><slot name='tab_${i}'></slot></li>`);
       }
-
-      // Delete any excess tab tags.
-      const tabElements = DomUtils.toArray(tabbar.querySelectorAll("." + CLASS_TAB));
-      if (tabElements.length > tabCount) {
-        tabElements.slice(tabCount).forEach( el => tabbar.removeChild(el));
-      }
-    } else {
-      // Delete all tab tags. We don't need to show them.
-      const tabElements = DomUtils.toArray(tabbar.querySelectorAll("." + CLASS_TAB));
-      tabElements.forEach( el => tabbar.removeChild(el));
     }
+    tabbar.innerHTML = parts.join('');
+  }
+
+  private _applyTabClickHandlers(tabbar: HTMLDivElement): void {
+    let i = 0;
+    for (const tabLi of tabbar.querySelectorAll("." + CLASS_TAB)) {
+      tabLi.addEventListener('click', this._tabClickHandler.bind(this, tabLi, i));
+      i++;
+    }
+  }
+
+  private _createContentHolders(tabCount: number): void {
+    const contentsStack = this._getContentsStack();
 
     // Create content holders
     let contentWrapperElementCount = contentsStack.children.length;
@@ -205,35 +249,18 @@ export class TabWidget extends TemplatedElementBase {
       wrapperDiv.classList.add('wrapper');
       const contentElement = this.ownerDocument.createElement('slot');
       contentElement.setAttribute('name', 'content_' + contentWrapperElementCount);
-            
+
       wrapperDiv.appendChild(contentElement);
       contentsStack.appendChild(wrapperDiv);
 
       contentWrapperElementCount++;
     }
-        
+
     while (contentsStack.children.length > tabCount) {
       contentsStack.removeChild(contentsStack.children[contentsStack.children.length-1]);
     }
-
-    // Try to find the previously active tab and take note of its index.
-    let selectTab = -1;
-    const tabElements = DomUtils.toArray(tabbar.querySelectorAll("." + CLASS_TAB));
-    for (let i=0; i<tabElements.length; i++) {
-      if (tabElements[i].classList.contains(CLASS_ACTIVE)) {
-        selectTab = i;
-        break;
-      }
-    }
-    
-    if (tabCount > 0) {
-      selectTab = selectTab === -1 ? 0 : selectTab;
-      
-      this.setSelectedIndex(selectTab);
-      this._showTab(selectTab);
-    }
   }
-  
+
   private _tabClickHandler(tabElement: HTMLElement, index: number) {
     // This handler may fire when a tab is removed during the click event bubble procedure. This check
     // supresses the event if the tab has been removed already.
@@ -242,18 +269,6 @@ export class TabWidget extends TemplatedElementBase {
       doLater(this._sendSwitchEvent.bind(this));
     }
   }
-
-  //-----------------------------------------------------------------------
-  //
-  //   ######                                
-  //   #     # #    # #####  #      #  ####  
-  //   #     # #    # #    # #      # #    # 
-  //   ######  #    # #####  #      # #      
-  //   #       #    # #    # #      # #      
-  //   #       #    # #    # #      # #    # 
-  //   #        ####  #####  ###### #  ####  
-  //
-  //-----------------------------------------------------------------------
 
   setSelectedIndex(index: number) {
     if (this._getContentsStack().children.length === 0) {
@@ -264,18 +279,19 @@ export class TabWidget extends TemplatedElementBase {
       this._log.warn("Out of range index given to the 'currentIndex' property.");
       return;
     }
-    
+
     if (this._getContentsStack().currentIndex === index) {
       return;
     }
     this._getContentsStack().currentIndex = index;
     this._showTab(index);
+    this._scrollTabIntoView(index);
   }
-  
+
   getSelectedIndex(): number {
     return this._getContentsStack().currentIndex;
   }
-  
+
   private _getTabs(): Tab[] {
     return <Tab[]> DomUtils.toArray<Element>(this.children).filter( element => element.nodeName === Tab.TAG_NAME );
   }
@@ -287,7 +303,7 @@ export class TabWidget extends TemplatedElementBase {
     }
     this.setSelectedIndex(index);
   }
-  
+
   getSelectedTab(): Tab {
     const currentIndex = this.getSelectedIndex();
     if (currentIndex === -1) {
@@ -296,7 +312,7 @@ export class TabWidget extends TemplatedElementBase {
     const currentTab = this._getTabs()[currentIndex];
     return currentTab;
   }
-  
+
   @Attribute({default: true}) showFrame: boolean;
 
   private _observeShowFrame(target: string): void {
@@ -307,10 +323,10 @@ export class TabWidget extends TemplatedElementBase {
     if (value) {
       this._getTop().classList.add('show_frame');
     } else {
-      this._getTop().classList.remove('show_frame');          
+      this._getTop().classList.remove('show_frame');
     }
   }
-  
+
   private _showTab(index: number): void {
     if (this.showTabs) {
       const tabbar = this._getTabbar();
@@ -328,23 +344,20 @@ export class TabWidget extends TemplatedElementBase {
       }
     }
   }
-  
+
+  private _scrollTabIntoView(index: number): void {
+    const tabbar = this._getTabbar();
+    const item = <HTMLElement> tabbar.children.item(index);
+    item.scrollIntoView({
+      inline: "nearest"
+    });
+  }
+
   private _sendSwitchEvent(): void {
     const event = new CustomEvent(TabWidget.EVENT_TAB_SWITCH, { detail: null, bubbles: true });
     this.dispatchEvent(event);
   }
 
-  //-----------------------------------------------------------------------
-  //
-  //  ######                            ##       ######                       
-  //  #     # #####    ##    ####      #  #      #     # #####   ####  #####  
-  //  #     # #    #  #  #  #    #      ##       #     # #    # #    # #    # 
-  //  #     # #    # #    # #          ###       #     # #    # #    # #    # 
-  //  #     # #####  ###### #  ###    #   # #    #     # #####  #    # #####  
-  //  #     # #   #  #    # #    #    #    #     #     # #   #  #    # #      
-  //  ######  #    # #    #  ####      ###  #    ######  #    #  ####  #      
-  //                                                                         
-  //-----------------------------------------------------------------------
   private _setupDragAndDrop(): void {
     const tabBar = this._getTabbar();
     tabBar.addEventListener("dragstart", this._handleDragStart.bind(this));

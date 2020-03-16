@@ -581,6 +581,13 @@
       "keys": [
         "Cmd-F"
       ]
+    },
+    {
+      "command": "extraterm:application.quit",
+      "category": "window",
+      "keys": [
+        "Cmd-Q"
+      ]
     }
   ]
 }

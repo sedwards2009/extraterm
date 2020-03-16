@@ -311,3 +311,33 @@ span.group {
 @include char-width(40);
 @include char-width(60);
 @include char-width(80);
+
+// Max widths to comfortably support inputs with 'x' chars.
+@mixin char-max-width($chars) {
+  .char-max-width-#{$chars} {
+    min-width: 0;
+    max-width: #{$chars}em;
+  }
+
+  select.char-max-width-#{$chars} {
+    min-width: 0;
+    max-width: #{$chars + 1}em;
+  }
+  
+  input[type="number"].char-max-width-#{$chars} {
+    min-width: 0;
+    max-width: #{$chars + 3}ch;
+  }
+}
+
+@include char-max-width(2);
+@include char-max-width(3);
+@include char-max-width(4);
+@include char-max-width(6);
+@include char-max-width(8);
+@include char-max-width(12);
+@include char-max-width(20);
+@include char-max-width(30);
+@include char-max-width(40);
+@include char-max-width(60);
+@include char-max-width(80);
