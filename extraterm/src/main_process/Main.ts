@@ -563,6 +563,15 @@ function setupLogging(): void {
   }
 
   const logWriter = new FileLogWriter(logFilePath);
+  try {
+    logWriter.open();
+  } catch (error) {
+    // The primary reason why this may happen is if an instance of Extraterm is already running.
+    _log.warn(error);
+    _log.warn("Unable to write to log file ", logFilePath);
+    return;
+  }
+
   addLogWriter(logWriter);
   _log.info("Recording logs to ", logFilePath);
 }
