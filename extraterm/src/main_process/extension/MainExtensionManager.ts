@@ -88,6 +88,7 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
   }
 
   private _scanPath(extensionPath: string): ExtensionMetadata[] {
+    this._log.info(`Scanning '${extensionPath}' for extensions.`);
     if (fs.existsSync(extensionPath)) {
       const result: ExtensionMetadata[] = [];
       const contents = fs.readdirSync(extensionPath);
