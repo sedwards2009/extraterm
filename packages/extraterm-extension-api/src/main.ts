@@ -737,10 +737,12 @@ export interface Backend {
 }
 
 /**
- * This interface grants the extension at load and activtion time.
+ * Access to the Extraterm extension API
  *
- * It provides access to the whole Extraterm extension API, as well as some
- * convenience class and objects.
+ * This provides an extension access to the whole Extraterm extension API, as
+ * well as some convenience classes and objects.
+ *
+ * An instance of this is passed to each extension's `activate()` function.
  */
 export interface ExtensionContext {
 
@@ -772,7 +774,14 @@ export interface ExtensionContext {
   readonly logger: Logger;
 }
 
-
+/**
+ * Logging facility
+ *
+ * A simple text logging facility, much like the browser `console.log()` API
+ * and friends. An instance of this interface is available to a extension via
+ * the `ExtensionContext` object passed to each extension's `activate()`
+ * function.
+ */
 export interface Logger {
   /**
    * Log a debug message.

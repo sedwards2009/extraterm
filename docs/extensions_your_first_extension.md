@@ -94,4 +94,4 @@ Our extension adds a new command to the command palette. Open the command palett
 
 If selecting the "Type Now" command didn't do anything then move on to the next guide where we discuss [logging and debugging](extensions_logging_and_debugging.md).
 
-Next: [Logging and Debugging](extensions_logging_and_debugging.md)
+Next: [Logging and Debugging Extensions](extensions_logging_and_debugging.md)

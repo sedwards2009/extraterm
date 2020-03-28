@@ -20,8 +20,15 @@ Extraterm is built on top of the [Electron](https://www.electronjs.org) platform
 
 # Documentation Overview
 
-Your First Extension
 
-Guides
+## Guides
+
+These guides build on top of the previous guides and are intended to be read in order.
+
+* [Your First Extension](extensions_your_first_extension.md)
+* [Logging and Debugging Extensions](extensions_logging_and_debugging.md)
+
+
+## Reference
 
 * [Extension API Reference](extension_api/)
