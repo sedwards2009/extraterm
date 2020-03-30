@@ -739,7 +739,7 @@ export interface Backend {
 /**
  * Access to the Extraterm extension API
  *
- * This provides an extension access to the whole Extraterm extension API, as
+ * This provides extensions access to the whole Extraterm extension API, as
  * well as some convenience classes and objects.
  *
  * An instance of this is passed to each extension's `activate()` function.
