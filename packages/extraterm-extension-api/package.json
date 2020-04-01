@@ -21,7 +21,7 @@
     "publish-pkg": "yarn publish --access public"
   },
   "devDependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz",
+    "@extraterm/ace-ts": "0.18.0",
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
     "shx": "^0.3.2",

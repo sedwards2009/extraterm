@@ -6,7 +6,7 @@ import { BulkFileHandle, Disposable, ViewerMetadata, FindOptions, FindStartPosit
 import {WebComponent} from 'extraterm-web-component-decorators';
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Position,
-  UndoManager } from "ace-ts";
+  UndoManager } from "@extraterm/ace-ts";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 
@@ -25,7 +25,7 @@ import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise'
 import { RefreshLevel } from '../viewers/ViewerElementTypes';
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
-import { SearchOptions } from 'ace-ts/build/SearchOptions';
+import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
 
 const VisualState = ViewerElementTypes.VisualState;
 type VisualState = ViewerElementTypes.VisualState;

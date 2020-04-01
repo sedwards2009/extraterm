@@ -1,6 +1,4 @@
-import { Document } from "ace-ts";
-import { RangeBasic } from "ace-ts";
-import { Position } from "ace-ts";
+import { Document, Position, RangeBasic } from "@extraterm/ace-ts";
 
 export class TerminalDocument extends Document {
 

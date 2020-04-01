@@ -17,7 +17,7 @@
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
-    "ace-ts": "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz",
+    "@extraterm/ace-ts": "0.18.0",
     "commander": "^2.9.0",
     "easta": "3.0.1",
     "extraterm-ace-terminal-renderer": "0.1.0",

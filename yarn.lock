@@ -159,6 +159,11 @@
     global-agent "^2.0.2"
     global-tunnel-ng "^2.7.1"
 
+"@extraterm/ace-ts@0.18.0":
+  version "0.18.0"
+  resolved "https://registry.yarnpkg.com/@extraterm/ace-ts/-/ace-ts-0.18.0.tgz#d852f06d411a26504720a2845d5c8506ed117aaa"
+  integrity sha512-qkJnznSZa3vDeH3f4ORMLxzi+zsWo7rbOdGPT/sJBZo8oqCnxAzBqEUOJZGq/bv6cFTBjCPw68rG4NMYk3MkYQ==
+
 "@jest/types@^24.9.0":
   version "24.9.0"
   resolved "https://registry.yarnpkg.com/@jest/types/-/types-24.9.0.tgz#63cb26cb7500d069e5a389441a7c6ab5e909fc59"
@@ -585,10 +590,6 @@ abbrev@1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/abbrev/-/abbrev-1.1.1.tgz#f8f2c887ad10bf67f634f005b6987fed3179aac8"
   integrity sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==
-
-"ace-ts@https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz":
-  version "0.16.0"
-  resolved "https://github.com/sedwards2009/ace-ts/releases/download/v0.16.0/ace-ts-v0.16.0.tgz#92da755f731b6cb435aca01dd011dd846bf220a6"
 
 acorn-dynamic-import@^2.0.0:
   version "2.0.2"

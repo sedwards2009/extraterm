@@ -23,10 +23,10 @@ import {ViewerElement} from './ViewerElement';
 import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer, CursorStyle } from "extraterm-ace-terminal-renderer";
-import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "ace-ts";
+import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "@extraterm/ace-ts";
 import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
-import { SearchOptions } from 'ace-ts/build/SearchOptions';
+import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { Color } from '../gui/Util';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
@@ -403,7 +403,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._metadataEventDoLater.trigger();
   }
 
-  getSelectionText(): string {    
+  getSelectionText(): string {
     const selection = this._aceEditSession.getSelection();
     if (selection.isEmpty()) {
       return null;

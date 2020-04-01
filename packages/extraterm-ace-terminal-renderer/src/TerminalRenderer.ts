@@ -2,7 +2,7 @@
  * Copyright 2015-2018 Simon Edwards <simon@simonzone.com>
  */
 
-import { Renderer, HScrollBar, HScrollTracking, VScrollBar } from "ace-ts";
+import { Renderer, HScrollBar, HScrollTracking, VScrollBar } from "@extraterm/ace-ts";
 
 export class TerminalRenderer extends Renderer {
 

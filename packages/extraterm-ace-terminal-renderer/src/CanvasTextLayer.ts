@@ -1,11 +1,11 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { TextLayer, EditSession, ViewPortSize } from "ace-ts";
+import { TextLayer, EditSession, ViewPortSize } from "@extraterm/ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer } from "extraterm-char-render-canvas";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
-import { LayerConfig } from "ace-ts/build/layer/LayerConfig";
+import { LayerConfig } from "@extraterm/ace-ts";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";

@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { HeavyString } from "ace-ts";
+import { HeavyString } from "@extraterm/ace-ts";
 import * as TermApi from "term-api";
 import { lastVisibleCellInLine } from "./LineFunctions";
 

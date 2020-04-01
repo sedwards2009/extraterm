@@ -1,7 +1,7 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { Delta, HeavyString } from "ace-ts";
+import { Delta, HeavyString } from "@extraterm/ace-ts";
 import { LineData } from "./LineData";
 import { Line } from "term-api";
 import { countCodePoints } from "extraterm-unicode-utilities";

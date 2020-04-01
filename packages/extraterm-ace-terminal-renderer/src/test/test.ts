@@ -1,10 +1,7 @@
 import { TerminalCanvasEditSession } from "../TerminalCanvasEditSession";
-import { EditSession } from "ace-ts/build/EditSession";
-import { Editor } from "ace-ts/build/Editor";
-import { UndoManager } from "ace-ts/build/UndoManager";
-import { Renderer } from "ace-ts/build/Renderer";
-import * as dom from "ace-ts/build/lib/dom";
-import * as event from "ace-ts/build/lib/event";
+import { Editor, EditSession, Renderer, UndoManager } from "@extraterm/ace-ts";
+import * as dom from "@extraterm/ace-ts/dist/lib/dom";
+import * as event from "@extraterm/ace-ts/dist/lib/event";
 import { TerminalCanvasAceEditor } from "../TerminalCanvasAceEditor";
 import * as TermApi from "term-api";
 import { TerminalDocument } from "../TerminalDocument";

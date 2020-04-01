@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
-import { Renderer, HScrollBar, HScrollTracking, VScrollBar, TextLayer, FontMetricsMonitor, FontMetrics } from "ace-ts";
+import { Renderer, HScrollBar, HScrollTracking, VScrollBar, TextLayer, FontMetricsMonitor, FontMetrics } from "@extraterm/ace-ts";
 import { CanvasTextLayer } from "./CanvasTextLayer";
 import { computeDpiFontMetrics } from "extraterm-char-render-canvas";
 import { Event } from '@extraterm/extraterm-extension-api';

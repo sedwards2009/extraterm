@@ -8,7 +8,7 @@ import { LineDataEditor } from "./LineDataEditor";
 import { LineData } from "./LineData";
 import { Line } from "term-api";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { Delta } from "ace-ts";
+import { Delta } from "@extraterm/ace-ts";
 
 // FIXME de-duplicate this class
 class LineImpl extends CharCellGrid implements Line {
@@ -17,7 +17,7 @@ class LineImpl extends CharCellGrid implements Line {
   constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
     super(width, height, _palette, __bare__);
   }
-  
+
   clone(): Line {
     const grid = new LineImpl(this.width, this.height, this.palette);
     this.cloneInto(grid);
@@ -140,9 +140,9 @@ describe.each(testCases)("Evaluate", (name: string, input: string, delta: Delta,
 
     const lineData = createLineDataFromString(input, width);
     const editor = new LineDataEditor(lineData);
-  
+
     editor.update(delta);
-    
+
     const outputTextRows = output.split("\n");
     for (let i=0; i < outputTextRows.length; i++) {
       expect(lineData.getLine(i).getString(0, 0)).toBe(outputTextRows[i]);

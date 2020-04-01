@@ -1,7 +1,7 @@
 /**
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
-import { Command, Editor, OrientedRange, Position } from "ace-ts";
+import { Command, Editor, OrientedRange, Position } from "@extraterm/ace-ts";
 
 
 export const ExtraEditCommands: Command<Editor>[] = [];

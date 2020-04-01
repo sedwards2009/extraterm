@@ -1,7 +1,7 @@
 /**
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
-import { Editor, Renderer, EditSession } from "ace-ts";
+import { Editor, Renderer, EditSession } from "@extraterm/ace-ts";
 import { Event} from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 

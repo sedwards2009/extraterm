@@ -6,7 +6,7 @@ import { Document,
          Delta,
          Fold,
          LanguageMode,
-         TextMode, RangeBasic, OrientedRange } from "ace-ts";
+         TextMode, RangeBasic, OrientedRange } from "@extraterm/ace-ts";
 
 import * as TermApi from "term-api";
 import { LineData } from "./canvas_line_data/LineData";
