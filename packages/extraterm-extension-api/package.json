@@ -1,6 +1,6 @@
 {
   "name": "@extraterm/extraterm-extension-api",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Extension API for the Extraterm terminal",
   "author": "Simon Edwards",
   "license": "MIT",
@@ -21,15 +21,13 @@
     "publish-pkg": "yarn publish --access public"
   },
   "dependencies": {
-    "@extraterm/ace-ts": "0.18.0"
+    "@extraterm/ace-ts": "0.18.0",
+    "@types/node": "^12.6.2"
   },
   "devDependencies": {
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
     "shx": "^0.3.2",
     "typedoc": "^0.16.10"
-  },
-  "peerDependencies": {
-    "@types/node": "^12.6.2"
   }
 }
