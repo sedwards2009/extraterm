@@ -10,6 +10,7 @@ import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
 import { isSupportedOnThisPlatform } from '../../extension/InternalTypes';
+import { ExtensionCard } from './ExtensionCardUi';
 
 
 export interface ExtensionMetadataAndState {
@@ -23,30 +24,20 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
 
 @Component(
   {
+    components: {
+      "extension-card": ExtensionCard
+    },
     template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
-
-  <div v-for="extension in allUserExtensions" v-bind:key="extension.path" class="card">
-    <h3>{{ extension.metadata.displayName || extension.metadata.name }}&nbsp;<span class="extension-version">{{ extension.metadata.version }}</span></h3>
-    <div>{{ extension.metadata.description}}</div>
-    <div class="extension-controls">
-      <span :class="{'traffic-light-running': extension.running, 'traffic-light-stopped': !extension.running}"></span>
-      <span class="group">
-        <button
-          v-if="!extension.running"
-          v-on:click="$emit('${EVENT_ENABLE_EXTENSION}', extension.metadata.name)"
-          class="inline">
-          <i class="fas fa-play"></i>&nbsp;Enable
-        </button>
-        <button
-          v-if="extension.running"
-          v-on:click="$emit('${EVENT_DISABLE_EXTENSION}', extension.metadata.name)"
-          class="inline">
-          <i class="fas fa-pause"></i>&nbsp;Disable
-        </button>
-      </span>
-    </div>
+  <extension-card
+    v-for="extension in allUserExtensions"
+    v-bind:key="extension.path"
+    v-on:detail-click="selectedExtension = extension"
+    :extension="extension"
+  ></extension-card>
+  <div v-if="selectedExtension != null">
+    We have a selected extension
   </div>
 </div>
 `)
@@ -55,6 +46,8 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
 export class ExtensionSettingsUi extends Vue {
 
   allExtensions: ExtensionMetadataAndState[];
+
+  selectedExtension: ExtensionMetadataAndState = null;
 
   constructor() {
     super();
