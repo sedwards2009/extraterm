@@ -164,13 +164,6 @@
   resolved "https://registry.yarnpkg.com/@extraterm/ace-ts/-/ace-ts-0.18.0.tgz#d852f06d411a26504720a2845d5c8506ed117aaa"
   integrity sha512-qkJnznSZa3vDeH3f4ORMLxzi+zsWo7rbOdGPT/sJBZo8oqCnxAzBqEUOJZGq/bv6cFTBjCPw68rG4NMYk3MkYQ==
 
-"@extraterm/extraterm-extension-api@0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@extraterm/extraterm-extension-api/-/extraterm-extension-api-0.1.0.tgz#0cc2721bbb25eaf109927d18a59fd5e2955f855e"
-  integrity sha512-5UQFN7yJ4Mb6YNNlzDFaio/EXuoFeNHZ8w57erZ0vNTbgi2F+qn5elS7xuP+DG51nHmgVUULA3lJTIntbmXsGg==
-  dependencies:
-    "@types/node" "^13.1.2"
-
 "@jest/types@^24.9.0":
   version "24.9.0"
   resolved "https://registry.yarnpkg.com/@jest/types/-/types-24.9.0.tgz#63cb26cb7500d069e5a389441a7c6ab5e909fc59"
@@ -331,7 +324,7 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@12.6.2", "@types/node@^10.12.18", "@types/node@^12.0.12", "@types/node@^12.6.2", "@types/node@^13.1.2", "@types/node@^8.10.10":
+"@types/node@*", "@types/node@12.6.2", "@types/node@^10.12.18", "@types/node@^12.0.12", "@types/node@^12.6.2", "@types/node@^8.10.10":
   version "12.6.2"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-12.6.2.tgz#a5ccec6abb6060d5f20d256fb03ed743e9774999"
   integrity sha512-gojym4tX0FWeV2gsW4Xmzo5wxGjXGm550oVUII7f7G5o4BV6c7DBdiG1RRQd+y1bvqRyYtPfMK85UM95vsapqQ==

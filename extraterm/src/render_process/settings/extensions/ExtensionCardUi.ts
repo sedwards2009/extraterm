@@ -8,13 +8,8 @@ import Vue from 'vue';
 
 import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
+import { ExtensionMetadataAndState } from './ExtensionMetadataAndStateType';
 
-
-export interface ExtensionMetadataAndState {
-  metadata: ExtensionMetadata;
-  running: boolean;
-}
 
 export const EVENT_ENABLE_EXTENSION = "enable-extension";
 export const EVENT_DISABLE_EXTENSION = "disable-extension";

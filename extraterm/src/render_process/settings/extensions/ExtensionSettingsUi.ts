@@ -8,15 +8,11 @@ import Vue from 'vue';
 
 import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { ExtensionMetadata } from 'extraterm/src/ExtensionMetadata';
 import { isSupportedOnThisPlatform } from '../../extension/InternalTypes';
 import { ExtensionCard } from './ExtensionCardUi';
+import { ExtensionDetails } from './ExtensionDetailsUi';
+import { ExtensionMetadataAndState } from './ExtensionMetadataAndStateType';
 
-
-export interface ExtensionMetadataAndState {
-  metadata: ExtensionMetadata;
-  running: boolean;
-}
 
 export const EVENT_ENABLE_EXTENSION = "enable-extension";
 export const EVENT_DISABLE_EXTENSION = "disable-extension";
@@ -25,20 +21,28 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
 @Component(
   {
     components: {
-      "extension-card": ExtensionCard
+      "extension-card": ExtensionCard,
+      "extension-details": ExtensionDetails,
     },
     template: trimBetweenTags(`
 <div class="settings-page">
   <h2><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
-  <extension-card
-    v-for="extension in allUserExtensions"
-    v-bind:key="extension.path"
-    v-on:detail-click="selectedExtension = extension"
-    :extension="extension"
-  ></extension-card>
-  <div v-if="selectedExtension != null">
-    We have a selected extension
-  </div>
+
+  <template v-if="selectedExtension == null">
+    <extension-card
+      v-for="extension in allUserExtensions"
+      v-bind:key="extension.path"
+      v-on:detail-click="selectedExtension = extension"
+      :extension="extension"
+    ></extension-card>
+  </template>
+
+  <template v-else>
+    <a v-on:click="selectedExtension = null">&lt<-- All Extensions</a>
+    <extension-details
+      :extension="selectedExtension"
+    ></extension-details>
+  </template>
 </div>
 `)
   }

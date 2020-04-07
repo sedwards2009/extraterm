@@ -2,6 +2,11 @@ table {
   background-color: $table-background-color;
   border-collapse: collapse;
   border-spacing: 0;
+
+  &.cols-1-1 > thead > tr > th {
+    width: 50%;
+  }
+
 }
 
 th, td {

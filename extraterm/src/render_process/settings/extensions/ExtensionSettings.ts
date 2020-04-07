@@ -6,9 +6,10 @@ import { WebComponent } from 'extraterm-web-component-decorators';
 import { SettingsBase } from '../SettingsBase';
 import { ConfigKey } from '../../../Config';
 
-import { ExtensionSettingsUi, ExtensionMetadataAndState, EVENT_ENABLE_EXTENSION, EVENT_DISABLE_EXTENSION } from './ExtensionSettingsUi';
+import { ExtensionSettingsUi, EVENT_ENABLE_EXTENSION, EVENT_DISABLE_EXTENSION } from './ExtensionSettingsUi';
 import { ExtensionManager } from "../../extension/InternalTypes";
 import { Disposable } from '@extraterm/extraterm-extension-api';
+import { ExtensionMetadataAndState } from "./ExtensionMetadataAndStateType";
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
 
