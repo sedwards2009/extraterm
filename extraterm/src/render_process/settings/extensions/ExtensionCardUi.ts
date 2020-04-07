@@ -24,10 +24,11 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
   <div class="card">
     <h3>{{ extension.metadata.displayName || extension.metadata.name }}&nbsp;<span class="extension-version">{{ extension.metadata.version }}</span></h3>
     <div>{{ extension.metadata.description}}</div>
-    <div><button v-on:click="$emit('detail-click')">Details</button></div>
-    <div class="extension-controls">
-      <span :class="{'traffic-light-running': extension.running, 'traffic-light-stopped': !extension.running}"></span>
-      <span class="group">
+    <div class="gui-packed-row">
+      <button v-on:click="$emit('detail-click')" class="compact inline">Details</button>
+      <div class="expand"></div>
+      <span :class="{'compact':true, 'traffic-light-running': extension.running, 'traffic-light-stopped': !extension.running}"></span>
+      <span class="group compact">
         <button
           v-if="!extension.running"
           v-on:click="$emit('${EVENT_ENABLE_EXTENSION}', extension.metadata.name)"
