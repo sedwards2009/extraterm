@@ -24,7 +24,9 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
     template: trimBetweenTags(`
   <div class="card">
     <h3>{{ extension.metadata.displayName || extension.metadata.name }}&nbsp;<span class="extension-version">{{ extension.metadata.version }}</span></h3>
-    <div>{{ extension.metadata.description}}</div>
+    <p>
+      {{ extension.metadata.description}}
+    </p>
     <div class="gui-packed-row">
       <button v-if="showDetailsButton" v-on:click="$emit('detail-click')" class="compact inline">Details</button>
       <div class="expand"></div>
