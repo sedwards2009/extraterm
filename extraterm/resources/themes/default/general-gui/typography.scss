@@ -13,6 +13,7 @@ body {
 
 a {
   color: $link-color;
+  cursor: pointer;
 
   &:hover {
     color: $link-hover-color;

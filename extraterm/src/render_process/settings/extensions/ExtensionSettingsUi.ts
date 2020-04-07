@@ -38,7 +38,9 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
   </template>
 
   <template v-else>
-    <a v-on:click="selectedExtension = null">&lt<-- All Extensions</a>
+    <p>
+      <a v-on:click="selectedExtension = null"><i class="fas fa-arrow-left"></i> All Extensions</a>
+    </p>
     <extension-details
       :extension="selectedExtension"
     ></extension-details>
