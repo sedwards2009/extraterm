@@ -28,6 +28,7 @@ interface MenuPair {
   <div>
     <extension-card
       :extension="extension"
+      :showDetailsButton="false"
     ></extension-card>
 
     <h3>Details</h3>

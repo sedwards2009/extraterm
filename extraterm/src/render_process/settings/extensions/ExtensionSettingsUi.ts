@@ -34,6 +34,7 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
       v-bind:key="extension.path"
       v-on:detail-click="selectedExtension = extension"
       :extension="extension"
+      :showDetailsButton="true"
     ></extension-card>
   </template>
 
