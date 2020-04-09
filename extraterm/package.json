@@ -18,8 +18,10 @@
   },
   "dependencies": {
     "@extraterm/ace-ts": "0.18.0",
+    "@types/dompurify": "^2.0.1",
     "@types/marked": "^0.7.3",
     "commander": "^2.9.0",
+    "dompurify": "^2.0.8",
     "easta": "3.0.1",
     "extraterm-ace-terminal-renderer": "0.1.0",
     "extraterm-boolean-expression-evaluator": "1.0.0",

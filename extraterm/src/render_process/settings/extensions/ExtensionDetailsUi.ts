@@ -7,6 +7,7 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 import * as fs from 'fs';
 import * as marked from 'marked';
+import * as dompurify from 'dompurify';
 
 import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -268,7 +269,8 @@ export class ExtensionDetails extends Vue {
           if (err != null) {
             return;
           }
-          this.rawReadmeText = marked(data);
+
+          this.rawReadmeText = dompurify.sanitize(marked(data));
         });
     }
 
