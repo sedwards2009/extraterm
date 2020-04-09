@@ -5,6 +5,8 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import * as fs from 'fs';
+import * as marked from 'marked';
 
 import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -32,7 +34,8 @@ interface MenuPair {
     ></extension-card>
 
     <h3>Details</h3>
-    FIXME Rendered markdown goes here.
+    <div v-html="readmeText">
+    </div>
 
     <h3>Feature Contributions</h3>
 
@@ -250,8 +253,26 @@ interface MenuPair {
 export class ExtensionDetails extends Vue {
   extension: ExtensionMetadataAndState;
 
+  rawReadmeText: string = null;
+  loadingReadmeText: boolean = false;
+
   constructor() {
     super();
+  }
+
+  get readmeText(): string {
+    if (this.rawReadmeText == null && ! this.loadingReadmeText && this.extension.metadata.readmePath != null) {
+      this.loadingReadmeText = true;
+      fs.readFile(this.extension.metadata.readmePath, {encoding: "utf8"},
+        (err: NodeJS.ErrnoException, data: string) => {
+          if (err != null) {
+            return;
+          }
+          this.rawReadmeText = marked(data);
+        });
+    }
+
+    return this.rawReadmeText == null ? "" : this.rawReadmeText;
   }
 
   get menus(): MenuPair[] {
