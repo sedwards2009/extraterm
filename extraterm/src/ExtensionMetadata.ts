@@ -17,6 +17,7 @@ export interface ExtensionMetadata {
   includePlatform?: ExtensionPlatform[];
   excludePlatform?: ExtensionPlatform[];
   isInternal?: boolean;
+  readmePath?: string;
 }
 
 export interface ExtensionDesiredState {

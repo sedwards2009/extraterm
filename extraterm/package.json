@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@extraterm/ace-ts": "0.18.0",
+    "@types/marked": "^0.7.3",
     "commander": "^2.9.0",
     "easta": "3.0.1",
     "extraterm-ace-terminal-renderer": "0.1.0",
@@ -39,6 +40,7 @@
     "json-to-ast": "2.1.0",
     "lodash": "^4.17.13",
     "markdown": "0.5.0",
+    "marked": "^0.8.2",
     "mime-types": "^2.1.21",
     "node-sass": "4.12.0",
     "qs": "6.3.1",
@@ -51,6 +53,7 @@
     "xregexp": "4.2.4"
   },
   "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.3.0",
     "@types/commander": "2.3.31",
     "@types/file-type": "^5.2.1",
     "@types/he": "1.1.0",
@@ -68,7 +71,6 @@
     "electron": "7.1.7",
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
-    "@extraterm/extraterm-extension-api": "0.3.0",
     "finalhandler": "0.4.0",
     "jest": "23.6.0",
     "nodeunit": "0.11.0",

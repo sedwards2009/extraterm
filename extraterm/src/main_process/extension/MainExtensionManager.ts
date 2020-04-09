@@ -119,9 +119,27 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
     const packageJsonString = fs.readFileSync(packageJsonPath, "UTF8");
     try {
       const result = parsePackageJsonString(packageJsonString, extensionPath);
+
+      const jsonTree = JSON.parse(packageJsonString);
+      result.readmePath = this._getExtensionReadmePath(jsonTree, extensionPath);
+
       return result;
     } catch(ex) {
       this._log.warn(`An error occurred while processing '${packageJsonPath}': ` + ex);
+      return null;
+    }
+  }
+
+  private _getExtensionReadmePath(packageJsonTree: any, extensionPath: string): string {
+    if (packageJsonTree.extratermReadme != null) {
+      return path.join(extensionPath, packageJsonTree.extratermReadme);
+    } else {
+      const entries = fs.readdirSync(extensionPath);
+      for (const entry of entries) {
+        if (entry.toLowerCase().startsWith("readme.")) {
+          return path.join(extensionPath, entry);
+        }
+      }
       return null;
     }
   }
