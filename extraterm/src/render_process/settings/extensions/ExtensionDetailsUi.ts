@@ -39,220 +39,228 @@ interface MenuPair {
       <i class="fas fa-home"></i> Home page: <a :href="extension.metadata.homepage">{{extension.metadata.homepage}}</a>
     </p>
 
-    <h3>Details</h3>
-    <div v-html="readmeText">
+    <div class="gui-layout width-100pc cols-1-1">
+      <h3 class="sub-tab" v-bind:class="{selected: subtab==='details'}" v-on:click.stop="subtab = 'details'">
+        Details
+      </h3>
+      <h3 class="sub-tab" v-bind:class="{selected: subtab==='contributions'}" v-on:click.stop="subtab = 'contributions'">
+        Contributions
+      </h3>
     </div>
 
-    <h3>Feature Contributions</h3>
+    <div v-if="subtab === 'details'" v-html="readmeText">
+    </div>
 
-    <template v-if="extension.metadata.contributes.commands.length !== 0">
-      <h4>Commands</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Command</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="command in extension.metadata.contributes.commands">
-            <td>{{ command.title }}</td>
-            <td>{{ command.command }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+    <div v-if="subtab === 'contributions'">
+      <template v-if="extension.metadata.contributes.commands.length !== 0">
+        <h4>Commands</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="command in extension.metadata.contributes.commands">
+              <td>{{ command.title }}</td>
+              <td>{{ command.command }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.keybindings.length !== 0">
-      <h4>Keybindings</h4>
-      <table class="width-100pc">
-        <thead>
-          <tr>
-            <th>Path</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="keybindings in extension.metadata.contributes.keybindings">
-            <td>{{ keybindings.path }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.keybindings.length !== 0">
+        <h4>Keybindings</h4>
+        <table class="width-100pc">
+          <thead>
+            <tr>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="keybindings in extension.metadata.contributes.keybindings">
+              <td>{{ keybindings.path }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="menus.length !== 0">
-      <h4>Menus</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Context</th>
-            <th>Command</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="menuPair in menus">
-            <td>{{ menuPair.context }}</td>
-            <td>{{ menuPair.command }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="menus.length !== 0">
+        <h4>Menus</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Context</th>
+              <th>Command</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="menuPair in menus">
+              <td>{{ menuPair.context }}</td>
+              <td>{{ menuPair.command }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.sessionBackends.length !== 0">
-      <h4>Session backends</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="backend in extension.metadata.contributes.sessionBackends">
-            <td>{{ backend.name }}</td>
-            <td>{{ backend.type }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.sessionBackends.length !== 0">
+        <h4>Session backends</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="backend in extension.metadata.contributes.sessionBackends">
+              <td>{{ backend.name }}</td>
+              <td>{{ backend.type }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.sessionEditors.length !== 0">
-      <h4>Session editors</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="sessionEditor in extension.metadata.contributes.sessionEditors">
-            <td>{{ sessionEditor.name }}</td>
-            <td>{{ sessionEditor.type }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.sessionEditors.length !== 0">
+        <h4>Session editors</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="sessionEditor in extension.metadata.contributes.sessionEditors">
+              <td>{{ sessionEditor.name }}</td>
+              <td>{{ sessionEditor.type }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.syntaxThemes.length !== 0">
-      <h4>Syntax themes</h4>
-      <table class="width-100pc">
-        <thead>
-          <tr>
-            <th>Path</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="syntaxTheme in extension.metadata.contributes.syntaxThemes">
-            <td>{{ syntaxTheme.path }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.syntaxThemes.length !== 0">
+        <h4>Syntax themes</h4>
+        <table class="width-100pc">
+          <thead>
+            <tr>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="syntaxTheme in extension.metadata.contributes.syntaxThemes">
+              <td>{{ syntaxTheme.path }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.syntaxThemeProviders.length !== 0">
-      <h4>Syntax theme providers</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Formats</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="syntaxThemeProvider in extension.metadata.contributes.syntaxThemeProviders">
-            <td>{{ syntaxThemeProvider.name }}</td>
-            <td>{{ syntaxThemeProvider.humanFormatNames.join(", ") }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.syntaxThemeProviders.length !== 0">
+        <h4>Syntax theme providers</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Formats</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="syntaxThemeProvider in extension.metadata.contributes.syntaxThemeProviders">
+              <td>{{ syntaxThemeProvider.name }}</td>
+              <td>{{ syntaxThemeProvider.humanFormatNames.join(", ") }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.tabTitleWidgets.length !== 0">
-      <h4>Tab title widgets</h4>
-      <table class="width-100pc">
-        <thead>
-          <tr>
-            <th>Name</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="tabTitleWidget in extension.metadata.contributes.tabTitleWidgets">
-            <td>{{ tabTitleWidget.name }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.tabTitleWidgets.length !== 0">
+        <h4>Tab title widgets</h4>
+        <table class="width-100pc">
+          <thead>
+            <tr>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="tabTitleWidget in extension.metadata.contributes.tabTitleWidgets">
+              <td>{{ tabTitleWidget.name }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.terminalBorderWidgets.length !== 0">
-      <h4>Terminal border widgets</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Border</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="terminalBorderWidget in extension.metadata.contributes.terminalBorderWidgets">
-            <td>{{ terminalBorderWidget.name }}</td>
-            <td>{{ terminalBorderWidget.border }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.terminalBorderWidgets.length !== 0">
+        <h4>Terminal border widgets</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Border</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="terminalBorderWidget in extension.metadata.contributes.terminalBorderWidgets">
+              <td>{{ terminalBorderWidget.name }}</td>
+              <td>{{ terminalBorderWidget.border }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.terminalThemes.length !== 0">
-      <h4>Terminal themes</h4>
-      <table class="width-100pc">
-        <thead>
-          <tr>
-            <th>Path</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="terminalTheme in extension.metadata.contributes.terminalThemes">
-            <td>{{ terminalTheme.path }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.terminalThemes.length !== 0">
+        <h4>Terminal themes</h4>
+        <table class="width-100pc">
+          <thead>
+            <tr>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="terminalTheme in extension.metadata.contributes.terminalThemes">
+              <td>{{ terminalTheme.path }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.terminalThemeProviders.length !== 0">
-      <h4>Terminal themes</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Formats</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="terminalThemeProvider in extension.metadata.contributes.terminalThemeProviders">
-            <td>{{ terminalThemeProvider.name }}</td>
-            <td>{{ terminalThemeProvider.humanFormatNames.join(", ") }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
+      <template v-if="extension.metadata.contributes.terminalThemeProviders.length !== 0">
+        <h4>Terminal themes</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Formats</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="terminalThemeProvider in extension.metadata.contributes.terminalThemeProviders">
+              <td>{{ terminalThemeProvider.name }}</td>
+              <td>{{ terminalThemeProvider.humanFormatNames.join(", ") }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
 
-    <template v-if="extension.metadata.contributes.viewers.length !== 0">
-      <h4>Viewers</h4>
-      <table class="width-100pc cols-1-1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Mime-types</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="viewer in extension.metadata.contributes.viewers">
-            <td>{{ viewer.name }}</td>
-            <td>{{ viewer.mimeTypes.join(", ") }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </template>
-  </div>
+      <template v-if="extension.metadata.contributes.viewers.length !== 0">
+        <h4>Viewers</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Mime-types</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="viewer in extension.metadata.contributes.viewers">
+              <td>{{ viewer.name }}</td>
+              <td>{{ viewer.mimeTypes.join(", ") }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+      </div>
+    </div>
 `)
   }
 )
@@ -261,6 +269,7 @@ export class ExtensionDetails extends Vue {
 
   rawReadmeText: string = null;
   loadingReadmeText: boolean = false;
+  subtab: 'details' | 'contributions' = 'details';
 
   constructor() {
     super();

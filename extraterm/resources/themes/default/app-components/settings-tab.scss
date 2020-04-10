@@ -30,7 +30,7 @@ $tab-background-color-active: $background-color;
   background-color: lighten($background-color, 2%);
   border-right: 1px solid $base-border-color;
   overflow-x: auto;
-  
+
   ul {
     list-style: none;
     padding-left: 0;
@@ -53,7 +53,7 @@ $tab-background-color-active: $background-color;
   }
 }
 
-#settings_pane {  
+#settings_pane {
   flex-grow: 1;
   padding: $panel-body-padding;
   overflow: auto;
@@ -143,7 +143,7 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 
   & > et-virtual-scroll-canvas {
     display: block;
-    height: 100%;  
+    height: 100%;
   }
 }
 
@@ -162,4 +162,18 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
   height: 1em;
   border-radius: 0.5em;
   background-color: red;
+}
+
+.sub-tab {
+  color: $text-color;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &.selected {
+    color: $headings-color;
+    text-decoration: underline;
+  }
 }
