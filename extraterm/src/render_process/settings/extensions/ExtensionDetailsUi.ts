@@ -35,6 +35,10 @@ interface MenuPair {
       :showDetailsButton="false"
     ></extension-card>
 
+    <p v-if="extension.metadata.homepage != null">
+      <i class="fas fa-home"></i> Home page: <a :href="extension.metadata.homepage">{{extension.metadata.homepage}}</a>
+    </p>
+
     <h3>Details</h3>
     <div v-html="readmeText">
     </div>

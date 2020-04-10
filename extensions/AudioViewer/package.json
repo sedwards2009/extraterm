@@ -6,6 +6,7 @@
   "license": "MIT",
   "version": "1.0.0",
   "main": "dist/AudioViewerExtension.js",
+  "homepage": "https://github.com/sedwards2009/extraterm/tree/master/extensions/AudioViewer",
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
     "build-fast": "tsc",
