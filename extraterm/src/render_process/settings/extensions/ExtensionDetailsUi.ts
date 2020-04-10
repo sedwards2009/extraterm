@@ -5,6 +5,7 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import {shell} from 'electron';
 import * as fs from 'fs';
 import * as marked from 'marked';
 import * as dompurify from 'dompurify';
@@ -28,7 +29,7 @@ interface MenuPair {
       extension: Object,
     },
     template: trimBetweenTags(`
-  <div>
+  <div v-on:click.stop.prevent="onClick($event)">
     <extension-card
       :extension="extension"
       :showDetailsButton="false"
@@ -286,5 +287,12 @@ export class ExtensionDetails extends Vue {
       ...menus.newTerminal.map(m => ({ context: "New terminal", command: m.command })),
       ...menus.terminalTab.map(m => ({ context: "Terminal tab", command: m.command })),
     ];
+  }
+
+  onClick(ev: MouseEvent): void {
+    if ((<HTMLElement> ev.target).tagName === "A") {
+      const href = (<HTMLAnchorElement> ev.target).href;
+      shell.openExternal(href);
+    }
   }
 }
