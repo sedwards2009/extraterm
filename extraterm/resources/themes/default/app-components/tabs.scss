@@ -63,6 +63,10 @@ $tab-max-width: 20rem;
 
     box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
     transition: color .1s ease-in;
+    
+    &:first-child {
+      margin-left: pxToRem(25px);
+    }
 
     &, &:before, &:after {
       background-image: -webkit-linear-gradient(top, lighten(#333, 7%), #333);
@@ -149,10 +153,6 @@ $tab-max-width: 20rem;
     &:hover {
       color: inherit;
     }
-  }
-
-  & > DIV.remainder-left {
-    margin: 0 pxToRem(20px) 0 pxToRem(5px);
   }
 
   .placeholder {

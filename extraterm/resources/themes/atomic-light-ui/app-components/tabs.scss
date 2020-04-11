@@ -70,6 +70,10 @@ $tab-background-color: #e8e8e8;
     box-shadow: inset -1px -1px 1px rgba(0,0,0, .05);
     transition: color .1s ease-in;
 
+    &:first-child {
+      margin-left: pxToRem(25px);
+    }
+
     &, &:before, &:after {
       box-sizing: border-box;
 
@@ -152,14 +156,6 @@ $tab-background-color: #e8e8e8;
     &:hover {
       color: inherit;
     }
-  }
-
-  & > DIV.remainder-left {
-    margin: 0 pxToRem(20px) 0 pxToRem(5px);
-  }
-
-  & > DIV.remainder {
-    padding-bottom: $tab-bottom-border-height;
   }
 
   .placeholder {
