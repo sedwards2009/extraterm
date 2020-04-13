@@ -44,7 +44,7 @@ interface MenuPair {
         Details
       </h3>
       <h3 class="sub-tab" v-bind:class="{selected: subtab==='contributions'}" v-on:click.stop="subtab = 'contributions'">
-        Contributions
+        Feature Contributions
       </h3>
     </div>
 
