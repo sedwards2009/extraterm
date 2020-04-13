@@ -51,7 +51,7 @@
     "sinon": "^4.5.0",
     "tslint": "^5.9.1",
     "tslint-config-standard": "^7.0.0",
-    "typescript": "3.5.3"
+    "typescript": "3.7.4"
   },
   "nyc": {
     "sourceMap": true,
