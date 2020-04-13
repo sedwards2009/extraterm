@@ -122,7 +122,6 @@ button {
 
   &.quiet.quiet.quiet {
     border-color: transparent;
-    background-color: inherit;
     color: $text-color;
     text-shadow: none;
 
@@ -144,7 +143,6 @@ button {
   &.microtool {
     font-weight: normal;
     border-color: transparent;
-    background-color: inherit;
     color: $text-color;
     text-shadow: none;
   
@@ -198,6 +196,6 @@ button {
 
     &.danger:hover, &.danger:focus {
       background-color: $button-danger-bg-color;
-    }
+    }    
   }
 }

@@ -40,7 +40,6 @@ $tab-bottom-border-height: pxToRem(5px);
 #ID_TABBAR_CONTAINER > DIV.remainder, #ID_TABBAR_CONTAINER > DIV.remainder_left {
   flex-shrink: 0;
   flex-grow: 1;
-  border-top: 1px solid transparent;
 }
 
 #ID_TABBAR_CONTAINER > DIV.remainder {
