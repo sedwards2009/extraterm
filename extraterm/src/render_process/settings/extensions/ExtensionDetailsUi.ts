@@ -276,16 +276,21 @@ export class ExtensionDetails extends Vue {
   }
 
   get readmeText(): string {
-    if (this.rawReadmeText == null && ! this.loadingReadmeText && this.extension.metadata.readmePath != null) {
-      this.loadingReadmeText = true;
-      fs.readFile(this.extension.metadata.readmePath, {encoding: "utf8"},
-        (err: NodeJS.ErrnoException, data: string) => {
-          if (err != null) {
-            return;
-          }
+    if (! this.loadingReadmeText) {
+      if (this.extension.metadata.readmePath != null) {
+        this.loadingReadmeText = true;
+        fs.readFile(this.extension.metadata.readmePath, {encoding: "utf8"},
+          (err: NodeJS.ErrnoException, data: string) => {
+            if (err != null) {
+              this.rawReadmeText = "<p>(Missing)</p>";
+              return;
+            }
 
-          this.rawReadmeText = dompurify.sanitize(marked(data));
-        });
+            this.rawReadmeText = dompurify.sanitize(marked(data));
+          });
+      } else {
+        this.rawReadmeText = "<p>(Missing)</p>";
+      }
     }
 
     return this.rawReadmeText == null ? "" : this.rawReadmeText;
