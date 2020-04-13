@@ -44,7 +44,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
-      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const themeStyle = document.createElement('style');
       themeStyle.id = ThemeableElementBase.ID_THEME;
       

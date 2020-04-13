@@ -50,6 +50,7 @@
 button {
   font-weight: $button-font-weight;
   font-family: $font-family;
+  user-select: none;
 
   @include button-size($button-font-size, $button-line-height, $button-padding-vertical, $button-padding-horizontal,
                         $button-border-width);

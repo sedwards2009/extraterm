@@ -16,15 +16,15 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   {
     template: trimBetweenTags(`
 <div class="settings-page">
-  <h2><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
+  <h2 class="no-user-select"><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
   <div v-for="(item, index) in sessions" v-bind:key="item.uuid" class="session-configuration card">
-    <h3 class="session-name">{{ item.name }}</h3>
-    <div class="session-type">{{getSessionTypeName(item.type)}}</div>
+    <h3 class="session-name no-user-select">{{ item.name }}</h3>
+    <div class="session-type no-user-select">{{getSessionTypeName(item.type)}}</div>
 
     <div class="session-card-buttons">
       <button v-if="index != 0" class="microtool primary" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
-      <div v-if="index == 0"><em>default</em></div>
+      <div v-if="index == 0" class="no-user-select"><em>default</em></div>
       <button v-if="index != 0" class="microtool danger" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
     </div>
     <div>

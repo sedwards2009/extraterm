@@ -219,6 +219,7 @@ input[type="range"] {
 label {
   margin-right: 0.5rem;
   font-size: $input-font-size;
+  user-select: none;
 }
 
 .gui-layout > label {

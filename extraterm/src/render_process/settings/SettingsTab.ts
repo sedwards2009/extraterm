@@ -41,7 +41,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     this._ui = new SettingsUi();
     const component = this._ui.$mount();
 
-    const shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
+    const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
     const themeStyle = document.createElement("style");
     themeStyle.id = ThemeableElementBase.ID_THEME;
 

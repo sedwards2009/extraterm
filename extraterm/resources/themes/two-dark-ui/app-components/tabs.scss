@@ -16,7 +16,7 @@ $tab-max-width: 20rem;
   position: relative;
   display: flex;
   height: $ui-tab-height;
-  -webkit-user-select: none;
+  user-select: none;
   -webkit-padding-start: 0;
 
   list-style: none;

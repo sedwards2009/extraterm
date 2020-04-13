@@ -23,7 +23,7 @@ export class StackedWidget extends TemplatedElementBase {
   private _initialized = false;
 
   constructor() {
-    super({ delegatesFocus: true });
+    super({ delegatesFocus: false });
     this._currentIndex = -1;
   }
   

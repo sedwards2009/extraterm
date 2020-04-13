@@ -32,7 +32,7 @@ export function nextId(): string {
     },
     template: trimBetweenTags(`
 <div class="settings-page">
-  <h2><i class="far fa-window-maximize"></i>&nbsp;&nbsp;Frame Handling Rules</h2>
+  <h2 class="no-user-select"><i class="far fa-window-maximize"></i>&nbsp;&nbsp;Frame Handling Rules</h2>
 
   <div class="gui-packed-row width-100pc">
     <label class="char-width-8">Default action:</label>
@@ -43,7 +43,7 @@ export function nextId(): string {
   </div>
 
   <div v-for="commandLineAction in commandLineActions" v-bind:key="commandLineAction.id" class="frame-configuration card">
-    <h3 class="">Rule: {{commandLineAction.match}}</h3>
+    <h3 class="no-user-select">Rule: {{commandLineAction.match}}</h3>
     <div class="frame-card-buttons">
       <button v-on:click="deleteCommandLineAction(commandLineAction.id);" class="microtool danger"><i class="fa fa-times"></i></button>
     </div>
@@ -67,7 +67,7 @@ export function nextId(): string {
   </div>
 
   <button @click="addCommandLineAction">New Rule</button>
-  <p>
+  <p class="no-user-select">
   Add rules to customize whether different commands are framed or not.
   </p>
 </div>

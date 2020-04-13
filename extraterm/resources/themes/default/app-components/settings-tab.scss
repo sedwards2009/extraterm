@@ -24,8 +24,8 @@ $tab-background-color-active: $background-color;
   flex-shrink: 0;
   width: 180px;
 
-  -webkit-user-select: none;
   user-select: none;
+
   padding-top: $component-padding-vertical;
   background-color: lighten($background-color, 2%);
   border-right: 1px solid $base-border-color;
@@ -87,8 +87,6 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
   border: 1px solid $base-border-color;
   background-color: $package-card-background-color;
   overflow: hidden;
-  cursor: pointer;
-  -webkit-user-select: none;
 }
 
 .session-configuration {
@@ -167,7 +165,8 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
 .sub-tab {
   color: $text-color;
   cursor: pointer;
-
+  user-select: none;
+  
   &:hover {
     text-decoration: underline;
   }

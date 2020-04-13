@@ -22,7 +22,7 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     this._ui = new uiConstructor();
     this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
 
-    const shadow = this.attachShadow({ mode: "open", delegatesFocus: true });
+    const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
     const themeStyle = document.createElement("style");
     themeStyle.id = ThemeableElementBase.ID_THEME;
     shadow.appendChild(themeStyle);

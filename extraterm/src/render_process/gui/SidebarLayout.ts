@@ -27,7 +27,7 @@ export class SidebarLayout extends TemplatedElementBase {
   private _log: Logger;
 
   constructor() {
-    super({ delegatesFocus: true });
+    super({ delegatesFocus: false });
     this._log = getLogger(SidebarLayout.TAG_NAME, this);
 
     for (const slotElement of this.shadowRoot.querySelectorAll("slot")) {

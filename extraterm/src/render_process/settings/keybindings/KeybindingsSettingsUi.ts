@@ -29,7 +29,7 @@ export const EVENT_RENAME = "rename";
     },
     template: trimBetweenTags(`
 <div class="settings-page">
-  <h2><i class="far fa-keyboard"></i>&nbsp;&nbsp;Keybindings</h2>
+  <h2 class="no-user-select"><i class="far fa-keyboard"></i>&nbsp;&nbsp;Keybindings</h2>
 
   <div class="gui-packed-row">
     <label>Keybindings:</label>

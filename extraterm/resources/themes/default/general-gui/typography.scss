@@ -78,3 +78,7 @@ p.minor, span.minor {
 .highlight-danger {
   background-color: change_color($brand-danger, $alpha: 0.5);
 }
+
+.no-user-select {
+  user-select: none;
+}

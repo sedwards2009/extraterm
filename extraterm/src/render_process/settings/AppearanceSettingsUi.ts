@@ -46,9 +46,9 @@ const isDarwin = process.platform === "darwin";
   {
     template: trimBetweenTags(`
 <div class="settings-page">
-  <h2><i class="fa fa-paint-brush"></i>&nbsp;&nbsp;Appearance</h2>
+  <h2 class="no-user-select"><i class="fa fa-paint-brush"></i>&nbsp;&nbsp;Appearance</h2>
 
-  <h3>Terminal</h3>
+  <h3 class="no-user-select">Terminal</h3>
 
   <div class="gui-layout cols-1-2">
     <label for="terminal-font">Font:</label>
@@ -89,7 +89,7 @@ const isDarwin = process.platform === "darwin";
 
     <label></label>
     <div>
-      <p class="minor">{{themeTerminalFormatsMessage}}</p>
+      <p class="minor no-user-select">{{themeTerminalFormatsMessage}}</p>
     </div>
 
     <label>Cursor style:</label>
@@ -117,7 +117,7 @@ const isDarwin = process.platform === "darwin";
     </et-vue-terminal-ace-viewer-element>
   </div>
 
-  <h3>Interface</h3>
+  <h3 class="no-user-select">Interface</h3>
 
   <div class="gui-layout cols-1-2">
     <label for="theme-terminal">Theme:</label>
@@ -130,7 +130,7 @@ const isDarwin = process.platform === "darwin";
     <template v-if="themeGUIComment != ''">
       <label></label>
       <div>
-        <p class="minor">
+        <p class="minor no-user-select">
           <i class="fa fa-info-circle"></i>
           {{themeGUIComment}}
         </p>
@@ -154,7 +154,7 @@ const isDarwin = process.platform === "darwin";
     <template v-if="titleBarStyle != currentTitleBarStyle">
       <label></label>
       <div>
-        <p class="highlight-warning">
+        <p class="highlight-warning no-user-select">
           <i class="fa fa-info-circle"></i>
           A restart is requred before this change takes effect.
         </p>
@@ -183,7 +183,7 @@ const isDarwin = process.platform === "darwin";
 
   </div>
 
-  <h3>Text Viewer</h3>
+  <h3 class="no-user-select">Text Viewer</h3>
 
   <div class="gui-layout cols-1-2">
     <label for="theme-terminal">Theme:</label>
@@ -210,7 +210,7 @@ const isDarwin = process.platform === "darwin";
 
     <label></label>
     <div>
-      <p class="minor">{{themeSyntaxFormatsMessage}}</p>
+      <p class="minor no-user-select">{{themeSyntaxFormatsMessage}}</p>
     </div>
 
     <et-vue-text-ace-viewer-element

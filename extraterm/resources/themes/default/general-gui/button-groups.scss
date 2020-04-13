@@ -1,4 +1,5 @@
 div.group, span.group {
+  user-select: none;
 
   & > button:not(:first-child) {
     border-top-left-radius: 0;

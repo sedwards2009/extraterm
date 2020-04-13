@@ -105,7 +105,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     }
     this._elementAttached = true;
 
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
 
     const clone = this._createClone();
     shadow.appendChild(clone);

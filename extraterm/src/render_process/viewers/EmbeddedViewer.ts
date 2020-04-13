@@ -487,7 +487,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _setUpShadowDom(): void {
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this._createClone();
     shadow.appendChild(clone);
 

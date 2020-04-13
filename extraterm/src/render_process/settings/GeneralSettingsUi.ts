@@ -17,7 +17,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
   {
     template: trimBetweenTags(`
 <div class="settings-page">
-  <h2><i class="fa fa-sliders-h"></i>&nbsp;&nbsp;General Settings</h2>
+  <h2 class="no-user-select"><i class="fa fa-sliders-h"></i>&nbsp;&nbsp;General Settings</h2>
     
   <div class="gui-layout cols-1-2">
     <label for="tips">Show Tips:</label>
@@ -39,19 +39,19 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     <span><label><input type="checkbox" v-model="autoCopySelectionToClipboard">Automatically copy selection to clipboard</label></span>
 
     <label></label>
-    <span>&nbsp;</span>
+    <span class="no-user-select">&nbsp;</span>
     
     <label></label>
     <span><label><input type="checkbox" v-model="gpuDriverWorkaroundFlag">Reduce graphic effects</label></span>
 
     <label></label>
-    <span>Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors.</span>
+    <span class="no-user-select">Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors.</span>
 
     <label></label>
     <span><label><input type="checkbox" v-model="isHardwareAccelerated">Hardware Acceleration</label></span>
 
     <label></label>
-    <span>Some graphics hardware and driver combinations can give incorrect rendering. Turning off this option may avoid this problem.</span>
+    <span class="no-user-select">Some graphics hardware and driver combinations can give incorrect rendering. Turning off this option may avoid this problem.</span>
 
     <template v-if="isHardwareAccelerated !== systemIsHardwareAccelerated">
       <label></label>

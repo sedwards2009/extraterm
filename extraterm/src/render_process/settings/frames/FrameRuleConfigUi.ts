@@ -33,7 +33,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
         v-bind:value="frameRuleLines"
         @change="onFrameRuleLinesChange"
       />
-      <div v-if="frameRule == 'frame_if_lines'">&nbsp;lines</div>
+      <div v-if="frameRule == 'frame_if_lines'" class="no-user-select">&nbsp;lines</div>
     </div>`)
   }
 )

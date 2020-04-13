@@ -26,7 +26,7 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
     },
     template: trimBetweenTags(`
 <div class="settings-page">
-  <h2><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
+  <h2 class="no-user-select"><i class="fas fa-puzzle-piece"></i>&nbsp;&nbsp;Extensions</h2>
 
   <template v-if="selectedExtension == null">
     <extension-card
@@ -39,7 +39,7 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
   </template>
 
   <template v-else>
-    <p>
+    <p class="no-user-select">
       <a v-on:click="selectedExtension = null"><i class="fas fa-arrow-left"></i> All Extensions</a>
     </p>
     <extension-details

@@ -29,7 +29,7 @@ $tab-bottom-border-height: pxToRem(5px);
 
   cursor: default;
   -webkit-touch-callout: none;
-  -webkit-user-select: none;
+  user-select: none;
 }
 
 #ID_TABBAR > li {
