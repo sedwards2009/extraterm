@@ -6,6 +6,7 @@
 @import "fonts/font-awesome";
 
 $tab-background-color-active: $background-color;
+$tab-bottom-border-height: pxToRem(5px);
 
 /* gui-tabwidget */
 
@@ -17,10 +18,14 @@ $tab-background-color-active: $background-color;
 
 #ID_TABBAR_CONTAINER {
   position: relative;
+  display: flex;
 }
 
 #ID_TABBAR {
   flex: 0 auto;
+  min-width: 0;
+
+  padding-right: pxToRem(2px);
 
   cursor: default;
   -webkit-touch-callout: none;
@@ -32,17 +37,31 @@ $tab-background-color-active: $background-color;
   white-space: nowrap;
 }
 
-#ID_TABBAR > DIV.remainder {
+#ID_TABBAR_CONTAINER > DIV.remainder, #ID_TABBAR_CONTAINER > DIV.remainder_left {
   flex-shrink: 0;
   flex-grow: 1;
-  height: $tab-height + pxToRem(1px);
+}
+
+#ID_TABBAR_CONTAINER > DIV.remainder {
+  &:after {
+    content: "";
+    position: absolute;
+    box-sizing: border-box;
+    bottom: 0;
+    height: $tab-bottom-border-height;
+    left: 0;
+    right: 0;
+    background-color: $tab-background-color-active;
+    border-top: 1px solid $tab-border-color;
+    pointer-events: none;
+  }
 }
 
 #ID_BUTTON_CONTAINER {
   flex-shrink: 0;
   flex-grow: 0;
   align-self: center;
-  padding-left: ($ui-tab-height - 1.5rem) / 2;
+  padding-left: ($tab-height - 1.5rem) / 2;
 
   &.hide-buttons {
     display: none;

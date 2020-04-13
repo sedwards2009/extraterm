@@ -15,10 +15,10 @@ jobs:
     pool:
       vmImage: 'Ubuntu-18.04'
     steps:
-      - script: env
-      - script: echo Build.SourceBranch $(Build.SourceBranch)
       - script: yarn install --frozen-lockfile
         displayName: 'Yarn install'
+      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+        displayName: Check for tag and package.json version
       - script: yarn run package-commands-zip --version=$(git describe --tags)
         displayName: 'Run yarn package-commands-zip'
       - task: CopyFiles@2
@@ -41,6 +41,8 @@ jobs:
           versionSpec: '12.8.1'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
+      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+        displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild
         displayName: "yarn run electron-rebuild"
       - script: yarn run lint-strict
@@ -72,6 +74,8 @@ jobs:
           versionSpec: '12.8.1'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
+      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+        displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild-win32
         displayName: "yarn run electron-rebuild-win32"
       - script: yarn run lint-strict
@@ -112,6 +116,8 @@ jobs:
           versionSpec: '12.8.1'
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
+      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+        displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild
         displayName: "yarn run electron-rebuild"
       - script: yarn run lint-strict

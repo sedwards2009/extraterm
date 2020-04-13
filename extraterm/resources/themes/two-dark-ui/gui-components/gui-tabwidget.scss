@@ -34,11 +34,14 @@ $tab-background-color-active: $background-color;
   white-space: nowrap;
 }
 
-#ID_TABBAR_CONTAINER > DIV.remainder, #ID_TABBAR_CONTAINER > DIV.remainder_left {
+#ID_TABBAR_CONTAINER > DIV.remainder {
   flex-shrink: 0;
   flex-grow: 1;
-  border-top: 1px solid transparent;
   height: $tab-height;
+}
+
+#ID_TABBAR_CONTAINER > DIV.remainder, #ID_TABBAR_CONTAINER > DIV.remainder-left {
+  border-top: 1px solid $tab-border-color;
 }
 
 #ID_CONTENTS {
