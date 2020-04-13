@@ -63,7 +63,7 @@ export class AboutTab extends ViewerElement implements AcceptsConfigDatabase {
       divContainer.innerHTML = `<div id='${ID_ABOUT}'>
   <h1>Extraterm</h1>
   <h3>version ${this._configDatabase.getConfig(SYSTEM_CONFIG).applicationVersion}</h3>
-  <p>Copyright &copy; 2015-2019 Simon Edwards &lt;simon@simonzone.com&gt;</p>
+  <p>Copyright &copy; 2015-2020 Simon Edwards &lt;simon@simonzone.com&gt;</p>
   <p>Published under the MIT license</p>
   <p>See <a href="http://extraterm.org">extraterm.org</a> and <a href="https://github.com/sedwards2009/extraterm">https://github.com/sedwards2009/extraterm</a></p>
   <hr>
