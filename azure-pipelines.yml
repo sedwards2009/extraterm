@@ -61,7 +61,7 @@ jobs:
   - job: package_windows
     displayName: "Build Windows packages"
     pool:
-      vmImage: 'windows-2019'
+      vmImage: 'vs2017-win2016'
     steps:
       - script: choco install nsis -y
         displayName: "install nsis"
@@ -70,6 +70,7 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: '10.11.0'
+      - script: yarn global add node-gyp
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
