@@ -28,6 +28,7 @@
     "shx": "^0.3.2",
     "typescript": "3.7.4"
   },
+  "isInternal": true,
   "excludePlatform": [
     {
       "os": "win32"
