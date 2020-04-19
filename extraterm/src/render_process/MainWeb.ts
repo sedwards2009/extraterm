@@ -595,7 +595,7 @@ async function asyncSetupConfiguration(): Promise<void> {
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
-  const keybindingsFile = loadKeybindingsFromObject(newSystemConfig.keybindingsFile, process.platform);
+  const keybindingsFile = loadKeybindingsFromObject(newSystemConfig.flatKeybindingsFile, process.platform);
   if (! keybindingsFile.equals(keybindingsManager.getKeybindingsMapping())) {
     keybindingsManager.setKeybindingsMapping(keybindingsFile);
   }

@@ -14,7 +14,7 @@ import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 import { ExtensionMetadata, ExtensionDesiredState } from './ExtensionMetadata';
-import { KeybindingsFile } from './keybindings/KeybindingsFile';
+import { KeybindingsFile, CustomKeybindingsFile, LogicalKeybindingsName, StackedKeybindingsFile } from './keybindings/KeybindingsFile';
 
 
 /**
@@ -75,9 +75,6 @@ export enum MessageType {
   READ_KEYBINDINGS_REQUEST,
   READ_KEYBINDINGS,
 
-  COPY_KEYBINDINGS,
-  RENAME_KEYBINDINGS,
-  DELETE_KEYBINDINGS,
   UPDATE_KEYBINDINGS,
   GLOBAL_KEYBINDINGS_ENABLE,
 
@@ -490,39 +487,26 @@ export interface ExtensionDisableMessage extends Message {
   extensionName: string;
 }
 
+//-------------------------------------------------------------------------
 // Keybindings
 
-export interface KeybindingsCopyMessage extends Message {
-  sourceName: string;
-  destName: string;
-}
-
-export interface KeybindingsDeleteMessage extends Message {
-  name: string;
-}
-
 export interface KeybindingsReadRequestMessage extends Message {
-  name: string;
+  name: LogicalKeybindingsName;
 }
 
 export interface KeybindingsReadMessage extends Message {
-  name: string;
-  keybindings: KeybindingsFile;
-}
-
-export interface KeybindingsRenameMessage extends Message {
-  sourceName: string;
-  destName: string;
+  stackedKeybindingsFile: StackedKeybindingsFile;
 }
 
 export interface KeybindingsUpdateMessage extends Message {
-  name: string;
-  keybindings: KeybindingsFile;
+  customKeybindingsFile: CustomKeybindingsFile;
 }
 
 export interface GlobalKeybindingsEnableMessage extends Message {
   enabled: boolean;
 }
+
+//-------------------------------------------------------------------------
 
 export interface TerminalThemeRequestMessage extends Message {
   id: string;

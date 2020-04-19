@@ -1,11 +1,11 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 import { WebComponent } from 'extraterm-web-component-decorators';
 
-import { KeybindingsSettingsUi, EVENT_DUPLICATE, EVENT_DELETE, EVENT_RENAME } from './KeybindingsSettingsUi';
-import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig, KeybindingsInfo } from '../../../Config';
+import { KeybindingsSettingsUi } from './KeybindingsSettingsUi';
+import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from '../SettingsBase';
@@ -16,13 +16,13 @@ import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategor
 import { ExtensionManager } from '../../extension/InternalTypes';
 import { ExtensionCommandContribution } from '../../../ExtensionMetadata';
 import { Disposable } from '@extraterm/extraterm-extension-api';
+import { LogicalKeybindingsName } from 'extraterm/src/keybindings/KeybindingsFile';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 
 @WebComponent({tag: KEY_BINDINGS_SETTINGS_TAG})
 export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _log: Logger = null;
-  private _autoSelect: string = null;
   private _keybindingsManager: KeybindingsManager = null;
   private _extensionManager: ExtensionManager = null;
   private _commandChangedDisposable: Disposable = null;
@@ -30,21 +30,6 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   constructor() {
     super(KeybindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
     this._log = getLogger(KEY_BINDINGS_SETTINGS_TAG, this);
-
-    this._getUi().$on(EVENT_DUPLICATE, keybindingsName => {
-      const destName = keybindingsName + " copy";
-      this._autoSelect = destName;
-      WebIpc.keybindingsCopy(keybindingsName, destName);
-    });
-
-    this._getUi().$on(EVENT_DELETE, keybindingsFilename => {
-      WebIpc.keybindingsDelete(keybindingsFilename);
-    });
-    
-    this._getUi().$on(EVENT_RENAME, (keybindingsName, newKeybindingsName) => {
-      this._autoSelect = newKeybindingsName;
-      WebIpc.keybindingsRename(keybindingsName, newKeybindingsName);
-    });
 
     this._getUi().$on(EVENT_START_KEY_INPUT, () => {
       if (this._keybindingsManager != null) {
@@ -66,18 +51,6 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   protected _setConfig(key: ConfigKey, config: any): void {
     const ui = this._getUi();
 
-    if (key === SYSTEM_CONFIG) {
-      const systemConfig = <SystemConfig> config;
-      if (ui.keybindingsInfoList.length !== systemConfig.keybindingsInfoList.length) {
-        ui.keybindingsInfoList = systemConfig.keybindingsInfoList;
-        if (this._autoSelect != null) {
-          ui.selectedKeybindings = this._autoSelect;
-          this._loadKeybindings(ui.selectedKeybindings);
-          this._autoSelect = null;
-        }
-      }
-    }
-
     if (key === GENERAL_CONFIG) {
       const generalConfig = <GeneralConfig> config;
       if (ui.selectedKeybindings !== generalConfig.keybindingsName) {
@@ -87,10 +60,9 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     }
   }
 
-  private _loadKeybindings(name: string): void {
-    WebIpc.keybindingsRequestRead(name).then(msg => {
-      this._getUi().keybindings = msg.keybindings;
-    });
+  private async _loadKeybindings(name: LogicalKeybindingsName): Promise<void> {
+    const msg = await WebIpc.keybindingsRequestRead(name);
+    this._getUi().keybindings = msg.stackedKeybindingsFile.keybindingsFile;
   }
 
   protected _dataChanged(): void {
@@ -102,21 +74,8 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
       this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
       this._loadKeybindings(ui.selectedKeybindings);
     }
-
-    if ( ! this._getSelectedKeybindingsInfo().readOnly) {
-      WebIpc.keybindingsUpdate(ui.selectedKeybindings, ui.keybindings);
-    }
-  }
-
-  private _getSelectedKeybindingsInfo(): KeybindingsInfo {
-    const ui = this._getUi();
-    const systemConfig = <SystemConfig> this._getConfig(SYSTEM_CONFIG);
-    for (const bindings of systemConfig.keybindingsInfoList) {
-      if (bindings.name === ui.selectedKeybindings) {
-        return bindings;
-      }
-    }
-    return null;
+// FIXME
+    // WebIpc.keybindingsUpdate(ui.selectedKeybindings, ui.keybindings);
   }
 
   set keybindingsManager(keybindingsManager: KeybindingsManager) {
@@ -125,7 +84,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
   get keybindingsManager(): KeybindingsManager {
     return this._keybindingsManager;
-  } 
+  }
 
   set extensionManager(extensionManager: ExtensionManager) {
     this._extensionManager = extensionManager;

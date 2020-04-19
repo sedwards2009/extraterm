@@ -5,7 +5,7 @@
  */
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { Event, SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { KeybindingsFile } from './keybindings/KeybindingsFile';
+import { KeybindingsFile, LogicalKeybindingsName } from './keybindings/KeybindingsFile';
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
 export type GpuDriverWorkaround = "none" | "no_blend";
@@ -31,7 +31,7 @@ export interface GeneralConfig {
 
   scrollbackMaxLines?: number;
   scrollbackMaxFrames?: number;
-  keybindingsName?: string;
+  keybindingsName?: LogicalKeybindingsName;
 
   showTips?: ShowTipsStrEnum;
   tipCounter?: number;
@@ -80,10 +80,9 @@ export interface CommandLineAction {
   frameRuleLines: number;
 }
 
-export interface KeybindingsInfo {
-  name: string;
+export interface KeybindingsFileInfo {
+  name: LogicalKeybindingsName;
   filename: string;
-  readOnly: boolean;
   path: string;
 }
 
@@ -102,8 +101,7 @@ export interface SingleWindowConfiguration {
 export interface SystemConfig {
   homeDir: string;
   applicationVersion: string;
-  keybindingsInfoList: KeybindingsInfo[];
-  keybindingsFile: KeybindingsFile;
+  flatKeybindingsFile: KeybindingsFile;
 
   availableFonts: FontInfo[];
   titleBarStyle: TitleBarStyle;

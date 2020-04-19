@@ -209,6 +209,10 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
     return this._extensionMetadata;
   }
 
+  getActiveExtensionMetadata(): ExtensionMetadata[] {
+    return this._activeExtensions.map(ae => ae.metadata);
+  }
+
   enableExtension(name: string): void {
     const metadata = this._getExtensionMetadataByName(name);
     if (metadata == null) {

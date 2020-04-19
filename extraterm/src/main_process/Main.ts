@@ -38,7 +38,7 @@ import { getAvailableFontsSync } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory,
   getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupAppData,
-  KEYBINDINGS_OSX, KEYBINDINGS_PC, sanitizeAndIinitializeConfigs, readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
+  sanitizeAndIinitializeConfigs, readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
 import { bestOverlap } from "./RectangleMatch";
 
 const LOG_FINE = false;
@@ -181,8 +181,20 @@ function setupExtensionManager(configDatabase: ConfigDatabase,
 
 function setupKeybindingsIOManager(extensionManager: MainExtensionManager): KeybindingsIOManager {
   const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
-  keybindingsIOManager.scan();
+
+  keybindingsIOManager.onUpdate(() => {
+    updateSystemConfigKeybindings();
+  });
+
   return keybindingsIOManager;
+}
+
+function updateSystemConfigKeybindings(): void {
+  // Broadcast the updated bindings.
+  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  systemConfig.flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsFile(generalConfig.keybindingsName);
+  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 }
 
 function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: MainExtensionManager): ThemeManager {
@@ -614,12 +626,11 @@ const _log = getLogger("main");
 function systemConfiguration(config: GeneralConfig, keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[], packageJson: any): SystemConfig {
   const homeDir = app.getPath('home');
 
-  const keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(config.keybindingsName);
+  const flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsFile(config.keybindingsName);
   return {
     homeDir,
     applicationVersion: packageJson.version,
-    keybindingsFile,
-    keybindingsInfoList: keybindingsIOManager.getInfoList(),
+    flatKeybindingsFile,
     availableFonts: availableFonts,
     titleBarStyle,
     userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
@@ -835,18 +846,6 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
 
     case Messages.MessageType.EXTENSION_DISABLE:
       extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
-      break;
-
-    case Messages.MessageType.COPY_KEYBINDINGS:
-      handleKeybindingsCopy(<Messages.KeybindingsCopyMessage> msg);
-      break;
-
-    case Messages.MessageType.DELETE_KEYBINDINGS:
-      handleKeybindingsDelete(<Messages.KeybindingsDeleteMessage> msg);
-      break;
-
-    case Messages.MessageType.RENAME_KEYBINDINGS:
-      handleKeybindingsRename(<Messages.KeybindingsRenameMessage> msg);
       break;
 
     case Messages.MessageType.READ_KEYBINDINGS_REQUEST:
@@ -1164,64 +1163,17 @@ function handleExtensionDesiredStateRequest(): Messages.ExtensionDesiredStateMes
   return {type: Messages.MessageType.EXTENSION_DESIRED_STATE, desiredState: extensionManager.getDesiredState()};
 }
 
-function handleKeybindingsCopy(msg: Messages.KeybindingsCopyMessage): void {
-  keybindingsIOManager.copyKeybindings(msg.sourceName, msg.destName);
-
-  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
-}
-
-function handleKeybindingsDelete(msg: Messages.KeybindingsDeleteMessage): void {
-  deleteKeybindings(msg.name);
-}
-
-function deleteKeybindings(targetName: string): void {
-  keybindingsIOManager.deleteKeybindings(targetName);
-
-  const generalConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
-  if (generalConfig.keybindingsName === targetName) {
-    generalConfig.keybindingsName = isDarwin ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
-    configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
-  }
-
-  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
-}
-
-function handleKeybindingsRename(msg: Messages.KeybindingsCopyMessage): void {
-  keybindingsIOManager.copyKeybindings(msg.sourceName, msg.destName);
-
-  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  systemConfig.keybindingsInfoList = keybindingsIOManager.getInfoList();
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
-
-  const generalConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
-  generalConfig.keybindingsName = msg.destName;
-  configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
-
-  deleteKeybindings(msg.sourceName);
-}
-
 function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {
-  const keybindings = keybindingsIOManager.readKeybindingsFileByName(msg.name);
+  const stackedKeybindingsFile = keybindingsIOManager.getStackedKeybindings(msg.name);
   const reply: Messages.KeybindingsReadMessage = {
     type: Messages.MessageType.READ_KEYBINDINGS,
-    name: msg.name,
-    keybindings
+    stackedKeybindingsFile
   };
   return reply;
 }
 
 function handleKeybindingsUpdate(msg: Messages.KeybindingsUpdateMessage): void {
-  keybindingsIOManager.updateKeybindings(msg.name, msg.keybindings);
-
-  // Broadcast the updated bindings.
-  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
-  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  systemConfig.keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(generalConfig.keybindingsName);
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+  keybindingsIOManager.updateCustomKeybindingsFile(msg.customKeybindingsFile);
 }
 
 function handleGlobalKeybindingsEnable(msg: Messages.GlobalKeybindingsEnableMessage): void {

@@ -14,7 +14,7 @@ import * as config from '../Config';
 import {Logger, getLogger} from "extraterm-logging";
 import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
-import { KeybindingsFile } from '../keybindings/KeybindingsFile';
+import { KeybindingsFile, LogicalKeybindingsName, CustomKeybindingsFile } from '../keybindings/KeybindingsFile';
 
 const _log = getLogger("WebIPC");
 
@@ -236,31 +236,19 @@ export function disableExtension(extensionName: string): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function keybindingsCopy(sourceName: string, destName: string): void {
-  const msg: Messages.KeybindingsCopyMessage = {type: Messages.MessageType.COPY_KEYBINDINGS, sourceName, destName};
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
-export function keybindingsRequestRead(name: string): Promise<Messages.KeybindingsReadMessage> {
+export function keybindingsRequestRead(name: LogicalKeybindingsName): Promise<Messages.KeybindingsReadMessage> {
   const msg: Messages.KeybindingsReadRequestMessage = {
     type: Messages.MessageType.READ_KEYBINDINGS_REQUEST,
     name
   };
   return <Promise<Messages.KeybindingsReadMessage>> request(msg, Messages.MessageType.READ_KEYBINDINGS);
 }
-
-export function keybindingsRename(sourceName: string, destName: string): void {
-  const msg: Messages.KeybindingsRenameMessage = {type: Messages.MessageType.RENAME_KEYBINDINGS, sourceName, destName};
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
-export function keybindingsDelete(name: string): void {
-  const msg: Messages.KeybindingsDeleteMessage = {type: Messages.MessageType.DELETE_KEYBINDINGS, name: name};
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
-export function keybindingsUpdate(name: string, keybindings: KeybindingsFile): void {
-  const msg: Messages.KeybindingsUpdateMessage = {type: Messages.MessageType.UPDATE_KEYBINDINGS, name, keybindings};
+// FIXME naming
+export function keybindingsUpdate(customKeybindingsFile: CustomKeybindingsFile): void {
+  const msg: Messages.KeybindingsUpdateMessage = {
+    type: Messages.MessageType.UPDATE_KEYBINDINGS,
+    customKeybindingsFile
+  };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 

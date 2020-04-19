@@ -13,7 +13,7 @@ import { KeybindingsFile } from "../../keybindings/KeybindingsFile";
 SourceMapSupport.install();
 
 const keyBindingsMap: KeybindingsFile = {
-  name: "Test file",
+  extends: "pc-style",
   bindings: [
     {
       command: "open",

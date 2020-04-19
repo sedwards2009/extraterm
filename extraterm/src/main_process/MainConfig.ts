@@ -21,6 +21,7 @@ import {CommandLineAction, SystemConfig, ConfigDatabase, ConfigKey, UserStoredCo
 import * as Messages from '../WindowMessages';
 import { ThemeManager } from '../theme/ThemeManager';
 import { KeybindingsIOManager } from './KeybindingsIOManager';
+import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from '../keybindings/KeybindingsFile';
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
 const PATHS_CONFIG_FILENAME = "application_paths.json";
@@ -33,8 +34,8 @@ const USER_TERMINAL_THEMES_DIR = "terminal";
 
 const DEFAULT_TERMINALFONT = "LigaDejaVuSansMono";
 
-export const KEYBINDINGS_OSX = "Mac OS X bindings";
-export const KEYBINDINGS_PC = "PC style bindings";
+export const KEYBINDINGS_OSX: LogicalKeybindingsName = "macos-style";
+export const KEYBINDINGS_PC: LogicalKeybindingsName = "pc-style";
 
 const MAIN_CONFIG = "extraterm.json";
 const EXTENSION_DIRECTORY = "extensions";
@@ -235,6 +236,10 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, availableF
   sanitizeStringEnumField(userStoredConfig, "gpuDriverWorkaround", ["none", "no_blend"], "none");
   sanitizeField(userStoredConfig, "isHardwareAccelerated", true);
   sanitizeField(userStoredConfig, "keybindingsName", process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC);
+  if ( ! AllLogicalKeybindingsNames.includes(userStoredConfig.keybindingsName)) {
+    userStoredConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+  }
+
   sanitizeField(userStoredConfig, "minimizeToTray", false);
   sanitizeField(userStoredConfig, "scrollbackMaxFrames", 100);
   sanitizeField(userStoredConfig, "scrollbackMaxLines", 500000);
@@ -340,7 +345,7 @@ function distributeUserStoredConfig(userStoredConfig: UserStoredConfig, configDa
       if (newGeneralConfig != null) {
         if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
           const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-          systemConfig.keybindingsFile = keybindingsIOManager.readKeybindingsFileByName(newGeneralConfig.keybindingsName);
+          systemConfig.flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsFile(newGeneralConfig.keybindingsName);
           configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
         }
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,8 +9,8 @@ import * as path from 'path';
 import {Logger, getLogger, log} from "extraterm-logging";
 
 import { MainExtensionManager } from './extension/MainExtensionManager';
-import { KeybindingsInfo } from '../Config';
-import { KeybindingsFile } from '../keybindings/KeybindingsFile';
+import { KeybindingsFileInfo } from '../Config';
+import { KeybindingsFile, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsFileBinding, StackedKeybindingsFile, CustomKeybindingsFile } from '../keybindings/KeybindingsFile';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from '@extraterm/extraterm-extension-api';
 
@@ -18,34 +18,46 @@ import { Event } from '@extraterm/extraterm-extension-api';
 export class KeybindingsIOManager {
 
   private _log: Logger = null;
-  private _keybindingsList: KeybindingsInfo[] = [];
+  private _keybindingsFileList: KeybindingsFileInfo[] = null;
+  private _flatKeybindingMap: Map<LogicalKeybindingsName, KeybindingsFile> = null;
+  private _customKeybindingsMap: Map<LogicalKeybindingsName, CustomKeybindingsFile> = null;
 
-  private _onUpdateEventEmitter = new EventEmitter<string>();
-  onUpdate: Event<string>;
+  private _onUpdateEventEmitter = new EventEmitter<void>();
+  onUpdate: Event<void>;
 
   constructor(private _userPath: string, private _mainExtensionManager: MainExtensionManager) {
     this._log = getLogger("KeybindingsIOManager", this);
+    this._clearCaches();
     this.onUpdate = this._onUpdateEventEmitter.event;
+    this._mainExtensionManager.onDesiredStateChanged(() => {
+      this._clearCaches();
+      this._onUpdateEventEmitter.fire();
+    });
   }
 
-  scan(): void {
-    this._keybindingsList = this._scanAll();
+  private _getKeybindingsFileList(): KeybindingsFileInfo[] {
+    this._scan();
+    return this._keybindingsFileList;
+  }
 
-    for (const x of this._keybindingsList) {
-      this._log.debug(`{filename: ${x.filename}, path: ${x.path}, name: ${x.name}}`);
+  private _scan(): void {
+    if (this._keybindingsFileList != null) {
+      return;
     }
+
+    const infoLists = this._getKeybindingsExtensionPaths().map(p => this._scanKeybindingsDirectory(p));
+    this._keybindingsFileList = infoLists.reduce( (list, accu) => [...list, ...accu], []);
   }
 
-  private _scanAll(): KeybindingsInfo[] {
-    const userInfoList = this._scanKeybindingsDirectory(this._userPath, false);
-    const extensionInfoLists = this._getKeybindingsExtensionPaths().map(p => this._scanKeybindingsDirectory(p, true));
-    const infoLists = [userInfoList, ...extensionInfoLists];
-    return infoLists.reduce( (list, accu) => [...list, ...accu], []);
+  private _clearCaches(): void {
+    this._flatKeybindingMap = new Map<LogicalKeybindingsName, KeybindingsFile>();
+    this._customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsFile>();
+    this._keybindingsFileList = null;
   }
 
   private _getKeybindingsExtensionPaths(): string [] {
     const paths: string[] = [];
-    for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
+    for (const extension of this._mainExtensionManager.getActiveExtensionMetadata()) {
       for (const st of extension.contributes.keybindings) {
         paths.push(path.join(extension.path, st.path));
       }
@@ -53,51 +65,63 @@ export class KeybindingsIOManager {
     return paths;
   }
 
-  private _scanKeybindingsDirectory(directory: string, readOnly: boolean): KeybindingsInfo[] {
-    const result: KeybindingsInfo[] = [];
+  private _scanKeybindingsDirectory(directory: string): KeybindingsFileInfo[] {
+    const result: KeybindingsFileInfo[] = [];
     if (fs.existsSync(directory)) {
       const contents = fs.readdirSync(directory);
       contents.forEach( (item) => {
         if (item.endsWith(".json")) {
           const name = item.slice(0, -5);
-          const info: KeybindingsInfo = {
-            name: name,
-            filename: item,
-            readOnly,
-            path: directory
-          };
-          result.push(info);
+
+          if (AllLogicalKeybindingsNames.includes(<LogicalKeybindingsName>name)) {
+            const info: KeybindingsFileInfo = {
+              name: <LogicalKeybindingsName>name,
+              filename: item,
+              path: directory
+            };
+            result.push(info);
+          }
         }
       });
     }
     return result;
   }
 
-  getInfoList(): KeybindingsInfo[] {
-    return this._keybindingsList;
+  @log
+  getFlatKeybindingsFile(name: LogicalKeybindingsName): KeybindingsFile {
+    const result = this._getFlatBaseKeybindingsFile(name);
+    this._log.debug(`getFlatKeybindingsFile() result.bindings.length: ${result.bindings.length}`);
+    return result;
   }
 
-  hasKeybindingsName(name: string): boolean {
-    return this._getInfoByName(name) != null;
-  }
+  private _getFlatBaseKeybindingsFile(name: LogicalKeybindingsName): KeybindingsFile {
+    if (this._flatKeybindingMap.has(name)) {
+      return this._flatKeybindingMap.get(name);
+    }
 
-  private _getInfoByName(name: string): KeybindingsInfo {
-    for (const info of this._keybindingsList) {
-      if (info.name === name) {
-        return info;
+    const flatKeybindings = new Map<string, KeybindingsFileBinding>();
+    for (const fileInfo of this._getKeybindingsFileList()) {
+      if (fileInfo.name === name) {
+        const keybindingsFile = this._readKeybindingsFile(fileInfo);
+        for (const binding of keybindingsFile.bindings) {
+          flatKeybindings.set(binding.command, binding);
+        }
       }
     }
-    return null;
+
+    return {
+      extends: name,
+      bindings: Array.from(flatKeybindings.values())
+    };
   }
 
-  readKeybindingsFileByName(name: string): KeybindingsFile {
-    const info = this._getInfoByName(name);
-    const fullPath = path.join(info.path, info.filename);
+  private _readKeybindingsFile(fileInfo: KeybindingsFileInfo): KeybindingsFile {
+    const fullPath = path.join(fileInfo.path, fileInfo.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
     let keyBindingsJSON: KeybindingsFile = JSON.parse(keyBindingJsonString);
 
     if (keyBindingsJSON == null) {
-      keyBindingsJSON = { name: "", bindings: [] };
+      keyBindingsJSON = { extends: name, bindings: [] };
     }
     if (keyBindingsJSON.bindings == null) {
       keyBindingsJSON.bindings = [];
@@ -105,62 +129,69 @@ export class KeybindingsIOManager {
     return keyBindingsJSON;
   }
 
-  copyKeybindings(sourceName: string, destName: string): boolean {
-    const sourceInfo = this._getInfoByName(sourceName);
-    if (sourceInfo == null) {
-      this._log.warn(`Unable to find keybindings file '${sourceName}'`);
-      return false;
-    }
-
-    const sourcePath = path.join(sourceInfo.path, sourceInfo.filename);
-    const destPath = path.join(this._userPath, destName + ".json");
-    try {
-      const contents = fs.readFileSync(sourcePath);
-      fs.writeFileSync(destPath, contents);
-    } catch(err) {
-      this._log.warn(`Unable to copy '${sourcePath}' to '${destPath}'. Error: ${err.message}`);
-      return false;
-    }
-
-    this.scan();
-    return true;
+  getStackedKeybindings(name: LogicalKeybindingsName): StackedKeybindingsFile {
+    return {
+      name,
+      keybindingsFile: this._getFlatBaseKeybindingsFile(name),
+      customKeybindingsFile: this._getCustomKeybindingsFile(name)
+    };
   }
 
-  updateKeybindings(name: string, data: KeybindingsFile): boolean {
-    const info = this._getInfoByName(name);
-    if (info == null) {
-      this._log.warn(`Unable to find keybindings file '${name}'`);
-      return false;
+  private _getCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsFile {
+    if (this._customKeybindingsMap.has(name)) {
+      return this._customKeybindingsMap.get(name);
     }
 
-    const destPath = path.join(info.path, info.filename);
-    try {
-      fs.writeFileSync(destPath, JSON.stringify(data, null, "  "));
-    } catch(err) {
-      this._log.warn(`Unable to update '${destPath}'. Error: ${err.message}`);
-      return false;
-    }
-
-    this._onUpdateEventEmitter.fire(name);
-    return true;
+    const customKeybindingsFile = this._readCustomKeybindingsFile(name);
+    this._customKeybindingsMap.set(name, customKeybindingsFile);
+    return customKeybindingsFile;
   }
 
-  deleteKeybindings(targetName: string): boolean {
-    const targetInfo = this._getInfoByName(targetName);
-    if (targetInfo == null) {
-      this._log.warn(`Unable to find keybindings file '${targetName}'`);
-      return false;
-    }
-
-    const targetPath = path.join(targetInfo.path, targetInfo.filename);
-    try {
-      fs.unlinkSync(targetPath);
-    } catch(err) {
-      this._log.warn(`Unable to delete '${targetPath}'. Error: ${err.message}`);
-      return false;
-    }
-
-    this.scan();
-    return true;
+  private _getCustomKeybindingsFilePath(name: LogicalKeybindingsName): string {
+    return path.join(this._userPath, name + ".json");
   }
+
+  private _readCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsFile {
+    const filePath = this._getCustomKeybindingsFilePath(name);
+    if ( ! fs.existsSync(filePath)) {
+      return {
+        basedOn: name,
+        customBindings: []
+      };
+    }
+
+    try {
+      const contents = fs.readFileSync(filePath, { encoding: "UTF8" } );
+      return JSON.parse(contents);
+    } catch(err) {
+      this._log.warn(`Unable to read '${filePath}'. Error: ${err.message}`);
+      return {
+        basedOn: name,
+        customBindings: []
+      };
+    }
+  }
+
+  updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsFile): void {
+
+  }
+
+  // updateKeybindings(name: string, data: KeybindingsFile): boolean {
+  //   const info = this._getInfoByName(name);
+  //   if (info == null) {
+  //     this._log.warn(`Unable to find keybindings file '${name}'`);
+  //     return false;
+  //   }
+
+  //   const destPath = path.join(info.path, info.filename);
+  //   try {
+  //     fs.writeFileSync(destPath, JSON.stringify(data, null, "  "));
+  //   } catch(err) {
+  //     this._log.warn(`Unable to update '${destPath}'. Error: ${err.message}`);
+  //     return false;
+  //   }
+
+  //   this._onUpdateEventEmitter.fire(name);
+  //   return true;
+  // }
 }

@@ -43,11 +43,11 @@ export class GlobalKeybindingsManager {
     this.onToggleShowHideWindow = this._onToggleShowHideWindowEventEmitter.event;
 
     this._updateGlobalKeybindings();
-  
-    keybindingsIOManager.onUpdate((name: string) => {
+
+    keybindingsIOManager.onUpdate(() => {
       this._updateGlobalKeybindings();
     });
-  
+
     configDatabase.onChange((e: ConfigChangeEvent) => {
       if (e.key === GENERAL_CONFIG) {
         const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
@@ -77,9 +77,9 @@ export class GlobalKeybindingsManager {
   private _createGlobalKeybindings(): void {
     globalShortcut.unregisterAll();
     const generalConfig = <GeneralConfig> this.configDatabase.getConfig(GENERAL_CONFIG);
-    const keybindingsFile = this.keybindingsIOManager.readKeybindingsFileByName(generalConfig.keybindingsName);
+    const keybindingsFile = this.keybindingsIOManager.getFlatKeybindingsFile(generalConfig.keybindingsName);
     const globalKeybindings = new KeybindingsMapping(KeyStroke.parseConfigString, keybindingsFile, process.platform);
-  
+
     const commandsToEmitters = {
       "extraterm:global.globalMaximize": this._onMaximizeEventEmitter,
       "extraterm:global.globalHide": this._onHideWindowEventEmitter,
