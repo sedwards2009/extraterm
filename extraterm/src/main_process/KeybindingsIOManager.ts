@@ -10,7 +10,7 @@ import {Logger, getLogger, log} from "extraterm-logging";
 
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { KeybindingsFileInfo } from '../Config';
-import { KeybindingsFile, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsFileBinding, StackedKeybindingsFile, CustomKeybindingsFile } from '../keybindings/KeybindingsFile';
+import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsBinding, StackedKeybindingsSet, CustomKeybindingsSet } from '../keybindings/KeybindingsFile';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from '@extraterm/extraterm-extension-api';
 
@@ -19,8 +19,8 @@ export class KeybindingsIOManager {
 
   private _log: Logger = null;
   private _keybindingsFileList: KeybindingsFileInfo[] = null;
-  private _flatKeybindingMap: Map<LogicalKeybindingsName, KeybindingsFile> = null;
-  private _customKeybindingsMap: Map<LogicalKeybindingsName, CustomKeybindingsFile> = null;
+  private _flatKeybindingMap: Map<LogicalKeybindingsName, KeybindingsSet> = null;
+  private _customKeybindingsMap: Map<LogicalKeybindingsName, CustomKeybindingsSet> = null;
 
   private _onUpdateEventEmitter = new EventEmitter<void>();
   onUpdate: Event<void>;
@@ -50,8 +50,8 @@ export class KeybindingsIOManager {
   }
 
   private _clearCaches(): void {
-    this._flatKeybindingMap = new Map<LogicalKeybindingsName, KeybindingsFile>();
-    this._customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsFile>();
+    this._flatKeybindingMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
+    this._customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsSet>();
     this._keybindingsFileList = null;
   }
 
@@ -87,19 +87,18 @@ export class KeybindingsIOManager {
     return result;
   }
 
-  @log
-  getFlatKeybindingsFile(name: LogicalKeybindingsName): KeybindingsFile {
-    const result = this._getFlatBaseKeybindingsFile(name);
+  getFlatKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
+    const result = this._getFlatBaseKeybindingsSet(name);
     this._log.debug(`getFlatKeybindingsFile() result.bindings.length: ${result.bindings.length}`);
     return result;
   }
 
-  private _getFlatBaseKeybindingsFile(name: LogicalKeybindingsName): KeybindingsFile {
+  private _getFlatBaseKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
     if (this._flatKeybindingMap.has(name)) {
       return this._flatKeybindingMap.get(name);
     }
 
-    const flatKeybindings = new Map<string, KeybindingsFileBinding>();
+    const flatKeybindings = new Map<string, KeybindingsBinding>();
     for (const fileInfo of this._getKeybindingsFileList()) {
       if (fileInfo.name === name) {
         const keybindingsFile = this._readKeybindingsFile(fileInfo);
@@ -115,10 +114,10 @@ export class KeybindingsIOManager {
     };
   }
 
-  private _readKeybindingsFile(fileInfo: KeybindingsFileInfo): KeybindingsFile {
+  private _readKeybindingsFile(fileInfo: KeybindingsFileInfo): KeybindingsSet {
     const fullPath = path.join(fileInfo.path, fileInfo.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
-    let keyBindingsJSON: KeybindingsFile = JSON.parse(keyBindingJsonString);
+    let keyBindingsJSON: KeybindingsSet = JSON.parse(keyBindingJsonString);
 
     if (keyBindingsJSON == null) {
       keyBindingsJSON = { extends: name, bindings: [] };
@@ -129,15 +128,15 @@ export class KeybindingsIOManager {
     return keyBindingsJSON;
   }
 
-  getStackedKeybindings(name: LogicalKeybindingsName): StackedKeybindingsFile {
+  getStackedKeybindings(name: LogicalKeybindingsName): StackedKeybindingsSet {
     return {
       name,
-      keybindingsFile: this._getFlatBaseKeybindingsFile(name),
-      customKeybindingsFile: this._getCustomKeybindingsFile(name)
+      keybindingsSet: this._getFlatBaseKeybindingsSet(name),
+      customKeybindingsSet: this._getCustomKeybindingsFile(name)
     };
   }
 
-  private _getCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsFile {
+  private _getCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsSet {
     if (this._customKeybindingsMap.has(name)) {
       return this._customKeybindingsMap.get(name);
     }
@@ -151,7 +150,7 @@ export class KeybindingsIOManager {
     return path.join(this._userPath, name + ".json");
   }
 
-  private _readCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsFile {
+  private _readCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsSet {
     const filePath = this._getCustomKeybindingsFilePath(name);
     if ( ! fs.existsSync(filePath)) {
       return {
@@ -172,7 +171,7 @@ export class KeybindingsIOManager {
     }
   }
 
-  updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsFile): void {
+  updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): void {
 
   }
 

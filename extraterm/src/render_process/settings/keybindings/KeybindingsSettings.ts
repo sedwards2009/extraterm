@@ -62,7 +62,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
   private async _loadKeybindings(name: LogicalKeybindingsName): Promise<void> {
     const msg = await WebIpc.keybindingsRequestRead(name);
-    this._getUi().keybindings = msg.stackedKeybindingsFile.keybindingsFile;
+    this._getUi().keybindings = msg.stackedKeybindingsFile.keybindingsSet;
   }
 
   protected _dataChanged(): void {

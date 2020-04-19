@@ -7,7 +7,7 @@ import { Event } from '@extraterm/extraterm-extension-api';
 
 import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
 import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
-import { KeybindingsFile, KeybindingsFileBinding } from '../../keybindings/KeybindingsFile';
+import { KeybindingsSet, KeybindingsBinding } from '../../keybindings/KeybindingsFile';
 import { Logger, getLogger } from 'extraterm-logging';
 import { Category } from '../../ExtensionMetadata';
 
@@ -15,7 +15,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
 
   private _term_log: Logger = null;
 
-  constructor(keybindingsFile: KeybindingsFile, platform: string) {
+  constructor(keybindingsFile: KeybindingsSet, platform: string) {
     super(TermKeyStroke.parseConfigString, keybindingsFile, platform);
     this._term_log = getLogger("TermKeybindingsMapping", this);
   }
@@ -27,7 +27,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
    * @return the command string or `null` if the event doesn't have a matching
    *         key binding.
    */
-  mapEventToCommands(ev: MinimalKeyboardEvent): KeybindingsFileBinding[] {
+  mapEventToCommands(ev: MinimalKeyboardEvent): KeybindingsBinding[] {
     if ( ! this.isEnabled()) {
       return [];
     }
@@ -44,7 +44,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
     } else {
       if (ev.key.charCodeAt(0) === 160) { // nbsp to space on the Mac
         key = " ";
-      } else {        
+      } else {
         key = ev.key;
       }
     }
@@ -111,7 +111,7 @@ export class TermKeyStroke extends KeyStroke implements TermMinimalKeyboardEvent
  *            being objects mapping key binding strings to command strings
  * @return the object which maps context names to `KeybindingMapping` objects
  */
-export function loadKeybindingsFromObject(obj: KeybindingsFile, platform: string): TermKeybindingsMapping {
+export function loadKeybindingsFromObject(obj: KeybindingsSet, platform: string): TermKeybindingsMapping {
   return new TermKeybindingsMapping(obj, platform);
 }
 
@@ -122,7 +122,7 @@ export interface KeybindingsManager {
    * @return the KeybindingContexts object or Null if one is not available.
    */
   getKeybindingsMapping(): TermKeybindingsMapping;
-  
+
   setKeybindingsMapping(newKeybindingsContexts: TermKeybindingsMapping): void;
 
   /**

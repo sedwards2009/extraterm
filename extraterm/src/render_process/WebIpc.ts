@@ -11,10 +11,10 @@ const ipc = Electron.ipcRenderer;
 import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
 import * as config from '../Config';
-import {Logger, getLogger} from "extraterm-logging";
+import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
-import { KeybindingsFile, LogicalKeybindingsName, CustomKeybindingsFile } from '../keybindings/KeybindingsFile';
+import { LogicalKeybindingsName, CustomKeybindingsSet } from '../keybindings/KeybindingsFile';
 
 const _log = getLogger("WebIPC");
 
@@ -243,11 +243,11 @@ export function keybindingsRequestRead(name: LogicalKeybindingsName): Promise<Me
   };
   return <Promise<Messages.KeybindingsReadMessage>> request(msg, Messages.MessageType.READ_KEYBINDINGS);
 }
-// FIXME naming
-export function keybindingsUpdate(customKeybindingsFile: CustomKeybindingsFile): void {
+
+export function customKeybindingsSetUpdate(customKeybindingsSet: CustomKeybindingsSet): void {
   const msg: Messages.KeybindingsUpdateMessage = {
     type: Messages.MessageType.UPDATE_KEYBINDINGS,
-    customKeybindingsFile
+    customKeybindingsSet
   };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }

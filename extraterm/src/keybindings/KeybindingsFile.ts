@@ -17,7 +17,7 @@ export const AllLogicalKeybindingsNames: LogicalKeybindingsName[] = [
 /**
  * Defines extra commands and default keybindings for a logical set of keybindings.
  */
-export interface KeybindingsFile {
+export interface KeybindingsSet {
 
   /**
    * The name of a logical keybindings set to extend with extra commands.
@@ -29,10 +29,10 @@ export interface KeybindingsFile {
   /**
    * List of commands with their default keybindings
    */
-  bindings: KeybindingsFileBinding[];
+  bindings: KeybindingsBinding[];
 }
 
-export interface KeybindingsFileBinding {
+export interface KeybindingsBinding {
   command: string;
   category: Category;
   keys: string[];
@@ -41,9 +41,9 @@ export interface KeybindingsFileBinding {
 /**
  * Stores User customised keybindings
  */
-export interface CustomKeybindingsFile {
+export interface CustomKeybindingsSet {
   basedOn: LogicalKeybindingsName;
-  customBindings: KeybindingsFileBinding[];
+  customBindings: KeybindingsBinding[];
 }
 
 export interface CustomKeybinding {
@@ -51,8 +51,8 @@ export interface CustomKeybinding {
   keys: string[];
 }
 
-export interface StackedKeybindingsFile {
+export interface StackedKeybindingsSet {
   name: LogicalKeybindingsName;
-  keybindingsFile: KeybindingsFile;
-  customKeybindingsFile: CustomKeybindingsFile;
+  keybindingsSet: KeybindingsSet;
+  customKeybindingsSet: CustomKeybindingsSet;
 }

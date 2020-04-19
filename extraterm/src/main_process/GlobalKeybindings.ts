@@ -77,7 +77,7 @@ export class GlobalKeybindingsManager {
   private _createGlobalKeybindings(): void {
     globalShortcut.unregisterAll();
     const generalConfig = <GeneralConfig> this.configDatabase.getConfig(GENERAL_CONFIG);
-    const keybindingsFile = this.keybindingsIOManager.getFlatKeybindingsFile(generalConfig.keybindingsName);
+    const keybindingsFile = this.keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
     const globalKeybindings = new KeybindingsMapping(KeyStroke.parseConfigString, keybindingsFile, process.platform);
 
     const commandsToEmitters = {

@@ -8,11 +8,11 @@ import "jest";
 import * as SourceMapSupport from 'source-map-support';
 import * as KeybindingsManager from './KeyBindingsManager';
 import { eventKeyNameToConfigKeyName } from '../../keybindings/KeybindingsMapping';
-import { KeybindingsFile } from "../../keybindings/KeybindingsFile";
+import { KeybindingsSet } from "../../keybindings/KeybindingsFile";
 
 SourceMapSupport.install();
 
-const keyBindingsMap: KeybindingsFile = {
+const keyBindingsMap: KeybindingsSet = {
   extends: "pc-style",
   bindings: [
     {
@@ -120,7 +120,7 @@ const keyBindingsMap: KeybindingsFile = {
 
 test("context", () => {
   const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
-  
+
   expect(editorKeybindings).not.toBe(null);
   expect(editorKeybindings).not.toBe(undefined);
 });
@@ -166,7 +166,7 @@ describe.each([
   [{ isComposing: false, altKey: false, ctrlKey: true, metaKey: false, shiftKey: true, key: "C", keyCode: 67 }, "bigbreak"],
   [{ isComposing: false, altKey: true, ctrlKey: true, metaKey: false, shiftKey: false, key: ".", keyCode: 190 }, "moveTabRight"],
 ])("", (input, output: string) => {
-  test(`mapEventToCommand() -> ${output}"`, () => {  
+  test(`mapEventToCommand() -> ${output}"`, () => {
     const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
     expect(editorKeybindings.mapEventToCommands(input)[0].command).toEqual(output);
   });

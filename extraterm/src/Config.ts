@@ -5,7 +5,7 @@
  */
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { Event, SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { KeybindingsFile, LogicalKeybindingsName } from './keybindings/KeybindingsFile';
+import { KeybindingsSet, LogicalKeybindingsName } from './keybindings/KeybindingsFile';
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
 export type GpuDriverWorkaround = "none" | "no_blend";
@@ -101,7 +101,7 @@ export interface SingleWindowConfiguration {
 export interface SystemConfig {
   homeDir: string;
   applicationVersion: string;
-  flatKeybindingsFile: KeybindingsFile;
+  flatKeybindingsSet: KeybindingsSet;
 
   availableFonts: FontInfo[];
   titleBarStyle: TitleBarStyle;

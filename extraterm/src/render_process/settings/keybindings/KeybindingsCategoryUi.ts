@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
-import { KeybindingsFile, KeybindingsFileBinding } from '../../../keybindings/KeybindingsFile';
+import { KeybindingsSet, KeybindingsBinding } from '../../../keybindings/KeybindingsFile';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
 import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -105,7 +105,7 @@ export class KeybindingsCategory extends Vue {
   // Props
   category: Category;
   categoryName: string;
-  keybindings: KeybindingsFile;
+  keybindings: KeybindingsSet;
   readOnly: boolean;
   searchText: string;
   commands: ExtensionCommandContribution[];
@@ -182,7 +182,7 @@ export class KeybindingsCategory extends Vue {
           const currentKeyStroke = TermKeyStroke.parseConfigString(shortcuts[i]);
           if (currentKeyStroke.equals(keyStroke)) {
             Vue.delete(shortcuts, i);
-            return;           
+            return;
           }
         }
       }
@@ -195,7 +195,7 @@ export class KeybindingsCategory extends Vue {
     this.$emit(EVENT_START_KEY_INPUT);
   }
 
-  private _findKeybindingByKeyStroke(keyStrokeStroke: string): KeybindingsFileBinding {
+  private _findKeybindingByKeyStroke(keyStrokeStroke: string): KeybindingsBinding {
     const keyStroke = TermKeyStroke.parseConfigString(keyStrokeStroke);
 
     for (const keybinding of this.keybindings.bindings) {
@@ -219,7 +219,7 @@ export class KeybindingsCategory extends Vue {
     return -1;
   }
 
-  private _findKeybindingByCommand(command: string): KeybindingsFileBinding {
+  private _findKeybindingByCommand(command: string): KeybindingsBinding {
     for (const keybinding of this.keybindings.bindings) {
       if (keybinding.category === this.category && keybinding.command === command) {
         return keybinding;
@@ -263,7 +263,7 @@ export class KeybindingsCategory extends Vue {
       const newKeyStrokes = [...existingKeybinding.keys, keyStrokeString];
       Vue.set(existingKeybinding, "keys", newKeyStrokes);
     }
-  }      
+  }
 
   onKeyInputCancelled(): void {
     this.inputState = "read";

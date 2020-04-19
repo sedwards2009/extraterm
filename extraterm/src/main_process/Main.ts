@@ -193,7 +193,7 @@ function updateSystemConfigKeybindings(): void {
   // Broadcast the updated bindings.
   const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  systemConfig.flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsFile(generalConfig.keybindingsName);
+  systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 }
 
@@ -626,11 +626,11 @@ const _log = getLogger("main");
 function systemConfiguration(config: GeneralConfig, keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[], packageJson: any): SystemConfig {
   const homeDir = app.getPath('home');
 
-  const flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsFile(config.keybindingsName);
+  const flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsSet(config.keybindingsName);
   return {
     homeDir,
     applicationVersion: packageJson.version,
-    flatKeybindingsFile,
+    flatKeybindingsSet: flatKeybindingsFile,
     availableFonts: availableFonts,
     titleBarStyle,
     userTerminalThemeDirectory: getUserTerminalThemeDirectory(),
@@ -1173,7 +1173,7 @@ function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessag
 }
 
 function handleKeybindingsUpdate(msg: Messages.KeybindingsUpdateMessage): void {
-  keybindingsIOManager.updateCustomKeybindingsFile(msg.customKeybindingsFile);
+  keybindingsIOManager.updateCustomKeybindingsFile(msg.customKeybindingsSet);
 }
 
 function handleGlobalKeybindingsEnable(msg: Messages.GlobalKeybindingsEnableMessage): void {

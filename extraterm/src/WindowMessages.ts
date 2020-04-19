@@ -14,7 +14,7 @@ import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 import { ExtensionMetadata, ExtensionDesiredState } from './ExtensionMetadata';
-import { KeybindingsFile, CustomKeybindingsFile, LogicalKeybindingsName, StackedKeybindingsFile } from './keybindings/KeybindingsFile';
+import { CustomKeybindingsSet, LogicalKeybindingsName, StackedKeybindingsSet } from './keybindings/KeybindingsFile';
 
 
 /**
@@ -495,11 +495,11 @@ export interface KeybindingsReadRequestMessage extends Message {
 }
 
 export interface KeybindingsReadMessage extends Message {
-  stackedKeybindingsFile: StackedKeybindingsFile;
+  stackedKeybindingsFile: StackedKeybindingsSet;
 }
 
 export interface KeybindingsUpdateMessage extends Message {
-  customKeybindingsFile: CustomKeybindingsFile;
+  customKeybindingsSet: CustomKeybindingsSet;
 }
 
 export interface GlobalKeybindingsEnableMessage extends Message {

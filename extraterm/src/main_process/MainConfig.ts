@@ -345,7 +345,7 @@ function distributeUserStoredConfig(userStoredConfig: UserStoredConfig, configDa
       if (newGeneralConfig != null) {
         if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
           const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-          systemConfig.flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsFile(newGeneralConfig.keybindingsName);
+          systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(newGeneralConfig.keybindingsName);
           configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
         }
       }

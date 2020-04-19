@@ -5,7 +5,7 @@
  */
 import * as _ from 'lodash';
 import { Logger, getLogger, log } from "extraterm-logging";
-import { KeybindingsFile, KeybindingsFileBinding } from './KeybindingsFile';
+import { KeybindingsSet, KeybindingsBinding } from './KeybindingsFile';
 import { Category } from '../ExtensionMetadata';
 
 const isDarwin = process.platform === "darwin";
@@ -29,7 +29,7 @@ export class KeyStroke {
   readonly configKeyLowercase: string;
   private _humanReadableString: string = null;
   readonly isComposing: boolean = false;
-  
+
   constructor(options: KeyStrokeOptions) {
     this.altKey = options.altKey;
     this.ctrlKey = options.ctrlKey;
@@ -97,7 +97,7 @@ export class KeyStroke {
     this._humanReadableString = parts.join(isDarwin ? "" : "+");
     return this._humanReadableString;
   }
-    
+
   hashString(): string {
     return `${mapString(this.configKey)}:${mapBool(this.altKey)}:${mapBool(this.ctrlKey)}:${mapBool(this.metaKey)}:${mapBool(this.shiftKey)}`;
   }
@@ -198,7 +198,7 @@ export function eventKeyNameToConfigKeyName(eventKeyName: string): string {
 export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
 
   readonly keyStrokeList: KS[] = [];
-  protected _keyStrokeHashToCommandsMapping = new Map<string, KeybindingsFileBinding[]>();
+  protected _keyStrokeHashToCommandsMapping = new Map<string, KeybindingsBinding[]>();
   private _categoryMaps = new Map<Category, Map<string, KS[]>>();
   private _log: Logger = null;
   private _platform: string;
@@ -207,7 +207,7 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
   // FIXME remove this and the param below
   private _parseConfigKeyStrokeString: (config: string) => KS = null;
 
-  constructor(parseConfigString: (config: string) => KS, keybindingsFile: KeybindingsFile, platform: string) {
+  constructor(parseConfigString: (config: string) => KS, keybindingsFile: KeybindingsSet, platform: string) {
     this._log = getLogger("KeybindingMapping", this);
     this._parseConfigKeyStrokeString = parseConfigString;
     this._platform = platform;
@@ -215,7 +215,7 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
     this._buildIndex(keybindingsFile.bindings);
   }
 
-  private _buildIndex(bindingsList: KeybindingsFileBinding[]): void {
+  private _buildIndex(bindingsList: KeybindingsBinding[]): void {
     for (const keybinding of bindingsList) {
       const shortcutList = keybinding.keys;
 

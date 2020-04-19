@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsCategory, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
-import { KeybindingsFile } from '../../../keybindings/KeybindingsFile';
+import { KeybindingsSet } from '../../../keybindings/KeybindingsFile';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ExtensionManager } from '../../extension/InternalTypes';
 import { Category, ExtensionCommandContribution } from '../../../ExtensionMetadata';
@@ -52,7 +52,7 @@ const categoryNames = {
 )
 export class KeybindingsList extends Vue {
   // Props
-  keybindings: KeybindingsFile;
+  keybindings: KeybindingsSet;
   commandsByCategory: { [index: string]: ExtensionCommandContribution[] };
   readOnly: boolean;
   searchText: string;
