@@ -5,7 +5,7 @@
  */
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
 import { Event, SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { KeybindingsSet, LogicalKeybindingsName } from './keybindings/KeybindingsFile';
+import { KeybindingsSet, LogicalKeybindingsName } from './keybindings/KeybindingsTypes';
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
 export type GpuDriverWorkaround = "none" | "no_blend";

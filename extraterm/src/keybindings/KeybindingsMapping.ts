@@ -5,7 +5,7 @@
  */
 import * as _ from 'lodash';
 import { Logger, getLogger, log } from "extraterm-logging";
-import { KeybindingsSet, KeybindingsBinding } from './KeybindingsFile';
+import { KeybindingsSet, KeybindingsBinding } from './KeybindingsTypes';
 import { Category } from '../ExtensionMetadata';
 
 const isDarwin = process.platform === "darwin";

@@ -21,7 +21,7 @@ import {CommandLineAction, SystemConfig, ConfigDatabase, ConfigKey, UserStoredCo
 import * as Messages from '../WindowMessages';
 import { ThemeManager } from '../theme/ThemeManager';
 import { KeybindingsIOManager } from './KeybindingsIOManager';
-import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from '../keybindings/KeybindingsFile';
+import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from '../keybindings/KeybindingsTypes';
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
 const PATHS_CONFIG_FILENAME = "application_paths.json";

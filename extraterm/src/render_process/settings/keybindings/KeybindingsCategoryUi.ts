@@ -6,7 +6,7 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
-import { KeybindingsSet, KeybindingsBinding } from '../../../keybindings/KeybindingsFile';
+import { KeybindingsSet, KeybindingsBinding } from '../../../keybindings/KeybindingsTypes';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
 import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';

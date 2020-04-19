@@ -16,7 +16,7 @@ import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategor
 import { ExtensionManager } from '../../extension/InternalTypes';
 import { ExtensionCommandContribution } from '../../../ExtensionMetadata';
 import { Disposable } from '@extraterm/extraterm-extension-api';
-import { LogicalKeybindingsName } from 'extraterm/src/keybindings/KeybindingsFile';
+import { LogicalKeybindingsName } from 'extraterm/src/keybindings/KeybindingsTypes';
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 

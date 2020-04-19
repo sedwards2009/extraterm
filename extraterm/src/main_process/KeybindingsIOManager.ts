@@ -10,7 +10,8 @@ import {Logger, getLogger, log} from "extraterm-logging";
 
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import { KeybindingsFileInfo } from '../Config';
-import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsBinding, StackedKeybindingsSet, CustomKeybindingsSet } from '../keybindings/KeybindingsFile';
+import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsBinding, StackedKeybindingsSet,
+  CustomKeybindingsSet } from '../keybindings/KeybindingsTypes';
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from '@extraterm/extraterm-extension-api';
 
