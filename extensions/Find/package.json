@@ -37,6 +37,11 @@
         "when": "terminalFocus"
       }
     ],
+    "keybindings": [
+      {
+        "path": "keybindings"
+      }
+    ],
     "terminalBorderWidgets": [
       {
         "name": "find",

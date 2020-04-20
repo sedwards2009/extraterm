@@ -1,0 +1,12 @@
+{
+  "extends": "macos-style-emacs",
+  "bindings": [
+    {
+      "command": "find:find",
+      "category": "terminal",
+      "keys": [
+        "Cmd-F"
+      ]
+    }
+  ] 
+}

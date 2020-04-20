@@ -1,0 +1,12 @@
+{
+  "extends": "pc-style-emacs",
+  "bindings": [
+    {
+      "command": "find:find",
+      "category": "terminal",
+      "keys": [
+        "Ctrl-Shift-F"
+      ]
+    }
+  ]
+}

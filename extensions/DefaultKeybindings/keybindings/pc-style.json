@@ -567,13 +567,6 @@
       "keys": [
         "Ctrl-Shift-Enter"
       ]
-    },
-    {
-      "command": "find:find",
-      "category": "terminal",
-      "keys": [
-        "Ctrl-Shift-F"
-      ]
     }
   ]
 }

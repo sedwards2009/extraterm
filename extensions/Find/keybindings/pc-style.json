@@ -1,0 +1,12 @@
+{
+  "extends": "pc-style",
+  "bindings": [
+    {
+      "command": "find:find",
+      "category": "terminal",
+      "keys": [
+        "Ctrl-Shift-F"
+      ]
+    }
+  ]
+}

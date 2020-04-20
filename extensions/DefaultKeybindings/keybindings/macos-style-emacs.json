@@ -581,13 +581,6 @@
       ]
     },
     {
-      "command": "find:find",
-      "category": "terminal",
-      "keys": [
-        "Cmd-F"
-      ]
-    },
-    {
       "command": "extraterm:application.quit",
       "category": "window",
       "keys": [
