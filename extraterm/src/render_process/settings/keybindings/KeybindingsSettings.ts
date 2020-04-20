@@ -53,26 +53,27 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
 
     if (key === GENERAL_CONFIG) {
       const generalConfig = <GeneralConfig> config;
-      if (ui.selectedKeybindings !== generalConfig.keybindingsName) {
-        ui.selectedKeybindings = generalConfig.keybindingsName;
-        this._loadKeybindings(ui.selectedKeybindings);
+      if (ui.selectedKeybindingsSetName !== generalConfig.keybindingsName || this._getUi().baseKeybindingsSet == null) {
+        ui.selectedKeybindingsSetName = generalConfig.keybindingsName;
+        this._loadKeybindings(ui.selectedKeybindingsSetName);
       }
     }
   }
 
   private async _loadKeybindings(name: LogicalKeybindingsName): Promise<void> {
     const msg = await WebIpc.keybindingsRequestRead(name);
-    this._getUi().keybindings = msg.stackedKeybindingsFile.keybindingsSet;
+    this._getUi().baseKeybindingsSet = msg.stackedKeybindingsFile.keybindingsSet;
+    
   }
 
   protected _dataChanged(): void {
     const newGeneralConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
     const ui = this._getUi();
 
-    if (newGeneralConfig.keybindingsName !== ui.selectedKeybindings) {
-      newGeneralConfig.keybindingsName = ui.selectedKeybindings;
+    if (newGeneralConfig.keybindingsName !== ui.selectedKeybindingsSetName) {
+      newGeneralConfig.keybindingsName = ui.selectedKeybindingsSetName;
       this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
-      this._loadKeybindings(ui.selectedKeybindings);
+      this._loadKeybindings(ui.selectedKeybindingsSetName);
     }
 // FIXME
     // WebIpc.keybindingsUpdate(ui.selectedKeybindings, ui.keybindings);

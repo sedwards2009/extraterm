@@ -24,7 +24,7 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
   props: {
     category: String,
     categoryName: String,
-    keybindings: Object,      // KeybindingsFile,
+    baseKeybindingsSet: Object,      // KeybindingsSet,
     commands: Array,          // ExtensionCommandContribution[]
     readOnly: Boolean,
     searchText: String,
@@ -105,7 +105,7 @@ export class KeybindingsCategory extends Vue {
   // Props
   category: Category;
   categoryName: string;
-  keybindings: KeybindingsSet;
+  baseKeybindingsSet: KeybindingsSet;
   readOnly: boolean;
   searchText: string;
   commands: ExtensionCommandContribution[];
@@ -153,7 +153,7 @@ export class KeybindingsCategory extends Vue {
       result.set(command.command, []);
     }
 
-    for (const command of this.keybindings.bindings) {
+    for (const command of this.baseKeybindingsSet.bindings) {
       if (command.category === this.category) {
         result.set(command.command, command.keys.map(TermKeyStroke.parseConfigString));
       }
@@ -174,7 +174,7 @@ export class KeybindingsCategory extends Vue {
   }
 
   deleteKey(keyStroke: TermKeyStroke): void {
-    for (const keybinding of this.keybindings.bindings) {
+    for (const keybinding of this.baseKeybindingsSet.bindings) {
       if (keybinding.category === this.category) {
         const shortcuts = keybinding.keys;
 
@@ -198,7 +198,7 @@ export class KeybindingsCategory extends Vue {
   private _findKeybindingByKeyStroke(keyStrokeStroke: string): KeybindingsBinding {
     const keyStroke = TermKeyStroke.parseConfigString(keyStrokeStroke);
 
-    for (const keybinding of this.keybindings.bindings) {
+    for (const keybinding of this.baseKeybindingsSet.bindings) {
       if (keybinding.category === this.category) {
         const shortcuts = keybinding.keys;
         if (this._findKeyStrokeInKeys(keyStroke, shortcuts) !== -1) {
@@ -220,7 +220,7 @@ export class KeybindingsCategory extends Vue {
   }
 
   private _findKeybindingByCommand(command: string): KeybindingsBinding {
-    for (const keybinding of this.keybindings.bindings) {
+    for (const keybinding of this.baseKeybindingsSet.bindings) {
       if (keybinding.category === this.category && keybinding.command === command) {
         return keybinding;
       }
@@ -258,7 +258,7 @@ export class KeybindingsCategory extends Vue {
         category: this.category,
         keys: [keyStrokeString]
       };
-      Vue.set(this.keybindings, "bindings", [...this.keybindings.bindings, newKeybinding]);
+      Vue.set(this.baseKeybindingsSet, "bindings", [...this.baseKeybindingsSet.bindings, newKeybinding]);
     } else {
       const newKeyStrokes = [...existingKeybinding.keys, keyStrokeString];
       Vue.set(existingKeybinding, "keys", newKeyStrokes);

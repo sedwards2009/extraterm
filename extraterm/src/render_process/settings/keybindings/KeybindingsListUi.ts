@@ -28,7 +28,7 @@ const categoryNames = {
       "keybindings-category": KeybindingsCategory
     },
     props: {
-      keybindings: Object,      // KeybindingsFile,
+      baseKeybindingsSet: Object,      // KeybindingsSet,
       readOnly: Boolean,
       searchText: String,
       commandsByCategory: Object,
@@ -40,7 +40,7 @@ const categoryNames = {
         :key="category"
         :category="category"
         :categoryName="getCategoryName(category)"
-        :keybindings="keybindings"
+        :baseKeybindingsSet="baseKeybindingsSet"
         :readOnly="readOnly"
         :searchText="searchText"
         :commands="commandsByCategory[category]"
@@ -52,7 +52,7 @@ const categoryNames = {
 )
 export class KeybindingsList extends Vue {
   // Props
-  keybindings: KeybindingsSet;
+  baseKeybindingsSet: KeybindingsSet;
   commandsByCategory: { [index: string]: ExtensionCommandContribution[] };
   readOnly: boolean;
   searchText: string;

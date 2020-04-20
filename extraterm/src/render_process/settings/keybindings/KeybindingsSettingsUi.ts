@@ -20,7 +20,7 @@ interface KeybindingsInfo {
   name: string;
 }
 
-const allKeybindingFiles: KeybindingsInfo[] = [
+const allKeybindingsSets: KeybindingsInfo[] = [
   {
     id: "pc-style",
     name: "PC style bindings"
@@ -56,8 +56,8 @@ const allKeybindingFiles: KeybindingsInfo[] = [
     <select
         class="expand"
         id="keybindings-style"
-        v-model="selectedKeybindings">
-      <option v-for="option in sortedKeybindingsInfoList" v-bind:value="option.name">
+        v-model="selectedKeybindingsSetName">
+      <option v-for="option in allKeybindingsSetInfo" v-bind:value="option.id">
         {{ option.name }}
       </option>
     </select>
@@ -83,8 +83,8 @@ const allKeybindingFiles: KeybindingsInfo[] = [
   </div>
 
   <keybindings-category-list
-    v-if="keybindings !== null"
-    :keybindings="keybindings"
+    v-if="baseKeybindingsSet !== null"
+    :baseKeybindingsSet="baseKeybindingsSet"
     :searchText="searchText"
     :commandsByCategory="commandsByCategory"
     v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
@@ -97,16 +97,16 @@ const allKeybindingFiles: KeybindingsInfo[] = [
 export class KeybindingsSettingsUi extends Vue {
   keybindingsInfoList: KeybindingsInfo[] = [];
 
-  keybindings: KeybindingsSet = null;
-  selectedKeybindings: LogicalKeybindingsName = "pc-style";
+  baseKeybindingsSet: KeybindingsSet = null;
+  selectedKeybindingsSetName: LogicalKeybindingsName = null;
   commandsByCategory: { [index: string]: ExtensionCommandContribution[] } = {};
 
   searchText: string = "";
 
   recordingKey: boolean = false;
 
-  get allKeybindingFiles(): KeybindingsInfo[] {
-    return allKeybindingFiles;
+  get allKeybindingsSetInfo(): KeybindingsInfo[] {
+    return allKeybindingsSets;
   }
 
   onRecordKey(): void {
