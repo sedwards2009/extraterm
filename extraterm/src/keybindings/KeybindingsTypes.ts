@@ -43,7 +43,7 @@ export interface KeybindingsBinding {
  */
 export interface CustomKeybindingsSet {
   basedOn: LogicalKeybindingsName;
-  customBindings: KeybindingsBinding[];
+  customBindings: CustomKeybinding[];
 }
 
 export interface CustomKeybinding {

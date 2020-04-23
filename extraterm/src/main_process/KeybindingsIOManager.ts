@@ -51,9 +51,13 @@ export class KeybindingsIOManager {
   }
 
   private _clearCaches(): void {
-    this._flatKeybindingMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
+    this._clearFlatCaches();
     this._customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsSet>();
     this._keybindingsFileList = null;
+  }
+
+  private _clearFlatCaches(): void {
+    this._flatKeybindingMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
   }
 
   private _getKeybindingsExtensionPaths(): string [] {
@@ -173,25 +177,21 @@ export class KeybindingsIOManager {
   }
 
   updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): void {
+    this._writeCustomKeybindingsFile(customKeybindingsFile);
+    this._customKeybindingsMap.set(customKeybindingsFile.basedOn, customKeybindingsFile);
+    this._clearFlatCaches();
 
+    this._onUpdateEventEmitter.fire();
   }
 
-  // updateKeybindings(name: string, data: KeybindingsFile): boolean {
-  //   const info = this._getInfoByName(name);
-  //   if (info == null) {
-  //     this._log.warn(`Unable to find keybindings file '${name}'`);
-  //     return false;
-  //   }
-
-  //   const destPath = path.join(info.path, info.filename);
-  //   try {
-  //     fs.writeFileSync(destPath, JSON.stringify(data, null, "  "));
-  //   } catch(err) {
-  //     this._log.warn(`Unable to update '${destPath}'. Error: ${err.message}`);
-  //     return false;
-  //   }
-
-  //   this._onUpdateEventEmitter.fire(name);
-  //   return true;
-  // }
+  private _writeCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): boolean {
+    const filePath = this._getCustomKeybindingsFilePath(customKeybindingsFile.basedOn);
+    try {
+      fs.writeFileSync(filePath, JSON.stringify(customKeybindingsFile, null, "  "));
+    } catch(err) {
+      this._log.warn(`Unable to update '${filePath}'. Error: ${err.message}`);
+      return false;
+    }
+    return true;
+  }
 }

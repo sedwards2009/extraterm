@@ -8,18 +8,7 @@ import Vue from 'vue';
 import { KeybindingsCategory, EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { KeybindingsSet } from '../../../keybindings/KeybindingsTypes';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { ExtensionManager } from '../../extension/InternalTypes';
 import { Category, ExtensionCommandContribution } from '../../../ExtensionMetadata';
-
-const categoryNames = {
-  "global": "Global",
-  "application": "Application",
-  "window": "Window",
-  "textEditing": "Text Editor",
-  "terminal": "Terminal",
-  "terminalCursorMode": "Terminal: Cursor Mode",
-  "viewer": "Viewer Tabs"
-};
 
 
 @Component(
@@ -29,6 +18,7 @@ const categoryNames = {
     },
     props: {
       baseKeybindingsSet: Object,      // KeybindingsSet,
+      customKeybindingsSet: Object,    // KeybindingsSet,
       readOnly: Boolean,
       searchText: String,
       commandsByCategory: Object,
@@ -41,6 +31,7 @@ const categoryNames = {
         :category="category"
         :categoryName="getCategoryName(category)"
         :baseKeybindingsSet="baseKeybindingsSet"
+        :customKeybindingsSet="customKeybindingsSet"
         :readOnly="readOnly"
         :searchText="searchText"
         :commands="commandsByCategory[category]"
@@ -53,6 +44,7 @@ const categoryNames = {
 export class KeybindingsList extends Vue {
   // Props
   baseKeybindingsSet: KeybindingsSet;
+  customKeybindingsSet: KeybindingsSet;
   commandsByCategory: { [index: string]: ExtensionCommandContribution[] };
   readOnly: boolean;
   searchText: string;
@@ -74,3 +66,13 @@ export class KeybindingsList extends Vue {
     return categoryNames[category];
   }
 }
+
+const categoryNames = {
+  "global": "Global",
+  "application": "Application",
+  "window": "Window",
+  "textEditing": "Text Editor",
+  "terminal": "Terminal",
+  "terminalCursorMode": "Terminal: Cursor Mode",
+  "viewer": "Viewer Tabs"
+};

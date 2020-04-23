@@ -1,12 +1,13 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import { log, getLogger } from "extraterm-logging";
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
-import { KeybindingsSet, KeybindingsBinding } from '../../../keybindings/KeybindingsTypes';
+import { KeybindingsSet, KeybindingsBinding, CustomKeybindingsSet, CustomKeybinding } from '../../../keybindings/KeybindingsTypes';
 import { TermKeyStroke } from '../../keybindings/KeyBindingsManager';
 import { Emulator, Platform } from '../../emulator/Term';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -17,6 +18,18 @@ export const EVENT_END_KEY_INPUT = "end-key-input";
 
 type KeybindingsKeyInputState = "read" | "edit" | "conflict";
 
+interface CommandKeybindingInfo {
+  command: string;
+  baseKeybindingsList: string[];
+  baseKeyStrokeList: TermKeyStroke[];
+
+  customKeybinding: CustomKeybinding | null;
+  customKeyStrokeList: TermKeyStroke[] | null;
+}
+
+const _log = getLogger("KeybindingsCategoryUi");
+
+
 @Component({
   components: {
     "keybindings-key-input": KeybindingsKeyInput
@@ -25,8 +38,8 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
     category: String,
     categoryName: String,
     baseKeybindingsSet: Object,      // KeybindingsSet,
+    customKeybindingsSet: Object,   // CustomKeybindingsSet
     commands: Array,          // ExtensionCommandContribution[]
-    readOnly: Boolean,
     searchText: String,
   },
   watch: {
@@ -40,7 +53,7 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
   <h3>{{categoryName}}
     <span v-if="commands.length !== filteredCommands.length" class="badge">{{filteredCommands.length}} / {{commands.length}}</span>
   </h3>
-  <table v-if="filteredCommands.length !== 0" v-bind:class="{'width-100pc': true, 'table-hover': !readOnly}">
+  <table v-if="filteredCommands.length !== 0" class="width-100pc table-hover">
     <thead>
       <tr>
         <th width="50%">Command</th>
@@ -49,9 +62,18 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
     </thead>
     <tbody>
       <tr v-for="command in filteredCommands" v-bind:key="command.command" class="command-row">
-        <td :title="command">{{command.title}}</td>
+        <td :title="'Command code: ' + command.command">{{command.title}}</td>
         <td class="keybindings-key-colomn">
-          <template v-for="(keybinding, index) in commandToKeybindingsMapping.get(command.command)">
+
+        <button
+          v-if="hasCommandCustomKeystrokes(command.command)"
+          class="microtool warning"
+          title="Revert to default"
+          v-on:click="revertKeys(command.command)"
+          ><i class="fas fa-undo"></i>
+        </button>
+
+        <template v-for="(keybinding, index) in getKeystrokesForCommand(command.command)">
             <br v-if="index !== 0" />
             <div class="keycap">
               <span>{{keybinding.formatHumanReadable()}}</span>
@@ -64,20 +86,18 @@ type KeybindingsKeyInputState = "read" | "edit" | "conflict";
             ></i>
 
             <button
-                :disabled="readOnly"
-                v-on:click="deleteKey(keybinding)"
-                class="microtool" :class="{danger: !readOnly}"
-                :title="readOnly ? 'Not editable. Use duplicate first' : 'Remove keybinding'">
+                v-on:click="deleteKey(command.command, keybinding)"
+                class="microtool danger hover"
+                title="Remove keybinding">
                 <i class="fas fa-times"></i>
             </button>
           </template>
 
           <button
               v-if="effectiveInputState(command) === 'read'"
-              :disabled="readOnly"
               v-on:click="addKey(command.command)"
-              class="microtool" :class="{success: !readOnly}"
-              :title="readOnly ? 'Not editable. Use duplicate first' : 'Add keybinding'">
+              class="microtool success hover"
+              title="Add keybinding">
             <i class="fas fa-plus"></i>
           </button>
 
@@ -106,7 +126,7 @@ export class KeybindingsCategory extends Vue {
   category: Category;
   categoryName: string;
   baseKeybindingsSet: KeybindingsSet;
-  readOnly: boolean;
+  customKeybindingsSet: CustomKeybindingsSet;
   searchText: string;
   commands: ExtensionCommandContribution[];
 
@@ -121,25 +141,27 @@ export class KeybindingsCategory extends Vue {
 
     if (this.searchText.trim() !== "") {
       const searchString = this.searchText.toLowerCase().trim();
-      const filteredCommands = commands.filter((command): boolean => {
-        if (command.title.toLowerCase().indexOf(searchString) !== -1) {
+      const filteredCommands = commands.filter((commandContribution): boolean => {
+        if (commandContribution.title.toLowerCase().indexOf(searchString) !== -1) {
           return true;
         }
         const commandToKeybindingsMapping = this.commandToKeybindingsMapping;
 
         // Also match the search string against the current bindings for the command.
-        if ( ! commandToKeybindingsMapping.has(command.command)) {
+        if ( ! commandToKeybindingsMapping.has(commandContribution.command)) {
           return false;
         }
 
-        const keybindingsList = commandToKeybindingsMapping.get(command.command);
-        for (const keybinding of keybindingsList) {
+        const keybindingInfo = commandToKeybindingsMapping.get(commandContribution.command);
+        const keyStrokeList = keybindingInfo.customKeyStrokeList == null
+                                ? keybindingInfo.baseKeyStrokeList
+                                : keybindingInfo.customKeyStrokeList;
+        for (const keybinding of keyStrokeList) {
           if (keybinding.formatHumanReadable().toLowerCase().indexOf(searchString) !== -1) {
             return true;
           }
         }
         return false;
-
       });
       return filteredCommands;
     } else {
@@ -147,18 +169,55 @@ export class KeybindingsCategory extends Vue {
     }
   }
 
-  get commandToKeybindingsMapping(): Map<string, TermKeyStroke[]> {
-    const result = new Map<string, TermKeyStroke[]>();
-    for (const command of this.commands) {
-      result.set(command.command, []);
-    }
-
-    for (const command of this.baseKeybindingsSet.bindings) {
-      if (command.category === this.category) {
-        result.set(command.command, command.keys.map(TermKeyStroke.parseConfigString));
+  get commandToKeybindingsMapping(): Map<string, CommandKeybindingInfo> {
+    const result = new Map<string, CommandKeybindingInfo>();
+    for (const commandContribution of this.commands) {
+      if (commandContribution.category === this.category) {
+        result.set(commandContribution.command, {
+          command: commandContribution.command,
+          baseKeybindingsList: [],
+          baseKeyStrokeList: [],
+          customKeybinding: null,
+          customKeyStrokeList: null
+        });
       }
     }
+
+    for (const keybinding of this.baseKeybindingsSet.bindings) {
+      if (keybinding.category === this.category) {
+        const commandKeybindingsInfo = result.get(keybinding.command);
+        if (commandKeybindingsInfo == null) {
+          _log.warn(`Command '${keybinding.command}' is not registered, but is in the base keybindings set.`);
+        } else {
+          commandKeybindingsInfo.baseKeybindingsList = keybinding.keys;
+          commandKeybindingsInfo.baseKeyStrokeList = keybinding.keys.map(TermKeyStroke.parseConfigString);
+        }
+      }
+    }
+
+    for (const customKeybinding of this.customKeybindingsSet.customBindings) {
+      const commandKeybindingInfo = result.get(customKeybinding.command);
+      if (commandKeybindingInfo != null) {
+        commandKeybindingInfo.customKeybinding = customKeybinding;
+        commandKeybindingInfo.customKeyStrokeList = customKeybinding.keys.map(TermKeyStroke.parseConfigString);
+      }
+    }
+
     return result;
+  }
+
+  getKeystrokesForCommand(command: string): TermKeyStroke[] {
+    const info = this.commandToKeybindingsMapping.get(command);
+    return info.customKeyStrokeList == null ? info.baseKeyStrokeList : info.customKeyStrokeList;
+  }
+
+  hasCommandCustomKeystrokes(command: string): boolean {
+    const info = this.commandToKeybindingsMapping.get(command);
+    if (info == null) {
+      _log.warn(`hasCommandCustomKeystrokes() Unknown command '${command}'`);
+      return false;
+    }
+    return info.customKeyStrokeList != null;
   }
 
   effectiveInputState(command: ExtensionCommandContribution): KeybindingsKeyInputState {
@@ -173,19 +232,20 @@ export class KeybindingsCategory extends Vue {
     return Emulator.isKeySupported(<Platform> process.platform, keybinding);
   }
 
-  deleteKey(keyStroke: TermKeyStroke): void {
-    for (const keybinding of this.baseKeybindingsSet.bindings) {
-      if (keybinding.category === this.category) {
-        const shortcuts = keybinding.keys;
+  deleteKey(command: string, keyStroke: TermKeyStroke): void {
+    const commandKeybindingInfo = this.commandToKeybindingsMapping.get(command);
+    if (commandKeybindingInfo.customKeyStrokeList == null) {
 
-        for (let i=0; i<shortcuts.length; i++) {
-          const currentKeyStroke = TermKeyStroke.parseConfigString(shortcuts[i]);
-          if (currentKeyStroke.equals(keyStroke)) {
-            Vue.delete(shortcuts, i);
-            return;
-          }
-        }
-      }
+      const newKeybinding: CustomKeybinding = {
+        command,
+        keys: commandKeybindingInfo.baseKeybindingsList.filter(
+          keybinding=> ! TermKeyStroke.parseConfigString(keybinding).equals(keyStroke))
+      };
+      Vue.set(this.customKeybindingsSet, "customBindings", [...this.customKeybindingsSet.customBindings, newKeybinding]);
+    } else {
+      const newKeyStrokes = commandKeybindingInfo.customKeybinding.keys.filter(
+        keybinding=> ! TermKeyStroke.parseConfigString(keybinding).equals(keyStroke));
+      Vue.set(commandKeybindingInfo.customKeybinding, "keys", newKeyStrokes);
     }
   }
 
@@ -193,6 +253,11 @@ export class KeybindingsCategory extends Vue {
     this.inputState = "edit";
     this.selectedCommand = command;
     this.$emit(EVENT_START_KEY_INPUT);
+  }
+
+  revertKeys(command: string): void {
+    Vue.set(this.customKeybindingsSet, "customBindings",
+      this.customKeybindingsSet.customBindings.filter(ck => ck.command !== command));
   }
 
   private _findKeybindingByKeyStroke(keyStrokeStroke: string): KeybindingsBinding {
@@ -219,9 +284,9 @@ export class KeybindingsCategory extends Vue {
     return -1;
   }
 
-  private _findKeybindingByCommand(command: string): KeybindingsBinding {
-    for (const keybinding of this.baseKeybindingsSet.bindings) {
-      if (keybinding.category === this.category && keybinding.command === command) {
+  private _findCustomKeybindingsByCommand(command: string): CustomKeybinding {
+    for (const keybinding of this.customKeybindingsSet.customBindings) {
+      if (keybinding.command === command) {
         return keybinding;
       }
     }
@@ -251,17 +316,16 @@ export class KeybindingsCategory extends Vue {
   }
 
   private _addKeyStrokeToCommandNoConflict(command: string, keyStrokeString: string): void {
-    const existingKeybinding = this._findKeybindingByCommand(command);
-    if (existingKeybinding == null) {
-      const newKeybinding = {
+    const commandKeybindingInfo = this.commandToKeybindingsMapping.get(command);
+    if (commandKeybindingInfo.customKeybinding == null) {
+      const newKeybinding: CustomKeybinding = {
         command,
-        category: this.category,
-        keys: [keyStrokeString]
+        keys: [...commandKeybindingInfo.baseKeybindingsList, keyStrokeString]
       };
-      Vue.set(this.baseKeybindingsSet, "bindings", [...this.baseKeybindingsSet.bindings, newKeybinding]);
+      Vue.set(this.customKeybindingsSet, "customBindings", [...this.customKeybindingsSet.customBindings, newKeybinding]);
     } else {
-      const newKeyStrokes = [...existingKeybinding.keys, keyStrokeString];
-      Vue.set(existingKeybinding, "keys", newKeyStrokes);
+      const newKeyStrokes = [...commandKeybindingInfo.customKeybinding.keys, keyStrokeString];
+      Vue.set(commandKeybindingInfo.customKeybinding, "keys", newKeyStrokes);
     }
   }
 
@@ -275,7 +339,7 @@ export class KeybindingsCategory extends Vue {
   }
 
   onReplaceConflict(): void {
-    this.deleteKey(TermKeyStroke.parseConfigString(this.conflictKey));
+    this.deleteKey(this.selectedCommand, TermKeyStroke.parseConfigString(this.conflictKey));
     this._addKeyStrokeToCommandNoConflict(this.selectedCommand, this.conflictKey);
 
     this.selectedCommand = "";

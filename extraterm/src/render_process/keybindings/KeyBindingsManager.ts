@@ -51,7 +51,7 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
 
     const lowerKey = eventKeyNameToConfigKeyName(key).toLowerCase();
     for (const keybinding of this.keyStrokeList) {
-      if (keybinding.configKeyLowercase === lowerKey &&
+      if (keybinding.plainKeyLowercase === lowerKey &&
           keybinding.altKey === ev.altKey &&
           keybinding.ctrlKey === ev.ctrlKey &&
           keybinding.shiftKey === ev.shiftKey &&
@@ -96,7 +96,7 @@ export class TermKeyStroke extends KeyStroke implements TermMinimalKeyboardEvent
 
   constructor(options: KeyStrokeOptions) {
     super(options);
-    this.key = configKeyNameToEventKeyName(options.configKey);
+    this.key = configKeyNameToEventKeyName(options.plainKey);
   }
 
   static parseConfigString(keybindingString: string): TermKeyStroke {

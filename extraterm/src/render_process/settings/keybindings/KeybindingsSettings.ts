@@ -5,9 +5,8 @@
 import { WebComponent } from 'extraterm-web-component-decorators';
 
 import { KeybindingsSettingsUi } from './KeybindingsSettingsUi';
-import { SYSTEM_CONFIG, SystemConfig, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
-import { Logger, getLogger } from "extraterm-logging";
-import { log } from "extraterm-logging";
+import { SYSTEM_CONFIG, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
+import { log, Logger, getLogger } from "extraterm-logging";
 import { SettingsBase } from '../SettingsBase';
 import * as WebIpc from '../../WebIpc';
 import * as ThemeTypes from '../../../theme/Theme';
@@ -63,7 +62,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private async _loadKeybindings(name: LogicalKeybindingsName): Promise<void> {
     const msg = await WebIpc.keybindingsRequestRead(name);
     this._getUi().baseKeybindingsSet = msg.stackedKeybindingsFile.keybindingsSet;
-    
+    this._getUi().customKeybindingsSet = msg.stackedKeybindingsFile.customKeybindingsSet;
   }
 
   protected _dataChanged(): void {
@@ -75,8 +74,10 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
       this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
       this._loadKeybindings(ui.selectedKeybindingsSetName);
     }
-// FIXME
-    // WebIpc.keybindingsUpdate(ui.selectedKeybindings, ui.keybindings);
+
+    if (ui.customKeybindingsSet != null) {
+      WebIpc.customKeybindingsSetUpdate(ui.customKeybindingsSet);
+    }
   }
 
   set keybindingsManager(keybindingsManager: KeybindingsManager) {

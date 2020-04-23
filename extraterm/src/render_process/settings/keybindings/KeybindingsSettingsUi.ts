@@ -8,7 +8,7 @@ import Vue from 'vue';
 import * as _ from 'lodash';
 
 import { trimBetweenTags} from 'extraterm-trim-between-tags';
-import { KeybindingsSet, LogicalKeybindingsName } from '../../../keybindings/KeybindingsTypes';
+import { KeybindingsSet, LogicalKeybindingsName, CustomKeybindingsSet } from '../../../keybindings/KeybindingsTypes';
 import { EVENT_START_KEY_INPUT, EVENT_END_KEY_INPUT } from './KeybindingsCategoryUi';
 import { KeybindingsList } from './KeybindingsListUi';
 import { KeybindingsKeyInput, EVENT_SELECTED, EVENT_CANCELED } from './KeyInputUi';
@@ -85,6 +85,7 @@ const allKeybindingsSets: KeybindingsInfo[] = [
   <keybindings-category-list
     v-if="baseKeybindingsSet !== null"
     :baseKeybindingsSet="baseKeybindingsSet"
+    :customKeybindingsSet="customKeybindingsSet"
     :searchText="searchText"
     :commandsByCategory="commandsByCategory"
     v-on:${EVENT_START_KEY_INPUT}="$emit('${EVENT_START_KEY_INPUT}')"
@@ -98,6 +99,7 @@ export class KeybindingsSettingsUi extends Vue {
   keybindingsInfoList: KeybindingsInfo[] = [];
 
   baseKeybindingsSet: KeybindingsSet = null;
+  customKeybindingsSet: CustomKeybindingsSet = null;
   selectedKeybindingsSetName: LogicalKeybindingsName = null;
   commandsByCategory: { [index: string]: ExtensionCommandContribution[] } = {};
 

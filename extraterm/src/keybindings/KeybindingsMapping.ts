@@ -15,7 +15,7 @@ export interface KeyStrokeOptions {
   ctrlKey: boolean;
   shiftKey: boolean;
   metaKey: boolean;
-  configKey: string;
+  plainKey: string;
 };
 
 
@@ -25,8 +25,8 @@ export class KeyStroke {
   readonly ctrlKey: boolean;
   readonly metaKey: boolean;
   readonly shiftKey: boolean;
-  readonly configKey: string;
-  readonly configKeyLowercase: string;
+  readonly plainKey: string;
+  readonly plainKeyLowercase: string;
   private _humanReadableString: string = null;
   readonly isComposing: boolean = false;
 
@@ -35,8 +35,8 @@ export class KeyStroke {
     this.ctrlKey = options.ctrlKey;
     this.metaKey = options.metaKey;
     this.shiftKey = options.shiftKey;
-    this.configKey = options.configKey;
-    this.configKeyLowercase = options.configKey.toLowerCase();
+    this.plainKey = options.plainKey;
+    this.plainKeyLowercase = options.plainKey.toLowerCase();
   }
 
   static parseConfigString(keyStrokeString: string): KeyStroke {
@@ -51,7 +51,7 @@ export class KeyStroke {
       this.ctrlKey === other.ctrlKey &&
       this.metaKey === other.metaKey &&
       this.shiftKey === other.shiftKey &&
-      this.configKeyLowercase === other.configKeyLowercase;
+      this.plainKeyLowercase === other.plainKeyLowercase;
   }
 
   formatHumanReadable(): string {
@@ -88,10 +88,10 @@ export class KeyStroke {
       }
     }
 
-    if (eventKeyToHumanMapping[this.configKey.toLowerCase()] !== undefined) {
-      parts.push(eventKeyToHumanMapping[this.configKey.toLowerCase()]);
+    if (eventKeyToHumanMapping[this.plainKey.toLowerCase()] !== undefined) {
+      parts.push(eventKeyToHumanMapping[this.plainKey.toLowerCase()]);
     } else {
-      parts.push(_.capitalize(this.configKey));
+      parts.push(_.capitalize(this.plainKey));
     }
 
     this._humanReadableString = parts.join(isDarwin ? "" : "+");
@@ -99,7 +99,7 @@ export class KeyStroke {
   }
 
   hashString(): string {
-    return `${mapString(this.configKey)}:${mapBool(this.altKey)}:${mapBool(this.ctrlKey)}:${mapBool(this.metaKey)}:${mapBool(this.shiftKey)}`;
+    return `${mapString(this.plainKey)}:${mapBool(this.altKey)}:${mapBool(this.ctrlKey)}:${mapBool(this.metaKey)}:${mapBool(this.shiftKey)}`;
   }
 }
 
@@ -137,7 +137,7 @@ export function parseConfigKeyStrokeString<KS extends KeyStroke>(construct: (opt
     ctrlKey: hasCtrl,
     shiftKey: hasShift,
     metaKey: hasMeta,
-    configKey: key
+    plainKey: key
   });
 
   return keyStroke;

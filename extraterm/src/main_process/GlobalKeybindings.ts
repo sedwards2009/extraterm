@@ -118,10 +118,10 @@ export function keyStrokeToAccelerator(keyStroke: KeyStroke): string {
     parts.push("Shift");
   }
 
-  if (keyStroke.configKeyLowercase in keyHumanNames) {
-    parts.push(keyHumanNames[keyStroke.configKeyLowercase]);
+  if (keyStroke.plainKeyLowercase in keyHumanNames) {
+    parts.push(keyHumanNames[keyStroke.plainKeyLowercase]);
   } else {
-    parts.push(_.capitalize(keyStroke.configKey));
+    parts.push(_.capitalize(keyStroke.plainKey));
   }
   return parts.join("+");
 }

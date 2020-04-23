@@ -15,7 +15,7 @@
   height: 100%;
   overflow: auto;
   padding: $panel-body-padding;
-  
+
   & > * {
     max-width: calc(100% - 1rem);
   }
@@ -25,12 +25,12 @@ TR.command-row {
 
   height: calc(#{2*$table-cell-padding} + #{$line-height-computed + pxToRem(1px + 3px)});
 
-  BUTTON[class*="microtool"] {
+  BUTTON.microtool.hover {
     visibility: hidden;
     margin-left: 0.5em;
   }
 }
 
-TR.command-row:hover BUTTON[class*="microtool"] {
+TR.command-row:hover BUTTON.microtool.hover {
   visibility: visible;
 }
