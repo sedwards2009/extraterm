@@ -65,31 +65,33 @@ const _log = getLogger("KeybindingsCategoryUi");
         <td :title="'Command code: ' + command.command">{{command.title}}</td>
         <td class="keybindings-key-colomn">
 
-        <button
-          v-if="hasCommandCustomKeystrokes(command.command)"
-          class="microtool warning"
-          title="Revert to default"
-          v-on:click="revertKeys(command.command)"
-          ><i class="fas fa-undo"></i>
-        </button>
+          <button
+              v-if="hasCommandCustomKeystrokes(command.command)"
+              class="microtool warning"
+              title="Revert to default"
+              v-on:click="revertKeys(command.command)"
+            >
+            <i class="fas fa-undo"></i>
+          </button>
 
-        <template v-for="(keybinding, index) in getKeystrokesForCommand(command.command)">
+          <template v-for="(keybinding, index) in getKeystrokesForCommand(command.command)">
             <br v-if="index !== 0" />
             <div class="keycap">
               <span>{{keybinding.formatHumanReadable()}}</span>
             </div>
             &nbsp;
             <i
-                v-if="termConflict(keybinding)"
-                title="This may override the terminal emulation"
-                class="fas fa-exclamation-triangle"
+              v-if="termConflict(keybinding)"
+              title="This may override the terminal emulation"
+              class="fas fa-exclamation-triangle"
             ></i>
 
             <button
-                v-on:click="deleteKey(command.command, keybinding)"
-                class="microtool danger hover"
-                title="Remove keybinding">
-                <i class="fas fa-times"></i>
+              v-on:click="deleteKey(command.command, keybinding)"
+              class="microtool danger hover"
+              title="Remove keybinding"
+            >
+              <i class="fas fa-times"></i>
             </button>
           </template>
 
@@ -97,7 +99,8 @@ const _log = getLogger("KeybindingsCategoryUi");
               v-if="effectiveInputState(command) === 'read'"
               v-on:click="addKey(command.command)"
               class="microtool success hover"
-              title="Add keybinding">
+              title="Add keybinding"
+            >
             <i class="fas fa-plus"></i>
           </button>
 
@@ -260,17 +263,28 @@ export class KeybindingsCategory extends Vue {
       this.customKeybindingsSet.customBindings.filter(ck => ck.command !== command));
   }
 
-  private _findKeybindingByKeyStroke(keyStrokeStroke: string): KeybindingsBinding {
+  private _findCommandByKeyStroke(keyStrokeStroke: string): string {
     const keyStroke = TermKeyStroke.parseConfigString(keyStrokeStroke);
 
     for (const keybinding of this.baseKeybindingsSet.bindings) {
       if (keybinding.category === this.category) {
         const shortcuts = keybinding.keys;
         if (this._findKeyStrokeInKeys(keyStroke, shortcuts) !== -1) {
-          return keybinding;
+          return keybinding.command;
         }
       }
     }
+
+    for (const keybinding of this.customKeybindingsSet.customBindings) {
+      const info = this.commandToKeybindingsMapping.get(keybinding.command);
+      if (info != null) {
+        const shortcuts = keybinding.keys;
+        if (this._findKeyStrokeInKeys(keyStroke, shortcuts) !== -1) {
+          return keybinding.command;
+        }
+      }
+    }
+
     return null;
   }
 
@@ -284,27 +298,18 @@ export class KeybindingsCategory extends Vue {
     return -1;
   }
 
-  private _findCustomKeybindingsByCommand(command: string): CustomKeybinding {
-    for (const keybinding of this.customKeybindingsSet.customBindings) {
-      if (keybinding.command === command) {
-        return keybinding;
-      }
-    }
-    return null;
-  }
-
   onKeyInputSelected(keyStrokeString: string): void {
-    const conflictingKeybinding = this._findKeybindingByKeyStroke(keyStrokeString);
-    if (conflictingKeybinding == null) {
+    const conflictingKeybindingCommand = this._findCommandByKeyStroke(keyStrokeString);
+    if (conflictingKeybindingCommand == null) {
       this._addKeyStrokeToCommandNoConflict(this.selectedCommand, keyStrokeString);
       this.inputState = "read";
     } else {
       this.conflictKey = keyStrokeString;
-      this.conflictCommand = conflictingKeybinding.command;
+      this.conflictCommand = conflictingKeybindingCommand;
 
       this.conflictCommandName = "";
       for (const commandContrib of this.commands) {
-        if (commandContrib.command === conflictingKeybinding.command) {
+        if (commandContrib.command === conflictingKeybindingCommand) {
           this.conflictCommandName = commandContrib.title;
         }
       }
@@ -339,7 +344,7 @@ export class KeybindingsCategory extends Vue {
   }
 
   onReplaceConflict(): void {
-    this.deleteKey(this.selectedCommand, TermKeyStroke.parseConfigString(this.conflictKey));
+    this.deleteKey(this.conflictCommand, TermKeyStroke.parseConfigString(this.conflictKey));
     this._addKeyStrokeToCommandNoConflict(this.selectedCommand, this.conflictKey);
 
     this.selectedCommand = "";
