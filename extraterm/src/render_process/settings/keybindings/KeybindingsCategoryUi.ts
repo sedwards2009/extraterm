@@ -111,6 +111,7 @@ const _log = getLogger("KeybindingsCategoryUi");
           </keybindings-key-input>
 
           <template v-if="effectiveInputState(command) === 'conflict'">
+            <br v-if="getKeystrokesForCommand(command.command).length !== 0"/>
             <div class="keycap">
               <span>{{conflictKeyHumanReadable}}</span>
             </div>
