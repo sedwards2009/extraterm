@@ -68,7 +68,7 @@ const _log = getLogger("KeybindingsCategoryUi");
           <button
               v-if="hasCommandCustomKeystrokes(command.command)"
               class="microtool warning"
-              title="Revert to default"
+              :title="revertWarningText(command.command)"
               v-on:click="revertKeys(command.command)"
             >
             <i class="fas fa-undo"></i>
@@ -222,6 +222,14 @@ export class KeybindingsCategory extends Vue {
       return false;
     }
     return info.customKeyStrokeList != null;
+  }
+
+  revertWarningText(command: string): string {
+    const info = this.commandToKeybindingsMapping.get(command);
+    if (info == null) {
+      return "Revert to default";
+    }
+    return `Revert to default: ${info.baseKeyStrokeList.map(ks => ks.formatHumanReadable()).join(", ")}`;
   }
 
   effectiveInputState(command: ExtensionCommandContribution): KeybindingsKeyInputState {
