@@ -11,6 +11,7 @@ import { MainExtensionManager } from './extension/MainExtensionManager';
 
 test("Scan & Flatten", () => {
   const extensionManager = new MainExtensionManager(["../extensions"]);
+  extensionManager.startUpExtensions({"default-keybindings": true}, false);
 
   const kbm = new KeybindingsIOManager(".", extensionManager);
 

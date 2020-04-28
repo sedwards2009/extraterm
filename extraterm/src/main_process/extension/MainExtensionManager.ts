@@ -62,9 +62,9 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
     this._configDatabase = newConfigDatabase;
   }
 
-  startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}): void {
+  startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): void {
     for (const extensionInfo of this._extensionMetadata) {
-      this._extensionDesiredState[extensionInfo.name] = isSupportedOnThisPlatform(extensionInfo);
+      this._extensionDesiredState[extensionInfo.name] = startByDefault && isSupportedOnThisPlatform(extensionInfo);
     }
 
     // Merge in the explicitly enabled/disabled extensions from the config.
