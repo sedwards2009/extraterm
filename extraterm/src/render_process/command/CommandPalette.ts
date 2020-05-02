@@ -37,16 +37,16 @@ export class CommandPalette {
   constructor(private extensionManager: ExtensionManager, private keybindingsManager: KeybindingsManager) {
     this._log = getLogger("CommandPalette", this);
     const doc = window.document;
-  
+
     // Command palette
     this._commandPalette = <PopDownListPicker<CommandAndShortcut>> doc.createElement(PopDownListPicker.TAG_NAME);
     this._commandPalette.id = ID_COMMAND_PALETTE;
     this._commandPalette.titlePrimary = "Command Palette";
-    
+
     this._commandPalette.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
     this._commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
     this._commandPalette.addExtraCss([CssFile.COMMAND_PALETTE]);
-  
+
     this._commandPalette.addEventListener('selected', (ev: CustomEvent) => this._handleCommandPaletteSelected(ev));
   }
 
@@ -60,12 +60,12 @@ export class CommandPalette {
         categories: ["application", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
         when: true
       });
-  
+
       const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
-        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommandAndCategory(entry.command, entry.category);
+        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
         const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
-        return { id: entry.command + "_" + entry.category, shortcut, ...entry };
+        return { id: entry.command, shortcut, ...entry };
       });
 
       this._commandPaletteEntries = entriesAndShortcuts;
@@ -84,7 +84,7 @@ export class CommandPalette {
       this._returnFocusElement.focus();
       this._returnFocusElement = null;
     }
-    
+
     const selectedId = ev.detail.selected;
     if (selectedId !== null) {
       doLater( () => {
@@ -134,7 +134,7 @@ function commandPaletteFormatEntriesWithGroups(entries: CommandAndShortcut[], se
     currentGroup = entry.category;
     htmlParts.push(commandPaletteFormatEntry(entry, entry.id === selectedId, extraClass));
   }
-  
+
   return htmlParts.join("");
 }
 

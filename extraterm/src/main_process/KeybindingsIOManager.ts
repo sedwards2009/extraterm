@@ -94,7 +94,6 @@ export class KeybindingsIOManager {
 
   getFlatKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
     const result = this._getFlatBaseKeybindingsSet(name);
-    this._log.debug(`getFlatKeybindingsFile() result.bindings.length: ${result.bindings.length}`);
     return result;
   }
 

@@ -17,102 +17,82 @@ const keyBindingsMap: KeybindingsSet = {
   bindings: [
     {
       command: "open",
-      category: "window",
       keys: ["Ctrl-o"]
     },
     {
       command: "togglemode",
-      category: "window",
       keys: ["Ctrl-Space"]
     },
     {
       command: "zoom",
-      category: "window",
       keys: ["Ctrl-Plus"]
     },
     {
       command: "all",
-      category: "window",
       keys: ["Alt-Shift-Cmd-A"]
     },
     {
       command: "makespace",
-      category: "window",
       keys: ["space"]
     },
     {
       command: "smeg",
-      category: "window",
       keys: ["alt - shift - S"]
     },
     {
       command: "closewindow",
-      category: "window",
       keys: ["W-ctrl-shift"]
     },
     {
       command: "sleep",
-      category: "window",
       keys: ["shift-shift-shift-Z"]
     },
     {
       command: "pageup",
-      category: "window",
       keys: ["PageUp"]
     },
     {
       command: "gohome",
-      category: "window",
       keys: ["home"]
     },
     {
       command: "dedent",
-      category: "window",
       keys: ["Alt-Tab"]
     },
     {
       command: "otherpane",
-      category: "window",
       keys: ["Ctrl-Tab"]
     },
     {
       command: "finish",
-      category: "window",
       keys: ["End"]
     },
     {
       command: "up",
-      category: "window",
       keys: ["Up"]
     },
     {
       command: "down",
-      category: "window",
       keys: ["Down"]
     },
     {
       command: "rename",
-      category: "window",
       keys: ["F2"]
     },
     {
       command: "select-left",
-      category: "window",
       keys: ["Alt-Left"]
     },
     {
       command: "break",
-      category: "window",
       keys: ["Ctrl-c"]
     },
     {
       command: "bigbreak",
-      category: "window",
       keys: ["Ctrl-Shift-C"]
     },
     {
       command: "moveTabRight",
-      category: "window",
       keys: ["Ctrl-Alt-."]
     }
   ]
@@ -168,7 +148,7 @@ describe.each([
 ])("", (input, output: string) => {
   test(`mapEventToCommand() -> ${output}"`, () => {
     const editorKeybindings = KeybindingsManager.loadKeybindingsFromObject(keyBindingsMap, "linux");
-    expect(editorKeybindings.mapEventToCommands(input)[0].command).toEqual(output);
+    expect(editorKeybindings.mapEventToCommands(input)[0]).toEqual(output);
   });
 });
 

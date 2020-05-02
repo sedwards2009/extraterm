@@ -199,7 +199,7 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
 
   readonly keyStrokeList: KS[] = [];
   protected _keyStrokeHashToCommandsMapping = new Map<string, KeybindingsBinding[]>();
-  private _categoryMaps = new Map<Category, Map<string, KS[]>>();
+  private _commandToKeyStrokeMap = new Map<string, KS[]>();
   private _log: Logger = null;
   private _platform: string;
   private _enabled = true;
@@ -227,7 +227,7 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
 
       const ksHashList = ksList.map(ks => ks.hashString());
 
-      this._setKeyStrokesForCommandAndCategory(keybinding.command, keybinding.category, ksList);
+      this._setKeyStrokesForCommand(keybinding.command, ksList);
 
       for (const ksHash of ksHashList) {
         let list = this._keyStrokeHashToCommandsMapping.get(ksHash);
@@ -240,12 +240,8 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
     }
   }
 
-  private _setKeyStrokesForCommandAndCategory(command: string, category: Category, keyStrokes: KS[]): void {
-    if ( ! this._categoryMaps.has(category)) {
-      this._categoryMaps.set(category, new Map());
-    }
-    const commandMap = this._categoryMaps.get(category);
-    commandMap.set(command, keyStrokes);
+  private _setKeyStrokesForCommand(command: string, keyStrokes: KS[]): void {
+    this._commandToKeyStrokeMap.set(command, keyStrokes);
   }
 
   isEnabled(): boolean {
@@ -276,10 +272,7 @@ export class KeybindingsMapping<KS extends KeyStroke=KeyStroke> {
     return _.isEqual(myBindings, otherBindings);
   }
 
-  getKeyStrokesForCommandAndCategory(command: string, category: Category): KS[] {
-    if ( ! this._categoryMaps.has(category)) {
-      return [];
-    }
-    return this._categoryMaps.get(category).get(command) || [];
+  getKeyStrokesForCommand(command: string): KS[] {
+    return this._commandToKeyStrokeMap.get(command) || [];
   }
 }

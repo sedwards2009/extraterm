@@ -24,7 +24,7 @@ export interface CommandQueryOptions {
   newTerminalMenu?: boolean;
   terminalTitleMenu?: boolean;
   when?: boolean;
-  commandsWithCategories?: {command: string, category: Category}[];
+  commands?: string[];
 }
 
 export interface ExtensionManager {

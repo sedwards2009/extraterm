@@ -88,7 +88,7 @@ export class GlobalKeybindingsManager {
     };
 
     for (const command in commandsToEmitters) {
-      for (const keyStroke of globalKeybindings.getKeyStrokesForCommandAndCategory(command, "global")) {
+      for (const keyStroke of globalKeybindings.getKeyStrokesForCommand(command)) {
         globalShortcut.register(keyStrokeToAccelerator(keyStroke), () => {
           doLater(() => commandsToEmitters[command].fire());
         });

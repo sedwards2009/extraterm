@@ -191,14 +191,10 @@ export class KeybindingsCategory extends Vue {
     }
 
     for (const keybinding of this.baseKeybindingsSet.bindings) {
-      if (keybinding.category === this.category) {
-        const commandKeybindingsInfo = result.get(keybinding.command);
-        if (commandKeybindingsInfo == null) {
-          _log.warn(`Command '${keybinding.command}' is not registered, but is in the base keybindings set.`);
-        } else {
-          commandKeybindingsInfo.baseKeybindingsList = keybinding.keys;
-          commandKeybindingsInfo.baseKeyStrokeList = keybinding.keys.map(TermKeyStroke.parseConfigString);
-        }
+      const commandKeybindingsInfo = result.get(keybinding.command);
+      if (commandKeybindingsInfo != null) {
+        commandKeybindingsInfo.baseKeybindingsList = keybinding.keys;
+        commandKeybindingsInfo.baseKeyStrokeList = keybinding.keys.map(TermKeyStroke.parseConfigString);
       }
     }
 

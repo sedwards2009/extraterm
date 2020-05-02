@@ -21,13 +21,12 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
   }
 
   /**
-   * Maps a keyboard event to a command string.
+   * Maps a keyboard event to possible commands.
    *
    * @param ev the keyboard event
-   * @return the command string or `null` if the event doesn't have a matching
-   *         key binding.
+   * @return list of commands bound to this keyboard event.
    */
-  mapEventToCommands(ev: MinimalKeyboardEvent): KeybindingsBinding[] {
+  mapEventToCommands(ev: MinimalKeyboardEvent): string[] {
     if ( ! this.isEnabled()) {
       return [];
     }
@@ -56,31 +55,19 @@ export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
           keybinding.ctrlKey === ev.ctrlKey &&
           keybinding.shiftKey === ev.shiftKey &&
           keybinding.metaKey === ev.metaKey) {
-        return this._keyStrokeHashToCommandsMapping.get(keybinding.hashString());
+        return this._keyStrokeHashToCommandsMapping.get(keybinding.hashString()).map(binding => binding.command);
       }
     }
     return [];
   }
   // this._log.debug(`altKey: ${ev.altKey}, ctrlKey: ${ev.ctrlKey}, metaKey: ${ev.metaKey}, shiftKey: ${ev.shiftKey}, key: ${ev.key}, keyCode: ${ev.keyCode}`);
 
-  mapCommandToReadableKeyStrokes(command: string, category?: Category): string[] {
-    if (category == null) {
-      return [
-        ...this.mapCommandToReadableKeyStrokes(command, "global"),
-        ...this.mapCommandToReadableKeyStrokes(command, "application"),
-        ...this.mapCommandToReadableKeyStrokes(command, "window"),
-        ...this.mapCommandToReadableKeyStrokes(command, "textEditing"),
-        ...this.mapCommandToReadableKeyStrokes(command, "terminal"),
-        ...this.mapCommandToReadableKeyStrokes(command, "terminalCursorMode"),
-        ...this.mapCommandToReadableKeyStrokes(command, "viewer")
-      ];
-    } else {
-      const keyStrokes = this.getKeyStrokesForCommandAndCategory(command, category);
-      if (keyStrokes == null) {
-        return [];
-      }
-      return keyStrokes.map(ks => ks.formatHumanReadable());
+  mapCommandToReadableKeyStrokes(command: string): string[] {
+    const keyStrokes = this.getKeyStrokesForCommand(command);
+    if (keyStrokes == null) {
+      return [];
     }
+    return keyStrokes.map(ks => ks.formatHumanReadable());
   }
 }
 

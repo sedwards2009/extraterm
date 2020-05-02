@@ -34,7 +34,6 @@ export interface KeybindingsSet {
 
 export interface KeybindingsBinding {
   command: string;
-  category: Category;
   keys: string[];
 }
 

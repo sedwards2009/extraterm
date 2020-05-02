@@ -330,23 +330,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
 
     let commandPredicate = truePredicate;
-    if (options.commandsWithCategories != null) {
-      const commandsWithCategories = options.commandsWithCategories;
-
-      const index = new Map<Category, string[]>();
-      for (const commandWithCategory of commandsWithCategories) {
-        if ( ! index.has(commandWithCategory.category)) {
-          index.set(commandWithCategory.category, []);
-        }
-        index.get(commandWithCategory.category).push(commandWithCategory.command);
-      }
-
+    if (options.commands != null) {
+      const commands = options.commands;
       commandPredicate = commandEntry => {
-        if ( ! index.has(commandEntry.commandContribution.category)) {
-          return false;
-        }
-        return index.get(commandEntry.commandContribution.category)
-          .indexOf(commandEntry.commandContribution.command) !== -1;
+        return commands.indexOf(commandEntry.commandContribution.command) !== -1;
       };
     }
 

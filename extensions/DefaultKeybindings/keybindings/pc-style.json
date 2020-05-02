@@ -3,133 +3,114 @@
   "bindings": [
     {
       "command": "extraterm:window.focusTabLeft",
-      "category": "window",
       "keys": [
         "Ctrl-,"
       ]
     },
     {
       "command": "extraterm:window.focusTabRight",
-      "category": "window",
       "keys": [
         "Ctrl-."
       ]
     },
     {
       "command": "extraterm:window.newTerminal",
-      "category": "window",
       "keys": [
         "Ctrl-Shift-T"
       ]
     },
     {
       "command": "extraterm:window.closeTab",
-      "category": "window",
       "keys": [
         "Ctrl-Shift-Q"
       ]
     },
     {
       "command": "extraterm:window.focusPaneLeft",
-      "category": "window",
       "keys": [
         "Ctrl-Shift-<"
       ]
     },
     {
       "command": "extraterm:window.focusPaneRight",
-      "category": "window",
       "keys": [
         "Ctrl-Shift->"
       ]
     },
     {
       "command": "extraterm:window.focusPaneAbove",
-      "category": "window",
       "keys": [
         "Ctrl-Shift-:"
       ]
     },
     {
       "command": "extraterm:window.focusPaneBelow",
-      "category": "window",
       "keys": [
         "Ctrl-Shift-?"
       ]
     },
     {
       "command": "extraterm:window.moveTabLeft",
-      "category": "window",
       "keys": [
         "Ctrl-Alt-,"
       ]
     },
     {
       "command": "extraterm:window.moveTabRight",
-      "category": "window",
       "keys": [
         "Ctrl-Alt-."
       ]
     },
     {
       "command": "extraterm:window.moveTabUp",
-      "category": "window",
       "keys": [
         "Ctrl-Alt-;"
       ]
     },
     {
       "command": "extraterm:window.moveTabDown",
-      "category": "window",
       "keys": [
         "Ctrl-Alt-/"
       ]
     },
     {
       "command": "extraterm:terminal.enterCursorMode",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-Space"
       ]
     },
     {
       "command": "extraterm:terminal.scrollPageUp",
-      "category": "terminal",
       "keys": [
         "Shift-PageUp"
       ]
     },
     {
       "command": "extraterm:terminal.scrollPageDown",
-      "category": "terminal",
       "keys": [
         "Shift-PageDown"
       ]
     },
     {
       "command": "extraterm:terminal.goToPreviousFrame",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-PageUp"
       ]
     },
     {
       "command": "extraterm:terminal.goToNextFrame",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-PageDown"
       ]
     },
     {
       "command": "extraterm:terminal.copyToClipboard",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-C"
       ]
     },
     {
       "command": "extraterm:terminal.pasteFromClipboard",
-      "category": "terminal",
       "keys": [
         "Shift-Insert",
         "Ctrl-Shift-V"
@@ -137,112 +118,96 @@
     },
     {
       "command": "extraterm:terminal.deleteLastFrame",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-W"
       ]
     },
     {
       "command": "extraterm:terminal.openLastFrame",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-O"
       ]
     },
     {
       "command": "extraterm:terminal.increaseFontSize",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-Plus"
       ]
     },
     {
       "command": "extraterm:terminal.decreaseFontSize",
-      "category": "terminal",
       "keys": [
         "Ctrl-Minus"
       ]
     },
     {
       "command": "extraterm:terminal.resetFontSize",
-      "category": "terminal",
       "keys": [
         "Ctrl-="
       ]
     },
     {
       "command": "extraterm:terminal.enterNormalMode",
-      "category": "terminalCursorMode",
       "keys": [
         "Ctrl-Shift-Space"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoLeft",
-      "category": "textEditing",
       "keys": [
         "Left"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoRight",
-      "category": "textEditing",
       "keys": [
         "Right"
       ]
     },
     {
       "command": "extraterm:textEditor.goLineUp",
-      "category": "textEditing",
       "keys": [
         "Up"
       ]
     },
     {
       "command": "extraterm:textEditor.goLineDown",
-      "category": "textEditing",
       "keys": [
         "Down"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoLineEnd",
-      "category": "textEditing",
       "keys": [
         "End"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoLineStart",
-      "category": "textEditing",
       "keys": [
         "Home"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoPageUp",
-      "category": "textEditing",
       "keys": [
         "PageUp"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoPageDown",
-      "category": "textEditing",
       "keys": [
         "PageDown"
       ]
     },
     {
       "command": "extraterm:textEditor.del",
-      "category": "textEditing",
       "keys": [
         "Delete"
       ]
     },
     {
       "command": "extraterm:textEditor.backspace",
-      "category": "textEditing",
       "keys": [
         "Backspace",
         "Shift-Backspace"
@@ -250,112 +215,96 @@
     },
     {
       "command": "extraterm:textEditor.indent",
-      "category": "textEditing",
       "keys": [
         "Tab"
       ]
     },
     {
       "command": "extraterm:textEditor.outdent",
-      "category": "textEditing",
       "keys": [
         "Shift-Tab"
       ]
     },
     {
       "command": "extraterm:textEditor.overwrite",
-      "category": "textEditing",
       "keys": [
         "Insert"
       ]
     },
     {
       "command": "extraterm:textEditor.selectAll",
-      "category": "textEditing",
       "keys": [
         "Ctrl-a"
       ]
     },
     {
       "command": "extraterm:textEditor.removeLines",
-      "category": "textEditing",
       "keys": [
         "Shift-Delete"
       ]
     },
     {
       "command": "extraterm:textEditor.selectUp",
-      "category": "textEditing",
       "keys": [
         "Shift-Up"
       ]
     },
     {
       "command": "extraterm:textEditor.selectDown",
-      "category": "textEditing",
       "keys": [
         "Shift-Down"
       ]
     },
     {
       "command": "extraterm:textEditor.selectLineStart",
-      "category": "textEditing",
       "keys": [
         "Shift-Home"
       ]
     },
     {
       "command": "extraterm:textEditor.selectLineEnd",
-      "category": "textEditing",
       "keys": [
         "Shift-End"
       ]
     },
     {
       "command": "extraterm:textEditor.selectLeft",
-      "category": "textEditing",
       "keys": [
         "Shift-Left"
       ]
     },
     {
       "command": "extraterm:textEditor.selectRight",
-      "category": "textEditing",
       "keys": [
         "Shift-Right"
       ]
     },
     {
       "command": "extraterm:textEditor.selectPageUp",
-      "category": "textEditing",
       "keys": [
         "Shift-PageUp"
       ]
     },
     {
       "command": "extraterm:textEditor.selectPageDown",
-      "category": "textEditing",
       "keys": [
         "Shift-PageDown"
       ]
     },
     {
       "command": "extraterm:textEditor.selectWordLeft",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Shift-Left"
       ]
     },
     {
       "command": "extraterm:textEditor.selectWordRight",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Shift-Right"
       ]
     },
     {
       "command": "extraterm:textEditor.addCursorAbove",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Shift-Up",
         "Alt-Shift-Up"
@@ -363,7 +312,6 @@
     },
     {
       "command": "extraterm:textEditor.addCursorBelow",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Shift-Down",
         "Alt-Shift-Down"
@@ -371,28 +319,24 @@
     },
     {
       "command": "extraterm:textEditor.splitIntoLines",
-      "category": "textEditing",
       "keys": [
         "Alt-Shift-I"
       ]
     },
     {
       "command": "extraterm:textEditor.selectMoreAfter",
-      "category": "textEditing",
       "keys": [
         "Ctrl-d"
       ]
     },
     {
       "command": "extraterm:textEditor.undo",
-      "category": "textEditing",
       "keys": [
         "Ctrl-z"
       ]
     },
     {
       "command": "extraterm:textEditor.redo",
-      "category": "textEditing",
       "keys": [
         "Shift-Ctrl-Z",
         "Ctrl-y"
@@ -400,133 +344,114 @@
     },
     {
       "command": "extraterm:textEditor.gotoFileStart",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Home"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoFileEnd",
-      "category": "textEditing",
       "keys": [
         "Ctrl-End"
       ]
     },
     {
       "command": "extraterm:textEditor.scrollUp",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Up"
       ]
     },
     {
       "command": "extraterm:textEditor.scrollDown",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Down"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoWordLeft",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Left"
       ]
     },
     {
       "command": "extraterm:textEditor.gotoWordRight",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Right"
       ]
     },
     {
       "command": "extraterm:textEditor.removeWordLeft",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Backspace"
       ]
     },
     {
       "command": "extraterm:textEditor.removeWordRight",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Delete"
       ]
     },
     {
       "command": "extraterm:textEditor.blockOutdent",
-      "category": "textEditing",
       "keys": [
         "Ctrl-["
       ]
     },
     {
       "command": "extraterm:textEditor.blockIndent",
-      "category": "textEditing",
       "keys": [
         "Ctrl-]"
       ]
     },
     {
       "command": "extraterm:textEditor.undoSelection",
-      "category": "textEditing",
       "keys": [
         "Ctrl-u"
       ]
     },
     {
       "command": "extraterm:textEditor.singleSelection",
-      "category": "textEditing",
       "keys": [
         "Esc"
       ]
     },
     {
       "command": "extraterm:textEditor.cursorColumn",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Shift-|"
       ]
     },
     {
       "command": "extraterm:textEditor.backSlashesToForward",
-      "category": "textEditing",
       "keys": [
         "Ctrl-/"
       ]
     },
     {
       "command": "extraterm:textEditor.forwardSlashesToBack",
-      "category": "textEditing",
       "keys": [
         "Ctrl-\\"
       ]
     },
     {
       "command": "extraterm:textEditor.escapeShellChars",
-      "category": "textEditing",
       "keys": [
         "Ctrl-'"
       ]
     },
     {
       "command": "extraterm:textEditor.unescapeShellChars",
-      "category": "textEditing",
       "keys": [
         "Ctrl-Shift-\""
       ]
     },
     {
       "command": "extraterm:terminal.copyToClipboard",
-      "category": "textEditing",
       "keys": [
         "Ctrl-c"
       ]
     },
     {
       "command": "extraterm:terminal.pasteFromClipboard",
-      "category": "textEditing",
       "keys": [
         "Shift-Insert",
         "Ctrl-v"
@@ -534,14 +459,12 @@
     },
     {
       "command": "extraterm:viewerTab.copyToClipboard",
-      "category": "viewer",
       "keys": [
         "Ctrl-c"
       ]
     },
     {
       "command": "extraterm:viewerTab.pasteFromClipboard",
-      "category": "viewer",
       "keys": [
         "Shift-Insert",
         "Ctrl-v"
@@ -549,21 +472,18 @@
     },
     {
       "command": "extraterm:application.openCommandPalette",
-      "category": "window",
       "keys": [
         "Ctrl-Shift-P"
       ]
     },
     {
       "command": "extraterm:terminal.typeSelection",
-      "category": "terminal",
       "keys": [
         "Ctrl-Enter"
       ]
     },
     {
       "command": "extraterm:terminal.typeSelectionAndCr",
-      "category": "terminal",
       "keys": [
         "Ctrl-Shift-Enter"
       ]

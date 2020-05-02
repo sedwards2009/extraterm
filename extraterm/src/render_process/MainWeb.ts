@@ -293,7 +293,7 @@ function handleKeyCapture(ev: KeyboardEvent): void {
                                   ? ["application", "window"]
                                   : null;
   const filteredCommands = extensionManager.queryCommands({
-    commandsWithCategories: commands.map(c => ({command: c.command, category: c.category })),
+    commands,
     categories: categories,
     when: true
   });
