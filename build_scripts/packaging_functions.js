@@ -158,7 +158,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
     packagerOptions.win32metadata = {
       FileDescription: "Extraterm",
       ProductName: "Extraterm",
-      LegalCopyright: "(C) 2019 Simon Edwards"
+      LegalCopyright: "(C) 2020 Simon Edwards"
     };
   } else if (platform === "darwin") {
     packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.icns";

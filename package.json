@@ -4,6 +4,7 @@
   "description": "A terminal",
   "author": "Simon Edwards",
   "license": "MIT",
+  "main": "extraterm/main.js",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
