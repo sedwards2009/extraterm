@@ -66,13 +66,22 @@ function hoistSubprojectsModules(versionedOutputDir, platform) {
     if (test('-L', itemPath)) {
       echo(`Deleting symlink ${item} in ${modulesDir}`);
       rm(itemPath);
+    } else if (test('-d', itemPath) && itemPath.startsWith('@')) {
+      for (const item2 of ls(path.join(modulesDir, item))) {
+        const itemPath2 = path.join(modulesDir, item, item2);
+        if (test('-L', itemPath2)) {
+          echo(`Deleting deeper symlink ${path.join(item, item2)} in ${join(modulesDir, item)}`);
+          rm(itemPath2);
+        }
+      }
     }
   }
 
   // Move the 'packages' subprojects up into this node_modules dir.
   const packagesDir = path.join(versionedOutputDir, appDir(platform), "packages");
   for (const item of ls(packagesDir)) {
-    const destDir = path.join(modulesDir, item);
+    const packageJson = JSON.parse(fs.readFileSync(path.join(packagesDir, item, "package.json"), {encoding: "utf8"}));
+    const destDir = path.join(modulesDir, packageJson.name);
     echo(`Moving ${item} in to ${destDir}`);
     mv(path.join(packagesDir, item), destDir);
     const binDirPath = path.join(destDir, "node_modules", ".bin");
