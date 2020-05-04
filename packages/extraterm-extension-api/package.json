@@ -1,6 +1,6 @@
 {
   "name": "@extraterm/extraterm-extension-api",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Extension API for the Extraterm terminal",
   "author": "Simon Edwards",
   "license": "MIT",

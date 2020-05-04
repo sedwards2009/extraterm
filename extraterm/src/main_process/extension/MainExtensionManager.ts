@@ -311,9 +311,11 @@ class ExtensionContextImpl implements ExtensionContext {
   logger: ExtensionApi.Logger = null;
   isBackendProcess = true;
   backend: BackendImpl = null;
+  extensionPath: string = null;
 
   constructor(public __extensionMetadata: ExtensionMetadata) {
     this.logger = getLogger("[Main]" + this.__extensionMetadata.name);
+    this.extensionPath = this.__extensionMetadata.path;
     this.backend = new BackendImpl(this.__extensionMetadata);
   }
 

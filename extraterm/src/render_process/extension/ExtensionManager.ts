@@ -628,6 +628,8 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
 
   proxyFactory: ProxyFactory = null;
 
+  extensionPath: string = null;
+
   private _tabTitleWidgetFactoryMap = new Map<string, ExtensionApi.TabTitleWidgetFactory>();
 
   constructor(public extensionManager: ExtensionManager, public extensionMetadata: ExtensionMetadata,
@@ -639,6 +641,8 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
                                           extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
     this.internalWindow = new WindowProxy(this, commonExtensionState);
     this.window = this.internalWindow;
+
+    this.extensionPath = this.extensionMetadata.path;
 
     this.logger = getLogger(extensionMetadata.name);
   }

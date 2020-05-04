@@ -772,6 +772,11 @@ export interface ExtensionContext {
    * Logger object which the extension can use.
    */
   readonly logger: Logger;
+
+  /**
+   * Absolute path to where this extension is located on the file system.
+   */
+  readonly extensionPath: string;
 }
 
 /**
