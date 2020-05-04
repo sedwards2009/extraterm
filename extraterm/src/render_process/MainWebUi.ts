@@ -763,7 +763,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._focusTabContent(tabContentElement);
   }
 
-  private _shiftTab(tabWidget: TabWidget, direction: number): void {
+  private _selectAdjacentTab(tabWidget: TabWidget, direction: number): void {
     const contents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
     const len = contents.length;
     if (len === 0) {
@@ -1025,11 +1025,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _commandFocusTabLeft(): void {
-    this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), -1);
+    this._selectAdjacentTab(this._tabWidgetFromElement(this._getActiveTabElement()), -1);
   }
 
   private _commandFocusTabRight(): void {
-    this._shiftTab(this._tabWidgetFromElement(this._getActiveTabElement()), 1);
+    this._selectAdjacentTab(this._tabWidgetFromElement(this._getActiveTabElement()), 1);
   }
 
   private _commandFocusPaneLeft(): void {

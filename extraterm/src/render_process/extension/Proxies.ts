@@ -34,7 +34,7 @@ export class WindowProxy implements InternalWindow {
     this.onDidCreateTerminal = this._onDidCreateTerminalEventEmitter.event;
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
-    this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;    
+    this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
 

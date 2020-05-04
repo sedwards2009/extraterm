@@ -620,7 +620,7 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
   private _log: Logger = null;
 
   commands: CommandsRegistry = null;
-  window: InternalWindow = null;
+  window: ExtensionApi.Window = null;
   internalWindow: InternalWindow = null;
   aceModule: typeof Ace = Ace;
   logger: ExtensionApi.Logger = null;
@@ -637,8 +637,9 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
     this.proxyFactory = new ProxyFactoryImpl(this);
     this.commands = new CommandsRegistry(this, extensionMetadata.name,
                                           extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
-    this.window = new WindowProxy(this, commonExtensionState);
-    this.internalWindow = this.window;
+    this.internalWindow = new WindowProxy(this, commonExtensionState);
+    this.window = this.internalWindow;
+
     this.logger = getLogger(extensionMetadata.name);
   }
 
