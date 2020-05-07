@@ -1,0 +1,9 @@
+{
+  "basedOn": "pc-style",
+  "customBindings": [
+    {
+      "command": "extraterm:application.openCommandPalette",
+      "keys": []
+    }
+  ]
+}

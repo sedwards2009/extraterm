@@ -15,12 +15,14 @@ import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, Key
 import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from '@extraterm/extraterm-extension-api';
 
-
+/**
+ * Manages reading keybindings files and r/w keybinding customisation files.
+ */
 export class KeybindingsIOManager {
 
   private _log: Logger = null;
   private _keybindingsFileList: KeybindingsFileInfo[] = null;
-  private _flatKeybindingMap: Map<LogicalKeybindingsName, KeybindingsSet> = null;
+  private _baseKeybindingsMap: Map<LogicalKeybindingsName, KeybindingsSet> = null;
   private _customKeybindingsMap: Map<LogicalKeybindingsName, CustomKeybindingsSet> = null;
 
   private _onUpdateEventEmitter = new EventEmitter<void>();
@@ -51,13 +53,13 @@ export class KeybindingsIOManager {
   }
 
   private _clearCaches(): void {
-    this._clearFlatCaches();
+    this._clearBaseCaches();
     this._customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsSet>();
     this._keybindingsFileList = null;
   }
 
-  private _clearFlatCaches(): void {
-    this._flatKeybindingMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
+  private _clearBaseCaches(): void {
+    this._baseKeybindingsMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
   }
 
   private _getKeybindingsExtensionPaths(): string [] {
@@ -92,14 +94,41 @@ export class KeybindingsIOManager {
     return result;
   }
 
+  /**
+   * Get a keybindings set with the base set and customisations flatten together.
+   */
   getFlatKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
-    const result = this._getFlatBaseKeybindingsSet(name);
-    return result;
+    const baseKeybindingsSet = this._getBaseKeybindingsSet(name);
+
+    // Hash the custom bindings for speed purposes
+    const customizations = this._getCustomKeybindingsFile(name);
+    const customBindingsHash = new Map<string, string[]>();
+    for (const customBinding of customizations.customBindings) {
+      customBindingsHash.set(customBinding.command, customBinding.keys);
+    }
+
+    // Create the new set of bindings with the modifications mixed in.
+    const flatBindingsList: KeybindingsBinding[] = [];
+    for (const binding of baseKeybindingsSet.bindings) {
+      if (customBindingsHash.has(binding.command)) {
+        flatBindingsList.push({
+          command: binding.command,
+          keys: customBindingsHash.get(binding.command)
+        });
+      } else {
+        flatBindingsList.push(binding);
+      }
+    }
+
+    return {
+      extends: name,
+      bindings: flatBindingsList
+    };
   }
 
-  private _getFlatBaseKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
-    if (this._flatKeybindingMap.has(name)) {
-      return this._flatKeybindingMap.get(name);
+  private _getBaseKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
+    if (this._baseKeybindingsMap.has(name)) {
+      return this._baseKeybindingsMap.get(name);
     }
 
     const flatKeybindings = new Map<string, KeybindingsBinding>();
@@ -112,10 +141,13 @@ export class KeybindingsIOManager {
       }
     }
 
-    return {
+    const result: KeybindingsSet = {
       extends: name,
       bindings: Array.from(flatKeybindings.values())
     };
+    this._baseKeybindingsMap.set(name, result);
+
+    return result;
   }
 
   private _readKeybindingsFile(fileInfo: KeybindingsFileInfo): KeybindingsSet {
@@ -132,10 +164,13 @@ export class KeybindingsIOManager {
     return keyBindingsJSON;
   }
 
+  /**
+   * Get the keybindings base set and customisations.
+   */
   getStackedKeybindings(name: LogicalKeybindingsName): StackedKeybindingsSet {
     return {
       name,
-      keybindingsSet: this._getFlatBaseKeybindingsSet(name),
+      keybindingsSet: this._getBaseKeybindingsSet(name),
       customKeybindingsSet: this._getCustomKeybindingsFile(name)
     };
   }
@@ -175,10 +210,13 @@ export class KeybindingsIOManager {
     }
   }
 
+  /**
+   * Update a set of customisations and persist it.
+   */
   updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): void {
     this._writeCustomKeybindingsFile(customKeybindingsFile);
     this._customKeybindingsMap.set(customKeybindingsFile.basedOn, customKeybindingsFile);
-    this._clearFlatCaches();
+    this._clearBaseCaches();
 
     this._onUpdateEventEmitter.fire();
   }

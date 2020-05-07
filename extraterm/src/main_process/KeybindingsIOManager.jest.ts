@@ -7,17 +7,29 @@ import 'jest';
 
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { MainExtensionManager } from './extension/MainExtensionManager';
+import * as path from 'path';
 
 
 test("Scan & Flatten", () => {
   const extensionManager = new MainExtensionManager(["../extensions"]);
   extensionManager.startUpExtensions({"default-keybindings": true}, false);
 
-  const kbm = new KeybindingsIOManager(".", extensionManager);
+  const kbm = new KeybindingsIOManager(path.join(__dirname, "test_files"), extensionManager);
+
+  const stackedBindings = kbm.getStackedKeybindings("pc-style");
+  expect(stackedBindings.keybindingsSet.bindings.filter(b => b.command === "extraterm:application.openCommandPalette").length).toBe(1);
+  expect(stackedBindings.customKeybindingsSet.customBindings.filter(b => b.command === "extraterm:window.newTerminal").length).toBe(0);
+  expect(stackedBindings.customKeybindingsSet.customBindings.filter(b => b.command === "extraterm:application.openCommandPalette").length).toBe(1);
 
   const flatBindings = kbm.getFlatKeybindingsSet("pc-style");
+
   expect(flatBindings.extends).toBe("pc-style");
   expect(flatBindings.bindings.length).not.toBe(0);
 
   expect(flatBindings.bindings.filter(b => b.command === "extraterm:window.newTerminal").length).toBe(1);
+  expect(flatBindings.bindings.find(b => b.command === "extraterm:window.newTerminal").keys.length).toBe(1);
+
+  // The pc-style.json file under `test_files` should override the Command palette binding.
+  expect(flatBindings.bindings.filter(b => b.command === "extraterm:application.openCommandPalette").length).toBe(1);
+  expect(flatBindings.bindings.find(b => b.command === "extraterm:application.openCommandPalette").keys.length).toBe(0);
 });

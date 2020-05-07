@@ -7,9 +7,8 @@ import { Event } from '@extraterm/extraterm-extension-api';
 
 import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName, eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsMapping";
 import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
-import { KeybindingsSet, KeybindingsBinding } from '../../keybindings/KeybindingsTypes';
+import { KeybindingsSet } from '../../keybindings/KeybindingsTypes';
 import { Logger, getLogger } from 'extraterm-logging';
-import { Category } from '../../ExtensionMetadata';
 
 export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
 
