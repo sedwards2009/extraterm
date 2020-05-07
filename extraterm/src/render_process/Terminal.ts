@@ -163,6 +163,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     commands.registerCommand("extraterm:terminal.goToPreviousFrame", (args: any) => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
     commands.registerCommand("extraterm:terminal.goToNextFrame", (args: any) => extensionManager.getActiveTerminal().commandGoToNextFrame());
     commands.registerCommand("extraterm:terminal.copyToClipboard", (args: any) => extensionManager.getActiveTerminal().commandCopyToClipboard());
+    commands.registerCommand("extraterm:terminal.copyToClipboardWhenTextEditing", (args: any) => extensionManager.getActiveTerminal().commandCopyToClipboard());
     commands.registerCommand("extraterm:terminal.pasteFromClipboard", (args: any) => extensionManager.getActiveTerminal().commandPasteFromClipboard());
     commands.registerCommand("extraterm:terminal.deleteLastFrame", (args: any) => extensionManager.getActiveTerminal().commandDeleteLastFrame());
     commands.registerCommand("extraterm:terminal.openLastFrame", (args: any) => extensionManager.getActiveTerminal().commandOpenLastFrame());

@@ -456,13 +456,6 @@
       ]
     },
     {
-      "command": "extraterm:terminal.copyToClipboard",
-      "keys": [
-        "Cmd-c",
-        "Cmd-Shift-C"
-      ]
-    },
-    {
       "command": "extraterm:terminal.pasteFromClipboard",
       "keys": [
         "Cmd-v",

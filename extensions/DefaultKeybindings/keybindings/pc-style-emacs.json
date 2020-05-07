@@ -437,7 +437,7 @@
       ]
     },
     {
-      "command": "extraterm:terminal.copyToClipboard",
+      "command": "extraterm:terminal.copyToClipboardWhenTextEditing",
       "keys": [
         "Ctrl-c"
       ]

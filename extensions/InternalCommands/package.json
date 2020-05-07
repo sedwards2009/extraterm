@@ -577,14 +577,14 @@
         "when": "isTextEditing"
       },
       {
-        "command": "extraterm:terminal.copyToClipboard",
+        "command": "extraterm:terminal.copyToClipboardWhenTextEditing",
         "title": "Copy to Clipboard",
         "category": "textEditing",
         "icon": "far fa-copy",
-        "when": "terminalFocus && textEditorFocus"
+        "when": "terminalFocus && isTextEditing"
       },
       {
-        "command": "extraterm:terminal.pasteFromClipboard",
+        "command": "extraterm:terminal.pasteFromClipboardInEditMode",
         "title": "Paste from Clipboard",
         "category": "textEditing",
         "icon": "fa fa-clipboard",
