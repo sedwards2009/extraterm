@@ -6,6 +6,7 @@
   "license": "MIT",
   "version": "1.0.0",
   "main": "dist/TextMateSyntaxThemeProviderExtension.js",
+  "isInternal": true,
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
     "build-fast": "tsc",

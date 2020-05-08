@@ -3,6 +3,7 @@
   "displayName": "Community Syntax Themes",
   "description": "A collection of popular syntax highlighting themes gathered from the community.",
   "version": "1.0.0",
+  "isInternal": true,
   "contributes": {
     "syntaxThemes": [
       {

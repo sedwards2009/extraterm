@@ -3,6 +3,7 @@
   "displayName": "Community Terminal Themes",
   "description": "A collection of terminal color themes gathered from the community.",
   "version": "1.0.0",
+  "isInternal": true,
   "contributes": {
     "terminalThemes": [
       {
