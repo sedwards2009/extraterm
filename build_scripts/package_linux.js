@@ -101,6 +101,9 @@ Icon=extraterm
 
   cp("-r", "build_scripts/resources/linux/icons", path.join(debTmp, "usr", "share"));
 
+  // The sandbox exe needs suid otherwise the app doesn't run on hardened Linux kernels.
+  chmod("4775", path.join(debTmp, "opt", "extraterm", "chrome-sandbox"));
+
   // Package in .deb
   exec(`dpkg-deb --root-owner-group --build ${debTmp}`);
 }
