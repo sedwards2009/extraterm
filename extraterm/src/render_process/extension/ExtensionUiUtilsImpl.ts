@@ -14,11 +14,34 @@ import {PopDownListPicker} from '../gui/PopDownListPicker';
 import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
 import {ViewerElement} from '../viewers/ViewerElement';
 import { SupportsDialogStack } from '../SupportsDialogStack';
+import { doLater } from 'extraterm-later';
 
 
 interface IdLabelPair {
   id: string;
   label: string;
+}
+
+interface Focusable {
+  focus(): void;
+}
+
+let elementToFocus: Focusable = null;
+
+/**
+ * Focus an element later.
+ * 
+ * Multiple calls to this will only respect the last call.
+ */
+function focusLater(el: Focusable): void {
+  elementToFocus = el;
+  doLater(() => {
+    if (elementToFocus == null) {
+      return;
+    }
+    elementToFocus.focus();
+    elementToFocus = null;
+  });
 }
 
 export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
@@ -47,14 +70,15 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
 
     const dialogDisposable = host.showDialog(this._numberInputDialog);
     this._numberInputDialog.open();
-    this._numberInputDialog.focus();
+    focusLater(this._numberInputDialog);
 
     return new Promise((resolve, reject) => {
       const selectedHandler = (ev: CustomEvent): void => {
         dialogDisposable.dispose();
         this._numberInputDialog.removeEventListener('selected', selectedHandler);
+
+        focusLater(this._numberInputDialog);
         resolve(ev.detail.value == null ? undefined : ev.detail.value);
-        lastFocus.focus();
       };
 
       this._numberInputDialog.addEventListener('selected', selectedHandler);
@@ -88,14 +112,14 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
 
     const dialogDisposable = host.showDialog(this._listPicker);
     this._listPicker.open();
-    this._listPicker.focus();
+    focusLater(this._listPicker);
 
     return new Promise((resolve, reject) => {
       const selectedHandler = (ev: CustomEvent): void => {
         dialogDisposable.dispose();
         this._listPicker.removeEventListener('selected', selectedHandler);
+        focusLater(lastFocus);
         resolve(ev.detail.selected == null ? undefined : parseInt(ev.detail.selected, 10));
-        lastFocus.focus();
       };
 
       this._listPicker.addEventListener('selected', selectedHandler);
