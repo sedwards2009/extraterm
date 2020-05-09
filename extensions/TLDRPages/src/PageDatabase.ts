@@ -21,7 +21,8 @@ export interface CommandExample {
 }
 
 enum ParseState {
-  INITIAL,
+  PROLOGUE,
+  DESCRIPTION,
   EXAMPLE_BULLET,
 }
 
@@ -105,7 +106,7 @@ export class PageDatabase {
 
   private _parsePage(pageString: string): { description: string; examples: CommandExample[]; } {
     const lines = pageString.split("\n");
-    let state: ParseState = ParseState.INITIAL;
+    let state: ParseState = ParseState.PROLOGUE;
 
     const examples: CommandExample[] = [];
 
@@ -114,16 +115,20 @@ export class PageDatabase {
 
     for (const line of lines) {
       switch (state) {
-        case ParseState.INITIAL:
+        case ParseState.PROLOGUE:
+          if (line.startsWith("> ")) {
+            description = line.substr(2);
+            state = ParseState.DESCRIPTION;
+          }
+          break;
+
+        case ParseState.DESCRIPTION:
           if (line.startsWith("- ")) {
             exampleDescription = line.substr(2);
             if (exampleDescription.endsWith(":")) {
               exampleDescription = exampleDescription.substr(0, exampleDescription.length - 1);
             }
             state = ParseState.EXAMPLE_BULLET;
-
-          } else if (line.startsWith("> ")) {
-            description = line.substr(2);
           }
           break;
 
@@ -144,7 +149,7 @@ export class PageDatabase {
             description: exampleDescription,
             commandLine
           });
-          state = ParseState.INITIAL;
+          state = ParseState.DESCRIPTION;
           break;
       }
     }
