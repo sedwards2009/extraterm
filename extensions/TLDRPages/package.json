@@ -1,0 +1,33 @@
+{
+  "name": "tldr-pages",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "yarn run fetch-data && tsc",
+    "clean": "shx rm -rf dist data",
+    "fetch-data": "node build_scripts/download_data.js",
+    "test": "yarn run build && jest"
+  },
+  "author": "",
+  "license": "MIT",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tldr-pages:tldr",
+        "title": "TLDR Pages",
+        "category": "terminal",
+        "when": "terminalFocus"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "^0.4.0",
+    "@types/jest": "23.3.13",
+    "download-cli": "^1.1.1",
+    "jest": "23.6.0",
+    "shelljs": "0.8.3",
+    "ts-jest": "23.10.5",
+    "typescript": "3.7.4"
+  }
+}

@@ -9,3 +9,4 @@ build_tmp/
 docs/_site
 node_modules/
 docs/.sass-cache
+extensions/TLDRPages/data/
