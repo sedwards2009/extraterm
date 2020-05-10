@@ -28,12 +28,12 @@ Extensions declare how they extend Extraterm by specifying *contribution points*
 
 The `commands` field in `package.json` is a list of commands with the following structure:
 
-* `command` the full name of the command including the name of the extension it is from.
-* `title` the human readable title or name of the command.
-* `category` the category to group this command belongs to in the keybindings settings.
-* `order` number used to sort and order this command in the UI relative to other command which share the same category.
-* `when` a *when clause* which specifies when this command is available.
-* `icon`
+* `command`  - full name of the command including the name of the extension it is from.
+* `title`  - human readable title or name of the command.
+* `category`  - category to group this command belongs to in the keybindings settings tab.
+* `order` - number used to sort and order this command in the UI relative to other command which share the same category.
+* `when` - a *when clause* which specifies when this command is available. See below.
+* `icon` - the name of a Font Awesome icon to show next to this command in the Command Palette and in other menus.  See below.
 
 
 Example:
@@ -44,7 +44,7 @@ Example:
           "command": "my-extension:someCommand",
           "title": "Some Command",
           "when": "..."
-          "category": "",
+          "category": "terminal",
           "order": 2000,
           "contextMenu": true
         }
@@ -82,10 +82,20 @@ The following categories are defined:
 
 * `global` - Commands which are available system wide, even when Extraterm is not focussed.
 * `window` - Command which operate at the window level.
-* `textEditing`
-* `terminal`
-* `terminalCursorMode`
-* `viewer`
+* `textEditing` - Commands related to editing text directly inside Extraterm.
+* `terminal` - Commands directly affecting the terminal.
+* `terminalCursorMode` - Commands relevant to the terminal when in cursor mode.
+* `viewer` - Commands for operating on viewers.
+
+
+#### Icons
+
+Extraterm uses icons from [Font Awesome](https://fontawesome.com/) in its menus and in other place through out the application. When an icon needs to be specified use the HTML class value as shown on each icon detail page.
+
+For example, use the value `fas fa-baby` from the[ baby](https://fontawesome.com/icons/baby?style=solid) icon. It is shown just above the large graphic of the icon.
+
+Only icons in the 'free' collection are available in Extraterm.
+
 
 ### Viewers
 
