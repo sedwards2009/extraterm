@@ -451,10 +451,11 @@
       ]
     },
     {
-      "command": "extraterm:terminal.pasteFromClipboard",
+      "command": "extraterm:terminal.pasteFromClipboardWhenTextEditing",
       "keys": [
         "Shift-Insert",
-        "Ctrl-v"
+        "Ctrl-v",
+        "Ctrl-Shift-V"
       ]
     },
     {

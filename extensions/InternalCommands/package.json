@@ -584,7 +584,7 @@
         "when": "terminalFocus && isTextEditing"
       },
       {
-        "command": "extraterm:terminal.pasteFromClipboardInEditMode",
+        "command": "extraterm:terminal.pasteFromClipboardWhenTextEditing",
         "title": "Paste from Clipboard",
         "category": "textEditing",
         "icon": "fa fa-clipboard",
