@@ -20,7 +20,7 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
     props: {
       extension: Object,
       showDetailsButton: Boolean,
-    },  
+    },
     template: trimBetweenTags(`
   <div class="card">
     <h3>{{ extension.metadata.displayName || extension.metadata.name }}&nbsp;<span class="extension-version">{{ extension.metadata.version }}</span></h3>

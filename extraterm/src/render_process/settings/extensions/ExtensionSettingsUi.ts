@@ -35,6 +35,8 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
       v-on:detail-click="selectedExtension = extension"
       :extension="extension"
       :showDetailsButton="true"
+      v-on:enable-extension="onEnableExtension"
+      v-on:disable-extension="onDisableExtension"
     ></extension-card>
   </template>
 
@@ -44,6 +46,8 @@ export const EVENT_DISABLE_EXTENSION = "disable-extension";
     </p>
     <extension-details
       :extension="selectedExtension"
+      v-on:enable-extension="onEnableExtension"
+      v-on:disable-extension="onDisableExtension"
     ></extension-details>
   </template>
 </div>
@@ -63,5 +67,13 @@ export class ExtensionSettingsUi extends Vue {
 
   get allUserExtensions(): ExtensionMetadataAndState[] {
     return this.allExtensions.filter(ex => ! ex.metadata.isInternal && isSupportedOnThisPlatform(ex.metadata));
+  }
+
+  onEnableExtension(extensionName: string): void {
+    this.$emit(EVENT_ENABLE_EXTENSION, extensionName);
+  }
+
+  onDisableExtension(extensionName: string): void {
+    this.$emit(EVENT_DISABLE_EXTENSION, extensionName);
   }
 }

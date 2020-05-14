@@ -13,7 +13,7 @@ import * as dompurify from 'dompurify';
 import { } from '../../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ExtensionMetadataAndState } from './ExtensionMetadataAndStateType';
-import { ExtensionCard } from './ExtensionCardUi';
+import { ExtensionCard, EVENT_ENABLE_EXTENSION, EVENT_DISABLE_EXTENSION } from './ExtensionCardUi';
 
 interface MenuPair {
   context: string;
@@ -33,6 +33,8 @@ interface MenuPair {
     <extension-card
       :extension="extension"
       :showDetailsButton="false"
+      v-on:enable-extension="onEnableExtension"
+      v-on:disable-extension="onDisableExtension"
     ></extension-card>
 
     <p v-if="extension.metadata.homepage != null">
@@ -312,5 +314,13 @@ export class ExtensionDetails extends Vue {
       const href = (<HTMLAnchorElement> ev.target).href;
       shell.openExternal(href);
     }
+  }
+
+  onEnableExtension(extensionName: string): void {
+    this.$emit(EVENT_ENABLE_EXTENSION, extensionName);
+  }
+
+  onDisableExtension(extensionName: string): void {
+    this.$emit(EVENT_DISABLE_EXTENSION, extensionName);
   }
 }
