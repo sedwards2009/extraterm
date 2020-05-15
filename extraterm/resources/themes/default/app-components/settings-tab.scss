@@ -159,7 +159,16 @@ $package-card-background-color: lighten($tool-panel-background-color, 8%);
   width: 1em;
   height: 1em;
   border-radius: 0.5em;
-  background-color: red;
+  margin-left: 1em;
+  margin-right: 1em;
+}
+
+.traffic-light-running {
+  background-color: $brand-success;
+}
+
+.traffic-light-stopped {
+  background-color: $brand-danger;
 }
 
 .sub-tab {
