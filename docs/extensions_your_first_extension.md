@@ -4,7 +4,7 @@ title: Your First Extension
 
 # Your First Extension
 
-This guide runs through the work flow for a creating a very simple extension which adds a command to the command palette for typing in the current date and time.
+This guide runs through the process of creating a very simple extension which adds a command to the command palette. Executing this command will typing in the current date and time into the active terminal tab.
 
 Some familiarity with "node", "npm"/"yarn", and the command line is assumed.
 
