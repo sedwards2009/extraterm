@@ -101,7 +101,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L30">main.ts:30</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L30">main.ts:30</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -123,13 +123,19 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L46">main.ts:46</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L61">main.ts:61</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Show a list picker requesting an item from the list.</p>
 								</div>
+								<p>This shows the given list of strings and lets the user select one or
+									them or cancel the picker. The index of the item in the list is return
+									if an item is selected. <code>undefined</code> is returned if the user canceled the
+									picker by pressing escape, for example. The picker appears with in this
+								tab.</p>
+								<p>See <code>ListPickerOptions</code> for more details about how to configure this.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -153,13 +159,18 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L38">main.ts:38</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L45">main.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Show an input box requesting a number.</p>
 								</div>
+								<p>This shows a picker/dialog on this tab where the user can enter a number.
+									The acceptable range of values can be defined in the <code>options</code> parameter.
+									<code>undefined</code> is returned if the user canceled the picker by pressing
+								escape, for example. The picker appears with in this tab.</p>
+								<p>See <code>NumberInputOptions</code> for more details about how to configure this.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">

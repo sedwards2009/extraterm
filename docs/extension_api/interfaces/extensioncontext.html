@@ -71,7 +71,7 @@
 					<div class="lead">
 						<p>Access to the Extraterm extension API</p>
 					</div>
-					<p>This provides an extension access to the whole Extraterm extension API, as
+					<p>This provides extensions access to the whole Extraterm extension API, as
 					well as some convenience classes and objects.</p>
 					<p>An instance of this is passed to each extension&#39;s <code>activate()</code> function.</p>
 				</div>
@@ -94,6 +94,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="extensioncontext.html#acemodule" class="tsd-kind-icon">ace<wbr>Module</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="extensioncontext.html#backend" class="tsd-kind-icon">backend</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="extensioncontext.html#commands" class="tsd-kind-icon">commands</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="extensioncontext.html#extensionpath" class="tsd-kind-icon">extension<wbr>Path</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="extensioncontext.html#isbackendprocess" class="tsd-kind-icon">is<wbr>Backend<wbr>Process</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="extensioncontext.html#logger" class="tsd-kind-icon">logger</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="extensioncontext.html#window" class="tsd-kind-icon">window</a></li>
@@ -110,7 +111,7 @@
 					<div class="tsd-signature tsd-kind-icon">ace<wbr>Module<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">typeof </span><span class="tsd-signature-type">Ace</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L759">main.ts:759</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L774">main.ts:774</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -125,7 +126,7 @@
 					<div class="tsd-signature tsd-kind-icon">backend<span class="tsd-signature-symbol">:</span> <a href="backend.html" class="tsd-signature-type">Backend</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L769">main.ts:769</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L784">main.ts:784</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -140,9 +141,24 @@
 					<div class="tsd-signature tsd-kind-icon">commands<span class="tsd-signature-symbol">:</span> <a href="commands.html" class="tsd-signature-type">Commands</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L749">main.ts:749</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L764">main.ts:764</a></li>
 						</ul>
 					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="extensionpath" class="tsd-anchor"></a>
+					<h3>extension<wbr>Path</h3>
+					<div class="tsd-signature tsd-kind-icon">extension<wbr>Path<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L794">main.ts:794</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Absolute path to where this extension is located on the file system.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="isbackendprocess" class="tsd-anchor"></a>
@@ -150,7 +166,7 @@
 					<div class="tsd-signature tsd-kind-icon">is<wbr>Backend<wbr>Process<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L764">main.ts:764</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L779">main.ts:779</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -165,7 +181,7 @@
 					<div class="tsd-signature tsd-kind-icon">logger<span class="tsd-signature-symbol">:</span> <a href="logger.html" class="tsd-signature-type">Logger</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L774">main.ts:774</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L789">main.ts:789</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -180,7 +196,7 @@
 					<div class="tsd-signature tsd-kind-icon">window<span class="tsd-signature-symbol">:</span> <a href="window.html" class="tsd-signature-type">Window</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/5c6155f6/packages/extraterm-extension-api/src/main.ts#L754">main.ts:754</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L769">main.ts:769</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -214,6 +230,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="extensioncontext.html#commands" class="tsd-kind-icon">commands</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="extensioncontext.html#extensionpath" class="tsd-kind-icon">extension<wbr>Path</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="extensioncontext.html#isbackendprocess" class="tsd-kind-icon">is<wbr>Backend<wbr>Process</a>
