@@ -10,8 +10,6 @@ import * as SourceMapSupport from 'source-map-support';
 import { Event, CustomizedCommand, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
-const ElectronMenu = Electron.remote.Menu;
-
 import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
@@ -85,8 +83,6 @@ let fontLoader: FontLoader = null;
 let dpiWatcher: DpiWatcher = null;
 
 export async function asyncStartUp(closeSplash: () => void): Promise<void> {
-  ElectronMenu.setApplicationMenu(null);
-
   fontLoader = new FontLoader();
   dpiWatcher = new DpiWatcher();
   startUpTheming();
@@ -120,7 +116,7 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   startUpCommandPalette();
   startUpApplicationContextMenu();
   startUpWindowEvents();
-  startUpMenus();
+
   dpiWatcher.onChange(newDpi => handleDpiChange(newDpi));
 
   if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
@@ -162,6 +158,12 @@ function startUpWebIpc(): void {
   WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
 
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
+  WebIpc.registerDefaultHandler(Messages.MessageType.EXECUTE_COMMAND, handleExecuteCommand);
+}
+
+function handleExecuteCommand(msg: Messages.Message): void {
+  const executeCommandMessage = <Messages.ExecuteCommandMessage> msg;
+  extensionManager.executeCommand(executeCommandMessage.commandName);
 }
 
 function startUpWebIpcConfigHandling(): void {
@@ -472,60 +474,6 @@ function commandOpenCommandPalette(): void {
   if (isSupportsDialogStack(tab)) {
     commandPalette.open(tab, tab);
   }
-}
-
-function startUpMenus(): void {
-  if (process.platform === "darwin") {
-    setupOSXMenus();
-  }
-}
-
-function setupOSXMenus(): void {
-  const template: Electron.MenuItemConstructorOptions[] = [{
-    label: "Extraterm",
-    submenu: [
-      {
-        label: 'About Extraterm',
-        click(item, focusedWindow) {
-          extensionManager.executeCommand("extraterm:window.openAbout");
-        },
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Preferences...',
-        click(item, focusedWindow) {
-          extensionManager.executeCommand("extraterm:window.openSettings");
-        },
-      },
-      {
-        type: 'separator'
-      },
-      {
-        label: 'Quit',
-        click(item, focusedWindow) {
-          WebIpc.windowCloseRequest();
-        },
-        accelerator: 'Command+Q'
-      }
-    ]
-  },
-  {
-    label: 'Edit',
-    submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
-      { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-    ]
-  }
-  ];
-
-  const topMenu = ElectronMenu.buildFromTemplate(template);
-  ElectronMenu.setApplicationMenu(topMenu);
 }
 
 function handleDpiChange(dpi: number): void {

@@ -13,7 +13,7 @@ import * as SourceMapSupport from "source-map-support";
 
 import * as child_process from "child_process";
 import { Command } from "commander";
-import { app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu } from "electron";
+import { app, BrowserWindow, ipcMain as ipc, clipboard, dialog, screen, webContents, Tray, Menu, MenuItemConstructorOptions } from "electron";
 import fontInfo = require("fontinfo");
 import * as fs from "fs";
 import * as _ from "lodash";
@@ -362,7 +362,69 @@ function setupGlobalKeybindingsManager(): void {
 }
 
 function setUpMenu(): void {
-  Menu.setApplicationMenu(null);
+  if (process.platform === "darwin") {
+    setupOSXMenus();
+  } else {
+    Menu.setApplicationMenu(null);
+  }
+}
+
+function setupOSXMenus(): void {
+  const template: MenuItemConstructorOptions[] = [{
+    label: "Extraterm",
+    submenu: [
+      {
+        label: 'About Extraterm',
+        click: async () => {
+          sendCommandToWindow("extraterm:window.openAbout");
+        },
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Preferences...',
+        click: async () => {
+          sendCommandToWindow("extraterm:window.openSettings");
+        },
+      },
+      {
+        type: 'separator'
+      },
+      {
+        label: 'Quit',
+        click: async () =>  {
+          if (mainWindow != null) {
+            mainWindow.close();
+          }
+        },
+        accelerator: 'Command+Q'
+      }
+    ]
+  },
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+    ]
+  }
+  ];
+
+  const topMenu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(topMenu);
+}
+
+function sendCommandToWindow(commandName: string): void {
+  const msg: Messages.ExecuteCommandMessage = {
+    type: Messages.MessageType.EXECUTE_COMMAND,
+    commandName
+  };
+  mainWindow.webContents.send(Messages.CHANNEL_NAME, msg);
 }
 
 function openWindow(parsedArgs: Command): void {

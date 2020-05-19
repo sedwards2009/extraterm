@@ -83,6 +83,8 @@ export enum MessageType {
 
   QUIT_APPLICATION_REQUEST,
   QUIT_APPLICATION,
+
+  EXECUTE_COMMAND,
 }
 
 /**
@@ -525,3 +527,10 @@ export interface QuitApplicationRequestMessage extends Message {}
  * Sent to each window telling it to quit and close immediately.
  */
 export interface QuitApplicationMessage extends Message {}
+
+/**
+ * Sent to a window to execute a command.
+ */
+export interface ExecuteCommandMessage extends Message {
+  commandName: string;
+}
