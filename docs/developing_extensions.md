@@ -29,8 +29,6 @@ These guides build on top of the previous guides and are intended to be read in 
 * [Logging and Debugging Extensions](extensions_logging_and_debugging.md)
 * [Using TypeScript in Extensions](extensions_typescript.md)
 
-* [Contribution points and package.json](extensions_contribution_points.md)
-
 ## Reference
 
 * [Extension API Reference](extension_api/)
