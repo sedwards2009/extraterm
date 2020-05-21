@@ -930,6 +930,10 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       handleQuitApplicationRequest();
       break;
 
+    case Messages.MessageType.NEW_WINDOW:
+      handleNewWindow();
+      break;
+
     default:
       break;
   }
@@ -963,6 +967,10 @@ function handleQuitApplicationRequest(): void {
     type: Messages.MessageType.QUIT_APPLICATION,
   };
   sendMessageToAllWindows(msg);
+}
+
+function handleNewWindow(): void {
+  _log.debug("Main process got NewWindow message");
 }
 
 function handleThemeListRequest(): Messages.ThemeListMessage {

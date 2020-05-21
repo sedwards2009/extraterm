@@ -85,6 +85,7 @@ export enum MessageType {
   QUIT_APPLICATION,
 
   EXECUTE_COMMAND,
+  NEW_WINDOW,
 }
 
 /**
@@ -533,4 +534,11 @@ export interface QuitApplicationMessage extends Message {}
  */
 export interface ExecuteCommandMessage extends Message {
   commandName: string;
+}
+
+/**
+ * Tell the main process to open a new window.
+ */
+export interface NewWindowMessage extends Message {
+
 }

@@ -479,7 +479,7 @@ function commandOpenCommandPalette(): void {
 }
 
 function commandNewWindow(): void {
-  _log.debug("New window plz!");
+  WebIpc.newWindow();
 }
 
 function handleDpiChange(dpi: number): void {

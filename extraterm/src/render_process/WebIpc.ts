@@ -269,3 +269,8 @@ export function requestQuitApplication(): void {
   const msg: Messages.QuitApplicationRequestMessage = {type: Messages.MessageType.QUIT_APPLICATION_REQUEST};
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
+
+export function newWindow(): void {
+  const msg: Messages.NewWindowMessage = { type: Messages.MessageType.NEW_WINDOW };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
