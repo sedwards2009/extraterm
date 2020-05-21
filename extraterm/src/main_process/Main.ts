@@ -792,76 +792,77 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   }
 
   switch(msg.type) {
-    case Messages.MessageType.CONFIG_REQUEST:
-      reply = handleConfigRequest(<Messages.ConfigRequestMessage> msg);
+    case Messages.MessageType.BULK_FILE_CLOSE:
+      handleCloseBulkFile(<Messages.BulkFileCloseMessage> msg);
       break;
 
-    case Messages.MessageType.CONFIG:
-      handleConfig(<Messages.ConfigMessage> msg);
+    case Messages.MessageType.BULK_FILE_CREATE:
+      const createBulkFileReply = handleCreateBulkFile(<Messages.BulkFileCreateMessage> msg);
+      event.returnValue = createBulkFileReply;
       break;
 
-    case Messages.MessageType.FRAME_DATA_REQUEST:
-      _log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
+    case Messages.MessageType.BULK_FILE_DEREF:
+      handleDerefBulkFile(<Messages.BulkFileDerefMessage> msg);
       break;
 
-    case Messages.MessageType.THEME_LIST_REQUEST:
-      reply = handleThemeListRequest();
+    case Messages.MessageType.BULK_FILE_REF:
+      handleRefBulkFile(<Messages.BulkFileRefMessage> msg);
       break;
 
-    case Messages.MessageType.THEME_CONTENTS_REQUEST:
-      handleThemeContentsRequest(event.sender, <Messages.ThemeContentsRequestMessage> msg);
-      break;
-
-    case Messages.MessageType.THEME_RESCAN:
-      reply = handleThemeRescan();
-      break;
-
-    case Messages.MessageType.PTY_CREATE:
-      reply = handlePtyCreate(event.sender, <Messages.CreatePtyRequestMessage> msg);
-      break;
-
-    case Messages.MessageType.PTY_RESIZE:
-      handlePtyResize(<Messages.PtyResize> msg);
-      break;
-
-    case Messages.MessageType.PTY_INPUT:
-      handlePtyInput(<Messages.PtyInput> msg);
-      break;
-
-    case Messages.MessageType.PTY_CLOSE_REQUEST:
-      handlePtyCloseRequest(<Messages.PtyClose> msg);
-      break;
-
-    case Messages.MessageType.PTY_OUTPUT_BUFFER_SIZE:
-      handlePtyOutputBufferSize(<Messages.PtyOutputBufferSize> msg);
-      break;
-
-    case Messages.MessageType.DEV_TOOLS_REQUEST:
-      handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
-      break;
-
-    case Messages.MessageType.CLIPBOARD_WRITE:
-      handleClipboardWrite(<Messages.ClipboardWriteMessage> msg);
+    case Messages.MessageType.BULK_FILE_WRITE:
+      handleWriteBulkFile(<Messages.BulkFileWriteMessage> msg);
       break;
 
     case Messages.MessageType.CLIPBOARD_READ_REQUEST:
       reply = handleClipboardReadRequest(<Messages.ClipboardReadRequestMessage> msg);
       break;
 
-    case Messages.MessageType.WINDOW_CLOSE_REQUEST:
-      mainWindow.close();
+    case Messages.MessageType.CLIPBOARD_WRITE:
+      handleClipboardWrite(<Messages.ClipboardWriteMessage> msg);
       break;
 
-    case Messages.MessageType.WINDOW_MINIMIZE_REQUEST:
-      minimizeAllWindows();
+    case Messages.MessageType.CONFIG:
+      handleConfig(<Messages.ConfigMessage> msg);
       break;
 
-    case Messages.MessageType.WINDOW_MAXIMIZE_REQUEST:
-      if (mainWindow.isMaximized()) {
-        mainWindow.unmaximize();
-      } else {
-        mainWindow.maximize();
-      }
+    case Messages.MessageType.CONFIG_REQUEST:
+      reply = handleConfigRequest(<Messages.ConfigRequestMessage> msg);
+      break;
+
+    case Messages.MessageType.DEV_TOOLS_REQUEST:
+      handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
+      break;
+
+    case Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST:
+      event.returnValue = handleExtensionDesiredStateRequest();
+      return;
+
+    case Messages.MessageType.EXTENSION_DISABLE:
+      extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
+      break;
+
+    case Messages.MessageType.EXTENSION_ENABLE:
+      extensionManager.enableExtension((<Messages.ExtensionEnableMessage>msg).extensionName);
+      break;
+
+    case Messages.MessageType.EXTENSION_METADATA_REQUEST:
+      event.returnValue = handleExtensionMetadataRequest();
+      return;
+
+    case Messages.MessageType.FRAME_DATA_REQUEST:
+      _log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
+      break;
+
+    case Messages.MessageType.GLOBAL_KEYBINDINGS_ENABLE:
+      handleGlobalKeybindingsEnable(<Messages.GlobalKeybindingsEnableMessage>msg);
+      break;
+
+    case Messages.MessageType.KEYBINDINGS_READ_REQUEST:
+      reply = handleKeybindingsReadRequest(<Messages.KeybindingsReadRequestMessage>msg);
+      break;
+
+    case Messages.MessageType.KEYBINDINGS_UPDATE:
+      handleKeybindingsUpdate(<Messages.KeybindingsUpdateMessage>msg);
       break;
 
     case Messages.MessageType.NEW_TAG_REQUEST:
@@ -873,65 +874,64 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       }
       break;
 
-    case Messages.MessageType.BULK_FILE_CREATE:
-      const createBulkFileReply = handleCreateBulkFile(<Messages.BulkFileCreateMessage> msg);
-      event.returnValue = createBulkFileReply;
+    case Messages.MessageType.NEW_WINDOW:
+      handleNewWindow();
       break;
 
-    case Messages.MessageType.BULK_FILE_WRITE:
-      handleWriteBulkFile(<Messages.BulkFileWriteMessage> msg);
+    case Messages.MessageType.PTY_CLOSE_REQUEST:
+      handlePtyCloseRequest(<Messages.PtyClose> msg);
       break;
 
-    case Messages.MessageType.BULK_FILE_CLOSE:
-      handleCloseBulkFile(<Messages.BulkFileCloseMessage> msg);
+    case Messages.MessageType.PTY_CREATE:
+      reply = handlePtyCreate(event.sender, <Messages.CreatePtyRequestMessage> msg);
       break;
 
-    case Messages.MessageType.BULK_FILE_REF:
-      handleRefBulkFile(<Messages.BulkFileRefMessage> msg);
+    case Messages.MessageType.PTY_INPUT:
+      handlePtyInput(<Messages.PtyInput> msg);
       break;
 
-    case Messages.MessageType.BULK_FILE_DEREF:
-      handleDerefBulkFile(<Messages.BulkFileDerefMessage> msg);
+    case Messages.MessageType.PTY_OUTPUT_BUFFER_SIZE:
+      handlePtyOutputBufferSize(<Messages.PtyOutputBufferSize> msg);
       break;
 
-    case Messages.MessageType.EXTENSION_METADATA_REQUEST:
-      event.returnValue = handleExtensionMetadataRequest();
-      return;
-
-    case Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST:
-      event.returnValue = handleExtensionDesiredStateRequest();
-      return;
-
-    case Messages.MessageType.EXTENSION_ENABLE:
-      extensionManager.enableExtension((<Messages.ExtensionEnableMessage>msg).extensionName);
-      break;
-
-    case Messages.MessageType.EXTENSION_DISABLE:
-      extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
-      break;
-
-    case Messages.MessageType.READ_KEYBINDINGS_REQUEST:
-      reply = handleKeybindingsReadRequest(<Messages.KeybindingsReadRequestMessage>msg);
-      break;
-
-    case Messages.MessageType.UPDATE_KEYBINDINGS:
-      handleKeybindingsUpdate(<Messages.KeybindingsUpdateMessage>msg);
-      break;
-
-    case Messages.MessageType.GLOBAL_KEYBINDINGS_ENABLE:
-      handleGlobalKeybindingsEnable(<Messages.GlobalKeybindingsEnableMessage>msg);
-      break;
-
-    case Messages.MessageType.TERMINAL_THEME_REQUEST:
-      handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
+    case Messages.MessageType.PTY_RESIZE:
+      handlePtyResize(<Messages.PtyResize> msg);
       break;
 
     case Messages.MessageType.QUIT_APPLICATION_REQUEST:
       handleQuitApplicationRequest();
       break;
 
-    case Messages.MessageType.NEW_WINDOW:
-      handleNewWindow();
+    case Messages.MessageType.THEME_CONTENTS_REQUEST:
+      handleThemeContentsRequest(event.sender, <Messages.ThemeContentsRequestMessage> msg);
+      break;
+
+    case Messages.MessageType.THEME_LIST_REQUEST:
+      reply = handleThemeListRequest();
+      break;
+
+    case Messages.MessageType.THEME_RESCAN:
+      reply = handleThemeRescan();
+      break;
+
+    case Messages.MessageType.WINDOW_CLOSE_REQUEST:
+      mainWindow.close();
+      break;
+
+    case Messages.MessageType.WINDOW_MAXIMIZE_REQUEST:
+      if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+      } else {
+        mainWindow.maximize();
+      }
+      break;
+
+    case Messages.MessageType.WINDOW_MINIMIZE_REQUEST:
+      minimizeAllWindows();
+      break;
+
+    case Messages.MessageType.TERMINAL_THEME_REQUEST:
+      handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
       break;
 
     default:
@@ -946,6 +946,13 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
   }
 }
 
+function handleConfig(msg: Messages.ConfigMessage): void {
+  if (LOG_FINE) {
+    _log.debug("Incoming new config: ", msg);
+  }
+  configDatabase.setConfig(msg.key, msg.config);
+}
+
 function handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.ConfigMessage {
   const reply: Messages.ConfigMessage = {
     type: Messages.MessageType.CONFIG,
@@ -953,13 +960,6 @@ function handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.Confi
     config: configDatabase.getConfig(msg.key)
   };
   return reply;
-}
-
-function handleConfig(msg: Messages.ConfigMessage): void {
-  if (LOG_FINE) {
-    _log.debug("Incoming new config: ", msg);
-  }
-  configDatabase.setConfig(msg.key, msg.config);
 }
 
 function handleQuitApplicationRequest(): void {
@@ -1236,7 +1236,7 @@ function handleExtensionDesiredStateRequest(): Messages.ExtensionDesiredStateMes
 function handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {
   const stackedKeybindingsFile = keybindingsIOManager.getStackedKeybindings(msg.name);
   const reply: Messages.KeybindingsReadMessage = {
-    type: Messages.MessageType.READ_KEYBINDINGS,
+    type: Messages.MessageType.KEYBINDINGS_READ,
     stackedKeybindingsFile
   };
   return reply;

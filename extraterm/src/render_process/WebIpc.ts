@@ -238,15 +238,15 @@ export function disableExtension(extensionName: string): void {
 
 export function keybindingsRequestRead(name: LogicalKeybindingsName): Promise<Messages.KeybindingsReadMessage> {
   const msg: Messages.KeybindingsReadRequestMessage = {
-    type: Messages.MessageType.READ_KEYBINDINGS_REQUEST,
+    type: Messages.MessageType.KEYBINDINGS_READ_REQUEST,
     name
   };
-  return <Promise<Messages.KeybindingsReadMessage>> request(msg, Messages.MessageType.READ_KEYBINDINGS);
+  return <Promise<Messages.KeybindingsReadMessage>> request(msg, Messages.MessageType.KEYBINDINGS_READ);
 }
 
 export function customKeybindingsSetUpdate(customKeybindingsSet: CustomKeybindingsSet): void {
   const msg: Messages.KeybindingsUpdateMessage = {
-    type: Messages.MessageType.UPDATE_KEYBINDINGS,
+    type: Messages.MessageType.KEYBINDINGS_UPDATE,
     customKeybindingsSet
   };
   ipc.send(Messages.CHANNEL_NAME, msg);
