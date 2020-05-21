@@ -51,9 +51,7 @@ const isDarwin = process.platform === "darwin";
 
 // crashReporter.start(); // Report crashes
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the javascript object is GCed.
-let mainWindow: Electron.BrowserWindow = null;
+let appWindowIds: number[] = [];
 
 const LOG_FILENAME = "extraterm.log";
 const THEMES_DIRECTORY = "themes";
@@ -214,7 +212,7 @@ function electronReady(parsedArgs: Command): void {
   setupTrayIcon();
   setupGlobalKeybindingsManager();
   setUpMenu();
-  openWindow(parsedArgs);
+  openWindow({openDevTools: parsedArgs.devTools});
 }
 
 function setupBulkFileStorage(): void {
@@ -313,17 +311,21 @@ function minimizeAllWindows(): void {
 }
 
 function restoreAllWindows(): void {
+  let i = 0;
   for (const window of BrowserWindow.getAllWindows()) {
     const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
 
-    const bounds = generalConfig.windowConfiguration[0];
+    const bounds = generalConfig.windowConfiguration[i];
     if (isLinux) {
       // On Linux, if a window is the width or height of the screen then
       // Electron (2.0.13) resizes them (!) to be smaller for some annoying
       // reason. This is a hack to make sure that windows are restored with
       // the correct dimensions.
-      window.setBounds(bounds);
-      window.setMinimumSize(bounds.width, bounds.height);
+      if (bounds != null) {
+        window.setBounds(bounds);
+        window.setMinimumSize(bounds.width, bounds.height);
+      }
+
       if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
         window.show();
       }
@@ -336,10 +338,12 @@ function restoreAllWindows(): void {
 
       // Windows and macOS
       if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
-        if (bounds.isMaximized === true) {
-          window.maximize();
+        if (bounds != null) {
+          if (bounds.isMaximized === true) {
+            window.maximize();
+          }
+          checkWindowBoundsLater(window, bounds);
         }
-        checkWindowBoundsLater(mainWindow, bounds);
 
         window.show();
       }
@@ -350,6 +354,7 @@ function restoreAllWindows(): void {
         window.focus();
       });
     }
+    i++;
   }
 }
 
@@ -394,9 +399,7 @@ function setupOSXMenus(): void {
       {
         label: 'Quit',
         click: async () =>  {
-          if (mainWindow != null) {
-            mainWindow.close();
-          }
+          handleQuitApplicationRequest();
         },
         accelerator: 'Command+Q'
       }
@@ -424,15 +427,22 @@ function sendCommandToWindow(commandName: string): void {
     type: Messages.MessageType.EXECUTE_COMMAND,
     commandName
   };
-  mainWindow.webContents.send(Messages.CHANNEL_NAME, msg);
+  for (const windowId of appWindowIds) {
+    const window = BrowserWindow.fromId(windowId);
+    window.webContents.send(Messages.CHANNEL_NAME, msg);
+  }
 }
 
-function openWindow(parsedArgs: Command): void {
+interface OpenWindowOptions {
+  openDevTools?: boolean;
+}
+
+function openWindow(options: OpenWindowOptions=null): void {
   const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const themeInfo = themeManager.getTheme(generalConfig.themeGUI);
 
   // Create the browser window.
-  const options = <Electron.BrowserWindowConstructorOptions> {
+  const newBrowserWindowOptions = <Electron.BrowserWindowConstructorOptions> {
     width: 1200,
     height: 600,
     webPreferences: {
@@ -446,69 +456,74 @@ function openWindow(parsedArgs: Command): void {
 
   if (isDarwin) {
     if (generalConfig.titleBarStyle === "native") {
-      options.frame = true;
+      newBrowserWindowOptions.frame = true;
     } else {
       if (generalConfig.titleBarStyle === "theme") {
-        options.titleBarStyle = "hidden";
+        newBrowserWindowOptions.titleBarStyle = "hidden";
       } else {
         // Compact
-        options.titleBarStyle = "hiddenInset";
+        newBrowserWindowOptions.titleBarStyle = "hiddenInset";
       }
     }
   } else {
-    options.frame = generalConfig.titleBarStyle === "native";
+    newBrowserWindowOptions.frame = generalConfig.titleBarStyle === "native";
   }
 
   // Restore the window position and size from the last session.
-  const dimensions = getWindowDimensionsFromConfig(0);
+  const dimensions = getWindowDimensionsFromConfig(appWindowIds.length);
   if (dimensions != null) {
-    options.x = dimensions.x;
-    options.y = dimensions.y;
-    options.width = dimensions.width;
-    options.height = dimensions.height;
+    newBrowserWindowOptions.x = dimensions.x;
+    newBrowserWindowOptions.y = dimensions.y;
+    newBrowserWindowOptions.width = dimensions.width;
+    newBrowserWindowOptions.height = dimensions.height;
   }
 
   if (isWindows) {
-    options.icon = path.join(__dirname, ICO_ICON_PATH);
+    newBrowserWindowOptions.icon = path.join(__dirname, ICO_ICON_PATH);
   } else if (isLinux) {
-    options.icon = path.join(__dirname, PNG_ICON_PATH);
-  }
-  mainWindow = new BrowserWindow(options);
-
-  if ((<any>parsedArgs).devTools) {
-    mainWindow.webContents.openDevTools();
+    newBrowserWindowOptions.icon = path.join(__dirname, PNG_ICON_PATH);
   }
 
-  mainWindow.setMenu(null);
+  const newWindow = new BrowserWindow(newBrowserWindowOptions);
+
+  if (options?.openDevTools) {
+    newWindow.webContents.openDevTools();
+  }
+
+  newWindow.setMenu(null);
 
   // Emitted when the window is closed.
-  const mainWindowWebContentsId = mainWindow.webContents.id;
-  mainWindow.on("closed", () => {
+  const mainWindowWebContentsId = newWindow.webContents.id;
+  const newWindowId = newWindow.id;
+  newWindow.on("closed", () => {
     cleanUpPtyWindow(mainWindowWebContentsId);
-    mainWindow = null;
+
+    appWindowIds = appWindowIds.filter(wId => wId !== newWindowId);
   });
 
-  mainWindow.on("close", saveAllWindowDimensions);
-  mainWindow.on("resize", saveAllWindowDimensions);
-  mainWindow.on("maximize", saveAllWindowDimensions);
-  mainWindow.on("unmaximize", saveAllWindowDimensions);
+  newWindow.on("close", saveAllWindowDimensions);
+  newWindow.on("resize", saveAllWindowDimensions);
+  newWindow.on("maximize", saveAllWindowDimensions);
+  newWindow.on("unmaximize", saveAllWindowDimensions);
 
-  setupTransparentBackground();
-  checkWindowBoundsLater(mainWindow, dimensions);
+  setupTransparentBackground(newWindow);
+  checkWindowBoundsLater(newWindow, dimensions);
 
   const params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
     "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
 
   // and load the index.html of the app.
-  mainWindow.loadURL(ResourceLoader.toUrl("render_process/main.html") + params);
+  newWindow.loadURL(ResourceLoader.toUrl("render_process/main.html") + params);
 
-  mainWindow.webContents.on('devtools-closed', () => {
-    sendDevToolStatus(mainWindow, false);
+  newWindow.webContents.on('devtools-closed', () => {
+    sendDevToolStatus(newWindow, false);
   });
 
-  mainWindow.webContents.on('devtools-opened', () => {
-    sendDevToolStatus(mainWindow, true);
+  newWindow.webContents.on('devtools-opened', () => {
+    sendDevToolStatus(newWindow, true);
   });
+
+  appWindowIds.push(newWindow.id);
 }
 
 function checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWindowConfiguration): void {
@@ -582,7 +597,7 @@ function checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWind
     }
 
     if (updateNeeded) {
-      mainWindow.setBounds(newDimensions);
+      window.setBounds(newDimensions);
     }
   });
 }
@@ -599,23 +614,26 @@ function matchWindowToDisplay(window: BrowserWindow): Electron.Display {
 }
 
 function saveAllWindowDimensions(): void {
-  const windowId = 0;
-  const rect = mainWindow.getNormalBounds();
-  const isMaximized = mainWindow.isMaximized();
+  for (let i=0; i<appWindowIds.length; i++) {
+    const window = BrowserWindow.fromId(appWindowIds[i]);
 
-  const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
+    const rect = window.getNormalBounds();
+    const isMaximized = window.isMaximized();
 
-  if (newGeneralConfig.windowConfiguration == null) {
-    newGeneralConfig.windowConfiguration = {};
+    const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
+
+    if (newGeneralConfig.windowConfiguration == null) {
+      newGeneralConfig.windowConfiguration = {};
+    }
+    newGeneralConfig.windowConfiguration[i] = {
+      isMaximized,
+      x: rect.x,
+      y: rect.y,
+      width: rect.width,
+      height: rect.height
+    };
+    configDatabase.setConfig(GENERAL_CONFIG, newGeneralConfig);
   }
-  newGeneralConfig.windowConfiguration[windowId] = {
-    isMaximized,
-    x: rect.x,
-    y: rect.y,
-    width: rect.width,
-    height: rect.height
-  };
-  configDatabase.setConfig(GENERAL_CONFIG, newGeneralConfig);
 }
 
 function getWindowDimensionsFromConfig(windowId: number): SingleWindowConfiguration {
@@ -650,7 +668,7 @@ function setupLogging(): void {
   _log.info("Recording logs to ", logFilePath);
 }
 
-function setupTransparentBackground(): void {
+function setupTransparentBackground(window: BrowserWindow): void {
   const setWindowComposition = () => {
     const generalConfig = <GeneralConfig> configDatabase.getConfig("general");
     const isWindowOpaque = generalConfig.windowBackgroundMode === "opaque";
@@ -658,11 +676,11 @@ function setupTransparentBackground(): void {
       const accent = isWindowOpaque
                       ? AccentState.ACCENT_DISABLED
                       : AccentState.ACCENT_ENABLE_BLURBEHIND;
-      SetWindowCompositionAttribute(mainWindow.getNativeWindowHandle(), accent, 0);
+      SetWindowCompositionAttribute(window.getNativeWindowHandle(), accent, 0);
     }
     if (isDarwin) {
       if ( ! isWindowOpaque) {
-        mainWindow.setVibrancy("dark");
+        window.setVibrancy("dark");
       }
     }
   };
@@ -674,9 +692,9 @@ function setupTransparentBackground(): void {
     }
   });
 
-  mainWindow.once("ready-to-show", () => {
+  window.once("ready-to-show", () => {
     setWindowComposition();
-    mainWindow.show();
+    window.show();
   });
 }
 
@@ -915,10 +933,12 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       break;
 
     case Messages.MessageType.WINDOW_CLOSE_REQUEST:
-      mainWindow.close();
+      const window = BrowserWindow.fromWebContents(event.sender);
+      window.close();
       break;
 
     case Messages.MessageType.WINDOW_MAXIMIZE_REQUEST:
+      const mainWindow = BrowserWindow.fromWebContents(event.sender);
       if (mainWindow.isMaximized()) {
         mainWindow.unmaximize();
       } else {
@@ -970,7 +990,7 @@ function handleQuitApplicationRequest(): void {
 }
 
 function handleNewWindow(): void {
-  _log.debug("Main process got NewWindow message");
+  openWindow();
 }
 
 function handleThemeListRequest(): Messages.ThemeListMessage {
