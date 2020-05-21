@@ -348,6 +348,7 @@ function setUpWindowControls(): void {
 function startUpMainMenu(): void {
   const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
     <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
+        <${MenuItem.TAG_NAME} icon="far fa-window-restore" data-command="extraterm:application.newWindow">New Window</${MenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="extraicon extraicon-pocketknife" data-command="extraterm:window.openSettings">Settings</${MenuItem.TAG_NAME}>
         <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" data-command="extraterm:window.toggleDeveloperTools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
         <${MenuItem.TAG_NAME} icon="far fa-lightbulb" data-command="extraterm:window.openAbout">About</${MenuItem.TAG_NAME}>
@@ -406,6 +407,7 @@ function registerCommands(extensionManager: ExtensionManager): void {
                             customizeToggleDeveloperTools);
   commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
   commands.registerCommand("extraterm:application.openCommandPalette", commandOpenCommandPalette);
+  commands.registerCommand("extraterm:application.newWindow", commandNewWindow);
 
   EtTerminal.registerCommands(extensionManager);
   TextCommandsRegisterCommands(extensionManager);
@@ -474,6 +476,10 @@ function commandOpenCommandPalette(): void {
   if (isSupportsDialogStack(tab)) {
     commandPalette.open(tab, tab);
   }
+}
+
+function commandNewWindow(): void {
+  _log.debug("New window plz!");
 }
 
 function handleDpiChange(dpi: number): void {

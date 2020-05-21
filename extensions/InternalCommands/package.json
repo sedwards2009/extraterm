@@ -14,6 +14,14 @@
         "order": 900
       },
       {
+        "command": "extraterm:application.newWindow",
+        "title": "New Window",
+        "category": "window",
+        "icon": "far fa-window-restore",
+        "when": "",
+        "order": 900
+      },
+      {
         "command": "extraterm:terminal.typeSelection",
         "title": "Type Selection",
         "category": "terminal",
