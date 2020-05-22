@@ -153,6 +153,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _dialogStack: HTMLElement[] = [];
 
   private _copyToClipboardLater: DebouncedDoLater = null;
+  private _windowId: string = null;
 
   static registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
@@ -243,6 +244,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   dispose(): void {
     this._copyToClipboardLater.cancel();
     this._terminalCanvas.dispose();
+  }
+
+  setWindowId(windowId: string): void {
+    this._windowId = windowId;
   }
 
   /**
@@ -1057,6 +1062,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _createEmbeddedViewerElement(): EmbeddedViewer {
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
+    el.setWindowId(this._windowId);
     injectKeybindingsManager(el, this._keyBindingManager);
     injectConfigDatabase(el, this._configDatabase);
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {

@@ -5,7 +5,7 @@
  */
 import * as he from 'he';
 import { BulkFileHandle } from '@extraterm/extraterm-extension-api';
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 
@@ -99,11 +99,12 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _themes: ThemeTypes.ThemeInfo[] = [];
   private _terminalVisualConfig: TerminalVisualConfig = null;
   private _lastFocus: Element = null;
-  private _splitLayout = new SplitLayout();
+  private _splitLayout: SplitLayout = null;
   private _fileBroker = new BulkFileBroker();
 
   constructor() {
     super();
+    this._splitLayout = new SplitLayout();
     this._log = getLogger("ExtratermMainWebUI", this);
   }
 
@@ -116,6 +117,13 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       this._setUpWindowControls();
     }
     this._setupPtyIpc();
+  }
+
+  @Attribute({default: ""}) windowId: string;
+
+  @Observe("windowId")
+  private _observeWindowId(target: string): void {
+    this._splitLayout.setWindowId(this.windowId);
   }
 
   focus(): void {
@@ -199,9 +207,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
     const detail = <DroppedEventDetail> ev.detail;
 
-    if (detail.mimeType === ElementMimeType.MIMETYPE) {
+    if (ElementMimeType.equals(detail.mimeType, this.windowId)) {
       this._handleElementDroppedEvent(detail.targetTabWidget, detail.tabIndex, detail.dropData);
-    } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
+    } else if (FrameMimeType.equals(detail.mimeType, this.windowId)) {
       this._handleFrameDroppedEvent(detail.targetTabWidget, detail.tabIndex, detail.dropData);
     }
   }
@@ -267,9 +275,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const detail = <SnapDroppedEventDetail> ev.detail;
     const target = ev.target;
     if (target instanceof TabWidget) {
-      if (detail.mimeType === ElementMimeType.MIMETYPE) {
+      if (ElementMimeType.equals(detail.mimeType, this.windowId)) {
         this._handleElementDroppedEvent(target, target.getSelectedIndex() + 1, detail.dropData);
-      } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
+      } else if (FrameMimeType.equals(detail.mimeType, this.windowId)) {
         this._handleFrameDroppedEvent(target, target.getSelectedIndex() + 1, detail.dropData);
       }
     }
@@ -284,9 +292,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       const newTabWidget = splitBefore ? this._splitLayout.splitBeforeTabWidget(target, orientation) : this._splitLayout.splitAfterTabWidget(target, orientation);
       this._splitLayout.update();
 
-      if (detail.mimeType === ElementMimeType.MIMETYPE) {
+      if (ElementMimeType.equals(detail.mimeType, this.windowId)) {
         this._handleElementDroppedEvent(newTabWidget, 0, detail.dropData);
-      } else if (detail.mimeType === FrameMimeType.MIMETYPE) {
+      } else if (FrameMimeType.equals(detail.mimeType, this.windowId)) {
         this._handleFrameDroppedEvent(newTabWidget, 0, detail.dropData);
       }
     }
@@ -550,6 +558,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
+    newTerminal.setWindowId(this.windowId);
     newTerminal.setBulkFileBroker(this._fileBroker);
     config.injectConfigDatabase(newTerminal, this._configManager);
     injectKeybindingsManager(newTerminal, this._keybindingsManager);

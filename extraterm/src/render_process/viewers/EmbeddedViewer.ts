@@ -110,7 +110,7 @@ class TitleBarUI extends Vue {
 @WebComponent({tag: "et-embeddedviewer"})
 export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
     AcceptsTerminalVisualConfig {
-  
+
   static TAG_NAME = 'ET-EMBEDDEDVIEWER';
 
   static EVENT_CLOSE_REQUEST = 'close-request';
@@ -121,14 +121,14 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
   /**
    * Type guard for detecting a EtEmbeddedViewer instance.
-   * 
+   *
    * @param  node the node to test
    * @return      True if the node is a EtEmbeddedViewer.
    */
   static is(node: Node): node is EmbeddedViewer {
     return node !== null && node !== undefined && node instanceof EmbeddedViewer;
   }
-  
+
   private _log: Logger = null;
   private _visualState: VisualState = ViewerElementTypes.VisualState.AUTO;
   private _mode: ViewerElementTypes.Mode = ViewerElementTypes.Mode.DEFAULT;
@@ -146,6 +146,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
   private _boundHandleDragStart: (ev: DragEvent) => void = null;
   private _boundHandleDragEnd: (ev: DragEvent) => void = null;
+  private _windowId: string = null;
 
   constructor() {
     super();
@@ -154,7 +155,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     this._boundFocusHandler = this._handleChildFocus.bind(this);
     this._boundHandleDragStart = this._handleDragStart.bind(this);
     this._boundHandleDragEnd = this._handleDragStart.bind(this);
-  
+
     this._setUpShadowDom();
     this._updateUiFromMetadata();
     this.installThemeCss();
@@ -184,6 +185,10 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       this._connectSetupDone = true;
     }
     this._handleResize();
+  }
+
+  setWindowId(windowId: string): void {
+    this._windowId = windowId;
   }
 
   getMetadata(): ViewerMetadata {
@@ -237,7 +242,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     if (this.childNodes.length !== 0) {
       this.innerHTML = "";
     }
-    
+
     if (element !== null) {
       element.setVisualState(this._visualState);
       element.setMode(this._mode);
@@ -250,11 +255,11 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       this._updateUiFromMetadata();
     }
   }
-  
+
   getViewerElement(): ViewerElement {
     return this._getViewerElement();
   }
-  
+
   setVisualState(newVisualState: VisualState): void {
     this._visualState = newVisualState;
     const viewerElement = this.getViewerElement();
@@ -262,11 +267,11 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       viewerElement.setVisualState(newVisualState);
     }
   }
-  
+
   getVisualState(): VisualState {
     return this._visualState;
   }
-  
+
   // See VirtualScrollable
   getMinHeight(): number {
     if (DEBUG_SIZE) {
@@ -274,7 +279,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     }
     return this.getReserveViewportHeight(0);
   }
-  
+
   // See VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
     const viewerElement = this.getViewerElement();
@@ -287,18 +292,18 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     }
     return result;
   }
-  
+
   // See VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     const {top, bottom} = this._borderSize();
     const result = top + bottom;
-      
+
     if (DEBUG_SIZE) {
       this._log.debug("getReserveViewportHeight() => ", result);
     }
     return result;
   }
-  
+
   // See VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
     if (DEBUG_SIZE) {
@@ -329,7 +334,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
 
     const outputContainerDiv = <HTMLDivElement>this._getById(ID_OUTPUT_CONTAINER);
     outputContainerDiv.style.top = "" + headerHeight + "px";
-    
+
     if (setterState.physicalTop > 0 || setterState.height < setterState.containerHeight) {
       // Bottom part is visible
       containerDiv.classList.remove(CLASS_BOTTOM_NOT_VISIBLE);
@@ -338,7 +343,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       containerDiv.classList.add(CLASS_BOTTOM_NOT_VISIBLE);
       containerDiv.classList.remove(CLASS_BOTTOM_VISIBLE);
     }
-    
+
     const percent = Math.floor(setterState.yOffset / this.getVirtualHeight(0) * 100);
     this._titleBarUI.scrollName = "" + percent + "%";
 
@@ -384,16 +389,16 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     const viewerElement = this.getViewerElement();
     return viewerElement === null ? false : viewerElement.hasSelection();
   }
-  
+
   getBulkFileHandle(): BulkFileHandle {
     const viewerElement = this.getViewerElement();
-    return viewerElement === null ? null : viewerElement.getBulkFileHandle();    
-  }  
+    return viewerElement === null ? null : viewerElement.getBulkFileHandle();
+  }
 
   setTag(tag: string): void {
     this._titleBarUI.tagName = tag;
   }
-  
+
   getTag(): string {
     return this._titleBarUI.tagName;
   }
@@ -469,7 +474,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     }
     return null;
   }
-  
+
   setCursorPositionTop(x: number): boolean {
     const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
@@ -477,7 +482,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     }
     return false;
   }
-  
+
   setCursorPositionBottom(x: number): boolean {
     const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
@@ -539,10 +544,10 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     this._updatePosture(metadata.posture);
     this._switchDragDropHandlers(metadata.moveable !== false);
   }
-  
+
   private _updatePosture(posture: ViewerPosture): void {
     const container = <HTMLDivElement>this._getById(ID_CONTAINER);
-    
+
     const postureMapping = new Map<ViewerPosture, string>();
     postureMapping.set(ViewerPosture.RUNNING, CLASS_RUNNING);
     postureMapping.set(ViewerPosture.SUCCESS, CLASS_SUCCEEDED);
@@ -562,11 +567,11 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     this.addEventListener(ViewerElement.EVENT_METADATA_CHANGE, this._handleViewerMetadataChanged.bind(this));
     this._titleBarUI.popOutHandler = this._emitFramePopOut.bind(this);
     this._titleBarUI.closeHandler = this._emitCloseRequest.bind(this);
-    
-    const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);    
+
+    const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);
     outputDiv.addEventListener('keydown', this._handleKeyDown.bind(this));
     outputDiv.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
-    
+
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_BEFORE_SELECTION_CHANGE);
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_MOVE);
     DomUtils.addCustomEventResender(this, ViewerElement.EVENT_CURSOR_EDGE);
@@ -582,7 +587,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     });
   }
 
-  private _switchDragDropHandlers(on: boolean): void {  
+  private _switchDragDropHandlers(on: boolean): void {
     const headerDiv = DomUtils.getShadowId(this, ID_HEADER);
     headerDiv.draggable = on;
     if (on) {
@@ -598,10 +603,10 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     const outputContainerDiv = DomUtils.getShadowId(this, ID_OUTPUT_CONTAINER);
     DomUtils.preventScroll(outputContainerDiv);
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
-      const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);    
+      const outputDiv = DomUtils.getShadowId(this, ID_OUTPUT);
       outputDiv.style.top = "-" + offset +"px";
     });
-    
+
     const setterState: VirtualScrollArea.SetterState = {
       height: this.getMinHeight(),
       heightChanged: true,
@@ -637,8 +642,9 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     }
 
     // Reference to this frame for the purposes of drag and drop inside Extraterm.
-    ev.dataTransfer.setData(FrameMimeType.MIMETYPE, "" + this.getTag());
-    
+    const mimeTypeParams = this._windowId != null && this._windowId !== "" ? `;windowid=${this._windowId}` : "";
+    ev.dataTransfer.setData(FrameMimeType.MIMETYPE + mimeTypeParams, "" + this.getTag());
+
     const handle = this.getBulkFileHandle();
     if (handle != null && handle.getState() === BulkFileState.COMPLETED) {
       const metadata = handle.getMetadata();
@@ -699,7 +705,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     const dragEndedEvent = new CustomEvent(EVENT_DRAG_ENDED, { bubbles: true });
     this.dispatchEvent(dragEndedEvent);
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.EMBEDDED_FRAME];
   }
@@ -709,7 +715,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     if (template === null) {
       template = window.document.createElement('template');
       template.id = ID;
-      
+
       template.innerHTML = trimBetweenTags(`
         <style id=${ThemeableElementBase.ID_THEME}></style>
         <div id='${ID_CONTAINER}' style='display: none;' class='${CLASS_RUNNING}'>
@@ -785,7 +791,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       this._emitFramePopOut();
       return;
     }
-    
+
     if (ev.keyCode === 87 && ev.ctrlKey && ev.shiftKey) { // Ctrl+Shift+W
       ev.stopPropagation();
       ev.preventDefault();

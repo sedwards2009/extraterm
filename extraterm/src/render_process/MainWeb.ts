@@ -9,6 +9,9 @@ import * as SourceMapSupport from 'source-map-support';
 
 import { Event, CustomizedCommand, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
+import { doLater } from 'extraterm-later';
+import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
+import { createUuid } from 'extraterm-uuid';
 
 import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
@@ -51,8 +54,6 @@ import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
 import { FontLoader, DpiWatcher } from './gui/Util';
-import { doLater } from 'extraterm-later';
-import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -81,6 +82,8 @@ let applicationContextMenu: ApplicationContextMenu = null;
 let terminalVisualConfig: TerminalVisualConfig = null;
 let fontLoader: FontLoader = null;
 let dpiWatcher: DpiWatcher = null;
+const windowId = createUuid();
+
 
 export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   fontLoader = new FontLoader();
@@ -203,6 +206,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
 
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
+  mainWebUi.windowId = windowId;
   injectConfigDatabase(mainWebUi, configDatabase);
   injectKeybindingsManager(mainWebUi, keybindingsManager);
   mainWebUi.setExtensionManager(extensionManager);

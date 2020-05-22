@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -56,10 +56,11 @@ const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
  */
 @WebComponent({tag: "et-snapdropcontainer"})
 export class SnapDropContainer extends TemplatedElementBase {
-  
+
   static TAG_NAME = "ET-SNAPDROPCONTAINER";
   static EVENT_DROPPED = "snapdropcontainer-dropped";
   private _log: Logger;
+  private _supportedMimeTypes: string[] = [];
 
   constructor() {
     super({ delegatesFocus: false });
@@ -72,6 +73,19 @@ export class SnapDropContainer extends TemplatedElementBase {
     topDiv.addEventListener("dragover", this._handleDragOver.bind(this), true);
     topDiv.addEventListener("dragleave", this._handleDragLeave.bind(this), true);
     topDiv.addEventListener("drop", this._handleDrop.bind(this), true);
+
+    this._updateSupportedMimeTypes();
+  }
+
+  private _updateSupportedMimeTypes(): void {
+    const mimeTypeParams = this.windowId != null && this.windowId !== "" ? `;windowid=${this.windowId}` : "";
+    this._supportedMimeTypes = SUPPORTED_MIMETYPES.map(mt => mt + mimeTypeParams);
+  }
+
+  @Attribute({default: ""}) windowId: string;
+  @Observe("windowId")
+  private _observeWindowId(target: string): void {
+    this._updateSupportedMimeTypes();
   }
 
   protected _html(): string {
@@ -87,14 +101,14 @@ export class SnapDropContainer extends TemplatedElementBase {
   }
 
   private _handleDragEnter(ev: DragEvent): void {
-    if (this._isSupportedDropMimeType(ev)) {
+    if (this._isSupportedDropPayload(ev)) {
       ev.stopPropagation();
       this._showDragCover(ev);
     }
   }
 
   private _handleDragOver(ev: DragEvent): void {
-    if (this._isSupportedDropMimeType(ev)) {
+    if (this._isSupportedDropPayload(ev)) {
       ev.preventDefault();
       ev.stopPropagation();
 
@@ -103,7 +117,7 @@ export class SnapDropContainer extends TemplatedElementBase {
   }
 
   private _handleDragLeave(ev: DragEvent): void {
-    if (this._isSupportedDropMimeType(ev)) {
+    if (this._isSupportedDropPayload(ev)) {
       ev.stopPropagation();
       if (ev.target === DomUtils.getShadowId(this, ID_DRAG_COVER)) {
         this._hideDragCover();
@@ -179,10 +193,10 @@ export class SnapDropContainer extends TemplatedElementBase {
     }
   }
 
-  private _isSupportedDropMimeType(ev: DragEvent): boolean {
+  private _isSupportedDropPayload(ev: DragEvent): boolean {
     for (let i=0; i < ev.dataTransfer.items.length; i++) {
       const item = ev.dataTransfer.items[i];
-      if (SUPPORTED_MIMETYPES.indexOf(item.type) !== -1) {
+      if (this._supportedMimeTypes.indexOf(item.type) !== -1) {
         return true;
       }
     }
@@ -190,7 +204,7 @@ export class SnapDropContainer extends TemplatedElementBase {
   }
 
   private _getSupportedDropMimeTypeData(ev: DragEvent): {mimeType: string; data: string;} {
-    for (const mimeType of SUPPORTED_MIMETYPES) {
+    for (const mimeType of this._supportedMimeTypes) {
       const data = ev.dataTransfer.getData(mimeType);
       if (data != null && data !== "") {
         return {mimeType, data};

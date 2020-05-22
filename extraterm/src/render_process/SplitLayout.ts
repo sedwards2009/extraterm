@@ -7,7 +7,7 @@ import * as DomUtils from './DomUtils';
 import {Splitter, SplitOrientation} from './gui/Splitter';
 import {TabWidget} from './gui/TabWidget';
 import {Tab} from './gui/Tab';
-import {Logger, getLogger} from "extraterm-logging";
+import {Logger, getLogger, log} from "extraterm-logging";
 
 interface ElementFactory {
   (): Element;
@@ -79,6 +79,7 @@ export class SplitLayout {
   private _leftSpaceDefaultElementFactory: ElementFactory = null;
   private _rightSpaceDefaultElementFactory: ElementFactory = null;
   private _rootInfoNode: RootInfoNode = null;
+  private _windowId: string = null;
 
   constructor() {
     this._tabContainerFactory = () => document.createElement("DIV");
@@ -88,6 +89,13 @@ export class SplitLayout {
     tabWidget.showFrame = false;
     this._rootInfoNode = {type: "tabwidget", children: [], tabWidget: tabWidget, emptyTab: null,
       emptyTabContent: null, emptyContainer: null, leftSpaceDefaultElement: null, rightSpaceDefaultElement: null};
+  }
+
+  setWindowId(windowId: string): void {
+    this._windowId = windowId;
+    for (const tabWidget of this.getAllTabWidgets()) {
+      tabWidget.windowId = windowId;
+    }
   }
 
   setRootContainer(el: Element): void {
@@ -182,6 +190,10 @@ export class SplitLayout {
 
   getAllTabContents(): Element[] {
     return getAllTabContents(this._rootInfoNode);
+  }
+
+  getAllTabWidgets(): TabWidget[] {
+    return getAllTabWidgets(this._rootInfoNode);
   }
 
   getTabContentsByTabWidget(tabWidget: TabWidget): Element[] {
@@ -467,6 +479,7 @@ export class SplitLayout {
     const newTabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
     newTabWidget.id = this._nextTabWidgetId();
     newTabWidget.showFrame = false;
+    newTabWidget.windowId = this._windowId;
     const newTabWidgetInfo: TabWidgetInfoNode = {
       type: "tabwidget",
       children: children,
@@ -497,14 +510,12 @@ export class SplitLayout {
       return;
     }
 
-    let tabInfo: TabInfo = null;
     let tabWidgetInfo: TabWidgetInfoNode = null;
     let splitterInfo: SplitterInfoNode = null;
 
     if (path.length >= 2) {
       const lastPart = path[path.length-1];
       if (lastPart.type === "tabinfo") {
-        tabInfo = lastPart;
         tabWidgetInfo = <TabWidgetInfoNode> path[path.length-2];
         splitterInfo = <SplitterInfoNode> path[path.length-3];
 
@@ -731,6 +742,7 @@ export class SplitLayout {
       infoNode.tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
       infoNode.tabWidget.id = this._nextTabWidgetId();
       infoNode.tabWidget.showFrame = false;
+      infoNode.tabWidget.windowId = this._windowId;
     }
     const tabWidget = infoNode.tabWidget;
 
@@ -939,6 +951,16 @@ function getAllTabContents(infoNode: RootInfoNode): Element[] {
     return infoNode.children.map(getAllTabContents).reduce( (accu,list) => [...accu, ...list], []);
   } else {
     return infoNode.children.map(kidInfo => kidInfo.content);
+  }
+}
+
+function getAllTabWidgets(infoNode: RootInfoNode): TabWidget[] {
+  if (infoNode.type === "splitter") {
+    return infoNode.children.map(getAllTabWidgets).reduce( (accu,list) => [...accu, ...list], []);
+  } else if (infoNode.type === "tabwidget") {
+    return [infoNode.tabWidget];
+  } else {
+    return [];
   }
 }
 

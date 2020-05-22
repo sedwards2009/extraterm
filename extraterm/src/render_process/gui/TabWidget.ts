@@ -133,6 +133,16 @@ export class TabWidget extends TemplatedElementBase {
     this.update();
   }
 
+  @Attribute({default: ""}) windowId: string;
+  @Observe("windowId")
+  private _observeWindowId(target: string): void {
+    const snapDropContainer = <SnapDropContainer> DomUtils.getShadowId(this, ID_SNAP_DROP_CONTAINER);
+    if (snapDropContainer == null) {
+      return;
+    }
+    snapDropContainer.windowId = this.windowId;
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.GUI_TABWIDGET, ThemeTypes.CssFile.TABS];
   }
@@ -158,7 +168,7 @@ export class TabWidget extends TemplatedElementBase {
           <div class='${CLASS_REMAINDER_RIGHT}'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></div>
         </div>
         <div id='${ID_CONTENTS}'>
-          <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}'>
+          <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}' windowId='${this.windowId}'>
             <${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}>
           </${SnapDropContainer.TAG_NAME}>
         </div>
@@ -383,7 +393,8 @@ export class TabWidget extends TemplatedElementBase {
       return;
     }
 
-    ev.dataTransfer.setData(ElementMimeType.MIMETYPE, ElementMimeType.elementToData(parentElement));
+    const mimeTypeParams = this.windowId != null && this.windowId !== "" ? `;windowid=${this.windowId}` : "";
+    ev.dataTransfer.setData(ElementMimeType.MIMETYPE + mimeTypeParams, ElementMimeType.elementToData(parentElement));
     ev.dataTransfer.setDragImage(parentElement, -10, -10);
     ev.dataTransfer.effectAllowed = 'move';
     ev.dataTransfer.dropEffect = 'move';
@@ -475,10 +486,17 @@ export class TabWidget extends TemplatedElementBase {
   }
 
   private _getSupportedDropMimeTypeData(ev: DragEvent): {mimeType: string; data: string;} {
-    for (const mimeType of [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE]) {
-      const data = ev.dataTransfer.getData(mimeType);
+    const supportedMimeTypes: {
+      MIMETYPE: string;
+      dataTransferGetData(dataTransfer: DataTransfer, windowId: string): string;
+    }[] = [
+      ElementMimeType, FrameMimeType
+    ];
+
+    for (const mimeType of supportedMimeTypes) {
+      const data = mimeType.dataTransferGetData(ev.dataTransfer, this.windowId);
       if (data != null && data !== "") {
-        return {mimeType, data};
+        return {mimeType: mimeType.MIMETYPE, data};
       }
     }
     return {mimeType: null, data: null};
