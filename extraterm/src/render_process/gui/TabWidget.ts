@@ -356,6 +356,10 @@ export class TabWidget extends TemplatedElementBase {
   }
 
   private _scrollTabIntoView(index: number): void {
+    if ( ! this.showTabs) {
+      return;
+    }
+
     const tabbar = this._getTabbar();
     const item = <HTMLElement> tabbar.children.item(index);
     item.scrollIntoView({
