@@ -27,7 +27,7 @@ const ID_TITLE = "ID_TITLE";
  */
 @WebComponent({tag: "et-empty-pane-menu"})
 export class EmptyPaneMenu extends ThemeableElementBase {
-  
+
   static TAG_NAME = "ET-EMPTY-PANE-MENU";
 
   private _log: Logger;
@@ -37,7 +37,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
     super();
     this._log = getLogger(EmptyPaneMenu.TAG_NAME, this);
   }
-  
+
   /**
    * Custom Element 'connected' life cycle hook.
    */
@@ -47,7 +47,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const themeStyle = document.createElement('style');
       themeStyle.id = ThemeableElementBase.ID_THEME;
-      
+
       const divContainer = document.createElement('div');
       divContainer.id = ID_EMPTY_PANE_MENU;
       divContainer.innerHTML = trimBetweenTags(`<div id="${ID_CONTAINER}">
@@ -60,30 +60,33 @@ export class EmptyPaneMenu extends ThemeableElementBase {
       `);
 
       shadow.appendChild(themeStyle);
-      shadow.appendChild(divContainer);    
+      shadow.appendChild(divContainer);
 
       const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
       listPicker.addEventListener("selected", (ev: CustomEvent): void => {
-        const event = new CustomEvent("selected", { detail: {selected: ev.detail.selected } });
-        this.dispatchEvent(event);
+        this._emitSelectedEvent(ev.detail.selected);
       });
 
       listPicker.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
       listPicker.setFormatEntriesFunc(commandPaletteFormatEntries);
       listPicker.addExtraCss([ThemeTypes.CssFile.COMMAND_PALETTE]);
-      
+
       listPicker.setEntries(this._entries);
-      
+
       const closeButton = DomUtils.getShadowId(this, ID_CLOSE_BUTTON);
       closeButton.addEventListener('click', () => {
-        const event = new CustomEvent("selected", { detail: {selected: 'closePane' } });
-        this.dispatchEvent(event);
+        this._emitSelectedEvent("extraterm:window.closePane_window");
       });
 
       this.updateThemeCss();
     }
   }
-  
+
+  private _emitSelectedEvent(command: string): void {
+    const event = new CustomEvent("selected", { detail: {selected: command } });
+    this.dispatchEvent(event);
+  }
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.EMPTY_PANE_MENU];
   }
@@ -101,7 +104,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
 
   setEntries(entries: CommandAndShortcut[]): void {
     this._entries = entries;
-    
+
     if (DomUtils.getShadowRoot(this) != null) {
       const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
       listPicker.setEntries(entries);
