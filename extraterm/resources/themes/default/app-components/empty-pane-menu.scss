@@ -22,10 +22,15 @@
 
 #ID_CONTAINER {
   --empty-pane-menu-container-width: #{pxToRem(400px)};
+  position: absolute;
 
-  display: block;
-
-  width: 100%;
+  display: flex;
+  flex-direction: column;
+  top: 0;
+  bottom: 0;
+  
+  left: 0;
+  right: 0;
   max-width: var(--empty-pane-menu-container-width);
 
   margin-top: $layout-vertical-spacing;
@@ -35,4 +40,14 @@
 
 #ID_CLOSE_BUTTON {
   align-self: top;
+}
+
+#ID_TITLE {
+  flex: 0 0;
+}
+
+et-listpicker {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 0;
 }

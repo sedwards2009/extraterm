@@ -10,6 +10,12 @@
   outline: 0 solid transparent;
 }
 
+#ID_DIALOG {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 #ID_FILTER {
   box-sizing: border-box;
   width: 100%;
@@ -18,11 +24,13 @@
 #ID_RESULTS {
   overflow: auto;
   cursor: default;
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 .CLASS_RESULT_ENTRY {
   display: flex;
-  
+
   width: 100%;
   box-sizing: border-box;
 
