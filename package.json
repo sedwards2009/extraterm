@@ -40,6 +40,9 @@
       "extraterm",
       "packages/*",
       "extensions/*"
+    ],
+    "nohoist": [
+      "**/lit-html"
     ]
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",

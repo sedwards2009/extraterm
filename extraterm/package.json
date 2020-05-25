@@ -28,6 +28,7 @@
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-font-ligatures": "1.0.0",
     "extraterm-later": "1.0.0",
+    "extraterm-lit-html": "1.2.1",
     "extraterm-logging": "1.0.0",
     "extraterm-readonly-toolbox": "0.1.0",
     "extraterm-resize-notifier": "0.1.0",
