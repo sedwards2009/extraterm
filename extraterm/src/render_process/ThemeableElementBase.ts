@@ -1,8 +1,9 @@
 /*
- * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { html, TemplateResult, directive } from 'extraterm-lit-html';
 
 import * as ThemeTypes from '../theme/Theme';
 import * as DomUtils from './DomUtils';
@@ -76,4 +77,12 @@ export class ThemeableElementBase extends HTMLElement implements ThemeTypes.Them
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [];
   }
+
+  protected _styleTag(): TemplateResult {
+    return html`<style id=${ThemeableElementBase.ID_THEME}>${preserveStyle()}</style>`;
+  }
 }
+
+const preserveStyle = directive(() => (part) => {
+  // no-op
+});
