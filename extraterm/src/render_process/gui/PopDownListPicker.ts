@@ -5,6 +5,7 @@
  */
 import { html, render, TemplateResult, directive } from 'extraterm-lit-html';
 import { unsafeHTML } from 'extraterm-lit-html/directives/unsafe-html.js';
+import { live } from 'extraterm-lit-html/directives/live.js';
 
 import {Disposable} from '@extraterm/extraterm-extension-api';
 import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
@@ -46,8 +47,9 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this.attachShadow({ mode: 'open', delegatesFocus: true });
     this._handleDialogClose = this._handleDialogClose.bind(this);
     this._handleFilterInput = this._handleFilterInput.bind(this);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this._handleFilterKeyDown = this._handleFilterKeyDown.bind(this);
     this._handleResultClick = this._handleResultClick.bind(this);
+
     this.updateThemeCss();
 
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
@@ -61,7 +63,8 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   private _handleFilterInput(): void {
-    this._render();
+    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
+    this.filter = filterInput.value;
   }
 
   private _handleResultClick(ev: Event): void {
@@ -77,13 +80,11 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   protected _render(): void {
     const filterKeyDown = {
-      handleEvent: this.handleKeyDown,
+      handleEvent: this._handleFilterKeyDown,
       capture: true
     };
 
-    const filterElement = (<HTMLInputElement> this._elementById(ID_FILTER));
-    const filterInputValue = filterElement == null ? "" : filterElement.value;
-    const filteredEntries = this._filterEntries(this._entries, filterInputValue);
+    const filteredEntries = this._filterEntries(this._entries, this.filter);
 
     if (filteredEntries.length === 0) {
       this._setSelected(null);
@@ -95,8 +96,8 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       }
     }
 
-    const formattedEntries = this._formatEntries(filteredEntries, this.selected, filterInputValue);
-            
+    const formattedEntries = this._formatEntries(filteredEntries, this.selected, this.filter);
+
     const template = html`${this._styleTag()}
       <et-popdowndialog
           id="ID_DIALOG"
@@ -111,6 +112,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
               id="ID_FILTER"
               @input=${this._handleFilterInput}
               @keydown=${filterKeyDown}
+              .value=${live(this.filter)}
             />
           </div>
           <div
@@ -157,10 +159,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this._entries = entries;
     this.selected = null;
 
-    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
-    if (filterInput !== null) {
-      filterInput.value = "";
-    }
+    this.filter = "";
     this._render();
   }
 
@@ -170,8 +169,9 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   @Attribute({default: ""}) titlePrimary: string;
   @Attribute({default: ""}) titleSecondary: string;
+  @Attribute({default: ""}) filter: string;
 
-  @Observe("titlePrimary", "titleSecondary")
+  @Observe("titlePrimary", "titleSecondary", "filter")
   private _observe(target: string): void {
     this._render();
   }
@@ -204,7 +204,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     resultsDiv.scrollTop = selectedRelativeTop;
   }
 
-  private handleKeyDown(ev: KeyboardEvent) {
+  private _handleFilterKeyDown(ev: KeyboardEvent): void {
     if (ev.key === "Escape") {
       this._okId(null);
       ev.preventDefault();
@@ -225,8 +225,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       ev.preventDefault();
       ev.stopPropagation();
 
-      const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
-      const filteredEntries = this._filterEntries(this._entries, filterInput.value);
+      const filteredEntries = this._filterEntries(this._entries, this.filter);
       if (filteredEntries.length === 0) {
         return;
       }
@@ -290,9 +289,10 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     const rect = dialog.getBoundingClientRect();
     resultsDiv.style.maxHeight = `${Math.floor(rect.height * 0.75)}px`;
 
+    this.filter = "";
     this._render();
+
     const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
-    filterInput.value = "";
     filterInput.focus();
 
     this._getDialog().open();
