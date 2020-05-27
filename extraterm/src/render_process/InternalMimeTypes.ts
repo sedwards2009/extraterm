@@ -45,7 +45,13 @@ export const FrameMimeType = {
 };
 
 function mimeTypeEquals(baseMimeType: string, mimeType: string, windowId: string): boolean {
-  return `${baseMimeType};windowid=${windowId}` === mimeType;
+  const parts = mimeType.split(";");
+  const hasWindowId = parts.length !== 1 && parts[1].startsWith("windowid=");
+  if (windowId != null && hasWindowId) {
+    return `${baseMimeType};windowid=${windowId}` === mimeType;
+  } else {
+    return baseMimeType === parts[0];
+  }
 }
 
 function dataTransferGetData(
@@ -56,7 +62,7 @@ function dataTransferGetData(
   for (let i=0; i < dataTransfer.items.length; i++) {
     const item = dataTransfer.items[i];
     if (mimeType.equals(item.type, windowId)) {
-      dataTransfer.getData(item.type);
+      return dataTransfer.getData(item.type);
     }
   }
   return null;
