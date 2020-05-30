@@ -3,12 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, render, TemplateResult, directive } from 'extraterm-lit-html';
-import { classMap } from 'extraterm-lit-html/directives/class-map.js';
-import { Attribute, Observe, WebComponent } from 'extraterm-web-component-decorators';
+import { html, render, TemplateResult } from "extraterm-lit-html";
+import { classMap } from "extraterm-lit-html/directives/class-map.js";
+import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
+import { Attribute, Observe, WebComponent } from "extraterm-web-component-decorators";
 
-import * as ThemeTypes from '../../theme/Theme';
-import { ThemeableElementBase } from '../ThemeableElementBase';
+import * as ThemeTypes from "../../theme/Theme";
+import { ThemeableElementBase } from "../ThemeableElementBase";
 
 
 /**
@@ -21,7 +22,7 @@ export class MenuItem extends ThemeableElementBase {
 
   constructor() {
     super();
-    this.attachShadow({ mode: 'open', delegatesFocus: false });
+    this.attachShadow({ mode: "open", delegatesFocus: false });
     this.updateThemeCss();
     this._render();
   }
@@ -37,28 +38,28 @@ export class MenuItem extends ThemeableElementBase {
 
   protected _render(): void {
     const template = html`${this._styleTag()}
-      <div id='ID_CONTAINER' class=${classMap({'selected': this.selected})}>
-        <div id='ID_ICON1'>${this._formatGutterIcon()}</div>
-        <div id='ID_ICON2'>${this._formatIcon()}</div>
-        <div id='ID_LABEL'><slot></slot></div>
-        <div id='ID_SHORTCUT'>${this.shortcut}</div>
+      <div id="ID_CONTAINER" class=${classMap({"selected": this.selected})}>
+        <div id="ID_ICON1">${this._formatGutterIcon()}</div>
+        <div id="ID_ICON2">${this._formatIcon()}</div>
+        <div id="ID_LABEL"><slot></slot></div>
+        <div id="ID_SHORTCUT">${this.shortcut}</div>
       </div>`;
     render(template, this.shadowRoot);
   }
 
   protected _formatGutterIcon(): TemplateResult {
-    return html`<i class='fa fa-fw'></i>`;
+    return html`<i class="fa fa-fw"></i>`;
   }
 
   protected _formatIcon(): TemplateResult {
     const iconName = this.icon;
-    if (iconName != null && iconName.startsWith('extraicon-')) {
-      return html`<span class='extraicon'>&${iconName.substr('extraicon-'.length)};</span>`;
+    if (iconName != null && iconName.startsWith("extraicon-")) {
+      return html`<span class="extraicon">${unsafeHTML("&" + iconName.substr("extraicon-".length) + ";")}</span>`;
     } else {
       if (iconName == null || iconName === "") {
-        return html`<i class='fa-fw fa'>&nbsp;</i>`;
+        return html`<i class="fa-fw fa">&nbsp;</i>`;
       } else {
-        return html`<i class=${'fa-fw ' + (iconName == null ? "" : iconName)}></i>`;
+        return html`<i class=${"fa-fw " + (iconName == null ? "" : iconName)}></i>`;
       }
     }
   }

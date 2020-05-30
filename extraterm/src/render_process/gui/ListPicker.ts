@@ -51,7 +51,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): DirectiveFn =>
       repeat(filteredEntries, (entry) => entry.id, (entry, index) => html`<div data-id=${entry.id}>${entry.id}</div>`);
-
+    this._render();
   }
 
   private _handleFilterInput(): void {
