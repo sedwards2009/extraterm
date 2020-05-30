@@ -3,19 +3,20 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, render, TemplateResult, directive } from 'extraterm-lit-html';
-import { unsafeHTML } from 'extraterm-lit-html/directives/unsafe-html.js';
-import { live } from 'extraterm-lit-html/directives/live.js';
+import { html, render, TemplateResult } from "extraterm-lit-html";
+import { DirectiveFn } from "extraterm-lit-html/lib/directive";
+import { live } from "extraterm-lit-html/directives/live";
+import { repeat } from "extraterm-lit-html/directives/repeat";
 
-import {Disposable} from '@extraterm/extraterm-extension-api';
-import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import {Disposable} from "@extraterm/extraterm-extension-api";
+import {Attribute, Observe, WebComponent} from "extraterm-web-component-decorators";
 
-import {doLater} from 'extraterm-later';
+import {doLater} from "extraterm-later";
 import {log, Logger, getLogger} from "extraterm-logging";
-import * as ThemeTypes from '../../theme/Theme';
-import {PopDownDialog} from './PopDownDialog';
-import { ThemeableElementBase } from '../ThemeableElementBase';
-import * as DomUtils from '../DomUtils';
+import * as ThemeTypes from "../../theme/Theme";
+import {PopDownDialog} from "./PopDownDialog";
+import { ThemeableElementBase } from "../ThemeableElementBase";
+import * as DomUtils from "../DomUtils";
 
 
 const ID_FILTER = "ID_FILTER";
@@ -36,7 +37,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _log: Logger = null;
   private _entries: T[] = [];
   private _filterEntries: (entries: T[], filterText: string) => T[];
-  private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string;
+  private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => DirectiveFn | TemplateResult;
   private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
@@ -44,17 +45,18 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     super();
     this._log = getLogger(PopDownListPicker.TAG_NAME, this);
 
-    this.attachShadow({ mode: 'open', delegatesFocus: true });
+    this.attachShadow({ mode: "open", delegatesFocus: true });
+    this.updateThemeCss();
+
     this._handleDialogClose = this._handleDialogClose.bind(this);
     this._handleFilterInput = this._handleFilterInput.bind(this);
     this._handleFilterKeyDown = this._handleFilterKeyDown.bind(this);
     this._handleResultClick = this._handleResultClick.bind(this);
 
-    this.updateThemeCss();
-
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
-    this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): string =>
-      filteredEntries.map(entry => `<div ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>${entry.id}</div>`).join("");
+    this._formatEntries = (filteredEntries: T[], selectedId: string, filter: string): DirectiveFn | TemplateResult =>
+      repeat(filteredEntries, (entry) => entry.id,
+        (entry, index) => html`<div data-id=${entry.id}>${entry.id}</div>`);
   }
 
   private _handleDialogClose(): void {
@@ -117,7 +119,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
           </div>
           <div
             id="ID_RESULTS"
-            @click=${this._handleResultClick}>${unsafeHTML(formattedEntries)}</div>
+            @click=${this._handleResultClick}>${formattedEntries}</div>
         </div>
       </et-popdowndialog>
       `;
@@ -180,7 +182,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this._filterEntries = func;
   }
 
-  setFormatEntriesFunc(func: (filteredEntries: T[], selectedId: string, filterInputValue: string) => string): void {
+  setFormatEntriesFunc(func: (filteredEntries: T[], selectedId: string, filter: string) => DirectiveFn | TemplateResult): void {
     this._formatEntries = func;
   }
 

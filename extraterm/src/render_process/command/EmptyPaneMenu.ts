@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -16,10 +16,8 @@ import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 
 const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
-const ID_CONTAINER = "ID_CONTAINER";
 const ID_EMPTY_PANE_MENU = "ID_EMPTY_PANE_MENU";
 const ID_LIST_PICKER = "ID_LIST_PICKER";
-const ID_TITLE = "ID_TITLE";
 
 
 /**
@@ -50,12 +48,12 @@ export class EmptyPaneMenu extends ThemeableElementBase {
 
       const divContainer = document.createElement('div');
       divContainer.id = ID_EMPTY_PANE_MENU;
-      divContainer.innerHTML = trimBetweenTags(`<div id="${ID_CONTAINER}">
-        <div id="${ID_TITLE}" class="gui-packed-row">
+      divContainer.innerHTML = trimBetweenTags(`<div id="ID_CONTAINER">
+        <div id="ID_TITLE" class="gui-packed-row">
           <span class="expand">Pane Menu</span>
-          <button id="${ID_CLOSE_BUTTON}" class="compact microtool danger"><i class="fa fa-times"></i></button>
+          <button id="ID_CLOSE_BUTTON" class="compact microtool danger"><i class="fa fa-times"></i></button>
         </div>
-        <${ListPicker.TAG_NAME} id="${ID_LIST_PICKER}"></${ListPicker.TAG_NAME}>
+        <et-listpicker id="${ID_LIST_PICKER}"></et-listpicker>
       </div>
       `);
 
@@ -117,11 +115,11 @@ export class EmptyPaneMenu extends ThemeableElementBase {
 
   getFilter(): string {
     const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
-    return listPicker.getFilter();
+    return listPicker.filter;
   }
 
   setFilter(text: string): void {
     const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
-    listPicker.setFilter(text);
+    listPicker.filter = text;
   }
 }
