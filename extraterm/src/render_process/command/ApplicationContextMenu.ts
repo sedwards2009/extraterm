@@ -1,20 +1,18 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as he from "he";
+import { html, render, TemplateResult, DirectiveFn } from "extraterm-lit-html";
+import { repeat } from "extraterm-lit-html/directives/repeat";
 
 import { getLogger } from "extraterm-logging";
-import { Logger } from '@extraterm/extraterm-extension-api';
+import { Logger } from "@extraterm/extraterm-extension-api";
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import * as DomUtils from "../DomUtils";
 import { doLater } from "extraterm-later";
 import { ExtensionManager, CommandQueryOptions } from "../extension/InternalTypes";
-import { MenuItem } from "../gui/MenuItem";
-import { DividerMenuItem } from "../gui/DividerMenuItem";
-import { CheckboxMenuItem } from "../gui/CheckboxMenuItem";
 import { CommandAndShortcut } from "./CommandPalette";
 import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
@@ -22,6 +20,17 @@ import { ContextMenuType, ContextMenuRequestEventDetail } from "./CommandUtils";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
+
+interface CommandLine {
+  type: "command";
+  id: string;
+  command: CommandAndShortcut;
+}
+
+interface DividerLine {
+  type: "divider";
+  id: string;
+}
 
 export class ApplicationContextMenu {
   private _log: Logger;
@@ -100,33 +109,45 @@ export class ApplicationContextMenu {
         this._menuEntries = null;
         return;
       }
-      this._contextMenuElement.innerHTML = this._formatMenuHtml(this._menuEntries);
+
+      render(this._formatMenuHtml(this._menuEntries), this._contextMenuElement);
       this._contextMenuElement.open(ev.detail.x, ev.detail.y);
     });
   }
 
-  private _formatMenuHtml(menuEntries: CommandAndShortcut[]): string {
-    const htmlParts: string[] = [];
-    let lastCategory = "";
-    let index = 0;
-    for (const command of menuEntries) {
-      if (command.category !== lastCategory && lastCategory !== "") {
-        htmlParts.push(`<${DividerMenuItem.TAG_NAME}></${DividerMenuItem.TAG_NAME}>`);
-      }
-      lastCategory = command.category;
-      htmlParts.push(this._commandAndShortcutToHtml("index_" + index, command));
-      index++;
-    }
-    return htmlParts.join("");
+  private _formatMenuHtml(menuEntries: CommandAndShortcut[]): DirectiveFn | TemplateResult {
+    const lines = this._computeCommandAndDividerList(menuEntries);
+    return repeat(lines, (line) => line.id,
+      (line, index) => {
+        if (line.type === "divider") {
+          return html`<et-divider-menu-item></et-divider-menu-item>`;
+        }
+        return this._commandAndShortcutToHtml("index_" + index, line.command);
+      });
   }
 
-  private _commandAndShortcutToHtml(name: string, command: CommandAndShortcut): string {
+  private _computeCommandAndDividerList(menuEntries: CommandAndShortcut[]): (CommandLine | DividerLine)[] {
+    let lastCategory = "";
+    const lines: (CommandLine | DividerLine)[] = [];
+    let dividerCounter = 0;
+    for (const command of menuEntries) {
+      if (command.category !== lastCategory && lastCategory !== "") {
+        lines.push( { type: "divider", id: `divider_${dividerCounter}`} );
+        dividerCounter++;
+      }
+      lines.push( {type: "command", id: command.id, command } );
+      lastCategory = command.category;
+    }
+    return lines;
+  }
+
+  private _commandAndShortcutToHtml(name: string, command: CommandAndShortcut): TemplateResult {
     if (command.checked != null) {
-      return `<${CheckboxMenuItem.TAG_NAME} name="${name}" icon="${command.icon}" checked="${command.checked}"
-        shortcut="${command.shortcut}">${he.encode(command.title)}</${CheckboxMenuItem.TAG_NAME}>`;
+      return html`<et-checkboxmenuitem name=${name} icon=${command.icon} checked=${command.checked}
+        shortcut=${command.shortcut}>${command.title}</et-checkboxmenuitem>`;
     } else {
-      return `<${MenuItem.TAG_NAME} name="${name}" icon="${command.icon}"
-        shortcut="${command.shortcut}">${he.encode(command.title)}</${MenuItem.TAG_NAME}>`;
+      return html`<et-menuitem name=${name} icon=${command.icon}
+        shortcut=${command.shortcut}>${command.title}</et-menuitem>`;
     }
   }
 
