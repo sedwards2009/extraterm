@@ -4,19 +4,17 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { WebComponent } from "extraterm-web-component-decorators";
+import { html, render } from "extraterm-lit-html";
 
-import * as ThemeTypes from '../../theme/Theme';
-import {ThemeableElementBase} from '../ThemeableElementBase';
-import {ListPicker} from '../gui/ListPicker';
-import * as DomUtils from '../DomUtils';
-import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandAndShortcut } from './CommandPalette';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import * as ThemeTypes from "../../theme/Theme";
+import {ThemeableElementBase} from "../ThemeableElementBase";
+import {ListPicker} from "../gui/ListPicker";
+import * as DomUtils from "../DomUtils";
+import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandAndShortcut } from "./CommandPalette";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 
-const ID_CLOSE_BUTTON = "ID_CLOSE_BUTTON";
-const ID_EMPTY_PANE_MENU = "ID_EMPTY_PANE_MENU";
 const ID_LIST_PICKER = "ID_LIST_PICKER";
 
 
@@ -34,50 +32,51 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   constructor() {
     super();
     this._log = getLogger(EmptyPaneMenu.TAG_NAME, this);
+
+    this.attachShadow({ mode: "open", delegatesFocus: false });
+    
+    this._handleListPickerSelected = this._handleListPickerSelected.bind(this);
+    this._handleCloseClicked = this._handleCloseClicked.bind(this);
+
+    this._render();
+    this.updateThemeCss();
+
+    const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
+    listPicker.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
+    listPicker.setFormatEntriesFunc(commandPaletteFormatEntries);
+    listPicker.addExtraCss([ThemeTypes.CssFile.COMMAND_PALETTE]);
+    listPicker.setEntries(this._entries);
   }
 
-  /**
-   * Custom Element 'connected' life cycle hook.
-   */
-  connectedCallback(): void {
-    super.connectedCallback();
-    if (DomUtils.getShadowRoot(this) == null) {
-      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-      const themeStyle = document.createElement('style');
-      themeStyle.id = ThemeableElementBase.ID_THEME;
-
-      const divContainer = document.createElement('div');
-      divContainer.id = ID_EMPTY_PANE_MENU;
-      divContainer.innerHTML = trimBetweenTags(`<div id="ID_CONTAINER">
-        <div id="ID_TITLE" class="gui-packed-row">
-          <span class="expand">Pane Menu</span>
-          <button id="ID_CLOSE_BUTTON" class="compact microtool danger"><i class="fa fa-times"></i></button>
+  protected _render(): void {
+    const template = html`${this._styleTag()}
+      <div id="ID_EMPTY_PANE_MENU">
+        <div id="ID_CONTAINER">
+          <div id="ID_TITLE" class="gui-packed-row">
+            <span class="expand">Pane Menu</span>
+            <button
+              id="ID_CLOSE_BUTTON"
+              class="compact microtool danger"
+              @click=${this._handleCloseClicked}
+            >
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+          <et-listpicker
+            id="${ID_LIST_PICKER}"
+            @selected=${this._handleListPickerSelected}
+          ></et-listpicker>
         </div>
-        <et-listpicker id="${ID_LIST_PICKER}"></et-listpicker>
-      </div>
-      `);
+      </div>`;
+    render(template, this.shadowRoot);
+  }
 
-      shadow.appendChild(themeStyle);
-      shadow.appendChild(divContainer);
+  private _handleListPickerSelected(ev: CustomEvent): void {
+    this._emitSelectedEvent(ev.detail.selected);
+  }
 
-      const listPicker = <ListPicker<CommandAndShortcut>> DomUtils.getShadowId(this, ID_LIST_PICKER);
-      listPicker.addEventListener("selected", (ev: CustomEvent): void => {
-        this._emitSelectedEvent(ev.detail.selected);
-      });
-
-      listPicker.setFilterAndRankEntriesFunc(commandPaletteFilterEntries);
-      listPicker.setFormatEntriesFunc(commandPaletteFormatEntries);
-      listPicker.addExtraCss([ThemeTypes.CssFile.COMMAND_PALETTE]);
-
-      listPicker.setEntries(this._entries);
-
-      const closeButton = DomUtils.getShadowId(this, ID_CLOSE_BUTTON);
-      closeButton.addEventListener('click', () => {
-        this._emitSelectedEvent("extraterm:window.closePane_window");
-      });
-
-      this.updateThemeCss();
-    }
+  private _handleCloseClicked(): void {
+    this._emitSelectedEvent("extraterm:window.closePane_window");
   }
 
   private _emitSelectedEvent(command: string): void {
