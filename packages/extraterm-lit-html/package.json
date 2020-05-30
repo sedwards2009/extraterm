@@ -22,10 +22,10 @@
     "build-directives": "babel --no-babelrc --presets=@babel/preset-env node_modules/lit-html/directives -d directives",
     "build-lib": "babel --no-babelrc --presets=@babel/preset-env node_modules/lit-html/lib -d lib",
     "build-lit": "babel --no-babelrc --presets=@babel/preset-env node_modules/lit-html/lit-html.js -d .",
-    "copy-directives-ts": "shx cp 'node_modules/lit-html/directives/*.ts' directives/",
-    "copy-lib-ts": "shx cp 'node_modules/lit-html/lib/*.ts' lib/",
-    "copy-lit-ts": "shx cp 'node_modules/lit-html/*.ts' .",
-    "copy-ts34": "shx cp -r 'node_modules/lit-html/ts3.4' . && shx rm -r ts3.4/ts3.4",
+    "copy-directives-ts": "shx cp \"node_modules/lit-html/directives/*.ts\" directives/",
+    "copy-lib-ts": "shx cp \"node_modules/lit-html/lib/*.ts\" lib/",
+    "copy-lit-ts": "shx cp \"node_modules/lit-html/*.ts\" .",
+    "copy-ts34": "shx cp -r node_modules/lit-html/ts3.4 . && shx rm -r ts3.4/ts3.4",
     "clean": "shx rm -rf lib directives lit-html.js lit-html.d.ts"
   },
   "devDependencies": {
