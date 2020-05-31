@@ -6,6 +6,7 @@
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
+import { html, render } from "extraterm-lit-html";
 
 import { Event, CustomizedCommand, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
@@ -59,7 +60,7 @@ type ThemeInfo = ThemeTypes.ThemeInfo;
 
 SourceMapSupport.install();
 
-const MENU_ITEM_DEVELOPER_TOOLS = 'developer_tools';
+const ID_CONTEXT_MENU_CONTAINER = "ID_CONTEXT_MENU_CONTAINER";
 const ID_MAIN_MENU = "ID_MAIN_MENU";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
@@ -350,26 +351,37 @@ function setUpWindowControls(): void {
 }
 
 function startUpMainMenu(): void {
-  const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
-    <${ContextMenu.TAG_NAME} id="${ID_MAIN_MENU}">
-        <${MenuItem.TAG_NAME} icon="far fa-window-restore" data-command="extraterm:application.newWindow">New Window</${MenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="extraicon extraicon-pocketknife" data-command="extraterm:window.openSettings">Settings</${MenuItem.TAG_NAME}>
-        <${CheckboxMenuItem.TAG_NAME} icon="fa fa-cogs" id="${MENU_ITEM_DEVELOPER_TOOLS}" data-command="extraterm:window.toggleDeveloperTools">Developer Tools</${CheckboxMenuItem.TAG_NAME}>
-        <${MenuItem.TAG_NAME} icon="far fa-lightbulb" data-command="extraterm:window.openAbout">About</${MenuItem.TAG_NAME}>
-    </${ContextMenu.TAG_NAME}>
-  `));
-  window.document.body.appendChild(contextMenuFragment);
+  const container = document.createElement("DIV");
+  container.id = ID_CONTEXT_MENU_CONTAINER;
+  document.body.appendChild(container);
 
-  const mainMenu = window.document.getElementById(ID_MAIN_MENU);
-  mainMenu.addEventListener('selected', (ev: CustomEvent) => {
-    extensionManager.executeCommand((<HTMLElement> ev.detail.menuItem).getAttribute("data-command"));
-  });
+  updateMainMenu();
 
   const menuButton = document.getElementById(ID_MENU_BUTTON);
   menuButton.addEventListener('click', () => {
     const contextMenu = <ContextMenu> document.getElementById(ID_MAIN_MENU);
     contextMenu.openAround(menuButton);
   });
+}
+
+function updateMainMenu(): void {
+  const container = document.getElementById(ID_CONTEXT_MENU_CONTAINER);
+  const template = html`
+    <et-contextmenu id="ID_MAIN_MENU" @selected=${handleMainMenuSelected}>
+      <et-menuitem icon="far fa-window-restore" data-command="extraterm:application.newWindow"
+      >New Window</et-menuitem>
+      <et-menuitem icon="extraicon extraicon-pocketknife" data-command="extraterm:window.openSettings"
+      >Settings</et-menuitem>
+      <et-checkboxmenuitem icon="fa fa-cogs" id="MENU_ITEM_DEVELOPER_TOOLS" data-command="extraterm:window.toggleDeveloperTools"
+      >Developer Tools</et-checkboxmenuitem>
+      <et-menuitem icon="far fa-lightbulb" data-command="extraterm:window.openAbout"
+      >About</et-menuitem>
+    </et-contextmenu>`;
+  render(template, container);
+}
+
+function handleMainMenuSelected(ev: CustomEvent): void {
+  extensionManager.executeCommand((<HTMLElement> ev.detail.menuItem).getAttribute("data-command"));
 }
 
 function startUpWindowEvents(): void {
