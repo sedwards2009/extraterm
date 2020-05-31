@@ -478,6 +478,12 @@
       ]
     },
     {
+      "command": "extraterm:application.newWindow",
+      "keys": [
+        "Ctrl-Shift-N"
+      ]
+    },
+    {
       "command": "extraterm:terminal.typeSelection",
       "keys": [
         "Ctrl-Enter"
