@@ -4,6 +4,11 @@
     {
       "command": "extraterm:application.openCommandPalette",
       "keys": []
+    },
+    {
+      "command": "extraterm:global.globalToggleShowHide",
+      "keys": ["Ctrl-F1"]
     }
+
   ]
 }

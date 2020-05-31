@@ -115,9 +115,17 @@ export class KeybindingsIOManager {
           command: binding.command,
           keys: customBindingsHash.get(binding.command)
         });
+        customBindingsHash.delete(binding.command);
       } else {
         flatBindingsList.push(binding);
       }
+    }
+
+    for (const [key, value] of customBindingsHash) {
+      flatBindingsList.push({
+        command: key,
+        keys: value
+      });
     }
 
     return {

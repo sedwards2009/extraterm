@@ -20,7 +20,7 @@ test("Scan & Flatten", () => {
   expect(stackedBindings.keybindingsSet.bindings.filter(b => b.command === "extraterm:application.openCommandPalette").length).toBe(1);
   expect(stackedBindings.customKeybindingsSet.customBindings.filter(b => b.command === "extraterm:window.newTerminal").length).toBe(0);
   expect(stackedBindings.customKeybindingsSet.customBindings.filter(b => b.command === "extraterm:application.openCommandPalette").length).toBe(1);
-
+  expect(stackedBindings.customKeybindingsSet.customBindings.filter(b => b.command === "extraterm:global.globalToggleShowHide").length).toBe(1);
   const flatBindings = kbm.getFlatKeybindingsSet("pc-style");
 
   expect(flatBindings.extends).toBe("pc-style");
@@ -32,4 +32,8 @@ test("Scan & Flatten", () => {
   // The pc-style.json file under `test_files` should override the Command palette binding.
   expect(flatBindings.bindings.filter(b => b.command === "extraterm:application.openCommandPalette").length).toBe(1);
   expect(flatBindings.bindings.find(b => b.command === "extraterm:application.openCommandPalette").keys.length).toBe(0);
+
+  expect(flatBindings.bindings.filter(b => b.command === "extraterm:global.globalToggleShowHide").length).toBe(1);
+  expect(flatBindings.bindings.find(b => b.command === "extraterm:global.globalToggleShowHide").keys.length).toBe(1);
+
 });
