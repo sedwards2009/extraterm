@@ -17,6 +17,7 @@ import { CommandAndShortcut } from "./CommandPalette";
 import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 import { ContextMenuType, ContextMenuRequestEventDetail } from "./CommandUtils";
+import { ExtensionCommandContribution } from "extraterm/src/ExtensionMetadata";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
@@ -51,13 +52,17 @@ export class ApplicationContextMenu {
     this._contextMenuElement.addEventListener("selected", (ev: CustomEvent) => {
       this._executeMenuCommand(ev.detail.name);
 
-      this.extensionManager.refocus(this._contextWindowState);
+      if (this._contextWindowState != null) {
+        this.extensionManager.refocus(this._contextWindowState);
+      }
       this._menuEntries = null;
       this._contextWindowState = null;
     });
 
     this._contextMenuElement.addEventListener("dismissed", (ev: CustomEvent) => {
-      this.extensionManager.refocus(this._contextWindowState);
+      if (this._contextWindowState != null) {
+        this.extensionManager.refocus(this._contextWindowState);
+      }
       this._menuEntries = null;
       this._contextWindowState = null;
     });
@@ -74,45 +79,64 @@ export class ApplicationContextMenu {
     }
 
     doLater( () => {
-      const menuType = <ContextMenuType> ev.detail.menuType;
-      const options: CommandQueryOptions = {
-        when: true
-      };
-
-      let showShortcuts = true;
-      switch(menuType) {
-        case ContextMenuType.NORMAL:
-          options.contextMenu = true;
-          break;
-
-        case ContextMenuType.NEW_TERMINAL_TAB:
-          options.newTerminalMenu = true;
-          showShortcuts = false;
-          break;
-
-        case ContextMenuType.TERMINAL_TAB:
-          options.terminalTitleMenu = true;
-          showShortcuts = false;
-          break;
-      }
-
-      const entries = this.extensionManager.queryCommandsWithExtensionWindowState(options, this._contextWindowState);
-
-      const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
-      this._menuEntries = entries.map((entry): CommandAndShortcut => {
-        const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
-        const shortcut = (showShortcuts && shortcuts.length !== 0) ? shortcuts[0].formatHumanReadable() : "";
-        return { id: entry.command + "_" + entry.category, shortcut, ...entry };
-      });
-
-      if (this._menuEntries.length === 0) {
-        this._menuEntries = null;
-        return;
-      }
-
-      render(this._formatMenuHtml(this._menuEntries), this._contextMenuElement);
+      this._updateMenu(<ContextMenuType> ev.detail.menuType);
       this._contextMenuElement.open(ev.detail.x, ev.detail.y);
     });
+  }
+
+  openAround(el: HTMLElement, menuType: ContextMenuType): void {
+    doLater( () => {
+      this._updateMenu(menuType);
+      this._contextMenuElement.openAround(el);
+    });
+  }
+
+  private _updateMenu(menuType: ContextMenuType): void {
+    const options: CommandQueryOptions = {
+      when: true
+    };
+
+    let showShortcuts = true;
+    switch(menuType) {
+      case ContextMenuType.NORMAL:
+        options.contextMenu = true;
+        break;
+
+      case ContextMenuType.NEW_TERMINAL_TAB:
+        options.newTerminalMenu = true;
+        showShortcuts = false;
+        break;
+
+      case ContextMenuType.TERMINAL_TAB:
+        options.terminalTitleMenu = true;
+        showShortcuts = false;
+        break;
+
+      case ContextMenuType.WINDOW_MENU:
+        options.windowMenu = true;
+        break;
+    }
+
+    let entries: ExtensionCommandContribution[] = null;
+    if (this._contextWindowState != null) {
+      entries = this.extensionManager.queryCommandsWithExtensionWindowState(options, this._contextWindowState);
+    } else {
+      entries = this.extensionManager.queryCommands(options);
+    }
+
+    const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
+    this._menuEntries = entries.map((entry): CommandAndShortcut => {
+      const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
+      const shortcut = (showShortcuts && shortcuts.length !== 0) ? shortcuts[0].formatHumanReadable() : "";
+      return { id: entry.command + "_" + entry.category, shortcut, ...entry };
+    });
+
+    if (this._menuEntries.length === 0) {
+      this._menuEntries = null;
+      return;
+    }
+
+    render(this._formatMenuHtml(this._menuEntries), this._contextMenuElement);
   }
 
   private _formatMenuHtml(menuEntries: CommandAndShortcut[]): DirectiveFn | TemplateResult {
@@ -122,7 +146,7 @@ export class ApplicationContextMenu {
         if (line.type === "divider") {
           return html`<et-divider-menu-item></et-divider-menu-item>`;
         }
-        return this._commandAndShortcutToHtml("index_" + index, line.command);
+        return this._commandAndShortcutToHtml(line.command);
       });
   }
 
@@ -141,26 +165,28 @@ export class ApplicationContextMenu {
     return lines;
   }
 
-  private _commandAndShortcutToHtml(name: string, command: CommandAndShortcut): TemplateResult {
+  private _commandAndShortcutToHtml(command: CommandAndShortcut): TemplateResult {
     if (command.checked != null) {
-      return html`<et-checkboxmenuitem name=${name} icon=${command.icon} checked=${command.checked}
+      return html`<et-checkboxmenuitem name=${command.command} icon=${command.icon} checked=${command.checked}
         shortcut=${command.shortcut}>${command.title}</et-checkboxmenuitem>`;
     } else {
-      return html`<et-menuitem name=${name} icon=${command.icon}
+      return html`<et-menuitem name=${command.command} icon=${command.icon}
         shortcut=${command.shortcut}>${command.title}</et-menuitem>`;
     }
   }
 
-  private _executeMenuCommand(id: string): void {
-    if (this._menuEntries == null || this._contextWindowState == null) {
+  private _executeMenuCommand(commandName: string): void {
+    if (this._menuEntries == null) {
       return;
     }
 
-    const index = Number.parseInt(id.substr("index_".length), 10);
-    const entry = this._menuEntries[index];
     const contextWindowState = this._contextWindowState;
     doLater( () => {
-      this.extensionManager.executeCommandWithExtensionWindowState(contextWindowState, entry.command);
+      if (contextWindowState != null) {
+        this.extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
+      } else {
+        this.extensionManager.executeCommand(commandName);
+      }
     });
   }
 }

@@ -323,6 +323,12 @@ export class ExtensionManagerImpl implements ExtensionManager {
       terminalTabMenuPredicate = commandEntry => commandEntry.terminalTab === terminalTabMenu;
     }
 
+    let windowMenuPredicate = truePredicate;
+    if (options.windowMenu != null) {
+      const windowMenu = options.windowMenu;
+      windowMenuPredicate = commandEntry => commandEntry.windowMenu === windowMenu;
+    }
+
     let categoryPredicate = truePredicate;
     if (options.categories != null) {
       const categories = options.categories;
@@ -346,7 +352,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
           if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) &&
               contextMenuPredicate(commandEntry) && emptyPaneMenuPredicate(commandEntry) &&
               newTerminalMenuPredicate(commandEntry) && terminalTabMenuPredicate(commandEntry) &&
-              categoryPredicate(commandEntry) && whenPredicate(commandEntry)) {
+              windowMenuPredicate(commandEntry) && categoryPredicate(commandEntry) &&
+              whenPredicate(commandEntry)) {
 
             const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
                                 commandEntry.commandContribution.command);

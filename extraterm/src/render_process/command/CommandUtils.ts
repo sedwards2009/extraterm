@@ -12,6 +12,7 @@ export enum ContextMenuType {
   NORMAL,
   NEW_TERMINAL_TAB,
   TERMINAL_TAB,
+  WINDOW_MENU,
 }
 
 export type ExtensionContextOverride = Partial<CommonExtensionWindowState>;

@@ -288,7 +288,7 @@
       },
       {
         "command": "extraterm:window.toggleDeveloperTools",
-        "title": "Toggle Developer Tools",
+        "title": "Developer Tools",
         "category": "application",
         "order": 3001,
         "icon": "fa fa-cogs",
@@ -736,6 +736,24 @@
         },
         {
           "command": "extraterm:window.closePane",
+          "show": true
+        }
+      ],
+      "windowMenu": [
+        {
+          "command": "extraterm:application.newWindow",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.openSettings",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.toggleDeveloperTools",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.openAbout",
           "show": true
         }
       ]

@@ -15,6 +15,7 @@ export interface CommandMenuEntry {
   emptyPane: boolean;
   newTerminal: boolean;
   terminalTab: boolean;
+  windowMenu: boolean;
 }
 
 export class CommandsRegistry implements ExtensionApi.Commands {
@@ -51,6 +52,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
         emptyPane: false,
         newTerminal: false,
         terminalTab: false,
+        windowMenu: false,
       });
     }
 
@@ -60,6 +62,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
       "emptyPane",
       "newTerminal",
       "terminalTab",
+      "windowMenu",
     ];
 
     for (const menuKey of menuKeys) {
@@ -101,6 +104,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
       emptyPane: false,
       newTerminal: false,
       terminalTab: false,
+      windowMenu: false,
     };
     this._commandToMenuEntryMap.get(commandContribution.command).push(newEntry);
     return {

@@ -159,6 +159,7 @@ export interface ExtensionMenusContribution {
   emptyPane: ExtensionMenu[];
   newTerminal: ExtensionMenu[];
   terminalTab: ExtensionMenu[];
+  windowMenu: ExtensionMenu[];
 }
 
 export interface ExtensionMenu {

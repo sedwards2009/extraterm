@@ -18,11 +18,9 @@ import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
-import { EVENT_CONTEXT_MENU_REQUEST } from './command/CommandUtils';
+import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType } from './command/CommandUtils';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
-import {ContextMenu} from './gui/ContextMenu';
-import * as DomUtils from './DomUtils';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
@@ -80,6 +78,7 @@ let configDatabase: ConfigDatabaseImpl = null;
 let extensionManager: ExtensionManager = null;
 let commandPalette: CommandPalette = null;
 let applicationContextMenu: ApplicationContextMenu = null;
+let windowMenu: ApplicationContextMenu = null;
 let terminalVisualConfig: TerminalVisualConfig = null;
 let fontLoader: FontLoader = null;
 let dpiWatcher: DpiWatcher = null;
@@ -351,37 +350,11 @@ function setUpWindowControls(): void {
 }
 
 function startUpMainMenu(): void {
-  const container = document.createElement("DIV");
-  container.id = ID_CONTEXT_MENU_CONTAINER;
-  document.body.appendChild(container);
-
-  updateMainMenu();
-
+  windowMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
   const menuButton = document.getElementById(ID_MENU_BUTTON);
   menuButton.addEventListener('click', () => {
-    const contextMenu = <ContextMenu> document.getElementById(ID_MAIN_MENU);
-    contextMenu.openAround(menuButton);
+    windowMenu.openAround(menuButton, ContextMenuType.WINDOW_MENU);
   });
-}
-
-function updateMainMenu(): void {
-  const container = document.getElementById(ID_CONTEXT_MENU_CONTAINER);
-  const template = html`
-    <et-contextmenu id="ID_MAIN_MENU" @selected=${handleMainMenuSelected}>
-      <et-menuitem icon="far fa-window-restore" data-command="extraterm:application.newWindow"
-      >New Window</et-menuitem>
-      <et-menuitem icon="extraicon extraicon-pocketknife" data-command="extraterm:window.openSettings"
-      >Settings</et-menuitem>
-      <et-checkboxmenuitem icon="fa fa-cogs" id="MENU_ITEM_DEVELOPER_TOOLS" data-command="extraterm:window.toggleDeveloperTools"
-      >Developer Tools</et-checkboxmenuitem>
-      <et-menuitem icon="far fa-lightbulb" data-command="extraterm:window.openAbout"
-      >About</et-menuitem>
-    </et-contextmenu>`;
-  render(template, container);
-}
-
-function handleMainMenuSelected(ev: CustomEvent): void {
-  extensionManager.executeCommand((<HTMLElement> ev.detail.menuItem).getAttribute("data-command"));
 }
 
 function startUpWindowEvents(): void {
@@ -471,15 +444,17 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
   createSessionCommands(sessionConfig);
 }
 
+let developerToolMenuChecked = false;
+
 function commandToggleDeveloperTools(): void {
   const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   WebIpc.devToolsRequest(developerToolMenu.checked);
+  developerToolMenuChecked = ! developerToolMenuChecked;
 }
 
 function customizeToggleDeveloperTools(): CustomizedCommand {
-  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
   return {
-    checked: developerToolMenu.checked
+    checked: developerToolMenuChecked
   };
 }
 

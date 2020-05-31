@@ -23,6 +23,7 @@ export interface CommandQueryOptions {
   emptyPaneMenu?: boolean;
   newTerminalMenu?: boolean;
   terminalTitleMenu?: boolean;
+  windowMenu?: boolean;
   when?: boolean;
   commands?: string[];
 }
