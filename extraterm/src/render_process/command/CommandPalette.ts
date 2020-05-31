@@ -1,20 +1,23 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as he from 'he';
+import { html, TemplateResult } from "extraterm-lit-html";
+import { DirectiveFn } from "extraterm-lit-html/lib/directive";
+import { repeat } from "extraterm-lit-html/directives/repeat";
+import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
 
-import { Disposable, Logger } from '@extraterm/extraterm-extension-api';
-import { doLater } from 'extraterm-later';
-import { PopDownListPicker } from '../gui/PopDownListPicker';
-import { CssFile } from '../../theme/Theme';
-import { SupportsDialogStack } from '../SupportsDialogStack';
-import { ExtensionManager } from '../extension/InternalTypes';
-import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
-import { getLogger } from 'extraterm-logging';
-import { ExtensionCommandContribution } from '../../ExtensionMetadata';
-import { CommonExtensionWindowState } from '../extension/CommonExtensionState';
+import { Disposable, Logger } from "@extraterm/extraterm-extension-api";
+import { doLater } from "extraterm-later";
+import { PopDownListPicker } from "../gui/PopDownListPicker";
+import { CssFile } from "../../theme/Theme";
+import { SupportsDialogStack } from "../SupportsDialogStack";
+import { ExtensionManager } from "../extension/InternalTypes";
+import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
+import { getLogger } from "extraterm-logging";
+import { ExtensionCommandContribution } from "../../ExtensionMetadata";
+import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 
 
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
@@ -47,7 +50,7 @@ export class CommandPalette {
     this._commandPalette.setFormatEntriesFunc(commandPaletteFormatEntries);
     this._commandPalette.addExtraCss([CssFile.COMMAND_PALETTE]);
 
-    this._commandPalette.addEventListener('selected', (ev: CustomEvent) => this._handleCommandPaletteSelected(ev));
+    this._commandPalette.addEventListener("selected", (ev: CustomEvent) => this._handleCommandPaletteSelected(ev));
   }
 
   open(contextElement: SupportsDialogStack, returnFocusElement: HTMLElement): void {
@@ -102,64 +105,61 @@ export class CommandPalette {
   }
 }
 
-
-const CLASS_RESULT_GROUP_HEAD = "CLASS_RESULT_GROUP_HEAD";
-const CLASS_RESULT_ICON_LEFT = "CLASS_RESULT_ICON_LEFT";
-const CLASS_RESULT_ICON_RIGHT = "CLASS_RESULT_ICON_RIGHT";
-const CLASS_RESULT_LABEL = "CLASS_RESULT_LABEL";
-const CLASS_RESULT_SHORTCUT = "CLASS_RESULT_SHORTCUT";
-
 export function commandPaletteFilterEntries(entries: CommandAndShortcut[], filter: string): CommandAndShortcut[] {
   const lowerFilter = filter.toLowerCase();
   return entries.filter( (entry) => entry.title.toLowerCase().includes(lowerFilter) );
 }
 
-export function commandPaletteFormatEntries(entries: CommandAndShortcut[], selectedId: string, filterInputValue: string): string {
-  return (filterInputValue.trim() === "" ? commandPaletteFormatEntriesWithGroups : commandPaletteFormatEntriesAsList)(entries, selectedId);
+export function commandPaletteFormatEntries(entries: CommandAndShortcut[], selectedId: string, filter: string): DirectiveFn | TemplateResult {
+  if (filter.trim() === "") {
+    return commandPaletteFormatEntriesWithGroups(entries, selectedId);
+  } else {
+    return commandPaletteFormatEntriesAsList(entries, selectedId);
+  }
 }
 
-function commandPaletteFormatEntriesAsList(entries: CommandAndShortcut[], selectedId: string): string {
-  return entries.map( (entry) => commandPaletteFormatEntry(entry, entry.id === selectedId) ).join("");
+function commandPaletteFormatEntriesAsList(entries: CommandAndShortcut[], selectedId: string): DirectiveFn | TemplateResult {
+  return repeat(entries, (entry) => entry.id, (entry, index) => commandPaletteFormatEntry(entry, entry.id === selectedId));
 }
 
-function commandPaletteFormatEntriesWithGroups(entries: CommandAndShortcut[], selectedId: string): string {
+function commandPaletteFormatEntriesWithGroups(entries: CommandAndShortcut[], selectedId: string): DirectiveFn | TemplateResult {
   let currentGroup: string = null;
-  const htmlParts: string[] = [];
-
-  for (const entry of entries) {
+  return repeat(entries, (entry) => entry.id, (entry, index) => {
     let extraClass = "";
     if (entry.category !== undefined && entry.category !== currentGroup && currentGroup !== null) {
-      extraClass = CLASS_RESULT_GROUP_HEAD;
+      extraClass = "CLASS_RESULT_GROUP_HEAD";
     }
     currentGroup = entry.category;
-    htmlParts.push(commandPaletteFormatEntry(entry, entry.id === selectedId, extraClass));
-  }
 
-  return htmlParts.join("");
+    return commandPaletteFormatEntry(entry, entry.id === selectedId, extraClass);
+  });
 }
 
-function commandPaletteFormatEntry(entry: CommandAndShortcut, selected: boolean, extraClassString = ""): string {
-  return `<div class='${PopDownListPicker.CLASS_RESULT_ENTRY} ${selected ? PopDownListPicker.CLASS_RESULT_SELECTED : ""} ${extraClassString}' ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>
-    <div class='${CLASS_RESULT_ICON_LEFT}'>${commandPaletteFormatCheckboxIcon(entry.checked)}</div>
-    <div class='${CLASS_RESULT_ICON_RIGHT}'>${commandPaletteFormatIcon(entry.icon)}</div>
-    <div class='${CLASS_RESULT_LABEL}'>${he.encode(entry.title)}</div>
-    <div class='${CLASS_RESULT_SHORTCUT}'>${entry.shortcut !== undefined && entry.shortcut !== null ? he.encode(entry.shortcut) : ""}</div>
+function commandPaletteFormatEntry(entry: CommandAndShortcut, selected: boolean, extraClassString = ""): TemplateResult {
+  const classes = PopDownListPicker.CLASS_RESULT_ENTRY + " " +
+      (selected ? PopDownListPicker.CLASS_RESULT_SELECTED : "") + " " + extraClassString;
+
+  return html`<div class=${classes} data-id=${entry.id}>
+    <div class="CLASS_RESULT_ICON_LEFT">${commandPaletteFormatCheckboxIcon(entry.checked)}</div>
+    <div class="CLASS_RESULT_ICON_RIGHT">${commandPaletteFormatIcon(entry.icon)}</div>
+    <div class="CLASS_RESULT_LABEL">${entry.title}</div>
+    <div class="CLASS_RESULT_SHORTCUT">${entry.shortcut || ""}</div>
   </div>`;
 }
 
-function commandPaletteFormatIcon(iconName?: string): string {
-  if (iconName != null && iconName.startsWith('extraicon-')) {
-    return `<span class='extraicon'>&${iconName.substr('extraicon-'.length)};</span>`;
+function commandPaletteFormatIcon(iconName?: string): TemplateResult {
+  if (iconName != null && iconName.startsWith("extraicon-")) {
+    return html`<span class="extraicon">${unsafeHTML("&" + iconName.substr("extraicon-".length))}</span>`;
   } else {
     if (iconName == null || iconName === "") {
-      return `<i class='fa-fw fa'>&nbsp;</i>`;
+      return html`<i class="fa-fw fa">&nbsp;</i>`;
     } else {
-      return `<i class='fa-fw ${iconName != null ? iconName : ""}'></i>`;
+      return html`<i class=${"fa-fw " + iconName || ""}></i>`;
     }
   }
 }
 
-function commandPaletteFormatCheckboxIcon(checked?: boolean): string {
+function commandPaletteFormatCheckboxIcon(checked?: boolean): TemplateResult {
   if (checked == null) {
     return commandPaletteFormatIcon(null);
   } else {

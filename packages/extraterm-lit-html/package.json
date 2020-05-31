@@ -1,0 +1,41 @@
+{
+  "name": "extraterm-lit-html",
+  "version": "1.2.1",
+  "description": "lit-html compiled to ES5",
+  "author": "Simon Edwards <simon@simonzone.com>",
+  "license": "BSD-3-Clause",
+  "main": "lit-html.js",
+  "typings": "lit-html.d.ts",
+  "typesVersions": {
+    "<3.8": {
+      "*": [
+        "ts3.4/*"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "scripts": {
+    "build": "yarn run build-lib && yarn run build-directives && yarn run build-lit && yarn run copy-directives-ts && yarn run copy-lib-ts && yarn run copy-lit-ts && yarn run copy-ts34",
+    "build-directives": "babel --no-babelrc --presets=@babel/preset-env node_modules/lit-html/directives -d directives",
+    "build-lib": "babel --no-babelrc --presets=@babel/preset-env node_modules/lit-html/lib -d lib",
+    "build-lit": "babel --no-babelrc --presets=@babel/preset-env node_modules/lit-html/lit-html.js -d .",
+    "copy-directives-ts": "shx cp \"node_modules/lit-html/directives/*.ts\" directives/",
+    "copy-lib-ts": "shx cp \"node_modules/lit-html/lib/*.ts\" lib/",
+    "copy-lit-ts": "shx cp \"node_modules/lit-html/*.ts\" .",
+    "copy-ts34": "shx cp -r node_modules/lit-html/ts3.4 . && shx rm -r ts3.4/ts3.4",
+    "clean": "shx rm -rf lib directives lit-html.js lit-html.d.ts"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "lit-html": "1.2.1",
+    "shx": "^0.3.2"
+  },
+  "workspaces": {
+    "nohoist": ["**/lit-html"]
+  }
+}

@@ -1,11 +1,16 @@
 /*
- * Copyright 2017-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as DomUtils from '../DomUtils';
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-import * as he from 'he';
+
+import { html, TemplateResult } from 'extraterm-lit-html';
+import { DirectiveFn } from 'extraterm-lit-html/lib/directive';
+import { classMap } from 'extraterm-lit-html/directives/class-map';
+import { repeat } from 'extraterm-lit-html/directives/repeat';
+
 
 import {EtTerminal} from '../Terminal';
 import {ExtensionUiUtils} from './InternalTypes';
@@ -30,7 +35,7 @@ let elementToFocus: Focusable = null;
 
 /**
  * Focus an element later.
- * 
+ *
  * Multiple calls to this will only respect the last call.
  */
 function focusLater(el: Focusable): void {
@@ -93,13 +98,17 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
 
     if (this._listPicker == null) {
       this._listPicker = <PopDownListPicker<IdLabelPair>> window.document.createElement(PopDownListPicker.TAG_NAME);
-      this._listPicker.setFormatEntriesFunc( (filteredEntries: IdLabelPair[], selectedId: string, filterInputValue: string): string => {
-        return filteredEntries.map( (entry): string => {
-          return `<div class='CLASS_RESULT_ENTRY ${entry.id === selectedId ? PopDownListPicker.CLASS_RESULT_SELECTED : ""}' ${PopDownListPicker.ATTR_DATA_ID}='${entry.id}'>
-            ${he.encode(entry.label)}
-          </div>`;
-        }).join("");
-      });
+      this._listPicker.setFormatEntriesFunc(
+        (filteredEntries: IdLabelPair[], selectedId: string, filterInputValue: string): DirectiveFn | TemplateResult => {
+          return repeat(
+            filteredEntries,
+            (entry) => entry.id,
+            (entry, index) => {
+              const classes = {CLASS_RESULT_ENTRY: true, CLASS_RESULT_SELECTED: entry.id === selectedId};
+              return html`<div class=${classMap(classes)} data-id=${entry.id}>${entry.label}</div>`;
+            }
+          );
+        });
 
       this._listPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
     }
@@ -125,7 +134,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       this._listPicker.addEventListener('selected', selectedHandler);
     });
   }
-      
+
   _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
     const lowerFilterText = filterText.toLowerCase().trim();
 

@@ -1,79 +1,77 @@
 /*
- * Copyright 2014-2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import { html, render, TemplateResult } from "extraterm-lit-html";
+import { classMap } from "extraterm-lit-html/directives/class-map.js";
+import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
+import { Attribute, Observe, WebComponent } from "extraterm-web-component-decorators";
 
-import * as ThemeTypes from '../../theme/Theme';
-import { TemplatedElementBase } from './TemplatedElementBase';
+import * as ThemeTypes from "../../theme/Theme";
+import { ThemeableElementBase } from "../ThemeableElementBase";
 
-const ID_CONTAINER = "ID_CONTAINER";
-const ID_ICON2 = "ID_ICON2";
-const ID_LABEL = "ID_LABEL";
-const ID_SHORTCUT = "ID_SHORTCUT";
-const CLASS_SELECTED = "selected";
 
 /**
  * A menu item suitable for use inside a ContextMenu.
  */
 @WebComponent({tag: "et-menuitem"})
-export class MenuItem extends TemplatedElementBase {
-  
+export class MenuItem extends ThemeableElementBase {
+
   static TAG_NAME = "ET-MENUITEM";
-  static ID_ICON1 = "ID_ICON1";
 
   constructor() {
-    super({ delegatesFocus: false });
-
-    (<HTMLElement>this._elementById(ID_ICON2)).innerHTML = this._formatIcon(this.getAttribute("icon"));
-
-    const shortcut = this.getAttribute("shortcut");
-    if (shortcut != null && shortcut !== "") {
-      (<HTMLElement>this._elementById(ID_SHORTCUT)).innerHTML = shortcut;
-    }
-
-    this.updateKeyboardSelected();
+    super();
+    this.attachShadow({ mode: "open", delegatesFocus: false });
+    this.updateThemeCss();
+    this._render();
   }
 
-  protected _html(): string {
-    return `
-      <div id='${ID_CONTAINER}'>
-        <div id='${MenuItem.ID_ICON1}'><i class='fa fa-fw'></i></div>
-        <div id='${ID_ICON2}'></div>
-        <div id='${ID_LABEL}'><slot></slot></div>
-        <div id='${ID_SHORTCUT}'></div>
+  @Attribute({default: false}) selected: boolean;
+  @Attribute({default: ""}) shortcut: string;
+  @Attribute({default: ""}) icon: string;
+
+  @Observe("selected", "shortcut", "icon")
+  private observeAttrChange(): void {
+    this._render();
+  }
+
+  protected _render(): void {
+    const template = html`${this._styleTag()}
+      <div id="ID_CONTAINER" class=${classMap({"selected": this.selected})}>
+        <div id="ID_ICON1">${this._formatGutterIcon()}</div>
+        <div id="ID_ICON2">${this._formatIcon()}</div>
+        <div id="ID_LABEL"><slot></slot></div>
+        <div id="ID_SHORTCUT">${this.shortcut}</div>
       </div>`;
+    render(template, this.shadowRoot);
   }
 
-  protected _formatIcon(iconName?: string): string {
-    if (iconName != null && iconName.startsWith('extraicon-')) {
-      return `<span class='extraicon'>&${iconName.substr('extraicon-'.length)};</span>`;
+  protected _formatGutterIcon(): TemplateResult {
+    return html`<i class="fa fa-fw"></i>`;
+  }
+
+  protected _formatIcon(): TemplateResult {
+    const iconName = this.icon;
+    if (iconName != null && iconName.startsWith("extraicon-")) {
+      return html`<span class="extraicon">${unsafeHTML("&" + iconName.substr("extraicon-".length) + ";")}</span>`;
     } else {
-      if (iconName == null) {
-        return `<i class='fa-fw fa'>&nbsp;</i>`;
+      if (iconName == null || iconName === "") {
+        return html`<i class="fa-fw fa">&nbsp;</i>`;
       } else {
-        return `<i class='fa-fw ${iconName != null ? iconName : ""}'></i>`;
+        return html`<i class=${"fa-fw " + (iconName == null ? "" : iconName)}></i>`;
       }
     }
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
-    return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME,
-      ThemeTypes.CssFile.EXTRAICONS, ThemeTypes.CssFile.GUI_MENUITEM];
+    return [
+      ThemeTypes.CssFile.GENERAL_GUI,
+      ThemeTypes.CssFile.FONT_AWESOME,
+      ThemeTypes.CssFile.EXTRAICONS,
+      ThemeTypes.CssFile.GUI_MENUITEM
+    ];
   }
 
   _clicked(): void {}
-
-  @Attribute({default: false}) public selected: boolean;
-
-  @Observe("selected")
-  private updateKeyboardSelected(): void {
-    const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
-    if (this.selected) {
-      container.classList.add(CLASS_SELECTED);
-    } else {
-      container.classList.remove(CLASS_SELECTED);
-    }
-  }
 }
