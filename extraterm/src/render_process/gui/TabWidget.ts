@@ -169,7 +169,7 @@ export class TabWidget extends TemplatedElementBase {
         </div>
         <div id='${ID_CONTENTS}'>
           <et-snap-drop-container id='${ID_SNAP_DROP_CONTAINER}' windowId='${this.windowId}'>
-            <${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}>
+            <et-stacked-widget id='${ID_CONTENTSTACK}'></et-stacked-widget>
           </et-snap-drop-container>
         </div>
       </div>
