@@ -20,7 +20,7 @@ interface TabTitleData {
 }
 
 for (const el of [
-  "et-contextmenu",
+  "et-context-menu",
 ]) {
   if (Vue.config.ignoredElements.indexOf(el) === -1) {
     Vue.config.ignoredElements.push(el);
@@ -44,7 +44,7 @@ export function activate(context: ExtensionContext): any {
     templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
     templateString.addFormatter("icon", new IconFormatter());
     templateString.setTemplateString("${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}");
-  
+
     const newDiv = document.createElement("div");
     newDiv.classList.add("tab_title");
     widget.getContainerElement().appendChild(newDiv);
@@ -120,9 +120,9 @@ class EditTabTitleWidget {
               v-model="template"
               v-on:input="onTemplateChange"
               v-on:keydown.capture="onTemplateKeyDown"
-              v-on:keypress.capture="onTemplateKeyPress"  
+              v-on:keypress.capture="onTemplateKeyPress"
               />
-            
+
             <div class="group compact">
               <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
               <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
@@ -148,19 +148,19 @@ class EditTabTitleWidget {
           </div>
         </div>
       </div>
-        <et-contextmenu ref="insertFieldMenu">
+        <et-context-menu ref="insertFieldMenu">
           <div v-for="fieldTup in fieldList"
             class="insert_field_menu_item gui-packed-row"
             v-on:click="onInsertFieldClick(fieldTup[1])"><div class="expand">{{ fieldTup[0] }}</div><div>\${ {{fieldTup[1]}} }</div></div>
-        </et-contextmenu>
+        </et-context-menu>
 
-        <et-contextmenu ref="insertIconMenu">
+        <et-context-menu ref="insertIconMenu">
           <div class="insert_icon_grid">
             <div v-for="(icon, index) in iconList"
               class="insert_icon_menu_item"
               v-on:click="onInsertIconClick(icon)"><i v-bind:class="{ [icon]: true }"></i></div>
             </div>
-        </et-contextmenu>
+        </et-context-menu>
       </div>`)
   })
 class EditTabTitlePanelUI extends Vue {

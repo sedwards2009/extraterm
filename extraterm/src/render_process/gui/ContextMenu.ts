@@ -25,13 +25,13 @@ const CLASS_CONTAINER_OPEN = "CLASS_CONTAINER_OPEN";
 /**
  * A context menu.
  */
-@WebComponent({tag: "et-contextmenu"})
+@WebComponent({tag: "et-context-menu"})
 export class ContextMenu extends TemplatedElementBase {
-   
-  static TAG_NAME = "ET-CONTEXTMENU";
-  
+
+  static TAG_NAME = "ET-CONTEXT-MENU";
+
   private _log: Logger;
-  
+
   constructor() {
     super({ delegatesFocus: false });
     this._log = getLogger(ContextMenu.TAG_NAME, this);
@@ -44,19 +44,19 @@ export class ContextMenu extends TemplatedElementBase {
         this._dismiss();
       }
     });
-    
+
     cover.addEventListener('contextmenu', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
       this._moveContainerTo(ev.clientX, ev.clientY);
     }, true);
-    
+
     const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
     container.addEventListener('mousedown', (ev: MouseEvent) => {
       ev.stopPropagation();
       ev.preventDefault();
     });
-    
+
     container.addEventListener('mousemove', (ev: MouseEvent) => {
       const srcElement = <HTMLElement> ev.srcElement;
       if (srcElement.nodeName === MenuItem.TAG_NAME || srcElement.nodeName === CheckboxMenuItem.TAG_NAME) {
@@ -65,18 +65,18 @@ export class ContextMenu extends TemplatedElementBase {
         this.selectMenuItem(this.childNodes, null);
       }
     });
-    
+
     container.addEventListener('mouseleave', (ev: MouseEvent) => {
       this.selectMenuItem(this.childNodes, null);
     });
-    
+
     container.addEventListener('click', (ev: MouseEvent) => {
       if (ev.srcElement instanceof MenuItem) {
         const item = <MenuItem>ev.srcElement;
         this.activateItem(item);
       }
     });
-    
+
     container.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
     container.addEventListener('keypress', (ev: KeyboardEvent) => { this.handleKeyPress(ev); });
   }
@@ -85,7 +85,7 @@ export class ContextMenu extends TemplatedElementBase {
     return `<div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
        <div id='${ID_CONTAINER}' class='${CLASS_CONTAINER_CLOSED}' tabindex='0'><slot></slot></div>`;
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_CONTEXTMENU];
   }
@@ -184,13 +184,13 @@ export class ContextMenu extends TemplatedElementBase {
       if (keyboardselected.length !== 0) {
         this.activateItem(keyboardselected[0]);
       }
-    }  
+    }
   }
 
   open(x: number, y: number): void {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
-    
+
     const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
     container.classList.remove(CLASS_CONTAINER_CLOSED);
     container.classList.add(CLASS_CONTAINER_OPEN);
@@ -244,11 +244,11 @@ export class ContextMenu extends TemplatedElementBase {
   openAround(targetElement: HTMLElement) {
     // Nuke any style like 'display: none' which can be use to prevent flicker.
     this.setAttribute('style', '');
-    
+
     const targetElementRect = targetElement.getBoundingClientRect();
     const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
     container.classList.remove(CLASS_CONTAINER_CLOSED);
-    container.classList.add(CLASS_CONTAINER_OPEN);  
+    container.classList.add(CLASS_CONTAINER_OPEN);
     const containerRect = container.getBoundingClientRect();
 
     this._openCover();
@@ -277,7 +277,7 @@ export class ContextMenu extends TemplatedElementBase {
   }
 
   private _dismiss(): void {
-    this.close();  
+    this.close();
     const event = new CustomEvent("dismissed", { });
     this.dispatchEvent(event);
   }
