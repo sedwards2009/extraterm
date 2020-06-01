@@ -168,9 +168,9 @@ export class TabWidget extends TemplatedElementBase {
           <div class='${CLASS_REMAINDER_RIGHT}'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></div>
         </div>
         <div id='${ID_CONTENTS}'>
-          <${SnapDropContainer.TAG_NAME} id='${ID_SNAP_DROP_CONTAINER}' windowId='${this.windowId}'>
+          <et-snap-drop-container id='${ID_SNAP_DROP_CONTAINER}' windowId='${this.windowId}'>
             <${StackedWidget.TAG_NAME} id='${ID_CONTENTSTACK}'></$ {StackedWidget.TAG_NAME}>
-          </${SnapDropContainer.TAG_NAME}>
+          </et-snap-drop-container>
         </div>
       </div>
       `);

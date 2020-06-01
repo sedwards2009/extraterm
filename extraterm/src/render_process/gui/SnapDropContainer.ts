@@ -1,8 +1,10 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { html, render } from "extraterm-lit-html";
+import { log, Logger, getLogger} from "extraterm-logging";
 import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -10,25 +12,15 @@ import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
 
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
-import { TemplatedElementBase } from './TemplatedElementBase';
 
-
-const ID = "EtSnapDropContainerTemplate";
 const ID_TOP = "ID_TOP";
 const ID_DRAG_COVER = "ID_DRAG_COVER";
 const ID_CONTENTS = "ID_CONTENTS";
 const CLASS_NOT_DRAGGING = "CLASS_NOT_DRAGGING";
 const CLASS_DRAGGING = "CLASS_DRAGGING";
-const CLASS_DROP_TARGET_MIDDLE = "CLASS_DROP_TARGET_MIDDLE";
-const CLASS_DROP_TARGET_NORTH = "CLASS_DROP_TARGET_NORTH";
-const CLASS_DROP_TARGET_SOUTH = "CLASS_DROP_TARGET_SOUTH";
-const CLASS_DROP_TARGET_EAST = "CLASS_DROP_TARGET_EAST";
-const CLASS_DROP_TARGET_WEST = "CLASS_DROP_TARGET_WEST";
-
 
 export enum DropLocation {
+  NONE,
   NORTH,
   SOUTH,
   EAST,
@@ -42,12 +34,14 @@ export interface DroppedEventDetail {
   dropData: string;
 }
 
-const dropLocationToCss = new Map<DropLocation, string>();
-dropLocationToCss.set(DropLocation.NORTH, CLASS_DROP_TARGET_NORTH);
-dropLocationToCss.set(DropLocation.SOUTH, CLASS_DROP_TARGET_SOUTH);
-dropLocationToCss.set(DropLocation.EAST, CLASS_DROP_TARGET_EAST);
-dropLocationToCss.set(DropLocation.WEST, CLASS_DROP_TARGET_WEST);
-dropLocationToCss.set(DropLocation.MIDDLE, CLASS_DROP_TARGET_MIDDLE);
+const dropLocationToCss = {
+  [DropLocation.NONE]: null,
+  [DropLocation.NORTH]: "CLASS_DROP_TARGET_NORTH",
+  [DropLocation.SOUTH]: "CLASS_DROP_TARGET_SOUTH",
+  [DropLocation.EAST]: "CLASS_DROP_TARGET_EAST",
+  [DropLocation.WEST]: "CLASS_DROP_TARGET_WEST",
+  [DropLocation.MIDDLE]: "CLASS_DROP_TARGET_MIDDLE",
+};
 
 const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
 
@@ -55,24 +49,26 @@ const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
  * A container which supports splitting and snapping for dragged items.
  */
 @WebComponent({tag: "et-snap-drop-container"})
-export class SnapDropContainer extends TemplatedElementBase {
+export class SnapDropContainer extends ThemeableElementBase {
 
   static TAG_NAME = "ET-SNAP-DROP-CONTAINER";
   static EVENT_DROPPED = "snapdropcontainer-dropped";
   private _log: Logger;
   private _supportedMimeTypes: string[] = [];
+  private _dropLocation: DropLocation = DropLocation.NONE;
 
   constructor() {
-    super({ delegatesFocus: false });
+    super();
     this._log = getLogger(SnapDropContainer.TAG_NAME, this);
+    this._handleDragEnter = this._handleDragEnter.bind(this);
+    this._handleDragOver = this._handleDragOver.bind(this);
+    this._handleDragLeave = this._handleDragLeave.bind(this);
+    this._handleDrop = this._handleDrop.bind(this);
 
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
-    topDiv.classList.add(CLASS_NOT_DRAGGING);
+    this.attachShadow({ mode: "open", delegatesFocus: false });
 
-    topDiv.addEventListener("dragenter", this._handleDragEnter.bind(this), true);
-    topDiv.addEventListener("dragover", this._handleDragOver.bind(this), true);
-    topDiv.addEventListener("dragleave", this._handleDragLeave.bind(this), true);
-    topDiv.addEventListener("drop", this._handleDrop.bind(this), true);
+    this._render();
+    this.updateThemeCss();
 
     this._updateSupportedMimeTypes();
   }
@@ -88,12 +84,37 @@ export class SnapDropContainer extends TemplatedElementBase {
     this._updateSupportedMimeTypes();
   }
 
-  protected _html(): string {
-    return `<div id='${ID_TOP}'>
-      <div id='${ID_CONTENTS}'><slot></slot></div>
-      <div id='${ID_DRAG_COVER}'></div>
-    </div>
-    `;
+  protected _render(): void {
+    const dragEnterHandler = {
+      handleEvent: this._handleDragEnter,
+      capture: true
+    };
+    const dragOverHandler = {
+      handleEvent: this._handleDragOver,
+      capture: true
+    };
+    const dragLeaveHandler = {
+      handleEvent: this._handleDragLeave,
+      capture: true
+    };
+    const dropHandler = {
+      handleEvent: this._handleDrop,
+      capture: true
+    };
+        
+    const template = html`${this._styleTag()}
+      <div
+          id='${ID_TOP}'
+          class=${this._dropLocation === DropLocation.NONE ? CLASS_NOT_DRAGGING : CLASS_DRAGGING}
+          @dragenter=${dragEnterHandler}
+          @dragover=${dragOverHandler}
+          @dragleave=${dragLeaveHandler}
+          @drop=${dropHandler}
+        >
+        <div id='${ID_CONTENTS}'><slot></slot></div>
+        <div id='${ID_DRAG_COVER}' class=${dropLocationToCss[this._dropLocation]} ></div>
+      </div>`;
+    render(template, this.shadowRoot);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -103,16 +124,17 @@ export class SnapDropContainer extends TemplatedElementBase {
   private _handleDragEnter(ev: DragEvent): void {
     if (this._isSupportedDropPayload(ev)) {
       ev.stopPropagation();
-      this._showDragCover(ev);
+      this._dropLocation = this._cursorPositionToDropLocation(ev);
+      this._render();
     }
   }
-
+  
   private _handleDragOver(ev: DragEvent): void {
     if (this._isSupportedDropPayload(ev)) {
       ev.preventDefault();
       ev.stopPropagation();
-
-      this._showDragCover(ev);
+      this._dropLocation = this._cursorPositionToDropLocation(ev);
+      this._render();
     }
   }
 
@@ -120,19 +142,10 @@ export class SnapDropContainer extends TemplatedElementBase {
     if (this._isSupportedDropPayload(ev)) {
       ev.stopPropagation();
       if (ev.target === DomUtils.getShadowId(this, ID_DRAG_COVER)) {
-        this._hideDragCover();
+        this._dropLocation = DropLocation.NONE;
+        this._render();
       }
     }
-  }
-
-  private _showDragCover(ev: DragEvent): void {
-    const dragCoverDiv = DomUtils.getShadowId(this, ID_DRAG_COVER);
-    DomUtils.removeAllClasses(dragCoverDiv);
-    dragCoverDiv.classList.add(dropLocationToCss.get(this._cursorPositionToDropLocation(ev)));
-
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
-    topDiv.classList.add(CLASS_DRAGGING);
-    topDiv.classList.remove(CLASS_NOT_DRAGGING);
   }
 
   // The drag over regions are north, south, east and west.
@@ -172,14 +185,9 @@ export class SnapDropContainer extends TemplatedElementBase {
     }
   }
 
-  private _hideDragCover(): void {
-    const topDiv = DomUtils.getShadowId(this, ID_TOP);
-    topDiv.classList.add(CLASS_NOT_DRAGGING);
-    topDiv.classList.remove(CLASS_DRAGGING);
-  }
-
   private _handleDrop(ev:DragEvent): void {
-    this._hideDragCover();
+    this._dropLocation = DropLocation.NONE;
+    this._render();
 
     const {mimeType, data} = this._getSupportedDropMimeTypeData(ev);
     if (mimeType != null) {
