@@ -54,7 +54,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   }
 
   private _handleFilterInput(): void {
-    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
     this.filter = filterInput.value;
   }
 
@@ -221,7 +221,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
         }
       } else {
 
-        const resultsDiv = this._elementById(ID_RESULTS);
+        const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
 
         // Determine the step size.
         let stepSize = 1;
@@ -271,7 +271,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this.filter = "";
     this._render();
 
-    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
     filterInput.focus();
 
     this._scrollToSelected();
@@ -285,9 +285,5 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
         this.dispatchEvent(event);
       });
     }
-  }
-
-  private _elementById(id: string): HTMLElement {
-    return DomUtils.getShadowId(this, id);
   }
 }
