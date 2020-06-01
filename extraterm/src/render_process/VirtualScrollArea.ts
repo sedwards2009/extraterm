@@ -112,9 +112,9 @@ export interface VirtualAreaState {
 }
 
 export interface ScrollBar {
-  setLength(length: number): void;       // The size of the complete range.
-  setPosition(position: number): void;   // The position of the thumb inside the range.
-  setThumbSize(size: number): void;      // The size of the thumb.
+  length: number;       // The size of the complete range.
+  position: number;     // The position of the thumb inside the range.
+  thumbSize: number;    // The size of the thumb.
 }
 
 export interface VirtualScrollableHeight {
@@ -778,10 +778,10 @@ export class VirtualScrollArea {
     // Update the scrollbar.
     if (newState.scrollbar !== null) {
       if (oldState.scrollbar !== newState.scrollbar || oldTotalHeight !== newTotalHeight) {
-        newState.scrollbar.setLength(newTotalHeight);
+        newState.scrollbar.length = newTotalHeight;
       }
       if (oldState.scrollbar !== newState.scrollbar || oldState.virtualScrollYOffset !== newState.virtualScrollYOffset) {
-        newState.scrollbar.setPosition(newState.virtualScrollYOffset);
+        newState.scrollbar.position = newState.virtualScrollYOffset;
       }
     }
   }

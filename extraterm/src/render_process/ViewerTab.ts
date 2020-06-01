@@ -127,7 +127,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
 
     scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
     scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._virtualScrollArea.scrollTo(scrollbar.getPosition());
+      this._virtualScrollArea.scrollTo(scrollbar.position);
     });
 
     scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
@@ -312,7 +312,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
         <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
         <div id='${ID_CONTAINER}'>
           <div id='${ID_SCROLL_AREA}'></div>
-          <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
+          <et-scroll-bar id='${ID_SCROLLBAR}'></et-scroll-bar>
         </div>`);
       window.document.body.appendChild(template);
     }
