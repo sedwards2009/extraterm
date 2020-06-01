@@ -300,6 +300,8 @@ function maximizeAllWindows(): void {
 }
 
 function minimizeAllWindows(): void {
+  saveAllWindowDimensions();
+
   for (const window of BrowserWindow.getAllWindows()) {
     const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
     if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
