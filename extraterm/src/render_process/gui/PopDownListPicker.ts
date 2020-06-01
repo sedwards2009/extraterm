@@ -101,11 +101,11 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     const formattedEntries = this._formatEntries(filteredEntries, this.selected, this.filter);
 
     const template = html`${this._styleTag()}
-      <et-popdowndialog
+      <et-pop-down-dialog
           id="ID_DIALOG"
           title-primary=${this.titlePrimary}
           title-secondary=${this.titleSecondary}
-          @ET-POPDOWNDIALOG-CLOSE_REQUEST=${this._handleDialogClose}>
+          @ET-POP-DOWN-DIALOG-CLOSE_REQUEST=${this._handleDialogClose}>
         <div id="ID_RESULTS_CONTAINER">
           <div class="gui-packed-row">
             <input
@@ -121,7 +121,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
             id="ID_RESULTS"
             @click=${this._handleResultClick}>${formattedEntries}</div>
         </div>
-      </et-popdowndialog>
+      </et-pop-down-dialog>
       `;
 
     render(template, this.shadowRoot);

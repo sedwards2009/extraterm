@@ -22,10 +22,10 @@ const ID_RESULTS = "ID_RESULTS";
 /**
  * A List Picker.
  */
-@WebComponent({tag: "et-listpicker"})
+@WebComponent({tag: "et-list-picker"})
 export class ListPicker<T extends { id: string; }> extends ThemeableElementBase {
 
-  static TAG_NAME = "ET-LISTPICKER";
+  static TAG_NAME = "ET-LIST-PICKER";
   static ATTR_DATA_ID = "data-id";
   static CLASS_RESULT_SELECTED = "CLASS_RESULT_SELECTED";
   static CLASS_RESULT_ENTRY = "CLASS_RESULT_ENTRY";

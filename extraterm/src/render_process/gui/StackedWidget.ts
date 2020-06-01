@@ -14,11 +14,11 @@ const ID_CONTAINER = 'ID_CONTAINER';
 /**
  * A widget which displays one of its DIV contents at a time.
  */
-@WebComponent({tag: "et-stackedwidget"})
+@WebComponent({tag: "et-stacked-widget"})
 export class StackedWidget extends TemplatedElementBase {
-  
-  static TAG_NAME = 'ET-STACKEDWIDGET';
-  
+
+  static TAG_NAME = 'ET-STACKED-WIDGET';
+
   private _currentIndex: number;
   private _initialized = false;
 
@@ -26,7 +26,7 @@ export class StackedWidget extends TemplatedElementBase {
     super({ delegatesFocus: false });
     this._currentIndex = -1;
   }
-  
+
   connectedCallback(): void {
     super.connectedCallback();
 
@@ -38,15 +38,15 @@ export class StackedWidget extends TemplatedElementBase {
     this.createPageHolders();
     this.showIndex(0);
   }
-  
+
   protected _html(): string {
     return `<div id='${ID_CONTAINER}'></div>`;
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_STACKEDWIDGET];
   }
-    
+
   //-----------------------------------------------------------------------
 
   // Override
@@ -60,7 +60,7 @@ export class StackedWidget extends TemplatedElementBase {
     this.showIndex(this._currentIndex);
     return result;
   }
-  
+
   // Override
   removeChild<T extends Node>(oldNode: T): T {
     const result = super.removeChild(oldNode);
@@ -71,7 +71,7 @@ export class StackedWidget extends TemplatedElementBase {
     this.showIndex(this._currentIndex);
     return result;
   }
-  
+
   @Attribute({default: -1}) currentIndex: number;
 
   @Filter("currentIndex")
@@ -86,7 +86,7 @@ export class StackedWidget extends TemplatedElementBase {
   private _observeCurrentIndex(target: string): void {
     this.showIndex(this.currentIndex);
   }
-  
+
   private showIndex(index: number): void {
     const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
     for (let i=0; i<container.children.length; i++) {
@@ -96,19 +96,19 @@ export class StackedWidget extends TemplatedElementBase {
         kid.classList.remove('hidden');
       } else {
         kid.classList.remove('visible');
-        kid.classList.add('hidden');        
+        kid.classList.add('hidden');
       }
     }
   }
 
   private createPageHolders(): void {
     const container = <HTMLDivElement>this._elementById(ID_CONTAINER);
-    
+
     for (let i=0; i<this.children.length; i++) {
       const kid = this.children.item(i);
       kid.slot = "" + i;
     }
-    
+
     while (container.childElementCount < this.childElementCount) {
       const holderDiv = this.ownerDocument.createElement('div');
       const contentElement = this.ownerDocument.createElement('slot');
@@ -116,7 +116,7 @@ export class StackedWidget extends TemplatedElementBase {
       holderDiv.appendChild(contentElement);
       container.appendChild(holderDiv);
     }
-    
+
     while (container.childElementCount > this.childElementCount) {
       container.removeChild(container.children.item(container.children.length-1));
     }

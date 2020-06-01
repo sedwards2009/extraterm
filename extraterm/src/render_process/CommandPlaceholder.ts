@@ -11,22 +11,22 @@ import { VirtualScrollable, SetterState } from './VirtualScrollArea';
 /**
  * An invisible element which can be placed in a terminal to mark the start of command output.
  */
-@WebComponent({tag: "et-commandplaceholder"})
+@WebComponent({tag: "et-command-placeholder"})
 export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable {
-  
-  static TAG_NAME = "ET-COMMANDPLACEHOLDER";
+
+  static TAG_NAME = "ET-COMMAND-PLACEHOLDER";
   static ATTR_COMMAND_LINE = "command-line";
 
   /**
    * Type guard for detecting a EtCommandPlaceHolder instance.
-   * 
+   *
    * @param  node the node to test
    * @return      True if the node is a EtCommandPlaceHolder.
    */
   static is(node: Node): node is CommandPlaceHolder {
     return node !== null && node !== undefined && node instanceof CommandPlaceHolder;
   }
-  
+
   //-----------------------------------------------------------------------
 
   getMinHeight(): number {
@@ -36,11 +36,11 @@ export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable
   getVirtualHeight(containerHeight: number): number {
     return 0;
   }
-  
+
   getReserveViewportHeight(containerHeight: number): number {
     return 0;
   }
-  
+
   setDimensionsAndScroll(setterState: SetterState): void {
   }
 

@@ -25,11 +25,11 @@ const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
 /**
  * A Pop Down Dialog.
  */
-@WebComponent({tag: "et-popdowndialog"})
+@WebComponent({tag: "et-pop-down-dialog"})
 export class PopDownDialog extends TemplatedElementBase {
-  
-  static TAG_NAME = "ET-POPDOWNDIALOG";
-  static EVENT_CLOSE_REQUEST = "ET-POPDOWNDIALOG-CLOSE_REQUEST";
+
+  static TAG_NAME = "ET-POP-DOWN-DIALOG";
+  static EVENT_CLOSE_REQUEST = "ET-POP-DOWN-DIALOG-CLOSE_REQUEST";
 
   private _isOpen = false;
 
@@ -39,14 +39,14 @@ export class PopDownDialog extends TemplatedElementBase {
     const containerDiv = this._elementById(ID_CONTAINER);
     containerDiv.addEventListener('contextmenu', (ev) => {
       this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
-    }); 
+    });
 
     const coverDiv = this._elementById(ID_COVER);
     coverDiv.addEventListener('mousedown', (ev) => {
       this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
     });
   }
-  
+
   protected _html(): string {
     return `
       <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
@@ -57,7 +57,7 @@ export class PopDownDialog extends TemplatedElementBase {
         </div>
       </div>`;
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_POP_DOWN_DIALOG];
   }
@@ -91,7 +91,7 @@ export class PopDownDialog extends TemplatedElementBase {
     const cover = <HTMLDivElement> this._elementById(ID_COVER);
     cover.classList.remove(CLASS_COVER_OPEN);
     cover.classList.add(CLASS_COVER_CLOSED);
-  
+
     const container = <HTMLDivElement> this._elementById(ID_CONTEXT_COVER);
     container.classList.remove(CLASS_CONTEXT_COVER_OPEN);
     container.classList.add(CLASS_CONTEXT_COVER_CLOSED);

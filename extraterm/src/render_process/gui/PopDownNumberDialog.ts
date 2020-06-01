@@ -17,10 +17,10 @@ const ID_INPUT = "ID_INPUT";
 /**
  * A Pop Down Number Dialog
  */
-@WebComponent({tag: "et-popdownnumberdialog"})
+@WebComponent({tag: "et-pop-down-number-dialog"})
 export class PopDownNumberDialog extends TemplatedElementBase {
-  
-  static TAG_NAME = "ET-POPDOWNNUMBERDIALOG";
+
+  static TAG_NAME = "ET-POP-DOWN-NUMBER-DIALOG";
 
   private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
@@ -38,7 +38,7 @@ export class PopDownNumberDialog extends TemplatedElementBase {
     const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
     textInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
   }
-  
+
   protected _html(): string {
     return `
       <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
@@ -46,7 +46,7 @@ export class PopDownNumberDialog extends TemplatedElementBase {
       </${PopDownDialog.TAG_NAME}>
       `;
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     const extraCssFiles = this._extraCssFiles == null ? [] : this._extraCssFiles;
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME,
@@ -93,7 +93,7 @@ export class PopDownNumberDialog extends TemplatedElementBase {
 
   /**
    * Specify extra Css files to load into this element.
-   * 
+   *
    * @param extraCssFiles extra Css files which should be loaded along side the default set.
    */
   addExtraCss(extraCssFiles: ThemeTypes.CssFile[]): void {
@@ -108,11 +108,11 @@ export class PopDownNumberDialog extends TemplatedElementBase {
       ev.stopPropagation();
       return;
     }
-    
+
     if (ev.key === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
-      
+
       this._okId(this.getValue());
     }
   }

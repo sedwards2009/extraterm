@@ -16,17 +16,17 @@ const ID_CONTAINER = "ID_CONTAINER";
 /**
  * A scrollbar.
  */
-@WebComponent({tag: "et-scrollbar"})
+@WebComponent({tag: "et-scroll-bar"})
 export class ScrollBar extends TemplatedElementBase {
 
-  static TAG_NAME = 'ET-SCROLLBAR';
-  
+  static TAG_NAME = 'ET-SCROLL-BAR';
+
   private _log: Logger;
   private _lastSetPosition = 0;
 
   constructor() {
     super({ delegatesFocus: false });
-    
+
     this._log = getLogger(ScrollBar.TAG_NAME, this);
 
     this._elementById(ID_CONTAINER).addEventListener('scroll', (ev: Event) => {
@@ -38,7 +38,7 @@ export class ScrollBar extends TemplatedElementBase {
         return;
       }
       this.position = top;
-      
+
       const event = new CustomEvent('scroll',
           { detail: {
             position: top,
@@ -50,16 +50,16 @@ export class ScrollBar extends TemplatedElementBase {
     this._updateLengthNumber("length");
     this._updatePosition("position");
   }
-  
+
   connectedCallback(): void {
     super.connectedCallback();
     this._updatePosition("position");
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_SCROLLBAR];
   }
-  
+
   protected _html(): string {
     return `<div id='${ID_CONTAINER}'><div id='${ID_AREA}'></div></div>`;
   }
@@ -71,7 +71,7 @@ export class ScrollBar extends TemplatedElementBase {
     if (value == null) {
       return undefined;
     }
-    
+
     if (isNaN(value)) {
       console.warn("Value '" + value + "'to scrollbar attribute 'length' was NaN.");
       return undefined;
@@ -120,7 +120,7 @@ export class ScrollBar extends TemplatedElementBase {
 
   setThumbSize(size: number): void {
   }
-  
+
   getThumbSize(): number {
     return 7734;  // FIXME bogus.
   }

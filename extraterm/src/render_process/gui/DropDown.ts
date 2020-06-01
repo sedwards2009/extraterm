@@ -18,10 +18,10 @@ const SLOT_CONTEXTMENU = "et-contextmenu";
  * element like a button which emits a click event. When the user activates
  * the button, the ContextMenu is displayed.
  */
-@WebComponent({tag: "et-dropdown"})
+@WebComponent({tag: "et-drop-down"})
 export class DropDown extends TemplatedElementBase {
-  
-  static TAG_NAME = 'ET-DROPDOWN';
+
+  static TAG_NAME = 'ET-DROP-DOWN';
 
   constructor() {
     super( {delegatesFocus: false} );

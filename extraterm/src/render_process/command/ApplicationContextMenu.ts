@@ -167,11 +167,11 @@ export class ApplicationContextMenu {
 
   private _commandAndShortcutToHtml(command: CommandAndShortcut): TemplateResult {
     if (command.checked != null) {
-      return html`<et-checkboxmenuitem name=${command.command} icon=${command.icon} checked=${command.checked}
-        shortcut=${command.shortcut}>${command.title}</et-checkboxmenuitem>`;
+      return html`<et-checkbox-menu-item name=${command.command} icon=${command.icon} checked=${command.checked}
+        shortcut=${command.shortcut}>${command.title}</et-checkbox-menu-item>`;
     } else {
-      return html`<et-menuitem name=${command.command} icon=${command.icon}
-        shortcut=${command.shortcut}>${command.title}</et-menuitem>`;
+      return html`<et-menu-item name=${command.command} icon=${command.icon}
+        shortcut=${command.shortcut}>${command.title}</et-menu-item>`;
     }
   }
 

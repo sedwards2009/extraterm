@@ -54,10 +54,10 @@ const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
 /**
  * A container which supports splitting and snapping for dragged items.
  */
-@WebComponent({tag: "et-snapdropcontainer"})
+@WebComponent({tag: "et-snap-drop-container"})
 export class SnapDropContainer extends TemplatedElementBase {
 
-  static TAG_NAME = "ET-SNAPDROPCONTAINER";
+  static TAG_NAME = "ET-SNAP-DROP-CONTAINER";
   static EVENT_DROPPED = "snapdropcontainer-dropped";
   private _log: Logger;
   private _supportedMimeTypes: string[] = [];

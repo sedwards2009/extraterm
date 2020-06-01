@@ -34,7 +34,7 @@ export class EmptyPaneMenu extends ThemeableElementBase {
     this._log = getLogger(EmptyPaneMenu.TAG_NAME, this);
 
     this.attachShadow({ mode: "open", delegatesFocus: false });
-    
+
     this._handleListPickerSelected = this._handleListPickerSelected.bind(this);
     this._handleCloseClicked = this._handleCloseClicked.bind(this);
 
@@ -62,10 +62,10 @@ export class EmptyPaneMenu extends ThemeableElementBase {
               <i class="fa fa-times"></i>
             </button>
           </div>
-          <et-listpicker
+          <et-list-picker
             id="${ID_LIST_PICKER}"
             @selected=${this._handleListPickerSelected}
-          ></et-listpicker>
+          ></et-list-picker>
         </div>
       </div>`;
     render(template, this.shadowRoot);

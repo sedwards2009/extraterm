@@ -58,10 +58,10 @@ export interface DroppedEventDetail {
  *
  * See Tab.
  */
-@WebComponent({tag: "et-tabwidget"})
+@WebComponent({tag: "et-tab-widget"})
 export class TabWidget extends TemplatedElementBase {
 
-  static TAG_NAME = "ET-TABWIDGET";
+  static TAG_NAME = "ET-TAB-WIDGET";
   static EVENT_TAB_SWITCH = "tab-switch";
   static EVENT_DROPPED = "tabwidget-dropped";
 

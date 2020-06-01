@@ -218,7 +218,7 @@ function flattenSplitLayout(layout) {
 document.createElement = (elName) => {
   if (elName === "et-splitter") {
     return <any> new FakeSplitter();
-  } else if (elName === "et-tabwidget") {
+  } else if (elName === "et-tab-widget") {
     return <any> new FakeTabWidget();
   } else if (elName === "et-tab") {
     return <any> makeFakeTab();
