@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { WebComponent } from "extraterm-web-component-decorators";
 import { html, render } from "extraterm-lit-html";
 
-import * as ThemeTypes from '../../theme/Theme';
-import { ThemeableElementBase } from '../ThemeableElementBase';
+import * as ThemeTypes from "../../theme/Theme";
+import { ThemeableElementBase } from "../ThemeableElementBase";
 
 
 /**

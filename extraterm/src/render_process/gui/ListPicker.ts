@@ -40,13 +40,12 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   constructor() {
     super();
     this._log = getLogger(ListPicker.TAG_NAME, this);
-
-    this.attachShadow({ mode: "open", delegatesFocus: true });
-    this.updateThemeCss();
-
     this._handleFilterInput = this._handleFilterInput.bind(this);
     this._handleFilterKeyDown = this._handleFilterKeyDown.bind(this);
     this._handleResultsClick = this._handleResultsClick.bind(this);
+
+    this.attachShadow({ mode: "open", delegatesFocus: true });
+    this.updateThemeCss();
 
     this._filterEntries = (entries: T[], filterText: string): T[] => entries;
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): DirectiveFn =>
@@ -107,7 +106,6 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
           >${formattedEntries}</div>
       </div>
     `;
-
     render(template, this.shadowRoot);
   }
 
