@@ -447,9 +447,7 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
 let developerToolMenuChecked = false;
 
 function commandToggleDeveloperTools(): void {
-  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-  WebIpc.devToolsRequest(developerToolMenu.checked);
-  developerToolMenuChecked = ! developerToolMenuChecked;
+  WebIpc.devToolsRequest( ! developerToolMenuChecked);
 }
 
 function customizeToggleDeveloperTools(): CustomizedCommand {
@@ -520,11 +518,8 @@ function handleThemeContentsMessage(msg: Messages.Message): void {
 
 function handleDevToolsStatus(msg: Messages.Message): void {
   const devToolsStatusMessage = <Messages.DevToolsStatusMessage> msg;
-  const developerToolMenu = <CheckboxMenuItem> document.getElementById("developer_tools");
-  if (developerToolMenu === null) {
-    return;
-  }
-  developerToolMenu.checked = devToolsStatusMessage.open;
+  developerToolMenuChecked = devToolsStatusMessage.open;
+  applicationContextMenu.render();
 }
 
 function handleClipboardRead(msg: Messages.Message): void {
