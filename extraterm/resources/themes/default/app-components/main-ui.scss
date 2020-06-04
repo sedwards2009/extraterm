@@ -43,12 +43,12 @@ $tab-background-color-active: $background-color;
   #ID_TOP_LAYOUT {
     display: flex;
     flex-direction: column;
-  }  
+  }
 
   #ID_TITLE_BAR {
     background: $tab-bar-background-color;
   }
-  
+
   #ID_MAIN_CONTENTS {
     flex-grow: 1;
   }
@@ -67,7 +67,7 @@ $tab-background-color-active: $background-color;
     height: $tab-height;
     -webkit-app-region: drag;
   }
-  
+
   #ID_MAIN_CONTENTS {
     position: absolute;
     width: 100%;
@@ -90,7 +90,7 @@ $tab-background-color-active: $background-color;
 
   & > #ID_NEW_TERMINAL_CONTEXT_AREA {
     display: flex;
-    
+
     & > .CLASS_NEW_TAB_BUTTON {
       align-self: center;
     }
@@ -114,14 +114,14 @@ DIV.tab_content {
 DIV.tab_content > * {
   position: absolute;
   width: 100%;
-  
+
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
 }
 
-ET-TAB:focus {
+et-tab:focus {
   outline: none;
 }
 
@@ -157,7 +157,7 @@ DIV.tab_title_extensions {
 
   margin-left: pxToRem(8px);
   margin-right: pxToRem(8px);
-  
+
   & > ex-extension-widget-proxy {
     width: 100%;
   }
@@ -169,7 +169,7 @@ DIV.tab_header_close {
 }
 
 DIV.tab_header_container:hover DIV.tab_header_close > BUTTON:not(:hover) {
-  color: $text-highlight-color;  
+  color: $text-highlight-color;
 }
 
 DIV.tab_header_close:hover > BUTTON {
