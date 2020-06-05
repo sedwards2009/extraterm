@@ -23,8 +23,8 @@ export class MenuItem extends ThemeableElementBase {
   constructor() {
     super();
     this.attachShadow({ mode: "open", delegatesFocus: false });
-    this.updateThemeCss();
     this._render();
+    this.updateThemeCss();
   }
 
   @Attribute({default: false}) selected: boolean;
