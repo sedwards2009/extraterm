@@ -38,6 +38,7 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * Text zoom
 * Unicode support
 * Color emoji
+* Multiple windows
 * [MIT license](LICENSE.txt)
 * [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
 
