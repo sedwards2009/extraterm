@@ -16,11 +16,25 @@ import { ThemeableElementBase } from "../ThemeableElementBase";
 @WebComponent({tag: "et-stacked-widget"})
 export class StackedWidget extends ThemeableElementBase {
 
+  private _mutationObserver: MutationObserver = null;
+
   constructor() {
     super();
     this.attachShadow({ mode: "open", delegatesFocus: false });
     this._render();
     this.updateThemeCss();
+
+    this._mutationObserver = new MutationObserver( (mutations) => {
+      this._applySlotsAttributes();
+      if (this.currentIndex === -1) {
+        this.currentIndex = 0;
+      }
+      if (this.currentIndex >= this.childElementCount) {
+        this.currentIndex = this.childElementCount - 1;
+      }
+      this._render();
+    });
+    this._mutationObserver.observe(this, { childList: true });
   }
 
   protected _render(): void {
@@ -36,28 +50,6 @@ export class StackedWidget extends ThemeableElementBase {
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GUI_STACKEDWIDGET];
-  }
-
-  // Override
-  appendChild<T extends Node>(newNode: T): T {
-    const result = super.appendChild(newNode);
-    if (this.currentIndex === -1) {
-      this.currentIndex = 0;
-    }
-    this._applySlotsAttributes();
-    this._render();
-    return result;
-  }
-
-  // Override
-  removeChild<T extends Node>(oldNode: T): T {
-    const result = super.removeChild(oldNode);
-    if (this.currentIndex >= this.childElementCount) {
-      this.currentIndex = this.childElementCount - 1;
-    }
-    this._applySlotsAttributes();
-    this._render();
-    return result;
   }
 
   @Attribute({default: -1}) currentIndex: number;
