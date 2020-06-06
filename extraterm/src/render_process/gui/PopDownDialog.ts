@@ -1,20 +1,13 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import {Attribute, Observe, WebComponent} from "extraterm-web-component-decorators";
+import { html, render } from "extraterm-lit-html";
 
-import * as ThemeTypes from '../../theme/Theme';
-import { TemplatedElementBase } from './TemplatedElementBase';
-
-const ID_COVER = "ID_COVER";
-const ID_CONTEXT_COVER = "ID_CONTEXT_COVER";
-const ID_CONTAINER = "ID_CONTAINER";
-
-const ID_TITLE_PRIMARY = "ID_TITLE_PRIMARY";
-const ID_TITLE_SECONDARY = "ID_TITLE_SECONDARY";
-const ID_TITLE_CONTAINER = "ID_TITLE_CONTAINER";
+import * as ThemeTypes from "../../theme/Theme";
+import { ThemeableElementBase } from "../ThemeableElementBase";
 
 const CLASS_CONTEXT_COVER_OPEN = "CLASS_CONTEXT_COVER_OPEN";
 const CLASS_CONTEXT_COVER_CLOSED = "CLASS_CONTEXT_COVER_CLOSED";
@@ -26,7 +19,7 @@ const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
  * A Pop Down Dialog.
  */
 @WebComponent({tag: "et-pop-down-dialog"})
-export class PopDownDialog extends TemplatedElementBase {
+export class PopDownDialog extends ThemeableElementBase {
 
   static TAG_NAME = "ET-POP-DOWN-DIALOG";
   static EVENT_CLOSE_REQUEST = "ET-POP-DOWN-DIALOG-CLOSE_REQUEST";
@@ -34,28 +27,48 @@ export class PopDownDialog extends TemplatedElementBase {
   private _isOpen = false;
 
   constructor() {
-    super({ delegatesFocus: true });
+    super();
 
-    const containerDiv = this._elementById(ID_CONTAINER);
-    containerDiv.addEventListener('contextmenu', (ev) => {
-      this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
-    });
+    this._handleContainerContextMenu = this._handleContainerContextMenu.bind(this);
+    this._handleCoverMouseDown = this._handleCoverMouseDown.bind(this);
 
-    const coverDiv = this._elementById(ID_COVER);
-    coverDiv.addEventListener('mousedown', (ev) => {
-      this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
-    });
+    this.attachShadow({ mode: "open", delegatesFocus: true });
+    this._render();
   }
 
-  protected _html(): string {
-    return `
-      <div id='${ID_COVER}' class='${CLASS_COVER_CLOSED}'></div>
-      <div id='${ID_CONTEXT_COVER}' class='${CLASS_CONTEXT_COVER_CLOSED}'>
-        <div id='${ID_CONTAINER}'>
-          <div id="${ID_TITLE_CONTAINER}"><div id="${ID_TITLE_PRIMARY}"></div><div id="${ID_TITLE_SECONDARY}"></div></div>
+  private _handleContainerContextMenu(): void {
+    this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
+  }
+
+  private _handleCoverMouseDown(): void {
+    this.dispatchEvent(new CustomEvent(PopDownDialog.EVENT_CLOSE_REQUEST, {bubbles: false}));
+  }
+
+  protected _render(): void {
+    const template = html`${this._styleTag()}
+      <div
+        id="ID_COVER"
+        class=${this._isOpen ? CLASS_COVER_OPEN : CLASS_COVER_CLOSED}
+        @mousedown=${this._handleCoverMouseDown}
+      >
+      </div>
+      <div
+        id="ID_CONTEXT_COVER"
+        class=${this._isOpen ? CLASS_CONTEXT_COVER_OPEN : CLASS_CONTEXT_COVER_CLOSED}
+      >
+        <div
+          id="ID_CONTAINER"
+          @contextmenu=${this._handleContainerContextMenu}
+        >
+          <div id="ID_TITLE_CONTAINER">
+            <div id="ID_TITLE_PRIMARY">${this.titlePrimary}</div>
+            <div id="ID_TITLE_SECONDARY">${this.titleSecondary}</div>
+          </div>
           <slot></slot>
         </div>
       </div>`;
+
+    render(template, this.shadowRoot);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -63,40 +76,21 @@ export class PopDownDialog extends TemplatedElementBase {
   }
 
   @Attribute({default: ""}) titlePrimary: string;
-
   @Attribute({default: ""}) titleSecondary: string;
 
   @Observe("titlePrimary", "titleSecondary")
   private _updateTitle(): void {
-    const titlePrimaryDiv = <HTMLDivElement> this._elementById(ID_TITLE_PRIMARY);
-    const titleSecondaryDiv = <HTMLDivElement> this._elementById(ID_TITLE_SECONDARY);
-
-    titlePrimaryDiv.innerText = this.titlePrimary;
-    titleSecondaryDiv.innerText = this.titleSecondary;
+    this._render();
   }
 
   open(): void {
-    const container = <HTMLDivElement> this._elementById(ID_CONTEXT_COVER);
-    container.classList.remove(CLASS_CONTEXT_COVER_CLOSED);
-    container.classList.add(CLASS_CONTEXT_COVER_OPEN);
-
-    const cover = <HTMLDivElement> this._elementById(ID_COVER);
-    cover.classList.remove(CLASS_COVER_CLOSED);
-    cover.classList.add(CLASS_COVER_OPEN);
-
     this._isOpen = true;
+    this._render();
   }
 
   close(): void {
-    const cover = <HTMLDivElement> this._elementById(ID_COVER);
-    cover.classList.remove(CLASS_COVER_OPEN);
-    cover.classList.add(CLASS_COVER_CLOSED);
-
-    const container = <HTMLDivElement> this._elementById(ID_CONTEXT_COVER);
-    container.classList.remove(CLASS_CONTEXT_COVER_OPEN);
-    container.classList.add(CLASS_CONTEXT_COVER_CLOSED);
-
     this._isOpen = false;
+    this._render();
   }
 
   isOpen(): boolean {
