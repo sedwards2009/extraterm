@@ -24,8 +24,6 @@ export class PopDownDialog extends ThemeableElementBase {
   static TAG_NAME = "ET-POP-DOWN-DIALOG";
   static EVENT_CLOSE_REQUEST = "ET-POP-DOWN-DIALOG-CLOSE_REQUEST";
 
-  private _isOpen = false;
-
   constructor() {
     super();
 
@@ -48,13 +46,13 @@ export class PopDownDialog extends ThemeableElementBase {
     const template = html`${this._styleTag()}
       <div
         id="ID_COVER"
-        class=${this._isOpen ? CLASS_COVER_OPEN : CLASS_COVER_CLOSED}
+        class=${this.open ? CLASS_COVER_OPEN : CLASS_COVER_CLOSED}
         @mousedown=${this._handleCoverMouseDown}
       >
       </div>
       <div
         id="ID_CONTEXT_COVER"
-        class=${this._isOpen ? CLASS_CONTEXT_COVER_OPEN : CLASS_CONTEXT_COVER_CLOSED}
+        class=${this.open ? CLASS_CONTEXT_COVER_OPEN : CLASS_CONTEXT_COVER_CLOSED}
       >
         <div
           id="ID_CONTAINER"
@@ -83,17 +81,9 @@ export class PopDownDialog extends ThemeableElementBase {
     this._render();
   }
 
-  open(): void {
-    this._isOpen = true;
+  @Attribute({default: false}) open: boolean;
+  @Observe("open")
+  private _observeOpen(target: string): void {
     this._render();
-  }
-
-  close(): void {
-    this._isOpen = false;
-    this._render();
-  }
-
-  isOpen(): boolean {
-    return this._isOpen;
   }
 }

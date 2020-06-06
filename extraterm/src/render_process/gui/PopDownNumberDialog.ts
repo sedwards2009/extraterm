@@ -122,12 +122,12 @@ export class PopDownNumberDialog extends TemplatedElementBase {
     textInput.focus();
 
     const dialog = <PopDownDialog> this._elementById(ID_DIALOG);
-    dialog.open();
+    dialog.open = true;
   }
 
   close(): void {
     const dialog = <PopDownDialog> this._elementById(ID_DIALOG);
-    dialog.close();
+    dialog.open = false;
   }
 
   private _okId(value: number): void {

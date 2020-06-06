@@ -60,7 +60,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   private _handleDialogClose(): void {
-    this._getDialog().close();
+    this._getDialog().open = false;
     this._okId(null);
   }
 
@@ -297,7 +297,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
     filterInput.focus();
 
-    this._getDialog().open();
+    this._getDialog().open = true;
     this._scrollToSelected();
   }
 
@@ -306,7 +306,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     if (dialog == null) {
       return;
     }
-    dialog.close();
+    dialog.open = false;
   }
 
   isOpen(): boolean {
@@ -314,7 +314,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     if (dialog == null) {
       return false;
     }
-    return dialog.isOpen();
+    return dialog.open;
   }
 
   private _okId(selectedId: string): void {
