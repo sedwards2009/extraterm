@@ -805,7 +805,6 @@ export class SplitLayout {
 
     DomUtils.setElementChildren(tabWidget, targetChildrenList);
     tabWidget.showTabs = infoNode.children.length !== 0;
-    tabWidget.update();
   }
 }
 

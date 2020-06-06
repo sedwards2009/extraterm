@@ -28,8 +28,6 @@ const ATTR_TAG_REST_RIGHT = "rest";
 const ID_TABBAR = "ID_TABBAR";
 const ID_SNAP_DROP_CONTAINER = "ID_SNAP_DROP_CONTAINER";
 
-const CLASS_REMAINDER_LEFT = "remainder-left";
-const CLASS_REMAINDER_RIGHT = "remainder";
 const CLASS_TAB = "tab";
 const CLASS_SHOW_BUTTONS = "show-buttons";
 const CLASS_HIDE_BUTTONS = "hide-buttons";
@@ -158,7 +156,7 @@ export class TabWidget extends ThemeableElementBase {
 
   @Observe("showTabs")
   private _observeShowTabs(target: string): void {
-    this.update();
+    this._syncDom();
   }
 
   @Attribute({default: ""}) windowId: string;
@@ -173,10 +171,6 @@ export class TabWidget extends ThemeableElementBase {
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.GUI_TABWIDGET, ThemeTypes.CssFile.TABS];
-  }
-
-  update(): void {
-    this._syncDom();
   }
 
   protected _render(): void {
@@ -214,7 +208,7 @@ export class TabWidget extends ThemeableElementBase {
     const template = html`${this._styleTag()}
       <div id='ID_TOP' class=${classMap({show_frame: this.showFrame})}>
         <div id='ID_TABBAR_CONTAINER'>
-          <div class='${CLASS_REMAINDER_LEFT}'><slot name='${ATTR_TAG_REST_LEFT}'></slot></div>
+          <div class='remainder-left'><slot name='${ATTR_TAG_REST_LEFT}'></slot></div>
           <ul
             id='${ID_TABBAR}'
             class="extraterm-tabs"
@@ -235,7 +229,7 @@ export class TabWidget extends ThemeableElementBase {
               <i class="fas fa-caret-right"></i>
             </button>
           </div>
-          <div class='${CLASS_REMAINDER_RIGHT}'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></div>
+          <div class='remainder'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></div>
         </div>
         <div id='ID_CONTENTS'>
           <et-snap-drop-container id=${ID_SNAP_DROP_CONTAINER} windowId='${this.windowId}'>
