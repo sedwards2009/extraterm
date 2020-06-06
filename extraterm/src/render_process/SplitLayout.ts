@@ -290,7 +290,7 @@ export class SplitLayout {
     }
 
     const {tabWidgetInfo, tabInfo} = info;
-    tabWidgetInfo.tabWidget.setSelectedIndex(tabWidgetInfo.children.indexOf(tabInfo));
+    tabWidgetInfo.tabWidget.selectedIndex = tabWidgetInfo.children.indexOf(tabInfo);
   }
 
   splitAfterTabWidget(tabWidget: TabWidget, orientation: SplitOrientation): TabWidget {

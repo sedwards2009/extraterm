@@ -3,42 +3,33 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from 'lodash';
+import * as _ from "lodash";
 import { html, render, TemplateResult } from "extraterm-lit-html";
-import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import { Attribute, Observe, WebComponent, Filter } from "extraterm-web-component-decorators";
 import { classMap } from "extraterm-lit-html/directives/class-map.js";
 
-import {doLater} from 'extraterm-later';
-import * as DomUtils from '../DomUtils';
+import { doLater } from "extraterm-later";
+import * as DomUtils from "../DomUtils";
 import { log } from "extraterm-logging";
-import {Logger, getLogger} from "extraterm-logging";
+import { Logger, getLogger } from "extraterm-logging";
 import { ResizeNotifier } from "extraterm-resize-notifier";
 
-import * as ThemeTypes from '../../theme/Theme';
-import {StackedWidget} from './StackedWidget';
-import {Tab} from './Tab';
-import {SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail} from './SnapDropContainer';
-import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from '../GeneralEvents';
-import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
-import { ThemeableElementBase } from '../ThemeableElementBase';
+import * as ThemeTypes from "../../theme/Theme";
+import { StackedWidget } from "./StackedWidget";
+import { Tab } from "./Tab";
+import { SnapDropContainer } from "./SnapDropContainer";
+import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from "../GeneralEvents";
+import { ElementMimeType, FrameMimeType } from "../InternalMimeTypes";
+import { ThemeableElementBase } from "../ThemeableElementBase";
 
 const ATTR_TAG_REST_LEFT = "rest-left";
 const ATTR_TAG_REST_RIGHT = "rest";
 
-const ID_TOP = "ID_TOP";
 const ID_TABBAR = "ID_TABBAR";
-const ID_TABBAR_CONTAINER = "ID_TABBAR_CONTAINER";
-const ID_CONTENTSTACK = "ID_CONTENTSTACK";
 const ID_SNAP_DROP_CONTAINER = "ID_SNAP_DROP_CONTAINER";
-const ID_CONTENTS = "ID_CONTENTS";
-const ID_DROP_INDICATOR = "ID_DROP_INDICATOR";
-const ID_BUTTON_CONTAINER = "ID_BUTTON_CONTAINER";
-const ID_BUTTON_LEFT = "ID_BUTTON_LEFT";
-const ID_BUTTON_RIGHT=  "ID_BUTTON_RIGHT";
 
 const CLASS_REMAINDER_LEFT = "remainder-left";
 const CLASS_REMAINDER_RIGHT = "remainder";
-const CLASS_ACTIVE = "active";
 const CLASS_TAB = "tab";
 const CLASS_SHOW_BUTTONS = "show-buttons";
 const CLASS_HIDE_BUTTONS = "hide-buttons";
@@ -93,8 +84,6 @@ export class TabWidget extends ThemeableElementBase {
     this.attachShadow({ mode: "open", delegatesFocus: false });
     this._render();
     this._applySlotAttributes();
-
-    this.setSelectedIndex(0);
 
     this._mutationObserver = new MutationObserver( (mutations) => {
       this._syncDom();
@@ -198,15 +187,14 @@ export class TabWidget extends ThemeableElementBase {
 
     const tabs: TemplateResult[] = [];
     if (this.showTabs) {
-      const selectedTabIndex = this.getSelectedIndex();
       for (let i=0; i<this._tabCount; i++) {
         if (i === this._dropPointerIndex) {
-          tabs.push(html`<div id=${ID_DROP_INDICATOR}></div>`);
+          tabs.push(html`<div id='ID_DROP_INDICATOR'></div>`);
         }
 
         const classes = {
             tab: true,
-            active: i === selectedTabIndex,
+            active: i === this.selectedIndex,
         };
         tabs.push(html`<li
           class=${classMap(classes)}
@@ -214,7 +202,7 @@ export class TabWidget extends ThemeableElementBase {
       }
 
       if (this._dropPointerIndex >= this._tabCount) {
-        tabs.push(html`<div id=${ID_DROP_INDICATOR}></div>`);
+        tabs.push(html`<div id='ID_DROP_INDICATOR'></div>`);
       }
     }
 
@@ -224,8 +212,8 @@ export class TabWidget extends ThemeableElementBase {
     }
 
     const template = html`${this._styleTag()}
-      <div id='${ID_TOP}' class=${classMap({show_frame: this.showFrame})}>
-        <div id='${ID_TABBAR_CONTAINER}'>
+      <div id='ID_TOP' class=${classMap({show_frame: this.showFrame})}>
+        <div id='ID_TABBAR_CONTAINER'>
           <div class='${CLASS_REMAINDER_LEFT}'><slot name='${ATTR_TAG_REST_LEFT}'></slot></div>
           <ul
             id='${ID_TABBAR}'
@@ -239,19 +227,19 @@ export class TabWidget extends ThemeableElementBase {
             @dragend=${this._handleDragEnd}
             @drop=${this._handleDrop}
           >${tabs}</ul>
-          <div id='${ID_BUTTON_CONTAINER}' class='${this._showButtonsFlag ? CLASS_SHOW_BUTTONS : CLASS_HIDE_BUTTONS}'>
-            <button id='${ID_BUTTON_LEFT}' class='microtool quiet primary' @click=${this._handleButtonLeftClick}>
+          <div id='ID_BUTTON_CONTAINER' class='${this._showButtonsFlag ? CLASS_SHOW_BUTTONS : CLASS_HIDE_BUTTONS}'>
+            <button class='microtool quiet primary' @click=${this._handleButtonLeftClick}>
               <i class="fas fa-caret-left"></i>
             </button>
-            <button id='${ID_BUTTON_RIGHT}' class='microtool quiet primary' @click=${this._handleButtonRightClick}>
+            <button class='microtool quiet primary' @click=${this._handleButtonRightClick}>
               <i class="fas fa-caret-right"></i>
             </button>
           </div>
           <div class='${CLASS_REMAINDER_RIGHT}'><slot name='${ATTR_TAG_REST_RIGHT}'></slot></div>
         </div>
-        <div id='${ID_CONTENTS}'>
-          <et-snap-drop-container id='${ID_SNAP_DROP_CONTAINER}' windowId='${this.windowId}'>
-            <et-stacked-widget id='${ID_CONTENTSTACK}' current-index=${this.getSelectedIndex()}>${tabContents}</et-stacked-widget>
+        <div id='ID_CONTENTS'>
+          <et-snap-drop-container id=${ID_SNAP_DROP_CONTAINER} windowId='${this.windowId}'>
+            <et-stacked-widget id='ID_CONTENTSTACK' current-index=${this.selectedIndex}>${tabContents}</et-stacked-widget>
           </et-snap-drop-container>
         </div>
       </div>
@@ -293,33 +281,38 @@ export class TabWidget extends ThemeableElementBase {
     // This handler may fire when a tab is removed during the click event bubble procedure. This check
     // supresses the event if the tab has been removed already.
     if ((<HTMLElement>ev.currentTarget).parentNode !== null) {
-      this.setSelectedIndex(index);
+      this.selectedIndex = index;
       doLater(this._sendSwitchEvent.bind(this));
     }
   }
 
-  setSelectedIndex(index: number): void {
+  @Attribute({default: 0}) selectedIndex: number;
+
+  @Filter("selectedIndex")
+  private _sanitizeSelectedIndex(index: number): number {
     this._syncDom();
 
     if (this._tabCount === 0) {
-      this._selectedIndex = -1;
-      return;
+      return -1;
     }
+
     if (index < 0 || this._tabCount <= index) {
       this._log.warn("Out of range index given to the 'currentIndex' property.");
-      return;
+      return undefined;
     }
-    if (this._selectedIndex === index) {
-      return;
-    }
-    this._selectedIndex = index;
 
-    this._render();
-    this._scrollTabIntoView(index);
+    return index;
   }
 
-  getSelectedIndex(): number {
-    return this._selectedIndex;
+  @Observe("selectedIndex")
+  private _observeSelectedIndex(target: string): void {
+    if (this._selectedIndex === this.selectedIndex) {
+      return;
+    }
+
+    this._selectedIndex = this.selectedIndex;
+    this._render();
+    this._scrollTabIntoView(this.selectedIndex);
   }
 
   private _getTabs(): Tab[] {
@@ -333,20 +326,20 @@ export class TabWidget extends ThemeableElementBase {
     if (index === -1) {
       return;
     }
-    this.setSelectedIndex(index);
+    this.selectedIndex = index;
   }
 
   getSelectedTab(): Tab {
-    const currentIndex = this.getSelectedIndex();
-    if (currentIndex === -1) {
+    if (this.selectedIndex === -1) {
       return null;
     }
-    const currentTab = this._getTabs()[currentIndex];
+    const currentTab = this._getTabs()[this.selectedIndex];
     return currentTab;
   }
 
   @Attribute({default: true}) showFrame: boolean;
 
+  @Observe("showFrame")
   private _observeShowFrame(target: string): void {
     this._syncDom();
     this._render();
