@@ -1,50 +1,57 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable} from '@extraterm/extraterm-extension-api';
-import {Attribute, Observe, WebComponent} from 'extraterm-web-component-decorators';
+import {Disposable} from "@extraterm/extraterm-extension-api";
+import {Attribute, Observe, WebComponent} from "extraterm-web-component-decorators";
+import { html, render } from "extraterm-lit-html";
 
-import {doLater} from 'extraterm-later';
-import {PopDownDialog} from './PopDownDialog';
-import * as ThemeTypes from '../../theme/Theme';
-import { TemplatedElementBase } from './TemplatedElementBase';
+import * as DomUtils from "../DomUtils";
+import {doLater} from "extraterm-later";
+import {PopDownDialog} from "./PopDownDialog";
+import * as ThemeTypes from "../../theme/Theme";
+import { ThemeableElementBase } from "../ThemeableElementBase";
 
-const ID_DIALOG = "ID_DIALOG";
 const ID_INPUT = "ID_INPUT";
 
 /**
  * A Pop Down Number Dialog
  */
 @WebComponent({tag: "et-pop-down-number-dialog"})
-export class PopDownNumberDialog extends TemplatedElementBase {
+export class PopDownNumberDialog extends ThemeableElementBase {
 
   static TAG_NAME = "ET-POP-DOWN-NUMBER-DIALOG";
 
   private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
+  private _open = false;
 
   constructor() {
-    super({ delegatesFocus: true });
-
-    const dialog = <PopDownDialog> this._elementById(ID_DIALOG);
-    dialog.titlePrimary = this.titlePrimary;
-    dialog.titleSecondary = this.titleSecondary;
-    dialog.addEventListener(PopDownDialog.EVENT_CLOSE_REQUEST, () => {
-      this._okId(null);
-    });
-
-    const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
-    textInput.addEventListener('keydown', (ev: KeyboardEvent) => { this.handleKeyDown(ev); });
+    super();
+    this._handleDialogCloseRequest = this._handleDialogCloseRequest.bind(this);
+    this._handleTextInputKeyDown = this._handleTextInputKeyDown.bind(this);
+    this.attachShadow({ mode: "open", delegatesFocus: true });
+    this._render();
   }
 
-  protected _html(): string {
-    return `
-      <${PopDownDialog.TAG_NAME} id="${ID_DIALOG}">
-        <div class="form-group"><input type="number" id="${ID_INPUT}" min="0" max="10" value="1" /></div>
-      </${PopDownDialog.TAG_NAME}>
+  protected _render(): void {
+    const template = html`${this._styleTag()}
+      <et-pop-down-dialog
+        id="ID_DIALOG"
+        title-primary=${this.titlePrimary}
+        title-secondary=${this.titleSecondary}
+        open=${this._open}
+        @ET-POP-DOWN-DIALOG-CLOSE_REQUEST=${this._handleDialogCloseRequest}
+      >
+        <div class="form-group"><input type="number" id=${ID_INPUT} @keydown=${this._handleTextInputKeyDown} min="0" max="10" value="1" /></div>
+      </et-pop-down-dialog>
       `;
+    render(template, this.shadowRoot);
+  }
+
+  private _handleDialogCloseRequest(): void {
+    this._okId(null);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -74,21 +81,11 @@ export class PopDownNumberDialog extends TemplatedElementBase {
   }
 
   @Attribute({default: ""}) titlePrimary: string;
-  @Observe("titlePrimary")
-  private _updateTitlePrimary(target: string): void {
-    const dialog = <PopDownDialog> this._elementById(ID_DIALOG);
-    if (dialog != null) {
-      dialog.titlePrimary = this.titlePrimary;
-    }
-  }
-
   @Attribute({default: ""}) titleSecondary: string;
-  @Observe("titleSecondary")
-  private _updateTitleSecondary(target: string): void {
-    const dialog = <PopDownDialog> this._elementById(ID_DIALOG);
-    if (dialog != null) {
-      dialog.titleSecondary = this.titleSecondary;
-    }
+
+  @Observe("titlePrimary", "titleSecondary")
+  private _observeTitles(target: string): void {
+    this._render();
   }
 
   /**
@@ -101,7 +98,7 @@ export class PopDownNumberDialog extends TemplatedElementBase {
     this.updateThemeCss();
   }
 
-  private handleKeyDown(ev: KeyboardEvent) {
+  private _handleTextInputKeyDown(ev: KeyboardEvent) {
     if (ev.key === "Escape") {
       this._okId(null);
       ev.preventDefault();
@@ -118,16 +115,16 @@ export class PopDownNumberDialog extends TemplatedElementBase {
   }
 
   open(): void {
+    this._open = true;
+    this._render();
+
     const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
     textInput.focus();
-
-    const dialog = <PopDownDialog> this._elementById(ID_DIALOG);
-    dialog.open = true;
   }
 
   close(): void {
-    const dialog = <PopDownDialog> this._elementById(ID_DIALOG);
-    dialog.open = false;
+    this._open = false;
+    this._render();
   }
 
   private _okId(value: number): void {
@@ -139,5 +136,9 @@ export class PopDownNumberDialog extends TemplatedElementBase {
         this.dispatchEvent(event);
       });
     }
+  }
+
+  private _elementById(id: string): HTMLElement {
+    return DomUtils.getShadowId(this, id);
   }
 }
