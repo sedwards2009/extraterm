@@ -44,7 +44,13 @@ export class PopDownNumberDialog extends ThemeableElementBase {
         open=${this._open}
         @ET-POP-DOWN-DIALOG-CLOSE_REQUEST=${this._handleDialogCloseRequest}
       >
-        <div class="form-group"><input type="number" id=${ID_INPUT} @keydown=${this._handleTextInputKeyDown} min="0" max="10" value="1" /></div>
+        <div class="form-group"><input
+          type="number"
+          id=${ID_INPUT}
+          @keydown=${this._handleTextInputKeyDown}
+          min=${this.min}
+          max=${this.max}
+          value="1" /></div>
       </et-pop-down-dialog>
       `;
     render(template, this.shadowRoot);
@@ -70,20 +76,12 @@ export class PopDownNumberDialog extends ThemeableElementBase {
     textInput.valueAsNumber = value;
   }
 
-  setMinimum(min: number): void {
-    const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
-    textInput.setAttribute("min", "" + min);
-  }
-
-  setMaximum(max: number): void {
-    const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
-    textInput.setAttribute("max", "" + max);
-  }
-
+  @Attribute({default: 0}) min: number;
+  @Attribute({default: 10}) max: number;
   @Attribute({default: ""}) titlePrimary: string;
   @Attribute({default: ""}) titleSecondary: string;
 
-  @Observe("titlePrimary", "titleSecondary")
+  @Observe("min", "max", "titlePrimary", "titleSecondary")
   private _observeTitles(target: string): void {
     this._render();
   }
