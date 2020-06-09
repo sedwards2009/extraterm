@@ -1,15 +1,16 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { html, render } from "extraterm-lit-html";
+import { WebComponent } from "extraterm-web-component-decorators";
 
-import {ContextMenu} from './ContextMenu';
-import { TemplatedElementBase } from './TemplatedElementBase';
+import {ContextMenu} from "./ContextMenu";
+import { ThemeableElementBase } from "../ThemeableElementBase";
 
 
-const SLOT_CONTEXTMENU = "et-contextmenu";
+const SLOT_CONTEXTMENU = "et-context-menu";
 
 /**
  * A Drop Down menu.
@@ -18,19 +19,26 @@ const SLOT_CONTEXTMENU = "et-contextmenu";
  * element like a button which emits a click event. When the user activates
  * the button, the ContextMenu is displayed.
  */
-@WebComponent({tag: "et-dropdown"})
-export class DropDown extends TemplatedElementBase {
-  
-  static TAG_NAME = 'ET-DROPDOWN';
+@WebComponent({tag: "et-drop-down"})
+export class DropDown extends ThemeableElementBase {
 
   constructor() {
-    super( {delegatesFocus: false} );
+    super();
 
-    const clickHandler = (ev: MouseEvent) => {
-      const cm = <ContextMenu>this.querySelector(ContextMenu.TAG_NAME);
-      cm.openAround(<HTMLElement> ev.target);
-    };
+    this._handleClick = this._handleClick.bind(this);
+    this._handleSelected = this._handleSelected.bind(this);
 
+    this.attachShadow({ mode: "open", delegatesFocus: false });
+    this.updateThemeCss();
+    this._render();
+
+    this._setupChildObservation();
+
+    this.addEventListener("click", this._handleClick);
+    this.addEventListener("selected", this._handleSelected);
+  }
+
+  private _setupChildObservation(): void {
     const childChangeCallback: MutationCallback = (mutationsList, observer) => {
       for(const mutation of mutationsList) {
         if (mutation.type === "childList") {
@@ -43,12 +51,6 @@ export class DropDown extends TemplatedElementBase {
     const observer = new MutationObserver(childChangeCallback);
     const config = { attributes: true, childList: true, subtree: true };
     observer.observe(this, config);
-
-    this.addEventListener('click', clickHandler);
-    this.addEventListener('selected', (ev: MouseEvent) => {
-      const event = new CustomEvent('selected', { detail: ev.detail });
-      this.dispatchEvent(event);
-    });
   }
 
   connectedCallback(): void {
@@ -56,8 +58,20 @@ export class DropDown extends TemplatedElementBase {
     this._assignSlotContent();
   }
 
-  protected _html(): string {
-    return `<div><slot name='${SLOT_CONTEXTMENU}'></slot></div><div><slot></slot></div>`;
+  private _handleClick(ev: MouseEvent): void {
+    const cm = <ContextMenu>this.querySelector(ContextMenu.TAG_NAME);
+    cm.openAround(<HTMLElement> ev.target);
+  }
+
+  private _handleSelected(ev: MouseEvent): void {
+    const event = new CustomEvent("selected", { detail: ev.detail });
+    this.dispatchEvent(event);
+  }
+
+  protected _render(): void {
+    const template = html`${this._styleTag()}
+      <div><slot name=${SLOT_CONTEXTMENU}></slot></div><div><slot></slot></div>`;
+    render(template, this.shadowRoot);
   }
 
   private _assignSlotContent(): void {

@@ -69,12 +69,12 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       this._numberInputDialog = <PopDownNumberDialog> window.document.createElement(PopDownNumberDialog.TAG_NAME);
     }
     this._numberInputDialog.titlePrimary = options.title;
-    this._numberInputDialog.setMinimum(options.minimum !== undefined ? options.minimum : Number.MIN_SAFE_INTEGER);
-    this._numberInputDialog.setMaximum(options.maximum !== undefined ? options.maximum : Number.MAX_SAFE_INTEGER);
-    this._numberInputDialog.setValue(options.value);
+    this._numberInputDialog.min = options.minimum !== undefined ? options.minimum : Number.MIN_SAFE_INTEGER;
+    this._numberInputDialog.max = options.maximum !== undefined ? options.maximum : Number.MAX_SAFE_INTEGER;
+    this._numberInputDialog.value = options.value;
 
     const dialogDisposable = host.showDialog(this._numberInputDialog);
-    this._numberInputDialog.open();
+    this._numberInputDialog.open = true;
     focusLater(this._numberInputDialog);
 
     return new Promise((resolve, reject) => {

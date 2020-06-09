@@ -60,7 +60,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   private _handleDialogClose(): void {
-    this._getDialog().close();
+    this._getDialog().open = false;
     this._okId(null);
   }
 
@@ -101,11 +101,11 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     const formattedEntries = this._formatEntries(filteredEntries, this.selected, this.filter);
 
     const template = html`${this._styleTag()}
-      <et-popdowndialog
+      <et-pop-down-dialog
           id="ID_DIALOG"
           title-primary=${this.titlePrimary}
           title-secondary=${this.titleSecondary}
-          @ET-POPDOWNDIALOG-CLOSE_REQUEST=${this._handleDialogClose}>
+          @ET-POP-DOWN-DIALOG-CLOSE_REQUEST=${this._handleDialogClose}>
         <div id="ID_RESULTS_CONTAINER">
           <div class="gui-packed-row">
             <input
@@ -121,7 +121,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
             id="ID_RESULTS"
             @click=${this._handleResultClick}>${formattedEntries}</div>
         </div>
-      </et-popdowndialog>
+      </et-pop-down-dialog>
       `;
 
     render(template, this.shadowRoot);
@@ -297,7 +297,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
     filterInput.focus();
 
-    this._getDialog().open();
+    this._getDialog().open = true;
     this._scrollToSelected();
   }
 
@@ -306,7 +306,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     if (dialog == null) {
       return;
     }
-    dialog.close();
+    dialog.open = false;
   }
 
   isOpen(): boolean {
@@ -314,7 +314,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     if (dialog == null) {
       return false;
     }
-    return dialog.isOpen();
+    return dialog.open;
   }
 
   private _okId(selectedId: string): void {

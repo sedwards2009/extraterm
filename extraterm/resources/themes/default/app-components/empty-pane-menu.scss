@@ -28,7 +28,7 @@
   flex-direction: column;
   top: 0;
   bottom: 0;
-  
+
   left: 0;
   right: 0;
   max-width: var(--empty-pane-menu-container-width);
@@ -46,7 +46,7 @@
   flex: 0 0;
 }
 
-et-listpicker {
+et-list-picker {
   flex-grow: 1;
   flex-shrink: 1;
   min-height: 0;

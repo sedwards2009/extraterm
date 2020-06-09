@@ -107,11 +107,11 @@ class TitleBarUI extends Vue {
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-@WebComponent({tag: "et-embeddedviewer"})
+@WebComponent({tag: "et-embedded-viewer"})
 export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
     AcceptsTerminalVisualConfig {
 
-  static TAG_NAME = 'ET-EMBEDDEDVIEWER';
+  static TAG_NAME = 'ET-EMBEDDED-VIEWER';
 
   static EVENT_CLOSE_REQUEST = 'close-request';
   static EVENT_FRAME_POP_OUT = 'frame-pop-out';

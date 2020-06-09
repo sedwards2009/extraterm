@@ -222,7 +222,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       this._splitLayout.update();
 
       const tabContent = this._splitLayout.getTabContentByTab(tabElement);
-      targetTabWidget.setSelectedIndex(tabIndex);
+      targetTabWidget.selectedIndex = tabIndex;
       this._focusTabContent(tabContent);
     }
   }
@@ -276,9 +276,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const target = ev.target;
     if (target instanceof TabWidget) {
       if (ElementMimeType.equals(detail.mimeType, this.windowId)) {
-        this._handleElementDroppedEvent(target, target.getSelectedIndex() + 1, detail.dropData);
+        this._handleElementDroppedEvent(target, target.selectedIndex + 1, detail.dropData);
       } else if (FrameMimeType.equals(detail.mimeType, this.windowId)) {
-        this._handleFrameDroppedEvent(target, target.getSelectedIndex() + 1, detail.dropData);
+        this._handleFrameDroppedEvent(target, target.selectedIndex + 1, detail.dropData);
       }
     }
   }
@@ -779,14 +779,14 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       return;
     }
 
-    let i = tabWidget.getSelectedIndex();
+    let i = tabWidget.selectedIndex;
     i = i + direction;
     if (i < 0) {
       i = len - 1;
     } else if (i >= len) {
       i = 0;
     }
-    tabWidget.setSelectedIndex(i);
+    tabWidget.selectedIndex = i;
     this._focusTabContent(contents[i]);
   }
 

@@ -1,14 +1,12 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as Util from './gui/Util';
-
 /**
  * Convert an array-like object to a real array.
- * 
+ *
  * @param {Object} fakeArray An array-like object with get() and length support.
  * @return {Array} A real array object with the elements as fakeArray.
  */
@@ -27,92 +25,6 @@ export interface LeftRightPair {
   right: Node[];
 }
 
-/**
- * Insert a node under a parent node at an offset.
- * 
- * @param {Node} rootNode
- * @param {number} offset
- * @param {Node} newNode
- */
-export function insertNodeAt(rootNode: Node, offset: number, newNode: Node): void {
-  if (offset >= rootNode.childNodes.length) {
-    rootNode.appendChild(newNode);
-  } else {
-    rootNode.insertBefore(newNode, rootNode.childNodes[offset]);
-  }
-}
-
-/**
- * Extracts formatted plain text from a document range.
- *
- * @param range the range to scan and extract the text from.
- * @return the formatted plain text representation.
- */
-export function extractTextFromRange(range: Range): string {
-  const nbspRegexp = /\u00a0/g;
-  
-  const startContainer = range.startContainer;
-  const endContainer = range.endContainer;
-  let result = "";
-  
-  // Use case where the start and end of the range are inside the same text node.
-  if (startContainer === range.endContainer) {
-    if (startContainer.nodeType === Node.TEXT_NODE) {
-      const textNode = <Text> startContainer;
-      return textNode.data.slice(range.startOffset, range.endOffset).replace(nbspRegexp, " ");
-    }
-  }
-  
-  let currentNode: Node;
-  if (startContainer.nodeType === Node.TEXT_NODE) {
-    result += (<Text> startContainer).data.slice(range.startOffset).replace(nbspRegexp, " ");
-    currentNode = nextDocumentOrderNode(startContainer);
-  } else {
-    currentNode = startContainer.childNodes[range.startOffset];
-  }
-
-  const endNode = endContainer.nodeType === Node.TEXT_NODE ? endContainer : endContainer.childNodes[range.endOffset];
-  
-  while (currentNode !== endNode && currentNode !== null) {
-    if (currentNode.nodeType === Node.TEXT_NODE) {
-      result += (<Text> currentNode).data.replace(nbspRegexp, " ");
-      
-    } else if (currentNode.nodeName === "DIV") {
-      const divElement = <HTMLDivElement> currentNode;
-      if (divElement.classList.contains('terminal-active') || divElement.classList.contains('terminal-scrollback')) {
-        result = Util.trimRight(result) + "\n";
-      }
-    }
-    
-    currentNode = nextDocumentOrderNode(currentNode);
-  }
-  
-  if (endContainer.nodeType === Node.TEXT_NODE) {
-    result += (<Text> endContainer).data.slice(0, range.endOffset).replace(nbspRegexp, " ");
-  }
-  
-  return result;
-}
-
-function nextDocumentOrderNode(currentNode: Node): Node {
-  if (currentNode.childNodes.length !== 0) {
-    return currentNode.childNodes[0];
-  }
-  
-  if (currentNode.nextSibling !== null) {
-    return currentNode.nextSibling;
-  }
-  
-  return nextDocumentOrderNodeUp(currentNode.parentNode);
-}
-
-function nextDocumentOrderNodeUp(currentNode: Node): Node {
-  if (currentNode.nextSibling !== null) {
-    return currentNode.nextSibling;
-  }
-  return nextDocumentOrderNodeUp(currentNode.parentNode);
-}
-
 export function getShadowRoot(self: Element): ShadowRoot {
   return self.webkitShadowRoot ? self.webkitShadowRoot : self.shadowRoot;
 }
@@ -127,7 +39,7 @@ export function getShadowId(el: HTMLElement, id: string): HTMLElement {
 
 /**
  * Converts a node list to a real array.
- * 
+ *
  * @param  nodeList the node list to convert.
  * @return          a new array holding the same contents as the node list.
  */
@@ -142,61 +54,8 @@ export function nodeListToArray(nodeList: NodeList): Node[] {
 }
 
 /**
- * Create a KeyboardEvent.
- *
- * This works around a bunch of bugs in Blink.
- * 
- * @param  eventName event name, one of 'keypress', 'keydown' and 'keyup'
- * @param  initMap map of values to use to fill the event
- * @return new keyboard event
- */
-export function newKeyboardEvent(eventName: string, initMap: {
-      bubbles?: boolean;
-      key?: string;
-      code?: string;
-      location?: number;
-      repeat?: boolean;
-      keyCode?: number;
-      charCode?: number;
-      which?: number;
-      ctrlKey?: boolean;
-      shiftKey?: boolean;
-      altKey?: boolean;
-      metaKey?: boolean;
-    }): KeyboardEvent {
-  
-  const fakeKeyDownEvent = new KeyboardEvent(eventName, initMap);
-
-  // https://stackoverflow.com/questions/12937391/cannot-initialize-keycode-in-keyboard-event-init-method      
-  Object.defineProperty(fakeKeyDownEvent, 'keyCode', {
-    get: function() {
-      return initMap.keyCode;
-    }
-  });
-  
-  Object.defineProperty(fakeKeyDownEvent, 'charCode', {
-    get: function() {
-      return initMap.charCode;
-    }
-  });
-
-  Object.defineProperty(fakeKeyDownEvent, 'code', {
-    get: function() {
-      return initMap.code;
-    }
-  });
-
-  Object.defineProperty(fakeKeyDownEvent, 'which', {
-    get: function() {
-      return initMap.which;
-    }
-  });
-  return fakeKeyDownEvent;
-}
-
-/**
  * Add an event listener which blocks an event and retransmits it.
- * 
+ *
  * @param listenTarget    the object on which to intercept the custom event
  * @param eventName the name of the Custom Event to intercept and retransmit
  * @param retransmitTarget (Optional) the element on which to retransmit the event
@@ -212,7 +71,7 @@ export function addCustomEventResender(listenTarget: EventTarget, eventName: str
     ev.stopPropagation();
     const detail = ev.detail;
     const bubbles = ev.bubbles;
-    
+
     const event = new CustomEvent(eventName, { bubbles: bubbles, detail: detail });
     inflightResentEvents.set(listenTarget, event);
     (retransmitTarget === null ? listenTarget : retransmitTarget).dispatchEvent(event);
@@ -225,18 +84,6 @@ const inflightResentEvents = new Map<EventTarget, CustomEvent>();
 //-------------------------------------------------------------------------
 
 /**
- * Format a Uint8Array and mimetype as a data url.
- * 
- * @param  buffer   [description]
- * @param  mimeType [description]
- * @return          [description]
- */
-export function CreateDataUrl(buffer: Buffer, mimeType: string): string {
-  const base64Data = buffer.toString('base64');
-  return "data:" + mimeType + ";base64," + base64Data;
-}
-
-/**
  * Set the input focus on an element and prevent any scrolling for occuring.
  *
  * @param el the element to focus
@@ -247,7 +94,7 @@ export function focusWithoutScroll(el: HTMLElement): void {
 
 /**
  * Prevent an Element from scrolling.
- * 
+ *
  * @param el the element to prevent all scrolling on.
  */
 export function preventScroll(el: HTMLElement): void {
@@ -267,7 +114,7 @@ export function preventScroll(el: HTMLElement): void {
  */
 export function pixelLengthToFloat(length: string | number): number {
   if (typeof length === "string") {
-    const lengthStr = length.indexOf("px") !== -1 ? length.substr(0, length.length-2) : length;    
+    const lengthStr = length.indexOf("px") !== -1 ? length.substr(0, length.length-2) : length;
     return parseFloat(lengthStr);
   } else {
     return length;
@@ -290,7 +137,7 @@ export function pixelLengthToInt(length: string | number): number {
 
 /**
  * Expand a HTML string into Document Fragment.
- * 
+ *
  * @param {html} the HTML code to use.
  * @return A Document Fragment containing the nodes defined by the `html` parameter.
  */
@@ -306,10 +153,10 @@ export function htmlToFragment(html: string): DocumentFragment {
 
 /**
  * Update the list of children on an element.
- * 
+ *
  * This function updates the children while trying to do as few changes on
  * the DOM as possible.
- * 
+ *
  * @param el the Element to update.
  * @param targetChildrenList the desired list of child elements.
  */
@@ -337,7 +184,7 @@ export function setElementChildren(el: Element, targetChildrenList: Element[]): 
 
 /**
  * Test if a node is in the DOM tree.
- * 
+ *
  * @param node the node to test
  * @return true if the node is attached somewhere inside its DOM tree.
  */
@@ -370,9 +217,9 @@ export function removeAllClasses(el: Element): void {
 
 /**
  * Get the path from the node through its parents, to the root.
- * 
+ *
  * This function will also traverse shadow DOM boundaries.
- * 
+ *
  * @param node the node
  * @return the path from the node to its root parent with nodes closer to the
  *         start node first and the ultimate parent node last.
@@ -399,10 +246,10 @@ export function nodePathToRoot(node: Node): Node[] {
 
 /**
  * Get the list of active/focused elements and their nested active elements.
- * 
+ *
  * This function traverses Shadow DOM boundaries to find nested
  * active/focused elements starting from the top window.
- * 
+ *
  * @returns list of active elements
  */
 export function activeNestedElements(): Element[] {

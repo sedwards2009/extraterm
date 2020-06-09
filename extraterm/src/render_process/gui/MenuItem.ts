@@ -15,16 +15,16 @@ import { ThemeableElementBase } from "../ThemeableElementBase";
 /**
  * A menu item suitable for use inside a ContextMenu.
  */
-@WebComponent({tag: "et-menuitem"})
+@WebComponent({tag: "et-menu-item"})
 export class MenuItem extends ThemeableElementBase {
 
-  static TAG_NAME = "ET-MENUITEM";
+  static TAG_NAME = "ET-MENU-ITEM";
 
   constructor() {
     super();
     this.attachShadow({ mode: "open", delegatesFocus: false });
-    this.updateThemeCss();
     this._render();
+    this.updateThemeCss();
   }
 
   @Attribute({default: false}) selected: boolean;

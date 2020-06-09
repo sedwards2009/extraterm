@@ -150,15 +150,15 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
         ev.stopPropagation();
       }
     });
-    
+
     this._scrollBar.addEventListener('scroll', (ev: CustomEvent) => {
-      this._virtualScrollArea.scrollTo(this._scrollBar.getPosition());
+      this._virtualScrollArea.scrollTo(this._scrollBar.position);
     });
 
     this._scrollContainer.addEventListener('wheel', (ev: WheelEvent): void => {
       ev.stopPropagation();
       ev.preventDefault();
-  
+
       this._handleMouseWheelDelta(ev.deltaY);
     });
 
@@ -180,7 +180,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       this._handleBeforeSelectionChange.bind(this));
     this._scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleViewerCursor.bind(this));
     this._scrollArea.addEventListener(ViewerElement.EVENT_CURSOR_EDGE, this._handleViewerCursorEdge.bind(this));
-    
+
     this.updateThemeCss();
     this._setupFontResizeDetector();
     this._scheduleResize();
@@ -189,7 +189,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
   private _handleResize(): void {
     if ( ! this.isConnected) {
       return;
-    }      
+    }
     this.refresh(RefreshLevel.COMPLETE);
   }
 
@@ -207,7 +207,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
             <div id='${ID_SCROLL_AREA}'></div>
           </div>
           <div id='${ID_SCROLLBAR_CONTAINER}'>
-            <${ScrollBar.TAG_NAME} id='${ID_SCROLLBAR}'></${ScrollBar.TAG_NAME}>
+            <et-scroll-bar id='${ID_SCROLLBAR}'></et-scroll-bar>
           </div>
         </div>`);
       window.document.body.appendChild(template);
@@ -350,7 +350,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
         break;
       case "thick":
         spacing = this._rootFontSize() * 2;
-        break;            
+        break;
     }
     this._virtualScrollArea.setSpacing(spacing);
   }
@@ -432,7 +432,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     if (this._lastChildWithFocus === el) {
       this._lastChildWithFocus = null;
     }
-    
+
     el.removeEventListener('focus', this._childFocusHandlerFunc);
 
     if (el.parentElement === this._scrollArea) {
@@ -694,11 +694,11 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     if (this._scheduleLaterQueue.indexOf(this._stashedChildResizeTask) === -1) {
       this._scheduleLaterProcessing(this._stashedChildResizeTask);
     }
-  }  
+  }
 
   private _scheduleLaterProcessing(func: Function): void {
     this._scheduleLaterQueue.push(func);
-    
+
     if (this._scheduleLaterHandle === null) {
       this._scheduleLaterHandle = doLater( () => {
         this._scheduleLaterHandle = null;
@@ -775,7 +775,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
           break;
         }
       }
-    
+
     } else {
       // Bottom edge. Move the cursor to the top of the next ViewerElement.
       for (let i=index+1; i<this._childElementList.length; i++) {
@@ -803,7 +803,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     }
     return rc;
   }
-  
+
   enforceScrollbackSize(maxScrollbackLines: number, maxScrollbackFrames: number): void {
     // Prevent the scrollback check from running multiple times.
     if (this._enforceScrollbackLengthGuard) {
@@ -874,7 +874,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       if (textLikeViewer != null) {
         linesInScrollback += textLikeViewer.lineCount();
         if (frameCount > maxScrollbackFrames || linesInScrollback > maxScrollbackLines) {
-          
+
           // We've hit a limit. Delete the rest.
           killList.push(scrollableKid);
           while (i < childrenReverse.length) {
@@ -903,7 +903,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     } else if (EmbeddedViewer.is(kidNode)) {
       const viewer = kidNode.getViewerElement();
       if (TerminalViewer.is(viewer)) {
-        return viewer;  
+        return viewer;
       } else if (TextViewer.is(viewer)) {
         return viewer;
       }

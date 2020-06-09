@@ -12,10 +12,10 @@ import {MenuItem} from "./MenuItem";
 /**
  * A check box menu item for use inside a context menu.
  */
-@WebComponent({tag: "et-checkboxmenuitem"})
+@WebComponent({tag: "et-checkbox-menu-item"})
 export class CheckboxMenuItem extends MenuItem {
 
-  static TAG_NAME = "ET-CHECKBOXMENUITEM";
+  static TAG_NAME = "ET-CHECKBOX-MENU-ITEM";
 
   @Attribute({default: false}) checked: boolean;
 
