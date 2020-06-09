@@ -38,6 +38,7 @@ export class ApplicationContextMenu {
   private _contextMenuElement: ContextMenu = null
   private _menuEntries: CommandAndShortcut[] = null;
   private _contextWindowState : CommonExtensionWindowState = null;
+  private _menuType = ContextMenuType.NORMAL;
 
   constructor(private extensionManager: ExtensionManager, private keybindingsManager: KeybindingsManager) {
     this._log = getLogger("ApplicationContextMenu", this);
@@ -85,10 +86,15 @@ export class ApplicationContextMenu {
   }
 
   openAround(el: HTMLElement, menuType: ContextMenuType): void {
+    this._menuType = menuType;
     doLater( () => {
       this._updateMenu(menuType);
       this._contextMenuElement.openAround(el);
     });
+  }
+
+  render(): void {
+    this._updateMenu(this._menuType);
   }
 
   private _updateMenu(menuType: ContextMenuType): void {
