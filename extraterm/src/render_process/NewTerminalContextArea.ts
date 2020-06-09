@@ -3,12 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from 'extraterm-web-component-decorators';
-import { Logger } from '@extraterm/extraterm-extension-api';
-import { getLogger, log } from 'extraterm-logging';
-import { dispatchContextMenuRequest, ContextMenuType } from './command/CommandUtils';
+import { CustomElement } from "extraterm-web-component-decorators";
+import { Logger } from "@extraterm/extraterm-extension-api";
+import { getLogger, log } from "extraterm-logging";
+import { dispatchContextMenuRequest, ContextMenuType } from "./command/CommandUtils";
 
-@WebComponent({tag: "et-new-terminal-button"})
+@CustomElement("et-new-terminal-button")
 export class NewTerminalContextArea extends HTMLElement {
 
   static TAG_NAME = "et-new-terminal-button";
@@ -18,7 +18,7 @@ export class NewTerminalContextArea extends HTMLElement {
   constructor() {
     super();
     this._log = getLogger("NewTerminalButton", this);
-    this.addEventListener('contextmenu', ev => this._handleContextMenuCapture(ev), true);
+    this.addEventListener("contextmenu", ev => this._handleContextMenuCapture(ev), true);
   }
 
   private _handleContextMenuCapture(ev: MouseEvent): void {

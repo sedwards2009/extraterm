@@ -10,9 +10,9 @@ import { Logger, getLogger } from "extraterm-logging";
 import { CssFile } from '../../theme/Theme';
 import { InternalExtensionContext } from './InternalTypes';
 import { ExtensionCss } from '../../ExtensionMetadata';
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 
-@WebComponent({tag: "et-extension-widget-proxy"})
+@CustomElement("et-extension-widget-proxy")
 export class WidgetProxy extends ThemeableElementBase  {
 
   static TAG_NAME = "et-extension-widget-proxy";

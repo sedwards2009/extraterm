@@ -3,15 +3,15 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {WebComponent} from 'extraterm-web-component-decorators';
+import {CustomElement} from "extraterm-web-component-decorators";
 
-import { VirtualScrollable, SetterState } from './VirtualScrollArea';
+import { VirtualScrollable, SetterState } from "./VirtualScrollArea";
 
 
 /**
  * An invisible element which can be placed in a terminal to mark the start of command output.
  */
-@WebComponent({tag: "et-command-placeholder"})
+@CustomElement("et-command-placeholder")
 export class CommandPlaceHolder extends HTMLElement implements VirtualScrollable {
 
   static TAG_NAME = "ET-COMMAND-PLACEHOLDER";

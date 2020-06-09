@@ -5,7 +5,7 @@
 import Component from 'vue-class-component';
 import { Disposable } from '@extraterm/extraterm-extension-api';
 import Vue from 'vue';
-import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorators';
+import {CustomElement, Attribute, Observe} from 'extraterm-web-component-decorators';
 
 import {DebouncedDoLater} from 'extraterm-later';
 import {Logger, getLogger} from "extraterm-logging";
@@ -52,7 +52,7 @@ Time remaining ${formatHumanDuration(this.etaSeconds)}`;
   }
 }
 
-@WebComponent({tag: "et-compact-file-transfer-progress"})
+@CustomElement("et-compact-file-transfer-progress")
 export class FileTransferProgress extends ThemedContainerElementBase implements Disposable {
 
   static TAG_NAME = "et-compact-file-transfer-progress";

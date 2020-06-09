@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Attribute, Filter, Observe, WebComponent} from "extraterm-web-component-decorators";
+import {Attribute, Filter, Observe, CustomElement } from "extraterm-web-component-decorators";
 import { html, render, TemplateResult } from "extraterm-lit-html";
 
 import * as ThemeTypes from "../../theme/Theme";
@@ -13,7 +13,7 @@ import { ThemeableElementBase } from "../ThemeableElementBase";
 /**
  * A widget which displays one of its DIV contents at a time.
  */
-@WebComponent({tag: "et-stacked-widget"})
+@CustomElement("et-stacked-widget")
 export class StackedWidget extends ThemeableElementBase {
 
   private _mutationObserver: MutationObserver = null;

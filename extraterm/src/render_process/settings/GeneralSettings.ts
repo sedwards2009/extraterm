@@ -2,7 +2,7 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 
 import { GeneralSettingsUi } from './GeneralSettingsUi';
 import { GeneralConfig, SystemConfig, ConfigKey, GENERAL_CONFIG, SYSTEM_CONFIG } from '../../Config';
@@ -12,7 +12,7 @@ import { SettingsBase } from './SettingsBase';
 
 export const GENERAL_SETTINGS_TAG = "et-general-settings";
 
-@WebComponent({tag: GENERAL_SETTINGS_TAG})
+@CustomElement(GENERAL_SETTINGS_TAG)
 export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
   private _log: Logger = null;
 
@@ -29,7 +29,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
       if (ui.showTips !== generalConfig.showTips) {
         ui.showTips = generalConfig.showTips;
       }
-      
+
       // We take care to only update things which have actually changed.
       if (ui.maxScrollbackLines !== generalConfig.scrollbackMaxLines) {
         ui.maxScrollbackLines = generalConfig.scrollbackMaxLines;

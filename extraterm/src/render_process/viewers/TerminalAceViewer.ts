@@ -1,9 +1,8 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { isEqual } from "lodash";
 
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition, TerminalTheme } from '@extraterm/extraterm-extension-api';
 import * as XRegExp from "xregexp";
 
@@ -46,7 +45,7 @@ const NO_STYLE_HACK = "NO_STYLE_HACK";
 const DEBUG_RESIZE = false;
 
 
-@WebComponent({tag: "et-terminal-ace-viewer"})
+@CustomElement("et-terminal-ace-viewer")
 export class TerminalViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
     TextEditor, AcceptsTerminalVisualConfig, Disposable {
 

@@ -7,7 +7,7 @@
 import * as path from 'path';
 import Component from 'vue-class-component';
 import Vue from 'vue';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import {BulkFileHandle, BulkFileState, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
 
@@ -107,7 +107,7 @@ class TitleBarUI extends Vue {
 /**
  * A visual frame which contains another element and can be shown directly inside a terminal.
  */
-@WebComponent({tag: "et-embedded-viewer"})
+@CustomElement("et-embedded-viewer")
 export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
     AcceptsTerminalVisualConfig {
 

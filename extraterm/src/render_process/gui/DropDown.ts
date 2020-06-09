@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { html, render } from "extraterm-lit-html";
-import { WebComponent } from "extraterm-web-component-decorators";
+import { CustomElement } from "extraterm-web-component-decorators";
 
 import {ContextMenu} from "./ContextMenu";
 import { ThemeableElementBase } from "../ThemeableElementBase";
@@ -19,7 +19,7 @@ const SLOT_CONTEXTMENU = "et-context-menu";
  * element like a button which emits a click event. When the user activates
  * the button, the ContextMenu is displayed.
  */
-@WebComponent({tag: "et-drop-down"})
+@CustomElement("et-drop-down")
 export class DropDown extends ThemeableElementBase {
 
   constructor() {

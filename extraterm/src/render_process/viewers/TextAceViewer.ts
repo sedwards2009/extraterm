@@ -3,7 +3,7 @@
  */
 "use strict";
 import { BulkFileHandle, Disposable, ViewerMetadata, FindOptions, FindStartPosition } from '@extraterm/extraterm-extension-api';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import { ExtratermAceEditor, TerminalRenderer } from "extraterm-ace-terminal-renderer";
 import { Command, DefaultCommands, Document, Editor, EditSession, MultiSelectCommands, ModeList, Position,
   UndoManager } from "@extraterm/ace-ts";
@@ -51,7 +51,7 @@ const NO_STYLE_HACK = "NO_STYLE_HACK";
 const DEBUG_RESIZE = false;
 
 
-@WebComponent({tag: "et-text-viewer"})
+@CustomElement("et-text-viewer")
 export class TextViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
     TextEditor, Disposable {
 

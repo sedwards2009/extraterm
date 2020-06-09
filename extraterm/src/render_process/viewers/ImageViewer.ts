@@ -3,7 +3,7 @@
  */
 
 "use strict";
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import { BulkFileHandle, ViewerMetadata } from '@extraterm/extraterm-extension-api';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { Logger, getLogger } from "extraterm-logging";
@@ -31,22 +31,22 @@ const CLASS_FOCUS_AUTO = "focus-auto";
 const DEBUG_SIZE = false;
 
 
-@WebComponent({tag: "et-image-viewer"})
+@CustomElement("et-image-viewer")
 export class ImageViewer extends ViewerElement {
 
   static TAG_NAME = "ET-IMAGE-VIEWER";
   private static _resizeNotifier = new ResizeNotifier();
-  
+
   /**
    * Type guard for detecting a EtTerminalViewer instance.
-   * 
+   *
    * @param  node the node to test
    * @return      True if the node is a EtTerminalViewer.
    */
   static is(node: Node): node is ImageViewer {
     return node !== null && node !== undefined && node instanceof ImageViewer;
   }
-  
+
   private _log: Logger;
   private _bulkFileHandle: BulkFileHandle = null;
   private _metadataEventDoLater: DebouncedDoLater = null;
@@ -57,7 +57,7 @@ export class ImageViewer extends ViewerElement {
   private _height = 0;
   private _mode: Mode = Mode.DEFAULT;
   private _visualState: VisualState = VisualState.UNFOCUSED;
-  
+
   // The current element height. This is a cached value used to prevent touching the DOM.
   private _currentElementHeight = -1;
 
@@ -91,15 +91,15 @@ export class ImageViewer extends ViewerElement {
       const clone = this.createClone();
       shadow.appendChild(clone);
       this.updateThemeCss();
-      
+
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       this.style.height = "0px";
-      
+
       containerDiv.addEventListener('focus', (ev) => {
         const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
         this._cursorTop = containerDiv.scrollTop;
       } );
-      
+
       const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
       imgElement.addEventListener('load', () => this._handleImageLoad());
       ImageViewer._resizeNotifier.observe(imgElement, (target: Element, contentRect: DOMRectReadOnly) => {
@@ -111,7 +111,7 @@ export class ImageViewer extends ViewerElement {
       if (this._bulkFileHandle !== null) {
         this._setImageUrl(this._bulkFileHandle.getUrl());
       }
-      
+
       this._adjustHeight(this._height);
     }
     this._handleResize();
@@ -135,7 +135,7 @@ export class ImageViewer extends ViewerElement {
     }
   }
 
-  getSelectionText(): string {    
+  getSelectionText(): string {
     return null;
   }
 
@@ -151,28 +151,28 @@ export class ImageViewer extends ViewerElement {
     const hasFocus = this === DomUtils.getShadowRoot(this).activeElement; // FIXME
     return hasFocus;
   }
-  
+
   setVisualState(newVisualState: VisualState): void {
     if (newVisualState !== this._visualState) {
       if (DomUtils.getShadowRoot(this) !== null) {
         this._applyVisualState(newVisualState);
-      }    
+      }
       this._visualState = newVisualState;
     }
   }
-  
+
   getVisualState(): VisualState {
     return this._visualState;
   }
-  
+
   setMimeType(mimeType: string): void {
     this._mimeType = mimeType;
   }
-  
+
   getMimeType(): string {
     return this._mimeType;
   }
-  
+
   getBulkFileHandle(): BulkFileHandle {
     return this._bulkFileHandle;
   }
@@ -198,18 +198,18 @@ export class ImageViewer extends ViewerElement {
   setMode(newMode: Mode): void {
     this._mode = newMode;
   }
-  
+
   getMode(): Mode {
     return this._mode;
   }
-  
+
   setEditable(editable: boolean): void {
   }
-  
+
   getEditable(): boolean {
     return false;
-  }  
-  
+  }
+
   // VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
     if (setterState.heightChanged || setterState.yOffsetChanged) {
@@ -218,7 +218,7 @@ export class ImageViewer extends ViewerElement {
           setterState.yOffset, setterState.yOffsetChanged);
       }
       this._adjustHeight(setterState.height);
-      
+
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       if (containerDiv !== null) {
         containerDiv.scrollTop = setterState.yOffset;
@@ -238,13 +238,13 @@ export class ImageViewer extends ViewerElement {
     if (this._imageHeight > 0) {
       result = this._imageHeight;
     }
-    
+
     if (DEBUG_SIZE) {
       this._log.debug("getVirtualHeight: ",result);
     }
     return result;
   }
-  
+
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     if (DEBUG_SIZE) {
@@ -252,7 +252,7 @@ export class ImageViewer extends ViewerElement {
     }
     return 0;
   }
-  
+
   getCursorPosition(): CursorMoveDetail {
     const detail: CursorMoveDetail = {
       left: 0,
@@ -262,24 +262,24 @@ export class ImageViewer extends ViewerElement {
     };
     return detail;
   }
-  
+
   setCursorPositionTop(ch: number): boolean {
     this._cursorTop = 0;
     this.focus();
     return true;
   }
-  
+
   setCursorPositionBottom(ch: number): boolean {
     this._cursorTop = this._imageHeight - this._height;
     this.focus();
     return true;
   }
-  
+
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
     return ["image/x-bmp", "image/bmp", "image/png", "image/gif", "image/jpeg",  "image/webp"].indexOf(mimeType) !== -1;
   }
-  
+
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -294,32 +294,32 @@ export class ImageViewer extends ViewerElement {
 
       window.document.body.appendChild(template);
     }
-    
+
     return window.document.importNode(template.content, true);
   }
-  
+
   private _applyVisualState(visualState: VisualState): void {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
 
     containerDiv.classList.remove(CLASS_FORCE_FOCUSED);
     containerDiv.classList.remove(CLASS_FORCE_UNFOCUSED);
     containerDiv.classList.remove(CLASS_FOCUS_AUTO);
-    
+
     switch (visualState) {
       case VisualState.AUTO:
         containerDiv.classList.add(CLASS_FOCUS_AUTO);
         break;
-        
+
       case VisualState.FOCUSED:
         containerDiv.classList.add(CLASS_FORCE_FOCUSED);
         break;
-        
+
       case VisualState.UNFOCUSED:
         containerDiv.classList.add(CLASS_FORCE_UNFOCUSED);
         break;
     }
   }
-  
+
   private _setImageUrl(url: string): void {
     const imageEl = DomUtils.getShadowId(this, ID_IMAGE);
     imageEl.setAttribute("src", url);
@@ -328,12 +328,12 @@ export class ImageViewer extends ViewerElement {
     const imgElement = <HTMLImageElement> DomUtils.getShadowId(this, ID_IMAGE);
     this._imageWidth = imgElement.width;
     this._imageHeight = imgElement.height;
-    
+
     const cursorDiv = DomUtils.getShadowId(this, ID_CURSOR);
     cursorDiv.style.height = "" + imgElement.height + "px";
     emitResizeEvent(this);
   }
-  
+
   public dispatchEvent(ev: Event): boolean {
     if (ev.type === 'keydown' || ev.type === 'keypress') {
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);

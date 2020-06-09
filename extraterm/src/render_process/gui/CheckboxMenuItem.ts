@@ -5,14 +5,14 @@
  */
 import { html, TemplateResult } from "extraterm-lit-html";
 import { classMap } from "extraterm-lit-html/directives/class-map.js";
-import { Attribute, Observe, WebComponent } from "extraterm-web-component-decorators";
+import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 
 import {MenuItem} from "./MenuItem";
 
 /**
  * A check box menu item for use inside a context menu.
  */
-@WebComponent({tag: "et-checkbox-menu-item"})
+@CustomElement("et-checkbox-menu-item")
 export class CheckboxMenuItem extends MenuItem {
 
   static TAG_NAME = "ET-CHECKBOX-MENU-ITEM";

@@ -21,7 +21,7 @@ import { TextViewer } from "./viewers/TextAceViewer";
 import { VisualState, Mode, CursorEdgeDetail, Edge, RefreshLevel } from "./viewers/ViewerElementTypes";
 import { EventEmitter } from "../utils/EventEmitter";
 import { ResizeCanary } from "./ResizeCanary";
-import { WebComponent } from "extraterm-web-component-decorators";
+import { CustomElement } from "extraterm-web-component-decorators";
 import { ThemeableElementBase } from "./ThemeableElementBase";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { CssFile } from '../theme/Theme';
@@ -48,7 +48,7 @@ const ID_SCROLL_CONTAINER = "ID_SCROLL_CONTAINER";
 const ID_SCROLLBAR_CONTAINER = "ID_SCROLLBAR_CONTAINER";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 
-@WebComponent({tag: "et-terminal-canvas"})
+@CustomElement("et-terminal-canvas")
 export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfigDatabase {
 
   static TAG_NAME = "et-terminal-canvas";

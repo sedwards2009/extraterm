@@ -5,7 +5,7 @@
  */
 
 import {BulkFileHandle, Disposable, ViewerMetadata} from '@extraterm/extraterm-extension-api';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 
 import {doLater, DebouncedDoLater} from 'extraterm-later';
 import * as DomUtils from './DomUtils';
@@ -45,7 +45,7 @@ const SCROLL_STEP = 1;
 /**
  * A viewer tab which can contain any ViewerElement.
  */
-@WebComponent({tag: "et-viewer-tab"})
+@CustomElement("et-viewer-tab")
 export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     SupportsClipboardPaste.SupportsClipboardPaste, SupportsDialogStack.SupportsDialogStack {
 

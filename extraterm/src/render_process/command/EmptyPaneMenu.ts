@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { WebComponent } from "extraterm-web-component-decorators";
+import { CustomElement } from "extraterm-web-component-decorators";
 import { html, render } from "extraterm-lit-html";
 
 import * as ThemeTypes from "../../theme/Theme";
@@ -21,7 +21,7 @@ const ID_LIST_PICKER = "ID_LIST_PICKER";
 /**
  * The Extraterm Empty Pane Menu.
  */
-@WebComponent({tag: "et-empty-pane-menu"})
+@CustomElement("et-empty-pane-menu")
 export class EmptyPaneMenu extends ThemeableElementBase {
 
   static TAG_NAME = "ET-EMPTY-PANE-MENU";

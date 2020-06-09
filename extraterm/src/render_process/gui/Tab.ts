@@ -4,14 +4,14 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {log, Logger, getLogger} from "extraterm-logging";
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 
 /**
  * Holds the contents of one tab inside a TabWidget tag.
  */
-@WebComponent({tag: "et-tab"})
+@CustomElement("et-tab")
 export class Tab extends HTMLElement {
-  
+
   static TAG_NAME = "ET-TAB";
 
   private _log: Logger;

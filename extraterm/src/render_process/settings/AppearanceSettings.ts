@@ -2,7 +2,7 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { AppearanceSettingsUi } from './AppearanceSettingsUi';
@@ -18,7 +18,7 @@ import { TerminalVisualConfig } from '../TerminalVisualConfig';
 
 export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 
-@WebComponent({tag: APPEARANCE_SETTINGS_TAG})
+@CustomElement(APPEARANCE_SETTINGS_TAG)
 export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   private _log: Logger = null;
   private _fontOptions: FontInfo[] = [];
@@ -59,13 +59,13 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
         }
         return a.name < b.name ? -1 : 1;
       });
-      
+
       if ( ! _.isEqual(this._fontOptions, newFontOptions)) {
         this._fontOptions = newFontOptions;
         ui.terminalFontOptions = newFontOptions;
       }
     }
-    
+
     if (key === GENERAL_CONFIG) {
       const ui = this._getUi();
       const generalConfig = <GeneralConfig> config;

@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as he from 'he';
 import * as SourceDir from '../../SourceDir';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 import {Logger, getLogger} from "extraterm-logging";
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -41,32 +41,32 @@ const CLASS_KEYCAP = "CLASS_KEYCAP";
 function loadTipFile(): string[] {
   const tipPath = path.join(SourceDir.path, "../resources/tips/tips.html");
   const tipHtml = fs.readFileSync(tipPath, {encoding: 'utf8'});
-  
+
   const parts = tipHtml.split(/<article>([^]*?)<\/article>/m);
   return parts.filter( (p, i) => {
     return i % 2 === 1;
-  });  
+  });
 }
 
 const tipData = loadTipFile();
 
-@WebComponent({tag: "et-tip-viewer"})
+@CustomElement("et-tip-viewer")
 export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, AcceptsKeybindingsManager, Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   static MIME_TYPE = "application/x-extraterm-tip";
   private static _resizeNotifier = new ResizeNotifier();
-  
+
   /**
    * Type guard for detecting a EtTipViewer instance.
-   * 
+   *
    * @param  node the node to test
    * @return      True if the node is a EtTipViewer.
    */
   static is(node: Node): node is TipViewer {
     return node !== null && node !== undefined && node instanceof TipViewer;
   }
-  
+
   private _log: Logger;
   private _configManager: ConfigDatabase = null;
   private _keybindingsManager: KeybindingsManager = null;
@@ -105,17 +105,17 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
     metadata.icon = "far fa-lightbulb";
     return metadata;
   }
-  
+
   connectedCallback(): void {
     super.connectedCallback();
-    
+
     if (DomUtils.getShadowRoot(this) == null) {
       this._tipIndex = this._configManager.getConfig(GENERAL_CONFIG).tipCounter % this._getTipCount();
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this.createClone();
       shadow.appendChild(clone);
       this.updateThemeCss();
-      
+
       const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
       TipViewer._resizeNotifier.observe(containerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
         this._handleResize();
@@ -129,7 +129,7 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
           shell.openExternal((<HTMLAnchorElement> source).href);
         }
       });
-      
+
       containerDiv.addEventListener('focus', (ev: FocusEvent) => {
         if (ev.target instanceof HTMLSelectElement) {
           ev.stopPropagation();
@@ -138,19 +138,19 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
       }, true);
 
       this._setTipHTML(this._getTipHTML(this._tipIndex));
-      
+
       const nextButton = DomUtils.getShadowId(this, ID_NEXT_BUTTON);
       nextButton.addEventListener('click', () => {
         this._tipIndex = (this._tipIndex + 1) % this._getTipCount();
         this._setTipHTML(this._getTipHTML(this._tipIndex));
       });
-      
+
       const previousButton = DomUtils.getShadowId(this, ID_PREVIOUS_BUTTON);
       previousButton.addEventListener('click', () => {
         this._tipIndex = (this._tipIndex + this._getTipCount() - 1) % this._getTipCount();
         this._setTipHTML(this._getTipHTML(this._tipIndex));
       });
-      
+
       const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
       showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
       showTipsSelect.addEventListener('change', () => {
@@ -161,7 +161,7 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
     }
     this._handleResize();
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.TIP_VIEWER, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GENERAL_GUI];
   }
@@ -185,7 +185,7 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
       this._configManagerDisposable.dispose();
       this._configManagerDisposable = null;
     }
-    
+
     this._configManager = newConfigManager;
     if (this._configManager !== null) {
       this._configManagerDisposable = this._configManager.onChange(this._configChanged.bind(this));
@@ -197,14 +197,14 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
       this._keybindingsManagerDisposable.dispose();
       this._keybindingsManagerDisposable = null;
     }
-    
+
     this._keybindingsManager = newKeybindingsManager;
     if (this._keybindingsManager !== null) {
       this._keybindingsManagerDisposable = this._keybindingsManager.onChange(this._keyBindingChanged.bind(this));
     }
   }
-  
-  getSelectionText(): string {    
+
+  getSelectionText(): string {
     return null;
   }
 
@@ -225,7 +225,7 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
   getHeight(): number {
     return this._height;
   }
-  
+
   // VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
   }
@@ -239,17 +239,17 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
   getVirtualHeight(containerHeight: number): number {
     return this._height;
   }
-  
+
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     return 0;
   }
-  
+
   // From viewerelementtypes.SupportsMimeTypes
   static supportsMimeType(mimeType): boolean {
     return [TipViewer.MIME_TYPE].indexOf(mimeType) !== -1;
   }
-  
+
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
@@ -277,10 +277,10 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
 
       window.document.body.appendChild(template);
     }
-    
+
     return window.document.importNode(template.content, true);
   }
-  
+
   private _configChanged(): void {
     const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
     showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
@@ -313,10 +313,10 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
             kbd.parentNode.removeChild(kbd);
           }
         }
-      }      
+      }
     });
   }
-  
+
   private _fixImgRelativeUrls(contentDiv: HTMLElement): void {
     const imgElements = contentDiv.querySelectorAll("img");
     const prefix = "file:///" + SourceDir.path + "/tips/";
@@ -329,8 +329,8 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
   private _getTipHTML(tipNumber: number): string {
     return tipData[tipNumber];
   }
-  
+
   private _getTipCount(): number {
     return tipData.length;
-  }  
+  }
 }

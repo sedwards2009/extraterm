@@ -5,7 +5,7 @@
 import Component from 'vue-class-component';
 import { Disposable } from '@extraterm/extraterm-extension-api';
 import Vue from 'vue';
-import {WebComponent, Attribute, Observe} from 'extraterm-web-component-decorators';
+import {CustomElement, Attribute, Observe} from 'extraterm-web-component-decorators';
 
 import {DebouncedDoLater} from 'extraterm-later';
 import {Logger, getLogger} from "extraterm-logging";
@@ -107,7 +107,7 @@ at ${formatHumanBytes(this.speedBytesPerSecond)}/s`;
   }
 }
 
-@WebComponent({tag: "et-file-transfer-progress"})
+@CustomElement("et-file-transfer-progress")
 export class FileTransferProgress extends ThemedContainerElementBase implements Disposable {
 
   static TAG_NAME = "et-file-transfer-progress";
@@ -139,7 +139,7 @@ export class FileTransferProgress extends ThemedContainerElementBase implements 
   private updateFilename(): void {
     this._ui.name = this.filename;
   }
-  
+
   @Attribute({default: "download"}) public actionType: string;
 
   @Observe("actionType")

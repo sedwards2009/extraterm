@@ -2,8 +2,7 @@
  * Copyright 2014-2015 Simon Edwards <simon@simonzone.com>
  */
 
-"use strict";
-import {WebComponent} from 'extraterm-web-component-decorators';
+import {CustomElement} from 'extraterm-web-component-decorators';
 
 import {ViewerElement} from '../viewers/ViewerElement';
 import * as DomUtils from '../DomUtils';
@@ -15,11 +14,11 @@ const ID_CONTAINER = "container";
 const ID_MAIN_STYLE = "main_style";
 
 
-@WebComponent({tag: "et-markdown-viewer"})
+@CustomElement("et-markdown-viewer")
 class EtMarkdownViewer extends ViewerElement {
-  
+
   static TAG_NAME = "ET-MARKDOWN-VIEWER";
-  
+
   private _focusable = false;
 
   getSelectionText(): string {
@@ -36,16 +35,16 @@ class EtMarkdownViewer extends ViewerElement {
   focus(): void {
     DomUtils.getShadowId(this, ID_CONTAINER).focus();
   }
-  
+
   hasFocus(): boolean {
     const root = DomUtils.getShadowRoot(this);
     return root.activeElement !== null;
   }
-  
+
   isFocusable(): boolean {
     return this._focusable;
   }
-  
+
   setFocusable(value: boolean) {
     this._focusable = value;
     this._updateFocusable(value);
@@ -56,9 +55,9 @@ class EtMarkdownViewer extends ViewerElement {
     const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
     const clone = this.createClone();
     shadow.appendChild(clone);
-    
+
     this._updateFocusable(this._focusable);
-    
+
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.addEventListener('keydown', (ev: KeyboardEvent): void => {
       if (ev.keyCode === 9 && ! ev.ctrlKey) {
@@ -71,22 +70,22 @@ class EtMarkdownViewer extends ViewerElement {
     super.connectedCallback();
     const container = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);
     const kids = this.childNodes;
-    
+
     // Collect the raw text content.
-    let text = "";    
+    let text = "";
     let i = 0;
     for (i=0; i<kids.length; i++) {
       if (kids[i].nodeName === '#text') {
         text = text + kids[i].textContent;
       }
     }
-    
+
     const markdownText = markdown.toHTML(text);
     container.innerHTML = markdownText;
   }
-  
+
   /**
-   * 
+   *
    */
   private createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
@@ -99,7 +98,7 @@ class EtMarkdownViewer extends ViewerElement {
           width: 100%;
           white-space: normal;
         }
-        
+
         #${ID_CONTAINER} {
           overflow: auto;
           height: 100%;
@@ -112,10 +111,10 @@ class EtMarkdownViewer extends ViewerElement {
 
       window.document.body.appendChild(template);
     }
-    
+
     return window.document.importNode(template.content, true);
   }
-  
+
   private _updateFocusable(focusable: boolean): void {
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     containerDiv.setAttribute('tabIndex', focusable ? "-1" : "");

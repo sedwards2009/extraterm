@@ -5,7 +5,7 @@
  */
 
 import { Disposable } from '@extraterm/extraterm-extension-api';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 
 import {doLater} from 'extraterm-later';
 import * as DomUtils from './DomUtils';
@@ -46,7 +46,7 @@ const intersectionObserver = new IntersectionObserver((entries) => {
 /**
  * A surface for displaying virtual scrollable elements including scrollbars.
  */
-@WebComponent({tag: "et-virtual-scroll-canvas"})
+@CustomElement("et-virtual-scroll-canvas")
 export class VirtualScrollCanvas extends ThemeableElementBase {
 
   static TAG_NAME = "ET-VIRTUAL-SCROLL-CANVAS";

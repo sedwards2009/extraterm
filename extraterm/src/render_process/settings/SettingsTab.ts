@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
@@ -22,12 +22,12 @@ import { TerminalVisualConfig } from '../TerminalVisualConfig';
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 
 
-@WebComponent({tag: "et-settings-tab"})
+@CustomElement("et-settings-tab")
 export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     AcceptsExtensionManager, AcceptsKeybindingsManager, SupportsDialogStack.SupportsDialogStack {
-  
+
   static TAG_NAME = "ET-SETTINGS-TAB";
-  
+
   private _log: Logger = null;
   private _ui: SettingsUi = null;
   private _dialogStack: HTMLElement[] = [];
@@ -46,9 +46,9 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     themeStyle.id = ThemeableElementBase.ID_THEME;
 
     shadow.appendChild(themeStyle);
-    
+
     this.updateThemeCss();
-    
+
     shadow.appendChild(component.$el);
     component.$el.addEventListener('contextmenu', (ev: MouseEvent) => this._handleContextMenuCapture(ev), true);
   }
@@ -77,7 +77,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   setConfigDatabase(configDatabase: ConfigDatabase): void {
     this._ui.setConfigDatabase(configDatabase);
   }
-  
+
   setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
     this._ui.setKeybindingsManager(newKeybindingsManager);
   }
@@ -85,15 +85,15 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._ui.setExtensionManager(extensionManager);
   }
-  
+
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
     this._ui.themes = themes;
   }
-  
+
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this._ui.setTerminalVisualConfig(terminalVisualConfig);
   }
-  
+
   private _handleContextMenuCapture(ev: MouseEvent): void {
     ev.stopImmediatePropagation();
     ev.preventDefault();

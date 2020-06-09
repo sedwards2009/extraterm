@@ -3,7 +3,7 @@
  */
 
 import {BulkFileHandle, BulkFileState, Disposable, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 
 import {DebouncedDoLater} from 'extraterm-later';
 import {FileTransferProgress} from '../gui/file_transfer/FileTransferProgress';
@@ -14,7 +14,7 @@ import {ViewerElement} from './ViewerElement';
 import * as ThemeTypes from '../../theme/Theme';
 
 
-@WebComponent({tag: "et-download-viewer"})
+@CustomElement("et-download-viewer")
 export class DownloadViewer extends SimpleViewerElement implements Disposable {
 
   static TAG_NAME = "et-download-viewer";

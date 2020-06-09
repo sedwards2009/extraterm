@@ -5,10 +5,10 @@
  */
 
 import * as nodeunit from 'nodeunit';
-import {Attribute, Filter, Observe, WebComponent} from '../Decorators';
+import { Attribute, Filter, Observe, CustomElement } from '../Decorators';
 
 
-@WebComponent({tag: "string-component"})
+@CustomElement("string-component")
 class StringComponent extends HTMLElement {
 
   @Attribute someString: string;
@@ -52,7 +52,7 @@ export function testStringAttributeViaHTML(test: nodeunit.Test): void {
   test.done();
 }
 
-@WebComponent({tag: "multi-string-component"})
+@CustomElement("multi-string-component")
 class MultiStringComponent extends HTMLElement {
 
   @Attribute someString: string;
@@ -137,7 +137,7 @@ export function testMultiStringAttributeViaJSWithMultiobserver(test: nodeunit.Te
   });
 }
 
-@WebComponent({tag: "filter-string-component"})
+@CustomElement("filter-string-component")
 class FilterStringComponent extends HTMLElement {
 
   @Attribute someString: string;
@@ -155,16 +155,16 @@ class FilterStringComponent extends HTMLElement {
   }
 
   @Attribute shortString: string;
-  
+
   @Filter("shortString")
   private _toLowerCase(aString: string): string {
-    return aString.toLowerCase();    
+    return aString.toLowerCase();
   }
 
   @Filter("shortString")
   private _trimString(aString: string): string {
     return aString.trim();
-  }  
+  }
 }
 
 function filterStringTest(guts: (sc: FilterStringComponent) => void): void {
@@ -220,7 +220,7 @@ export function testFilter2StringAttributeViaHTML(test: nodeunit.Test): void {
   });
 }
 
-@WebComponent({tag: "number-component"})
+@CustomElement("number-component")
 class NumberComponent extends HTMLElement {
 
   @Attribute someNumber: number;
@@ -251,7 +251,7 @@ export function testNumberAttributeViaJS(test: nodeunit.Test): void {
     test.equals(sc.someNumber, 123);
     test.equals(sc.lastSomeNumber, 123);
     test.equals(typeof sc.lastSomeNumber, "number");
-    
+
     test.done();
   });
 }
@@ -266,7 +266,7 @@ export function testNumberAttributeViaHTML(test: nodeunit.Test): void {
   test.done();
 }
 
-@WebComponent({tag: "boolean-component"})
+@CustomElement("boolean-component")
 class BooleanComponent extends HTMLElement {
 
   @Attribute someBoolean: boolean;
@@ -297,7 +297,7 @@ export function testBooleanAttributeViaJS(test: nodeunit.Test): void {
     test.equals(sc.someBoolean, false);
     test.equals(sc.lastSomeBoolean, false);
     test.equals(typeof sc.lastSomeBoolean, "boolean");
-    
+
     test.done();
   });
 }
@@ -312,7 +312,7 @@ export function testBooleanAttributeViaHTML(test: nodeunit.Test): void {
   test.done();
 }
 
-@WebComponent({tag: "substring-component"})
+@CustomElement("substring-component")
 class SubStringComponent extends StringComponent {
 
   @Observe("someString")
@@ -329,12 +329,12 @@ export function testSubclassObserve(test: nodeunit.Test): void {
   sc.someString = "blah";
   test.equals(sc.lastSomeString, "blah");
   test.equals(sc.subLastSomeString, "blah");
-  
+
   test.done();
 }
 
 
-@WebComponent({tag: "defaults-component"})
+@CustomElement("defaults-component")
 class DefaultsComponent extends HTMLElement {
 
   @Attribute({default: "foo"}) someString: string;
@@ -351,9 +351,9 @@ export function testDefaults(test: nodeunit.Test): void {
 
   test.equals(typeof ic.someNumber, "number");
   test.equals(ic.someNumber, 123);
-  
+
   test.equals(typeof ic.someBoolean, "boolean");
   test.equals(ic.someBoolean, false);
-  
+
   test.done();
 }

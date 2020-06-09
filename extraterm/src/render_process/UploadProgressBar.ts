@@ -3,13 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import * as ThemeTypes from '../theme/Theme';
 import {FileTransferProgress} from './gui/file_transfer/FileTransferProgress';
 import { doLater } from 'extraterm-later';
 
 
-@WebComponent({tag: "et-upload-progress-bar"})
+@CustomElement("et-upload-progress-bar")
 export class UploadProgressBar extends FileTransferProgress {
 
   static TAG_NAME = "ET-UPLOAD-PROGRESS-BAR";

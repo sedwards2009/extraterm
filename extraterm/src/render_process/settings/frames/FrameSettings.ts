@@ -2,7 +2,7 @@
  * Copyright 2018 Simon Edwards <simon@simonzone.com>
  */
 
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { FrameSettingsUi, nextId, Identifiable, IdentifiableCommandLineAction} from './FrameSettingsUi';
@@ -13,7 +13,7 @@ import { SettingsBase } from '../SettingsBase';
 
 export const FRAME_SETTINGS_TAG = "et-frame-settings";
 
-@WebComponent({tag: FRAME_SETTINGS_TAG})
+@CustomElement(FRAME_SETTINGS_TAG)
 export class FrameSettings extends SettingsBase<FrameSettingsUi> {
   private _log: Logger = null;
 
@@ -72,5 +72,5 @@ function stripIds(list: Identifiable[]): void {
     if (idable.id !== undefined) {
       delete idable.id;
     }
-  });  
+  });
 }

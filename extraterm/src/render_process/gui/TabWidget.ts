@@ -5,7 +5,7 @@
  */
 import * as _ from "lodash";
 import { html, render, TemplateResult } from "extraterm-lit-html";
-import { Attribute, Observe, WebComponent, Filter } from "extraterm-web-component-decorators";
+import { Attribute, Observe, CustomElement, Filter } from "extraterm-web-component-decorators";
 import { classMap } from "extraterm-lit-html/directives/class-map.js";
 
 import { doLater } from "extraterm-later";
@@ -48,7 +48,7 @@ export interface DroppedEventDetail {
  *
  * See Tab.
  */
-@WebComponent({tag: "et-tab-widget"})
+@CustomElement("et-tab-widget")
 export class TabWidget extends ThemeableElementBase {
 
   static TAG_NAME = "ET-TAB-WIDGET";

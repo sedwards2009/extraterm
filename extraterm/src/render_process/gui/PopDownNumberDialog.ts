@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Disposable} from "@extraterm/extraterm-extension-api";
-import {Attribute, Observe, WebComponent} from "extraterm-web-component-decorators";
+import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 import { html, render } from "extraterm-lit-html";
 
 import * as DomUtils from "../DomUtils";
@@ -18,7 +18,7 @@ const ID_INPUT = "ID_INPUT";
 /**
  * A Pop Down Number Dialog
  */
-@WebComponent({tag: "et-pop-down-number-dialog"})
+@CustomElement("et-pop-down-number-dialog")
 export class PopDownNumberDialog extends ThemeableElementBase {
 
   static TAG_NAME = "ET-POP-DOWN-NUMBER-DIALOG";

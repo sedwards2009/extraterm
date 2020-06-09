@@ -7,7 +7,7 @@
 import * as crypto from 'crypto';
 import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
-import {WebComponent} from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import { log as LogDecorator, Logger, getLogger } from "extraterm-logging";
 import * as TermApi from 'term-api';
 import { DeepReadonly } from 'extraterm-readonly-toolbox';
@@ -90,7 +90,7 @@ type InputStreamFilter = (input: string) => string;
  * An EtTerminal is full terminal emulator with GUI intergration. It handles the
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
-@WebComponent({tag: "et-terminal"})
+@CustomElement("et-terminal")
 export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindingsManager,
   AcceptsConfigDatabase, Disposable, SupportsClipboardPaste.SupportsClipboardPaste,
   SupportsDialogStack.SupportsDialogStack {

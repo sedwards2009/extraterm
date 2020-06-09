@@ -3,16 +3,16 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {WebComponent} from 'extraterm-web-component-decorators';
-import {ViewerMetadata} from '@extraterm/extraterm-extension-api';
+import {CustomElement} from "extraterm-web-component-decorators";
+import {ViewerMetadata} from "@extraterm/extraterm-extension-api";
 
-import * as ThemeTypes from '../theme/Theme';
-import {ViewerElement} from './viewers/ViewerElement';
-import {ThemeableElementBase} from './ThemeableElementBase';
-import * as DomUtils from './DomUtils';
-import {shell} from 'electron';
+import * as ThemeTypes from "../theme/Theme";
+import {ViewerElement} from "./viewers/ViewerElement";
+import {ThemeableElementBase} from "./ThemeableElementBase";
+import * as DomUtils from "./DomUtils";
+import {shell} from "electron";
 import {Logger, getLogger} from "extraterm-logging";
-import { AcceptsConfigDatabase, ConfigDatabase, SYSTEM_CONFIG } from '../Config';
+import { AcceptsConfigDatabase, ConfigDatabase, SYSTEM_CONFIG } from "../Config";
 
 const ID_ABOUT = "ID_ABOUT";
 
@@ -20,9 +20,9 @@ const ID_ABOUT = "ID_ABOUT";
 /**
  * The Extraterm About tab.
  */
-@WebComponent({tag: "et-about-tab"})
+@CustomElement("et-about-tab")
 export class AboutTab extends ViewerElement implements AcceptsConfigDatabase {
-  
+
   static TAG_NAME = "ET-ABOUT-TAB";
 
   private _log: Logger = null;
@@ -55,12 +55,12 @@ export class AboutTab extends ViewerElement implements AcceptsConfigDatabase {
   connectedCallback(): void {
     super.connectedCallback();
     if (DomUtils.getShadowRoot(this) == null) {
-      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-      const themeStyle = document.createElement('style');
+      const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
+      const themeStyle = document.createElement("style");
       themeStyle.id = ThemeableElementBase.ID_THEME;
-      
-      const divContainer = document.createElement('div');
-      divContainer.innerHTML = `<div id='${ID_ABOUT}'>
+
+      const divContainer = document.createElement("div");
+      divContainer.innerHTML = `<div id="${ID_ABOUT}">
   <h1>Extraterm</h1>
   <h3>version ${this._configDatabase.getConfig(SYSTEM_CONFIG).applicationVersion}</h3>
   <p>Copyright &copy; 2015-2020 Simon Edwards &lt;simon@simonzone.com&gt;</p>
@@ -74,7 +74,7 @@ export class AboutTab extends ViewerElement implements AcceptsConfigDatabase {
 
       shadow.appendChild(themeStyle);
       shadow.appendChild(divContainer);
-      divContainer.addEventListener('click', this._handleClick.bind(this));
+      divContainer.addEventListener("click", this._handleClick.bind(this));
 
       this.updateThemeCss();
     }
@@ -87,7 +87,7 @@ export class AboutTab extends ViewerElement implements AcceptsConfigDatabase {
       shell.openExternal(href);
     }
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.ABOUT_TAB];
   }

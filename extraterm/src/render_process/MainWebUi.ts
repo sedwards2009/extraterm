@@ -5,7 +5,7 @@
  */
 import * as he from 'he';
 import { BulkFileHandle } from '@extraterm/extraterm-extension-api';
-import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
+import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 
@@ -74,7 +74,7 @@ const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 /**
  * Top level UI component for a normal terminal window
  */
-@WebComponent({tag: "extraterm-mainwebui"})
+@CustomElement("extraterm-mainwebui")
 export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
     config.AcceptsConfigDatabase {
 

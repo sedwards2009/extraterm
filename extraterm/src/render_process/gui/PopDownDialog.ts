@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Attribute, Observe, WebComponent} from "extraterm-web-component-decorators";
+import {Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 import { html, render } from "extraterm-lit-html";
 
 import * as ThemeTypes from "../../theme/Theme";
@@ -18,7 +18,7 @@ const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
 /**
  * A Pop Down Dialog.
  */
-@WebComponent({tag: "et-pop-down-dialog"})
+@CustomElement("et-pop-down-dialog")
 export class PopDownDialog extends ThemeableElementBase {
 
   static TAG_NAME = "ET-POP-DOWN-DIALOG";

@@ -6,7 +6,7 @@
 import { html, render, TemplateResult } from "extraterm-lit-html";
 import { classMap } from "extraterm-lit-html/directives/class-map.js";
 import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
-import { Attribute, Observe, WebComponent } from "extraterm-web-component-decorators";
+import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
@@ -15,7 +15,7 @@ import { ThemeableElementBase } from "../ThemeableElementBase";
 /**
  * A menu item suitable for use inside a ContextMenu.
  */
-@WebComponent({tag: "et-menu-item"})
+@CustomElement("et-menu-item")
 export class MenuItem extends ThemeableElementBase {
 
   static TAG_NAME = "ET-MENU-ITEM";

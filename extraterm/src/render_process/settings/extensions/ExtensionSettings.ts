@@ -2,7 +2,7 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 import { Logger, getLogger } from "extraterm-logging";
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import { SettingsBase } from '../SettingsBase';
 import { ConfigKey } from '../../../Config';
 
@@ -13,13 +13,13 @@ import { ExtensionMetadataAndState } from "./ExtensionMetadataAndStateType";
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
 
-@WebComponent({tag: EXTENSION_SETTINGS_TAG})
+@CustomElement(EXTENSION_SETTINGS_TAG)
 export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
   private _log: Logger = null;
 
   private _extensionManager: ExtensionManager = null;
   private _stateChangedDisposable: Disposable = null;
-  
+
   constructor() {
     super(ExtensionSettingsUi, []);
     this._log = getLogger(EXTENSION_SETTINGS_TAG, this);
@@ -45,7 +45,7 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
 
   set extensionManager(extensionManager: ExtensionManager) {
     this._extensionManager = extensionManager;
-    
+
     if (this._stateChangedDisposable != null) {
       this._stateChangedDisposable.dispose();
       this._stateChangedDisposable = null;

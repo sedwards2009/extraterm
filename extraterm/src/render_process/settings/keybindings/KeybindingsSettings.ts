@@ -2,7 +2,7 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 
 import { KeybindingsSettingsUi } from './KeybindingsSettingsUi';
 import { SYSTEM_CONFIG, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
@@ -19,7 +19,7 @@ import { LogicalKeybindingsName } from 'extraterm/src/keybindings/KeybindingsTyp
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 
-@WebComponent({tag: KEY_BINDINGS_SETTINGS_TAG})
+@CustomElement(KEY_BINDINGS_SETTINGS_TAG)
 export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _log: Logger = null;
   private _keybindingsManager: KeybindingsManager = null;

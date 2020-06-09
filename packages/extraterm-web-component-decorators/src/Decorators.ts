@@ -7,12 +7,6 @@ import * as reflect from 'reflect-metadata';
 
 require('reflect-metadata');  // Ensure that it is actually imported and not elided by tsc.
 
-export interface WebComponentOptions {
-  // The tag name to register this component under. This must conform to the
-  // requirements set down in the Custom Element spec and contain a hyphen.
-  tag: string;
-}
-
 const ATTRIBUTES_REGISTRATION_KEY = "_attributes_";
 const OBSERVERS_REGISTRATION_KEY = "_observers_";
 
@@ -57,7 +51,7 @@ function jsTypeToPropertyType(name: string): PropertyType {
  *
  * This should appear at the top of classes which implement Custom Elements.
  */
-export function WebComponent(options: WebComponentOptions): (target: any) => any {
+export function CustomElement(tag: string): (target: any) => any {
   return function(constructor: any): any {
 
     let attributeRegistrations: AttributeRegistrationsMapping = null;
@@ -168,14 +162,14 @@ export function WebComponent(options: WebComponentOptions): (target: any) => any
     }
 
     // Check for double registration with the same tag.
-    const tag = options.tag.toLowerCase();
-    const previousRegistration = window.customElements.get(tag);
+    const tagLower = tag.toLowerCase();
+    const previousRegistration = window.customElements.get(tagLower);
     if (previousRegistration !== undefined) {
-      console.warn(`A Custom Element with name '${tag}' is already registered.`);
+      console.warn(`A Custom Element with name '${tagLower}' is already registered.`);
       return constructor;
     }
 
-    window.customElements.define(tag, constructor);
+    window.customElements.define(tagLower, constructor);
     return constructor;
   };
 }

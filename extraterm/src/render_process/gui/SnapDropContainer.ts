@@ -5,7 +5,7 @@
  */
 import { html, render } from "extraterm-lit-html";
 import { log, Logger, getLogger} from "extraterm-logging";
-import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
+import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -48,7 +48,7 @@ const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
 /**
  * A container which supports splitting and snapping for dragged items.
  */
-@WebComponent({tag: "et-snap-drop-container"})
+@CustomElement("et-snap-drop-container")
 export class SnapDropContainer extends ThemeableElementBase {
 
   static TAG_NAME = "ET-SNAP-DROP-CONTAINER";
@@ -101,7 +101,7 @@ export class SnapDropContainer extends ThemeableElementBase {
       handleEvent: this._handleDrop,
       capture: true
     };
-        
+
     const template = html`${this._styleTag()}
       <div
           id='${ID_TOP}'
@@ -128,7 +128,7 @@ export class SnapDropContainer extends ThemeableElementBase {
       this._render();
     }
   }
-  
+
   private _handleDragOver(ev: DragEvent): void {
     if (this._isSupportedDropPayload(ev)) {
       ev.preventDefault();

@@ -7,7 +7,7 @@ import { html, render, TemplateResult } from "extraterm-lit-html";
 import { DirectiveFn } from "extraterm-lit-html/lib/directive";
 import { repeat } from "extraterm-lit-html/directives/repeat";
 import { Disposable } from "@extraterm/extraterm-extension-api";
-import { Attribute, Observe, WebComponent } from "extraterm-web-component-decorators";
+import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 
 import * as ThemeTypes from "../../theme/Theme";
 import * as DomUtils from "../DomUtils";
@@ -22,7 +22,7 @@ const ID_RESULTS = "ID_RESULTS";
 /**
  * A List Picker.
  */
-@WebComponent({tag: "et-list-picker"})
+@CustomElement("et-list-picker")
 export class ListPicker<T extends { id: string; }> extends ThemeableElementBase {
 
   static TAG_NAME = "ET-LIST-PICKER";

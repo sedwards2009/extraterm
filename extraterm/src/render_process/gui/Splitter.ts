@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -39,7 +39,7 @@ export enum SplitOrientation {
  * A widget to display panes of widgets separated by a moveable gap/bar.
  *
  */
-@WebComponent({tag: "et-splitter"})
+@CustomElement("et-splitter")
 export class Splitter extends ThemeableElementBase {
 
   static TAG_NAME = "ET-SPLITTER";

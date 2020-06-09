@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from "extraterm-web-component-decorators";
+import { CustomElement } from "extraterm-web-component-decorators";
 import { html, render } from "extraterm-lit-html";
 
 import * as DomUtils from "../DomUtils";
@@ -27,7 +27,7 @@ const CLASS_CONTAINER_OPEN = "CLASS_CONTAINER_OPEN";
 /**
  * A context menu.
  */
-@WebComponent({tag: "et-context-menu"})
+@CustomElement("et-context-menu")
 export class ContextMenu extends ThemeableElementBase {
 
   static TAG_NAME = "ET-CONTEXT-MENU";
@@ -97,7 +97,7 @@ export class ContextMenu extends ThemeableElementBase {
       handlEvent: this._handleCoverContextmenu,
       capture: true,
     };
-    
+
     const template = html`${this._styleTag()}
       <div
         id=${ID_COVER}

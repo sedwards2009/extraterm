@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { html, render } from "extraterm-lit-html";
-import { Attribute, Filter, Observe, WebComponent } from "extraterm-web-component-decorators";
+import { Attribute, Filter, Observe, CustomElement } from "extraterm-web-component-decorators";
 
 import { log, Logger, getLogger } from "extraterm-logging";
 import * as DomUtils from "../DomUtils";
@@ -17,7 +17,7 @@ const ID_CONTAINER = "ID_CONTAINER";
 /**
  * A scrollbar.
  */
-@WebComponent({tag: "et-scroll-bar"})
+@CustomElement("et-scroll-bar")
 export class ScrollBar extends ThemeableElementBase {
 
   private _log: Logger;

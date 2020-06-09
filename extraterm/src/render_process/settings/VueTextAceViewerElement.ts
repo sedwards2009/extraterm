@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
+import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { ViewerElement } from '../viewers/ViewerElement';
 import { Logger, getLogger } from 'extraterm-logging';
 import { TextViewer } from '../viewers/TextAceViewer';
@@ -12,7 +12,7 @@ import { VirtualScrollCanvas } from '../VirtualScrollCanvas';
 
 export const VUE_TEXT_ACE_VIEWER_ELEMENT_TAG = "et-vue-text-ace-viewer-element";
 
-@WebComponent({tag: VUE_TEXT_ACE_VIEWER_ELEMENT_TAG})
+@CustomElement(VUE_TEXT_ACE_VIEWER_ELEMENT_TAG)
 export class VueTextAceViewerElement extends ViewerElement {
 
   private _log: Logger = null;

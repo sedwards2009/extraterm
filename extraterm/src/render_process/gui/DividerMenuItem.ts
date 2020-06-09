@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent } from "extraterm-web-component-decorators";
+import { CustomElement } from "extraterm-web-component-decorators";
 import { html, render } from "extraterm-lit-html";
 
 import * as ThemeTypes from "../../theme/Theme";
@@ -13,7 +13,7 @@ import { ThemeableElementBase } from "../ThemeableElementBase";
 /**
  * Divider line menu item for use inside a context menu.
  */
-@WebComponent({tag: "et-divider-menu-item"})
+@CustomElement("et-divider-menu-item")
 export class DividerMenuItem extends ThemeableElementBase {
 
   constructor() {

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { html, render } from "extraterm-lit-html";
-import { WebComponent } from "extraterm-web-component-decorators";
+import { CustomElement } from "extraterm-web-component-decorators";
 import { getLogger, Logger } from "extraterm-logging";
 import { CssFile } from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
@@ -12,7 +12,7 @@ import { ThemeableElementBase } from "../ThemeableElementBase";
 
 export type BorderSide = "north" | "south" | "east" | "west";
 
-@WebComponent({tag: "et-sidebar-layout"})
+@CustomElement("et-sidebar-layout")
 export class SidebarLayout extends ThemeableElementBase {
 
   static TAG_NAME = "ET-SIDEBAR-LAYOUT";

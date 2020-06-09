@@ -9,7 +9,7 @@ import { live } from "extraterm-lit-html/directives/live";
 import { repeat } from "extraterm-lit-html/directives/repeat";
 
 import {Disposable} from "@extraterm/extraterm-extension-api";
-import {Attribute, Observe, WebComponent} from "extraterm-web-component-decorators";
+import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 
 import {doLater} from "extraterm-later";
 import {log, Logger, getLogger} from "extraterm-logging";
@@ -26,7 +26,7 @@ const ID_RESULTS = "ID_RESULTS";
 /**
  * A Pop Down List Picker.
  */
-@WebComponent({tag: "et-popdownlistpicker"})
+@CustomElement("et-popdownlistpicker")
 export class PopDownListPicker<T extends { id: string; }> extends ThemeableElementBase {
 
   static TAG_NAME = "ET-POPDOWNLISTPICKER";

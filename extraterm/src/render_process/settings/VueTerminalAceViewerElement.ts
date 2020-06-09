@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { WebComponent, Attribute, Observe } from 'extraterm-web-component-decorators';
+import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from 'extraterm-logging';
 
 import { ViewerElement } from '../viewers/ViewerElement';
@@ -15,7 +15,7 @@ import { VisualState } from '../viewers/ViewerElementTypes';
 
 export const VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG = "et-vue-terminal-ace-viewer-element";
 
-@WebComponent({tag: VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG})
+@CustomElement(VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG)
 export class VueTerminalAceViewerElement extends ViewerElement {
 
   private _log: Logger = null;
