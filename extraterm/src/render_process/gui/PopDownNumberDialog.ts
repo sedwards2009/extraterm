@@ -25,12 +25,12 @@ export class PopDownNumberDialog extends ThemeableElementBase {
 
   private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
-  private _open = false;
 
   constructor() {
     super();
     this._handleDialogCloseRequest = this._handleDialogCloseRequest.bind(this);
     this._handleTextInputKeyDown = this._handleTextInputKeyDown.bind(this);
+    this._handleInputChange = this._handleInputChange.bind(this);
     this.attachShadow({ mode: "open", delegatesFocus: true });
     this._render();
   }
@@ -41,7 +41,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
         id="ID_DIALOG"
         title-primary=${this.titlePrimary}
         title-secondary=${this.titleSecondary}
-        open=${this._open}
+        open=${this.open}
         @ET-POP-DOWN-DIALOG-CLOSE_REQUEST=${this._handleDialogCloseRequest}
       >
         <div class="form-group"><input
@@ -50,7 +50,8 @@ export class PopDownNumberDialog extends ThemeableElementBase {
           @keydown=${this._handleTextInputKeyDown}
           min=${this.min}
           max=${this.max}
-          value="1" /></div>
+          @change=${this._handleInputChange}
+          value=${this.value} /></div>
       </et-pop-down-dialog>
       `;
     render(template, this.shadowRoot);
@@ -66,22 +67,13 @@ export class PopDownNumberDialog extends ThemeableElementBase {
             ThemeTypes.CssFile.GUI_POP_DOWN_NUMBER_DIALOG, ...extraCssFiles];
   }
 
-  getValue(): number {
-    const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
-    return textInput.valueAsNumber;
-  }
-
-  setValue(value: number): void {
-    const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
-    textInput.valueAsNumber = value;
-  }
-
+  @Attribute({default: 0}) value: number;
   @Attribute({default: 0}) min: number;
   @Attribute({default: 10}) max: number;
   @Attribute({default: ""}) titlePrimary: string;
   @Attribute({default: ""}) titleSecondary: string;
 
-  @Observe("min", "max", "titlePrimary", "titleSecondary")
+  @Observe("min", "max", "titlePrimary", "titleSecondary", "value")
   private _observeTitles(target: string): void {
     this._render();
   }
@@ -96,7 +88,11 @@ export class PopDownNumberDialog extends ThemeableElementBase {
     this.updateThemeCss();
   }
 
-  private _handleTextInputKeyDown(ev: KeyboardEvent) {
+  private _handleInputChange(ev: Event): void {
+    this.value = (<HTMLInputElement>ev.target).valueAsNumber;
+  }
+
+  private _handleTextInputKeyDown(ev: KeyboardEvent): void {
     if (ev.key === "Escape") {
       this._okId(null);
       ev.preventDefault();
@@ -108,27 +104,24 @@ export class PopDownNumberDialog extends ThemeableElementBase {
       ev.preventDefault();
       ev.stopPropagation();
 
-      this._okId(this.getValue());
+      this._okId(this.value);
     }
   }
 
-  open(): void {
-    this._open = true;
+  @Attribute({default:false}) open: boolean;
+  @Observe("open")
+  private _observeOpen(): void {
     this._render();
-
-    const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
-    textInput.focus();
-  }
-
-  close(): void {
-    this._open = false;
-    this._render();
+    if (this.open) {
+      const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
+      textInput.focus();
+    }
   }
 
   private _okId(value: number): void {
     if (this._laterHandle === null) {
       this._laterHandle = doLater( () => {
-        this.close();
+        this.open = false;
         this._laterHandle = null;
         const event = new CustomEvent("selected", { detail: {value: value } });
         this.dispatchEvent(event);
