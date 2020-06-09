@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,11 +7,12 @@ import { WebComponent } from 'extraterm-web-component-decorators';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
-import { TemplatedElementBase } from './TemplatedElementBase';
 import { RefreshLevel } from '../viewers/ViewerElementTypes';
+import { ThemeableElementBase } from '../ThemeableElementBase';
 
 const ID_TOP = "ID_TOP";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -39,11 +40,11 @@ export enum SplitOrientation {
  *
  */
 @WebComponent({tag: "et-splitter"})
-export class Splitter extends TemplatedElementBase {
-  
+export class Splitter extends ThemeableElementBase {
+
   static TAG_NAME = "ET-SPLITTER";
   private static _resizeNotifier = new ResizeNotifier();
-  
+
   private _log: Logger;
   private _mutationObserver: MutationObserver = null;
   private _orientation: SplitOrientation = SplitOrientation.VERTICAL;
@@ -52,9 +53,17 @@ export class Splitter extends TemplatedElementBase {
   private _dividerDragOffset: number = 0;
 
   constructor() {
-    super({ delegatesFocus: false });
-
+    super();
     this._log = getLogger(Splitter.TAG_NAME, this);
+
+    this.attachShadow({ mode: 'open', delegatesFocus: false });
+
+    const styleElement = document.createElement("style");
+    styleElement.id = ThemeableElementBase.ID_THEME;
+    this.shadowRoot.appendChild(styleElement);
+    this.shadowRoot.appendChild(DomUtils.htmlToFragment(trimBetweenTags(this._html())));
+    this.updateThemeCss();
+
     this._paneSizes = new PaneSizes();
 
     const topDiv = this._elementById(ID_TOP);
@@ -99,7 +108,7 @@ export class Splitter extends TemplatedElementBase {
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.GUI_SPLITTER];
   }
-  
+
   getSplitOrientation(): SplitOrientation {
     return this._orientation;
   }
@@ -144,7 +153,7 @@ export class Splitter extends TemplatedElementBase {
     }
     return result;
   }
-  
+
   private _refresh(level: RefreshLevel): void {
     if (DomUtils.getShadowRoot(this) !== null && DomUtils.isNodeInDom(this)) {
       // DOM read
@@ -171,18 +180,6 @@ export class Splitter extends TemplatedElementBase {
       <div id='${ID_COVER}'><div id='${ID_INDICATOR}'></div></div>
     </div>`;
   }
-
-  //-----------------------------------------------------------------------
-  //
-  //   #######                                   
-  //   #       #    # ###### #    # #####  ####  
-  //   #       #    # #      ##   #   #   #      
-  //   #####   #    # #####  # #  #   #    ####  
-  //   #       #    # #      #  # #   #        # 
-  //   #        #  #  #      #   ##   #   #    # 
-  //   #######   ##   ###### #    #   #    ####  
-  //
-  //-----------------------------------------------------------------------
 
   private _handleMouseDown(ev: MouseEvent): void {
     const target = <HTMLElement> ev.target;
@@ -233,7 +230,7 @@ export class Splitter extends TemplatedElementBase {
     if (this._dividerDrag === NOT_DRAGGING) {
       return;
     }
-    
+
     ev.preventDefault();
     ev.stopPropagation();
 
@@ -301,7 +298,7 @@ export class Splitter extends TemplatedElementBase {
 
   /**
    * Immediately perform any pending layout updates.
-   * 
+   *
    * If this is not called then updates are performed at the next microtask via the mutation observer.
    */
   update(): void {
@@ -316,16 +313,16 @@ export class Splitter extends TemplatedElementBase {
 
   //-----------------------------------------------------------------------
   //
-  //   #                                        
-  //   #         ##   #   #  ####  #    # ##### 
-  //   #        #  #   # #  #    # #    #   #   
-  //   #       #    #   #   #    # #    #   #   
-  //   #       ######   #   #    # #    #   #   
-  //   #       #    #   #   #    # #    #   #   
-  //   ####### #    #   #    ####   ####    #   
+  //   #
+  //   #         ##   #   #  ####  #    # #####
+  //   #        #  #   # #  #    # #    #   #
+  //   #       #    #   #   #    # #    #   #
+  //   #       ######   #   #    # #    #   #
+  //   #       #    #   #   #    # #    #   #
+  //   ####### #    #   #    ####   ####    #
   //
   //-----------------------------------------------------------------------
-                                          
+
   private _createLayout(paneSizes: PaneSizes): void {
     const topDiv = this._elementById(ID_CONTAINER);
 
@@ -388,10 +385,13 @@ export class Splitter extends TemplatedElementBase {
           divider.style.width = null;
         }
         position += DIVIDER_SIZE;
-      }      
+      }
     }
   }
 
+  private _elementById(id: string): HTMLElement {
+    return DomUtils.getShadowId(this, id);
+  }
 }
 
 //-----------------------------------------------------------------------
@@ -452,7 +452,7 @@ class PaneSizes {
     const copy = this._paneSizes.slice();
     copy[dividerIndex] += delta;
     copy[dividerIndex+1] -= delta;
-    
+
     return new PaneSizes(copy, this._panes);
   }
 
@@ -560,5 +560,5 @@ class PaneSizes {
     }
     return new PaneSizes(newPaneSizes, tempPanes);
   }
-  
+
 }
