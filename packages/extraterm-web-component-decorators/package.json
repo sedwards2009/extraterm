@@ -1,6 +1,6 @@
 {
   "name": "extraterm-web-component-decorators",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "description": "TypeScript decorators for Web Components from the Extraterm project",
   "author": "Simon Edwards",
   "license": "MIT",
@@ -22,7 +22,7 @@
   },
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
-    "build-fast": "tsc && webpack dist/test/TestCode.js dist/test/bundle.js",
+    "build-fast": "tsc && webpack dist/test/TestCode.js dist/test/bundle.js && shx cp src/test/RunTests.html dist/test/",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
@@ -31,5 +31,8 @@
   },
   "dependencies": {
     "reflect-metadata": "0.1.10"
+  },
+  "workspaces": {
+    "nohoist": ["**/nodeunit", "**/reflect-metadata"]
   }
 }

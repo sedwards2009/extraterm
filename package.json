@@ -42,7 +42,9 @@
       "extensions/*"
     ],
     "nohoist": [
-      "**/lit-html"
+      "**/lit-html",
+      "**/nodeunit",
+      "**/reflect-metadata"
     ]
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
