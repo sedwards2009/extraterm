@@ -9,19 +9,22 @@ import * as reflect from 'reflect-metadata';
 type FilterMethod = (value: any, target: string) => any;
 type ObserverMethodName = string;
 
+
+type PropertyType = 'any' | 'String' | 'Number' | 'Boolean';
+
+function jsTypeToPropertyType(name: string): PropertyType {
+  if (name === "String" || name === "Number" || name === "Boolean") {
+    return name;
+  }
+  return "any";
+}
+
+
 interface AttributeData {
   jsName: string;
   attributeName: string;
-
+  dataType: PropertyType;
   instanceValueMap: WeakMap<any, any>;
-
-  // kebabName: string;
-
-  // key: Symbol;
-  // getter: () => any;
-  // directSetter: (newValue: any) => void;
-  // attributeName: string;
-  // dataType: PropertyType;
 
   filters: FilterMethod[];
   observers: ObserverMethodName[];
@@ -73,7 +76,7 @@ export function CustomElement(tag: string): (target: any) => any {
 
 export function Attribute(prototype: any, key: string) {
   const decoratorData = getDecoratorData(prototype);
-  decoratorData.installAttribute(key);
+  decoratorData.installAttribute(prototype, key);
   return undefined;
 }
 
@@ -106,15 +109,29 @@ class DecoratorData {
     return this._instanceConstructedMap.get(instance);
   }
 
-  installAttribute(jsName: string): void {
+  installAttribute(prototype: any, jsName: string): void {
     const decoratorData = this;
     const attrData = this._getOrCreateAttributeData(jsName);
+
+    let propertyType: PropertyType = "any";
+    const propertyTypeMetadata = Reflect.getMetadata("design:type", prototype, jsName);
+    if (propertyTypeMetadata != null) {
+      propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
+    }
+    attrData.dataType = propertyType;
 
     const getter = function(this: any): any {
       return attrData.instanceValueMap.get(this);
     };
 
-    const setter = function(this: any, newValue: any): void {
+    const setter = function(this: any, newStringValue: any): void {
+      let newValue: any = newStringValue;
+      if (attrData.dataType === "Number" && (typeof newValue !== "number")) {
+        newValue = parseFloat(newStringValue);
+      } else if (attrData.dataType === "Boolean" && (typeof newValue !== "boolean")) {
+        newValue = newStringValue === attrData.attributeName || newStringValue === "" || newStringValue === "true";
+      }
+
       // Filter
 
       attrData.instanceValueMap.set(this, newValue);
@@ -152,6 +169,7 @@ console.log(`this[methodName]`, this[methodName]);
     const newRegistration: AttributeData = {
       jsName,
       attributeName,
+      dataType: null,
       instanceValueMap: new WeakMap<any, any>(),
       filters: [],
       observers: [],
