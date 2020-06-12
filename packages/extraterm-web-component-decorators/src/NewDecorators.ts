@@ -79,6 +79,10 @@ export function CustomElement(tag: string): (target: any) => any {
           super.removeAttribute(attrName);
         }
       }
+
+      [decoratorData.superSetAttributeSymbol](attrName: string, value: any): void {
+        super.setAttribute(attrName, value);
+      }
     };
 
     decoratorData.validate();
@@ -112,6 +116,8 @@ class DecoratorData {
 
   private _attrNameAttrDataMap = new Map<string, AttributeData>();
   //                                     ^ Key is a kebab-case attribute name.
+
+  superSetAttributeSymbol = Symbol("SuperSetAttribute")
 
   constructor(private _elementProto: any) {
   }
@@ -160,8 +166,7 @@ class DecoratorData {
       attrData.instanceValueMap.set(this, newValue);
 
       if (decoratorData._isInstanceConstructed(this)) {
-        // FIXME
-        // this[SetParentAttributeSymbol].call(this, attrData.attributeName, newValue);
+        this[decoratorData.superSetAttributeSymbol].call(this, attrData.attributeName, newValue);
       }
 
       // Notify observers
