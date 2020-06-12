@@ -283,8 +283,7 @@ class BooleanComponent extends HTMLElement {
     this.lastSomeBoolean = this.someBoolean;
   }
 
-  public lastSomeBoolean: boolean;
-
+  lastSomeBoolean: boolean;
 }
 
 function someBooleanTest(guts: (sc: BooleanComponent) => void): void {
@@ -297,10 +296,23 @@ function someBooleanTest(guts: (sc: BooleanComponent) => void): void {
   }
 }
 
-export function testBooleanAttributeViaJS(test: nodeunit.Test): void {
+export function testTrueBooleanAttributeViaJS(test: nodeunit.Test): void {
+  someBooleanTest((sc: BooleanComponent): void => {
+    sc.someBoolean = true;
+    test.equals(sc.hasAttribute("some-boolean"), true);
+    test.notEqual(sc.getAttribute("some-boolean"), null);
+    test.equals(sc.someBoolean, true);
+
+    test.done();
+  });
+}
+
+
+export function testFalseBooleanAttributeViaJS(test: nodeunit.Test): void {
   someBooleanTest((sc: BooleanComponent): void => {
     sc.someBoolean = false;
-    test.equals(sc.getAttribute("some-boolean"), "false");
+    test.equals(sc.hasAttribute("some-boolean"), false);
+    test.equals(sc.getAttribute("some-boolean"), null);
     test.equals(sc.someBoolean, false);
     test.equals(sc.lastSomeBoolean, false);
     test.equals(typeof sc.lastSomeBoolean, "boolean");
@@ -311,8 +323,8 @@ export function testBooleanAttributeViaJS(test: nodeunit.Test): void {
 
 export function testBooleanAttributeViaHTML(test: nodeunit.Test): void {
   someBooleanTest((sc: BooleanComponent): void => {
-    sc.setAttribute("some-boolean", "false");
-    test.equals(sc.getAttribute("some-boolean"), "false");
+    sc.removeAttribute("some-boolean");
+    test.equals(sc.getAttribute("some-boolean"), null);
     test.equals(sc.lastSomeBoolean, false);
     test.equals(typeof sc.lastSomeBoolean, "boolean");
   });

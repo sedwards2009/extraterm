@@ -9,7 +9,6 @@ import * as reflect from 'reflect-metadata';
 type FilterMethod = (value: any, target: string) => any;
 type ObserverMethodName = string;
 
-
 type PropertyType = 'any' | 'String' | 'Number' | 'Boolean';
 
 function jsTypeToPropertyType(name: string): PropertyType {
@@ -18,7 +17,6 @@ function jsTypeToPropertyType(name: string): PropertyType {
   }
   return "any";
 }
-
 
 interface AttributeData {
   jsName: string;
@@ -64,6 +62,17 @@ export function CustomElement(tag: string): (target: any) => any {
       setAttribute(attrName: string, value: any): void {
         if ( ! decoratorData.setAttribute(this, attrName, value)) {
           super.setAttribute(attrName, value);
+        }
+      }
+
+      hasAttribute(attrName: string): boolean {
+        const result = decoratorData.hasAttribute(this, attrName);
+        return result === undefined ? super.hasAttribute(attrName) : result;
+      }
+
+      removeAttribute(attrName: string): void {
+        if ( ! decoratorData.removeAttribute(this, attrName)) {
+          super.removeAttribute(attrName);
         }
       }
     };
@@ -186,7 +195,12 @@ console.log(`this[methodName]`, this[methodName]);
       return undefined;
     }
 
-    return attrData.instanceValueMap.get(instance);
+    const value = attrData.instanceValueMap.get(instance);
+    if (attrData.dataType === "Boolean") {
+      return value ? "" : null;
+    }
+
+    return value;
   }
 
   setAttribute(instance: any, attrName: string, value: any): boolean {
@@ -196,6 +210,29 @@ console.log(`this[methodName]`, this[methodName]);
     }
 
     instance[attrData.jsName] = value;
+    return true;
+  }
+
+  hasAttribute(instance: any, attrName: string) : boolean {
+    const attrData = this._attrNameAttrDataMap.get(attrName);
+    if (attrData === undefined) {
+      return undefined;
+    }
+    if (attrData.dataType !== "Boolean") {
+      return undefined;
+    }
+    return instance[attrData.jsName];
+  }
+
+  removeAttribute(instance: any, attrName: string) : boolean {
+    const attrData = this._attrNameAttrDataMap.get(attrName);
+    if (attrData === undefined) {
+      return false;
+    }
+    if (attrData.dataType !== "Boolean") {
+      return false;
+    }
+    instance[attrData.jsName] = false;
     return true;
   }
 
