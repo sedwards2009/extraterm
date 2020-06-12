@@ -361,7 +361,7 @@ class DefaultsComponent extends HTMLElement {
 
   @Attribute someString = "foo";
   @Attribute someNumber = 123;
-  @Attribute someBoolean= false;
+  @Attribute someBoolean = false;
 }
 
 export function testDefaults(test: nodeunit.Test): void {

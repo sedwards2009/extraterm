@@ -6,7 +6,7 @@
 import * as reflect from 'reflect-metadata';
 
 
-type FilterMethod = (value: any, target: string) => any;
+type FilterMethodName = string;
 type ObserverMethodName = string;
 
 type PropertyType = 'any' | 'String' | 'Number' | 'Boolean';
@@ -24,7 +24,7 @@ interface AttributeData {
   dataType: PropertyType;
   instanceValueMap: WeakMap<any, any>;
 
-  filters: FilterMethod[];
+  filters: FilterMethodName[];
   observers: ObserverMethodName[];
 }
 
@@ -33,13 +33,16 @@ function kebabCase(name: string): string {
 }
 
 const decoratorDataSymbol = Symbol("Custom Element Decorator Data");
-// const SetParentAttributeSymbol = Symbol("SetParentAttribute");
 
 
 /**
  * Class decorator for web components.
  *
  * This should appear at the top of classes which implement Custom Elements.
+ *
+ * @param tag The tag for this custom element written in kebab-case. As
+ *            conform the Custom Element specification, this tag must contain
+ *            a `-` (dash) character.
  */
 export function CustomElement(tag: string): (target: any) => any {
   return function(constructor: any): any {
@@ -142,18 +145,23 @@ class DecoratorData {
       }
 
       // Filter
+      for (const methodName of attrData.filters) {
+        const updatedValue = this[methodName].call(this, newValue, jsName);
+        if (updatedValue === undefined) {
+          return;
+        }
+        newValue = updatedValue;
+      }
 
       attrData.instanceValueMap.set(this, newValue);
+
       if (decoratorData._isInstanceConstructed(this)) {
-
-// console.log(`this[SetParentAttributeSymbol]`, this[SetParentAttributeSymbol]);
-
+        // FIXME
         // this[SetParentAttributeSymbol].call(this, attrData.attributeName, newValue);
       }
 
       // Notify observers
       for (const methodName of attrData.observers) {
-console.log(`this[methodName]`, this[methodName]);
         this[methodName].call(this, jsName);
       }
     };
@@ -240,6 +248,11 @@ console.log(`this[methodName]`, this[methodName]);
     const attrData = this._getOrCreateAttributeData(jsPropertyName);
     attrData.observers.push(methodName);
   }
+
+  registerFilter(jsPropertyName: string, methodName: string): void {
+    const attrData = this._getOrCreateAttributeData(jsPropertyName);
+    attrData.filters.push(methodName);
+  }
 }
 
 /**
@@ -249,8 +262,8 @@ console.log(`this[methodName]`, this[methodName]);
  * attribute which changed. Note: The name is actually that of the
  * property. i.e. "someString" not "some-string".
  *
- * @param targets variable number of parameters naming the attributes which
- *          this method observes.
+ * @param jsPropertyNames variable number of parameters naming the
+ *                        attributes which this method observes.
  */
 export function Observe(...jsPropertyNames: string[]) {
   return function (proto: any, methodName: string, descriptor: PropertyDescriptor) {
@@ -274,10 +287,14 @@ export function Observe(...jsPropertyNames: string[]) {
  * Also these filters can only be used for attributes which have been created
  * using the `Attribute` decorator.
  *
- * @param targets variable number of parameters naming the attributes which
- *          this method filters.
+ * @param jsPropertyNames variable number of parameters naming the attributes
+ *                        which this method filters.
  */
-export function Filter(...targets: string[]) {
+export function Filter(...jsPropertyNames: string[]) {
   return function(proto: any, methodName: string, descriptor: PropertyDescriptor) {
+    const decoratorData = getDecoratorData(proto);
+    for (const jsPropertyName of jsPropertyNames) {
+      decoratorData.registerFilter(jsPropertyName, methodName);
+    }
   };
 }
