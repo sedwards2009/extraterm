@@ -5,7 +5,7 @@
  */
 
 import * as nodeunit from 'nodeunit';
-import { Attribute, Filter, Observe, CustomElement } from '../Decorators';
+import { Attribute, Filter, Observe, CustomElement } from '../NewDecorators';
 
 
 @CustomElement("string-component")
@@ -18,7 +18,7 @@ class StringComponent extends HTMLElement {
     this.lastSomeString = this.someString;
   }
 
-  public lastSomeString: string;
+  lastSomeString: string;
 
 }
 
@@ -35,13 +35,20 @@ function someStringTest(guts: (sc: StringComponent) => void): void {
 export function testStringAttributeViaJS(test: nodeunit.Test): void {
   someStringTest((sc: StringComponent): void => {
     sc.someString = "my string";
-    test.equals(sc.getAttribute("some-string"), "my string");
     test.equals(sc.someString, "my string");
-    test.equals(sc.lastSomeString, "my string");
+    test.equals(sc.getAttribute("some-string"), "my string");
   });
   test.done();
 }
 
+export function testAttributeObserver(test: nodeunit.Test): void {
+  someStringTest((sc: StringComponent): void => {
+    sc.someString = "first string";
+    sc.someString = "my string";
+    test.equals(sc.lastSomeString, "my string");
+  });
+  test.done();
+}
 
 export function testStringAttributeViaHTML(test: nodeunit.Test): void {
   someStringTest((sc: StringComponent): void => {
@@ -312,6 +319,9 @@ export function testBooleanAttributeViaHTML(test: nodeunit.Test): void {
   test.done();
 }
 
+/*
+
+// TODO should we support @Observe on attributes in the superclass?
 @CustomElement("substring-component")
 class SubStringComponent extends StringComponent {
 
@@ -332,14 +342,14 @@ export function testSubclassObserve(test: nodeunit.Test): void {
 
   test.done();
 }
-
+*/
 
 @CustomElement("defaults-component")
 class DefaultsComponent extends HTMLElement {
 
-  @Attribute({default: "foo"}) someString: string;
-  @Attribute({default: 123}) someNumber: number;
-  @Attribute({default: false}) someBoolean: boolean;
+  @Attribute someString = "foo";
+  @Attribute someNumber = 123;
+  @Attribute someBoolean= false;
 }
 
 export function testDefaults(test: nodeunit.Test): void {
