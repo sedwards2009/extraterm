@@ -21,6 +21,7 @@ function jsTypeToPropertyType(name: string): PropertyType {
 interface AttributeData {
   jsName: string;
   attributeName: string;
+  attributeExists: boolean;
   dataType: PropertyType;
   instanceValueMap: WeakMap<any, any>;
 
@@ -80,6 +81,8 @@ export function CustomElement(tag: string): (target: any) => any {
       }
     };
 
+    decoratorData.validate();
+
     const tagLower = tag.toLowerCase();
     window.customElements.define(tagLower, interceptedConstructor);
     return interceptedConstructor;
@@ -131,6 +134,7 @@ class DecoratorData {
       propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
     }
     attrData.dataType = propertyType;
+    attrData.attributeExists = true;
 
     const getter = function(this: any): any {
       return attrData.instanceValueMap.get(this);
@@ -186,6 +190,7 @@ class DecoratorData {
     const newRegistration: AttributeData = {
       jsName,
       attributeName,
+      attributeExists: false,
       dataType: null,
       instanceValueMap: new WeakMap<any, any>(),
       filters: [],
@@ -252,6 +257,19 @@ class DecoratorData {
   registerFilter(jsPropertyName: string, methodName: string): void {
     const attrData = this._getOrCreateAttributeData(jsPropertyName);
     attrData.filters.push(methodName);
+  }
+
+  validate(): void {
+    for (const [jsName, attrData] of this._jsNameAttrDataMap) {
+      if ( ! attrData.attributeExists) {
+        for (const observerMethodName of attrData.observers) {
+          console.warn(`Observer method '${observerMethodName}' is attached to undefined property '${jsName}'.`);
+        }
+        for (const filterMethodName of attrData.filters) {
+          console.warn(`Filter method '${filterMethodName}' is attached to undefined property '${jsName}'.`);
+        }
+      }
+    }
   }
 }
 
