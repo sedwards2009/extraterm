@@ -1,43 +1,15 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as reflect from 'reflect-metadata';
 
-require('reflect-metadata');  // Ensure that it is actually imported and not elided by tsc.
 
-const ATTRIBUTES_REGISTRATION_KEY = "_attributes_";
-const OBSERVERS_REGISTRATION_KEY = "_observers_";
-
-type FilterMethod = (value: any, target: string) => any;
-type FilterRegistration = {name: string, method: FilterMethod};
-
+type FilterMethodName = string;
+type ObserverMethodName = string;
 
 type PropertyType = 'any' | 'String' | 'Number' | 'Boolean';
-
-interface AttributeRegistration {
-  name: string;
-  directSetter: (newValue: any) => void;
-  attributeName: string;
-  dataType: PropertyType;
-
-  filterRegistrations: FilterRegistration[];
-}
-type AttributeRegistrationsMapping = Map<string, AttributeRegistration>;
-
-type ObserverMethod = (target: string) => void;
-
-interface ObserverRegistration {
-  name: string;
-  attributeName: string;
-  methodName: string;
-  method: ObserverMethod;
-}
-
-function kebabCase(name: string): string {
-  return name.split(/(?=[ABCDEFGHIJKLMNOPQRSTUVWXYZ])/g).map(s => s.toLowerCase()).join("-");
-}
 
 function jsTypeToPropertyType(name: string): PropertyType {
   if (name === "String" || name === "Number" || name === "Boolean") {
@@ -46,321 +18,301 @@ function jsTypeToPropertyType(name: string): PropertyType {
   return "any";
 }
 
+interface AttributeData {
+  jsName: string;
+  attributeName: string;
+  attributeExists: boolean;
+  dataType: PropertyType;
+  instanceValueMap: WeakMap<any, any>;
+
+  filters: FilterMethodName[];
+  observers: ObserverMethodName[];
+}
+
+function kebabCase(name: string): string {
+  return name.split(/(?=[ABCDEFGHIJKLMNOPQRSTUVWXYZ])/g).map(s => s.toLowerCase()).join("-");
+}
+
+const decoratorDataSymbol = Symbol("Custom Element Decorator Data");
+
+
 /**
  * Class decorator for web components.
  *
  * This should appear at the top of classes which implement Custom Elements.
+ *
+ * @param tag The tag for this custom element written in kebab-case. As
+ *            conform the Custom Element specification, this tag must contain
+ *            a `-` (dash) character.
  */
 export function CustomElement(tag: string): (target: any) => any {
   return function(constructor: any): any {
+    const decoratorData = getDecoratorData(constructor.prototype);
 
-    let attributeRegistrations: AttributeRegistrationsMapping = null;
-    if (constructor.hasOwnProperty(ATTRIBUTES_REGISTRATION_KEY)) {
-      attributeRegistrations = constructor[ATTRIBUTES_REGISTRATION_KEY];
-    }
-
-    let observerRegistrations: ObserverRegistration[] = null;
-    if (constructor.hasOwnProperty(OBSERVERS_REGISTRATION_KEY)) {
-      observerRegistrations = constructor[OBSERVERS_REGISTRATION_KEY];
-    }
-
-    if (attributeRegistrations != null || observerRegistrations != null) {
-      if (attributeRegistrations != null) {
-        validateAllFilters(constructor.prototype, attributeRegistrations);
+    const interceptedConstructor = class extends constructor {
+      constructor() {
+        super();
+        decoratorData.markInstanceConstructed(this);
       }
 
-      if (observerRegistrations != null) {
-        validateObservers(observerRegistrations, constructor, attributeRegistrations);
+      getAttribute(attrName: string): any {
+        const result = decoratorData.getAttribute(this, attrName);
+        if (result !== undefined) {
+          return result;
+        }
+        return super.getAttribute(attrName);
       }
 
-      // Set up `observedAttributes` and `attributeChangedCallback()`
-      Object.defineProperty(constructor, "observedAttributes", {
-        get: function() {
-          const observedAttributeNames = new Set<string>();
-
-          if (attributeRegistrations != null) {
-            // We observe our own attributes for update purposes.
-            for (const [key, registration] of attributeRegistrations.entries()) {
-              if (registration.attributeName !== null) {
-                observedAttributeNames.add(registration.attributeName);
-              }
-            }
-          }
-
-          // We also observe the attributes targetted by @Observe
-          if (observerRegistrations != null) {
-            for (const observerRegistration of observerRegistrations) {
-              observedAttributeNames.add(observerRegistration.attributeName);
-            }
-          }
-
-          // Don't forget the ones from the superclass.
-          const superObservedAttributes = constructor.prototype.__proto__.constructor.observedAttributes;
-          if (superObservedAttributes !== undefined) {
-            for (const attr of superObservedAttributes) {
-              observedAttributeNames.add(attr);
-            }
-          }
-          return observedAttributeNames;
-        },
-        enumerable: true,
-        configurable: true
-      });
-
-      let originalAttributeChangedCallback = null;
-      if (constructor.prototype["attributeChangedCallback"] !== undefined) {
-        originalAttributeChangedCallback = constructor.prototype.attributeChangedCallback;
+      setAttribute(attrName: string, value: any): void {
+        if ( ! decoratorData.setAttribute(this, attrName, value)) {
+          super.setAttribute(attrName, value);
+        }
       }
 
-      // New attributeChangedCallback()
-      constructor.prototype.attributeChangedCallback = function(attrName: string, oldValue: string, newStringValue: string): void {
-        if (originalAttributeChangedCallback !== null) {
-          originalAttributeChangedCallback.call(this, attrName, oldValue, newStringValue);
+      hasAttribute(attrName: string): boolean {
+        const result = decoratorData.hasAttribute(this, attrName);
+        return result === undefined ? super.hasAttribute(attrName) : result;
+      }
+
+      removeAttribute(attrName: string): void {
+        if ( ! decoratorData.removeAttribute(this, attrName)) {
+          super.removeAttribute(attrName);
         }
+      }
 
-        const attrNameLower = attrName.toLowerCase();
-        if (attributeRegistrations != null) {
-          for (const [key, registration] of attributeRegistrations) {
-            if (registration.attributeName !== attrNameLower) {
-              continue;
-            }
+      [decoratorData.superSetAttributeSymbol](attrName: string, value: any): void {
+        super.setAttribute(attrName, value);
+      }
+    };
 
-            let newValue: any = newStringValue;
-            if (registration.dataType === "Number") {
-              newValue = parseFloat(newStringValue);
-            } else if (registration.dataType === "Boolean") {
-              newValue = newStringValue === attrName || newStringValue === "" || newStringValue === "true";
-            }
+    decoratorData.validate();
 
-            // Apply filters.
-            for (const filter of registration.filterRegistrations) {
-              const updatedValue = filter.method.call(this, newValue, registration.name);
-              if (updatedValue === undefined) {
-                return;
-              }
-              newValue = updatedValue;
-            }
-
-            if (oldValue !== newValue) {
-              registration.directSetter.call(this, newValue);
-            }
-
-            break;
-          }
-        }
-
-        // Notify observers
-        if (observerRegistrations != null) {
-          for (const observerRegistration of observerRegistrations) {
-            if (observerRegistration.attributeName === attrNameLower) {
-              observerRegistration.method.call(this, observerRegistration.name);
-            }
-          }
-        }
-
-      };
-    }
-
-    // Check for double registration with the same tag.
     const tagLower = tag.toLowerCase();
-    const previousRegistration = window.customElements.get(tagLower);
-    if (previousRegistration !== undefined) {
-      console.warn(`A Custom Element with name '${tagLower}' is already registered.`);
-      return constructor;
-    }
-
-    window.customElements.define(tagLower, constructor);
-    return constructor;
+    window.customElements.define(tagLower, interceptedConstructor);
+    return interceptedConstructor;
   };
 }
 
-function validateAllFilters(prototype: Object, attributes: AttributeRegistrationsMapping): void {
-  for (const attributeMetadata of collectUniqueMetadatas(attributes)) {
-    validateFilters(prototype, attributeMetadata);
+export function Attribute(prototype: any, key: string) {
+  const decoratorData = getDecoratorData(prototype);
+  decoratorData.installAttribute(prototype, key);
+  return undefined;
+}
+
+function getDecoratorData(prototype: any): DecoratorData {
+  if (prototype[decoratorDataSymbol] == null) {
+    prototype[decoratorDataSymbol] = new DecoratorData(prototype);
   }
+  return prototype[decoratorDataSymbol];
 }
 
-function collectUniqueMetadatas(attributes: AttributeRegistrationsMapping): Set<AttributeRegistration> {
-  return new Set<AttributeRegistration>(attributes.values());
-}
 
-function validateFilters(prototype: Object, attributeMetadata: AttributeRegistration): void {
-  for (const filter of attributeMetadata.filterRegistrations) {
-    if (attributeMetadata.attributeName === null) {
-      console.warn(`Filter method '${filter.name}' is attached to undefined property '${attributeMetadata.name}'.`);
+class DecoratorData {
+
+  private _instanceConstructedMap = new WeakMap<any, boolean>();
+
+  private _jsNameAttrDataMap = new Map<string, AttributeData>();
+  //                              ^ Key is the js attribute name
+
+  private _attrNameAttrDataMap = new Map<string, AttributeData>();
+  //                                     ^ Key is a kebab-case attribute name.
+
+  superSetAttributeSymbol = Symbol("SuperSetAttribute")
+
+  constructor(private _elementProto: any) {
+  }
+
+  markInstanceConstructed(instance: any): void {
+    this._instanceConstructedMap.set(instance, true);
+  }
+
+  private _isInstanceConstructed(instance: any): boolean {
+    return this._instanceConstructedMap.get(instance);
+  }
+
+  installAttribute(prototype: any, jsName: string): void {
+    const decoratorData = this;
+    const attrData = this._getOrCreateAttributeData(jsName);
+
+    let propertyType: PropertyType = "any";
+    const propertyTypeMetadata = Reflect.getMetadata("design:type", prototype, jsName);
+    if (propertyTypeMetadata != null) {
+      propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
+    }
+    attrData.dataType = propertyType;
+    attrData.attributeExists = true;
+
+    const getter = function(this: any): any {
+      return attrData.instanceValueMap.get(this);
+    };
+
+    const setter = function(this: any, newStringValue: any): void {
+      let newValue: any = newStringValue;
+      if (attrData.dataType === "Number" && (typeof newValue !== "number")) {
+        newValue = parseFloat(newStringValue);
+      } else if (attrData.dataType === "Boolean" && (typeof newValue !== "boolean")) {
+        newValue = newStringValue === attrData.attributeName || newStringValue === "" || newStringValue === "true";
+      }
+
+      // Filter
+      for (const methodName of attrData.filters) {
+        const updatedValue = this[methodName].call(this, newValue, jsName);
+        if (updatedValue === undefined) {
+          return;
+        }
+        newValue = updatedValue;
+      }
+
+      const oldValue = attrData.instanceValueMap.get(this);
+      if (oldValue === newValue) {
+        return;
+      }
+
+      attrData.instanceValueMap.set(this, newValue);
+      if (decoratorData._isInstanceConstructed(this)) {
+        this[decoratorData.superSetAttributeSymbol].call(this, attrData.attributeName, newValue);
+      }
+
+      // Notify observers
+      for (const methodName of attrData.observers) {
+        this[methodName].call(this, jsName);
+      }
+    };
+
+    if (delete this._elementProto[jsName]) {
+      Object.defineProperty(this._elementProto, jsName, {
+        get: getter,
+        set: setter,
+        enumerable: true,
+        configurable: true
+      });
+    }
+  }
+
+  private _getOrCreateAttributeData(jsName: string): AttributeData {
+    const registration = this._jsNameAttrDataMap.get(jsName);
+    if (registration != null) {
+      return registration;
     }
 
-    const methodParameters = Reflect.getMetadata("design:paramtypes", prototype, filter.name);
+    const attributeName = kebabCase(jsName);
+    const newRegistration: AttributeData = {
+      jsName,
+      attributeName,
+      attributeExists: false,
+      dataType: null,
+      instanceValueMap: new WeakMap<any, any>(),
+      filters: [],
+      observers: [],
+    };
+
+    this._jsNameAttrDataMap.set(jsName, newRegistration);
+    this._attrNameAttrDataMap.set(attributeName, newRegistration);
+    return newRegistration;
+  }
+
+  getAttribute(instance: any, attrName: string): any {
+    const attrData = this._attrNameAttrDataMap.get(attrName);
+    if (attrData === undefined) {
+      return undefined;
+    }
+
+    const value = attrData.instanceValueMap.get(instance);
+    if (attrData.dataType === "Boolean") {
+      return value ? "" : null;
+    }
+
+    return value;
+  }
+
+  setAttribute(instance: any, attrName: string, value: any): boolean {
+    const attrData = this._attrNameAttrDataMap.get(attrName);
+    if (attrData === undefined) {
+      return false;
+    }
+
+    instance[attrData.jsName] = value;
+    return true;
+  }
+
+  hasAttribute(instance: any, attrName: string) : boolean {
+    const attrData = this._attrNameAttrDataMap.get(attrName);
+    if (attrData === undefined) {
+      return undefined;
+    }
+    if (attrData.dataType !== "Boolean") {
+      return undefined;
+    }
+    return instance[attrData.jsName];
+  }
+
+  removeAttribute(instance: any, attrName: string) : boolean {
+    const attrData = this._attrNameAttrDataMap.get(attrName);
+    if (attrData === undefined) {
+      return false;
+    }
+    if (attrData.dataType !== "Boolean") {
+      return false;
+    }
+    instance[attrData.jsName] = false;
+    return true;
+  }
+
+  registerObserver(jsPropertyName: string, methodName: string): void {
+    const attrData = this._getOrCreateAttributeData(jsPropertyName);
+    attrData.observers.push(methodName);
+  }
+
+  registerFilter(jsPropertyName: string, methodName: string): void {
+    const attrData = this._getOrCreateAttributeData(jsPropertyName);
+    attrData.filters.push(methodName);
+  }
+
+  validate(): void {
+    for (const [jsName, attrData] of this._jsNameAttrDataMap) {
+      if ( ! attrData.attributeExists) {
+        for (const observerMethodName of attrData.observers) {
+          console.warn(`Observer method '${observerMethodName}' is attached to undefined property '${jsName}'.`);
+        }
+        for (const filterMethodName of attrData.filters) {
+          console.warn(`Filter method '${filterMethodName}' is attached to undefined property '${jsName}'.`);
+        }
+      } else {
+
+        for (const filterMethodName of attrData.filters) {
+          this._validateFilterMethod(attrData, filterMethodName);
+        }
+      }
+    }
+  }
+
+  private _validateFilterMethod(attrData: AttributeData, filterMethodName: string): void {
+    const methodParameters = Reflect.getMetadata("design:paramtypes", this._elementProto, filterMethodName);
     if (methodParameters != null) {
       if (methodParameters.length !== 1 && methodParameters.length !== 2) {
-        console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong number of parameters. It should have 1 or 2 instead of ${methodParameters.length}.`);
+        console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong number of parameters. It should have 1 or 2 instead of ${methodParameters.length}.`);
       } else {
         const firstParameterType = jsTypeToPropertyType(methodParameters[0].name);
-        if (firstParameterType !== "any" && attributeMetadata.dataType !== "any" && firstParameterType !== attributeMetadata.dataType) {
-          console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong parameter type. Expected '${attributeMetadata.dataType}', found '${methodParameters[0].name}'.`);
+        if (firstParameterType !== "any" && attrData.dataType !== "any" && firstParameterType !== attrData.dataType) {
+          console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong parameter type. Expected '${attrData.dataType}', found '${methodParameters[0].name}'.`);
         }
         if (methodParameters.length === 2) {
           if (methodParameters[1].name !== "String") {
-            console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong 2nd parameter type. Expected 'String', found '${methodParameters[1].name}'.`);
+            console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong 2nd parameter type. Expected 'String', found '${methodParameters[1].name}'.`);
           }
         }
       }
     }
 
     // Check that the return type matches the attribute type.
-    const returnTypeMeta = Reflect.getMetadata("design:returntype", prototype, filter.name);
+    const returnTypeMeta = Reflect.getMetadata("design:returntype", this._elementProto, filterMethodName);
     if (returnTypeMeta != null) {
       const returnType = jsTypeToPropertyType(returnTypeMeta.name);
-      if (returnType !== "any" && attributeMetadata.dataType !== "any" && attributeMetadata.dataType !== returnType) {
-        console.warn(`Filter method '${filter.name}' on property '${attributeMetadata.name}' has the wrong return type. Expected '${attributeMetadata.dataType}', found '${returnType}'.`);
+      if (returnType !== "any" && attrData.dataType !== "any" && attrData.dataType !== returnType) {
+        console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong return type. Expected '${attrData.dataType}', found '${returnType}'.`);
       }
     }
   }
-}
-
-function validateObservers(observerRegistrations: ObserverRegistration[], constructor: any,
-    attributeRegistrations: AttributeRegistrationsMapping): void {
-
-  const acceptableAttributes = new Set<string>();
-
-  if (attributeRegistrations != null) {
-    for (const [key, registration] of attributeRegistrations.entries()) {
-      acceptableAttributes.add(registration.attributeName);
-    }
-  }
-
-  const superObservedAttributes = constructor.prototype.__proto__.constructor.observedAttributes;
-  if (superObservedAttributes !== undefined) {
-    for (const attr of superObservedAttributes) {
-      acceptableAttributes.add(attr);
-    }
-  }
-
-  for (const observerRegistration of observerRegistrations) {
-    if ( ! acceptableAttributes.has(observerRegistration.attributeName)) {
-      console.warn(`Observer method '${observerRegistration.methodName}' is attached to undefined property '${observerRegistration.name}'.`);
-    }
-  }
-}
-
-export interface AttributeOptions {
-  default: string | number | boolean;
-}
-
-/**
- * Mark a property as being a HTML attribute.
- *
- * The property will exposed as an HTML attribute. The name of the attribute
- * is in kebab-case. i.e. the words of the property lower case and separated
- * be dashes. For example "someString" become attribute "some-string".
- *
- * This decorator can be used in two ways. The direct way is with no
- * arguments, and the second way is with an options object as the single argument.
- * The options object can be used to specify a default (internal) value for
- * the attribute/property.
- *
- * See also `Observer` and `Filter`
- */
-export function Attribute(protoOrOptions: AttributeOptions | any, key?: string): any {
-  if (arguments.length === 1) {
-    const options = <AttributeOptions> protoOrOptions;
-    const defaultValue = options.default;
-    return (proto: any, key: string): void => {
-      applyAttribute(proto, key, defaultValue);
-    };
-  } else {
-    applyAttribute(<any> protoOrOptions, key, undefined);
-    return undefined;
-  }
-}
-
-export function applyAttribute(proto: any, key: string, defaultValue: any): void {
-  const valueMap = new WeakMap<any, any>();
-  const attributeName = kebabCase(key);
-
-  let propertyType: PropertyType = "any";
-  const propertyTypeMetadata = Reflect.getMetadata("design:type", proto, key);
-  if (propertyTypeMetadata != null) {
-    propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
-  }
-
-  validateAttributeDefaultValue(key, propertyType, defaultValue);
-
-  const getter = function (this: any) {
-    if ( ! valueMap.has(this)) {
-      valueMap.set(this, defaultValue);
-    }
-
-    return valueMap.get(this);
-  };
-
-  const setter = function (this: any, newValue: any): void {
-    if ( ! valueMap.has(this)) {
-      valueMap.set(this, defaultValue);
-    }
-
-    if (newValue === valueMap.get(this)) {
-      return;
-    }
-
-    this.setAttribute(attributeName, newValue);
-  };
-
-  const directSetter = function(this: any, newValue: any): void {
-    if ( ! valueMap.has(this)) {
-      valueMap.set(this, defaultValue);
-    }
-    valueMap.set(this, newValue);
-  };
-
-  if (delete proto[key]) {
-    Object.defineProperty(proto, key, {
-      get: getter,
-      set: setter,
-      enumerable: true,
-      configurable: true
-    });
-
-    if ( ! proto.constructor.hasOwnProperty(ATTRIBUTES_REGISTRATION_KEY)) {
-      proto.constructor[ATTRIBUTES_REGISTRATION_KEY] = new Map();
-    }
-    const attributes: AttributeRegistrationsMapping = proto.constructor[ATTRIBUTES_REGISTRATION_KEY];
-
-    let metadata: AttributeRegistration = attributes.get(key);
-    if (metadata === undefined) {
-      metadata = {name: key, attributeName, dataType: propertyType, directSetter, filterRegistrations: []};
-    } else {
-      metadata.attributeName = propertyType;
-    }
-
-    attributes.set(key,  metadata);
-  }
-}
-
-function validateAttributeDefaultValue(key: string, propertyType: PropertyType, defaultValue: any): void {
-  if (propertyType === "any" || defaultValue === undefined) {
-    return;
-  }
-
-  switch (propertyType) {
-    case "String":
-      if (defaultValue === null || (typeof defaultValue) === "string") {
-        return;
-      }
-      break;
-    case "Number":
-      if ((typeof defaultValue) === "number" || defaultValue === null) {
-        return;
-      }
-      break;
-    case "Boolean":
-      if ((typeof defaultValue) === "boolean" || defaultValue === null) {
-        return;
-      }
-      break;
-  }
-
-  console.warn(`Default value for property '${key}' has type '${typeof defaultValue}', expected type '${propertyType}'.`);
 }
 
 /**
@@ -370,28 +322,15 @@ function validateAttributeDefaultValue(key: string, propertyType: PropertyType, 
  * attribute which changed. Note: The name is actually that of the
  * property. i.e. "someString" not "some-string".
  *
- * @param targets variable number of parameters naming the attributes which
- *          this method observes.
+ * @param jsPropertyNames variable number of parameters naming the
+ *                        attributes which this method observes.
  */
-export function Observe(...targets: string[]) {
+export function Observe(...jsPropertyNames: string[]) {
   return function (proto: any, methodName: string, descriptor: PropertyDescriptor) {
-
-    // Register this method as being an attribute observer.
-    if ( ! proto.constructor.hasOwnProperty(OBSERVERS_REGISTRATION_KEY)) {
-      proto.constructor[OBSERVERS_REGISTRATION_KEY] = [];
+    const decoratorData = getDecoratorData(proto);
+    for (const jsPropertyName of jsPropertyNames) {
+      decoratorData.registerObserver(jsPropertyName, methodName);
     }
-    const attributes: ObserverRegistration[] = proto.constructor[OBSERVERS_REGISTRATION_KEY];
-
-    for (const target of targets) {
-      const metadata: ObserverRegistration = {
-        name: target,
-        attributeName: kebabCase(target),
-        method: proto[methodName],
-        methodName: methodName
-      };
-      attributes.push(metadata);
-    }
-    return descriptor;
   };
 }
 
@@ -408,27 +347,14 @@ export function Observe(...targets: string[]) {
  * Also these filters can only be used for attributes which have been created
  * using the `Attribute` decorator.
  *
- * @param targets variable number of parameters naming the attributes which
- *          this method filters.
+ * @param jsPropertyNames variable number of parameters naming the attributes
+ *                        which this method filters.
  */
-export function Filter(...targets: string[]) {
+export function Filter(...jsPropertyNames: string[]) {
   return function(proto: any, methodName: string, descriptor: PropertyDescriptor) {
-
-    // Register this method as being an attribute observer.
-    if ( ! proto.constructor.hasOwnProperty(ATTRIBUTES_REGISTRATION_KEY)) {
-      proto.constructor[ATTRIBUTES_REGISTRATION_KEY] = new Map();
+    const decoratorData = getDecoratorData(proto);
+    for (const jsPropertyName of jsPropertyNames) {
+      decoratorData.registerFilter(jsPropertyName, methodName);
     }
-    const attributes: AttributeRegistrationsMapping = proto.constructor[ATTRIBUTES_REGISTRATION_KEY];
-
-    for (const target of targets) {
-      if ( ! attributes.has(target)) {
-        const metadata: AttributeRegistration = {name: target, attributeName: null, dataType: 'any', directSetter: null, filterRegistrations: []};
-        attributes.set(target, metadata);
-      }
-      const metadata = attributes.get(target);
-      metadata.filterRegistrations.push({name: methodName, method: proto[methodName]});
-    }
-
-    return descriptor;
   };
 }

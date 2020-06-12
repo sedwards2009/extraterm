@@ -1,11 +1,11 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
 import * as nodeunit from 'nodeunit';
-import { Attribute, Filter, Observe, CustomElement } from '../NewDecorators';
+import { Attribute, Filter, Observe, CustomElement } from '../Decorators';
 
 
 @CustomElement("string-component")
