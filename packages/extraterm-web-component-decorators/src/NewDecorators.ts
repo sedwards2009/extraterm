@@ -268,6 +268,39 @@ class DecoratorData {
         for (const filterMethodName of attrData.filters) {
           console.warn(`Filter method '${filterMethodName}' is attached to undefined property '${jsName}'.`);
         }
+      } else {
+
+        for (const filterMethodName of attrData.filters) {
+          this._validateFilterMethod(attrData, filterMethodName);
+        }
+      }
+    }
+  }
+
+  private _validateFilterMethod(attrData: AttributeData, filterMethodName: string): void {
+    const methodParameters = Reflect.getMetadata("design:paramtypes", this._elementProto, filterMethodName);
+    if (methodParameters != null) {
+      if (methodParameters.length !== 1 && methodParameters.length !== 2) {
+        console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong number of parameters. It should have 1 or 2 instead of ${methodParameters.length}.`);
+      } else {
+        const firstParameterType = jsTypeToPropertyType(methodParameters[0].name);
+        if (firstParameterType !== "any" && attrData.dataType !== "any" && firstParameterType !== attrData.dataType) {
+          console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong parameter type. Expected '${attrData.dataType}', found '${methodParameters[0].name}'.`);
+        }
+        if (methodParameters.length === 2) {
+          if (methodParameters[1].name !== "String") {
+            console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong 2nd parameter type. Expected 'String', found '${methodParameters[1].name}'.`);
+          }
+        }
+      }
+    }
+
+    // Check that the return type matches the attribute type.
+    const returnTypeMeta = Reflect.getMetadata("design:returntype", this._elementProto, filterMethodName);
+    if (returnTypeMeta != null) {
+      const returnType = jsTypeToPropertyType(returnTypeMeta.name);
+      if (returnType !== "any" && attrData.dataType !== "any" && attrData.dataType !== returnType) {
+        console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong return type. Expected '${attrData.dataType}', found '${returnType}'.`);
       }
     }
   }
