@@ -163,8 +163,12 @@ class DecoratorData {
         newValue = updatedValue;
       }
 
-      attrData.instanceValueMap.set(this, newValue);
+      const oldValue = attrData.instanceValueMap.get(this);
+      if (oldValue === newValue) {
+        return;
+      }
 
+      attrData.instanceValueMap.set(this, newValue);
       if (decoratorData._isInstanceConstructed(this)) {
         this[decoratorData.superSetAttributeSymbol].call(this, attrData.attributeName, newValue);
       }
