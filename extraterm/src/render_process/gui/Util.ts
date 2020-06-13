@@ -3,110 +3,26 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event } from '@extraterm/extraterm-extension-api';
+import { Event } from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "../../utils/EventEmitter";
 
-
-/**
- * Convert a value to a boolean.
- * 
- * @param {Object} value The value to parse and convert.
- * @param {Boolean} defaultValue (Optional) The default value if the input
- *     was too ambigious. Defaults to false.
- * @returns {Boolean} The converted value.
- */
-export function htmlValueToBool(value: any, defaultValue?: boolean): boolean {
-  if (value === null || value === undefined || value === "") {
-    return defaultValue === undefined ? false : defaultValue;
-  }
-  return ! (value === false || value === "false");
-}
-
-/**
- * Converts a boolean to a string.
- * 
- * @param  value the boolean to convert
- * @return the string "true" or "false"
- */
-export function booleanToString(value: boolean): string {
-  return value ? "true" : "false";
-}
-
-/**
- * Trim whitlespace on the right side of a string.
- *
- * @param source the string to trim
- * @return the trimmed string
- */
-export function trimRight(source: string): string {
-  if (source === null) {
-    return null;
-  }
-  return ("|"+source).trim().substr(1);
-}
-
-const nbspRegexp = /\u00a0/g;
-/**
- * Replace non-breaking space characters with normal spaces.
- * 
- * @param  text the string to replace the characters in
- * @return new string with new-breaking spaces removed
- */
-export function replaceNbsp(text: string): string {
-  return text.replace(nbspRegexp, " ");
-}
-
-//-------------------------------------------------------------------------
-
-/**
- * Parse a string as a boolean value.
- * 
- * @param  value string to parse
- * @return the boolean value or false if it could not be parsed
- */
-export function toBoolean(value: any): boolean {
-  if (value === true || value === false) {
-    return value;
-  }
-  if (value === 0) {
-    return false;
-  }
-  if (value === 'true') {
-    return true;
-  }
-  if (value === 'false') {
-    return false;
-  }
-  return Boolean(value);
-}
-
-/**
- * Returns the new value if is is available otherwise the default value.
- *
- * @param defaultValue
- * @param newValue
- * @return Either the default value or the new value.
- */
-export function override(defaultValue: any, newValue: any): any {
-  return newValue !== null && newValue !== undefined ? newValue : defaultValue;
-}
 
 //-------------------------------------------------------------------------
 /**
  * Utility class for handling CSS colors
  */
 export class Color {
-  
+
   _red: number;
   _green: number;
   _blue: number;
   _opacity: number; // 0-255
   _hexString: string = null;
   _rgbaString: string = null;
-  
+
   /**
    * Creates a color object.
-   * 
+   *
    * @param  {string |       number}      redOrString [description]
    * @param  {number}    green   [description]
    * @param  {number}    blue    [description]
@@ -129,11 +45,11 @@ export class Color {
           this._green = parseInt(stringColor.slice(2, 3), 16) * 17;
           this._blue = parseInt(stringColor.slice(3, 4), 16) * 17;
           this._opacity = parseInt(stringColor.slice(4, 5), 16) * 17;
-            
+
         } else if (stringColor.length === 7) {
           this._red = parseInt(stringColor.slice(1, 3), 16);
           this._green = parseInt(stringColor.slice(3, 5), 16);
-          this._blue = parseInt(stringColor.slice(5, 7), 16);          
+          this._blue = parseInt(stringColor.slice(5, 7), 16);
           this._opacity = 255;
 
         } else if (stringColor.length === 9) {
@@ -143,9 +59,9 @@ export class Color {
           this._opacity = parseInt(stringColor.slice(7, 9), 16);
         } else {
           // Malformed hex colour.
-          
+
         }
-        
+
       } else {
         // What now?!
       }
@@ -160,7 +76,7 @@ export class Color {
   }
   /**
    * Returns the color as a 6 digit hex string.
-   * 
+   *
    * @return the color as a CSS style hex string.
    */
   toHexString(): string {
@@ -168,11 +84,11 @@ export class Color {
       this._hexString = "#" + to2DigitHex(this._red) + to2DigitHex(this._green) + to2DigitHex(this._blue);
     }
     return this._hexString;
-  }  
-  
+  }
+
   /**
    * Returns the color as a CSS rgba() value.
-   * 
+   *
    * @return the color as a CSS rgba() value.
    */
   toRGBAString(): string {
@@ -188,7 +104,7 @@ export class Color {
 
   /**
    * Returns the color as a CSS string.
-   * 
+   *
    * @return the color as a CSS formatted string.
    */
   toString(): string {
@@ -202,7 +118,7 @@ export class Color {
 
   /**
    * Creates a new color with the given opacity value.
-   * 
+   *
    * @param  newOpacity A number from 0 to 1.
    * @return the new color.
    */
@@ -223,7 +139,7 @@ export class Color {
 
 /**
  * Converts an 8bit number to a 2 digit hexadecimal string.
- * 
+ *
  * @param  {number} value An integer in the range 0-255 inclusive.
  * @return {string}       the converted number.
  */
@@ -268,7 +184,7 @@ export class FontLoader {
     // Next phase is wait for the fonts to load.
     const fontPromises: Promise<FontFace>[] = [];
     window.document.fonts.forEach( (font: FontFace) => {
-      if (font.status !== 'loaded' && font.status !== 'loading') {
+      if (font.status !== "loaded" && font.status !== "loading") {
         fontPromises.push(font.load());
       }
     });
@@ -279,7 +195,7 @@ export class FontLoader {
 //-------------------------------------------------------------------------
 /**
  * Listener for window DPI changes.
- * 
+ *
  * `onChange(newDpi)` fires when the window DPI changes.
  */
 export class DpiWatcher {
