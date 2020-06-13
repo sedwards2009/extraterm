@@ -3,20 +3,20 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as reflect from 'reflect-metadata';
-require('reflect-metadata');  // Ensure that it is actually imported and not elided by tsc.
+import * as reflect from "reflect-metadata";
+require("reflect-metadata");  // Ensure that it is actually imported and not elided by tsc.
 
 
 type FilterMethodName = string;
 type ObserverMethodName = string;
 
-type PropertyType = 'any' | 'String' | 'Number' | 'Boolean';
+type PropertyType = "unknown" | "String" | "Number" | "Boolean";
 
 function jsTypeToPropertyType(name: string): PropertyType {
   if (name === "String" || name === "Number" || name === "Boolean") {
     return name;
   }
-  return "any";
+  return "unknown";
 }
 
 interface AttributeData {
@@ -135,7 +135,7 @@ class DecoratorData {
     const decoratorData = this;
     const attrData = this._getOrCreateAttributeData(jsName);
 
-    let propertyType: PropertyType = "any";
+    let propertyType: PropertyType = "unknown";
     const propertyTypeMetadata = Reflect.getMetadata("design:type", prototype, jsName);
     if (propertyTypeMetadata != null) {
       propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
@@ -147,23 +147,36 @@ class DecoratorData {
       return attrData.instanceValueMap.get(this);
     };
 
-    const setter = function(this: any, newStringValue: any): void {
-      let newValue: any = newStringValue;
-      if (attrData.dataType === "Number" && (typeof newValue !== "number")) {
-        newValue = parseFloat(newStringValue);
-      } else if (attrData.dataType === "Boolean" && (typeof newValue !== "boolean")) {
-        newValue = newStringValue === attrData.attributeName || newStringValue === "" || newStringValue === "true";
-      }
-
-      // Filter
-      for (const methodName of attrData.filters) {
-        const updatedValue = this[methodName].call(this, newValue, jsName);
-        if (updatedValue === undefined) {
-          return;
+    const setter = function(this: any, newRawValue: any): void {
+      if ( ! decoratorData._isInstanceConstructed(this) && attrData.dataType === "unknown") {
+        // Guess what the true data type for this attribute is. This is needed when TypeScript
+        // infers the type of a property via its initializing value.
+        if ((typeof newRawValue) === "number") {
+          attrData.dataType = "Number";
+        } else if ((typeof newRawValue) === "boolean") {
+          attrData.dataType = "Boolean";
+        } else if ((typeof newRawValue) === "string") {
+          attrData.dataType = "String";
         }
-        newValue = updatedValue;
       }
 
+      let newValue: any = newRawValue;
+      if (attrData.dataType === "Number" && (typeof newValue !== "number")) {
+        newValue = parseFloat(newRawValue);
+      } else if (attrData.dataType === "Boolean" && (typeof newValue !== "boolean")) {
+        newValue = newRawValue === attrData.attributeName || newRawValue === "" || newRawValue === "true";
+      }
+
+      if (decoratorData._isInstanceConstructed(this)) {
+        // Filter
+        for (const methodName of attrData.filters) {
+          const updatedValue = this[methodName].call(this, newValue, jsName);
+          if (updatedValue === undefined) {
+            return;
+          }
+          newValue = updatedValue;
+        }
+      }
       const oldValue = attrData.instanceValueMap.get(this);
       if (oldValue === newValue) {
         return;
@@ -294,7 +307,7 @@ class DecoratorData {
         console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong number of parameters. It should have 1 or 2 instead of ${methodParameters.length}.`);
       } else {
         const firstParameterType = jsTypeToPropertyType(methodParameters[0].name);
-        if (firstParameterType !== "any" && attrData.dataType !== "any" && firstParameterType !== attrData.dataType) {
+        if (firstParameterType !== "unknown" && attrData.dataType !== "unknown" && firstParameterType !== attrData.dataType) {
           console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong parameter type. Expected '${attrData.dataType}', found '${methodParameters[0].name}'.`);
         }
         if (methodParameters.length === 2) {
@@ -309,7 +322,7 @@ class DecoratorData {
     const returnTypeMeta = Reflect.getMetadata("design:returntype", this._elementProto, filterMethodName);
     if (returnTypeMeta != null) {
       const returnType = jsTypeToPropertyType(returnTypeMeta.name);
-      if (returnType !== "any" && attrData.dataType !== "any" && attrData.dataType !== returnType) {
+      if (returnType !== "unknown" && attrData.dataType !== "unknown" && attrData.dataType !== returnType) {
         console.warn(`Filter method '${filterMethodName}' on property '${attrData.jsName}' has the wrong return type. Expected '${attrData.dataType}', found '${returnType}'.`);
       }
     }
