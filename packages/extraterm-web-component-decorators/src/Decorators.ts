@@ -172,11 +172,11 @@ class DecoratorData {
       attrData.instanceValueMap.set(this, newValue);
       if (decoratorData._isInstanceConstructed(this)) {
         this[decoratorData.superSetAttributeSymbol].call(this, attrData.attributeName, newValue);
-      }
 
-      // Notify observers
-      for (const methodName of attrData.observers) {
-        this[methodName].call(this, jsName);
+        // Notify observers
+        for (const methodName of attrData.observers) {
+          this[methodName].call(this, jsName);
+        }
       }
     };
 
