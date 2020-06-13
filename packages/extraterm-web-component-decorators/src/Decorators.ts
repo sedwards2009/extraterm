@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as reflect from 'reflect-metadata';
+require('reflect-metadata');  // Ensure that it is actually imported and not elided by tsc.
 
 
 type FilterMethodName = string;
