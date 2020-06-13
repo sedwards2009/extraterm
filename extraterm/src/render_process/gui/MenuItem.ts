@@ -27,9 +27,9 @@ export class MenuItem extends ThemeableElementBase {
     this.updateThemeCss();
   }
 
-  @Attribute({default: false}) selected: boolean;
-  @Attribute({default: ""}) shortcut: string;
-  @Attribute({default: ""}) icon: string;
+  @Attribute selected = false;
+  @Attribute shortcut = "";
+  @Attribute icon = "";
 
   @Observe("selected", "shortcut", "icon")
   private observeAttrChange(): void {

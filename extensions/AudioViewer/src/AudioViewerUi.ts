@@ -39,7 +39,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
       </div>
       <div id="file_size">
         <et-compact-file-transfer-progress
-          :finished="downloadFinished"
+          :finished.prop="downloadFinished"
           :total="totalSizeBytes"
           :transferred="availableSizeBytes">
         </et-compact-file-transfer-progress>

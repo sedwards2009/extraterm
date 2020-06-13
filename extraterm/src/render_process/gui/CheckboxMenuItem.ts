@@ -17,7 +17,7 @@ export class CheckboxMenuItem extends MenuItem {
 
   static TAG_NAME = "ET-CHECKBOX-MENU-ITEM";
 
-  @Attribute({default: false}) checked: boolean;
+  @Attribute checked = false;
 
   @Observe("checked")
   private _observeChecked(): void {

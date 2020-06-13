@@ -173,7 +173,7 @@ export class ApplicationContextMenu {
 
   private _commandAndShortcutToHtml(command: CommandAndShortcut): TemplateResult {
     if (command.checked != null) {
-      return html`<et-checkbox-menu-item name=${command.command} icon=${command.icon} checked=${command.checked}
+      return html`<et-checkbox-menu-item name=${command.command} icon=${command.icon} ?checked=${command.checked}
         shortcut=${command.shortcut}>${command.title}</et-checkbox-menu-item>`;
     } else {
       return html`<et-menu-item name=${command.command} icon=${command.icon}

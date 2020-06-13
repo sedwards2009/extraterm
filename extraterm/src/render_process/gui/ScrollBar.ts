@@ -72,7 +72,7 @@ export class ScrollBar extends ThemeableElementBase {
     render(template, this.shadowRoot);
   }
 
-  @Attribute({default: 1}) length = 1;
+  @Attribute length = 1;
 
   @Filter("length")
   private _sanitizeLength(value: number): number {
@@ -94,7 +94,7 @@ export class ScrollBar extends ThemeableElementBase {
     areaElement.style.height = this.length + "px";
   }
 
-  @Attribute({default: 0}) position = 0;
+  @Attribute position = 0;
 
   @Filter("position")
   private _sanitizePosition(value: number): number {
@@ -110,5 +110,5 @@ export class ScrollBar extends ThemeableElementBase {
     this._lastSetPosition = containerElement.scrollTop;
   }
 
-  @Attribute({default: 0}) thumbSize = 0;
+  @Attribute thumbSize = 0;
 }

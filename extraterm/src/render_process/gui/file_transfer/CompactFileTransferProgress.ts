@@ -78,7 +78,7 @@ export class FileTransferProgress extends ThemedContainerElementBase implements 
     this._speedTracker = new SpeedTracker(this.total == null ? -1 : this.total);
   }
 
-  @Attribute({default: null}) public total: number;
+  @Attribute total = null;
 
   @Observe("total")
   private updateTotal(): void {
@@ -86,14 +86,14 @@ export class FileTransferProgress extends ThemedContainerElementBase implements 
     this._speedTracker = new SpeedTracker(this.total == null ? -1 : this.total);
   }
 
-  @Attribute({default: null}) public transferred: number;
+  @Attribute transferred = null;
 
   @Observe("transferred")
   private _updateTransferred(): void {
     this._updateLater.trigger();
   }
 
-  @Attribute({default: false}) public finished: boolean;
+  @Attribute finished = false;
 
   @Observe("finished")
   private _updateFinished(): void {

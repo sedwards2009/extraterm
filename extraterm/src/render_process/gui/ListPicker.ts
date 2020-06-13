@@ -118,7 +118,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
 
   private _programmaticSet = false;
 
-  @Attribute({default: null}) selected: string;
+  @Attribute selected: string = null;
 
   @Observe("selected")
   private _updateSelected(target: string): void {
@@ -148,7 +148,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     return this._entries;
   }
 
-  @Attribute({default: ""}) filter: string;
+  @Attribute filter: string = "";
 
   @Observe("filter")
   private _observe(target: string): void {

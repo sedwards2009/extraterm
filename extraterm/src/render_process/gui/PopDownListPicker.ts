@@ -139,7 +139,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   private _programmaticSet = false;
 
-  @Attribute({default: null}) selected: string;
+  @Attribute selected: string = null;
 
   @Observe("selected")
   private _updateSelected(target: string): void {
@@ -169,9 +169,9 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     return this._entries;
   }
 
-  @Attribute({default: ""}) titlePrimary: string;
-  @Attribute({default: ""}) titleSecondary: string;
-  @Attribute({default: ""}) filter: string;
+  @Attribute titlePrimary = "";
+  @Attribute titleSecondary = "";
+  @Attribute filter = "";
 
   @Observe("titlePrimary", "titleSecondary", "filter")
   private _observe(target: string): void {

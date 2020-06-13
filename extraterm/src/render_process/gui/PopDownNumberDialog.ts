@@ -41,7 +41,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
         id="ID_DIALOG"
         title-primary=${this.titlePrimary}
         title-secondary=${this.titleSecondary}
-        open=${this.open}
+        ?open=${this.open}
         @ET-POP-DOWN-DIALOG-CLOSE_REQUEST=${this._handleDialogCloseRequest}
       >
         <div class="form-group"><input
@@ -67,11 +67,11 @@ export class PopDownNumberDialog extends ThemeableElementBase {
             ThemeTypes.CssFile.GUI_POP_DOWN_NUMBER_DIALOG, ...extraCssFiles];
   }
 
-  @Attribute({default: 0}) value: number;
-  @Attribute({default: 0}) min: number;
-  @Attribute({default: 10}) max: number;
-  @Attribute({default: ""}) titlePrimary: string;
-  @Attribute({default: ""}) titleSecondary: string;
+  @Attribute value = 0;
+  @Attribute min = 0;
+  @Attribute max = 10;
+  @Attribute titlePrimary = "";
+  @Attribute titleSecondary = "";
 
   @Observe("min", "max", "titlePrimary", "titleSecondary", "value")
   private _observeTitles(target: string): void {
@@ -108,7 +108,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
     }
   }
 
-  @Attribute({default:false}) open: boolean;
+  @Attribute open = false;
   @Observe("open")
   private _observeOpen(): void {
     this._render();

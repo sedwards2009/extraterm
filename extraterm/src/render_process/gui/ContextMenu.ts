@@ -145,7 +145,11 @@ export class ContextMenu extends ThemeableElementBase {
       const item = kids[i];
 
       if (item instanceof MenuItem) {
-        (<MenuItem>item).setAttribute("selected", selectitem === item ? "true" : "false");
+        if (selectitem === item) {
+          (<MenuItem>item).setAttribute("selected", "selected");
+        } else {
+          (<MenuItem>item).removeAttribute("selected");
+        }
       }
     }
   }
@@ -164,7 +168,7 @@ export class ContextMenu extends ThemeableElementBase {
         return;
       }
 
-      const keyboardselected = menuitems.filter( (item:MenuItem) => Util.htmlValueToBool(item.getAttribute("selected")));
+      const keyboardselected = menuitems.filter( (item:MenuItem) => item.hasAttribute("selected"));
 
       if (ev.key === "ArrowUp") {
         if (keyboardselected.length === 0) {
@@ -216,7 +220,7 @@ export class ContextMenu extends ThemeableElementBase {
         return;
       }
 
-      const keyboardselected = menuitems.filter( (item:MenuItem) => Util.htmlValueToBool(item.getAttribute("selected")) );
+      const keyboardselected = menuitems.filter( (item:MenuItem) => item.hasAttribute("selected"));
       if (keyboardselected.length !== 0) {
         this.activateItem(keyboardselected[0]);
       }

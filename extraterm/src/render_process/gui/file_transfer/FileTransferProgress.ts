@@ -133,14 +133,14 @@ export class FileTransferProgress extends ThemedContainerElementBase implements 
     this._speedTracker = new SpeedTracker(this.total == null ? -1 : this.total);
   }
 
-  @Attribute({default: ""}) public filename: string;
+  @Attribute filename = "";
 
   @Observe("filename")
   private updateFilename(): void {
     this._ui.name = this.filename;
   }
 
-  @Attribute({default: "download"}) public actionType: string;
+  @Attribute actionType = "download";
 
   @Observe("actionType")
   private updateActionType(): void {
@@ -149,7 +149,7 @@ export class FileTransferProgress extends ThemedContainerElementBase implements 
     }
   }
 
-  @Attribute({default: null}) public total: number;
+  @Attribute total: number = null;
 
   @Observe("total")
   private updateTotal(): void {
@@ -157,14 +157,14 @@ export class FileTransferProgress extends ThemedContainerElementBase implements 
     this._speedTracker = new SpeedTracker(this.total == null ? -1 : this.total);
   }
 
-  @Attribute({default: null}) public transferred: number;
+  @Attribute transferred: number = null;
 
   @Observe("transferred")
   private _updateTransferred(): void {
     this._updateLater.trigger();
   }
 
-  @Attribute({default: false}) public finished: boolean;
+  @Attribute finished = false;
 
   @Observe("finished")
   private _updateFinished(): void {

@@ -119,7 +119,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._setupPtyIpc();
   }
 
-  @Attribute({default: ""}) windowId: string;
+  @Attribute windowId = "";
 
   @Observe("windowId")
   private _observeWindowId(target: string): void {

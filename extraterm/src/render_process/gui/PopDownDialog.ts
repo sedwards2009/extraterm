@@ -73,15 +73,15 @@ export class PopDownDialog extends ThemeableElementBase {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.FONT_AWESOME, ThemeTypes.CssFile.GUI_POP_DOWN_DIALOG];
   }
 
-  @Attribute({default: ""}) titlePrimary: string;
-  @Attribute({default: ""}) titleSecondary: string;
+  @Attribute titlePrimary = "";
+  @Attribute titleSecondary = "";
 
   @Observe("titlePrimary", "titleSecondary")
   private _updateTitle(): void {
     this._render();
   }
 
-  @Attribute({default: false}) open: boolean;
+  @Attribute open = false;
   @Observe("open")
   private _observeOpen(target: string): void {
     this._render();

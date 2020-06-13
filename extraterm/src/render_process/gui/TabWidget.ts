@@ -152,14 +152,14 @@ export class TabWidget extends ThemeableElementBase {
     this._render();
   }
 
-  @Attribute({default: true}) showTabs: boolean;
+  @Attribute showTabs = true;
 
   @Observe("showTabs")
   private _observeShowTabs(target: string): void {
     this._syncDom();
   }
 
-  @Attribute({default: ""}) windowId: string;
+  @Attribute windowId = "";
   @Observe("windowId")
   private _observeWindowId(target: string): void {
     const snapDropContainer = <SnapDropContainer> DomUtils.getShadowId(this, ID_SNAP_DROP_CONTAINER);
@@ -280,7 +280,7 @@ export class TabWidget extends ThemeableElementBase {
     }
   }
 
-  @Attribute({default: 0}) selectedIndex: number;
+  @Attribute selectedIndex = 0;
 
   @Filter("selectedIndex")
   private _sanitizeSelectedIndex(index: number): number {
@@ -331,7 +331,7 @@ export class TabWidget extends ThemeableElementBase {
     return currentTab;
   }
 
-  @Attribute({default: true}) showFrame: boolean;
+  @Attribute showFrame = true;
 
   @Observe("showFrame")
   private _observeShowFrame(target: string): void {

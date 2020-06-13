@@ -78,7 +78,7 @@ export class SnapDropContainer extends ThemeableElementBase {
     this._supportedMimeTypes = SUPPORTED_MIMETYPES.map(mt => mt + mimeTypeParams);
   }
 
-  @Attribute({default: ""}) windowId: string;
+  @Attribute windowId = "";
   @Observe("windowId")
   private _observeWindowId(target: string): void {
     this._updateSupportedMimeTypes();

@@ -52,7 +52,7 @@ export class StackedWidget extends ThemeableElementBase {
     return [ThemeTypes.CssFile.GUI_STACKEDWIDGET];
   }
 
-  @Attribute({default: -1}) currentIndex: number;
+  @Attribute currentIndex = -1;
 
   @Filter("currentIndex")
   private _filterCurrentIndex(index: number): number {
