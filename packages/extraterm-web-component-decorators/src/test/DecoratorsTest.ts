@@ -324,9 +324,28 @@ export function testFalseBooleanAttributeViaJS(test: nodeunit.Test): void {
 export function testBooleanAttributeViaHTML(test: nodeunit.Test): void {
   someBooleanTest((sc: BooleanComponent): void => {
     sc.removeAttribute("some-boolean");
+    test.equals(sc.hasAttribute("some-boolean"), false);
+    test.equals(sc.someBoolean, false);
     test.equals(sc.getAttribute("some-boolean"), null);
     test.equals(sc.lastSomeBoolean, false);
     test.equals(typeof sc.lastSomeBoolean, "boolean");
+  });
+  test.done();
+}
+
+export function testBooleanAttributeToggle(test: nodeunit.Test): void {
+  someBooleanTest((sc: BooleanComponent): void => {
+
+    sc.removeAttribute("some-boolean");
+
+    test.equals(sc.hasAttribute("some-boolean"), false);
+    test.equals(sc.someBoolean, false);
+    test.equals(sc.getAttribute("some-boolean"), null);
+
+    sc.setAttribute("some-boolean", "some-boolean");
+    test.equals(sc.hasAttribute("some-boolean"), true);
+    test.equals(sc.someBoolean, true);
+    test.notEqual(sc.getAttribute("some-boolean"), null);
   });
   test.done();
 }
