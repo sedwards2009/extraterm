@@ -102,6 +102,10 @@ export class TabWidget extends ThemeableElementBase {
 
     this._childNodes = Array.from(domChildren);
     this._tabCount = this._childNodes.filter(n => n.nodeName === Tab.TAG_NAME).length;
+    if (this.selectedIndex >= this._tabCount) {
+      this.selectedIndex = this._tabCount - 1;
+    }
+
     this._render();
     this._applySlotAttributes();
   }
