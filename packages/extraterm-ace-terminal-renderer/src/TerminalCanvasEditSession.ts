@@ -192,37 +192,3 @@ export class TerminalCanvasEditSession extends EditSession {
     return unwrappedLines.join("");
   }
 }
-
-function maxNormalWidthCodePoint(): number {
-  return 0x01c3;  // Last char before the Croatian digraphs. DejaVuSansMono has some extra wide chars after this.
-}
-
-/**
- * Return true if a code point has a normal monospace width of one cell.
- *
- * @param the unicode code point to test
- * @return true if the code point has a normal monospace width of one cell.
- */
-function isCodePointNormalWidth(codePoint: number): boolean {
-  if (codePoint < 0x01c4) { // Latin up to the Croatian digraphs.
-    return true;
-  }
-
-  if (codePoint <= 0x1cc) {// Croatian digraphs can be a problem.
-    return false;
-  }
-
-  if (codePoint < 0x1f1) {  // Up to Latin leter DZ.
-    return true;
-  }
-  if (codePoint <= 0x1f3) { // Latin letter DZ.
-    return false;
-  }
-
-  return false;
-}
-
-function isFirstSurogate(s: string): boolean {
-  const codePoint = s.codePointAt(0);
-  return (codePoint & 0xFC00) === 0xD800;
-}
