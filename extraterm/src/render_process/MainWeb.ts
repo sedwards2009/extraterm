@@ -519,7 +519,9 @@ function handleThemeContentsMessage(msg: Messages.Message): void {
 function handleDevToolsStatus(msg: Messages.Message): void {
   const devToolsStatusMessage = <Messages.DevToolsStatusMessage> msg;
   developerToolMenuChecked = devToolsStatusMessage.open;
-  applicationContextMenu.render();
+  if (applicationContextMenu != null) {
+    applicationContextMenu.render();
+  }
 }
 
 function handleClipboardRead(msg: Messages.Message): void {
