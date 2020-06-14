@@ -6,7 +6,10 @@ import { Document,
          Delta,
          Fold,
          LanguageMode,
-         TextMode, RangeBasic, OrientedRange } from "@extraterm/ace-ts";
+         Position,
+         TextMode,
+         RangeBasic,
+         OrientedRange } from "@extraterm/ace-ts";
 
 import * as TermApi from "term-api";
 import { LineData } from "./canvas_line_data/LineData";
@@ -190,5 +193,30 @@ export class TerminalCanvasEditSession extends EditSession {
     }
     unwrappedLines.push(lines[lines.length-1]);
     return unwrappedLines.join("");
+  }
+
+  // Our optimised version which doesn't need to support wrapping or folds.
+  // The cost of this method becomes significant when thousands of lines are
+  // in the document.
+  screenPositionToDocumentPosition(screenRow: number, screenColumn: number): Position {
+    if (isNaN(screenRow) || screenRow < 0) {
+      return { row: 0, column: 0 };
+    }
+
+    const docRow = Math.floor(screenRow);
+    const maxRow = this.getLength() - 1;
+    if (docRow > maxRow) {
+      // clip at the end of the document
+      return {
+        row: maxRow,
+        column: this.getLine(maxRow).length
+      };
+    }
+
+    const line = this.getLine(docRow);
+    return {
+      row: docRow,
+      column: this.getStringScreenWidth(line, screenColumn)[1]
+    };
   }
 }
