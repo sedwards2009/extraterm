@@ -7,7 +7,7 @@ import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH
   UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
 import { isWide as isFullWidth } from "extraterm-unicode-utilities";
 
-import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
+import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";

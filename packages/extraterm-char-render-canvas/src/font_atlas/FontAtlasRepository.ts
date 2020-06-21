@@ -2,10 +2,10 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 
-import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
+import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
 import { FontAtlas } from "./FontAtlas";
 import { FontAtlasImpl } from "./FontAtlasImpl";
-import { Disposable } from "./Disposable";
+import { Disposable } from "../Disposable";
 
 
 export class FontAtlasRepository {

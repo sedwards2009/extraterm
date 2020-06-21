@@ -4,13 +4,13 @@
 
 import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
-import { ColorPatchCanvas } from "./ColorPatchCanvas";
-import { FontAtlas } from "./FontAtlas";
-import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
-import { computeFontMetrics, debugFontMetrics } from "./FontMeasurement";
-import { FontAtlasRepository } from "./FontAtlasRepository";
+import { ColorPatchCanvas } from "./color_patch/ColorPatchCanvas";
+import { FontAtlas } from "./font_atlas/FontAtlas";
+import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
+import { computeFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
+import { FontAtlasRepository } from "./font_atlas/FontAtlasRepository";
 import { Disposable } from "./Disposable";
-import { ColorPatchImageData } from "./ColorPatchImageData";
+import { ColorPatchImageData } from "./color_patch/ColorPatchImageData";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
