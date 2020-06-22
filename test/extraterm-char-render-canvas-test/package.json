@@ -1,0 +1,22 @@
+{
+  "name": "extraterm-char-render-canvas-test",
+  "version": "1.0.0",
+  "description": "Test harness for extraterm-char-render-canvas",
+  "license": "MIT",
+  "devDependencies": {
+    "parcel-bundler": "^1.12.4",
+    "serve": "^11.3.2",
+    "shx": "^0.3.2",
+    "typescript": "3.7.4"
+  },
+  "dependencies": {
+    "extraterm-char-render-canvas": "1.0.0"
+  },
+  "scripts": {
+    "build": "tsc && yarn run copy-terminal-font && yarn run copy-emoji-font && shx cp src/*.html dist && parcel build --no-minify dist/test.html",
+    "copy-terminal-font": "shx cp ../../extraterm/resources/terminal_fonts/LigaDejaVuSansMono.ttf dist/",
+    "copy-emoji-font": "shx cp ../../extraterm/resources/themes/default/fonts/Twemoji.ttf dist/",
+    "clean": "shx rm -r dist",
+    "server": "serve dist/"
+  }
+}

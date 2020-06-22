@@ -39,7 +39,8 @@
     "packages": [
       "extraterm",
       "packages/*",
-      "extensions/*"
+      "extensions/*",
+      "test/*"
     ],
     "nohoist": [
       "**/lit-html",

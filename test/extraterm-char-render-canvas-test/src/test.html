@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <script src="./main.js" defer></script>
+
+    <style>
+      @font-face {
+        font-family: 'dejavusansmono';
+        src: url('LigaDejaVuSansMono.ttf?v=1.0.0') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      @font-face {
+        font-family: 'twemoji';
+        src: url('Twemoji.ttf?v=1.0.0') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+        unicode-range: U+2000-1ffff;
+      }
+
+      body {
+        font-family: 'dejavusansmono';
+        background-color: #c0c0c0;
+        color: #ffffff;
+      }
+      canvas {
+        border: 1px solid white;
+      }
+    </style>
+
+  </head>
+  <body>
+    <button id="render_button">Render</button><br>
+    <div id="container"></div>
+  </body>
+</html>
