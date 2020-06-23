@@ -29,6 +29,7 @@ export class FontAtlasRepository {
       drawCodePointToImageData: fontAtlas.drawCodePointToImageData.bind(fontAtlas),
       drawCodePoints: fontAtlas.drawCodePoints.bind(fontAtlas),
       drawCodePointsToImageData: fontAtlas.drawCodePointsToImageData.bind(fontAtlas),
+      getCanvas: fontAtlas.getCanvas.bind(fontAtlas),
 
       dispose: () => {
         let value = this._refCount.get(key);

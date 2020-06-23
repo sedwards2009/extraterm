@@ -12,4 +12,5 @@ export interface FontAtlas {
                 xPixel: number, yPixel: number): void;
   drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode,
                            xPixel: number, yPixel: number): void;
+  getCanvas(): HTMLCanvasElement;
 }

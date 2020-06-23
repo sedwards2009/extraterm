@@ -1,5 +1,5 @@
 
-import { CharRenderCanvas, xtermPalette } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, Renderer, xtermPalette } from "extraterm-char-render-canvas";
 
 const log = console.log.bind(console);
 
@@ -24,7 +24,8 @@ function main(): void {
         unicodeEnd: 0x20000,
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }
-    ]
+    ],
+    renderer: Renderer.CPU,
   });
 
   containerDiv.appendChild(renderCanvas.getCanvasElement());
@@ -35,6 +36,8 @@ function main(): void {
   renderButton.addEventListener("click", () => {
 
     renderCanvas.render();
+
+    containerDiv.appendChild(renderCanvas.getFontAtlasCanvasElement());
   });
 }
 

@@ -13,7 +13,7 @@ import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
 
 const TWO_TO_THE_24 = 2 ** 24;
 
-const FONT_ATLAS_PAGE_WIDTH_CELLS = 8;
+const FONT_ATLAS_PAGE_WIDTH_CELLS = 32;
 const FONT_ATLAS_PAGE_HEIGHT_CELLS = 32;
 
 
@@ -32,6 +32,8 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   protected _pageCtx: CanvasRenderingContext2D = null;
   private _safetyPadding: number = 0;
 
+  private _glyphCellMap: CachedGlyph[][] = null;
+
   private _nextEmptyCellX: number = 0;
   private _nextEmptyCellY: number = 0;
   private _lookupTable: Map<number, CG> = new Map();
@@ -41,15 +43,17 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     this._log = getLogger("FontAtlasPage", this);
 
     // this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
-    this._initalize();
+    this._initialize();
   }
 
-  private _initalize(): void {
+  private _initialize(): void {
     this._safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) /4);
 
     this._pageCanvas = document.createElement("canvas");
     this._pageCanvas.width = FONT_ATLAS_PAGE_WIDTH_CELLS * (this._metrics.widthPx + this._safetyPadding * 2);
     this._pageCanvas.height = FONT_ATLAS_PAGE_HEIGHT_CELLS * (this._metrics.heightPx + this._safetyPadding * 2);
+
+    this._initializeSlots();
 
     // document.body.appendChild(this._pageCanvas);
 
@@ -59,6 +63,19 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     this._pageCtx.fillStyle = "#00000000";
     this._pageCtx.fillRect(0, 0, this._pageCanvas.width, this._pageCanvas.height);
     this._pageCtx.fillStyle = "#ffffffff";
+  }
+
+  private _initializeSlots(): void {
+    const slotsMap: CachedGlyph[][] = [];
+    for (let j=0; j<FONT_ATLAS_PAGE_HEIGHT_CELLS; j++) {
+      const slotRow = new Array(FONT_ATLAS_PAGE_WIDTH_CELLS);
+      for (let i=0; i<FONT_ATLAS_PAGE_WIDTH_CELLS; i++) {
+        slotRow[i] = null;
+      }
+      slotsMap.push(slotRow);
+    }
+
+    this._glyphCellMap = slotsMap;
   }
 
   getCanvas(): HTMLCanvasElement {
@@ -91,15 +108,17 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
       }
     }
 
+    this._computeNextEmptyCell(widthInCells);
+
     const xPx = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
     const yPx = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
 
     const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, xPx, yPx, widthPx, widthInCells);
 
+    this._lookupTable.set(this._makeLookupKey(codePoint, style), cachedGlyph);
     for (let i=0; i<widthInCells; i++) {
-      this._incrementNextEmptyCell();
+      this._glyphCellMap[this._nextEmptyCellY][this._nextEmptyCellX + i] = cachedGlyph;
     }
-
     return cachedGlyph;
   }
 
@@ -176,8 +195,6 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
       widthPx,
     });
 
-    this._lookupTable.set(this._makeLookupKey(codePoint, style), cachedGlyph);
-
     this._pageCtx.restore();
 
     return cachedGlyph;
@@ -185,14 +202,50 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
 
   protected abstract _createCachedGlyphStruct(cg: CachedGlyph): CG;
 
-  private _incrementNextEmptyCell(): void {
-    this._nextEmptyCellX++;
-    if (this._nextEmptyCellX >= (FONT_ATLAS_PAGE_WIDTH_CELLS -1)) {
-      this._nextEmptyCellX = 0;
-      this._nextEmptyCellY++;
-      if (this._nextEmptyCellY >= FONT_ATLAS_PAGE_HEIGHT_CELLS) {
-        this._isFull = true;
+  private _computeNextEmptyCell(widthInCells: number): void {
+    const coord = this._findNextEmptyCell(this._glyphCellMap, this._nextEmptyCellX, this._nextEmptyCellY, widthInCells);
+    if (coord != null) {
+      this._nextEmptyCellX = coord.x;
+      this._nextEmptyCellY = coord.y;
+      return;
+    }
+
+    this._flushLRU();
+
+    const coord2 = this._findNextEmptyCell(this._glyphCellMap, this._nextEmptyCellX, this._nextEmptyCellY, widthInCells);
+    this._nextEmptyCellX = coord2.x;
+    this._nextEmptyCellY = coord2.y;
+  }
+
+  private _findNextEmptyCell(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): {x: number, y: number} {
+    for (let j=y; j<FONT_ATLAS_PAGE_HEIGHT_CELLS; j++) {
+      for (let i=x; i<FONT_ATLAS_PAGE_WIDTH_CELLS; i++) {
+        if (this._isCellFreeAt(glyphCellMap, i, j, widthInCells)) {
+          return {x: i, y: j};
+        }
+      }
+      x = 0;
+    }
+    return null;
+  }
+
+  /**
+   * Is there room at a `x`,`y` coord for a cell of `widthInCells` cells wide?
+   */
+  private _isCellFreeAt(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): boolean {
+    if (x + widthInCells >= FONT_ATLAS_PAGE_WIDTH_CELLS) {
+      return false;
+    }
+    for (let i=0; i<widthInCells; i++) {
+      const cachedGlyph = glyphCellMap[y][x + i];
+      if (cachedGlyph != null) {
+        return false;
       }
     }
+    return true;
+  }
+
+  private _flushLRU(): void {
+    console.log("_flushLRU()");
   }
 }

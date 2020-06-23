@@ -69,6 +69,10 @@ export class FontAtlasImpl implements FontAtlas {
     page.drawCodePointsToImageData(destImageData, codePoints, style, xPixel, yPixel);
   }
 
+  getCanvas(): HTMLCanvasElement {
+    return this._cpuRenderedPages[0].getCanvas();
+  }
+
   private _appendImageBitmapPage(): ImageBitmapFontAtlasPage {
     const page = new ImageBitmapFontAtlasPage(this._metrics);
     this._imageBitmapPages.push(page);

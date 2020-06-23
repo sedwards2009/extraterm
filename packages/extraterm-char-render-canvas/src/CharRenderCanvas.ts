@@ -361,6 +361,10 @@ export class CharRenderCanvas implements Disposable {
     return this._canvas;
   }
 
+  getFontAtlasCanvasElement(): HTMLCanvasElement {
+    return this._fontAtlas.getCanvas();
+  }
+
   getWidthPx(): number {
     return this._canvasWidthPx;
   }
