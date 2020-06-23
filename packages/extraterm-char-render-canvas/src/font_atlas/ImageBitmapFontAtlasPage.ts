@@ -20,8 +20,9 @@ export class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCache
     return { ...cg, imageBitmapPromise: null, imageBitmap: null };
   }
 
-  protected _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): ImageBitmapCachedGlyph {
-    const cg = super._insertChar(codePoint, alternateCodePoints, style);
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPixels: number,
+    yPixels: number, widthPx: number, widthInCells: number): ImageBitmapCachedGlyph {
+    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, xPixels, yPixels, widthPx, widthInCells);
 
     // ImageBitmaps are meant to be much fast to paint with compared to normal canvas.
     const promise = window.createImageBitmap(this._pageCanvas, cg.xPixels, cg.yPixels, cg.widthPx,

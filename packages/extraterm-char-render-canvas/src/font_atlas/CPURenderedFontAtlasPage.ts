@@ -26,8 +26,9 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
     return { ...cg, imageData: null };
   }
 
-  protected _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): CPURenderedCachedGlyph {
-    const cg = super._insertChar(codePoint, alternateCodePoints, style);
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPixels: number,
+    yPixels: number, widthPx: number, widthInCells: number): CPURenderedCachedGlyph {
+    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, xPixels, yPixels, widthPx, widthInCells);
     cg.imageData = this._pageCtx.getImageData(cg.xPixels, cg.yPixels, cg.widthPx, this._metrics.heightPx);
     return cg;
   }

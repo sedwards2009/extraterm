@@ -80,30 +80,46 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     return this._insertChar(codePoint, alternateCodePoints, style);
   }
 
-  protected _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
-    const xPixels = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
-    const yPixels = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
+  private _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
+    const widthPx = this._metrics.widthPx;
+    let widthInCells = 1;
+    if ( ! isBoxCharacter(codePoint)) {
+      if (alternateCodePoints == null) {
+        widthInCells = isFullWidth(codePoint) ? 2 : 1;
+      } else {
+        widthInCells = alternateCodePoints.length;
+      }
+    }
+
+    const xPx = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
+    const yPx = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
+
+    const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, xPx, yPx, widthPx, widthInCells);
+
+    for (let i=0; i<widthInCells; i++) {
+      this._incrementNextEmptyCell();
+    }
+
+    return cachedGlyph;
+  }
+
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPixels: number,
+      yPixels: number, widthPx: number, widthInCells: number): CG {
 
     this._pageCtx.save();
     if (style & STYLE_MASK_FAINT) {
       this._pageCtx.fillStyle = "#ffffff80";
     }
 
-    let widthPx = this._metrics.widthPx;
-    let widthInCells = 1;
     if (isBoxCharacter(codePoint)) {
       drawBoxCharacter(this._pageCtx, codePoint, xPixels, yPixels, this._metrics.widthPx, this._metrics.heightPx);
     } else {
       let str: string;
       if (alternateCodePoints == null) {
         str = String.fromCodePoint(codePoint);
-        widthInCells = isFullWidth(codePoint) ? 2 : 1;
       } else {
         str = String.fromCodePoint(...alternateCodePoints);
-        widthInCells = alternateCodePoints.length;
       }
-
-      widthPx = widthInCells * this._metrics.widthPx;
 
       let styleName = "";
       if (style & STYLE_MASK_BOLD) {
@@ -162,11 +178,8 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
 
     this._lookupTable.set(this._makeLookupKey(codePoint, style), cachedGlyph);
 
-    for (let i=0; i<widthInCells; i++) {
-      this._incrementNextEmptyCell();
-    }
-
     this._pageCtx.restore();
+
     return cachedGlyph;
   }
 
