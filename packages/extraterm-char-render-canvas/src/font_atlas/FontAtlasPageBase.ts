@@ -14,10 +14,6 @@ import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
 
 const TWO_TO_THE_24 = 2 ** 24;
 
-const FONT_ATLAS_PAGE_WIDTH_CELLS = 32;
-const FONT_ATLAS_PAGE_HEIGHT_CELLS = 32;
-const FLUSH_COUNT = Math.floor(FONT_ATLAS_PAGE_WIDTH_CELLS * FONT_ATLAS_PAGE_HEIGHT_CELLS * 0.2);
-
 export interface CachedGlyph {
   xPixels: number;
   yPixels: number;
@@ -36,6 +32,11 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
 
   protected _pageCanvas: HTMLCanvasElement = null;
   protected _pageCtx: CanvasRenderingContext2D = null;
+
+  private _atlasWidthInCells: number;
+  private _atlasHeightInCells: number;
+  private _atlasFlushCellCount: number;
+
   private _safetyPadding: number = 0;
 
   private _glyphCellMap: CachedGlyph[][] = null;
@@ -44,7 +45,6 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   private _nextEmptyCellX: number = 0;
   private _nextEmptyCellY: number = 0;
   private _lookupTable: Map<number, CG> = new Map();
-  private _isFull = false;
 
   constructor(protected readonly _metrics: MonospaceFontMetrics) {
     this._log = getLogger("FontAtlasPage", this);
@@ -54,11 +54,15 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   }
 
   private _initialize(): void {
+    this._atlasWidthInCells = 32;
+    this._atlasHeightInCells = 32;
+    this._atlasFlushCellCount = Math.floor(this._atlasWidthInCells * this._atlasHeightInCells * 0.2);
+
     this._safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) / 6);
 
     this._pageCanvas = document.createElement("canvas");
-    this._pageCanvas.width = FONT_ATLAS_PAGE_WIDTH_CELLS * (this._metrics.widthPx + this._safetyPadding * 2);
-    this._pageCanvas.height = FONT_ATLAS_PAGE_HEIGHT_CELLS * (this._metrics.heightPx + this._safetyPadding * 2);
+    this._pageCanvas.width = this._atlasWidthInCells * (this._metrics.widthPx + this._safetyPadding * 2);
+    this._pageCanvas.height = this._atlasHeightInCells * (this._metrics.heightPx + this._safetyPadding * 2);
 
     this._initializeSlots();
 
@@ -74,9 +78,10 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
 
   private _initializeSlots(): void {
     const slotsMap: CachedGlyph[][] = [];
-    for (let j=0; j<FONT_ATLAS_PAGE_HEIGHT_CELLS; j++) {
-      const slotRow = new Array(FONT_ATLAS_PAGE_WIDTH_CELLS);
-      for (let i=0; i<FONT_ATLAS_PAGE_WIDTH_CELLS; i++) {
+    const atlasWidthInCells = this._atlasWidthInCells;
+    for (let j=0; j<this._atlasHeightInCells; j++) {
+      const slotRow = new Array(atlasWidthInCells);
+      for (let i=0; i<atlasWidthInCells; i++) {
         slotRow[i] = null;
       }
       slotsMap.push(slotRow);
@@ -236,8 +241,8 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   }
 
   private _findNextEmptyCell(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): {x: number, y: number} {
-    for (let j=y; j<FONT_ATLAS_PAGE_HEIGHT_CELLS; j++) {
-      for (let i=x; i<FONT_ATLAS_PAGE_WIDTH_CELLS; i++) {
+    for (let j=y; j<this._atlasHeightInCells; j++) {
+      for (let i=x; i<this._atlasWidthInCells; i++) {
         if (this._isCellFreeAt(glyphCellMap, i, j, widthInCells)) {
           return {x: i, y: j};
         }
@@ -251,7 +256,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
    * Is there room at a `x`,`y` coord for a cell of `widthInCells` cells wide?
    */
   private _isCellFreeAt(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): boolean {
-    if (x + widthInCells > FONT_ATLAS_PAGE_WIDTH_CELLS) {
+    if (x + widthInCells > this._atlasWidthInCells) {
       return false;
     }
     for (let i=0; i<widthInCells; i++) {
@@ -276,7 +281,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
       return a.lastUse < b.lastUse ? -1 : 1;
     };
 
-    const cutOff = select(cachedGlyphsArray, FLUSH_COUNT, cmp);
+    const cutOff = select(cachedGlyphsArray, this._atlasFlushCellCount, cmp);
     const cutOffLastUse = cutOff.lastUse;
 
     for(const cachedGlyph of cachedGlyphsArray) {
