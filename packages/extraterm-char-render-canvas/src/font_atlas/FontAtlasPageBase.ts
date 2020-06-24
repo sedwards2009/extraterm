@@ -5,6 +5,7 @@ import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH
   STYLE_MASK_FAINT, STYLE_MASK_OVERLINE, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE,
   UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
 import { isWide as isFullWidth } from "extraterm-unicode-utilities";
+import { select } from "floyd-rivest";
 
 import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
@@ -15,13 +16,18 @@ const TWO_TO_THE_24 = 2 ** 24;
 
 const FONT_ATLAS_PAGE_WIDTH_CELLS = 32;
 const FONT_ATLAS_PAGE_HEIGHT_CELLS = 32;
-
+const FLUSH_COUNT = Math.floor(FONT_ATLAS_PAGE_WIDTH_CELLS * FONT_ATLAS_PAGE_HEIGHT_CELLS * 0.2);
 
 export interface CachedGlyph {
   xPixels: number;
   yPixels: number;
   widthCells: number;
   widthPx: number;
+
+  key: number;
+  atlasX: number;
+  atlasY: number;
+  lastUse: number;
 }
 
 
@@ -34,6 +40,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
 
   private _glyphCellMap: CachedGlyph[][] = null;
 
+  private _monoTime = 1;
   private _nextEmptyCellX: number = 0;
   private _nextEmptyCellY: number = 0;
   private _lookupTable: Map<number, CG> = new Map();
@@ -47,7 +54,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   }
 
   private _initialize(): void {
-    this._safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) /4);
+    this._safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) / 6);
 
     this._pageCanvas = document.createElement("canvas");
     this._pageCanvas.width = FONT_ATLAS_PAGE_WIDTH_CELLS * (this._metrics.widthPx + this._safetyPadding * 2);
@@ -87,14 +94,13 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   }
 
   protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
-    const cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
-    if (cachedGlyph != null) {
-      return cachedGlyph;
+    let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
+    if (cachedGlyph == null) {
+      cachedGlyph = this._insertChar(codePoint, alternateCodePoints, style);
     }
-    if (this._isFull) {
-      return null;
-    }
-    return this._insertChar(codePoint, alternateCodePoints, style);
+    cachedGlyph.lastUse = this._monoTime;
+    this._monoTime++;
+    return cachedGlyph;
   }
 
   private _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
@@ -114,24 +120,31 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     const yPx = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
 
     const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, xPx, yPx, widthPx, widthInCells);
+    cachedGlyph.atlasX = this._nextEmptyCellX;
+    cachedGlyph.atlasY = this._nextEmptyCellY;
 
-    this._lookupTable.set(this._makeLookupKey(codePoint, style), cachedGlyph);
+    const key = this._makeLookupKey(codePoint, style);
+    cachedGlyph.key = key;
+    this._lookupTable.set(key, cachedGlyph);
     for (let i=0; i<widthInCells; i++) {
       this._glyphCellMap[this._nextEmptyCellY][this._nextEmptyCellX + i] = cachedGlyph;
     }
     return cachedGlyph;
   }
 
-  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPixels: number,
-      yPixels: number, widthPx: number, widthInCells: number): CG {
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPx: number,
+      yPx: number, widthPx: number, widthInCells: number): CG {
 
     this._pageCtx.save();
+
+    this._pageCtx.clearRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
+
     if (style & STYLE_MASK_FAINT) {
       this._pageCtx.fillStyle = "#ffffff80";
     }
 
     if (isBoxCharacter(codePoint)) {
-      drawBoxCharacter(this._pageCtx, codePoint, xPixels, yPixels, this._metrics.widthPx, this._metrics.heightPx);
+      drawBoxCharacter(this._pageCtx, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx);
     } else {
       let str: string;
       if (alternateCodePoints == null) {
@@ -149,50 +162,55 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
       }
 
       this._pageCtx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
-      this._pageCtx.fillText(str, xPixels + this._metrics.fillTextXOffset, yPixels + this._metrics.fillTextYOffset);
+      this._pageCtx.fillText(str, xPx + this._metrics.fillTextXOffset, yPx + this._metrics.fillTextYOffset);
     }
 
     if (style & STYLE_MASK_STRIKETHROUGH) {
-      this._pageCtx.fillRect(xPixels,
-                              yPixels + this._metrics.strikethroughY,
+      this._pageCtx.fillRect(xPx,
+                              yPx + this._metrics.strikethroughY,
                               widthPx, this._metrics.strikethroughHeight);
     }
 
     const underline = style & STYLE_MASK_UNDERLINE;
     if (underline === UNDERLINE_STYLE_NORMAL || underline === UNDERLINE_STYLE_DOUBLE) {
-      this._pageCtx.fillRect(xPixels,
-                              yPixels + this._metrics.underlineY,
+      this._pageCtx.fillRect(xPx,
+                              yPx + this._metrics.underlineY,
                               widthPx, this._metrics.underlineHeight);
     }
     if (underline === UNDERLINE_STYLE_DOUBLE) {
-      this._pageCtx.fillRect(xPixels,
-                              yPixels + this._metrics.secondUnderlineY,
+      this._pageCtx.fillRect(xPx,
+                              yPx + this._metrics.secondUnderlineY,
                               widthPx, this._metrics.underlineHeight);
     }
     if (underline === UNDERLINE_STYLE_CURLY) {
       this._pageCtx.save();
       this._pageCtx.lineWidth = this._metrics.curlyThickness;
       this._pageCtx.beginPath();
-      this._pageCtx.moveTo(xPixels, yPixels+this._metrics.curlyY);
-      this._pageCtx.quadraticCurveTo(xPixels + widthPx/4, yPixels+this._metrics.curlyY-this._metrics.curlyHeight/2,
-                                      xPixels + widthPx/2, yPixels+this._metrics.curlyY);
-      this._pageCtx.quadraticCurveTo(xPixels + widthPx*3/4, yPixels+this._metrics.curlyY+this._metrics.curlyHeight/2,
-                                        xPixels + widthPx, yPixels+this._metrics.curlyY);
+      this._pageCtx.moveTo(xPx, yPx+this._metrics.curlyY);
+      this._pageCtx.quadraticCurveTo(xPx + widthPx/4, yPx+this._metrics.curlyY-this._metrics.curlyHeight/2,
+                                      xPx + widthPx/2, yPx+this._metrics.curlyY);
+      this._pageCtx.quadraticCurveTo(xPx + widthPx*3/4, yPx+this._metrics.curlyY+this._metrics.curlyHeight/2,
+                                        xPx + widthPx, yPx+this._metrics.curlyY);
       this._pageCtx.stroke();
       this._pageCtx.restore();
     }
 
     if (style & STYLE_MASK_OVERLINE) {
-      this._pageCtx.fillRect(xPixels,
-                              yPixels + this._metrics.overlineY,
+      this._pageCtx.fillRect(xPx,
+                              yPx + this._metrics.overlineY,
                               widthPx, this._metrics.overlineHeight);
     }
 
     const cachedGlyph = this._createCachedGlyphStruct({
-      xPixels,
-      yPixels,
+      xPixels: xPx,
+      yPixels: yPx,
       widthCells: widthInCells,
       widthPx,
+
+      key: -1,
+      atlasX: -1,
+      atlasY: -1,
+      lastUse: 0
     });
 
     this._pageCtx.restore();
@@ -233,7 +251,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
    * Is there room at a `x`,`y` coord for a cell of `widthInCells` cells wide?
    */
   private _isCellFreeAt(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): boolean {
-    if (x + widthInCells >= FONT_ATLAS_PAGE_WIDTH_CELLS) {
+    if (x + widthInCells > FONT_ATLAS_PAGE_WIDTH_CELLS) {
       return false;
     }
     for (let i=0; i<widthInCells; i++) {
@@ -245,7 +263,33 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     return true;
   }
 
+  /**
+   * Delete the $FLUSH_COUNT oldest glyphs from the atlas.
+   */
   private _flushLRU(): void {
-    console.log("_flushLRU()");
+    const cachedGlyphsArray = Array.from(this._lookupTable.values());
+
+    const cmp = function(a: CG, b: CG): -1 | 0 | 1 {
+      if (a.lastUse === b.lastUse) {
+        return 0;
+      }
+      return a.lastUse < b.lastUse ? -1 : 1;
+    };
+
+    const cutOff = select(cachedGlyphsArray, FLUSH_COUNT, cmp);
+    const cutOffLastUse = cutOff.lastUse;
+
+    for(const cachedGlyph of cachedGlyphsArray) {
+      if (cachedGlyph.lastUse <= cutOffLastUse) {
+        for (let i=0; i<cachedGlyph.widthCells; i++) {
+          this._glyphCellMap[cachedGlyph.atlasY][cachedGlyph.atlasX + i] = null;
+        }
+        this._lookupTable.delete(cachedGlyph.key);
+      }
+    }
+
+    this._nextEmptyCellX = 0;
+    this._nextEmptyCellY = 0;
   }
 }
+
