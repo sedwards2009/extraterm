@@ -12,7 +12,7 @@ export interface Indexable {
 }
 
 class TrieNode<V> {
-  private children = new Map<Primitive, TrieNode<V> | null>();
+  private children: Map<Primitive, TrieNode<V> | null> = null;
   private value: V = null;
 
   insert(index: number, key: Indexable, value: V): void {
@@ -23,6 +23,11 @@ class TrieNode<V> {
 
     const subkey = key[index];
     let childNode: TrieNode<V>;
+
+    if (this.children == null) {
+      this.children = new Map<Primitive, TrieNode<V> | null>();
+    }
+
     if ( ! this.children.has(subkey)) {
       childNode = new TrieNode<V>();
       this.children.set(subkey, childNode);
@@ -39,7 +44,7 @@ class TrieNode<V> {
     }
 
     const subkey = key[index];
-    const childNode = this.children.get(subkey);
+    const childNode = this.children?.get(subkey);
     if (childNode == null) {
       return undefined;
     }
@@ -53,7 +58,7 @@ class TrieNode<V> {
     }
 
     const subkey = key[index];
-    const childNode = this.children.get(subkey);
+    const childNode = this.children?.get(subkey);
     if (childNode == null) {
       return { value: this.value, length: index };
     }
@@ -67,7 +72,7 @@ class TrieNode<V> {
       return true;
     }
 
-    const childNode = this.children.get(key[index]);
+    const childNode = this.children?.get(key[index]);
     if (childNode == null) {
       return false;
     }
