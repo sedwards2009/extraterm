@@ -99,7 +99,7 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
     if (proxyCodePoint == null) {
       proxyCodePoint = this._nextFreeCodePoint;
       this._nextFreeCodePoint++;
-      this._proxyCodePointMapping.insert(codePoints, proxyCodePoint);
+      this._proxyCodePointMapping.set(codePoints, proxyCodePoint);
     }
 
     const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style);
