@@ -19,7 +19,7 @@ interface CPURenderedCachedGlyph extends CachedGlyph {
  */
 export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph> {
 
-  private _proxyCodePointMapping = new ArrayKeyTrie<number, number>();
+  private _proxyCodePointMapping = new ArrayKeyTrie<number>();
   private _nextFreeCodePoint = 0x11000000;
 
   protected _createCachedGlyphStruct(cg: CachedGlyph): CPURenderedCachedGlyph {
