@@ -32,7 +32,7 @@ describe.each(TEST_ITEMS)("Insert/get cases", (key: number[], value: string) => 
 
 test(`prefix length 3`, done => {
   const data = testData();
-  expect(data.getPrefix([1, 4, 5]).value).toBe(null);
+  expect(data.getPrefix([1, 4, 5]).value).toBe(undefined);
   expect(data.getPrefix([1, 4, 5]).length).toBe(3);
   done();
 });
@@ -73,5 +73,16 @@ test(`delete shouldn't kill close keys. 2.`, done => {
   expect(data.get([1, 4])).toBe("key with overlapping elements");
   expect(data.get([1, 4, 5, 6, 7, 8])).toBe(undefined);
 
+  done();
+});
+
+test(`values()`, done => {
+  const data = testData();
+  const valuesSet = new Set(data.values());
+
+  expect(valuesSet.has("first")).toBe(true);
+  expect(valuesSet.has("key with two elements")).toBe(true);
+  expect(valuesSet.has("key with overlapping elements")).toBe(true);
+  expect(valuesSet.has("long key")).toBe(true);
   done();
 });

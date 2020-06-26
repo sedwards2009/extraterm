@@ -13,7 +13,7 @@ export interface Indexable {
 
 class TrieNode<V> {
   private children: Map<Primitive, TrieNode<V> | null> = null;
-  private value: V = null;
+  private value: V = undefined;
 
   insert(index: number, key: Indexable, value: V): void {
     if (index >= key.length) {
@@ -87,6 +87,17 @@ class TrieNode<V> {
   isEmpty(): boolean {
     return this.value === undefined && (this.children == null || this.children.size === 0);
   }
+
+  *values(): IterableIterator<V> {
+    if (this.value !== undefined) {
+      yield this.value;
+    }
+    if (this.children != null) {
+      for (const v of this.children.values()) {
+        yield* v.values();
+      }
+    }
+  }
 }
 
 
@@ -144,5 +155,9 @@ export class ArrayKeyTrie<V> {
    */
   delete(key: Indexable): boolean {
     return this._root.delete(0, key);
+  }
+
+  *values(): IterableIterator<V> {
+    yield* this._root.values();
   }
 }
