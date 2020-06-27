@@ -588,16 +588,8 @@ export class CharRenderCanvas implements Disposable {
     const renderedCellGrid = this._renderedCellGrid;
     const spaceCodePoint = " ".codePointAt(0);
 
-    const rowIterator = normalizedCellIterator(cellGrid, row);
     const renderedRowIterator = normalizedCellIterator(renderedCellGrid, row);
-
-    while (true) {
-      const nextValue = rowIterator.next();
-      if (nextValue.done) {
-        break;
-      }
-
-      const cell: NormalizedCell = nextValue.value;
+    for (const cell of normalizedCellIterator(cellGrid, row)) {
       const renderedCell: NormalizedCell = renderedRowIterator.next().value;
 
       const flags = cellGrid.getFlags(cell.x, row);
