@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE } from "extraterm-char-cell-grid";
@@ -232,7 +232,7 @@ export class CharRenderCanvas implements Disposable {
 
   private _charCanvas: HTMLCanvasElement = null;
   private _charCanvasCtx: CanvasRenderingContext2D = null;
-  private _charCanvasImageData: ImageData = null;
+  private _charCanvasAlphaImageData: ImageData = null;
 
   private _canvasWidthPx = 512;
   private _canvasHeightPx = 512;
@@ -323,7 +323,7 @@ export class CharRenderCanvas implements Disposable {
     this._charCanvas.height = this._canvasHeightPx;
 
     this._charCanvasCtx = this._charCanvas.getContext("2d", { alpha: true });
-    this._charCanvasImageData = new ImageData(this._canvasWidthPx, this._canvasHeightPx);
+    this._charCanvasAlphaImageData = new ImageData(this._canvasWidthPx, this._canvasHeightPx);
 
     if (debugParentElement != null) {
       debugParentElement.appendChild(this._charCanvas);
@@ -482,9 +482,9 @@ export class CharRenderCanvas implements Disposable {
       this._bgColorPatchCanvas.setRenderCursor(renderCursor);
       this._bgColorPatchCanvas.render();
 
-      this._renderCharactersToImageData(this._charCanvasCtx, this._charCanvasImageData);
+      this._renderCharactersAlphaToImageData(this._charCanvasCtx, this._charCanvasAlphaImageData);
 
-      this._fgColorPatchImageData.pasteAlphaChannel(this._charCanvasImageData);
+      this._fgColorPatchImageData.pasteAlphaChannel(this._charCanvasAlphaImageData);
 
       this._canvasCtx.globalCompositeOperation = "copy";
       this._canvasCtx.putImageData(this._fgColorPatchImageData.getImageData(), 0, 0);
@@ -571,105 +571,67 @@ export class CharRenderCanvas implements Disposable {
     }
   }
 
-  private _renderCharactersToImageData(ctx: CanvasRenderingContext2D, imageData: ImageData): void {
+  private _renderCharactersAlphaToImageData(ctx: CanvasRenderingContext2D, imageData: ImageData): void {
     ctx.fillStyle = "#ffffffff";
     ctx.globalCompositeOperation = "copy";
 
     const height = this._cellGrid.height;
     for (let j=0; j<height; j++) {
-      this._renderCharacterRowToImageData(imageData, j);
+      this._renderCharacterAlphaRowToImageData(imageData, j);
     }
   }
 
-  private _renderCharacterRowToImageData(imageData: ImageData, row: number): void {
-    /*
-    This works by stepping through the contents of the previously rendered row and
-    the new row contents and comparing the two. Differences between the two indicate
-    glyphs/cells which need to rerendered. Sometimes multiple adjacent cells/glyphs
-    need to be rendered at the same time, for example, full width (2 cells) characters
-    and ligatures. We step through each row by one "group" of cells at a time. Most groups
-    are a single char/cell. Full width and ligature groups can be 2-4 cells wide.
-
-    Each trip through the main loop increments either the index into the rendered row
-    OR the current row.
-
-    For example:
-
-    Previously rendered row is "same === X". Current row is "same = = Y". The "===" in
-    the rendered row is a 3 cell wide ligature.
-
-    The groups and the comparision between then look like this:
-
-      Rendered row: [s] [a] [m] [e] [ ] [   ===   ] [ ] [X]
-
-      Current row:  [s] [a] [m] [e] [ ] [=] [ ] [=] [ ] [Y]
-                                        ^^^^^^^^^^^     ^^^
-      Diffs which                           |            |
-      trigger rendering:           Glyph size diff.  Code point diff.
-
-    In this example the substring "= =" will need to be rendered, and the "Y" too.
-    */
-
+  private _renderCharacterAlphaRowToImageData(imageData: ImageData, row: number): void {
     const cellGrid = this._cellGrid;
+    const cellWidthPx = this.cellWidthPx;
+    const cellHeightPx = this.cellHeightPx;
     const renderedCellGrid = this._renderedCellGrid;
-    const cellWidth = this.cellWidthPx;
-    const cellHeight = this.cellHeightPx;
-    const width = cellGrid.width;
     const spaceCodePoint = " ".codePointAt(0);
 
-    let xRendered = 0;
-    let x = 0;
-    while (x < width) {
-      const renderedFlags = renderedCellGrid.getFlags(xRendered, row);
-      const renderedWidthChars = ((renderedFlags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT) + 1;
-      if (xRendered < x) {
-        xRendered += renderedWidthChars;
-        continue;
+    const rowIterator = normalizedCellIterator(cellGrid, row);
+    const renderedRowIterator = normalizedCellIterator(renderedCellGrid, row);
+
+    while (true) {
+      const nextValue = rowIterator.next();
+      if (nextValue.done) {
+        break;
       }
 
-      const flags = cellGrid.getFlags(x, row);
-      const widthChars = ((flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT) + 1;
-      const style = cellGrid.getStyle(x, row);
-      const ligature = cellGrid.getLigature(x, row);
+      const cell: NormalizedCell = nextValue.value;
+      const renderedCell: NormalizedCell = renderedRowIterator.next().value;
+
+      const flags = cellGrid.getFlags(cell.x, row);
+      const renderedFlags = renderedCellGrid.getFlags(cell.x, row);
 
       const extraFontFlag = (flags & FLAG_MASK_EXTRA_FONT) !== 0;
       const renderedExtraFontFlag = (renderedFlags & FLAG_MASK_EXTRA_FONT) !== 0;
 
-      let mustRender = false;
-      if (x < xRendered) {
-        mustRender = true;
-      } else {
+      let isEqual = true;
+      isEqual = isEqual && cell.segment === renderedCell.segment;
+      isEqual = isEqual && cell.isLigature === renderedCell.isLigature;
+      isEqual = isEqual && cell.codePoint === renderedCell.codePoint;
+      isEqual = isEqual && extraFontFlag === renderedExtraFontFlag;
 
-        const renderedLigature = renderedCellGrid.getLigature(xRendered, row);
-        const renderedStyle = renderedCellGrid.getStyle(xRendered, row);
-
-        mustRender = (style !== renderedStyle) || (ligature !== renderedLigature);
-        mustRender = mustRender || (extraFontFlag !== renderedExtraFontFlag);
-        mustRender = mustRender || ! (
-          widthChars === renderedWidthChars && (
-            (cellGrid.getCodePoint(x, row) === renderedCellGrid.getCodePoint(xRendered, row)) &&
-            (widthChars < 2 || (cellGrid.getCodePoint(x+1, row) === renderedCellGrid.getCodePoint(xRendered+1, row))) &&
-            (widthChars < 3 || (cellGrid.getCodePoint(x+2, row) === renderedCellGrid.getCodePoint(xRendered+2, row))) &&
-            (widthChars < 4 || (cellGrid.getCodePoint(x+3, row) === renderedCellGrid.getCodePoint(xRendered+3, row)))
-          ));
+      if (isEqual && cell.isLigature) {
+        isEqual = isEqual && cell.ligatureCodePoints === renderedCell.ligatureCodePoints;
       }
 
-      if (mustRender) {
-        if (flags & FLAG_MASK_LIGATURE) {
-          const codePoints = [];
-          for (let k=0; k<widthChars; k++) {
-            codePoints[k] = cellGrid.getCodePoint(x+k, row);
+      const style = cellGrid.getStyle(cell.x, row);
+      const renderedStyle = renderedCellGrid.getStyle(renderedCell.x, row);
+      isEqual = isEqual && style === renderedStyle;
+
+      if ( ! isEqual) {
+        if (cell.isLigature) {
+          if (cell.segment === 0) {
+            this._fontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style, cell.x * cellWidthPx,
+              row * cellHeightPx);
           }
-          this._fontAtlas.drawCodePointsToImageData(imageData, codePoints, style, x * cellWidth,
-            row * cellHeight);
         } else {
-          const codePoint = cellGrid.getCodePoint(x, row);
-          const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || extraFontFlag) ? spaceCodePoint : codePoint;
-          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, x * cellWidth,
-            row * cellHeight);
+          const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || extraFontFlag) ? spaceCodePoint : cell.codePoint;
+          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, cell.x * cellWidthPx,
+            row * cellHeightPx);
         }
       }
-      x += widthChars;
     }
   }
 
@@ -807,9 +769,9 @@ export class CharRenderCanvas implements Disposable {
 
     const scrollingUp = verticalOffsetChars < 0;
     if (scrollingUp) {
-      this._charCanvasImageData.data.copyWithin(0, (-verticalOffsetChars * this.cellHeightPx) * this._charCanvasImageData.width *4);
+      this._charCanvasAlphaImageData.data.copyWithin(0, (-verticalOffsetChars * this.cellHeightPx) * this._charCanvasAlphaImageData.width *4);
     } else {
-      this._charCanvasImageData.data.copyWithin((verticalOffsetChars * this.cellHeightPx) * this._charCanvasImageData.width *4, 0);
+      this._charCanvasAlphaImageData.data.copyWithin((verticalOffsetChars * this.cellHeightPx) * this._charCanvasAlphaImageData.width *4, 0);
     }
   }
 }
@@ -820,4 +782,67 @@ function RGBAToCss(rgba: number): string {
   const blue = (rgba >> 8) & 0xff;
   const alpha = (rgba & 0xff) / 255;
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+interface NormalizedCell {
+  x: number;
+  segment: number;
+  codePoint: number;
+
+  isLigature: boolean;
+  ligatureCodePoints: number[];
+}
+
+/**
+ * Iterate through a row of cells and emit a 'cell' which contains extra data
+ * about where it is in a ligature etc.
+ * 
+ * Looping through a `CharCellGrid` and keeping track or where you are w.r.t.
+ * ligatures and wide chars is a PITA, but this simpliies the bookkeeping
+ * considerably.
+ */
+function* normalizedCellIterator(cellGrid: CharCellGrid, row: number): IterableIterator<NormalizedCell> {
+  const rowLength = cellGrid.width;
+  let x = 0;
+  while (x < rowLength) {
+    const flags = cellGrid.getFlags(x, row);
+
+    const widthChars = ((flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT) + 1;
+    const isLigature = flags & FLAG_MASK_LIGATURE;
+
+    if (isLigature) {
+      // Ligature case
+      const ligatureCodePoints: number[] = [];
+      for (let k=0; k<widthChars; k++) {
+        ligatureCodePoints[k] = cellGrid.getCodePoint(x+k, row);
+      }
+
+      for (let i=0; i<widthChars; i++) {
+        const normalizedCell: NormalizedCell = {
+          x,
+          segment: i,
+          codePoint: null,
+          isLigature: true,
+          ligatureCodePoints
+        };
+
+        yield normalizedCell;
+        x++;
+      }
+    } else {
+      // Normal and wide character case
+      const codePoint = cellGrid.getCodePoint(x, row);
+      for (let k=0; k<widthChars; k++) {
+        const normalizedCell: NormalizedCell = {
+          x,
+          segment: k,
+          codePoint,
+          isLigature: false,
+          ligatureCodePoints: null,
+        };
+        yield normalizedCell;
+        x++;
+      }
+    }
+  }
 }
