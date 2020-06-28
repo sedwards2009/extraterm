@@ -2,7 +2,7 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE } from "extraterm-char-cell-grid";
+import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { ColorPatchCanvas } from "./color_patch/ColorPatchCanvas";
 import { FontAtlas } from "./font_atlas/FontAtlas";
@@ -11,6 +11,7 @@ import { computeFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasure
 import { FontAtlasRepository } from "./font_atlas/FontAtlasRepository";
 import { Disposable } from "./Disposable";
 import { ColorPatchImageData } from "./color_patch/ColorPatchImageData";
+import { RGBAToCss } from "./RGBAToCss";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -532,7 +533,7 @@ export class CharRenderCanvas implements Disposable {
           if ( ! renderedExtraFontFlag) {
             // Erase the char in the char canvas and make room for
             // the glyph from the extrafont which will be drawn later.
-            this._fontAtlas.drawCodePoint(ctx, spaceCodePoint, 0, i * cellWidth, j * cellHeight);
+            this._fontAtlas.drawCodePoint(ctx, spaceCodePoint, 0, 0xffffffff, 0x00000000, i * cellWidth, j * cellHeight);
 
           }
         } else {
@@ -561,7 +562,9 @@ export class CharRenderCanvas implements Disposable {
                                               ((renderedFlags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT)+1);
           if (mustRender) {
             const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : codePoint;
-            this._fontAtlas.drawCodePoint(ctx, effectiveCodePoint, style, i * cellWidth, j * cellHeight);
+            const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
+            this._fontAtlas.drawCodePoint(ctx, effectiveCodePoint, style, fgColor, 0x00000000, i * cellWidth,
+              j * cellHeight);
           }
         }
 
@@ -613,15 +616,16 @@ export class CharRenderCanvas implements Disposable {
       isEqual = isEqual && style === renderedStyle;
 
       if ( ! isEqual) {
+        const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
         if (cell.isLigature) {
           if (cell.segment === 0) {
-            this._fontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style, cell.x * cellWidthPx,
-              row * cellHeightPx);
+            this._fontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style,
+              fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
           }
         } else {
           const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || extraFontFlag) ? spaceCodePoint : cell.codePoint;
-          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, cell.x * cellWidthPx,
-            row * cellHeightPx);
+          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
+            fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
         }
       }
     }
@@ -643,7 +647,8 @@ export class CharRenderCanvas implements Disposable {
           const codePoint = cellGrid.getCodePoint(i, j);
           const style = cellGrid.getStyle(i, j);
           const extraFont = this._getExtraFontSliceFromCodePoint(codePoint);
-          extraFont.fontAtlas.drawCodePoint(ctx, codePoint, style, i * cellWidth, j * cellHeight);
+          extraFont.fontAtlas.drawCodePoint(ctx, codePoint, style, 0xffffffff, 0x00000000, i * cellWidth,
+            j * cellHeight);
         }
       }
     }
@@ -768,14 +773,6 @@ export class CharRenderCanvas implements Disposable {
   }
 }
 
-function RGBAToCss(rgba: number): string {
-  const red = (rgba >> 24) & 0xff;
-  const green = (rgba >> 16) & 0xff;
-  const blue = (rgba >> 8) & 0xff;
-  const alpha = (rgba & 0xff) / 255;
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-}
-
 interface NormalizedCell {
   x: number;
   segment: number;
@@ -788,7 +785,7 @@ interface NormalizedCell {
 /**
  * Iterate through a row of cells and emit a 'cell' which contains extra data
  * about where it is in a ligature etc.
- * 
+ *
  * Looping through a `CharCellGrid` and keeping track or where you are w.r.t.
  * ligatures and wide chars is a PITA, but this simpliies the bookkeeping
  * considerably.

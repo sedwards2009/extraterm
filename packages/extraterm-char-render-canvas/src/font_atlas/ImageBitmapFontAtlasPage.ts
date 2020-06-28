@@ -20,9 +20,9 @@ export class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCache
     return { ...cg, imageBitmapPromise: null, imageBitmap: null };
   }
 
-  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPixels: number,
-    yPixels: number, widthPx: number, widthInCells: number): ImageBitmapCachedGlyph {
-    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, xPixels, yPixels, widthPx, widthInCells);
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
+      bgRGBA: number, xPixels: number, yPixels: number, widthPx: number, widthInCells: number): ImageBitmapCachedGlyph {
+    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, fgRGBA, bgRGBA, xPixels, yPixels, widthPx, widthInCells);
 
     // ImageBitmaps are meant to be much fast to paint with compared to normal canvas.
     const promise = window.createImageBitmap(this._pageCanvas, cg.xPixels, cg.yPixels, cg.widthPx,
@@ -36,10 +36,10 @@ export class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCache
     return cg;
   }
 
-  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, xPixel: number,
-      yPixel: number): boolean {
+  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number,
+      xPixel: number, yPixel: number): boolean {
 
-    const cachedGlyph = this._getGlyph(codePoint, null, style);
+    const cachedGlyph = this._getGlyph(codePoint, null, style, fgRGBA, bgRGBA);
     if (cachedGlyph === null) {
       return false;
     }
@@ -76,8 +76,8 @@ export class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCache
     ctx.restore();
   }
 
-  drawCodePoints(ctx: CanvasRenderingContext2D, codePoints: number[], style: StyleCode, xPixel: number,
-      yPixel: number): boolean {
+  drawCodePoints(ctx: CanvasRenderingContext2D, codePoints: number[], style: StyleCode, fgRGBA: number, bgRGBA: number,
+      xPixel: number, yPixel: number): boolean {
     return false;
   }
 }

@@ -10,6 +10,8 @@ import { select } from "floyd-rivest";
 import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
+import { ArrayKeyTrie } from "extraterm-array-key-trie";
+import { RGBAToCss } from "../RGBAToCss";
 
 
 const TWO_TO_THE_24 = 2 ** 24;
@@ -20,7 +22,7 @@ export interface CachedGlyph {
   widthCells: number;
   widthPx: number;
 
-  key: number;
+  key: number[];
   atlasX: number;
   atlasY: number;
   lastUse: number;
@@ -44,7 +46,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   private _monoTime = 1;
   private _nextEmptyCellX: number = 0;
   private _nextEmptyCellY: number = 0;
-  private _lookupTable: Map<number, CG> = new Map();
+  private _lookupTable = new ArrayKeyTrie<CG>();
 
   constructor(protected readonly _metrics: MonospaceFontMetrics) {
     this._log = getLogger("FontAtlasPage", this);
@@ -94,21 +96,25 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     return this._pageCanvas;
   }
 
-  private _makeLookupKey(codePoint: number, style: StyleCode): number {
-    return style * TWO_TO_THE_24 + codePoint;
+  private _makeLookupKey(codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number): number[] {
+    return [fgRGBA, bgRGBA, style * TWO_TO_THE_24 + codePoint];
   }
 
-  protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
-    let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style));
+  protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
+      bgRGBA: number): CG {
+
+    let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style, fgRGBA, bgRGBA));
     if (cachedGlyph == null) {
-      cachedGlyph = this._insertChar(codePoint, alternateCodePoints, style);
+      cachedGlyph = this._insertChar(codePoint, alternateCodePoints, style, fgRGBA, bgRGBA);
     }
     cachedGlyph.lastUse = this._monoTime;
     this._monoTime++;
     return cachedGlyph;
   }
 
-  private _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode): CG {
+  private _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
+      bgRGBA: number): CG {
+
     const widthPx = this._metrics.widthPx;
     let widthInCells = 1;
     if ( ! isBoxCharacter(codePoint)) {
@@ -124,11 +130,12 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     const xPx = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
     const yPx = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
 
-    const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, xPx, yPx, widthPx, widthInCells);
+    const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, fgRGBA, bgRGBA, xPx, yPx, widthPx,
+      widthInCells);
     cachedGlyph.atlasX = this._nextEmptyCellX;
     cachedGlyph.atlasY = this._nextEmptyCellY;
 
-    const key = this._makeLookupKey(codePoint, style);
+    const key = this._makeLookupKey(codePoint, style, fgRGBA, bgRGBA);
     cachedGlyph.key = key;
     this._lookupTable.set(key, cachedGlyph);
     for (let i=0; i<widthInCells; i++) {
@@ -137,16 +144,17 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
     return cachedGlyph;
   }
 
-  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPx: number,
-      yPx: number, widthPx: number, widthInCells: number): CG {
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
+      bgRGBA: number, xPx: number, yPx: number, widthPx: number, widthInCells: number): CG {
 
     this._pageCtx.save();
 
     this._pageCtx.clearRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
+    this._pageCtx.fillStyle = RGBAToCss(bgRGBA);
+    this._pageCtx.fillRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
 
-    if (style & STYLE_MASK_FAINT) {
-      this._pageCtx.fillStyle = "#ffffff80";
-    }
+    this._pageCtx.globalCompositeOperation = "source-over";
+    this._pageCtx.fillStyle = RGBAToCss(fgRGBA);
 
     if (isBoxCharacter(codePoint)) {
       drawBoxCharacter(this._pageCtx, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx);
@@ -212,7 +220,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
       widthCells: widthInCells,
       widthPx,
 
-      key: -1,
+      key: null,
       atlasX: -1,
       atlasY: -1,
       lastUse: 0

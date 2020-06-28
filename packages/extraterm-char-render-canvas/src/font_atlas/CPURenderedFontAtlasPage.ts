@@ -26,17 +26,19 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
     return { ...cg, imageData: null };
   }
 
-  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, xPixels: number,
-    yPixels: number, widthPx: number, widthInCells: number): CPURenderedCachedGlyph {
-    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, xPixels, yPixels, widthPx, widthInCells);
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
+      bgRGBA: number, xPixels: number, yPixels: number, widthPx: number, widthInCells: number): CPURenderedCachedGlyph {
+
+    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, fgRGBA, bgRGBA, xPixels, yPixels, widthPx,
+      widthInCells);
     cg.imageData = this._pageCtx.getImageData(cg.xPixels, cg.yPixels, cg.widthPx, this._metrics.heightPx);
     return cg;
   }
 
-  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number,
-      yPixel: number): boolean {
+  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode,  fgRGBA: number,
+      bgRGBA: number, xPixel: number, yPixel: number): boolean {
 
-    const cachedGlyph = this._getGlyph(codePoint, null, style);
+    const cachedGlyph = this._getGlyph(codePoint, null, style, fgRGBA, bgRGBA);
     if (cachedGlyph === null) {
       return false;
     }
@@ -92,8 +94,8 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
     }
   }
 
-  drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode, xPixel: number,
-        yPixel: number): boolean {
+  drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode,  fgRGBA: number,
+        bgRGBA: number, xPixel: number, yPixel: number): boolean {
 
     let proxyCodePoint = this._proxyCodePointMapping.get(codePoints);
     if (proxyCodePoint == null) {
@@ -102,7 +104,7 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
       this._proxyCodePointMapping.set(codePoints, proxyCodePoint);
     }
 
-    const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style);
+    const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style, fgRGBA, bgRGBA);
     if (cachedGlyph === null) {
       return false;
     }

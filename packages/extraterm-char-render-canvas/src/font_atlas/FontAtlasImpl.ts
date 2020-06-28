@@ -19,54 +19,55 @@ export class FontAtlasImpl implements FontAtlas {
     this._log = getLogger("FontAtlasImpl", this);
   }
 
-  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode,
+  drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number,
                 xPixel: number, yPixel: number): void {
 
     for (const page of this._imageBitmapPages) {
-      if (page.drawCodePoint(ctx, codePoint, style, xPixel, yPixel)) {
+      if (page.drawCodePoint(ctx, codePoint, style, fgRGBA, bgRGBA, xPixel, yPixel)) {
         return;
       }
     }
 
     const page = this._appendImageBitmapPage();
-    page.drawCodePoint(ctx, codePoint, style, xPixel, yPixel);
+    page.drawCodePoint(ctx, codePoint, style, fgRGBA, bgRGBA, xPixel, yPixel);
   }
 
-  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, xPixel: number, yPixel: number): void {
+  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, fgRGBA: number,
+      bgRGBA: number, xPixel: number, yPixel: number): void {
     for (const page of this._cpuRenderedPages) {
-      if (page.drawCodePointToImageData(destImageData, codePoint, style, xPixel, yPixel)) {
+      if (page.drawCodePointToImageData(destImageData, codePoint, style, fgRGBA, bgRGBA, xPixel, yPixel)) {
         return;
       }
     }
 
     const page = this._appendCPURenderedPage();
-    page.drawCodePointToImageData(destImageData, codePoint, style, xPixel, yPixel);
+    page.drawCodePointToImageData(destImageData, codePoint, style, fgRGBA, bgRGBA, xPixel, yPixel);
   }
 
-  drawCodePoints(ctx: CanvasRenderingContext2D, codePoints: number[], style: StyleCode,
-    xPixel: number, yPixel: number): void {
+  drawCodePoints(ctx: CanvasRenderingContext2D, codePoints: number[], style: StyleCode, fgRGBA: number, bgRGBA: number,
+      xPixel: number, yPixel: number): void {
 
     for (const page of this._imageBitmapPages) {
-      if (page.drawCodePoints(ctx, codePoints, style, xPixel, yPixel)) {
+      if (page.drawCodePoints(ctx, codePoints, style, fgRGBA, bgRGBA, xPixel, yPixel)) {
         return;
       }
     }
 
     const page = this._appendImageBitmapPage();
-    page.drawCodePoints(ctx, codePoints, style, xPixel, yPixel);
+    page.drawCodePoints(ctx, codePoints, style, fgRGBA, bgRGBA, xPixel, yPixel);
   }
 
-  drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode, xPixel: number,
-      yPixel: number): void {
+  drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode, fgRGBA: number,
+      bgRGBA: number, xPixel: number, yPixel: number): void {
 
     for (const page of this._cpuRenderedPages) {
-      if (page.drawCodePointsToImageData(destImageData, codePoints, style, xPixel, yPixel)) {
+      if (page.drawCodePointsToImageData(destImageData, codePoints, style, fgRGBA, bgRGBA, xPixel, yPixel)) {
         return;
       }
     }
 
     const page = this._appendCPURenderedPage();
-    page.drawCodePointsToImageData(destImageData, codePoints, style, xPixel, yPixel);
+    page.drawCodePointsToImageData(destImageData, codePoints, style, fgRGBA, bgRGBA, xPixel, yPixel);
   }
 
   getCanvas(): HTMLCanvasElement {
