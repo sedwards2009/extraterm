@@ -105,7 +105,6 @@ function spawnWsl(parameters: string[], encoding: string, onExit: (text: string)
 
   let text = "";
   wslProcess.stdout.on("data", data => {
-log.debug("data:", typeof(data)    );
     text += data.toString(encoding);
   });
   wslProcess.on("exit", (msg) => {
