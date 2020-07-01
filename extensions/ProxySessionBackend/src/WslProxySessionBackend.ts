@@ -17,28 +17,50 @@ import * as SourceDir from './SourceDir';
 interface WslProxySessionConfiguration extends SessionConfiguration {
   useDefaultShell?: boolean;
   shell?: string;
+  distribution?: string;
 }
 
 export class WslProxySessionBackend implements SessionBackend {
-  private _connector: WslProxyPtyConnector = null;
+  private _connectorMap = new Map<string, WslProxyPtyConnector>();
+  private _hasWsl = false;
+  private _distributions: string[] = [];
 
   constructor(private _log: Logger) {
+    this._hasWsl = this._validateExe("wsl.exe");
+    if (this._hasWsl) {
+      this._distributions = this._findWSLDistributions();
+    }
   }
-  
+
   defaultSessionConfigurations(): SessionConfiguration[] {
-    if (this._validateExe("wsl.exe")) {
+    const configs: WslProxySessionConfiguration[] = [];
+    if (this._hasWsl) {
       const wslSessionConfig: WslProxySessionConfiguration = {
         uuid: "",
-        name: "WSL",
+        name: "WSL Default",
         type: "wsl",
         useDefaultShell: true,
         shell: "",
-        args: ""
+        args: "",
+        distribution: "",
       };
-      return [wslSessionConfig];
-    } else {
-      return [];
+      configs.push(wslSessionConfig);
+
+      for (const distro of this._distributions) {
+        const wslSessionConfig: WslProxySessionConfiguration = {
+          uuid: "",
+          name: "WSL " + distro,
+          type: "wsl",
+          useDefaultShell: true,
+          shell: "",
+          args: "",
+          distribution: distro,
+        };
+        configs.push(wslSessionConfig);
+      }
     }
+
+    return configs;
   }
 
   private _validateExe(exe: string): boolean {
@@ -60,7 +82,25 @@ export class WslProxySessionBackend implements SessionBackend {
       return false;
     }
   }
-  
+
+  private _findWSLDistributions(): string[] {
+    const wslResult = child_process.spawnSync("wsl.exe", ["--list"], {encoding: "utf16le"});
+    if (wslResult.status !== 0) {
+      return [];
+    }
+
+    const result: string[] = [];
+    const lines = wslResult.stdout.trim().split("\n");
+    for (const line of lines.slice(1)) {
+      if (line.trim() === "") {
+        continue;
+      }
+      const parts = line.split(" ");
+      result.push(parts[0].trim());
+    }
+    return result;
+  }
+
   createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
     const sessionConfig = <WslProxySessionConfiguration> sessionConfiguration;
 
@@ -89,30 +129,36 @@ export class WslProxySessionBackend implements SessionBackend {
       options.cwd = sessionConfig.initialDirectory;
     }
 
-    const connector = this._getConnector();
+    const connector = this._getConnector(sessionConfig.distribution);
     return connector.spawn(options);
   }
-  
-  private _getConnector(): ProxyPtyConnector {
-    if (this._connector == null) {
-      this._connector = new WslProxyPtyConnector(this._log);
-      this._connector.start();
+
+  private _getConnector(distribution: string): ProxyPtyConnector {
+    const distro = distribution == null || distribution === "" ? "" : distribution;
+    let connector = this._connectorMap.get(distro);
+    if (connector == null) {
+      connector = new WslProxyPtyConnector(this._log, distro);
+      this._connectorMap.set(distro, connector);
+      connector.start();
     }
-    return this._connector;
+    return connector;
   }
 }
 
 let _log: Logger = null;
 
 class WslProxyPtyConnector extends ProxyPtyConnector {
-  constructor(logger: Logger) {
+  constructor(logger: Logger, private _distribution: string) {
     super(logger);
     _log = logger;
   }
 
   protected _spawnServer(): child_process.ChildProcess {
+    const distro = this._distribution == null || this._distribution === "" ? "" : this._distribution;
+    const distroArgs = distro === "" ? [] : ["-d", distro];
+
     // Clever way of mapping a Windows side dir to its WSL/Linux side equivalent.
-    const cdResult = child_process.spawnSync("wsl.exe", ["pwd"],
+    const cdResult = child_process.spawnSync("wsl.exe", [...distroArgs, "pwd"],
       {cwd: path.join(SourceDir.path, "python"), shell: true, encoding: "utf8"});
 
     if (cdResult.status !== 0) {
@@ -128,6 +174,6 @@ class WslProxyPtyConnector extends ProxyPtyConnector {
 
     const serverPath = wslPath + "/ptyserver2.py";
     _log.debug(`serverPath: ${serverPath}`);
-    return child_process.spawn("wsl.exe", ["PYTHONIOENCODING=utf-8:ignore", "python3", serverPath], {});
+    return child_process.spawn("wsl.exe", [...distroArgs, "PYTHONIOENCODING=utf-8:ignore", "python3", serverPath], {});
   }
 }
