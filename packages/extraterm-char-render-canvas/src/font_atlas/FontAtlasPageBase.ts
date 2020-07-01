@@ -70,7 +70,7 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
 
     // document.body.appendChild(this._pageCanvas);
 
-    this._pageCtx = this._pageCanvas.getContext("2d");
+    this._pageCtx = this._pageCanvas.getContext("2d", {alpha: false});
     this._pageCtx.textBaseline = "top";
 
     this._pageCtx.fillStyle = "#00000000";
@@ -147,17 +147,19 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
   protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
       bgRGBA: number, xPx: number, yPx: number, widthPx: number, widthInCells: number): CG {
 
-    this._pageCtx.save();
+    const ctx = this._pageCtx;
 
-    this._pageCtx.clearRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
-    this._pageCtx.fillStyle = RGBAToCss(bgRGBA);
-    this._pageCtx.fillRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
+    ctx.save();
 
-    this._pageCtx.globalCompositeOperation = "source-over";
-    this._pageCtx.fillStyle = RGBAToCss(fgRGBA);
+    ctx.clearRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
+    ctx.fillStyle = RGBAToCss(bgRGBA);
+    ctx.fillRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
+
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = RGBAToCss(fgRGBA);
 
     if (isBoxCharacter(codePoint)) {
-      drawBoxCharacter(this._pageCtx, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx);
+      drawBoxCharacter(ctx, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx);
     } else {
       let str: string;
       if (alternateCodePoints == null) {
@@ -174,44 +176,42 @@ export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
         styleName += "italic ";
       }
 
-      this._pageCtx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
-      this._pageCtx.fillText(str, xPx + this._metrics.fillTextXOffset, yPx + this._metrics.fillTextYOffset);
+      ctx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
+      ctx.fillText(str, xPx + this._metrics.fillTextXOffset, yPx + this._metrics.fillTextYOffset);
     }
 
     if (style & STYLE_MASK_STRIKETHROUGH) {
-      this._pageCtx.fillRect(xPx,
+      ctx.fillRect(xPx,
                               yPx + this._metrics.strikethroughY,
                               widthPx, this._metrics.strikethroughHeight);
     }
 
     const underline = style & STYLE_MASK_UNDERLINE;
     if (underline === UNDERLINE_STYLE_NORMAL || underline === UNDERLINE_STYLE_DOUBLE) {
-      this._pageCtx.fillRect(xPx,
+      ctx.fillRect(xPx,
                               yPx + this._metrics.underlineY,
                               widthPx, this._metrics.underlineHeight);
     }
     if (underline === UNDERLINE_STYLE_DOUBLE) {
-      this._pageCtx.fillRect(xPx,
+      ctx.fillRect(xPx,
                               yPx + this._metrics.secondUnderlineY,
                               widthPx, this._metrics.underlineHeight);
     }
     if (underline === UNDERLINE_STYLE_CURLY) {
-      this._pageCtx.save();
-      this._pageCtx.lineWidth = this._metrics.curlyThickness;
-      this._pageCtx.beginPath();
-      this._pageCtx.moveTo(xPx, yPx+this._metrics.curlyY);
-      this._pageCtx.quadraticCurveTo(xPx + widthPx/4, yPx+this._metrics.curlyY-this._metrics.curlyHeight/2,
+      ctx.save();
+      ctx.lineWidth = this._metrics.curlyThickness;
+      ctx.beginPath();
+      ctx.moveTo(xPx, yPx+this._metrics.curlyY);
+      ctx.quadraticCurveTo(xPx + widthPx/4, yPx+this._metrics.curlyY-this._metrics.curlyHeight/2,
                                       xPx + widthPx/2, yPx+this._metrics.curlyY);
-      this._pageCtx.quadraticCurveTo(xPx + widthPx*3/4, yPx+this._metrics.curlyY+this._metrics.curlyHeight/2,
+      ctx.quadraticCurveTo(xPx + widthPx*3/4, yPx+this._metrics.curlyY+this._metrics.curlyHeight/2,
                                         xPx + widthPx, yPx+this._metrics.curlyY);
-      this._pageCtx.stroke();
-      this._pageCtx.restore();
+      ctx.stroke();
+      ctx.restore();
     }
 
     if (style & STYLE_MASK_OVERLINE) {
-      this._pageCtx.fillRect(xPx,
-                              yPx + this._metrics.overlineY,
-                              widthPx, this._metrics.overlineHeight);
+      ctx.fillRect(xPx, yPx + this._metrics.overlineY, widthPx, this._metrics.overlineHeight);
     }
 
     const cachedGlyph = this._createCachedGlyphStruct({

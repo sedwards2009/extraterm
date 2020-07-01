@@ -67,7 +67,7 @@ export function xtermPalette(): number[] {
   }
 
   // Default BG/FG
-  colors[PALETTE_BG_INDEX] = 0x00000000;
+  colors[PALETTE_BG_INDEX] = 0x000000ff;
   colors[PALETTE_FG_INDEX] = 0xf0f0f0ff;
   // Cursor
   colors[PALETTE_CURSOR_INDEX] = 0xffaa00ff;
@@ -487,8 +487,11 @@ export class CharRenderCanvas implements Disposable {
 
       this._fgColorPatchImageData.pasteAlphaChannel(this._charCanvasAlphaImageData);
 
+      const fgColorPatchImageData = this._fgColorPatchImageData.getImageData();
+      this._renderCLUTCharacters(fgColorPatchImageData);
+
       this._canvasCtx.globalCompositeOperation = "copy";
-      this._canvasCtx.putImageData(this._fgColorPatchImageData.getImageData(), 0, 0);
+      this._canvasCtx.putImageData(fgColorPatchImageData, 0, 0);
 
       this._canvasCtx.globalCompositeOperation = "destination-over";
       this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
@@ -615,7 +618,7 @@ export class CharRenderCanvas implements Disposable {
       const renderedStyle = renderedCellGrid.getStyle(renderedCell.x, row);
       isEqual = isEqual && style === renderedStyle;
 
-      if ( ! isEqual) {
+      if ( ! isEqual && ! (cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row))) {
         const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
         if (cell.isLigature) {
           if (cell.segment === 0) {
@@ -626,6 +629,41 @@ export class CharRenderCanvas implements Disposable {
           const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || extraFontFlag) ? spaceCodePoint : cell.codePoint;
           this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
             fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
+        }
+      }
+    }
+  }
+
+  private _renderCLUTCharacters(imageData: ImageData): void {
+    const height = this._cellGrid.height;
+    for (let j=0; j<height; j++) {
+      this._renderCLUTCharacterRow(imageData, j);
+    }
+  }
+
+  private _renderCLUTCharacterRow(imageData: ImageData, row: number): void {
+    const cellGrid = this._cellGrid;
+    const cellWidthPx = this.cellWidthPx;
+    const cellHeightPx = this.cellHeightPx;
+    const spaceCodePoint = " ".codePointAt(0);
+
+    for (const cell of normalizedCellIterator(cellGrid, row)) {
+      const flags = cellGrid.getFlags(cell.x, row);
+      const extraFontFlag = (flags & FLAG_MASK_EXTRA_FONT) !== 0;
+      const style = cellGrid.getStyle(cell.x, row);
+
+      if (cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row) && ! extraFontFlag) {
+        let fgColor = cellGrid.getFgRGBA(cell.x, row);
+        fgColor = (style & STYLE_MASK_FAINT) ? (fgColor & 0xffffff00) | 0x80 : fgColor;
+        if (cell.isLigature) {
+          if (cell.segment === 0) {
+            this._fontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style,
+              fgColor, cellGrid.getBgRGBA(cell.x, row), cell.x * cellWidthPx, row * cellHeightPx);
+          }
+        } else {
+          const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : cell.codePoint;
+          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
+            fgColor, cellGrid.getBgRGBA(cell.x, row), cell.x * cellWidthPx, row * cellHeightPx);
         }
       }
     }

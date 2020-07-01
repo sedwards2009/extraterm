@@ -96,9 +96,13 @@ export class ColorPatchImageData {
     const imageDataArray = imageData.data;
     for (let j=0; j < Math.min(patchImageData.height, imageData.height); j++) {
       const patchOffset = j * patchImageData.width * 4 + 3;
-      const imageDataOffset = j * imageData.width * 4 + 3;
+      const imageDataOffset = j * imageData.width * 4;
       for (let i=0; i < effectiveWidth; i+=4) {
-        patchImageDataArray[i + patchOffset] = imageDataArray[i + imageDataOffset];
+        const red = imageDataArray[i + imageDataOffset];
+        const green = imageDataArray[i + imageDataOffset];
+        const blue = imageDataArray[i + imageDataOffset];
+        const brightness = (red + red + red + blue + green + green + green + green) >> 3;
+        patchImageDataArray[i + patchOffset] = brightness;
       }
     }
   }
