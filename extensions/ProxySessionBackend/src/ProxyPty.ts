@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -94,7 +94,7 @@ const NULL_ID = -1;
 class ProxyPty implements Pty {
 
   private _id: number = NULL_ID;
-  private _writeFunc: (id: number, msg: ProxyMessage) => void = null;
+  private _writeFunc: (msg: ProxyMessage) => void = null;
   private _waitingExitConfirmation = false;
 
   // Pre-open write queue.
@@ -110,7 +110,7 @@ class ProxyPty implements Pty {
   onExit: Event<void>;
   onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
 
-  constructor(writeFunc) {
+  constructor(writeFunc: (msg: ProxyMessage) => void) {
     this._writeFunc = writeFunc;
 
     this.onData = this._onDataEventEmitter.event;
@@ -127,7 +127,7 @@ class ProxyPty implements Pty {
     if (this._live) {
       this._writeQueue.forEach( (msg) => {
         msg.id = this._id;
-        this._writeFunc(this._id, msg);
+        this._writeFunc(msg);
       });
       this._writeQueue = [];
     }
@@ -140,7 +140,7 @@ class ProxyPty implements Pty {
         // Queue up this message for later.
         this._writeQueue.push(msg);
       } else {
-        this._writeFunc(this._id, msg);
+        this._writeFunc(msg);
       }
     }
   }
@@ -186,7 +186,7 @@ class ProxyPty implements Pty {
 
   exit(): void {
     this._waitingExitConfirmation = true;
-    this._onDataEventEmitter.fire("\n\n[Process exited. Press Enter to close this terminal.]");
+    this._onDataEventEmitter.fire("\n\r\n\r[Process exited. Press Enter to close this terminal.]");
     this._live = false;
   }
 
@@ -255,13 +255,13 @@ export abstract class ProxyPtyConnector {
     this._ptys.push(pty);
     const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns,
       id: NULL_ID, env: options.env, extraEnv: options.extraEnv == null ? {} : options.extraEnv, cwd: options.cwd || null};
-    this._sendMessage(null, msg);
+    this._sendMessage(msg);
     return pty;
   }
 
   destroy(): void {
     const msg: TerminateMessage = { type: TYPE_TERMINATE, id: -1 };
-    this._sendMessage(null, msg);
+    this._sendMessage(msg);
   }
 
   private _processMessageBuffer(): void {
@@ -270,10 +270,18 @@ export abstract class ProxyPtyConnector {
       if (end !== -1) {
         const msgString = this._messageBuffer.slice(0, end);
         this._messageBuffer = this._messageBuffer.slice(end+1);
-        const msg = <ProxyMessage> JSON.parse(msgString);
-        this._processMessage(msg);
+
+        try {
+          const msg = <ProxyMessage> JSON.parse(msgString);
+          this._processMessage(msg);
+        } catch(ex) {
+          // This can blow up if the proxy process dies unexpectedly.
+          this._log.warn(ex);
+          this._gracefullyAbortAll();
+          return;
+        }
       } else {
-        break;
+        return;
       }
     }
   }
@@ -329,12 +337,24 @@ export abstract class ProxyPtyConnector {
     return null;
   }
 
-  private _sendMessage(id: number, msg: ProxyMessage): void {
+  private _sendMessage(msg: ProxyMessage): void {
     const msgText = JSON.stringify(msg);
     if (DEBUG_FINE) {
       this._log.debug("main -> server: ", msgText);
     }
-    this._proxy.stdin.write(msgText + "\n", 'utf8');
+    try {
+      this._proxy.stdin.write(msgText + "\n", 'utf8');
+    } catch(ex) {
+      this._log.warn(ex);
+      this._gracefullyAbortAll();
+    }
   }
 
+  private _gracefullyAbortAll(): void {
+    for (const pty of this._ptys) {
+      pty.data("\n\r\n\r[PTY closed unexpectedly.]");
+      pty.exit();
+    }
+    this._ptys = [];
+  }
 }
