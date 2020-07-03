@@ -1,7 +1,8 @@
 
 import { CharRenderCanvas, Renderer, xtermPalette } from "extraterm-char-render-canvas";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { testPattern } from "./TestPattern";
+import { printTestPattern, printEmoji, CellGridOutputDevice } from "./TestPattern";
+
 
 const log = console.log.bind(console);
 
@@ -34,7 +35,7 @@ function main(): void {
 
   const renderButton1 = document.getElementById("render_button1");
   renderButton1.addEventListener("click", () => {
-    testPattern(renderCanvas.getCellGrid());
+    printTestPattern(new CellGridOutputDevice(renderCanvas.getCellGrid()));
     renderCanvas.render();
     containerDiv.appendChild(renderCanvas.getFontAtlasCanvasElement());
   });
@@ -53,6 +54,13 @@ function main(): void {
 
     fillGridWithString(renderCanvas.getCellGrid(), "ABCDEFGHIJKLMONPQRSTUVWXYZ");
 
+    renderCanvas.render();
+    containerDiv.appendChild(renderCanvas.getFontAtlasCanvasElement());
+  });
+
+  const renderButton4 = document.getElementById("render_button4");
+  renderButton4.addEventListener("click", () => {
+    printEmoji(new CellGridOutputDevice(renderCanvas.getCellGrid()));
     renderCanvas.render();
     containerDiv.appendChild(renderCanvas.getFontAtlasCanvasElement());
   });
