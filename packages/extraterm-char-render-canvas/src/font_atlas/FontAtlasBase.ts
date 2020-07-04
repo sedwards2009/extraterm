@@ -29,7 +29,7 @@ export interface CachedGlyph {
 }
 
 
-export abstract class FontAtlasPageBase<CG extends CachedGlyph> {
+export abstract class FontAtlasBase<CG extends CachedGlyph> {
   private _log: Logger = null;
 
   protected _pageCanvas: HTMLCanvasElement = null;

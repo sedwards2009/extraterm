@@ -1,7 +1,7 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-import { CachedGlyph, FontAtlasPageBase } from "./FontAtlasPageBase";
+import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase";
 import { ArrayKeyTrie } from "extraterm-array-key-trie";
 import { StyleCode } from "extraterm-char-cell-grid";
 
@@ -17,7 +17,7 @@ interface CPURenderedCachedGlyph extends CachedGlyph {
  * incur the overhead of the graphics APIs and for large numbers of small
  * glyphs it can be significantly faster.
  */
-export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCachedGlyph> {
+export class CPURenderedFontAtlas extends FontAtlasBase<CPURenderedCachedGlyph> {
 
   private _proxyCodePointMapping = new ArrayKeyTrie<number>();
   private _nextFreeCodePoint = 0x11000000;
@@ -36,15 +36,10 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
   }
 
   drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode,  fgRGBA: number,
-      bgRGBA: number, xPixel: number, yPixel: number): boolean {
+      bgRGBA: number, xPixel: number, yPixel: number): void {
 
     const cachedGlyph = this._getGlyph(codePoint, null, style, fgRGBA, bgRGBA);
-    if (cachedGlyph === null) {
-      return false;
-    }
-
     this._drawCachedGlyph(destImageData, cachedGlyph, xPixel, yPixel);
-    return true;
   }
 
   private _drawCachedGlyph(destImageData: ImageData, cachedGlyph: CPURenderedCachedGlyph, xPixel: number,
@@ -95,7 +90,7 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
   }
 
   drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode,  fgRGBA: number,
-        bgRGBA: number, xPixel: number, yPixel: number): boolean {
+        bgRGBA: number, xPixel: number, yPixel: number): void {
 
     let proxyCodePoint = this._proxyCodePointMapping.get(codePoints);
     if (proxyCodePoint == null) {
@@ -105,11 +100,6 @@ export class CPURenderedFontAtlasPage extends FontAtlasPageBase<CPURenderedCache
     }
 
     const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style, fgRGBA, bgRGBA);
-    if (cachedGlyph === null) {
-      return false;
-    }
-
     this._drawCachedGlyph(destImageData, cachedGlyph, xPixel, yPixel);
-    return true;
   }
 }

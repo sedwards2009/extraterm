@@ -1,19 +1,19 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
-import { FontAtlas } from "./FontAtlas";
-import { FontAtlasImpl } from "./FontAtlasImpl";
 import { Disposable } from "../Disposable";
+import { CPURenderedFontAtlas } from "./CPURenderedFontAtlas";
+import { ImageBitmapFontAtlas } from "./ImageBitmapFontAtlas";
 
 
-export class FontAtlasRepository {
+export abstract class FontAtlasRepository<FA> {
 
-  private _map = new Map<string, FontAtlas & Disposable>();
+  private _map = new Map<string, FA & Disposable>();
   private _refCount = new Map<string, number>();
 
-  getFontAtlas(metrics: MonospaceFontMetrics): FontAtlas & Disposable {
+  getFontAtlas(metrics: MonospaceFontMetrics): FA & Disposable {
     const key = this._key(metrics);
     const existingAtlas = this._map.get(key);
     if (existingAtlas != null) {
@@ -23,14 +23,10 @@ export class FontAtlasRepository {
       return existingAtlas;
     }
 
-    const fontAtlas = new FontAtlasImpl(metrics);
-    const disposableFontAtlas: FontAtlas & Disposable = {
-      drawCodePoint: fontAtlas.drawCodePoint.bind(fontAtlas),
-      drawCodePointToImageData: fontAtlas.drawCodePointToImageData.bind(fontAtlas),
-      drawCodePoints: fontAtlas.drawCodePoints.bind(fontAtlas),
-      drawCodePointsToImageData: fontAtlas.drawCodePointsToImageData.bind(fontAtlas),
-      getCanvas: fontAtlas.getCanvas.bind(fontAtlas),
+    const fontAtlas = this.newFontAtlas(metrics);
 
+    const disposableFA = <FA & Disposable> <unknown> {
+      __proto__: fontAtlas,
       dispose: () => {
         let value = this._refCount.get(key);
         value--;
@@ -40,12 +36,27 @@ export class FontAtlasRepository {
         }
       }
     };
+
     this._refCount.set(key, 1);
-    this._map.set(key, disposableFontAtlas);
-    return disposableFontAtlas;
+    this._map.set(key, disposableFA);
+    return disposableFA;
   }
+
+  protected abstract newFontAtlas(metrics: MonospaceFontMetrics): FA;
 
   private _key(metrics: MonospaceFontMetrics): string {
     return "" + metrics.fontFamily + ":" + metrics.fontSizePx;
+  }
+}
+
+export class CPURenderedFontAtlasRepository extends FontAtlasRepository<CPURenderedFontAtlas> {
+  protected newFontAtlas(metrics: MonospaceFontMetrics): CPURenderedFontAtlas {
+    return new CPURenderedFontAtlas(metrics);
+  }
+}
+
+export class ImageBitmapFontAtlasRepository extends FontAtlasRepository<ImageBitmapFontAtlas> {
+  protected newFontAtlas(metrics: MonospaceFontMetrics): ImageBitmapFontAtlas {
+    return new ImageBitmapFontAtlas(metrics);
   }
 }

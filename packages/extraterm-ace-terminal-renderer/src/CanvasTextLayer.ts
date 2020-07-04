@@ -3,7 +3,9 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "@extraterm/ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer } from "extraterm-char-render-canvas";
+import {
+  CharRenderCanvas, CPURenderedFontAtlasRepository, ImageBitmapFontAtlasRepository, CursorStyle, Renderer
+} from "extraterm-char-render-canvas";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import { LayerConfig } from "@extraterm/ace-ts";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
@@ -13,7 +15,8 @@ import { LigatureMarker } from "./LigatureMarker";
 
 const PROVISION_HEIGHT_FACTOR = 1.5;
 
-const fontAtlasRepository = new FontAtlasRepository();
+const cpuRenderedFontAtlasRepository = new CPURenderedFontAtlasRepository();
+const imageBitmapFontAtlasRepository = new ImageBitmapFontAtlasRepository();
 
 
 export class CanvasTextLayer implements TextLayer {
@@ -226,7 +229,8 @@ export class CanvasTextLayer implements TextLayer {
       heightPx: heightPxPair.renderLength,
       usableWidthPx: rawWidthPx * this._devicePixelRatio,
       usableHeightPx: rawHeightPx * this._devicePixelRatio,
-      fontAtlasRepository,
+      cpuRenderedFontAtlasRepository,
+      imageBitmapFontAtlasRepository,
       extraFonts: [{
         fontFamily: isWindows ? "Segoe UI Emoji" : "coloremoji",
         fontSizePx: this._fontSizePx * this._devicePixelRatio,

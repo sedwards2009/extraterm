@@ -5,13 +5,14 @@
 import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { ColorPatchCanvas } from "./color_patch/ColorPatchCanvas";
-import { FontAtlas } from "./font_atlas/FontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 import { computeFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
-import { FontAtlasRepository } from "./font_atlas/FontAtlasRepository";
+import { CPURenderedFontAtlasRepository, ImageBitmapFontAtlasRepository } from "./font_atlas/FontAtlasRepository";
 import { Disposable } from "./Disposable";
 import { ColorPatchImageData } from "./color_patch/ColorPatchImageData";
 import { RGBAToCss } from "./RGBAToCss";
+import { CPURenderedFontAtlas } from "./font_atlas/CPURenderedFontAtlas";
+import { ImageBitmapFontAtlas } from "./font_atlas/ImageBitmapFontAtlas";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -156,7 +157,9 @@ export interface CharRenderCanvasOptions {
   /**
    * Font atlas repository to use for fetching font atlases
    */
-  fontAtlasRepository?: FontAtlasRepository;
+  cpuRenderedFontAtlasRepository?: CPURenderedFontAtlasRepository;
+
+  imageBitmapFontAtlasRepository?: ImageBitmapFontAtlasRepository;
 
   cursorStyle?: CursorStyle;
 
@@ -212,7 +215,8 @@ export interface FontSlice {
 }
 
 interface ExtraFontSlice extends FontSlice {
-  fontAtlas: FontAtlas;
+  cpuRenderedFontAtlas: CPURenderedFontAtlas & Disposable;
+  imageBitmapFontAtlas: ImageBitmapFontAtlas & Disposable;
   codePointSet: Set<number>;
 }
 
@@ -244,7 +248,6 @@ export class CharRenderCanvas implements Disposable {
   private _fontFamily = "sans";
   private _fontSizePx = 10;
 
-  private _fontAtlas: FontAtlas = null;
   private _extraFontSlices: ExtraFontSlice[] = [];
 
   private cellWidthPx: number = 0;
@@ -258,7 +261,11 @@ export class CharRenderCanvas implements Disposable {
   private _fgColorPatchImageData: ColorPatchImageData = null;
 
   private _palette: number[] = null;
-  private _fontAtlasRepository: FontAtlasRepository = null;
+
+  private _cpuRenderedFontAtlasRepository: CPURenderedFontAtlasRepository = null;
+  private _cpuRenderedFontAtlas: CPURenderedFontAtlas & Disposable = null;
+  private _imageBitmapFontAtlasRepository: ImageBitmapFontAtlasRepository = null;
+  private _imageBitmapFontAtlas: ImageBitmapFontAtlas & Disposable = null;
 
   private _disposables: Disposable[] = [];
 
@@ -268,7 +275,8 @@ export class CharRenderCanvas implements Disposable {
   constructor(options: CharRenderCanvasOptions) {
     this._log = getLogger("CharRenderCanvas", this);
     const { widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily, fontSizePx,
-            debugParentElement, palette, fontAtlasRepository, cursorStyle, renderer } = options;
+            debugParentElement, palette, cpuRenderedFontAtlasRepository, imageBitmapFontAtlasRepository, cursorStyle,
+            renderer } = options;
 
     this._renderer = renderer || Renderer.ImageBitmap;
     this._palette = palette;
@@ -282,10 +290,16 @@ export class CharRenderCanvas implements Disposable {
     this.cellWidthPx = fontMetrics.widthPx;
     this.cellHeightPx = fontMetrics.heightPx;
 
-    if (fontAtlasRepository == null) {
-      this._fontAtlasRepository = new FontAtlasRepository();
+    if (imageBitmapFontAtlasRepository == null) {
+      this._imageBitmapFontAtlasRepository = new ImageBitmapFontAtlasRepository();
     } else {
-      this._fontAtlasRepository = fontAtlasRepository;
+      this._imageBitmapFontAtlasRepository = imageBitmapFontAtlasRepository;
+    }
+
+    if (cpuRenderedFontAtlasRepository == null) {
+      this._cpuRenderedFontAtlasRepository = new CPURenderedFontAtlasRepository();
+    } else {
+      this._cpuRenderedFontAtlasRepository = cpuRenderedFontAtlasRepository;
     }
 
     if (widthPx != null) {
@@ -330,9 +344,11 @@ export class CharRenderCanvas implements Disposable {
       debugParentElement.appendChild(this._charCanvas);
     }
 
-    const primaryFontAtlas =  this._fontAtlasRepository.getFontAtlas(fontMetrics);
-    this._disposables.push(primaryFontAtlas);
-    this._fontAtlas = primaryFontAtlas;
+    this._imageBitmapFontAtlas = this._imageBitmapFontAtlasRepository.getFontAtlas(fontMetrics);
+    this._disposables.push(this._imageBitmapFontAtlas);
+
+    this._cpuRenderedFontAtlas = this._cpuRenderedFontAtlasRepository.getFontAtlas(fontMetrics);
+    this._disposables.push(this._cpuRenderedFontAtlas);
 
     this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts, fontMetrics);
     this._bgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "background",
@@ -363,7 +379,11 @@ export class CharRenderCanvas implements Disposable {
   }
 
   getFontAtlasCanvasElement(): HTMLCanvasElement {
-    return this._fontAtlas.getCanvas();
+    if (this._renderer === Renderer.CPU) {
+      return this._cpuRenderedFontAtlas.getCanvas();
+    } else {
+      return this._imageBitmapFontAtlas.getCanvas();
+    }
   }
 
   getWidthPx(): number {
@@ -407,8 +427,11 @@ export class CharRenderCanvas implements Disposable {
       customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
       customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
 
-      const fontAtlas = this._fontAtlasRepository.getFontAtlas(customMetrics);
-      this._disposables.push(fontAtlas);
+      const imageBitmapFontAtlas = this._imageBitmapFontAtlasRepository.getFontAtlas(customMetrics);
+      this._disposables.push(imageBitmapFontAtlas);
+
+      const cpuRenderedFontAtlas = this._cpuRenderedFontAtlasRepository.getFontAtlas(customMetrics);
+      this._disposables.push(cpuRenderedFontAtlas);
 
       let codePointSet: Set<number> = null;
       if (extraFont.unicodeCodePoints != null) {
@@ -424,7 +447,7 @@ export class CharRenderCanvas implements Disposable {
         }
       }
 
-      return { ...extraFont, fontAtlas, codePointSet };
+      return { ...extraFont, cpuRenderedFontAtlas, imageBitmapFontAtlas, codePointSet };
     });
   }
 
@@ -465,7 +488,7 @@ export class CharRenderCanvas implements Disposable {
       this._bgColorPatchCanvas.setRenderCursor(renderCursor);
       this._bgColorPatchCanvas.render();
 
-      this._renderCharacters();
+      this._renderImageBitmapCharacters();
       this._canvasCtx.globalCompositeOperation = "copy";
       this._canvasCtx.drawImage(this._charCanvas, 0, 0);
 
@@ -503,7 +526,7 @@ export class CharRenderCanvas implements Disposable {
     this._updateRenderedCellGrid();
   }
 
-  private _renderCharacters(): void {
+  private _renderImageBitmapCharacters(): void {
     const ctx = this._charCanvasCtx;
 
     ctx.fillStyle = "#ffffffff";
@@ -536,8 +559,8 @@ export class CharRenderCanvas implements Disposable {
           if ( ! renderedExtraFontFlag) {
             // Erase the char in the char canvas and make room for
             // the glyph from the extrafont which will be drawn later.
-            this._fontAtlas.drawCodePoint(ctx, spaceCodePoint, 0, 0xffffffff, 0x00000000, i * cellWidth, j * cellHeight);
-
+            this._imageBitmapFontAtlas.drawCodePoint(ctx, spaceCodePoint, 0, 0xffffffff, 0x00000000, i * cellWidth,
+              j * cellHeight);
           }
         } else {
           const codePoint = cellGrid.getCodePoint(i, j);
@@ -566,7 +589,7 @@ export class CharRenderCanvas implements Disposable {
           if (mustRender) {
             const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : codePoint;
             const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
-            this._fontAtlas.drawCodePoint(ctx, effectiveCodePoint, style, fgColor, 0x00000000, i * cellWidth,
+            this._imageBitmapFontAtlas.drawCodePoint(ctx, effectiveCodePoint, style, fgColor, 0x00000000, i * cellWidth,
               j * cellHeight);
           }
         }
@@ -617,12 +640,12 @@ export class CharRenderCanvas implements Disposable {
         const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
         if (cell.isLigature) {
           if (cell.segment === 0) {
-            this._fontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style,
+            this._cpuRenderedFontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style,
               fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
           }
         } else {
           const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || cell.extraFontFlag) ? spaceCodePoint : cell.codePoint;
-          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
+          this._cpuRenderedFontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
             fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
         }
       }
@@ -650,12 +673,12 @@ export class CharRenderCanvas implements Disposable {
         fgColor = (style & STYLE_MASK_FAINT) ? (fgColor & 0xffffff00) | 0x80 : fgColor;
         if (cell.isLigature) {
           if (cell.segment === 0) {
-            this._fontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style,
+            this._cpuRenderedFontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style,
               fgColor, cellGrid.getBgRGBA(cell.x, row), cell.x * cellWidthPx, row * cellHeightPx);
           }
         } else {
           const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : cell.codePoint;
-          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
+          this._cpuRenderedFontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
             fgColor, cellGrid.getBgRGBA(cell.x, row), cell.x * cellWidthPx, row * cellHeightPx);
         }
       }
@@ -678,7 +701,7 @@ export class CharRenderCanvas implements Disposable {
           const codePoint = cellGrid.getCodePoint(i, j);
           const style = cellGrid.getStyle(i, j);
           const extraFont = this._getExtraFontSliceFromCodePoint(codePoint);
-          extraFont.fontAtlas.drawCodePoint(ctx, codePoint, style, 0xffffffff, 0x00000000, i * cellWidth,
+          extraFont.imageBitmapFontAtlas.drawCodePoint(ctx, codePoint, style, 0xffffffff, 0x00000000, i * cellWidth,
             j * cellHeight);
         }
       }

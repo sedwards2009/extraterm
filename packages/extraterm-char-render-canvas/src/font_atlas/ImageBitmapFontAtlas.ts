@@ -1,7 +1,7 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-import { CachedGlyph, FontAtlasPageBase } from "./FontAtlasPageBase";
+import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase";
 import { StyleCode } from "extraterm-char-cell-grid";
 
 
@@ -14,7 +14,7 @@ interface ImageBitmapCachedGlyph extends CachedGlyph {
  * Font atlas based glyph renderer which uses ImageBitmap and related
  * graphics APIs to copy glyphs into a target canvas.
  */
-export class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCachedGlyph> {
+export class ImageBitmapFontAtlas extends FontAtlasBase<ImageBitmapCachedGlyph> {
 
   protected _createCachedGlyphStruct(cg: CachedGlyph): ImageBitmapCachedGlyph {
     return { ...cg, imageBitmapPromise: null, imageBitmap: null };
@@ -37,14 +37,10 @@ export class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCache
   }
 
   drawCodePoint(ctx: CanvasRenderingContext2D, codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number,
-      xPixel: number, yPixel: number): boolean {
+      xPixel: number, yPixel: number): void {
 
     const cachedGlyph = this._getGlyph(codePoint, null, style, fgRGBA, bgRGBA);
-    if (cachedGlyph === null) {
-      return false;
-    }
     this._drawCachedGlyph(ctx, cachedGlyph, xPixel, yPixel);
-    return true;
   }
 
   private _drawCachedGlyph(ctx: CanvasRenderingContext2D, cachedGlyph: ImageBitmapCachedGlyph, xPixel: number,
@@ -74,10 +70,5 @@ export class ImageBitmapFontAtlasPage extends FontAtlasPageBase<ImageBitmapCache
                     widthPx, this._metrics.heightPx); // Size
     }
     ctx.restore();
-  }
-
-  drawCodePoints(ctx: CanvasRenderingContext2D, codePoints: number[], style: StyleCode, fgRGBA: number, bgRGBA: number,
-      xPixel: number, yPixel: number): boolean {
-    return false;
   }
 }
