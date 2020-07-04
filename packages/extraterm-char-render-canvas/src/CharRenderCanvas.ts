@@ -598,17 +598,11 @@ export class CharRenderCanvas implements Disposable {
     for (const cell of normalizedCellIterator(cellGrid, row)) {
       const renderedCell: NormalizedCell = renderedRowIterator.next().value;
 
-      const flags = cellGrid.getFlags(cell.x, row);
-      const renderedFlags = renderedCellGrid.getFlags(cell.x, row);
-
-      const extraFontFlag = (flags & FLAG_MASK_EXTRA_FONT) !== 0;
-      const renderedExtraFontFlag = (renderedFlags & FLAG_MASK_EXTRA_FONT) !== 0;
-
       let isEqual = true;
       isEqual = isEqual && cell.segment === renderedCell.segment;
       isEqual = isEqual && cell.isLigature === renderedCell.isLigature;
       isEqual = isEqual && cell.codePoint === renderedCell.codePoint;
-      isEqual = isEqual && extraFontFlag === renderedExtraFontFlag;
+      isEqual = isEqual && cell.extraFontFlag === renderedCell.extraFontFlag;
 
       if (isEqual && cell.isLigature) {
         isEqual = isEqual && cell.ligatureCodePoints === renderedCell.ligatureCodePoints;
@@ -618,7 +612,8 @@ export class CharRenderCanvas implements Disposable {
       const renderedStyle = renderedCellGrid.getStyle(renderedCell.x, row);
       isEqual = isEqual && style === renderedStyle;
 
-      if ( ! isEqual && ! (cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row))) {
+      const onlyUsesCLUT = cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row);
+      if ( ! isEqual && ! onlyUsesCLUT) {
         const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
         if (cell.isLigature) {
           if (cell.segment === 0) {
@@ -626,7 +621,7 @@ export class CharRenderCanvas implements Disposable {
               fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
           }
         } else {
-          const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || extraFontFlag) ? spaceCodePoint : cell.codePoint;
+          const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || cell.extraFontFlag) ? spaceCodePoint : cell.codePoint;
           this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style,
             fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
         }
@@ -648,11 +643,9 @@ export class CharRenderCanvas implements Disposable {
     const spaceCodePoint = " ".codePointAt(0);
 
     for (const cell of normalizedCellIterator(cellGrid, row)) {
-      const flags = cellGrid.getFlags(cell.x, row);
-      const extraFontFlag = (flags & FLAG_MASK_EXTRA_FONT) !== 0;
       const style = cellGrid.getStyle(cell.x, row);
 
-      if (cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row) && ! extraFontFlag) {
+      if (cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row) && ! cell.extraFontFlag) {
         let fgColor = cellGrid.getFgRGBA(cell.x, row);
         fgColor = (style & STYLE_MASK_FAINT) ? (fgColor & 0xffffff00) | 0x80 : fgColor;
         if (cell.isLigature) {
@@ -815,6 +808,7 @@ interface NormalizedCell {
   x: number;
   segment: number;
   codePoint: number;
+  extraFontFlag: boolean;
 
   isLigature: boolean;
   ligatureCodePoints: number[];
@@ -839,6 +833,8 @@ function* normalizedCellIterator(cellGrid: CharCellGrid, row: number): IterableI
 
     if (isLigature) {
       // Ligature case
+      const extraFontFlag = (cellGrid.getFlags(x, row) & FLAG_MASK_EXTRA_FONT) !== 0;
+
       const ligatureCodePoints: number[] = [];
       for (let k=0; k<widthChars; k++) {
         ligatureCodePoints[k] = cellGrid.getCodePoint(x+k, row);
@@ -849,6 +845,7 @@ function* normalizedCellIterator(cellGrid: CharCellGrid, row: number): IterableI
           x,
           segment: i,
           codePoint: null,
+          extraFontFlag,
           isLigature: true,
           ligatureCodePoints
         };
@@ -859,11 +856,13 @@ function* normalizedCellIterator(cellGrid: CharCellGrid, row: number): IterableI
     } else {
       // Normal and wide character case
       const codePoint = cellGrid.getCodePoint(x, row);
+      const extraFontFlag = (cellGrid.getFlags(x, row) & FLAG_MASK_EXTRA_FONT) !== 0;
       for (let k=0; k<widthChars; k++) {
         const normalizedCell: NormalizedCell = {
           x,
           segment: k,
           codePoint,
+          extraFontFlag,
           isLigature: false,
           ligatureCodePoints: null,
         };
