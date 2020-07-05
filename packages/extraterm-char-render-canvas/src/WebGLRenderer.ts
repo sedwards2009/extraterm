@@ -289,13 +289,7 @@ export class WebGLRenderer {
       const stride = 0;
       const offset = 0;
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._vertexPositionBuffer);
-      this._glContext.vertexAttribPointer(
-          this._vertexPosition,
-          numComponents,
-          type,
-          normalize,
-          stride,
-          offset);
+      this._glContext.vertexAttribPointer(this._vertexPosition, numComponents, type, normalize, stride, offset);
       this._glContext.enableVertexAttribArray(this._vertexPosition);
     }
 
@@ -308,13 +302,7 @@ export class WebGLRenderer {
       const stride = 0;
       const offset = 0;
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._textureCoordBuffer);
-      this._glContext.vertexAttribPointer(
-          this._textureCoord,
-          numComponents,
-          type,
-          normalize,
-          stride,
-          offset);
+      this._glContext.vertexAttribPointer(this._textureCoord, numComponents, type, normalize, stride, offset);
       this._glContext.enableVertexAttribArray(this._textureCoord);
     }
 
@@ -322,14 +310,8 @@ export class WebGLRenderer {
 
     this._glContext.useProgram(this._shaderProgram);
 
-    this._glContext.uniformMatrix4fv(
-        this._projectionMatrixLocation,
-        false,
-        this._projectionMatrix);
-    this._glContext.uniformMatrix4fv(
-        this._modelViewMatrixLocation,
-        false,
-        this._modelViewMatrix);
+    this._glContext.uniformMatrix4fv(this._projectionMatrixLocation, false, this._projectionMatrix);
+    this._glContext.uniformMatrix4fv(this._modelViewMatrixLocation, false, this._modelViewMatrix);
 
     this._glContext.activeTexture(this._glContext.TEXTURE0);
     this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
@@ -341,7 +323,6 @@ export class WebGLRenderer {
       const offset = 0;
       this._glContext.drawElements(this._glContext.TRIANGLES, vertexCount, type, offset);
     }
-
   }
 }
 
