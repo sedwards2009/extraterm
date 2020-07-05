@@ -5639,7 +5639,7 @@ flora-colossus@^1.0.0:
     debug "^4.1.1"
     fs-extra "^7.0.0"
 
-floyd-rivest@^1.0.1:
+floyd-rivest@1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/floyd-rivest/-/floyd-rivest-1.0.1.tgz#486cfd399a8a5584469ec8adabd1c43a26461101"
   integrity sha512-Np9l3R6KbC+8whVm32UITQTnGss6zSbVWNkKEUFe0LmBG1K8UyrL5Yu6OB5sl2AIapjJ7YDpW7l71Qi5uLEYTg==
@@ -6025,6 +6025,11 @@ git-repo-info@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/git-repo-info/-/git-repo-info-1.4.1.tgz#2a072823254aaf62fcf0766007d7b6651bd41943"
   integrity sha1-KgcoIyVKr2L88HZgB9e2ZRvUGUM=
+
+gl-matrix@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/gl-matrix/-/gl-matrix-3.3.0.tgz#232eef60b1c8b30a28cbbe75b2caf6c48fd6358b"
+  integrity sha512-COb7LDz+SXaHtl/h4LeaFcNdJdAQSDeVqjiIihSXNrkWObZLhDI4hIkZC11Aeqp7bcE72clzB0BnDXr2SmslRA==
 
 glob-base@^0.3.0:
   version "0.3.0"

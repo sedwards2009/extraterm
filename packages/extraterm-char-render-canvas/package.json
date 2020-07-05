@@ -16,7 +16,8 @@
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-logging": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0",
-    "floyd-rivest": "1.0.1"
+    "floyd-rivest": "1.0.1",
+    "gl-matrix": "^3.3.0"
   },
   "devDependencies": {
     "@types/node": "^12.6.2",

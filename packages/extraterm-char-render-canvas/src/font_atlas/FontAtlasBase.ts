@@ -95,6 +95,10 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   getCanvas(): HTMLCanvasElement {
     return this._pageCanvas;
   }
+  
+  getMetrics(): MonospaceFontMetrics {
+    return this._metrics;
+  }
 
   private _makeLookupKey(codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number): number[] {
     return [fgRGBA, bgRGBA, style * TWO_TO_THE_24 + codePoint];
