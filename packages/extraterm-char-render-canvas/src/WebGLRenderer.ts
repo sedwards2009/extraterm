@@ -18,13 +18,13 @@ export class WebGLRenderer {
   private _gridColumns: number;
   private _canvas: HTMLCanvasElement = null;
   private _glContext: WebGLRenderingContext = null;
-  private _indexBuffer: WebGLBuffer = null;
+  private _triangleIndexBuffer: WebGLBuffer = null;
   private _textureCoordBuffer: WebGLBuffer = null;
   private _vertexPositionBuffer: WebGLBuffer = null;
-
+  private _texture: WebGLTexture;
   private _shaderProgram: WebGLProgram;
-  private _vertexPosition: number;
-  private _textureCoord: number;
+  private _vertexPositionAttrib: number;
+  private _textureCoordAttrib: number;
   private _projectionMatrixLocation: WebGLUniformLocation;
   private _modelViewMatrixLocation: WebGLUniformLocation;
   private _uSamplerLocation: WebGLUniformLocation;
@@ -73,27 +73,30 @@ export class WebGLRenderer {
     this._canvas.height = this.maxHeight;
     document.body.appendChild(this._canvas);
 
-    this._glContext = this._canvas.getContext("webgl");
+    const gl = this._canvas.getContext("webgl");
+    this._glContext = gl;
 
     // If we don't have a GL context, give up now
-    if (!this._glContext) {
+    if (gl == null) {
       this._log.warn("Unable to initialize WebGL. Your browser or machine may not support it.");
       return false;
     }
 
-    this._shaderProgram = this._initShaderProgram(this._glContext, this._vertexShaderSource,
+    this._shaderProgram = this._initShaderProgram(gl, this._vertexShaderSource,
       this._fragmentShaderSource);
-    this._vertexPosition = this._glContext.getAttribLocation(this._shaderProgram, "aVertexPosition");
-    this._textureCoord = this._glContext.getAttribLocation(this._shaderProgram, "aTextureCoord");
-    this._projectionMatrixLocation = this._glContext.getUniformLocation(this._shaderProgram, "uProjectionMatrix");
-    this._modelViewMatrixLocation = this._glContext.getUniformLocation(this._shaderProgram, "uModelViewMatrix");
-    this._uSamplerLocation = this._glContext.getUniformLocation(this._shaderProgram, "uSampler");
+    this._vertexPositionAttrib = gl.getAttribLocation(this._shaderProgram, "aVertexPosition");
+    this._textureCoordAttrib = gl.getAttribLocation(this._shaderProgram, "aTextureCoord");
+    this._projectionMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uProjectionMatrix");
+    this._modelViewMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uModelViewMatrix");
+    this._uSamplerLocation = gl.getUniformLocation(this._shaderProgram, "uSampler");
 
-    this._initBuffers(this._glContext, this._fontAtlas);
+    this._vertexPositionBuffer = gl.createBuffer();
+    this._textureCoordBuffer = gl.createBuffer();
+    this._triangleIndexBuffer = gl.createBuffer();
 
-    this._glContext.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
-    this._glContext.disable(this._glContext.DEPTH_TEST);
-    this._glContext.clear(this._glContext.COLOR_BUFFER_BIT);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
+    gl.disable(gl.DEPTH_TEST);
+    gl.clear(gl.COLOR_BUFFER_BIT);
 
     const projectionMatrix = mat4.create();
     mat4.ortho(projectionMatrix, 0, this.maxWidth, 0, this.maxHeight, 0, 100);
@@ -108,6 +111,13 @@ export class WebGLRenderer {
     const modelViewMatrix = mat4.create();
     mat4.translate(modelViewMatrix, modelViewMatrix, [0, -this.maxHeight, -1.0]);
     this._modelViewMatrix = modelViewMatrix;
+
+    gl.useProgram(this._shaderProgram);
+    gl.uniform1i(this._uSamplerLocation, 0);
+    gl.uniformMatrix4fv(this._projectionMatrixLocation, false, this._projectionMatrix);
+    gl.uniformMatrix4fv(this._modelViewMatrixLocation, false, this._modelViewMatrix);
+
+    this._texture = gl.createTexture();
 
     return true;
   }
@@ -147,20 +157,16 @@ export class WebGLRenderer {
   }
 
   private _initBuffers(gl: WebGLRenderingContext, atlas: TextureFontAtlas): void {
-    this._vertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexPositionBuffer);
     const vertexPositions = this._gridVertexPositions(this._gridRows, this._gridColumns);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions), gl.STATIC_DRAW);
 
-    this._textureCoordBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._textureCoordBuffer);
     const textureCoordinates = this._gridTexturePositions(this._gridRows, this._gridColumns, atlas);
-
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
 
-    this._indexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
-    const indices = this._gridIndexes(this._gridRows, this._gridColumns);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
+    const indices = this._gridTriangleIndexes(this._gridRows, this._gridColumns);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
   }
 
@@ -196,7 +202,7 @@ export class WebGLRenderer {
     return result;
   }
 
-  private _gridIndexes(rows: number, columns: number): number [] {
+  private _gridTriangleIndexes(rows: number, columns: number): number [] {
     const result: number[] = [];
 
     for (let i=0; i < rows*columns; i++) {
@@ -248,14 +254,12 @@ export class WebGLRenderer {
   // When the image finished loading copy it into the texture.
   //
   private _loadAtlasTexture(gl: WebGLRenderingContext, atlasCanvas: HTMLCanvasElement): WebGLTexture {
-    const texture = gl.createTexture();
-
     const level = 0;
     const internalFormat = gl.RGBA;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
 
-    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.bindTexture(gl.TEXTURE_2D, this._texture);
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, atlasCanvas);
 
     // WebGL1 has different requirements for power of 2 images
@@ -273,12 +277,15 @@ export class WebGLRenderer {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     }
 
-    return texture;
+    return this._texture;
   }
 
   render( /*cellGrid: CharCellGrid, firstRow: number, rowCount: number, destinationCanvas */): void {
+    this._initBuffers(this._glContext, this._fontAtlas);
 
     const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
+    this._glContext.activeTexture(this._glContext.TEXTURE0);
+    this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute
@@ -289,8 +296,8 @@ export class WebGLRenderer {
       const stride = 0;
       const offset = 0;
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._vertexPositionBuffer);
-      this._glContext.vertexAttribPointer(this._vertexPosition, numComponents, type, normalize, stride, offset);
-      this._glContext.enableVertexAttribArray(this._vertexPosition);
+      this._glContext.vertexAttribPointer(this._vertexPositionAttrib, numComponents, type, normalize, stride, offset);
+      this._glContext.enableVertexAttribArray(this._vertexPositionAttrib);
     }
 
     // Tell WebGL how to pull out the texture coordinates from
@@ -302,20 +309,11 @@ export class WebGLRenderer {
       const stride = 0;
       const offset = 0;
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._textureCoordBuffer);
-      this._glContext.vertexAttribPointer(this._textureCoord, numComponents, type, normalize, stride, offset);
-      this._glContext.enableVertexAttribArray(this._textureCoord);
+      this._glContext.vertexAttribPointer(this._textureCoordAttrib, numComponents, type, normalize, stride, offset);
+      this._glContext.enableVertexAttribArray(this._textureCoordAttrib);
     }
 
-    this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, this._indexBuffer);
-
-    this._glContext.useProgram(this._shaderProgram);
-
-    this._glContext.uniformMatrix4fv(this._projectionMatrixLocation, false, this._projectionMatrix);
-    this._glContext.uniformMatrix4fv(this._modelViewMatrixLocation, false, this._modelViewMatrix);
-
-    this._glContext.activeTexture(this._glContext.TEXTURE0);
-    this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
-    this._glContext.uniform1i(this._uSamplerLocation, 0);
+    this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
 
     {
       const vertexCount = 6 * this._gridRows * this._gridColumns;
