@@ -15,7 +15,7 @@
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
     "shx": "^0.3.2",
-    "typescript": "3.7.4"
+    "typescript": "3.9.6"
   },
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
