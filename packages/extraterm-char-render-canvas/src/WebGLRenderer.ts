@@ -17,7 +17,7 @@ export class WebGLRenderer {
   private _gridRows: number;
   private _gridColumns: number;
   private _canvas: HTMLCanvasElement = null;
-  private _glContext: WebGLRenderingContext = null;
+  private _glContext: WebGL2RenderingContext = null;
   private _triangleIndexBuffer: WebGLBuffer = null;
   private _textureCoordBuffer: WebGLBuffer = null;
   private _vertexPositionBuffer: WebGLBuffer = null;
@@ -32,14 +32,14 @@ export class WebGLRenderer {
   private _modelViewMatrix: mat4;
 
   // Vertex shader program
-  private _vertexShaderSource = `
-    attribute vec4 aVertexPosition;
-    attribute vec2 aTextureCoord;
+  private _vertexShaderSource = `#version 300 es
+    in vec4 aVertexPosition;
+    in vec2 aTextureCoord;
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
 
-    varying highp vec2 vTextureCoord;
+    out highp vec2 vTextureCoord;
 
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
@@ -48,13 +48,15 @@ export class WebGLRenderer {
   `;
 
   // Fragment shader program
-  private _fragmentShaderSource = `
-    varying highp vec2 vTextureCoord;
+  private _fragmentShaderSource = `#version 300 es
+    in highp vec2 vTextureCoord;
 
     uniform sampler2D uSampler;
 
+    out highp vec4 fragColor;
+
     void main(void) {
-      gl_FragColor = texture2D(uSampler, vTextureCoord);
+      fragColor = texture(uSampler, vTextureCoord);
     }
   `;
 
@@ -73,7 +75,7 @@ export class WebGLRenderer {
     this._canvas.height = this.maxHeight;
     document.body.appendChild(this._canvas);
 
-    const gl = this._canvas.getContext("webgl");
+    const gl = this._canvas.getContext("webgl2");
     this._glContext = gl;
 
     // If we don't have a GL context, give up now
@@ -124,16 +126,16 @@ export class WebGLRenderer {
 
   // Initialize a shader program, so WebGL knows how to draw our data
   private _initShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string): WebGLProgram {
-    const vertexShader = this._loadShader(gl, gl.VERTEX_SHADER, vsSource);
-    const fragmentShader = this._loadShader(gl, gl.FRAGMENT_SHADER, fsSource);
+    const vertexShader = this._loadShader(gl, gl.VERTEX_SHADER, "VERTEX_SHADER", vsSource);
+    const fragmentShader = this._loadShader(gl, gl.FRAGMENT_SHADER, "FRAGMENT_SHADER", fsSource);
 
     const shaderProgram = gl.createProgram();
     gl.attachShader(shaderProgram, vertexShader);
     gl.attachShader(shaderProgram, fragmentShader);
     gl.linkProgram(shaderProgram);
 
-    if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      this._log.warn("Unable to initialize the shader program: " + gl.getProgramInfoLog(shaderProgram));
+    if ( ! gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+      this._log.warn(`Unable to link the shader program: ${gl.getProgramInfoLog(shaderProgram)}`);
       return null;
     }
 
@@ -143,12 +145,12 @@ export class WebGLRenderer {
   // creates a shader of the given type, uploads the source and
   // compiles it.
   //
-  private _loadShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
+  private _loadShader(gl: WebGLRenderingContext, type: number, shaderName: string, source: string): WebGLShader {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      this._log.warn("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
+    if ( ! gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      this._log.warn(`An error occurred compiling the shader ${shaderName}: ${gl.getShaderInfoLog(shader)}`);
       gl.deleteShader(shader);
       return null;
     }
