@@ -162,7 +162,7 @@ export class WebGLRenderer {
 
   private _initBuffers(gl: WebGLRenderingContext, atlas: TextureFontAtlas): void {
     gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexPositionBuffer);
-    const vertexPositions = this._gridVertexPositions(this._gridRows, this._gridColumns);
+    const vertexPositions = this._gridVertexPositions();
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions), gl.STATIC_DRAW);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this._textureCoordBuffer);
@@ -174,35 +174,30 @@ export class WebGLRenderer {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
   }
 
-  private _gridVertexPositions(rows: number, columns: number): number[] {
+  private _gridVertexPositions(): number[] {
     const result: number[] = [];
 
     const boxScale = 1; // 1.0 is normal, 0.9 is useful for debugging to get a grid effect.
+    const x = 0;
+    const x2 = boxScale * this._metrics.widthPx;
+    const y = 0;
+    const y2 = boxScale * this._metrics.heightPx;
 
-    for (let j=0; j<rows; j++) {
-      for (let i=0; i<columns; i++) {
-        const x = i * this._metrics.widthPx;
-        const x2 = (i+boxScale) * this._metrics.widthPx;
-        const y = j * this._metrics.heightPx;
-        const y2 = (j+boxScale) * this._metrics.heightPx;
+    result.push(x);
+    result.push(y);
+    result.push(1.0); // Z
 
-        result.push(x);
-        result.push(y);
-        result.push(1.0); // Z
+    result.push(x);
+    result.push(y2);
+    result.push(1.0); // Z
 
-        result.push(x);
-        result.push(y2);
-        result.push(1.0); // Z
+    result.push(x2);
+    result.push(y2);
+    result.push(1.0); // Z
 
-        result.push(x2);
-        result.push(y2);
-        result.push(1.0); // Z
-
-        result.push(x2);
-        result.push(y);
-        result.push(1.0); // Z
-      }
-    }
+    result.push(x2);
+    result.push(y);
+    result.push(1.0); // Z
     return result;
   }
 
