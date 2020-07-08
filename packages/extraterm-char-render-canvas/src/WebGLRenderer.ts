@@ -36,13 +36,15 @@ export class WebGLRenderer {
     in vec4 aVertexPosition;
     in vec2 aTextureCoord;
 
+    in vec4 aPos;
+
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
 
     out highp vec2 vTextureCoord;
 
     void main(void) {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+      gl_Position = uProjectionMatrix * uModelViewMatrix * (aVertexPosition + aPos);
       vTextureCoord = aTextureCoord;
     }
   `;
@@ -316,13 +318,47 @@ export class WebGLRenderer {
     }
 
     this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
+    {
+      const numComponents = 4;
+      const type = this._glContext.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+
+      const posAttrib = this._glContext.getAttribLocation(this._shaderProgram, "aPos");
+      const posBuffer = this._glContext.createBuffer();
+      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, posBuffer);
+      const posArray = this._gridVertexTopLeft(this._gridRows, this._gridColumns);
+
+      this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(posArray),
+        this._glContext.STATIC_DRAW);
+      this._glContext.vertexAttribPointer(posAttrib, numComponents, type, normalize, stride, offset);
+      this._glContext.vertexAttribDivisor(posAttrib, 1);
+      this._glContext.enableVertexAttribArray(posAttrib);
+    }
 
     {
-      const vertexCount = 6 * this._gridRows * this._gridColumns;
       const type = this._glContext.UNSIGNED_SHORT;
       const offset = 0;
-      this._glContext.drawElements(this._glContext.TRIANGLES, vertexCount, type, offset);
+      this._glContext.drawElementsInstanced(this._glContext.TRIANGLES, 6, type, offset,
+        this._gridRows * this._gridColumns);
     }
+  }
+
+  private _gridVertexTopLeft(rows: number, columns: number): number[] {
+    const result: number[] = [];
+    for (let j=0; j<rows; j++) {
+      for (let i=0; i<columns; i++) {
+        const x = i * this._metrics.widthPx;
+        const y = j * this._metrics.heightPx;
+
+        result.push(x);
+        result.push(y);
+        result.push(0);
+        result.push(0);
+      }
+    }
+    return result;
   }
 }
 
