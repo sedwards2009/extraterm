@@ -36,7 +36,7 @@ export class WebGLRenderer {
     in vec4 aVertexPosition;
     in vec2 aTextureCoord;
 
-    in vec4 aPos;
+    in vec2 aPos;
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
@@ -44,7 +44,7 @@ export class WebGLRenderer {
     out highp vec2 vTextureCoord;
 
     void main(void) {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * (aVertexPosition + aPos);
+      gl_Position = uProjectionMatrix * uModelViewMatrix * (aVertexPosition + vec4(aPos, 0, 0));
       vTextureCoord = aTextureCoord;
     }
   `;
@@ -319,7 +319,7 @@ export class WebGLRenderer {
 
     this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
     {
-      const numComponents = 4;
+      const numComponents = 2;
       const type = this._glContext.FLOAT;
       const normalize = false;
       const stride = 0;
@@ -349,13 +349,8 @@ export class WebGLRenderer {
     const result: number[] = [];
     for (let j=0; j<rows; j++) {
       for (let i=0; i<columns; i++) {
-        const x = i * this._metrics.widthPx;
-        const y = j * this._metrics.heightPx;
-
-        result.push(x);
-        result.push(y);
-        result.push(0);
-        result.push(0);
+        result.push(i * this._metrics.widthPx);
+        result.push(j * this._metrics.heightPx);
       }
     }
     return result;
