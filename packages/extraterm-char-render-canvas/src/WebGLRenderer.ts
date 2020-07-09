@@ -37,6 +37,7 @@ export class WebGLRenderer {
     in vec2 aTextureCoord;
 
     in vec2 aPos;
+    in vec2 tPos;
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
@@ -45,7 +46,7 @@ export class WebGLRenderer {
 
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * (aVertexPosition + vec4(aPos, 0, 0));
-      vTextureCoord = aTextureCoord;
+      vTextureCoord = aTextureCoord + tPos;
     }
   `;
 
@@ -162,19 +163,19 @@ export class WebGLRenderer {
 
   private _initBuffers(gl: WebGLRenderingContext, atlas: TextureFontAtlas): void {
     gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexPositionBuffer);
-    const vertexPositions = this._gridVertexPositions();
+    const vertexPositions = this._templateVertexPositions();
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions), gl.STATIC_DRAW);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this._textureCoordBuffer);
-    const textureCoordinates = this._gridTexturePositions(this._gridRows, this._gridColumns, atlas);
+    const textureCoordinates = this._templateTexturePositions(atlas);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
-    const indices = this._gridTriangleIndexes(this._gridRows, this._gridColumns);
+    const indices = this._templateTriangleIndexes();
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
   }
 
-  private _gridVertexPositions(): number[] {
+  private _templateVertexPositions(): number[] {
     const result: number[] = [];
 
     const boxScale = 1; // 1.0 is normal, 0.9 is useful for debugging to get a grid effect.
@@ -201,21 +202,32 @@ export class WebGLRenderer {
     return result;
   }
 
-  private _gridTriangleIndexes(rows: number, columns: number): number [] {
+  private _templateTriangleIndexes(): number [] {
+    return [0, 1, 2, 0, 2, 3];
+  }
+
+  private _templateTexturePositions(atlas: TextureFontAtlas): number[] {
     const result: number[] = [];
+    const xPixels = 0;
+    const yPixels = 0;
+    const x2Pixels = atlas.getTextureCellWidth();
+    const y2Pixels = atlas.getTextureCellHeight();
 
-    for (let i=0; i < rows*columns; i++) {
-      const i4 = i * 4;
-      result.push(i4);
-      result.push(i4 + 1);
-      result.push(i4 + 2);
+    result.push(xPixels);
+    result.push(yPixels);
 
-      result.push(i4);
-      result.push(i4 + 2);
-      result.push(i4 + 3);
-    }
+    result.push(xPixels);
+    result.push(y2Pixels);
+
+    result.push(x2Pixels);
+    result.push(y2Pixels);
+
+    result.push(x2Pixels);
+    result.push(yPixels);
+
     return result;
   }
+
 
   private _gridTexturePositions(rows: number, columns: number, atlas: TextureFontAtlas): number[] {
     const result: number[] = [];
@@ -226,23 +238,8 @@ export class WebGLRenderer {
     for (let j=0; j<=rows; j++) {
       for (let i=0; i<=columns; i++) {
         const coord = atlas.loadCodePoint(s.codePointAt(c % s.length), 0, 0xffffffff, 0x000000ff);
-        const xPixels = coord.textureXpx;
-        const yPixels = coord.textureYpx;
-        const x2Pixels = coord.textureX2px;
-        const y2Pixels = coord.textureY2px;
-
-        result.push(xPixels);
-        result.push(yPixels);
-
-        result.push(xPixels);
-        result.push(y2Pixels);
-
-        result.push(x2Pixels);
-        result.push(y2Pixels);
-
-        result.push(x2Pixels);
-        result.push(yPixels);
-
+        result.push(coord.textureXpx);
+        result.push(coord.textureYpx);
         c++;
       }
     }
@@ -282,6 +279,27 @@ export class WebGLRenderer {
   render( /*cellGrid: CharCellGrid, firstRow: number, rowCount: number, destinationCanvas */): void {
     this._initBuffers(this._glContext, this._fontAtlas);
 
+
+    {
+      const numComponents = 2;
+      const type = this._glContext.FLOAT;
+      const normalize = false;
+      const stride = 0;
+      const offset = 0;
+
+      const tPosAttrib = this._glContext.getAttribLocation(this._shaderProgram, "tPos");
+      const tPosBuffer = this._glContext.createBuffer();
+      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, tPosBuffer);
+
+      const tPosArray = this._gridTexturePositions(this._gridRows, this._gridColumns, this._fontAtlas);
+
+      this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(tPosArray),
+        this._glContext.STATIC_DRAW);
+      this._glContext.vertexAttribPointer(tPosAttrib, numComponents, type, normalize, stride, offset);
+      this._glContext.vertexAttribDivisor(tPosAttrib, 1);
+      this._glContext.enableVertexAttribArray(tPosAttrib);
+    }
+
     const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
     this._glContext.activeTexture(this._glContext.TEXTURE0);
     this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
@@ -313,6 +331,7 @@ export class WebGLRenderer {
     }
 
     this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
+
     {
       const numComponents = 2;
       const type = this._glContext.FLOAT;

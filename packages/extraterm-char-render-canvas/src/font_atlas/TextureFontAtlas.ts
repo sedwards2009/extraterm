@@ -30,4 +30,14 @@ export class TextureFontAtlas extends FontAtlasBase<TextureCachedGlyph> {
   loadCodePoint(codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number): TextureCachedGlyph {
     return this._getGlyph(codePoint, null, style, fgRGBA, bgRGBA);
   }
+
+  getTextureCellWidth(): number {
+    const canvasWidth = this._pageCanvas.width;
+    return this._metrics.widthPx / canvasWidth;
+  }
+
+  getTextureCellHeight(): number {
+    const canvasHeight = this._pageCanvas.height;
+    return this._metrics.heightPx / canvasHeight;
+  }
 }
