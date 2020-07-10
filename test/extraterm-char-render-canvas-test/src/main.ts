@@ -1,7 +1,7 @@
 
 import { CharRenderCanvas, Renderer, xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics } from "extraterm-char-render-canvas";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { printTestPattern, printEmoji, CellGridOutputDevice } from "./TestPattern";
+import { printTestPattern, printEmoji, CellGridOutputDevice, printPalette } from "./TestPattern";
 
 
 const log = console.log.bind(console);
@@ -105,9 +105,16 @@ function testWebGL(): void {
 
   containerDiv.appendChild(fontAtlas.getCanvas());
 
-  const renderer = new WebGLRenderer(fontAtlas, 512, 512);
+  const renderer = new WebGLRenderer(fontAtlas, 2048, 512);
   renderer.init();
-  renderer.render();
+
+  const cellGrid = new CharCellGrid(250, 20, xtermPalette());
+
+  const outputDevice = new CellGridOutputDevice(cellGrid);
+  printPalette(outputDevice);
+  outputDevice.cr();
+
+  renderer.render(cellGrid, 0, 17);
 }
 
 window.onload = main;

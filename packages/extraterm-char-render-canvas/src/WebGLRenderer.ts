@@ -14,8 +14,6 @@ export class WebGLRenderer {
 
   private _fontAtlas: TextureFontAtlas = null;
   private _metrics: MonospaceFontMetrics = null;
-  private _gridRows: number;
-  private _gridColumns: number;
   private _canvas: HTMLCanvasElement = null;
   private _glContext: WebGL2RenderingContext = null;
   private _triangleIndexBuffer: WebGLBuffer = null;
@@ -67,9 +65,6 @@ export class WebGLRenderer {
     this._log = getLogger();
     this._fontAtlas = fontAtlas;
     this._metrics = this._fontAtlas.getMetrics();
-
-    this._gridRows = Math.floor(maxHeight / this._metrics.heightPx);
-    this._gridColumns = Math.floor(maxWidth / this._metrics.widthPx);
   }
 
   init(): boolean {
@@ -229,18 +224,15 @@ export class WebGLRenderer {
   }
 
 
-  private _gridTexturePositions(rows: number, columns: number, atlas: TextureFontAtlas): number[] {
+  private _gridTexturePositions(cellGrid: CharCellGrid, atlas: TextureFontAtlas): number[] {
     const result: number[] = [];
 
-    const s = "Extraterm WebGL. ";
-    let c = 0;
-
-    for (let j=0; j<=rows; j++) {
-      for (let i=0; i<=columns; i++) {
-        const coord = atlas.loadCodePoint(s.codePointAt(c % s.length), 0, 0xffffffff, 0x000000ff);
+    for (let j=0; j<cellGrid.height; j++) {
+      for (let i=0; i<cellGrid.width; i++) {
+        const codePoint = cellGrid.getCodePoint(i, j);
+        const coord = atlas.loadCodePoint(codePoint, 0, cellGrid.getFgRGBA(i, j), cellGrid.getBgRGBA(i,j ));
         result.push(coord.textureXpx);
         result.push(coord.textureYpx);
-        c++;
       }
     }
     return result;
@@ -276,7 +268,7 @@ export class WebGLRenderer {
     return this._texture;
   }
 
-  render( /*cellGrid: CharCellGrid, firstRow: number, rowCount: number, destinationCanvas */): void {
+  render(cellGrid: CharCellGrid, firstRow: number, rowCount: number /*, destinationCanvas */): void {
     this._initBuffers(this._glContext, this._fontAtlas);
 
 
@@ -291,7 +283,7 @@ export class WebGLRenderer {
       const tPosBuffer = this._glContext.createBuffer();
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, tPosBuffer);
 
-      const tPosArray = this._gridTexturePositions(this._gridRows, this._gridColumns, this._fontAtlas);
+      const tPosArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
 
       this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(tPosArray),
         this._glContext.STATIC_DRAW);
@@ -342,7 +334,7 @@ export class WebGLRenderer {
       const posAttrib = this._glContext.getAttribLocation(this._shaderProgram, "aPos");
       const posBuffer = this._glContext.createBuffer();
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, posBuffer);
-      const posArray = this._gridVertexTopLeft(this._gridRows, this._gridColumns);
+      const posArray = this._gridVertexTopLeft(cellGrid);
 
       this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(posArray),
         this._glContext.STATIC_DRAW);
@@ -355,14 +347,14 @@ export class WebGLRenderer {
       const type = this._glContext.UNSIGNED_SHORT;
       const offset = 0;
       this._glContext.drawElementsInstanced(this._glContext.TRIANGLES, 6, type, offset,
-        this._gridRows * this._gridColumns);
+        cellGrid.width * cellGrid.height);
     }
   }
 
-  private _gridVertexTopLeft(rows: number, columns: number): number[] {
+  private _gridVertexTopLeft(cellGrid: CharCellGrid): number[] {
     const result: number[] = [];
-    for (let j=0; j<rows; j++) {
-      for (let i=0; i<columns; i++) {
+    for (let j=0; j<cellGrid.height; j++) {
+      for (let i=0; i<cellGrid.width; i++) {
         result.push(i * this._metrics.widthPx);
         result.push(j * this._metrics.heightPx);
       }

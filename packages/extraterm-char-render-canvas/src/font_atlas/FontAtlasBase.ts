@@ -56,7 +56,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   }
 
   private _initialize(): void {
-    this._atlasWidthInCells = 32;
+    this._atlasWidthInCells = 128;
     this._atlasHeightInCells = 32;
     this._atlasFlushCellCount = Math.floor(this._atlasWidthInCells * this._atlasHeightInCells * 0.2);
 
@@ -95,7 +95,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   getCanvas(): HTMLCanvasElement {
     return this._pageCanvas;
   }
-  
+
   getMetrics(): MonospaceFontMetrics {
     return this._metrics;
   }
