@@ -1,6 +1,7 @@
 *~
 dist/
 
+.cache/
 .vscode/
 .directory
 yarn-error.log
@@ -10,3 +11,4 @@ docs/_site
 node_modules/
 docs/.sass-cache
 extensions/TLDRPages/data/
+.nyc_output/
