@@ -23,9 +23,9 @@ export class EventEmitter<T> implements Disposable {
 
   /**
    * Attach a listener to this event.
-   * 
+   *
    * @param listener the function to call when this event is triggered.
-   * @return a `Disposible` which when used disconnects this listener from the event.
+   * @return a `Disposable` which when used disconnects this listener from the event.
    */
   event: Event<T> = (listener: (t: T) => void): Disposable => {
     this._listeners.push(listener);
@@ -37,7 +37,7 @@ export class EventEmitter<T> implements Disposable {
 
   /**
    * Fire the event to all listeners.
-   * 
+   *
    * @param t the payload of the event.
    */
   fire(t: T): void {
@@ -46,7 +46,7 @@ export class EventEmitter<T> implements Disposable {
 
   /**
    * Returns true if this event emitter has at least on listener subscribed to it.
-   * 
+   *
    * @return true if this event emitter has at least on listener subscribed to it.
    */
 
@@ -64,7 +64,7 @@ class DisposableHolder implements Disposable {
 
   /**
    * Add an object to the list of objects.
-   * 
+   *
    * @param d a Disposable object to hold on to.
    * @return the object which was added.
    */
