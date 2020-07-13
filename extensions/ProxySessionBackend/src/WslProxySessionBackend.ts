@@ -138,6 +138,9 @@ export class WslProxySessionBackend implements SessionBackend {
     let connector = this._connectorMap.get(distro);
     if (connector == null) {
       connector = new WslProxyPtyConnector(this._log, distro);
+      connector.onProxyClosed(() => {
+        this._connectorMap.delete(distro);
+      });
       this._connectorMap.set(distro, connector);
       connector.start();
     }

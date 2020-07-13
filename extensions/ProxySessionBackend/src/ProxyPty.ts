@@ -201,7 +201,11 @@ export abstract class ProxyPtyConnector {
   private _messageBuffer = "";
   private _proxy: child_process.ChildProcess = null;
 
+  private _onProxyClosedEmitter = new EventEmitter<void>();
+  onProxyClosed: Event<void>;
+
   constructor(private _log: Logger) {
+    this.onProxyClosed = this._onProxyClosedEmitter.event;
   }
 
   start(): void {
@@ -356,5 +360,7 @@ export abstract class ProxyPtyConnector {
       pty.exit();
     }
     this._ptys = [];
+
+    this._onProxyClosedEmitter.fire();
   }
 }
