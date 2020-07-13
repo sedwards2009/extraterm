@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -158,8 +158,9 @@ class WslProxyPtyConnector extends ProxyPtyConnector {
     const distroArgs = distro === "" ? [] : ["-d", distro];
 
     // Clever way of mapping a Windows side dir to its WSL/Linux side equivalent.
+    const proxyDirPath = SourceDir.path;
     const cdResult = child_process.spawnSync("wsl.exe", [...distroArgs, "pwd"],
-      {cwd: path.join(SourceDir.path, "python"), shell: true, encoding: "utf8"});
+      {cwd: proxyDirPath, shell: true, encoding: "utf8"});
 
     if (cdResult.status !== 0) {
       _log.warn("'wsl.exe pwd' returned status code ${cdResult.status} and stdout '${cdResult.stdout}'.");
@@ -172,8 +173,8 @@ class WslProxyPtyConnector extends ProxyPtyConnector {
       // FIXME throw new Exception();
     }
 
-    const serverPath = wslPath + "/ptyserver2.py";
+    const serverPath = wslPath + "/extraterm-wsl-proxy";
     _log.debug(`serverPath: ${serverPath}`);
-    return child_process.spawn("wsl.exe", [...distroArgs, "PYTHONIOENCODING=utf-8:ignore", "python3", serverPath], {});
+    return child_process.spawn("wsl.exe", [...distroArgs, serverPath], {});
   }
 }

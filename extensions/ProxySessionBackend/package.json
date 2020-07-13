@@ -7,7 +7,7 @@
   "main": "dist/ProxySessionBackendExtension.js",
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
-    "build-fast": "tsc && shx cp -r src/python dist/python",
+    "build-fast": "tsc && shx cp -r src/python dist/python && shx cp resources/extraterm-wsl-proxy dist/",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
