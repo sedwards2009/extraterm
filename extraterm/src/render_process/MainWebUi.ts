@@ -40,6 +40,7 @@ import { NewTerminalContextArea } from './NewTerminalContextArea';
 import { CommandAndShortcut } from './command/CommandPalette';
 import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
 import { TerminalVisualConfig, injectTerminalVisualConfig } from './TerminalVisualConfig';
+import { doLater } from 'extraterm-later';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -770,6 +771,16 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _switchToTab(tabContentElement: Element): void {
     this._splitLayout.showTabByTabContent(tabContentElement);
     this._focusTabContent(tabContentElement);
+
+    // FIXME This is a work-around for the problem where new tabs can't get the focus immediately.
+    const elements = DomUtils.activeNestedElements();
+    if ( ! elements.includes(tabContentElement)) {
+      this._log.warn(`Failed to focus content element: `, tabContentElement);
+      doLater(() => {
+        this._splitLayout.showTabByTabContent(tabContentElement);
+        this._focusTabContent(tabContentElement);
+      });
+    }
   }
 
   private _selectAdjacentTab(tabWidget: TabWidget, direction: number): void {

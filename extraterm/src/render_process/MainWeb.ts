@@ -6,7 +6,6 @@
 import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
-import { html, render } from "extraterm-lit-html";
 
 import { Event, CustomizedCommand, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
