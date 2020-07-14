@@ -56,9 +56,9 @@ test("scroll one", done => {
     emulator.write('9\n');
     emulator.write('10\n');
     emulator.write('11');
-    
+
     await waitOnEmulator(emulator);
-    
+
     expect(emulator.getLineText(0).trim()).toBe('2');
     done();
   }
@@ -82,7 +82,7 @@ test("render device", done => {
     emulator.write('8\r\n');
     emulator.write('9\r\n');
     emulator.write('10');
-    
+
     await waitOnEmulator(emulator);
 
     expect(readEmulatorScreenString(emulator)).toBe(device.getScreenString());
@@ -138,7 +138,7 @@ test("Move rows above cursor to scrollback", done => {
     emulator.moveRowsAboveCursorToScrollback();
 
     await waitOnEmulator(emulator);
-    
+
   // console.log("Emulator");
   // console.log(`x: ${emulator.x}, y: ${emulator.y}`);
   // console.log(formatRectString(readEmulatorScreenString(emulator)));
@@ -194,6 +194,12 @@ describe.each([
   [{key: "_", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x1f"],
   [{key: "?", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: true}, "\x1f"],
   [{key: "8", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\xf7"],
+
+  [{key: "Backspace", altKey: false, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: false}, "\x7f"],
+  [{key: "Backspace", altKey: false, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: true}, "\x7f"],
+  [{key: "Backspace", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x08"],
+  [{key: "Backspace", altKey: true, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: false}, "\x1b\x7f"],
+
 ])("Keyboard input keyDown()", (ev: MinimalKeyboardEvent, output: string) => {
 
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
@@ -219,7 +225,7 @@ function waitOnEmulator(emulator: Emulator): Promise<void> {
 function readEmulatorScreenString(emulator: Emulator): string {
   let result = lineToString(emulator.lineAtRow(0));
   let row = 1;
-  
+
   while (true) {
     const line = emulator.lineAtRow(row);
     if (line == null) {
