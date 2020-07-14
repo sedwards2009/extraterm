@@ -198,7 +198,7 @@ describe.each([
   [{key: "Backspace", altKey: false, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: false}, "\x7f"],
   [{key: "Backspace", altKey: false, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: true}, "\x7f"],
   [{key: "Backspace", altKey: false, ctrlKey: true, isComposing: false, metaKey: false, shiftKey: false}, "\x08"],
-  [{key: "Backspace", altKey: true, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: false}, "\x1b\x7f"],
+  [{key: "Backspace", altKey: true, ctrlKey: false, isComposing: false, metaKey: true, shiftKey: false}, "\x1b\x7f"],
 
 ])("Keyboard input keyDown()", (ev: MinimalKeyboardEvent, output: string) => {
 
