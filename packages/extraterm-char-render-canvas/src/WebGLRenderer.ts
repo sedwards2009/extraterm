@@ -7,6 +7,7 @@ import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FL
 import { log, Logger, getLogger } from "extraterm-logging";
 import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
+import { normalizedCellIterator } from "./NormalizedCellIterator";
 
 
 export class WebGLRenderer {
@@ -226,14 +227,15 @@ export class WebGLRenderer {
 
   private _gridTexturePositions(cellGrid: CharCellGrid, atlas: TextureFontAtlas): number[] {
     const result: number[] = [];
-
+    const textureCellWidth = atlas.getTextureCellWidth();
     for (let j=0; j<cellGrid.height; j++) {
-      for (let i=0; i<cellGrid.width; i++) {
-        const codePoint = cellGrid.getCodePoint(i, j);
-        const fontIndex = cellGrid.getExtraFontsFlag(i, j) ? 1 : 0;
-        const coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(i, j), fontIndex, cellGrid.getFgRGBA(i, j),
-          cellGrid.getBgRGBA(i,j ));
-        result.push(coord.textureXpx);
+      for (const normalizedCell of normalizedCellIterator(cellGrid, j)) {
+        const codePoint = normalizedCell.codePoint;
+        const fontIndex = normalizedCell.extraFontFlag ? 1 : 0;
+        const x = normalizedCell.x;
+        const coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(x, j), fontIndex, cellGrid.getFgRGBA(x, j),
+          cellGrid.getBgRGBA(x, j));
+        result.push(coord.textureXpx + normalizedCell.segment * textureCellWidth);
         result.push(coord.textureYpx);
       }
     }
