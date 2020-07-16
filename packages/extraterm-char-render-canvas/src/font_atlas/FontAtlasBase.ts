@@ -26,6 +26,8 @@ export interface CachedGlyph {
   atlasX: number;
   atlasY: number;
   lastUse: number;
+
+  fontIndex: number;
 }
 
 
@@ -48,7 +50,9 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   private _nextEmptyCellY: number = 0;
   private _lookupTable = new ArrayKeyTrie<CG>();
 
-  constructor(protected readonly _metrics: MonospaceFontMetrics) {
+  constructor(protected readonly _metrics: MonospaceFontMetrics,
+      protected readonly _extraFonts: MonospaceFontMetrics[]=[]) {
+
     this._log = getLogger("FontAtlasPage", this);
 
     // this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
@@ -104,20 +108,20 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     return [fgRGBA, bgRGBA, style * TWO_TO_THE_24 + codePoint];
   }
 
-  protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
-      bgRGBA: number): CG {
+  protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
+      fgRGBA: number, bgRGBA: number): CG {
 
     let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style, fgRGBA, bgRGBA));
     if (cachedGlyph == null) {
-      cachedGlyph = this._insertChar(codePoint, alternateCodePoints, style, fgRGBA, bgRGBA);
+      cachedGlyph = this._insertChar(codePoint, alternateCodePoints, style, fontIndex, fgRGBA, bgRGBA);
     }
     cachedGlyph.lastUse = this._monoTime;
     this._monoTime++;
     return cachedGlyph;
   }
 
-  private _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
-      bgRGBA: number): CG {
+  private _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
+      fgRGBA: number, bgRGBA: number): CG {
 
     const widthPx = this._metrics.widthPx;
     let widthInCells = 1;
@@ -134,8 +138,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     const xPx = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
     const yPx = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
 
-    const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, fgRGBA, bgRGBA, xPx, yPx, widthPx,
-      widthInCells);
+    const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, fontIndex, fgRGBA, bgRGBA, xPx, yPx,
+      widthPx, widthInCells);
     cachedGlyph.atlasX = this._nextEmptyCellX;
     cachedGlyph.atlasY = this._nextEmptyCellY;
 
@@ -148,8 +152,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     return cachedGlyph;
   }
 
-  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
-      bgRGBA: number, xPx: number, yPx: number, widthPx: number, widthInCells: number): CG {
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
+      fgRGBA: number, bgRGBA: number, xPx: number, yPx: number, widthPx: number, widthInCells: number): CG {
 
     const ctx = this._pageCtx;
 
@@ -180,7 +184,13 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
         styleName += "italic ";
       }
 
-      ctx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
+      if (fontIndex === 0) {
+        ctx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
+      } else {
+        const metrics = this._extraFonts[fontIndex-1];
+        ctx.font = styleName + metrics.fontSizePx + "px " + metrics.fontFamily;
+      }
+
       ctx.fillText(str, xPx + this._metrics.fillTextXOffset, yPx + this._metrics.fillTextYOffset);
     }
 
@@ -227,7 +237,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       key: null,
       atlasX: -1,
       atlasY: -1,
-      lastUse: 0
+      lastUse: 0,
+      fontIndex
     });
 
     this._pageCtx.restore();

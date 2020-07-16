@@ -26,19 +26,20 @@ export class CPURenderedFontAtlas extends FontAtlasBase<CPURenderedCachedGlyph> 
     return { ...cg, imageData: null };
   }
 
-  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fgRGBA: number,
-      bgRGBA: number, xPixels: number, yPixels: number, widthPx: number, widthInCells: number): CPURenderedCachedGlyph {
+  protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
+      fgRGBA: number, bgRGBA: number, xPixels: number, yPixels: number, widthPx: number,
+      widthInCells: number): CPURenderedCachedGlyph {
 
-    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, fgRGBA, bgRGBA, xPixels, yPixels, widthPx,
-      widthInCells);
+    const cg = super._insertCharAt(codePoint, alternateCodePoints, style, fontIndex, fgRGBA, bgRGBA, xPixels, yPixels,
+      widthPx, widthInCells);
     cg.imageData = this._pageCtx.getImageData(cg.xPixels, cg.yPixels, cg.widthPx, this._metrics.heightPx);
     return cg;
   }
 
-  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode,  fgRGBA: number,
-      bgRGBA: number, xPixel: number, yPixel: number): void {
+  drawCodePointToImageData(destImageData: ImageData, codePoint: number, style: StyleCode, fontIndex: number,
+      fgRGBA: number, bgRGBA: number, xPixel: number, yPixel: number): void {
 
-    const cachedGlyph = this._getGlyph(codePoint, null, style, fgRGBA, bgRGBA);
+    const cachedGlyph = this._getGlyph(codePoint, null, style, fontIndex, fgRGBA, bgRGBA);
     this._drawCachedGlyph(destImageData, cachedGlyph, xPixel, yPixel);
   }
 
@@ -89,8 +90,8 @@ export class CPURenderedFontAtlas extends FontAtlasBase<CPURenderedCachedGlyph> 
     }
   }
 
-  drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode,  fgRGBA: number,
-        bgRGBA: number, xPixel: number, yPixel: number): void {
+  drawCodePointsToImageData(destImageData: ImageData, codePoints: number[], style: StyleCode, fontIndex: number,
+      fgRGBA: number, bgRGBA: number, xPixel: number, yPixel: number): void {
 
     let proxyCodePoint = this._proxyCodePointMapping.get(codePoints);
     if (proxyCodePoint == null) {
@@ -99,7 +100,7 @@ export class CPURenderedFontAtlas extends FontAtlasBase<CPURenderedCachedGlyph> 
       this._proxyCodePointMapping.set(codePoints, proxyCodePoint);
     }
 
-    const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style, fgRGBA, bgRGBA);
+    const cachedGlyph = this._getGlyph(proxyCodePoint, codePoints, style, fontIndex, fgRGBA, bgRGBA);
     this._drawCachedGlyph(destImageData, cachedGlyph, xPixel, yPixel);
   }
 }

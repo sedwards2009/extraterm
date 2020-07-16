@@ -1,5 +1,5 @@
 
-import { CharRenderCanvas, Renderer, xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, Renderer, xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { printTestPattern, printEmoji, CellGridOutputDevice, printPalette } from "./TestPattern";
 
@@ -101,20 +101,38 @@ function testWebGL(): void {
   const containerDiv = document.getElementById("container");
 
   const metrics = computeFontMetrics("ligadejavusansmono", 16);
-  const fontAtlas = new TextureFontAtlas(metrics);
+  const customMetrics = computeEmojiMetrics(metrics);
+  const fontAtlas = new TextureFontAtlas(metrics, [customMetrics]);
 
   containerDiv.appendChild(fontAtlas.getCanvas());
 
   const renderer = new WebGLRenderer(fontAtlas, 2048, 512);
   renderer.init();
 
-  const cellGrid = new CharCellGrid(250, 20, xtermPalette());
+  const cellGrid = new CharCellGrid(250, 30, xtermPalette());
 
   const outputDevice = new CellGridOutputDevice(cellGrid);
   printPalette(outputDevice);
   outputDevice.cr();
+  printEmoji(outputDevice);
+  outputDevice.cr();
 
   renderer.render(cellGrid, 0, 17);
+}
+
+function computeEmojiMetrics(metrics: MonospaceFontMetrics): MonospaceFontMetrics {
+  const extraFontFamily = "twemoji";
+  const extraFontSizePx = 16;
+  const customMetrics = {
+    ...metrics,
+    fontFamily: extraFontFamily,
+    fontSizePx: extraFontSizePx,
+  };
+  const actualFontMetrics = computeFontMetrics(extraFontFamily, extraFontSizePx, ["\u{1f600}"]  /* Smile emoji */);
+  customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
+  customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
+
+  return customMetrics;
 }
 
 window.onload = main;

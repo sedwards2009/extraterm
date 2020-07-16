@@ -36,6 +36,8 @@ export interface OutputDevice {
   setUnderline(on: boolean): void;
   setItalic(on: boolean): void;
   setStrikethrough(on: boolean): void;
+  setExtraFont(on: boolean): void;
+
   reset(): void;
 }
 
@@ -106,6 +108,8 @@ export class VtOutputDevice implements OutputDevice {
     }
   }
 
+  setExtraFont(on: boolean): void {}
+
   print(s: string): void {
     this._lineBuffer += s;
   }
@@ -169,6 +173,7 @@ export class CellGridOutputDevice implements OutputDevice {
   private isItalic = false;
   private isUnderline = false;
   private isStrikethrough = false;
+  private isExtraFont = false;
 
   private fgRGB: [number, number, number] = [255,255,255];
   private bgRGB: [number, number, number] = [0, 0, 0];
@@ -213,6 +218,10 @@ export class CellGridOutputDevice implements OutputDevice {
     this.bgIndex = index;
   }
 
+  setExtraFont(on: boolean): void {
+    this.isExtraFont = on;
+  }
+
   print(s: string): void {
     for (let i=0; i<s.length; i++) {
       const codePoint = s.codePointAt(i);
@@ -235,8 +244,9 @@ export class CellGridOutputDevice implements OutputDevice {
       if (this.isStrikethrough) {
         style |= STYLE_MASK_STRIKETHROUGH;
       }
-
       this.cellGrid.setStyle(this.x, this.y, style);
+
+      this.cellGrid.setExtraFontsFlag(this.x, this.y, this.isExtraFont);
 
       if (this.fgColorMode === COLOR_MODE_PALETTE) {
         this.cellGrid.setFgClutIndex(this.x, this.y, this.fgIndex);
@@ -471,7 +481,11 @@ export function printEmoji(output: OutputDevice): void {
   output.cr();
   output.reset();
 
-  output.print("X😀🍺🚀X");
+  output.print("X");
+  output.setExtraFont(true);
+  output.print("😀🍺🚀");
+  output.setExtraFont(false);
+  output.print("X");
   output.cr();
 
   output.setBackgroundColorIndex(3);

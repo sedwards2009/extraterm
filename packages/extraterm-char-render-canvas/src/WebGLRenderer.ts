@@ -230,7 +230,9 @@ export class WebGLRenderer {
     for (let j=0; j<cellGrid.height; j++) {
       for (let i=0; i<cellGrid.width; i++) {
         const codePoint = cellGrid.getCodePoint(i, j);
-        const coord = atlas.loadCodePoint(codePoint, 0, cellGrid.getFgRGBA(i, j), cellGrid.getBgRGBA(i,j ));
+        const fontIndex = cellGrid.getExtraFontsFlag(i, j) ? 1 : 0;
+        const coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(i, j), fontIndex, cellGrid.getFgRGBA(i, j),
+          cellGrid.getBgRGBA(i,j ));
         result.push(coord.textureXpx);
         result.push(coord.textureYpx);
       }
