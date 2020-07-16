@@ -98,8 +98,11 @@ class FontMeasurement {
     // logFontMetrics(sampleChars[0], metrics);
     const charWidthPx = Math.ceil(metrics.width);
 
-    let ascent = Math.floor(-metrics.fontBoundingBoxAscent);
-    let descent = Math.ceil(metrics.fontBoundingBoxDescent);
+    const metricsAscent = metrics.fontBoundingBoxAscent === undefined ? metrics.actualBoundingBoxAscent : metrics.fontBoundingBoxAscent;
+    const metricsDescent = metrics.fontBoundingBoxDescent === undefined ? metrics.actualBoundingBoxDescent : metrics.fontBoundingBoxDescent;
+
+    let ascent = Math.floor(-metricsAscent);
+    let descent = Math.ceil(metricsDescent);
     for (const sampleChar of sampleChars) {
       const { topY, bottomY } = this._renderAndMeasureText(ctx, fontSizePx, sampleChar);
       ascent = Math.min(ascent, topY);
