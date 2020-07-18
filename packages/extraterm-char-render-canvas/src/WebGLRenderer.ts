@@ -10,6 +10,8 @@ import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 import { normalizedCellIterator } from "./NormalizedCellIterator";
 
 
+const CANVAS_SIZE_STEP = 512;
+
 export class WebGLRenderer {
   private _log: Logger = null;
 
@@ -62,16 +64,14 @@ export class WebGLRenderer {
     }
   `;
 
-  constructor(fontAtlas: TextureFontAtlas, public maxWidth: number, public maxHeight: number) {
-    this._log = getLogger();
+  constructor(fontAtlas: TextureFontAtlas) {
+    this._log = getLogger("WebGLRenderer", this);
     this._fontAtlas = fontAtlas;
     this._metrics = this._fontAtlas.getMetrics();
   }
 
   init(): boolean {
     this._canvas = document.createElement("canvas");
-    this._canvas.width = this.maxWidth;
-    this._canvas.height = this.maxHeight;
     document.body.appendChild(this._canvas);
 
     const gl = this._canvas.getContext("webgl2");
@@ -99,24 +99,11 @@ export class WebGLRenderer {
     gl.disable(gl.DEPTH_TEST);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const projectionMatrix = mat4.create();
-    mat4.ortho(projectionMatrix, 0, this.maxWidth, 0, this.maxHeight, 0, 100);
-
-    // Flip the image vertically so that we can keep our texture coords with 0,0
-    // being top left and create y value going down the screen.
-    const scaleVector = vec3.create();
-    vec3.set(scaleVector, 1, -1, 1);
-    mat4.scale(projectionMatrix, projectionMatrix, scaleVector);
-    this._projectionMatrix = projectionMatrix;
-
-    const modelViewMatrix = mat4.create();
-    mat4.translate(modelViewMatrix, modelViewMatrix, [0, -this.maxHeight, -1.0]);
-    this._modelViewMatrix = modelViewMatrix;
-
     gl.useProgram(this._shaderProgram);
     gl.uniform1i(this._uSamplerLocation, 0);
-    gl.uniformMatrix4fv(this._projectionMatrixLocation, false, this._projectionMatrix);
-    gl.uniformMatrix4fv(this._modelViewMatrixLocation, false, this._modelViewMatrix);
+
+    this._setupProjections();
+    this._resizeCanvas(1, 1);
 
     this._texture = gl.createTexture();
 
@@ -139,6 +126,50 @@ export class WebGLRenderer {
     }
 
     return shaderProgram;
+  }
+
+  private _setupProjections(): void {
+    const canvasWidth = this._canvas.width;
+    const canvasHeight = this._canvas.height;
+
+    const gl = this._glContext;
+    gl.useProgram(this._shaderProgram);
+
+    gl.viewport(0, 0, canvasWidth, canvasHeight);
+
+    const projectionMatrix = mat4.create();
+    mat4.ortho(projectionMatrix, 0, canvasWidth, 0, canvasHeight, 0, 100);
+
+    // Flip the image vertically so that we can keep our texture coords with 0,0
+    // being top left and create y value going down the screen.
+    const scaleVector = vec3.create();
+    vec3.set(scaleVector, 1, -1, 1);
+    mat4.scale(projectionMatrix, projectionMatrix, scaleVector);
+    this._projectionMatrix = projectionMatrix;
+
+    const modelViewMatrix = mat4.create();
+    mat4.translate(modelViewMatrix, modelViewMatrix, [0, -canvasHeight, -1.0]);
+    this._modelViewMatrix = modelViewMatrix;
+
+    gl.uniformMatrix4fv(this._projectionMatrixLocation, false, this._projectionMatrix);
+    gl.uniformMatrix4fv(this._modelViewMatrixLocation, false, this._modelViewMatrix);
+  }
+
+  private _resizeCanvas(minWidth: number, minHeight: number): void {
+    let changed = false;
+    if (this._canvas.width < minWidth) {
+      this._canvas.width = (Math.floor(minWidth / CANVAS_SIZE_STEP) + 1) * CANVAS_SIZE_STEP;
+      changed = true;
+    }
+    if (this._canvas.height < minHeight) {
+      this._canvas.height = (Math.floor(minHeight / CANVAS_SIZE_STEP) + 1) * CANVAS_SIZE_STEP;
+      changed = true;
+    }
+    if ( ! changed) {
+      return;
+    }
+
+    this._setupProjections();
   }
 
   // creates a shader of the given type, uploads the source and
@@ -275,6 +306,10 @@ export class WebGLRenderer {
   render(destinationContext: CanvasRenderingContext2D, cellGrid: CharCellGrid, firstRow: number,
       rowCount: number): void {
 
+    const rectWidth = this._metrics.widthPx * cellGrid.width;
+    const rectHeight = this._metrics.heightPx * cellGrid.height;
+    this._resizeCanvas(rectWidth, rectHeight);
+
     this._initBuffers(this._glContext, this._fontAtlas);
 
     {
@@ -358,8 +393,6 @@ export class WebGLRenderer {
     if (destinationContext == null) {
       return;
     }
-    const rectWidth = this._metrics.widthPx * cellGrid.width;
-    const rectHeight = this._metrics.heightPx * cellGrid.height;
     destinationContext.drawImage(this._canvas, 0, 0, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
   }
 

@@ -237,7 +237,7 @@ export class WebGLCharRenderCanvas implements Disposable {
       (extraFont) => computeEmojiMetrics(fontMetrics, extraFont.fontFamily, extraFont.fontSizePx));
 
     this._fontAtlas = new TextureFontAtlas(fontMetrics, extraFontMetrics);
-    this._webglRenderer = new WebGLRenderer(this._fontAtlas, 2560, 1440);
+    this._webglRenderer = new WebGLRenderer(this._fontAtlas);
     this._webglRenderer.init();
   }
 

@@ -110,7 +110,7 @@ function testWebGL(): void {
 
   containerDiv.appendChild(fontAtlas.getCanvas());
 
-  const renderer = new WebGLRenderer(fontAtlas, 2048, 512);
+  const renderer = new WebGLRenderer(fontAtlas);
   renderer.init();
 
   const cellGrid = new CharCellGrid(250, 30, xtermPalette());
