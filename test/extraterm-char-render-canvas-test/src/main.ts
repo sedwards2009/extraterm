@@ -1,5 +1,5 @@
 
-import { CharRenderCanvas, Renderer, xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
+import { CharRenderCanvas, Renderer, xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics, MonospaceFontMetrics, WebGLCharRenderCanvas } from "extraterm-char-render-canvas";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { printTestPattern, printEmoji, CellGridOutputDevice, printPalette } from "./TestPattern";
 
@@ -9,6 +9,7 @@ const log = console.log.bind(console);
 const WIDTH_CHARS = 130;
 const HEIGHT_CHARS = 68;
 let renderCanvas: CharRenderCanvas = null;
+let webglRenderCanvas: WebGLCharRenderCanvas = null;
 
 function main(): void {
   log("Main!");
@@ -27,6 +28,9 @@ function main(): void {
 
   const renderButton5 = document.getElementById("render_button5");
   renderButton5.addEventListener("click", testWebGL);
+
+  const renderButton6 = document.getElementById("render_button6");
+  renderButton6.addEventListener("click", renderWebGLTestPattern);
 }
 
 function renderTestPattern(): void {
@@ -117,7 +121,7 @@ function testWebGL(): void {
   printEmoji(outputDevice);
   outputDevice.cr();
 
-  renderer.render(cellGrid, 0, 17);
+  renderer.render(null, cellGrid, 0, 17);
 }
 
 function computeEmojiMetrics(metrics: MonospaceFontMetrics): MonospaceFontMetrics {
@@ -134,5 +138,41 @@ function computeEmojiMetrics(metrics: MonospaceFontMetrics): MonospaceFontMetric
 
   return customMetrics;
 }
+
+function renderWebGLTestPattern(): void {
+  const containerDiv = document.getElementById("container");
+  createWebGLRenderCanvas();
+  printTestPattern(new CellGridOutputDevice(webglRenderCanvas.getCellGrid()));
+  webglRenderCanvas.render();
+  containerDiv.appendChild(webglRenderCanvas.getFontAtlasCanvasElement());
+}
+
+
+function createWebGLRenderCanvas(): void {
+  if (webglRenderCanvas != null) {
+    return;
+  }
+
+  const containerDiv = document.getElementById("container");
+  webglRenderCanvas = new WebGLCharRenderCanvas({
+    widthChars: WIDTH_CHARS,
+    heightChars: HEIGHT_CHARS,
+    fontFamily: "ligadejavusansmono",
+    fontSizePx: 16,
+    palette: xtermPalette(),
+    extraFonts: [
+      {
+        fontFamily: "twemoji",
+        fontSizePx: 16,
+        unicodeStart: 0x1f000,
+        unicodeEnd: 0x20000,
+        sampleChars: ["\u{1f600}"]  // Smile emoji
+      }
+    ]
+  });
+
+  containerDiv.appendChild(webglRenderCanvas.getCanvasElement());
+}
+
 
 window.onload = main;

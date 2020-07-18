@@ -272,9 +272,10 @@ export class WebGLRenderer {
     return this._texture;
   }
 
-  render(cellGrid: CharCellGrid, firstRow: number, rowCount: number /*, destinationCanvas */): void {
-    this._initBuffers(this._glContext, this._fontAtlas);
+  render(destinationContext: CanvasRenderingContext2D, cellGrid: CharCellGrid, firstRow: number,
+      rowCount: number): void {
 
+    this._initBuffers(this._glContext, this._fontAtlas);
 
     {
       const numComponents = 2;
@@ -353,6 +354,13 @@ export class WebGLRenderer {
       this._glContext.drawElementsInstanced(this._glContext.TRIANGLES, 6, type, offset,
         cellGrid.width * cellGrid.height);
     }
+
+    if (destinationContext == null) {
+      return;
+    }
+    const rectWidth = this._metrics.widthPx * cellGrid.width;
+    const rectHeight = this._metrics.heightPx * cellGrid.height;
+    destinationContext.drawImage(this._canvas, 0, 0, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
   }
 
   private _gridVertexTopLeft(cellGrid: CharCellGrid): number[] {
