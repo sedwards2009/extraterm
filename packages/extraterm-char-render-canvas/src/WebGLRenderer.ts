@@ -97,10 +97,6 @@ export class WebGLRenderer {
     this._modelViewMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uModelViewMatrix");
     this._uSamplerLocation = gl.getUniformLocation(this._shaderProgram, "uSampler");
 
-    this._vertexPositionBuffer = gl.createBuffer();
-    this._textureCoordBuffer = gl.createBuffer();
-    this._triangleIndexBuffer = gl.createBuffer();
-
     gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
     gl.disable(gl.DEPTH_TEST);
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -109,7 +105,10 @@ export class WebGLRenderer {
     gl.uniform1i(this._uSamplerLocation, 0);
 
     this._setupProjections();
-    this._initBuffers(this._glContext, this._fontAtlas);
+    this._initVertexPositionBuffer(this._glContext);
+    this._initTemplateTexturePositions(this._glContext, this._fontAtlas.getTextureCellWidth(),
+      this._fontAtlas.getTextureCellHeight());
+    this._initTemplateMeshIndexes(this._glContext);
     this._resizeCanvas(1, 1);
 
     this._texture = gl.createTexture();
@@ -195,18 +194,46 @@ export class WebGLRenderer {
     return shader;
   }
 
-  private _initBuffers(gl: WebGLRenderingContext, atlas: TextureFontAtlas): void {
+  private _initTemplateTexturePositions(gl: WebGLRenderingContext, cellWidthPx: number, cellHeightPx: number): void {
+    this._textureCoordBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._textureCoordBuffer);
+    const textureCoordinates = this._templateTexturePositions(cellWidthPx, cellHeightPx);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
+
+    // Tell WebGL how to pull out the texture coordinates from
+    // the texture coordinate buffer into the textureCoord attribute.
+    const numComponents = 2;
+    const type = gl.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl.vertexAttribPointer(this._textureCoordAttrib, numComponents, type, normalize, stride, offset);
+    gl.enableVertexAttribArray(this._textureCoordAttrib);
+  }
+
+  private _initTemplateMeshIndexes(gl: WebGLRenderingContext): void {
+    this._triangleIndexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
+    const indices = this._templateTriangleIndexes();
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+  }
+
+  private _initVertexPositionBuffer(gl: WebGLRenderingContext): void {
+    this._vertexPositionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, this._vertexPositionBuffer);
     const vertexPositions = this._templateVertexPositions();
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions), gl.STATIC_DRAW);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this._textureCoordBuffer);
-    const textureCoordinates = this._templateTexturePositions(atlas);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoordinates), gl.STATIC_DRAW);
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
-    const indices = this._templateTriangleIndexes();
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+    // Tell WebGL how to pull out the positions from the position
+    // buffer into the vertexPosition attribute
+    const numComponents = 3;
+    const type = this._glContext.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._vertexPositionBuffer);
+    this._glContext.vertexAttribPointer(this._vertexPositionAttrib, numComponents, type, normalize, stride, offset);
+    this._glContext.enableVertexAttribArray(this._vertexPositionAttrib);
   }
 
   private _templateVertexPositions(): number[] {
@@ -240,12 +267,12 @@ export class WebGLRenderer {
     return [0, 1, 2, 0, 2, 3];
   }
 
-  private _templateTexturePositions(atlas: TextureFontAtlas): number[] {
+  private _templateTexturePositions(cellWidthPx: number, cellHeightPx: number): number[] {
     const result: number[] = [];
     const xPixels = 0;
     const yPixels = 0;
-    const x2Pixels = atlas.getTextureCellWidth();
-    const y2Pixels = atlas.getTextureCellHeight();
+    const x2Pixels = cellWidthPx;
+    const y2Pixels = cellHeightPx;
 
     result.push(xPixels);
     result.push(yPixels);
@@ -317,80 +344,16 @@ export class WebGLRenderer {
     const rectHeight = this._metrics.heightPx * cellGrid.height;
     this._resizeCanvas(rectWidth, rectHeight);
 
-    {
-      const numComponents = 2;
-      const type = this._glContext.FLOAT;
-      const normalize = false;
-      const stride = 0;
-      const offset = 0;
-
-      const glyphTexturePositionBuffer = this._glContext.createBuffer();
-      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, glyphTexturePositionBuffer);
-      const glyphPositionArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
-      this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(glyphPositionArray),
-        this._glContext.STATIC_DRAW);
-      this._glContext.vertexAttribPointer(this._glyphTexturetPositionAttrib, numComponents, type, normalize, stride,
-        offset);
-      this._glContext.vertexAttribDivisor(this._glyphTexturetPositionAttrib, 1);
-      this._glContext.enableVertexAttribArray(this._glyphTexturetPositionAttrib);
-    }
+    this._setupTexturePositions(cellGrid);
 
     const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
     this._glContext.activeTexture(this._glContext.TEXTURE0);
     this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
 
-    // Tell WebGL how to pull out the positions from the position
-    // buffer into the vertexPosition attribute
-    {
-      const numComponents = 3;
-      const type = this._glContext.FLOAT;
-      const normalize = false;
-      const stride = 0;
-      const offset = 0;
-      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._vertexPositionBuffer);
-      this._glContext.vertexAttribPointer(this._vertexPositionAttrib, numComponents, type, normalize, stride, offset);
-      this._glContext.enableVertexAttribArray(this._vertexPositionAttrib);
-    }
+    this._setupCellGridVertexes(cellGrid);
 
-    // Tell WebGL how to pull out the texture coordinates from
-    // the texture coordinate buffer into the textureCoord attribute.
-    {
-      const numComponents = 2;
-      const type = this._glContext.FLOAT;
-      const normalize = false;
-      const stride = 0;
-      const offset = 0;
-      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, this._textureCoordBuffer);
-      this._glContext.vertexAttribPointer(this._textureCoordAttrib, numComponents, type, normalize, stride, offset);
-      this._glContext.enableVertexAttribArray(this._textureCoordAttrib);
-    }
-
-    this._glContext.bindBuffer(this._glContext.ELEMENT_ARRAY_BUFFER, this._triangleIndexBuffer);
-
-    {
-      const numComponents = 2;
-      const type = this._glContext.FLOAT;
-      const normalize = false;
-      const stride = 0;
-      const offset = 0;
-
-      const posBuffer = this._glContext.createBuffer();
-      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, posBuffer);
-      const posArray = this._gridVertexTopLeft(cellGrid);
-
-      this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(posArray),
-        this._glContext.STATIC_DRAW);
-      this._glContext.vertexAttribPointer(this._cellPositionAttrib, numComponents, type, normalize, stride, offset);
-      this._glContext.vertexAttribDivisor(this._cellPositionAttrib, 1);
-      this._glContext.enableVertexAttribArray(this._cellPositionAttrib);
-    }
-
-    {
-      const type = this._glContext.UNSIGNED_SHORT;
-      const offset = 0;
-      this._glContext.drawElementsInstanced(this._glContext.TRIANGLES, 6, type, offset,
-        cellGrid.width * cellGrid.height);
-    }
+    this._glContext.drawElementsInstanced(this._glContext.TRIANGLES, 6, this._glContext.UNSIGNED_SHORT, 0,
+      cellGrid.width * cellGrid.height);
 
     if (destinationContext == null) {
       return;
@@ -398,7 +361,44 @@ export class WebGLRenderer {
     destinationContext.drawImage(this._canvas, 0, 0, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
   }
 
-  private _gridVertexTopLeft(cellGrid: CharCellGrid): number[] {
+  private _setupTexturePositions(cellGrid: CharCellGrid): void {
+    const glyphTexturePositionBuffer = this._glContext.createBuffer();
+    this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, glyphTexturePositionBuffer);
+    const glyphPositionArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
+    this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(glyphPositionArray),
+      this._glContext.STATIC_DRAW);
+
+    const numComponents = 2;
+    const type = this._glContext.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    this._glContext.vertexAttribPointer(this._glyphTexturetPositionAttrib, numComponents, type, normalize, stride,
+      offset);
+    this._glContext.vertexAttribDivisor(this._glyphTexturetPositionAttrib, 1);
+    this._glContext.enableVertexAttribArray(this._glyphTexturetPositionAttrib);
+  }
+
+  private _setupCellGridVertexes(cellGrid: CharCellGrid): void {
+    const numComponents = 2;
+    const type = this._glContext.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+
+    const cellGridVertexBuffer = this._glContext.createBuffer();
+    this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, cellGridVertexBuffer);
+
+    const cellGridVertexArray = this._cellGridVertexTopLeft(cellGrid);
+    this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(cellGridVertexArray),
+      this._glContext.STATIC_DRAW);
+
+    this._glContext.vertexAttribPointer(this._cellPositionAttrib, numComponents, type, normalize, stride, offset);
+    this._glContext.vertexAttribDivisor(this._cellPositionAttrib, 1);
+    this._glContext.enableVertexAttribArray(this._cellPositionAttrib);
+  }
+
+  private _cellGridVertexTopLeft(cellGrid: CharCellGrid): number[] {
     const result: number[] = [];
     for (let j=0; j<cellGrid.height; j++) {
       for (let i=0; i<cellGrid.width; i++) {
