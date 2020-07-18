@@ -15,6 +15,7 @@ import { CPURenderedFontAtlas } from "./font_atlas/CPURenderedFontAtlas";
 import { ImageBitmapFontAtlas } from "./font_atlas/ImageBitmapFontAtlas";
 import { normalizedCellIterator, NormalizedCell } from "./NormalizedCellIterator";
 import { FontSlice } from "./FontSlice";
+import { CursorStyle } from "./CursorStyle";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -175,15 +176,6 @@ interface ExtraFontSlice extends FontSlice {
   cpuRenderedFontAtlas: CPURenderedFontAtlas & Disposable;
   imageBitmapFontAtlas: ImageBitmapFontAtlas & Disposable;
   codePointSet: Set<number>;
-}
-
-export enum CursorStyle {
-  BLOCK,
-  BLOCK_OUTLINE,
-  UNDERLINE,
-  UNDERLINE_OUTLINE,
-  BEAM,
-  BEAM_OUTLINE,
 }
 
 export class CharRenderCanvas implements Disposable {

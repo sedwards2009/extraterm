@@ -2,7 +2,8 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-export { xtermPalette, CharRenderCanvasOptions, CursorStyle, CharRenderCanvas, Renderer } from "./CharRenderCanvas";
+export { xtermPalette, CharRenderCanvasOptions, CharRenderCanvas, Renderer } from "./CharRenderCanvas";
+export { CursorStyle } from "./CursorStyle";
 export { FontSlice } from "./FontSlice";
 export { computeFontMetrics, computeDpiFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
 export { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
