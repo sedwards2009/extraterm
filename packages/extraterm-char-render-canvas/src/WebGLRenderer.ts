@@ -27,7 +27,7 @@ export class WebGLRenderer {
 
   private _vertexPositionAttrib: number;
   private _textureCoordAttrib: number;
-  private _tPosAttrib: number;
+  private _glyphTexturetPositionAttrib: number;
   private _cellPositionAttrib: number;
 
   private _projectionMatrixLocation: WebGLUniformLocation;
@@ -42,7 +42,7 @@ export class WebGLRenderer {
     in vec2 aTextureCoord;
 
     in vec2 cellPosition;
-    in vec2 tPos;
+    in vec2 glyphTexturePosition;
 
     uniform mat4 uModelViewMatrix;
     uniform mat4 uProjectionMatrix;
@@ -51,7 +51,7 @@ export class WebGLRenderer {
 
     void main(void) {
       gl_Position = uProjectionMatrix * uModelViewMatrix * (aVertexPosition + vec4(cellPosition, 0, 0));
-      vTextureCoord = aTextureCoord + tPos;
+      vTextureCoord = aTextureCoord + glyphTexturePosition;
     }
   `;
 
@@ -91,7 +91,7 @@ export class WebGLRenderer {
       this._fragmentShaderSource);
     this._vertexPositionAttrib = gl.getAttribLocation(this._shaderProgram, "aVertexPosition");
     this._textureCoordAttrib = gl.getAttribLocation(this._shaderProgram, "aTextureCoord");
-    this._tPosAttrib = this._glContext.getAttribLocation(this._shaderProgram, "tPos");
+    this._glyphTexturetPositionAttrib = this._glContext.getAttribLocation(this._shaderProgram, "glyphTexturePosition");
     this._cellPositionAttrib = this._glContext.getAttribLocation(this._shaderProgram, "cellPosition");
     this._projectionMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uProjectionMatrix");
     this._modelViewMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uModelViewMatrix");
@@ -324,14 +324,15 @@ export class WebGLRenderer {
       const stride = 0;
       const offset = 0;
 
-      const tPosBuffer = this._glContext.createBuffer();
-      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, tPosBuffer);
-      const tPosArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
-      this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(tPosArray),
+      const glyphTexturePositionBuffer = this._glContext.createBuffer();
+      this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, glyphTexturePositionBuffer);
+      const glyphPositionArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
+      this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(glyphPositionArray),
         this._glContext.STATIC_DRAW);
-      this._glContext.vertexAttribPointer(this._tPosAttrib, numComponents, type, normalize, stride, offset);
-      this._glContext.vertexAttribDivisor(this._tPosAttrib, 1);
-      this._glContext.enableVertexAttribArray(this._tPosAttrib);
+      this._glContext.vertexAttribPointer(this._glyphTexturetPositionAttrib, numComponents, type, normalize, stride,
+        offset);
+      this._glContext.vertexAttribDivisor(this._glyphTexturetPositionAttrib, 1);
+      this._glContext.enableVertexAttribArray(this._glyphTexturetPositionAttrib);
     }
 
     const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
