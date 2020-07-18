@@ -24,8 +24,12 @@ export class WebGLRenderer {
   private _vertexPositionBuffer: WebGLBuffer = null;
   private _texture: WebGLTexture;
   private _shaderProgram: WebGLProgram;
+
   private _vertexPositionAttrib: number;
   private _textureCoordAttrib: number;
+  private _tPosAttrib: number;
+  private _cellPositionAttrib: number;
+
   private _projectionMatrixLocation: WebGLUniformLocation;
   private _modelViewMatrixLocation: WebGLUniformLocation;
   private _uSamplerLocation: WebGLUniformLocation;
@@ -37,7 +41,7 @@ export class WebGLRenderer {
     in vec4 aVertexPosition;
     in vec2 aTextureCoord;
 
-    in vec2 aPos;
+    in vec2 cellPosition;
     in vec2 tPos;
 
     uniform mat4 uModelViewMatrix;
@@ -46,7 +50,7 @@ export class WebGLRenderer {
     out highp vec2 vTextureCoord;
 
     void main(void) {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * (aVertexPosition + vec4(aPos, 0, 0));
+      gl_Position = uProjectionMatrix * uModelViewMatrix * (aVertexPosition + vec4(cellPosition, 0, 0));
       vTextureCoord = aTextureCoord + tPos;
     }
   `;
@@ -87,6 +91,8 @@ export class WebGLRenderer {
       this._fragmentShaderSource);
     this._vertexPositionAttrib = gl.getAttribLocation(this._shaderProgram, "aVertexPosition");
     this._textureCoordAttrib = gl.getAttribLocation(this._shaderProgram, "aTextureCoord");
+    this._tPosAttrib = this._glContext.getAttribLocation(this._shaderProgram, "tPos");
+    this._cellPositionAttrib = this._glContext.getAttribLocation(this._shaderProgram, "cellPosition");
     this._projectionMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uProjectionMatrix");
     this._modelViewMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uModelViewMatrix");
     this._uSamplerLocation = gl.getUniformLocation(this._shaderProgram, "uSampler");
@@ -318,17 +324,14 @@ export class WebGLRenderer {
       const stride = 0;
       const offset = 0;
 
-      const tPosAttrib = this._glContext.getAttribLocation(this._shaderProgram, "tPos");
       const tPosBuffer = this._glContext.createBuffer();
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, tPosBuffer);
-
       const tPosArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
-
       this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(tPosArray),
         this._glContext.STATIC_DRAW);
-      this._glContext.vertexAttribPointer(tPosAttrib, numComponents, type, normalize, stride, offset);
-      this._glContext.vertexAttribDivisor(tPosAttrib, 1);
-      this._glContext.enableVertexAttribArray(tPosAttrib);
+      this._glContext.vertexAttribPointer(this._tPosAttrib, numComponents, type, normalize, stride, offset);
+      this._glContext.vertexAttribDivisor(this._tPosAttrib, 1);
+      this._glContext.enableVertexAttribArray(this._tPosAttrib);
     }
 
     const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
@@ -370,16 +373,15 @@ export class WebGLRenderer {
       const stride = 0;
       const offset = 0;
 
-      const posAttrib = this._glContext.getAttribLocation(this._shaderProgram, "aPos");
       const posBuffer = this._glContext.createBuffer();
       this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, posBuffer);
       const posArray = this._gridVertexTopLeft(cellGrid);
 
       this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(posArray),
         this._glContext.STATIC_DRAW);
-      this._glContext.vertexAttribPointer(posAttrib, numComponents, type, normalize, stride, offset);
-      this._glContext.vertexAttribDivisor(posAttrib, 1);
-      this._glContext.enableVertexAttribArray(posAttrib);
+      this._glContext.vertexAttribPointer(this._cellPositionAttrib, numComponents, type, normalize, stride, offset);
+      this._glContext.vertexAttribDivisor(this._cellPositionAttrib, 1);
+      this._glContext.enableVertexAttribArray(this._cellPositionAttrib);
     }
 
     {
