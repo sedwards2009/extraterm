@@ -31,6 +31,13 @@ function main(): void {
 
   const renderButton6 = document.getElementById("render_button6");
   renderButton6.addEventListener("click", renderWebGLTestPattern);
+
+  const renderButton7 = document.getElementById("render_button7");
+  renderButton7.addEventListener("click", renderWebGLLowerAlphaPattern);
+
+  const renderButton8 = document.getElementById("render_button8");
+  renderButton8.addEventListener("click", renderWebGLUpperAlphaPattern);
+
 }
 
 function renderTestPattern(): void {
@@ -140,13 +147,23 @@ function computeEmojiMetrics(metrics: MonospaceFontMetrics): MonospaceFontMetric
 }
 
 function renderWebGLTestPattern(): void {
-  const containerDiv = document.getElementById("container");
   createWebGLRenderCanvas();
+  webglRenderCanvas.getCellGrid().clear();
   printTestPattern(new CellGridOutputDevice(webglRenderCanvas.getCellGrid()));
   webglRenderCanvas.render();
-  containerDiv.appendChild(webglRenderCanvas.getFontAtlasCanvasElement());
 }
 
+function renderWebGLLowerAlphaPattern(): void {
+  createWebGLRenderCanvas();
+  fillGridWithString(webglRenderCanvas.getCellGrid(), "ABCDEFGHIJKLMONPQRSTUVWXYZ");
+  webglRenderCanvas.render();
+}
+
+function renderWebGLUpperAlphaPattern(): void {
+  createWebGLRenderCanvas();
+  fillGridWithString(webglRenderCanvas.getCellGrid(), "abcdefghijklmonpqrstuvwxyz");
+  webglRenderCanvas.render();
+}
 
 function createWebGLRenderCanvas(): void {
   if (webglRenderCanvas != null) {
@@ -172,6 +189,7 @@ function createWebGLRenderCanvas(): void {
   });
 
   containerDiv.appendChild(webglRenderCanvas.getCanvasElement());
+  containerDiv.appendChild(webglRenderCanvas.getFontAtlasCanvasElement());
 }
 
 
