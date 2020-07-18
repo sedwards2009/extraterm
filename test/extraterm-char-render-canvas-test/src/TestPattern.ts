@@ -1,4 +1,4 @@
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, UNDERLINE_STYLE_NORMAL } from "extraterm-char-cell-grid";
 import * as easta from "easta";
 
 
@@ -161,11 +161,6 @@ export class VtOutputDevice implements OutputDevice {
   }
 }
 
-const STYLE_MASK_BOLD = 1;
-const STYLE_MASK_UNDERLINE = 2;
-const STYLE_MASK_ITALIC = 4;
-const STYLE_MASK_STRIKETHROUGH = 8;
-
 export class CellGridOutputDevice implements OutputDevice {
   private x = 0;
   private y = 0;
@@ -239,7 +234,7 @@ export class CellGridOutputDevice implements OutputDevice {
         style |= STYLE_MASK_ITALIC;
       }
       if (this.isUnderline) {
-        style |= STYLE_MASK_UNDERLINE;
+        style |= UNDERLINE_STYLE_NORMAL;
       }
       if (this.isStrikethrough) {
         style |= STYLE_MASK_STRIKETHROUGH;
