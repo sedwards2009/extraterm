@@ -103,6 +103,7 @@ export class WebGLRenderer {
     gl.uniform1i(this._uSamplerLocation, 0);
 
     this._setupProjections();
+    this._initBuffers(this._glContext, this._fontAtlas);
     this._resizeCanvas(1, 1);
 
     this._texture = gl.createTexture();
@@ -309,8 +310,6 @@ export class WebGLRenderer {
     const rectWidth = this._metrics.widthPx * cellGrid.width;
     const rectHeight = this._metrics.heightPx * cellGrid.height;
     this._resizeCanvas(rectWidth, rectHeight);
-
-    this._initBuffers(this._glContext, this._fontAtlas);
 
     {
       const numComponents = 2;
