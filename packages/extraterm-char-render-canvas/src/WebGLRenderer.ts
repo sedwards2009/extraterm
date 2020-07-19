@@ -3,7 +3,7 @@
  */
 import { mat4, vec3 } from "gl-matrix";
 
-import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
+import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE, STYLE_MASK_FAINT, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
@@ -35,6 +35,9 @@ export class WebGLRenderer {
   private _uSamplerLocation: WebGLUniformLocation;
   private _projectionMatrix: mat4;
   private _modelViewMatrix: mat4;
+
+  private _renderBlockCursor = false;
+  private _cursorColor = 0xff;
 
   // Vertex shader program
   private _vertexShaderSource = `#version 300 es
@@ -76,7 +79,6 @@ export class WebGLRenderer {
 
   init(): boolean {
     this._canvas = document.createElement("canvas");
-    document.body.appendChild(this._canvas);
 
     const gl = this._canvas.getContext("webgl2");
     this._glContext = gl;
@@ -114,6 +116,14 @@ export class WebGLRenderer {
     this._texture = gl.createTexture();
 
     return true;
+  }
+
+  setRenderBlockCursor(on: boolean): void {
+    this._renderBlockCursor = on;
+  }
+
+  setCursorColor(color: number): void {
+    this._cursorColor = color;
   }
 
   // Initialize a shader program, so WebGL knows how to draw our data
@@ -293,13 +303,30 @@ export class WebGLRenderer {
   private _gridTexturePositions(cellGrid: CharCellGrid, atlas: TextureFontAtlas): number[] {
     const result: number[] = [];
     const textureCellWidth = atlas.getTextureCellWidth();
+    const renderCursor = this._renderBlockCursor;
+
     for (let j=0; j<cellGrid.height; j++) {
       for (const normalizedCell of normalizedCellIterator(cellGrid, j)) {
         const codePoint = normalizedCell.codePoint;
         const fontIndex = normalizedCell.extraFontFlag ? 1 : 0;
         const x = normalizedCell.x;
-        const coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(x, j), fontIndex, cellGrid.getFgRGBA(x, j),
-          cellGrid.getBgRGBA(x, j));
+
+        let fgRGBA = cellGrid.getFgRGBA(x, j);
+        let bgRGBA = cellGrid.getBgRGBA(x, j);
+
+        const style = cellGrid.getStyle(x, j);
+        if ((style & STYLE_MASK_CURSOR) && renderCursor) {
+          fgRGBA = bgRGBA;
+          bgRGBA = this._cursorColor;
+        } else {
+          if (style & STYLE_MASK_INVERSE) {
+            const tmp = fgRGBA;
+            fgRGBA = bgRGBA;
+            bgRGBA = tmp;
+          }
+        }
+
+        const coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(x, j), fontIndex, fgRGBA, bgRGBA);
         result.push(coord.textureXpx + normalizedCell.segment * textureCellWidth);
         result.push(coord.textureYpx);
       }

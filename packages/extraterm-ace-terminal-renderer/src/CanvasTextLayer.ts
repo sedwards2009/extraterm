@@ -4,7 +4,7 @@
 import { TextLayer, EditSession, ViewPortSize } from "@extraterm/ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import {
-  CharRenderCanvas, CPURenderedFontAtlasRepository, ImageBitmapFontAtlasRepository, CursorStyle, Renderer
+  WebGLCharRenderCanvas, CPURenderedFontAtlasRepository, ImageBitmapFontAtlasRepository, CursorStyle, Renderer
 } from "extraterm-char-render-canvas";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import { LayerConfig } from "@extraterm/ace-ts";
@@ -23,7 +23,7 @@ export class CanvasTextLayer implements TextLayer {
 
   element: HTMLDivElement;
 
-  private _charRenderCanvas: CharRenderCanvas = null;
+  private _charRenderCanvas: WebGLCharRenderCanvas = null;
   private _canvasWidthCssPx = 0;
   private _canvasHeightCssPx = 0;
   private _currentCanvasRawWidthPx = 0;
@@ -221,7 +221,7 @@ export class CanvasTextLayer implements TextLayer {
 
     const isWindows = process.platform === "win32";
 
-    this._charRenderCanvas = new CharRenderCanvas({
+    this._charRenderCanvas = new WebGLCharRenderCanvas({
       fontFamily: this._fontFamily,
       fontSizePx: this._fontSizePx * this._devicePixelRatio,
       palette: this._palette,
@@ -229,8 +229,6 @@ export class CanvasTextLayer implements TextLayer {
       heightPx: heightPxPair.renderLength,
       usableWidthPx: rawWidthPx * this._devicePixelRatio,
       usableHeightPx: rawHeightPx * this._devicePixelRatio,
-      cpuRenderedFontAtlasRepository,
-      imageBitmapFontAtlasRepository,
       extraFonts: [{
         fontFamily: isWindows ? "Segoe UI Emoji" : "coloremoji",
         fontSizePx: this._fontSizePx * this._devicePixelRatio,
@@ -239,8 +237,7 @@ export class CanvasTextLayer implements TextLayer {
         unicodeCodePoints: isWindows ? windowsColorFontCodePoints : [],
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }],
-      cursorStyle: this._cursorStyle,
-      renderer: Renderer.CPU,
+      cursorStyle: this._cursorStyle
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();

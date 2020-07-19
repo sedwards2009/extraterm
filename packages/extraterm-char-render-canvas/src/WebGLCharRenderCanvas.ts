@@ -2,7 +2,7 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellGrid, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { Disposable } from "./Disposable";
 import { FontSlice } from "./FontSlice";
@@ -11,6 +11,7 @@ import { computeFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasure
 import { WebGLRenderer } from "./WebGLRenderer";
 import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
+import { RGBAToCss } from "./RGBAToCss";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -239,6 +240,8 @@ export class WebGLCharRenderCanvas implements Disposable {
     this._fontAtlas = new TextureFontAtlas(fontMetrics, extraFontMetrics);
     this._webglRenderer = new WebGLRenderer(this._fontAtlas);
     this._webglRenderer.init();
+    this._webglRenderer.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
+    this._webglRenderer.setRenderBlockCursor(this._cursorStyle === CursorStyle.BLOCK);
   }
 
   dispose(): void {
@@ -259,14 +262,75 @@ export class WebGLCharRenderCanvas implements Disposable {
   setPalette(palette: number[]) : void {
     this._palette = palette;
     this._cellGrid.setPalette(this._palette);
+    this._webglRenderer.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
+  }
+
+  setCursorStyle(cursorStyle: CursorStyle): void {
+    this._cursorStyle = cursorStyle;
+    this._webglRenderer.setRenderBlockCursor(this._cursorStyle === CursorStyle.BLOCK);
   }
 
   render(): void {
     this._webglRenderer.render(this._canvasCtx, this._cellGrid, 0, this._cellGrid.height);
+    this._renderCursors(this._canvasCtx);
   }
 
   getFontAtlasCanvasElement(): HTMLCanvasElement {
     return this._fontAtlas.getCanvas();
+  }
+
+  scrollVertical(verticalOffsetChars: number): void {
+  }
+
+  private _renderCursors(ctx: CanvasRenderingContext2D): void {
+    if (this._cursorStyle === CursorStyle.BLOCK) {
+      return;
+    }
+
+    ctx.save();
+    const cursorColor = RGBAToCss(this._palette[PALETTE_CURSOR_INDEX]);
+    ctx.strokeStyle = cursorColor;
+    ctx.fillStyle = cursorColor;
+    ctx.globalCompositeOperation = "source-over";
+
+    const cellGrid = this._cellGrid;
+    const cellWidth = this.cellWidthPx;
+    const cellHeight = this.cellHeightPx;
+    const width = cellGrid.width;
+    const height = cellGrid.height;
+
+    for (let j=0; j<height; j++) {
+      for (let i=0; i<width; i++) {
+        if (cellGrid.getStyle(i, j) & STYLE_MASK_CURSOR) {
+          switch (this._cursorStyle) {
+            case CursorStyle.BLOCK_OUTLINE:
+              ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + 0.5, cellWidth-1, cellHeight-1);
+              break;
+
+            case CursorStyle.UNDERLINE:
+              ctx.fillRect(i * cellWidth, j * cellHeight + cellHeight-3, cellWidth, 3);
+              break;
+
+            case CursorStyle.UNDERLINE_OUTLINE:
+              ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + cellHeight-2.5, cellWidth-1, 2);
+              break;
+
+            case CursorStyle.BEAM:
+              ctx.fillRect(i * cellWidth, j * cellHeight, 2, cellHeight);
+              break;
+
+            case CursorStyle.BEAM_OUTLINE:
+              ctx.strokeRect(i * cellWidth +0.5, j * cellHeight + 0.5, 2, cellHeight-1);
+              break;
+
+            default:
+              break;
+          }
+        }
+      }
+    }
+
+    ctx.restore();
   }
 }
 
