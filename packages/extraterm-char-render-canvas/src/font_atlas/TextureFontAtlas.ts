@@ -1,10 +1,11 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase";
+import { ArrayKeyTrie } from "extraterm-array-key-trie";
 import { StyleCode } from "extraterm-char-cell-grid";
+import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase";
 
-interface TextureCachedGlyph extends CachedGlyph {
+export interface TextureCachedGlyph extends CachedGlyph {
   textureXpx: number;
   textureX2px: number;
   textureYpx: number;
@@ -12,8 +13,12 @@ interface TextureCachedGlyph extends CachedGlyph {
 }
 
 /**
+ * Font Atlas aimed for use as a texture in WebGL.
  */
 export class TextureFontAtlas extends FontAtlasBase<TextureCachedGlyph> {
+
+  private _proxyCodePointMapping = new ArrayKeyTrie<number>();
+  private _nextFreeCodePoint = 0x11000000;
 
   protected _createCachedGlyphStruct(cg: CachedGlyph): TextureCachedGlyph {
     const canvasWidth = this._pageCanvas.width;
@@ -31,6 +36,19 @@ export class TextureFontAtlas extends FontAtlasBase<TextureCachedGlyph> {
       bgRGBA: number): TextureCachedGlyph {
 
     return this._getGlyph(codePoint, null, style, fontIndex, fgRGBA, bgRGBA);
+  }
+
+  loadCombiningCodePoints(codePoints: number[], style: StyleCode, fontIndex: number, fgRGBA: number,
+    bgRGBA: number): TextureCachedGlyph {
+
+    let proxyCodePoint = this._proxyCodePointMapping.get(codePoints);
+    if (proxyCodePoint == null) {
+      proxyCodePoint = this._nextFreeCodePoint;
+      this._nextFreeCodePoint++;
+      this._proxyCodePointMapping.set(codePoints, proxyCodePoint);
+    }
+
+    return this._getGlyph(proxyCodePoint, codePoints, style, fontIndex, fgRGBA, bgRGBA);
   }
 
   getTextureCellWidth(): number {

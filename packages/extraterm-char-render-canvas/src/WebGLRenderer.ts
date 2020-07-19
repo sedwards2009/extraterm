@@ -5,7 +5,7 @@ import { mat4, vec3 } from "gl-matrix";
 
 import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE, STYLE_MASK_FAINT, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
-import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
+import { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 import { normalizedCellIterator } from "./NormalizedCellIterator";
 
@@ -326,7 +326,14 @@ export class WebGLRenderer {
           }
         }
 
-        const coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(x, j), fontIndex, fgRGBA, bgRGBA);
+        let coord: TextureCachedGlyph = null;
+        if (normalizedCell.isLigature) {
+          coord = atlas.loadCombiningCodePoints(normalizedCell.ligatureCodePoints, cellGrid.getStyle(x, j),
+            fontIndex, fgRGBA, bgRGBA);
+        } else {
+          coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(x, j), fontIndex, fgRGBA, bgRGBA);
+        }
+
         result.push(coord.textureXpx + normalizedCell.segment * textureCellWidth);
         result.push(coord.textureYpx);
       }
