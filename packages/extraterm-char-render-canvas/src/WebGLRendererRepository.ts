@@ -45,7 +45,9 @@ export class WebGLRendererRepository {
 
   private _newWebGLRenderer(metrics: MonospaceFontMetrics, extraFonts: MonospaceFontMetrics[]): WebGLRenderer {
     const fontAtlas = new TextureFontAtlas(metrics, extraFonts);
-    return new WebGLRenderer(fontAtlas);
+    const renderer = new WebGLRenderer(fontAtlas);
+    renderer.init();
+    return renderer;
   }
 
   private _key(metrics: MonospaceFontMetrics, extraFonts: MonospaceFontMetrics[]): string {

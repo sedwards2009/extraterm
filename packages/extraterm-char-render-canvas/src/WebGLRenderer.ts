@@ -126,6 +126,10 @@ export class WebGLRenderer {
     this._cursorColor = color;
   }
 
+  getFontAtlas(): TextureFontAtlas {
+    return this._fontAtlas;
+  }
+
   // Initialize a shader program, so WebGL knows how to draw our data
   private _initShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string): WebGLProgram {
     const vertexShader = this._loadShader(gl, gl.VERTEX_SHADER, "VERTEX_SHADER", vsSource);

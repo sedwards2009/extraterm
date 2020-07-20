@@ -179,13 +179,12 @@ export class WebGLCharRenderCanvas implements Disposable {
   private _palette: number[] = null;
   private _cursorStyle = CursorStyle.BLOCK;
 
-  private _fontAtlas: TextureFontAtlas = null;
   private _webglRenderer: WebGLRenderer = null;
 
   constructor(options: WebGLCharRenderCanvasOptions) {
     this._log = getLogger("CharRenderCanvas", this);
     const { extraFonts, widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily,
-      fontSizePx, debugParentElement, palette, cursorStyle } = options;
+      fontSizePx, debugParentElement, palette, cursorStyle, webGLRendererRepository } = options;
 
     this._palette = palette;
     this._cursorStyle = cursorStyle === undefined? CursorStyle.BLOCK : cursorStyle;
@@ -233,11 +232,9 @@ export class WebGLCharRenderCanvas implements Disposable {
     const extraFontMetrics = extraFonts.map(
       (extraFont) => computeEmojiMetrics(fontMetrics, extraFont.fontFamily, extraFont.fontSizePx));
 
-    this._fontAtlas = new TextureFontAtlas(fontMetrics, extraFontMetrics);
-    this._webglRenderer = new WebGLRenderer(this._fontAtlas);
-    this._webglRenderer.init();
-    this._webglRenderer.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
-    this._webglRenderer.setRenderBlockCursor(this._cursorStyle === CursorStyle.BLOCK);
+    const webglRenderer = webGLRendererRepository.getWebGLRenderer(fontMetrics, extraFontMetrics);
+    this._disposables.push(webglRenderer);
+    this._webglRenderer = webglRenderer;
   }
 
   dispose(): void {
@@ -267,12 +264,14 @@ export class WebGLCharRenderCanvas implements Disposable {
   }
 
   render(): void {
+    this._webglRenderer.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
+    this._webglRenderer.setRenderBlockCursor(this._cursorStyle === CursorStyle.BLOCK);
     this._webglRenderer.render(this._canvasCtx, this._cellGrid, 0, this._cellGrid.height);
     this._renderCursors(this._canvasCtx);
   }
 
   getFontAtlasCanvasElement(): HTMLCanvasElement {
-    return this._fontAtlas.getCanvas();
+    return this._webglRenderer.getFontAtlas().getCanvas();
   }
 
   scrollVertical(verticalOffsetChars: number): void {
