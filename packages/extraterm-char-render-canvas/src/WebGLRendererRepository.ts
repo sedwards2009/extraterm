@@ -1,11 +1,13 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 import { Disposable } from "./Disposable";
 import { WebGLRenderer } from "./WebGLRenderer";
 import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
+import { computeFontMetrics } from "./font_metrics/FontMeasurement";
+import { FontSlice } from "./FontSlice";
+
 
 /**
  * A central repository for sharing `WebGLRenderer` instances.
@@ -15,8 +17,8 @@ export class WebGLRendererRepository {
   private _map = new Map<string, WebGLRenderer & Disposable>();
   private _refCount = new Map<string, number>();
 
-  getWebGLRenderer(metrics: MonospaceFontMetrics, extraFonts: MonospaceFontMetrics[]=[]): WebGLRenderer & Disposable {
-    const key = this._key(metrics, extraFonts);
+  getWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[]=[]): WebGLRenderer & Disposable {
+    const key = this._key(fontFamily, fontSizePx, extraFonts);
     const existingRenderer = this._map.get(key);
     if (existingRenderer != null) {
       let count = this._refCount.get(key);
@@ -25,7 +27,7 @@ export class WebGLRendererRepository {
       return existingRenderer;
     }
 
-    const renderer = this._newWebGLRenderer(metrics, extraFonts);
+    const renderer = this._newWebGLRenderer(fontFamily, fontSizePx, extraFonts);
     const disposableRenderer = <WebGLRenderer & Disposable> <unknown> {
       __proto__: renderer,
       dispose: () => {
@@ -43,15 +45,32 @@ export class WebGLRendererRepository {
     return disposableRenderer;
   }
 
-  private _newWebGLRenderer(metrics: MonospaceFontMetrics, extraFonts: MonospaceFontMetrics[]): WebGLRenderer {
-    const fontAtlas = new TextureFontAtlas(metrics, extraFonts);
+  private _newWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[]): WebGLRenderer {
+    const metrics = computeFontMetrics(fontFamily, fontSizePx);
+    const extraFontMetrics = extraFonts.map(
+      (extraFont) => this._computeEmojiMetrics(metrics, extraFont.fontFamily, extraFont.fontSizePx));
+
+    const fontAtlas = new TextureFontAtlas(metrics, extraFontMetrics);
     const renderer = new WebGLRenderer(fontAtlas);
     renderer.init();
     return renderer;
   }
 
-  private _key(metrics: MonospaceFontMetrics, extraFonts: MonospaceFontMetrics[]): string {
-    return `${metrics.fontFamily}:${metrics.fontSizePx}:` +
+  private _key(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[]): string {
+    return `${fontFamily}:${fontSizePx}:` +
       extraFonts.map(ef => `${ef.fontFamily}:${ef.fontSizePx}:`).join("");
+  }
+
+  private _computeEmojiMetrics(metrics: MonospaceFontMetrics, fontFamily: string, fontSizePx: number): MonospaceFontMetrics {
+    const customMetrics = {
+      ...metrics,
+      fontFamily: fontFamily,
+      fontSizePx: fontSizePx,
+    };
+    const actualFontMetrics = computeFontMetrics(fontFamily, fontSizePx, ["\u{1f600}"]  /* Smile emoji */);
+    customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
+    customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
+
+    return customMetrics;
   }
 }

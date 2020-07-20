@@ -227,12 +227,7 @@ export class WebGLCharRenderCanvas implements Disposable {
       debugParentElement.appendChild(this._canvas);
     }
 
-    // this._imageBitmapFontAtlas = this._imageBitmapFontAtlasRepository.getFontAtlas(fontMetrics);
-    // this._disposables.push(this._imageBitmapFontAtlas);
-    const extraFontMetrics = extraFonts.map(
-      (extraFont) => computeEmojiMetrics(fontMetrics, extraFont.fontFamily, extraFont.fontSizePx));
-
-    const webglRenderer = webGLRendererRepository.getWebGLRenderer(fontMetrics, extraFontMetrics);
+    const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontSizePx, extraFonts);
     this._disposables.push(webglRenderer);
     this._webglRenderer = webglRenderer;
   }
@@ -327,17 +322,4 @@ export class WebGLCharRenderCanvas implements Disposable {
 
     ctx.restore();
   }
-}
-
-function computeEmojiMetrics(metrics: MonospaceFontMetrics, fontFamily: string, fontSizePx: number): MonospaceFontMetrics {
-  const customMetrics = {
-    ...metrics,
-    fontFamily: fontFamily,
-    fontSizePx: fontSizePx,
-  };
-  const actualFontMetrics = computeFontMetrics(fontFamily, fontSizePx, ["\u{1f600}"]  /* Smile emoji */);
-  customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
-  customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
-
-  return customMetrics;
 }
