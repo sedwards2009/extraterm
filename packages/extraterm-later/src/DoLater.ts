@@ -28,26 +28,50 @@ function doLaterTimeoutHandler(): void {
 
 /**
  * Schedule a function to be executed later.
- * 
- * @param  func the function to be executed later
- * @param  msec Optional time delay in ms. Default is 0.
+ *
+ * @param func the function to be executed later
+ * @param msec Optional time delay in ms. Default is 0.
+ * @param hiPrio If true, then the function will be called before other scheduled functions.
+ *          This only applies if `msec` is 0.
  * @return {LaterHandle} This object can be used to cancel the scheduled execution.
  */
-export function doLater(func: Function, msec=0): Disposable {
-  const doLaterFunction: DoLaterFunctionEntry = {
-    func
-  };
-  laterList.push(doLaterFunction);
-
-  if (doLaterId == null) {
-    doLaterId = setTimeout(doLaterTimeoutHandler, msec);
-  }
-
-  return {
-    dispose: () => {
-      doLaterFunction.func = null;
+export function doLater(func: Function, msec=0, hiPrio=false): Disposable {
+  if (msec === 0) {
+    // Zero delay calls are batched to use one timer because they are so common.
+    const doLaterFunction: DoLaterFunctionEntry = {
+      func
+    };
+    if (hiPrio) {
+      laterList.splice(0,0, doLaterFunction);
+    } else {
+      laterList.push(doLaterFunction);
     }
-  };
+
+    if (doLaterId == null) {
+      doLaterId = setTimeout(doLaterTimeoutHandler, 0);
+    }
+
+    return {
+      dispose: () => {
+        doLaterFunction.func = null;
+      }
+    };
+  } else {
+
+    // Non-zero timeouts have to get their own timer.
+    let execFunction = func;
+    window.setTimeout(() => {
+      if (execFunction != null) {
+        execFunction();
+      }
+    }, msec);
+
+    return {
+      dispose: () => {
+        execFunction = null;
+      }
+    };
+  }
 }
 
 let doLaterFrameId: number = -1;
@@ -56,16 +80,16 @@ let laterFrameList: Function[] = [];
 function doLaterFrameHandler(): void {
   const workingList = [...laterFrameList];
   laterFrameList = [];
-  
+
   window.cancelAnimationFrame(doLaterFrameId);
   doLaterFrameId = -1;
-  
+
   workingList.forEach( f => f() );
 }
 
 /**
  * Schedule a function to run at the next animation frame.
- * 
+ *
  * @param func the function to execute next animation frame
  */
 export function doLaterFrame(func: Function): Disposable {
@@ -80,7 +104,7 @@ export function doLaterFrame(func: Function): Disposable {
 
 /**
  * Run a function later, and debounce the trigger mechanism. Repeatable too.
- * 
+ *
  * This is a reusable way of setting up callback to be called later after
  * being triggered. Like `doLater()` it is possible to specify how long
  * later, and as the name suggests this can be triggered multiple times
@@ -108,7 +132,7 @@ export class DebouncedDoLater {
       this._laterDisposable = null;
     }
   }
-  
+
   doNow(): void {
     this.cancel();
     this._callback();

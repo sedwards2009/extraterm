@@ -14,6 +14,13 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   <label for="name">Name:</label>
   <input type="text" name="name" v-model="name">
 
+  <label for="distribution">Distribution:</label>
+  <select v-model="distribution">
+    <option v-for="item in distributions" :value="item">
+      {{ item == "" ? "&lt;Default&gt;" : item}}
+    </option>
+  </select>
+
   <label class="col-sm-4 control-label">Shell:</label>
   <span>
     <label>
@@ -53,6 +60,8 @@ export class WslProxySessionEditorUi extends Vue {
   useDefaultShell: number = 1;
   shellErrorMsg = "";
   etcShells = [];
+  distribution = "";
+  distributions = [];
   args = "";
   initialDirectory = "";
 }

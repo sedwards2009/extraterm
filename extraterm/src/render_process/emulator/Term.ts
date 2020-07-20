@@ -2036,6 +2036,11 @@ export class Emulator implements EmulatorApi {
           break;
         }
 
+        if (ctrlKey) {
+          key = "\x08";
+          break;
+        }
+
         key = '\x7f'; // ^?
         break;
 
