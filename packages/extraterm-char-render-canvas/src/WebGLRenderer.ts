@@ -130,6 +130,10 @@ export class WebGLRenderer {
     return this._fontAtlas;
   }
 
+  getFontMetrics(): MonospaceFontMetrics {
+    return this._fontAtlas.getMetrics();
+  }
+
   // Initialize a shader program, so WebGL knows how to draw our data
   private _initShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string): WebGLProgram {
     const vertexShader = this._loadShader(gl, gl.VERTEX_SHADER, "VERTEX_SHADER", vsSource);

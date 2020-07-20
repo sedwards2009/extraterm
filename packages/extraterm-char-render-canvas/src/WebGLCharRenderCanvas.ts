@@ -192,7 +192,11 @@ export class WebGLCharRenderCanvas implements Disposable {
     this._fontSizePx = fontSizePx || 10;
     this._fontFamily = fontFamily || "monospace";
 
-    const fontMetrics = computeFontMetrics(this._fontFamily, this._fontSizePx);
+    const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontSizePx, extraFonts);
+    this._disposables.push(webglRenderer);
+    this._webglRenderer = webglRenderer;
+
+    const fontMetrics = this._webglRenderer.getFontMetrics();
     // debugFontMetrics(fontMetrics);
     this.cellWidthPx = fontMetrics.widthPx;
     this.cellHeightPx = fontMetrics.heightPx;
@@ -226,10 +230,6 @@ export class WebGLCharRenderCanvas implements Disposable {
     if (debugParentElement != null) {
       debugParentElement.appendChild(this._canvas);
     }
-
-    const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontSizePx, extraFonts);
-    this._disposables.push(webglRenderer);
-    this._webglRenderer = webglRenderer;
   }
 
   dispose(): void {
