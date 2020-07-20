@@ -12,6 +12,7 @@ import { WebGLRenderer } from "./WebGLRenderer";
 import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 import { RGBAToCss } from "./RGBAToCss";
+import { WebGLRendererRepository } from "./WebGLRendererRepository";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -147,12 +148,7 @@ export interface WebGLCharRenderCanvasOptions {
    */
   extraFonts?: FontSlice[];
 
-  /**
-   * Font atlas repository to use for fetching font atlases
-   */
-  // cpuRenderedFontAtlasRepository?: CPURenderedFontAtlasRepository;
-
-  // imageBitmapFontAtlasRepository?: ImageBitmapFontAtlasRepository;
+  webGLRendererRepository: WebGLRendererRepository;
 
   cursorStyle?: CursorStyle;
 }

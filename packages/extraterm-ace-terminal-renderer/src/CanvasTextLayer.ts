@@ -12,11 +12,11 @@ import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";
 import { LigatureMarker } from "./LigatureMarker";
+import { WebGLRendererRepository } from "extraterm-char-render-canvas/dist/WebGLRendererRepository";
 
 const PROVISION_HEIGHT_FACTOR = 1.5;
 
-const cpuRenderedFontAtlasRepository = new CPURenderedFontAtlasRepository();
-const imageBitmapFontAtlasRepository = new ImageBitmapFontAtlasRepository();
+const webGLRendererRepository = new WebGLRendererRepository();
 
 
 export class CanvasTextLayer implements TextLayer {
@@ -237,7 +237,8 @@ export class CanvasTextLayer implements TextLayer {
         unicodeCodePoints: isWindows ? windowsColorFontCodePoints : [],
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }],
-      cursorStyle: this._cursorStyle
+      cursorStyle: this._cursorStyle,
+      webGLRendererRepository
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();

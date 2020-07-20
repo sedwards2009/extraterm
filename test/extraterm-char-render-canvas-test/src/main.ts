@@ -2,6 +2,9 @@
 import { CharRenderCanvas, Renderer, xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics, MonospaceFontMetrics, WebGLCharRenderCanvas } from "extraterm-char-render-canvas";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { printTestPattern, printEmoji, CellGridOutputDevice, printPalette } from "./TestPattern";
+import { WebGLRendererRepository } from "extraterm-char-render-canvas/dist/WebGLRendererRepository";
+
+const webGLRendererRepository = new WebGLRendererRepository();
 
 
 const log = console.log.bind(console);
@@ -185,7 +188,8 @@ function createWebGLRenderCanvas(): void {
         unicodeEnd: 0x20000,
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }
-    ]
+    ],
+    webGLRendererRepository
   });
 
   containerDiv.appendChild(webglRenderCanvas.getCanvasElement());
