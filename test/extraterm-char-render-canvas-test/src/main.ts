@@ -116,11 +116,11 @@ function testWebGL(): void {
 
   const metrics = computeFontMetrics("ligadejavusansmono", 16);
   const customMetrics = computeEmojiMetrics(metrics);
-  const fontAtlas = new TextureFontAtlas(metrics, [customMetrics]);
+  const fontAtlas = new TextureFontAtlas(metrics, [customMetrics], false);
 
   containerDiv.appendChild(fontAtlas.getCanvas());
 
-  const renderer = new WebGLRenderer(fontAtlas);
+  const renderer = new WebGLRenderer(fontAtlas, false);
   renderer.init();
 
   const cellGrid = new CharCellGrid(250, 30, xtermPalette());
@@ -173,13 +173,16 @@ function createWebGLRenderCanvas(): void {
     return;
   }
 
+  const palette = xtermPalette();
+  palette[256] = 0x00000000;
+
   const containerDiv = document.getElementById("container");
   webglRenderCanvas = new WebGLCharRenderCanvas({
     widthChars: WIDTH_CHARS,
     heightChars: HEIGHT_CHARS,
     fontFamily: "ligadejavusansmono",
     fontSizePx: 16,
-    palette: xtermPalette(),
+    palette,
     extraFonts: [
       {
         fontFamily: "twemoji",
@@ -189,11 +192,13 @@ function createWebGLRenderCanvas(): void {
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }
     ],
-    webGLRendererRepository
+    webGLRendererRepository,
+    transparentBackground: false
   });
 
   containerDiv.appendChild(webglRenderCanvas.getCanvasElement());
   containerDiv.appendChild(webglRenderCanvas.getFontAtlasCanvasElement());
+  containerDiv.appendChild((<any>webglRenderCanvas)._webglRenderer._canvas);
 }
 
 

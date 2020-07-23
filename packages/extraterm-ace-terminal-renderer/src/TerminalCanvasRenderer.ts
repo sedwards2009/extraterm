@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 import { Renderer, HScrollBar, HScrollTracking, VScrollBar, TextLayer, FontMetricsMonitor, FontMetrics } from "@extraterm/ace-ts";
@@ -21,6 +21,7 @@ export interface TerminalCanvasRendererConfig {
   fontSizePx: number;
   fontFilePath: string;
   ligatureMarker: LigatureMarker;
+  transparentBackground: boolean;
 }
 
 export class TerminalCanvasRenderer extends Renderer {
@@ -47,10 +48,16 @@ export class TerminalCanvasRenderer extends Renderer {
   }
 
   protected createTextLayer(contentDiv: HTMLDivElement): TextLayer {
-    this._canvasTextLayer = new CanvasTextLayer(contentDiv, this._terminalCanvasRendererConfig.palette,
-      this._terminalCanvasRendererConfig.fontFamily, this._terminalCanvasRendererConfig.fontSizePx,
-      this._terminalCanvasRendererConfig.devicePixelRatio, this._terminalCanvasRendererConfig.cursorStyle,
-      this._terminalCanvasRendererConfig.ligatureMarker);
+    this._canvasTextLayer = new CanvasTextLayer({
+      contentDiv,
+      palette: this._terminalCanvasRendererConfig.palette,
+      fontFamily: this._terminalCanvasRendererConfig.fontFamily,
+      fontSizePx: this._terminalCanvasRendererConfig.fontSizePx,
+      devicePixelRatio: this._terminalCanvasRendererConfig.devicePixelRatio,
+      cursorStyle: this._terminalCanvasRendererConfig.cursorStyle,
+      ligatureMarker: this._terminalCanvasRendererConfig.ligatureMarker,
+      transparentBackground: this._terminalCanvasRendererConfig.transparentBackground
+    });
     return this._canvasTextLayer;
   }
 
@@ -68,6 +75,7 @@ export class TerminalCanvasRenderer extends Renderer {
       this._canvasTextLayer.setFontSizePx(terminalCanvasRendererConfig.fontSizePx);
       this._canvasTextLayer.setDevicePixelRatio(terminalCanvasRendererConfig.devicePixelRatio);
       this._canvasTextLayer.setLigatureMarker(terminalCanvasRendererConfig.ligatureMarker);
+      this._canvasTextLayer.setTransparentBackground(terminalCanvasRendererConfig.transparentBackground);
     }
     if (this._canvasFontMetricsMonitor != null) {
       this._canvasFontMetricsMonitor.setTerminalCanvasRendererConfig(terminalCanvasRendererConfig);

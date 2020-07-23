@@ -51,12 +51,12 @@ export abstract class FontAtlasRepository<FA> {
 
 export class CPURenderedFontAtlasRepository extends FontAtlasRepository<CPURenderedFontAtlas> {
   protected newFontAtlas(metrics: MonospaceFontMetrics): CPURenderedFontAtlas {
-    return new CPURenderedFontAtlas(metrics);
+    return new CPURenderedFontAtlas(metrics, [], false);
   }
 }
 
 export class ImageBitmapFontAtlasRepository extends FontAtlasRepository<ImageBitmapFontAtlas> {
   protected newFontAtlas(metrics: MonospaceFontMetrics): ImageBitmapFontAtlas {
-    return new ImageBitmapFontAtlas(metrics);
+    return new ImageBitmapFontAtlas(metrics, [], false);
   }
 }

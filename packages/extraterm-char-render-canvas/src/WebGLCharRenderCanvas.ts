@@ -7,10 +7,7 @@ import { log, Logger, getLogger } from "extraterm-logging";
 import { Disposable } from "./Disposable";
 import { FontSlice } from "./FontSlice";
 import { CursorStyle } from "./CursorStyle";
-import { computeFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
 import { WebGLRenderer } from "./WebGLRenderer";
-import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
-import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 import { RGBAToCss } from "./RGBAToCss";
 import { WebGLRendererRepository } from "./WebGLRendererRepository";
 
@@ -143,6 +140,8 @@ export interface WebGLCharRenderCanvasOptions {
    */
   palette: number[];
 
+  transparentBackground: boolean;
+
   /**
    * List of additional fonts for specific unicode ranges
    */
@@ -178,21 +177,38 @@ export class WebGLCharRenderCanvas implements Disposable {
   private _cellGrid: CharCellGrid = null;
   private _palette: number[] = null;
   private _cursorStyle = CursorStyle.BLOCK;
+  private _transparentBackground = false;
 
   private _webglRenderer: WebGLRenderer = null;
 
   constructor(options: WebGLCharRenderCanvasOptions) {
     this._log = getLogger("CharRenderCanvas", this);
-    const { extraFonts, widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily,
-      fontSizePx, debugParentElement, palette, cursorStyle, webGLRendererRepository } = options;
+    const {
+      cursorStyle,
+      debugParentElement,
+      extraFonts,
+      fontFamily,
+      fontSizePx,
+      heightChars,
+      heightPx,
+      palette,
+      transparentBackground,
+      usableHeightPx,
+      usableWidthPx,
+      webGLRendererRepository,
+      widthChars,
+      widthPx,
+    } = options;
 
     this._palette = palette;
     this._cursorStyle = cursorStyle === undefined? CursorStyle.BLOCK : cursorStyle;
 
     this._fontSizePx = fontSizePx || 10;
     this._fontFamily = fontFamily || "monospace";
+    this._transparentBackground = transparentBackground;
 
-    const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontSizePx, extraFonts);
+    const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontSizePx, extraFonts,
+      transparentBackground);
     this._disposables.push(webglRenderer);
     this._webglRenderer = webglRenderer;
 
@@ -225,7 +241,7 @@ export class WebGLCharRenderCanvas implements Disposable {
     this._canvas = <HTMLCanvasElement> document.createElement("canvas");
     this._canvas.width = this._canvasWidthPx;
     this._canvas.height = this._canvasHeightPx;
-    this._canvasCtx = this._canvas.getContext("2d");
+    this._canvasCtx = this._canvas.getContext("2d", {alpha: this._transparentBackground});
 
     if (debugParentElement != null) {
       debugParentElement.appendChild(this._canvas);

@@ -377,6 +377,7 @@ export function printRgbGradientPattern(output: OutputDevice) {
 }
 
 export function printPalette(output: OutputDevice): void {
+  output.setBackgroundColorIndex(256);
   output.print("8bit palette");
   output.cr();
   let i=0;
@@ -390,10 +391,11 @@ export function printPalette(output: OutputDevice): void {
       output.print(pre + index + " ");
     }
     output.setForegroundColorIndex(7);
-    output.setBackgroundColorIndex(0);
+    output.setBackgroundColorIndex(256);
     output.reset();
     output.cr();
 
+    output.setBackgroundColorIndex(256);
     for (let j=0; j<32; j++) {
       const index = i + j;
       output.setForegroundColorIndex(index);
@@ -402,7 +404,7 @@ export function printPalette(output: OutputDevice): void {
     }
 
     output.setForegroundColorIndex(7);
-    output.setBackgroundColorIndex(0);
+    output.setBackgroundColorIndex(256);
     output.reset();
     output.cr();
 

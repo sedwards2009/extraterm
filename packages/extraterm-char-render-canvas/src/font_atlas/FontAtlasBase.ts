@@ -51,7 +51,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   private _lookupTable = new ArrayKeyTrie<CG>();
 
   constructor(protected readonly _metrics: MonospaceFontMetrics,
-      protected readonly _extraFonts: MonospaceFontMetrics[]=[]) {
+      protected readonly _extraFonts: MonospaceFontMetrics[],
+      protected readonly _transparentBackground: boolean) {
 
     this._log = getLogger("FontAtlasPage", this);
 
@@ -74,7 +75,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
 
     // document.body.appendChild(this._pageCanvas);
 
-    this._pageCtx = this._pageCanvas.getContext("2d", {alpha: false});
+    this._pageCtx = this._pageCanvas.getContext("2d", {alpha: this._transparentBackground});
     this._pageCtx.textBaseline = "top";
 
     this._pageCtx.fillStyle = "#00000000";

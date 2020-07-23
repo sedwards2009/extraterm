@@ -17,8 +17,10 @@ export class WebGLRendererRepository {
   private _map = new Map<string, WebGLRenderer & Disposable>();
   private _refCount = new Map<string, number>();
 
-  getWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[]=[]): WebGLRenderer & Disposable {
-    const key = this._key(fontFamily, fontSizePx, extraFonts);
+  getWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[],
+      transparentBackground: boolean): WebGLRenderer & Disposable {
+
+    const key = this._key(fontFamily, fontSizePx, transparentBackground, extraFonts);
     const existingRenderer = this._map.get(key);
     if (existingRenderer != null) {
       let count = this._refCount.get(key);
@@ -27,7 +29,7 @@ export class WebGLRendererRepository {
       return existingRenderer;
     }
 
-    const renderer = this._newWebGLRenderer(fontFamily, fontSizePx, extraFonts);
+    const renderer = this._newWebGLRenderer(fontFamily, fontSizePx, extraFonts, transparentBackground);
     const disposableRenderer = <WebGLRenderer & Disposable> <unknown> {
       __proto__: renderer,
       dispose: () => {
@@ -45,19 +47,21 @@ export class WebGLRendererRepository {
     return disposableRenderer;
   }
 
-  private _newWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[]): WebGLRenderer {
+  private _newWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[],
+      transparentBackground: boolean): WebGLRenderer {
+
     const metrics = computeFontMetrics(fontFamily, fontSizePx);
     const extraFontMetrics = extraFonts.map(
       (extraFont) => this._computeEmojiMetrics(metrics, extraFont.fontFamily, extraFont.fontSizePx));
 
-    const fontAtlas = new TextureFontAtlas(metrics, extraFontMetrics);
-    const renderer = new WebGLRenderer(fontAtlas);
+    const fontAtlas = new TextureFontAtlas(metrics, extraFontMetrics, transparentBackground);
+    const renderer = new WebGLRenderer(fontAtlas, transparentBackground);
     renderer.init();
     return renderer;
   }
 
-  private _key(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[]): string {
-    return `${fontFamily}:${fontSizePx}:` +
+  private _key(fontFamily: string, fontSizePx: number, transparentBackground: boolean, extraFonts: FontSlice[]): string {
+    return `${fontFamily}:${fontSizePx}:${transparentBackground}:` +
       extraFonts.map(ef => `${ef.fontFamily}:${ef.fontSizePx}:`).join("");
   }
 

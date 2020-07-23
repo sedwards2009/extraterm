@@ -3,10 +3,7 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "@extraterm/ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import {
-  WebGLCharRenderCanvas, CPURenderedFontAtlasRepository, ImageBitmapFontAtlasRepository, CursorStyle, Renderer
-} from "extraterm-char-render-canvas";
-import { loadFile as loadFontFile} from "extraterm-font-ligatures";
+import { WebGLCharRenderCanvas, CursorStyle } from "extraterm-char-render-canvas";
 import { LayerConfig } from "@extraterm/ace-ts";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
@@ -18,11 +15,21 @@ const PROVISION_HEIGHT_FACTOR = 1.5;
 
 const webGLRendererRepository = new WebGLRendererRepository();
 
+export interface CanvasTextLayerOptions {
+  contentDiv: HTMLDivElement;
+  palette: number[];
+  fontFamily: string;
+  fontSizePx: number;
+  devicePixelRatio: number;
+  cursorStyle: CursorStyle;
+  ligatureMarker: LigatureMarker;
+  transparentBackground: boolean;
+}
 
 export class CanvasTextLayer implements TextLayer {
-
   element: HTMLDivElement;
 
+  private _contentDiv: HTMLDivElement = null;
   private _charRenderCanvas: WebGLCharRenderCanvas = null;
   private _canvasWidthCssPx = 0;
   private _canvasHeightCssPx = 0;
@@ -43,10 +50,12 @@ export class CanvasTextLayer implements TextLayer {
   private _cursorStyle = CursorStyle.BLOCK;
 
   private _clipDiv: HTMLDivElement = null;
+  private _transparentBackground = false;
 
-  constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
-              devicePixelRatio: number, cursorStyle: CursorStyle, ligatureMarker: LigatureMarker) {
+  constructor(options: CanvasTextLayerOptions) {
+    const { palette, fontFamily, fontSizePx, cursorStyle, ligatureMarker, contentDiv, transparentBackground } = options;
 
+    this._contentDiv = contentDiv;
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
 
@@ -55,6 +64,7 @@ export class CanvasTextLayer implements TextLayer {
     this._devicePixelRatio = devicePixelRatio;
     this._cursorStyle = cursorStyle;
     this._ligatureMarker = ligatureMarker;
+    this._transparentBackground = transparentBackground;
 
     this._clipDiv = <HTMLDivElement> document.createElement("DIV");
     this._clipDiv.classList.add("ace_layer");
@@ -128,6 +138,11 @@ export class CanvasTextLayer implements TextLayer {
       this._charRenderCanvas.setCursorStyle(cursorStyle);
       this._charRenderCanvas.render();
     }
+  }
+
+  setTransparentBackground(transparentBackground: boolean): void {
+    this._transparentBackground = transparentBackground;
+    this._deleteCanvasElement();
   }
 
   dispose(): void {
@@ -238,6 +253,7 @@ export class CanvasTextLayer implements TextLayer {
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }],
       cursorStyle: this._cursorStyle,
+      transparentBackground: this._transparentBackground,
       webGLRendererRepository
     });
 
@@ -259,6 +275,8 @@ export class CanvasTextLayer implements TextLayer {
     }
     const canvasElement = this._charRenderCanvas.getCanvasElement();
     canvasElement.parentElement.removeChild(canvasElement);
+
+    this._charRenderCanvas.dispose();
     this._charRenderCanvas = null;
   }
 

@@ -3,7 +3,7 @@
  */
 import { mat4, vec3 } from "gl-matrix";
 
-import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE, STYLE_MASK_FAINT, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
+import { CharCellGrid, STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
@@ -15,7 +15,6 @@ const CANVAS_SIZE_STEP = 512;
 export class WebGLRenderer {
   private _log: Logger = null;
 
-  private _fontAtlas: TextureFontAtlas = null;
   private _metrics: MonospaceFontMetrics = null;
   private _canvas: HTMLCanvasElement = null;
   private _glContext: WebGL2RenderingContext = null;
@@ -71,16 +70,15 @@ export class WebGLRenderer {
     }
   `;
 
-  constructor(fontAtlas: TextureFontAtlas) {
+  constructor(private _fontAtlas: TextureFontAtlas, private _transparentBackground: boolean) {
     this._log = getLogger("WebGLRenderer", this);
-    this._fontAtlas = fontAtlas;
     this._metrics = this._fontAtlas.getMetrics();
   }
 
   init(): boolean {
     this._canvas = document.createElement("canvas");
 
-    const gl = this._canvas.getContext("webgl2");
+    const gl = this._canvas.getContext("webgl2", {alpha: this._transparentBackground, premultipliedAlpha: false});
     this._glContext = gl;
 
     // If we don't have a GL context, give up now
@@ -99,7 +97,8 @@ export class WebGLRenderer {
     this._modelViewMatrixLocation = gl.getUniformLocation(this._shaderProgram, "uModelViewMatrix");
     this._uSamplerLocation = gl.getUniformLocation(this._shaderProgram, "uSampler");
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
+    gl.blendFuncSeparate(gl.ONE, gl.ZERO, gl.ONE, gl.ZERO);
+    gl.clearColor(0.0, 0.0, 0.0, this._transparentBackground ? 0.0 : 1.0);  // Clear to black
     gl.disable(gl.DEPTH_TEST);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -400,6 +399,11 @@ export class WebGLRenderer {
     if (destinationContext == null) {
       return;
     }
+
+    if (this._transparentBackground) {
+      destinationContext.clearRect(0, 0, rectWidth, rectHeight);
+    }
+
     destinationContext.drawImage(this._canvas, 0, 0, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
   }
 
