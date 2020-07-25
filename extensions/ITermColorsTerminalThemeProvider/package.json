@@ -23,7 +23,7 @@
     "@types/jest": "23.3.13",
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
-    "@extraterm/extraterm-extension-api": "0.3.0",
+    "@extraterm/extraterm-extension-api": "0.4.0",
     "jest": "23.6.0",
     "shx": "^0.3.2",
     "ts-jest": "23.10.5",
