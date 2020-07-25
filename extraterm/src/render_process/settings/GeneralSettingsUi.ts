@@ -18,7 +18,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     template: trimBetweenTags(`
 <div class="settings-page">
   <h2 class="no-user-select"><i class="fa fa-sliders-h"></i>&nbsp;&nbsp;General Settings</h2>
-    
+
   <div class="gui-layout cols-1-2">
     <label for="tips">Show Tips:</label>
     <select id="tips" v-model="showTips" class="char-width-12">
@@ -26,7 +26,7 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
         {{ option.name }}
       </option>
     </select>
-  
+
     <label for="${ID_SCROLLBACK}">Max. Scrollback Lines:</label>
     <span class="group"><input id="${ID_SCROLLBACK}" type="number" class="char-width-8"
         v-model.number="maxScrollbackLines" min="1" max="10000000" debounce="500" /><span>lines</span></span>
@@ -40,28 +40,13 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
     <label></label>
     <span class="no-user-select">&nbsp;</span>
-    
+
     <label></label>
     <span><label><input type="checkbox" v-model="gpuDriverWorkaroundFlag">Reduce graphic effects</label></span>
 
     <label></label>
     <span class="no-user-select">Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors.</span>
 
-    <label></label>
-    <span><label><input type="checkbox" v-model="isHardwareAccelerated">Hardware Acceleration</label></span>
-
-    <label></label>
-    <span class="no-user-select">Some graphics hardware and driver combinations can give incorrect rendering. Turning off this option may avoid this problem.</span>
-
-    <template v-if="isHardwareAccelerated !== systemIsHardwareAccelerated">
-      <label></label>
-      <div>
-        <p class="highlight-warning">
-          <i class="fa fa-info-circle"></i>
-          A restart is requred before this change takes effect.
-        </p>
-      </div>
-    </template>
   </div>
 </div>
 `)
@@ -71,13 +56,11 @@ export class GeneralSettingsUi extends Vue {
 
   showTips: ShowTipsStrEnum;
   showTipsOptions:{ id: ShowTipsStrEnum, name: string; }[];
-  
+
   maxScrollbackLines: number;
   maxScrollbackFrames: number;
   autoCopySelectionToClipboard: boolean;
   gpuDriverWorkaroundFlag: boolean;
-  isHardwareAccelerated: boolean;
-  systemIsHardwareAccelerated: boolean;
 
   constructor() {
     super();
@@ -87,7 +70,5 @@ export class GeneralSettingsUi extends Vue {
     this.maxScrollbackFrames = 100;
     this.autoCopySelectionToClipboard = true;
     this.gpuDriverWorkaroundFlag = false;
-    this.isHardwareAccelerated = true;
-    this.systemIsHardwareAccelerated = true;
   }
 }
