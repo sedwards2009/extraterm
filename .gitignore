@@ -12,3 +12,8 @@ node_modules/
 docs/.sass-cache
 extensions/TLDRPages/data/
 .nyc_output/
+coverage/
+
+packages/extraterm-lit-html/*
+!packages/extraterm-lit-html/package.json
+!packages/extraterm-lit-html/README.md
