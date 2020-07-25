@@ -1113,6 +1113,11 @@
   resolved "https://registry.yarnpkg.com/@extraterm/ace-ts/-/ace-ts-0.18.0.tgz#d852f06d411a26504720a2845d5c8506ed117aaa"
   integrity sha512-qkJnznSZa3vDeH3f4ORMLxzi+zsWo7rbOdGPT/sJBZo8oqCnxAzBqEUOJZGq/bv6cFTBjCPw68rG4NMYk3MkYQ==
 
+"@extraterm/ace-ts@0.19.0":
+  version "0.19.0"
+  resolved "https://npm.cloudsmith.io/ultimaker/stardust/@extraterm/ace-ts/-/0.19.0/ace-ts-0.19.0.tgz#c3088e4e3635e2fa7a384055ecf64bd68468d451"
+  integrity sha512-9Vq2r5nORAl7WrHhHTyquLinhFokVga3F2AwDv6110Iw2dISDsxX+UvI5HFb7SZzpsjAgRs5q5ut9s4rqaac6A==
+
 "@extraterm/extraterm-extension-api@0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@extraterm/extraterm-extension-api/-/extraterm-extension-api-0.3.0.tgz#d68454d09ba02c2ce9d9937cbe997847f305d186"
