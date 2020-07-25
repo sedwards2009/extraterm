@@ -40,7 +40,7 @@ export class TerminalCanvasRenderer extends Renderer {
   }
 
   protected createVScrollBar(container: HTMLElement): VScrollBar {
-    return new HiddenVScrollBar(container, this);
+    return null;
   }
 
   protected createHScrollBar(container: HTMLElement): HScrollBar {
@@ -109,15 +109,6 @@ export class TerminalCanvasRenderer extends Renderer {
     if (this._canvasTextLayer != null) {
       this._canvasTextLayer.rerender();
     }
-  }
-}
-
-class HiddenVScrollBar extends VScrollBar {
-  setVisible(isVisible: boolean): this {
-    if (isVisible === false) {
-      super.setVisible(false);    // Stop the scrollbar from ever being visible.
-    }
-    return this;
   }
 }
 

@@ -21,7 +21,7 @@
     "publish-pkg": "yarn publish --access public"
   },
   "dependencies": {
-    "@extraterm/ace-ts": "0.18.0",
+    "@extraterm/ace-ts": "0.19.0",
     "@types/node": "^12.6.2"
   },
   "devDependencies": {
