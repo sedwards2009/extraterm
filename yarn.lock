@@ -925,8 +925,8 @@
 
 "@extraterm/ace-ts@0.19.0":
   version "0.19.0"
-  resolved "https://npm.cloudsmith.io/ultimaker/stardust/@extraterm/ace-ts/-/0.19.0/ace-ts-0.19.0.tgz#c3088e4e3635e2fa7a384055ecf64bd68468d451"
-  integrity sha512-9Vq2r5nORAl7WrHhHTyquLinhFokVga3F2AwDv6110Iw2dISDsxX+UvI5HFb7SZzpsjAgRs5q5ut9s4rqaac6A==
+  resolved "https://registry.yarnpkg.com/@extraterm/ace-ts/-/ace-ts-0.19.0.tgz#6997f7c5af523a4cefb8efb83431845e4cf4befd"
+  integrity sha512-PvRVj2ngkf5+BzLlI22osWcYNfwFd6QY69RzulTWbQo5849fGq9MHq3rAwdjFKG115p/lcZt62O/dOPZ6RLFcQ==
 
 "@iarna/toml@^2.2.0":
   version "2.2.5"
@@ -2926,9 +2926,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001093:
-  version "1.0.30001105"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001105.tgz#d2cb0b31e5cf2f3ce845033b61c5c01566549abf"
-  integrity sha512-JupOe6+dGMr7E20siZHIZQwYqrllxotAhiaej96y6x00b/48rPt42o+SzOSCPbrpsDWvRja40Hwrj0g0q6LZJg==
+  version "1.0.30001106"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001106.tgz#7e2132711295ef30ffe5ee45b71936354d105d8c"
+  integrity sha512-XqSQKt9Fd3Z9BoN0cpSaITcTInKhMNGkaWtQ4rDnyQU1BJzzWDWCUi3cJflaPWk2kbrkYkfMrMrjIFzb3kd6NQ==
 
 capture-exit@^1.2.0:
   version "1.2.0"
