@@ -8,9 +8,9 @@
   "devDependencies": {
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
-    "@extraterm/extraterm-extension-api": "0.3.0",
+    "@extraterm/extraterm-extension-api": "0.5.0",
     "shx": "^0.3.2",
-    "typescript": "3.7.4"
+    "typescript": "3.9.6"
   },
   "main": "dist/TextViewerOptionsExtension.js",
   "scripts": {

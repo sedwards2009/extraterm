@@ -3,24 +3,34 @@
  */
 import { TextLayer, EditSession, ViewPortSize } from "@extraterm/ace-ts";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { CharRenderCanvas, FontAtlasRepository, CursorStyle, Renderer } from "extraterm-char-render-canvas";
-import { loadFile as loadFontFile} from "extraterm-font-ligatures";
+import { WebGLCharRenderCanvas, CursorStyle } from "extraterm-char-render-canvas";
 import { LayerConfig } from "@extraterm/ace-ts";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";
 import { LigatureMarker } from "./LigatureMarker";
+import { WebGLRendererRepository } from "extraterm-char-render-canvas/dist/WebGLRendererRepository";
 
 const PROVISION_HEIGHT_FACTOR = 1.5;
 
-const fontAtlasRepository = new FontAtlasRepository();
+const webGLRendererRepository = new WebGLRendererRepository();
 
+export interface CanvasTextLayerOptions {
+  contentDiv: HTMLDivElement;
+  palette: number[];
+  fontFamily: string;
+  fontSizePx: number;
+  devicePixelRatio: number;
+  cursorStyle: CursorStyle;
+  ligatureMarker: LigatureMarker;
+  transparentBackground: boolean;
+}
 
 export class CanvasTextLayer implements TextLayer {
-
   element: HTMLDivElement;
 
-  private _charRenderCanvas: CharRenderCanvas = null;
+  private _contentDiv: HTMLDivElement = null;
+  private _charRenderCanvas: WebGLCharRenderCanvas = null;
   private _canvasWidthCssPx = 0;
   private _canvasHeightCssPx = 0;
   private _currentCanvasRawWidthPx = 0;
@@ -40,10 +50,12 @@ export class CanvasTextLayer implements TextLayer {
   private _cursorStyle = CursorStyle.BLOCK;
 
   private _clipDiv: HTMLDivElement = null;
+  private _transparentBackground = false;
 
-  constructor(private readonly _contentDiv: HTMLDivElement, palette: number[], fontFamily: string, fontSizePx: number,
-              devicePixelRatio: number, cursorStyle: CursorStyle, ligatureMarker: LigatureMarker) {
+  constructor(options: CanvasTextLayerOptions) {
+    const { palette, fontFamily, fontSizePx, cursorStyle, ligatureMarker, contentDiv, transparentBackground } = options;
 
+    this._contentDiv = contentDiv;
     this._log = getLogger("CanvasTextLayer", this);
     this._palette = palette == null ? this._fallbackPalette() : palette;
 
@@ -52,6 +64,7 @@ export class CanvasTextLayer implements TextLayer {
     this._devicePixelRatio = devicePixelRatio;
     this._cursorStyle = cursorStyle;
     this._ligatureMarker = ligatureMarker;
+    this._transparentBackground = transparentBackground;
 
     this._clipDiv = <HTMLDivElement> document.createElement("DIV");
     this._clipDiv.classList.add("ace_layer");
@@ -125,6 +138,11 @@ export class CanvasTextLayer implements TextLayer {
       this._charRenderCanvas.setCursorStyle(cursorStyle);
       this._charRenderCanvas.render();
     }
+  }
+
+  setTransparentBackground(transparentBackground: boolean): void {
+    this._transparentBackground = transparentBackground;
+    this._deleteCanvasElement();
   }
 
   dispose(): void {
@@ -218,7 +236,7 @@ export class CanvasTextLayer implements TextLayer {
 
     const isWindows = process.platform === "win32";
 
-    this._charRenderCanvas = new CharRenderCanvas({
+    this._charRenderCanvas = new WebGLCharRenderCanvas({
       fontFamily: this._fontFamily,
       fontSizePx: this._fontSizePx * this._devicePixelRatio,
       palette: this._palette,
@@ -226,7 +244,6 @@ export class CanvasTextLayer implements TextLayer {
       heightPx: heightPxPair.renderLength,
       usableWidthPx: rawWidthPx * this._devicePixelRatio,
       usableHeightPx: rawHeightPx * this._devicePixelRatio,
-      fontAtlasRepository,
       extraFonts: [{
         fontFamily: isWindows ? "Segoe UI Emoji" : "coloremoji",
         fontSizePx: this._fontSizePx * this._devicePixelRatio,
@@ -236,7 +253,8 @@ export class CanvasTextLayer implements TextLayer {
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }],
       cursorStyle: this._cursorStyle,
-      renderer: Renderer.CPU,
+      transparentBackground: this._transparentBackground,
+      webGLRendererRepository
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();
@@ -257,6 +275,8 @@ export class CanvasTextLayer implements TextLayer {
     }
     const canvasElement = this._charRenderCanvas.getCanvasElement();
     canvasElement.parentElement.removeChild(canvasElement);
+
+    this._charRenderCanvas.dispose();
     this._charRenderCanvas = null;
   }
 

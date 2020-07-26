@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 import { CustomElement } from 'extraterm-web-component-decorators';
@@ -172,6 +172,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         fontFilePath: this._terminalVisualConfig.fontFilePath,
         devicePixelRatio: this._terminalVisualConfig.devicePixelRatio,
         ligatureMarker: this._terminalVisualConfig.ligatureMarker,
+        transparentBackground: this._terminalVisualConfig.transparentBackground,
       });
       this._aceRenderer.init();
       this._aceRenderer.setShowGutter(false);
@@ -511,6 +512,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         fontFilePath: terminalVisualConfig.fontFilePath,
         devicePixelRatio: terminalVisualConfig.devicePixelRatio,
         ligatureMarker: terminalVisualConfig.ligatureMarker,
+        transparentBackground: terminalVisualConfig.transparentBackground,
       };
 
       let requestResize = false;
@@ -523,7 +525,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
           previousConfig.fontSizePx !== terminalVisualConfig.fontSizePx ||
           previousConfig.devicePixelRatio !== terminalVisualConfig.devicePixelRatio ||
           previousConfig.fontFilePath !== terminalVisualConfig.fontFilePath ||
-          previousConfig.useLigatures !== terminalVisualConfig.useLigatures;
+          previousConfig.useLigatures !== terminalVisualConfig.useLigatures ||
+          previousConfig.transparentBackground !== terminalVisualConfig.transparentBackground;
 
         if (fontPropertiesChanged ||
             previousConfig.cursorStyle !== terminalVisualConfig.cursorStyle ||
@@ -814,7 +817,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
 
     const computedStyle = window.getComputedStyle(this);
-    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
+    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
     const newCols = Math.floor(width / charWidth);
     const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
 

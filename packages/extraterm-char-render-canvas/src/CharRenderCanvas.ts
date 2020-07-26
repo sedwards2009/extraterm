@@ -1,16 +1,21 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE } from "extraterm-char-cell-grid";
+import { CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT, STYLE_MASK_CURSOR, STYLE_MASK_INVISIBLE, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
-import { ColorPatchCanvas } from "./ColorPatchCanvas";
-import { FontAtlas } from "./FontAtlas";
-import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
-import { computeFontMetrics, debugFontMetrics } from "./FontMeasurement";
-import { FontAtlasRepository } from "./FontAtlasRepository";
+import { ColorPatchCanvas } from "./color_patch/ColorPatchCanvas";
+import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
+import { computeFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
+import { CPURenderedFontAtlasRepository, ImageBitmapFontAtlasRepository } from "./font_atlas/FontAtlasRepository";
 import { Disposable } from "./Disposable";
-import { ColorPatchImageData } from "./ColorPatchImageData";
+import { ColorPatchImageData } from "./color_patch/ColorPatchImageData";
+import { RGBAToCss } from "./RGBAToCss";
+import { CPURenderedFontAtlas } from "./font_atlas/CPURenderedFontAtlas";
+import { ImageBitmapFontAtlas } from "./font_atlas/ImageBitmapFontAtlas";
+import { normalizedCellIterator, NormalizedCell } from "./NormalizedCellIterator";
+import { FontSlice } from "./FontSlice";
+import { CursorStyle } from "./CursorStyle";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -66,7 +71,7 @@ export function xtermPalette(): number[] {
   }
 
   // Default BG/FG
-  colors[PALETTE_BG_INDEX] = 0x00000000;
+  colors[PALETTE_BG_INDEX] = 0x000000ff;
   colors[PALETTE_FG_INDEX] = 0xf0f0f0ff;
   // Cursor
   colors[PALETTE_CURSOR_INDEX] = 0xffaa00ff;
@@ -155,7 +160,9 @@ export interface CharRenderCanvasOptions {
   /**
    * Font atlas repository to use for fetching font atlases
    */
-  fontAtlasRepository?: FontAtlasRepository;
+  cpuRenderedFontAtlasRepository?: CPURenderedFontAtlasRepository;
+
+  imageBitmapFontAtlasRepository?: ImageBitmapFontAtlasRepository;
 
   cursorStyle?: CursorStyle;
 
@@ -165,63 +172,10 @@ export interface CharRenderCanvasOptions {
   renderer?: Renderer;
 }
 
-export interface FontSlice {
-  /**
-   * Font family to render the cells using
-   *
-   * The exact name is the same as that required by CSS.
-   */
-  fontFamily: string;
-
-  /**
-   * Size of the font in pixels
-   */
-  fontSizePx: number;
-
-  /**
-   * Set to true if the font is a color font
-   */
-  isColor?: boolean;
-
-  /**
-   * Start code point of the unicode range
-   *
-   * This and `unicodeEnd` define the range of unicode code points for
-   * which this font is to be used.
-   */
-  unicodeStart?: number;
-
-  /**
-   * End code point of the unicode range (exclusive)
-   *
-   * This and `unicodeStart` define the range of unicode code points for
-   * which this font is to be used.
-   */
-  unicodeEnd?: number;
-
-  /**
-   * Characters used to determine the effective size of the glyphs
-   *
-   * These characters are rendered and examined on the pixel level to
-   * determine the actual size of the font on the screen.
-   */
-  sampleChars?: string[];
-
-  unicodeCodePoints?: number[];
-}
-
 interface ExtraFontSlice extends FontSlice {
-  fontAtlas: FontAtlas;
+  cpuRenderedFontAtlas: CPURenderedFontAtlas & Disposable;
+  imageBitmapFontAtlas: ImageBitmapFontAtlas & Disposable;
   codePointSet: Set<number>;
-}
-
-export enum CursorStyle {
-  BLOCK,
-  BLOCK_OUTLINE,
-  UNDERLINE,
-  UNDERLINE_OUTLINE,
-  BEAM,
-  BEAM_OUTLINE,
 }
 
 export class CharRenderCanvas implements Disposable {
@@ -232,7 +186,7 @@ export class CharRenderCanvas implements Disposable {
 
   private _charCanvas: HTMLCanvasElement = null;
   private _charCanvasCtx: CanvasRenderingContext2D = null;
-  private _charCanvasImageData: ImageData = null;
+  private _charCanvasAlphaImageData: ImageData = null;
 
   private _canvasWidthPx = 512;
   private _canvasHeightPx = 512;
@@ -243,7 +197,6 @@ export class CharRenderCanvas implements Disposable {
   private _fontFamily = "sans";
   private _fontSizePx = 10;
 
-  private _fontAtlas: FontAtlas = null;
   private _extraFontSlices: ExtraFontSlice[] = [];
 
   private cellWidthPx: number = 0;
@@ -257,7 +210,11 @@ export class CharRenderCanvas implements Disposable {
   private _fgColorPatchImageData: ColorPatchImageData = null;
 
   private _palette: number[] = null;
-  private _fontAtlasRepository: FontAtlasRepository = null;
+
+  private _cpuRenderedFontAtlasRepository: CPURenderedFontAtlasRepository = null;
+  private _cpuRenderedFontAtlas: CPURenderedFontAtlas & Disposable = null;
+  private _imageBitmapFontAtlasRepository: ImageBitmapFontAtlasRepository = null;
+  private _imageBitmapFontAtlas: ImageBitmapFontAtlas & Disposable = null;
 
   private _disposables: Disposable[] = [];
 
@@ -267,7 +224,8 @@ export class CharRenderCanvas implements Disposable {
   constructor(options: CharRenderCanvasOptions) {
     this._log = getLogger("CharRenderCanvas", this);
     const { widthPx, heightPx, usableWidthPx, usableHeightPx, widthChars, heightChars, fontFamily, fontSizePx,
-            debugParentElement, palette, fontAtlasRepository, cursorStyle, renderer } = options;
+            debugParentElement, palette, cpuRenderedFontAtlasRepository, imageBitmapFontAtlasRepository, cursorStyle,
+            renderer } = options;
 
     this._renderer = renderer || Renderer.ImageBitmap;
     this._palette = palette;
@@ -281,10 +239,16 @@ export class CharRenderCanvas implements Disposable {
     this.cellWidthPx = fontMetrics.widthPx;
     this.cellHeightPx = fontMetrics.heightPx;
 
-    if (fontAtlasRepository == null) {
-      this._fontAtlasRepository = new FontAtlasRepository();
+    if (imageBitmapFontAtlasRepository == null) {
+      this._imageBitmapFontAtlasRepository = new ImageBitmapFontAtlasRepository();
     } else {
-      this._fontAtlasRepository = fontAtlasRepository;
+      this._imageBitmapFontAtlasRepository = imageBitmapFontAtlasRepository;
+    }
+
+    if (cpuRenderedFontAtlasRepository == null) {
+      this._cpuRenderedFontAtlasRepository = new CPURenderedFontAtlasRepository();
+    } else {
+      this._cpuRenderedFontAtlasRepository = cpuRenderedFontAtlasRepository;
     }
 
     if (widthPx != null) {
@@ -323,15 +287,17 @@ export class CharRenderCanvas implements Disposable {
     this._charCanvas.height = this._canvasHeightPx;
 
     this._charCanvasCtx = this._charCanvas.getContext("2d", { alpha: true });
-    this._charCanvasImageData = new ImageData(this._canvasWidthPx, this._canvasHeightPx);
+    this._charCanvasAlphaImageData = new ImageData(this._canvasWidthPx, this._canvasHeightPx);
 
     if (debugParentElement != null) {
       debugParentElement.appendChild(this._charCanvas);
     }
 
-    const primaryFontAtlas =  this._fontAtlasRepository.getFontAtlas(fontMetrics);
-    this._disposables.push(primaryFontAtlas);
-    this._fontAtlas = primaryFontAtlas;
+    this._imageBitmapFontAtlas = this._imageBitmapFontAtlasRepository.getFontAtlas(fontMetrics);
+    this._disposables.push(this._imageBitmapFontAtlas);
+
+    this._cpuRenderedFontAtlas = this._cpuRenderedFontAtlasRepository.getFontAtlas(fontMetrics);
+    this._disposables.push(this._cpuRenderedFontAtlas);
 
     this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts, fontMetrics);
     this._bgColorPatchCanvas = new ColorPatchCanvas(this._cellGrid, this.cellWidthPx, this.cellHeightPx, "background",
@@ -359,6 +325,14 @@ export class CharRenderCanvas implements Disposable {
 
   getCanvasElement(): HTMLCanvasElement {
     return this._canvas;
+  }
+
+  getFontAtlasCanvasElement(): HTMLCanvasElement {
+    if (this._renderer === Renderer.CPU) {
+      return this._cpuRenderedFontAtlas.getCanvas();
+    } else {
+      return this._imageBitmapFontAtlas.getCanvas();
+    }
   }
 
   getWidthPx(): number {
@@ -402,8 +376,11 @@ export class CharRenderCanvas implements Disposable {
       customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
       customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
 
-      const fontAtlas = this._fontAtlasRepository.getFontAtlas(customMetrics);
-      this._disposables.push(fontAtlas);
+      const imageBitmapFontAtlas = this._imageBitmapFontAtlasRepository.getFontAtlas(customMetrics);
+      this._disposables.push(imageBitmapFontAtlas);
+
+      const cpuRenderedFontAtlas = this._cpuRenderedFontAtlasRepository.getFontAtlas(customMetrics);
+      this._disposables.push(cpuRenderedFontAtlas);
 
       let codePointSet: Set<number> = null;
       if (extraFont.unicodeCodePoints != null) {
@@ -419,7 +396,7 @@ export class CharRenderCanvas implements Disposable {
         }
       }
 
-      return { ...extraFont, fontAtlas, codePointSet };
+      return { ...extraFont, cpuRenderedFontAtlas, imageBitmapFontAtlas, codePointSet };
     });
   }
 
@@ -460,7 +437,7 @@ export class CharRenderCanvas implements Disposable {
       this._bgColorPatchCanvas.setRenderCursor(renderCursor);
       this._bgColorPatchCanvas.render();
 
-      this._renderCharacters();
+      this._renderImageBitmapCharacters();
       this._canvasCtx.globalCompositeOperation = "copy";
       this._canvasCtx.drawImage(this._charCanvas, 0, 0);
 
@@ -478,12 +455,15 @@ export class CharRenderCanvas implements Disposable {
       this._bgColorPatchCanvas.setRenderCursor(renderCursor);
       this._bgColorPatchCanvas.render();
 
-      this._renderCharactersToImageData(this._charCanvasCtx, this._charCanvasImageData);
+      this._renderCharactersAlphaToImageData(this._charCanvasCtx, this._charCanvasAlphaImageData);
 
-      this._fgColorPatchImageData.pasteAlphaChannel(this._charCanvasImageData);
+      this._fgColorPatchImageData.pasteAlphaChannel(this._charCanvasAlphaImageData);
+
+      const fgColorPatchImageData = this._fgColorPatchImageData.getImageData();
+      this._renderCLUTCharacters(fgColorPatchImageData);
 
       this._canvasCtx.globalCompositeOperation = "copy";
-      this._canvasCtx.putImageData(this._fgColorPatchImageData.getImageData(), 0, 0);
+      this._canvasCtx.putImageData(fgColorPatchImageData, 0, 0);
 
       this._canvasCtx.globalCompositeOperation = "destination-over";
       this._canvasCtx.drawImage(this._bgColorPatchCanvas.getCanvas(), 0, 0);
@@ -495,7 +475,7 @@ export class CharRenderCanvas implements Disposable {
     this._updateRenderedCellGrid();
   }
 
-  private _renderCharacters(): void {
+  private _renderImageBitmapCharacters(): void {
     const ctx = this._charCanvasCtx;
 
     ctx.fillStyle = "#ffffffff";
@@ -528,8 +508,8 @@ export class CharRenderCanvas implements Disposable {
           if ( ! renderedExtraFontFlag) {
             // Erase the char in the char canvas and make room for
             // the glyph from the extrafont which will be drawn later.
-            this._fontAtlas.drawCodePoint(ctx, spaceCodePoint, 0, i * cellWidth, j * cellHeight);
-
+            this._imageBitmapFontAtlas.drawCodePoint(ctx, spaceCodePoint, 0, 0, 0xffffffff, 0x00000000, i * cellWidth,
+              j * cellHeight);
           }
         } else {
           const codePoint = cellGrid.getCodePoint(i, j);
@@ -557,7 +537,9 @@ export class CharRenderCanvas implements Disposable {
                                               ((renderedFlags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT)+1);
           if (mustRender) {
             const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : codePoint;
-            this._fontAtlas.drawCodePoint(ctx, effectiveCodePoint, style, i * cellWidth, j * cellHeight);
+            const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
+            this._imageBitmapFontAtlas.drawCodePoint(ctx, effectiveCodePoint, style, 0, fgColor, 0x00000000, i * cellWidth,
+              j * cellHeight);
           }
         }
 
@@ -567,105 +549,88 @@ export class CharRenderCanvas implements Disposable {
     }
   }
 
-  private _renderCharactersToImageData(ctx: CanvasRenderingContext2D, imageData: ImageData): void {
+  private _renderCharactersAlphaToImageData(ctx: CanvasRenderingContext2D, imageData: ImageData): void {
     ctx.fillStyle = "#ffffffff";
     ctx.globalCompositeOperation = "copy";
 
     const height = this._cellGrid.height;
     for (let j=0; j<height; j++) {
-      this._renderCharacterRowToImageData(imageData, j);
+      this._renderCharacterAlphaRowToImageData(imageData, j);
     }
   }
 
-  private _renderCharacterRowToImageData(imageData: ImageData, row: number): void {
-    /*
-    This works by stepping through the contents of the previously rendered row and
-    the new row contents and comparing the two. Differences between the two indicate
-    glyphs/cells which need to rerendered. Sometimes multiple adjacent cells/glyphs
-    need to be rendered at the same time, for example, full width (2 cells) characters
-    and ligatures. We step through each row by one "group" of cells at a time. Most groups
-    are a single char/cell. Full width and ligature groups can be 2-4 cells wide.
-
-    Each trip through the main loop increments either the index into the rendered row
-    OR the current row.
-
-    For example:
-
-    Previously rendered row is "same === X". Current row is "same = = Y". The "===" in
-    the rendered row is a 3 cell wide ligature.
-
-    The groups and the comparision between then look like this:
-
-      Rendered row: [s] [a] [m] [e] [ ] [   ===   ] [ ] [X]
-
-      Current row:  [s] [a] [m] [e] [ ] [=] [ ] [=] [ ] [Y]
-                                        ^^^^^^^^^^^     ^^^
-      Diffs which                           |            |
-      trigger rendering:           Glyph size diff.  Code point diff.
-
-    In this example the substring "= =" will need to be rendered, and the "Y" too.
-    */
-
+  private _renderCharacterAlphaRowToImageData(imageData: ImageData, row: number): void {
     const cellGrid = this._cellGrid;
+    const cellWidthPx = this.cellWidthPx;
+    const cellHeightPx = this.cellHeightPx;
     const renderedCellGrid = this._renderedCellGrid;
-    const cellWidth = this.cellWidthPx;
-    const cellHeight = this.cellHeightPx;
-    const width = cellGrid.width;
     const spaceCodePoint = " ".codePointAt(0);
 
-    let xRendered = 0;
-    let x = 0;
-    while (x < width) {
-      const renderedFlags = renderedCellGrid.getFlags(xRendered, row);
-      const renderedWidthChars = ((renderedFlags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT) + 1;
-      if (xRendered < x) {
-        xRendered += renderedWidthChars;
-        continue;
+    const renderedRowIterator = normalizedCellIterator(renderedCellGrid, row);
+    for (const cell of normalizedCellIterator(cellGrid, row)) {
+      const renderedCell: NormalizedCell = renderedRowIterator.next().value;
+
+      let isEqual = true;
+      isEqual = isEqual && cell.segment === renderedCell.segment;
+      isEqual = isEqual && cell.isLigature === renderedCell.isLigature;
+      isEqual = isEqual && cell.codePoint === renderedCell.codePoint;
+      isEqual = isEqual && cell.extraFontFlag === renderedCell.extraFontFlag;
+
+      if (isEqual && cell.isLigature) {
+        isEqual = isEqual && cell.ligatureCodePoints === renderedCell.ligatureCodePoints;
       }
 
-      const flags = cellGrid.getFlags(x, row);
-      const widthChars = ((flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT) + 1;
-      const style = cellGrid.getStyle(x, row);
-      const ligature = cellGrid.getLigature(x, row);
+      const style = cellGrid.getStyle(cell.x, row);
+      const renderedStyle = renderedCellGrid.getStyle(renderedCell.x, row);
+      isEqual = isEqual && style === renderedStyle;
 
-      const extraFontFlag = (flags & FLAG_MASK_EXTRA_FONT) !== 0;
-      const renderedExtraFontFlag = (renderedFlags & FLAG_MASK_EXTRA_FONT) !== 0;
-
-      let mustRender = false;
-      if (x < xRendered) {
-        mustRender = true;
-      } else {
-
-        const renderedLigature = renderedCellGrid.getLigature(xRendered, row);
-        const renderedStyle = renderedCellGrid.getStyle(xRendered, row);
-
-        mustRender = (style !== renderedStyle) || (ligature !== renderedLigature);
-        mustRender = mustRender || (extraFontFlag !== renderedExtraFontFlag);
-        mustRender = mustRender || ! (
-          widthChars === renderedWidthChars && (
-            (cellGrid.getCodePoint(x, row) === renderedCellGrid.getCodePoint(xRendered, row)) &&
-            (widthChars < 2 || (cellGrid.getCodePoint(x+1, row) === renderedCellGrid.getCodePoint(xRendered+1, row))) &&
-            (widthChars < 3 || (cellGrid.getCodePoint(x+2, row) === renderedCellGrid.getCodePoint(xRendered+2, row))) &&
-            (widthChars < 4 || (cellGrid.getCodePoint(x+3, row) === renderedCellGrid.getCodePoint(xRendered+3, row)))
-          ));
-      }
-
-      if (mustRender) {
-        if (flags & FLAG_MASK_LIGATURE) {
-          const codePoints = [];
-          for (let k=0; k<widthChars; k++) {
-            codePoints[k] = cellGrid.getCodePoint(x+k, row);
+      const onlyUsesCLUT = cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row);
+      if ( ! isEqual && ! onlyUsesCLUT) {
+        const fgColor = (style & STYLE_MASK_FAINT) ? 0xffffff80 : 0xffffffff;
+        if (cell.isLigature) {
+          if (cell.segment === 0) {
+            this._cpuRenderedFontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style, 0,
+              fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
           }
-          this._fontAtlas.drawCodePointsToImageData(imageData, codePoints, style, x * cellWidth,
-            row * cellHeight);
         } else {
-          const codePoint = cellGrid.getCodePoint(x, row);
-          const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || extraFontFlag) ? spaceCodePoint : codePoint;
-          this._fontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, x * cellWidth,
-            row * cellHeight);
+          const effectiveCodePoint = ((style & STYLE_MASK_INVISIBLE) || cell.extraFontFlag) ? spaceCodePoint : cell.codePoint;
+          this._cpuRenderedFontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, 0,
+            fgColor, 0x00000000, cell.x * cellWidthPx, row * cellHeightPx);
         }
       }
-      x += widthChars;
+    }
+  }
+
+  private _renderCLUTCharacters(imageData: ImageData): void {
+    const height = this._cellGrid.height;
+    for (let j=0; j<height; j++) {
+      this._renderCLUTCharacterRow(imageData, j);
+    }
+  }
+
+  private _renderCLUTCharacterRow(imageData: ImageData, row: number): void {
+    const cellGrid = this._cellGrid;
+    const cellWidthPx = this.cellWidthPx;
+    const cellHeightPx = this.cellHeightPx;
+    const spaceCodePoint = " ".codePointAt(0);
+
+    for (const cell of normalizedCellIterator(cellGrid, row)) {
+      const style = cellGrid.getStyle(cell.x, row);
+
+      if (cellGrid.isFgClut(cell.x, row) && cellGrid.isBgClut(cell.x, row) && ! cell.extraFontFlag) {
+        let fgColor = cellGrid.getFgRGBA(cell.x, row);
+        fgColor = (style & STYLE_MASK_FAINT) ? (fgColor & 0xffffff00) | 0x80 : fgColor;
+        if (cell.isLigature) {
+          if (cell.segment === 0) {
+            this._cpuRenderedFontAtlas.drawCodePointsToImageData(imageData, cell.ligatureCodePoints, style, 0,
+              fgColor, cellGrid.getBgRGBA(cell.x, row), cell.x * cellWidthPx, row * cellHeightPx);
+          }
+        } else {
+          const effectiveCodePoint = (style & STYLE_MASK_INVISIBLE) ? spaceCodePoint : cell.codePoint;
+          this._cpuRenderedFontAtlas.drawCodePointToImageData(imageData, effectiveCodePoint, style, 0,
+            fgColor, cellGrid.getBgRGBA(cell.x, row), cell.x * cellWidthPx, row * cellHeightPx);
+        }
+      }
     }
   }
 
@@ -685,7 +650,8 @@ export class CharRenderCanvas implements Disposable {
           const codePoint = cellGrid.getCodePoint(i, j);
           const style = cellGrid.getStyle(i, j);
           const extraFont = this._getExtraFontSliceFromCodePoint(codePoint);
-          extraFont.fontAtlas.drawCodePoint(ctx, codePoint, style, i * cellWidth, j * cellHeight);
+          extraFont.imageBitmapFontAtlas.drawCodePoint(ctx, codePoint, style, 0, 0xffffffff, 0x00000000,
+            i * cellWidth, j * cellHeight);
         }
       }
     }
@@ -803,17 +769,9 @@ export class CharRenderCanvas implements Disposable {
 
     const scrollingUp = verticalOffsetChars < 0;
     if (scrollingUp) {
-      this._charCanvasImageData.data.copyWithin(0, (-verticalOffsetChars * this.cellHeightPx) * this._charCanvasImageData.width *4);
+      this._charCanvasAlphaImageData.data.copyWithin(0, (-verticalOffsetChars * this.cellHeightPx) * this._charCanvasAlphaImageData.width *4);
     } else {
-      this._charCanvasImageData.data.copyWithin((verticalOffsetChars * this.cellHeightPx) * this._charCanvasImageData.width *4, 0);
+      this._charCanvasAlphaImageData.data.copyWithin((verticalOffsetChars * this.cellHeightPx) * this._charCanvasAlphaImageData.width *4, 0);
     }
   }
-}
-
-function RGBAToCss(rgba: number): string {
-  const red = (rgba >> 24) & 0xff;
-  const green = (rgba >> 16) & 0xff;
-  const blue = (rgba >> 8) & 0xff;
-  const alpha = (rgba & 0xff) / 255;
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }

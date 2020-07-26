@@ -31,7 +31,7 @@
   },
   "resolutions": {
     "@types/node": "12.6.2",
-    "typescript": "3.7.4",
+    "typescript": "3.9.6",
     "node-abi": "2.13.0"
   },
   "private": true,
@@ -39,7 +39,8 @@
     "packages": [
       "extraterm",
       "packages/*",
-      "extensions/*"
+      "extensions/*",
+      "test/*"
     ],
     "nohoist": [
       "**/lit-html",

@@ -47,7 +47,7 @@ const decoratorDataSymbol = Symbol("Custom Element Decorator Data");
  *            a `-` (dash) character.
  */
 export function CustomElement(tag: string): (target: any) => any {
-  return function(constructor: any): any {
+  return function(constructor: CustomElementConstructor): any {
     const decoratorData = getDecoratorData(constructor.prototype);
 
     const interceptedConstructor = class extends constructor {

@@ -17,7 +17,7 @@
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
-    "@extraterm/ace-ts": "0.18.0",
+    "@extraterm/ace-ts": "0.19.0",
     "@types/dompurify": "^2.0.1",
     "@types/marked": "^0.7.3",
     "commander": "^2.9.0",
@@ -56,7 +56,7 @@
     "xregexp": "4.2.4"
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.3.0",
+    "@extraterm/extraterm-extension-api": "0.5.0",
     "@types/commander": "2.3.31",
     "@types/file-type": "^5.2.1",
     "@types/he": "1.1.0",
@@ -82,7 +82,7 @@
     "shelljs": "0.8.3",
     "shx": "^0.3.2",
     "ts-jest": "23.10.5",
-    "typescript": "3.7.4",
+    "typescript": "3.9.6",
     "webfont": "^4.0.0"
   },
   "jshintConfig": {

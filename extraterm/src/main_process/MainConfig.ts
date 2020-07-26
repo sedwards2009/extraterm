@@ -234,7 +234,10 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, availableF
   sanitizeStringEnumField(userStoredConfig, "frameRule", frameRules, "frame_if_lines");
   sanitizeField(userStoredConfig, "frameRuleLines", 10);
   sanitizeStringEnumField(userStoredConfig, "gpuDriverWorkaround", ["none", "no_blend"], "none");
+
   sanitizeField(userStoredConfig, "isHardwareAccelerated", true);
+  userStoredConfig.isHardwareAccelerated = true;  // Always on since WebGL was introduced.
+
   sanitizeField(userStoredConfig, "keybindingsName", process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC);
   if ( ! AllLogicalKeybindingsNames.includes(userStoredConfig.keybindingsName)) {
     userStoredConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
