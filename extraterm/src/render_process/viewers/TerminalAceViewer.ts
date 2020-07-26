@@ -817,7 +817,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
 
     const computedStyle = window.getComputedStyle(this);
-    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight) - 4;
+    const width = widthPixels - px(computedStyle.marginLeft) - px(computedStyle.marginRight);
     const newCols = Math.floor(width / charWidth);
     const newRows = Math.max(2, Math.floor(heightPixels / charHeight));
 
