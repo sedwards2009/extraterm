@@ -15,7 +15,7 @@
   "dependencies": {
     "extraterm-trim-between-tags": "1.0.0",
     "fs-extra": "^5.0.0",
-    "lodash": "^4.17.13",
+    "lodash": "^4.17.19",
     "vue": "2.6.10",
     "vue-class-component": "6.3.2"
   },
