@@ -277,7 +277,7 @@ export class WebGLCharRenderCanvas implements Disposable {
   render(): void {
     this._webglRenderer.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
     this._webglRenderer.setRenderBlockCursor(this._cursorStyle === CursorStyle.BLOCK);
-    this._webglRenderer.render(this._canvasCtx, this._cellGrid, 0, this._cellGrid.height);
+    this._webglRenderer.render(this._canvasCtx, this._cellGrid);
     this._renderCursors(this._canvasCtx);
   }
 

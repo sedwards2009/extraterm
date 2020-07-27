@@ -131,7 +131,7 @@ function testWebGL(): void {
   printEmoji(outputDevice);
   outputDevice.cr();
 
-  renderer.render(null, cellGrid, 0, 17);
+  renderer.render(null, cellGrid);
 }
 
 function computeEmojiMetrics(metrics: MonospaceFontMetrics): MonospaceFontMetrics {

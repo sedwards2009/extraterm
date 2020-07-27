@@ -77,7 +77,16 @@ export class WebGLRenderer {
 
   init(): boolean {
     this._canvas = document.createElement("canvas");
+    this._canvas.addEventListener("webglcontextlost", (event)  => {
+      event.preventDefault();
+    }, false);
 
+    this._canvas.addEventListener("webglcontextrestored", () => this._initWebGLContext(), false);
+
+    return this._initWebGLContext();
+  }
+
+  private _initWebGLContext(): boolean {
     const gl = this._canvas.getContext("webgl2", {alpha: this._transparentBackground, premultipliedAlpha: false});
     this._glContext = gl;
 
@@ -378,8 +387,10 @@ export class WebGLRenderer {
     return this._texture;
   }
 
-  render(destinationContext: CanvasRenderingContext2D, cellGrid: CharCellGrid, firstRow: number,
-      rowCount: number): void {
+  render(destinationContext: CanvasRenderingContext2D, cellGrid: CharCellGrid): void {
+    if (this._glContext.isContextLost()) {
+      return;
+    }
 
     const rectWidth = this._metrics.widthPx * cellGrid.width;
     const rectHeight = this._metrics.heightPx * cellGrid.height;
