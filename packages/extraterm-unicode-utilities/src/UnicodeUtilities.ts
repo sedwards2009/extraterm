@@ -43,6 +43,10 @@ export function countCodePoints(str: string): number {
 }
 
 export function isWide(codePoint: number): boolean {
+  if (codePoint < 4352) {
+    return false;
+  }
+
   if (codePoint >= 0x10000) {
     return true;
   }
