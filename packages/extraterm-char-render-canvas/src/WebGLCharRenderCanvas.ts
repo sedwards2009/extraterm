@@ -243,8 +243,23 @@ export class WebGLCharRenderCanvas implements Disposable {
     this._canvas.height = this._canvasHeightPx;
     this._canvasCtx = this._canvas.getContext("2d", {alpha: this._transparentBackground});
 
+    this._paintInRightGapBackground();
+
     if (debugParentElement != null) {
       debugParentElement.appendChild(this._canvas);
+    }
+  }
+
+  private _paintInRightGapBackground(): void {
+    const gapPx = this._canvasWidthPx - this._widthChars * this.cellWidthPx;
+    if (gapPx !== 0) {
+      const ctx = this._canvasCtx;
+      ctx.save();
+      const bgColor = RGBAToCss(this._palette[PALETTE_BG_INDEX]);
+      ctx.fillStyle = bgColor;
+      ctx.globalCompositeOperation = "source-over";
+      this._canvasCtx.fillRect(this.cellWidthPx * this._widthChars, 0, gapPx, this._canvasHeightPx);
+      ctx.restore();
     }
   }
 
@@ -267,6 +282,7 @@ export class WebGLCharRenderCanvas implements Disposable {
     this._palette = palette;
     this._cellGrid.setPalette(this._palette);
     this._webglRenderer.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
+    this._paintInRightGapBackground();
   }
 
   setCursorStyle(cursorStyle: CursorStyle): void {
