@@ -36,20 +36,6 @@ function appDir(platform) {
   return platform === "darwin" ? "Extraterm.app/Contents/Resources/app" : "resources/app";
 }
 
-function pruneNodeSass(versionedOutputDir, arch, platform) {
-  const gutsDir = appDir(platform);
-  const nodeSassVendorDir = path.join(versionedOutputDir, gutsDir, "node_modules/node-sass/vendor");
-
-  rm('-rf', nodeSassVendorDir);
-
-  const nodeSassBinaryDir = path.join(versionedOutputDir, gutsDir, "src/node-sass-binary");
-  ["darwin-x64", "linux-ia32", "linux-x64", "win32-x64"].forEach( (name) => {
-    if (name !== platform + "-" + arch) {
-      rm('-rf', path.join(nodeSassBinaryDir, name + "-" + MODULE_VERSON));
-    }
-  });
-}
-
 function pruneTwemoji(versionedOutputDir, platform) {
   if (platform !== "linux") {
     const twemojiPath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/fonts/Twemoji.ttf");
@@ -103,9 +89,6 @@ function pruneNodeModules(versionedOutputDir, platform) {
 
 function pruneSpecificNodeModules() {
   [
-    "node-sass/src",
-    "node-sass/node_modules/node-gyp",
-    "node-sass/vendor",
     "globule",
     "vue/src",
     "vue/dist/vue.esm.browser.js",
@@ -194,9 +177,6 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   hoistSubprojectsModules(versionedOutputDir, platform);
   dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, targetAppRootPath));
   pruneNodeModules(versionedOutputDir, platform);
-
-  // Prune any unneeded node-sass binaries.
-  pruneNodeSass(versionedOutputDir, arch, platform);
   pruneTwemoji(versionedOutputDir, platform);
 
   // Zip it up.
