@@ -22,10 +22,10 @@ import { Color as UtilColor } from '../render_process/gui/Util';
 // Dart Sass has the same API as Node Sass, but they don't publish typing files.
 // So we reuse the `node-sass` typing.
 import * as DartSass from 'sass';
-import { Importer, ImporterReturnType, render } from 'node-sass';
+import { Importer, ImporterReturnType, renderSync, SassError } from 'node-sass';
 
 const Sass = {
-  render: <typeof render>DartSass.render
+  renderSync: <typeof renderSync>DartSass.renderSync
 };
 
 const THEME_CONFIG = "theme.json";
@@ -783,9 +783,9 @@ export class ThemeManager implements AcceptsConfigDatabase {
       if (DEBUG_SASS) {
         this._log.debug("Processing " + sassFileName);
       }
-      try {
-        const importer: Importer = (url: string, prev: string, done: (data: ImporterReturnType)=> void) => {
 
+      try {
+        const importer: Importer = (url: string, prev: string): ImporterReturnType => {
           const basePath = url;
           const contextBaseDir = path.dirname(prev);
           const dirName = path.join(contextBaseDir, path.dirname(basePath));
@@ -818,15 +818,14 @@ export class ThemeManager implements AcceptsConfigDatabase {
               }
               try {
                 const content = fs.readFileSync(candidateFileName, {encoding: 'utf-8'});
-                done( { contents: content } );
+                return { contents: content };
               } catch(err) {
-                done(err);
+                return err;
               }
-              return;
             }
           }
 
-          done(new Error("Unable to find " + basePath));
+          return new Error("Unable to find " + basePath);
         };
 
         // Start the compile using a small virtual 'boot' file.
@@ -835,25 +834,24 @@ export class ThemeManager implements AcceptsConfigDatabase {
           this._log.debug("Root sass text: ", scssText);
         }
 
-        Sass.render({data: scssText, precision: 8, importer: importer }, (err, result) => {
-          if (err === null) {
-            if (DEBUG_SASS) {
-              this._log.debug("Succeeded done processing " + sassFileName);
-            }
-
-            resolve(result.css.toString('utf8'));
-          } else {
-            this._log.warn("An SASS error occurred while processing " + sassFileName, err, err.message);
-            if (DEBUG_SASS) {
-              this._log.debug("Failed processing " + sassFileName);
-            }
-            cancel(new Error("An SASS error occurred while processing " + sassFileName + "\n" + err.message));
+        try {
+          const result = Sass.renderSync({data: scssText, precision: 8, importer: importer });
+          if (DEBUG_SASS) {
+            this._log.debug("Succeeded done processing " + sassFileName);
           }
-        });
+
+          resolve(result.css.toString('utf8'));
+        } catch(error) {
+          const err: SassError = error;
+          this._log.warn("An SASS error occurred while processing " + sassFileName, err, err.message);
+          if (DEBUG_SASS) {
+            this._log.debug("Failed processing " + sassFileName);
+          }
+          cancel(new Error("An SASS error occurred while processing " + sassFileName + "\n" + err.message));
+        }
       } catch (err) {
         this._log.warn("An error occurred while processing " + sassFileName, err);
         cancel(err);
-        return;
       }
     });
   }
