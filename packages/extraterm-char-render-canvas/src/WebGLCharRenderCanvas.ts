@@ -219,7 +219,7 @@ export class WebGLCharRenderCanvas implements Disposable {
 
     if (widthPx != null) {
       // Derive char width from pixels width
-      const effectiveWidthPx = usableWidthPx == null ? widthPx : usableWidthPx;
+      const effectiveWidthPx = usableWidthPx == null ? widthPx - 4 : usableWidthPx - 4;
       this._widthChars = Math.floor(effectiveWidthPx / this.cellWidthPx);
       this._canvasWidthPx = widthPx;
     } else {
