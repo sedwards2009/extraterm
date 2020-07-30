@@ -1,6 +1,7 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
+@use "sass:color";
 @import "general-gui/pxToRem";
 @import "general-gui/variables";
 
@@ -163,7 +164,7 @@ $ICON_FAIL_COLOR: $brand-text-danger;
   color: $ICON_NEUTRAL_COLOR;
 
   &:hover {
-    color: #ffffff - $ICON_NEUTRAL_COLOR;
+    color: color.invert($ICON_NEUTRAL_COLOR);
   }
 }
 

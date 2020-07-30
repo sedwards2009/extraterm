@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,25 +7,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
-
-import * as SourceDir from '../SourceDir';
-
-const PATCH_MODULE_VERSION = "75";  // This version number also appears in build_package.js
-const previousSASS_BINARY_PATH = process.env.SASS_BINARY_PATH;
-if (process.versions.modules === PATCH_MODULE_VERSION) {
-  // Patch in our special node-sass binary for the V8 module version used by Electron.
-  process.env.SASS_BINARY_PATH = path.join(SourceDir.path,
-    `../resources/node-sass-binary/${process.platform}-${process.arch}-${PATCH_MODULE_VERSION}/binding.node`);
-}
-
-import * as NodeSass from 'node-sass';
-
-if (previousSASS_BINARY_PATH === undefined) {
-  delete process.env.SASS_BINARY_PATH;
-} else {
-  process.env.SASS_BINARY_PATH = previousSASS_BINARY_PATH;
-}
-
 
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -37,6 +18,15 @@ import { MainExtensionManager } from '../main_process/extension/MainExtensionMan
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
 import { Color as UtilColor } from '../render_process/gui/Util';
+
+// Dart Sass has the same API as Node Sass, but they don't publish typing files.
+// So we reuse the `node-sass` typing.
+import * as DartSass from 'sass';
+import { Importer, ImporterReturnType, render } from 'node-sass';
+
+const Sass = {
+  render: <typeof render>DartSass.render
+};
 
 const THEME_CONFIG = "theme.json";
 
@@ -794,7 +784,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
         this._log.debug("Processing " + sassFileName);
       }
       try {
-        const importer: NodeSass.Importer = (url: string, prev: string, done: (data: NodeSass.ImporterReturnType)=> void) => {
+        const importer: Importer = (url: string, prev: string, done: (data: ImporterReturnType)=> void) => {
 
           const basePath = url;
           const contextBaseDir = path.dirname(prev);
@@ -845,7 +835,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
           this._log.debug("Root sass text: ", scssText);
         }
 
-        NodeSass.render({data: scssText, precision: 8, importer: importer }, (err, result) => {
+        Sass.render({data: scssText, precision: 8, importer: importer }, (err, result) => {
           if (err === null) {
             if (DEBUG_SASS) {
               this._log.debug("Succeeded done processing " + sassFileName);
