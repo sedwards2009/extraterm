@@ -31,13 +31,13 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
     this._log = getLogger(APPEARANCE_SETTINGS_TAG, this);
     this._getUi().$on("openUserTerminalThemesDir", () => {
-      shell.openItem(this._userTerminalThemeDirectory);
+      shell.showItemInFolder(this._userTerminalThemeDirectory);
     });
     this._getUi().$on("rescanUserTerminalThemesDir", () => {
       WebIpc.rescanThemes();
     });
     this._getUi().$on("openUserSyntaxThemesDir", () => {
-      shell.openItem(this._userSyntaxThemeDirectory);
+      shell.showItemInFolder(this._userSyntaxThemeDirectory);
     });
     this._getUi().$on("rescanUserSyntaxThemesDir", () => {
       WebIpc.rescanThemes();
