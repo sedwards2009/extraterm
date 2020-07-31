@@ -10,6 +10,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { ratioToFraction } from "./RatioToFraction";
 import { LigatureMarker } from "./LigatureMarker";
 import { WebGLRendererRepository } from "extraterm-char-render-canvas/dist/WebGLRendererRepository";
+import { PALETTE_BG_INDEX } from "extraterm-char-render-canvas/dist/WebGLCharRenderCanvas";
 
 const PROVISION_HEIGHT_FACTOR = 1.5;
 
@@ -311,6 +312,7 @@ export class CanvasTextLayer implements TextLayer {
         if (terminalLine.width < grid.width) {
           for (let i = terminalLine.width; i < grid.width; i++) {
             grid.clearCell(i, canvasRow);
+            grid.setBgClutIndex(i, canvasRow, PALETTE_BG_INDEX);
           }
         }
 
