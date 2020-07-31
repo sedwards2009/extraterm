@@ -89,6 +89,10 @@ function main(): void {
   app.commandLine.appendSwitch("high-dpi-support", "true");
   app.commandLine.appendSwitch("disable-color-correct-rendering");
 
+  // Needed to allow WebGL context restores. See https://github.com/electron/electron/issues/11934
+  app.commandLine.appendSwitch("disable-gpu-process-crash-limit");
+  app.disableDomainBlockingFor3DAPIs();
+
   if (isDarwin) {
     setupOSX();
   }

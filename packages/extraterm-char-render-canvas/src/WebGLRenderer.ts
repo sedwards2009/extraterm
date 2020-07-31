@@ -79,16 +79,37 @@ export class WebGLRenderer {
     this._canvas = document.createElement("canvas");
     this._canvas.addEventListener("webglcontextlost", (event)  => {
       event.preventDefault();
+      this._log.warn("WebGL Context Lost");
+      this._releaseContextRelatedResources();
     }, false);
 
-    this._canvas.addEventListener("webglcontextrestored", () => this._initWebGLContext(), false);
+    this._canvas.addEventListener("webglcontextrestored", () => {
+      this._log.warn("WebGL Context Restored");
+      this._glContext = null;
+      this.init();
+    }, false);
 
+    this._glContext = this._canvas.getContext("webgl2", {alpha: this._transparentBackground, premultipliedAlpha: false});
     return this._initWebGLContext();
   }
 
+  private _releaseContextRelatedResources(): void {
+    this._shaderProgram = null;
+    this._vertexPositionAttrib = null;
+    this._textureCoordAttrib = null;
+    this._glyphTexturetPositionAttrib = null;
+    this._cellPositionAttrib = null;
+    this._projectionMatrixLocation = null;
+    this._modelViewMatrixLocation = null;
+    this._uSamplerLocation = null;
+    this._triangleIndexBuffer = null;
+    this._textureCoordBuffer = null;
+    this._vertexPositionBuffer = null;
+    this._texture = null;
+  }
+
   private _initWebGLContext(): boolean {
-    const gl = this._canvas.getContext("webgl2", {alpha: this._transparentBackground, premultipliedAlpha: false});
-    this._glContext = gl;
+    const gl = this._glContext;
 
     // If we don't have a GL context, give up now
     if (gl == null) {
@@ -314,7 +335,6 @@ export class WebGLRenderer {
 
     return result;
   }
-
 
   private _gridTexturePositions(cellGrid: CharCellGrid, atlas: TextureFontAtlas): number[] {
     const result: number[] = [];
