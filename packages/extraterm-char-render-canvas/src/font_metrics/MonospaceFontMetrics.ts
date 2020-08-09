@@ -12,6 +12,7 @@ export interface MonospaceFontMetrics {
 
   readonly widthPx: number;
   readonly heightPx: number;
+  readonly boldItalicWidthPx: number;
 
   readonly strikethroughY: number;
   readonly strikethroughHeight: number;

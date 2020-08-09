@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
@@ -18,7 +18,7 @@ export function computeFontMetrics(fontFamily: string, fontSizePx: number, sampl
   }
 
   const fm = new FontMeasurement();
-  metrics = fm.computeFontMetrics(fontFamily, fontSizePx, sampleChars);
+  metrics = fm.computeFontMetrics({ family: fontFamily, sizePx: fontSizePx, sampleChars });
 
   computeFontMetricsCache.set(cacheKey, metrics);
   return metrics;
@@ -35,7 +35,7 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
 
   const fm = new FontMeasurement();
   const renderFontSizePx = fontSizePx * devicePixelRatio;
-  const renderFontMetrics = fm.computeFontMetrics(fontFamily, renderFontSizePx, sampleChars);
+  const renderFontMetrics = fm.computeFontMetrics({ family: fontFamily, sizePx: renderFontSizePx, sampleChars });
 
   const cssFontMetrics: MonospaceFontMetrics = {
     fontSizePx: renderFontMetrics.fontSizePx / devicePixelRatio,
@@ -46,6 +46,7 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
 
     widthPx: renderFontMetrics.widthPx / devicePixelRatio,
     heightPx: renderFontMetrics.heightPx / devicePixelRatio,
+    boldItalicWidthPx: renderFontMetrics.boldItalicWidthPx / devicePixelRatio,
 
     strikethroughY: renderFontMetrics.strikethroughY / devicePixelRatio,
     strikethroughHeight: renderFontMetrics.strikethroughHeight / devicePixelRatio,
@@ -70,27 +71,45 @@ export function computeDpiFontMetrics(fontFamily: string, fontSizePx: number, de
   return metrics;
 }
 
+interface TextMeasurements {
+  topY: number;
+  bottomY: number;
+  leftX: number;
+  rightX: number;
+}
+
+interface ComputeFontMetricsOptions {
+  family: string;
+  sizePx: number;
+  sampleChars?: string[];
+}
+
 class FontMeasurement {
   private _log: Logger = null;
   private _canvasWidthPx = 250;
   private _canvasHeightPx = 250;
 
-  computeFontMetrics(fontFamily: string, fontSizePx: number, sampleChars: string[]=null): MonospaceFontMetrics {
+  constructor() {
     this._log = getLogger("FontMeasurement", this);
+  }
+
+  computeFontMetrics(options: ComputeFontMetricsOptions): MonospaceFontMetrics {
+    const { family, sizePx } = options;
+    let { sampleChars }  = options;
 
     if (sampleChars == null) {
-      sampleChars = ["X", "_", "g", "\u00C5", "\u00E7", "\u014A", "\u013B","\u0141", "\u0126"];
+      sampleChars = ["X", "W", "_", "g", "\u00C5", "\u00E7", "\u014A", "\u013B","\u0141", "\u0126"];
     }
 
     const canvas = <HTMLCanvasElement> document.createElement("canvas");
 
-    this._canvasWidthPx = Math.ceil(fontSizePx * 3);
-    this._canvasHeightPx = Math.ceil(fontSizePx * 3);
+    this._canvasWidthPx = Math.ceil(sizePx * 3);
+    this._canvasHeightPx = Math.ceil(sizePx * 3);
     canvas.width = this._canvasWidthPx;
     canvas.height = this._canvasHeightPx;
 
     const ctx = canvas.getContext("2d", { alpha: false });
-    ctx.font = "" + fontSizePx + "px " + fontFamily;
+    ctx.font = "" + sizePx + "px " + family;
     ctx.textBaseline = "top";
 
     // Note: most of the properties on a TextMetrics object are behind Blink's experimental flag. 1/5/2019
@@ -104,10 +123,18 @@ class FontMeasurement {
     let ascent = Math.floor(-metricsAscent);
     let descent = Math.ceil(metricsDescent);
     for (const sampleChar of sampleChars) {
-      const { topY, bottomY } = this._renderAndMeasureText(ctx, fontSizePx, sampleChar);
+      const { topY, bottomY } = this._renderAndMeasureText(ctx, sizePx, sampleChar);
       ascent = Math.min(ascent, topY);
       descent = Math.max(descent, bottomY+1);
     }
+
+    let boldItalicWidthPx = charWidthPx;
+    ctx.font = "bold italic " + sizePx + "px " + family;
+    for (const sampleChar of sampleChars) {
+      const { leftX, rightX } = this._renderAndMeasureText(ctx, sizePx, sampleChar);
+      boldItalicWidthPx = Math.max(boldItalicWidthPx, rightX - leftX);
+    }
+    this._log.debug(`reported with: ${charWidthPx}, boldItalicWidthPx: ${boldItalicWidthPx}`);
 
     const fillTextYOffset = -ascent;
     const charHeightPx = descent - ascent;
@@ -115,7 +142,7 @@ class FontMeasurement {
     // this._log.debug(`charWidthPx: ${charWidthPx }, charHeightPx: ${charHeightPx}, fillTextYOffset: ${fillTextYOffset}`);
 
     // Used for the strike through and underline Y positions.
-    const {topY: mTopY, bottomY: mBottomY} = this._renderAndMeasureText(ctx, fontSizePx, "m");
+    const {topY: mTopY, bottomY: mBottomY} = this._renderAndMeasureText(ctx, sizePx, "m");
     // this._log.debug(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
 
     const underlineHeight = 1;
@@ -127,12 +154,13 @@ class FontMeasurement {
     const curlyY = underlineY + curlyHeight/2;
 
     return {
-      fontSizePx,
-      fontFamily,
+      fontSizePx: sizePx,
+      fontFamily: family,
 
       widthPx: charWidthPx,
       heightPx: charHeightPx,
-
+      boldItalicWidthPx,
+  
       fillTextYOffset,
       fillTextXOffset: 0,
 
@@ -151,7 +179,7 @@ class FontMeasurement {
     };
   }
 
-  private _renderAndMeasureText(ctx: CanvasRenderingContext2D, fontSizePx: number, text: string): { topY: number, bottomY: number } {
+  private _renderAndMeasureText(ctx: CanvasRenderingContext2D, fontSizePx: number, text: string): TextMeasurements {
     ctx.save();
 
     ctx.globalCompositeOperation = "copy";
@@ -166,41 +194,76 @@ class FontMeasurement {
     const imageData = ctx.getImageData(0, 0, fontSizePx * 3, fontSizePx * 3);
     const topRowY = this._findTopRowInImageData(imageData);
     const bottomRowY = this._findBottomRowInImageData(imageData);
+    const leftX = this._findLeftColumnInImageData(imageData);
+    const rightX = this._findRightColumnInImageData(imageData);
     ctx.restore();
-    return { topY: topRowY-textXY, bottomY: bottomRowY-textXY };
+    return { topY: topRowY-textXY, bottomY: bottomRowY-textXY, leftX, rightX };
   }
 
   private _findTopRowInImageData(imageData: ImageData): number {
-    const rawData = imageData.data;
-    const width = imageData.width;
     const height = imageData.height;
-    let offset = 0;
     for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++, offset += 4) {
-        if (rawData[offset] !== 0) {
-          return y;
-        }
+      if ( ! this._isRowBlack(imageData, y)) {
+        return y;
       }
     }
     return -1;
   }
 
   private _findBottomRowInImageData(imageData: ImageData): number {
-    const rawData = imageData.data;
-    const width = imageData.width;
     const height = imageData.height;
-
-    let offset = 4 * width * height - 4;
     for (let y = height-1; y >= 0; y--) {
-      for (let x = 0; x < width; x++, offset -= 4) {
-        if (rawData[offset] !== 0) {
-          return y;
-        }
+      if ( ! this._isRowBlack(imageData, y)) {
+        return y;
       }
     }
     return -1;
   }
 
+  private _isRowBlack(imageData: ImageData, row: number): boolean {
+    const rawData = imageData.data;
+    const width = imageData.width;
+    let offset = 4 * width * row;
+    for (let x = 0; x < width; x++, offset += 4) {
+      if (rawData[offset] !== 0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private _findLeftColumnInImageData(imageData: ImageData): number {
+    const width = imageData.width;
+    for (let x = 0; x < width; x++) {
+      if ( ! this._isColumnBlack(imageData, x)) {
+        return x;
+      }
+    }
+    return -1;
+  }
+
+  private _findRightColumnInImageData(imageData: ImageData): number {
+    const width = imageData.width;
+    for (let x = width-1; x >= 0; x--) {
+      if ( ! this._isColumnBlack(imageData, x)) {
+        return x;
+      }
+    }
+    return -1;
+  }
+
+  private _isColumnBlack(imageData: ImageData, column: number): boolean {
+    const rawData = imageData.data;
+    const height = imageData.height;
+    const width = imageData.width;
+    for (let y = 0; y < height; y++) {
+      const offset = 4 * (y * width + column);
+      if (rawData[offset] !== 0) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 export function debugFontMetrics(fontMetrics: MonospaceFontMetrics): void {
