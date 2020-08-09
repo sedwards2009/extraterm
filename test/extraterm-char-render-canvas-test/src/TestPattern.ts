@@ -43,7 +43,7 @@ export interface OutputDevice {
 
 export class VtOutputDevice implements OutputDevice {
 
-  private _lineBuffer = "";
+  private _textBuffer = "";
 
   private fgColorMode = COLOR_MODE_PALETTE;
   private bgColorMode = COLOR_MODE_PALETTE;
@@ -51,14 +51,6 @@ export class VtOutputDevice implements OutputDevice {
   private bgIndex = 0;
   private fgRGB = [255,255,255];
   private bgRGB = [0, 0, 0];
-
-  private fgR = 0;
-  private fgG = 0;
-  private fgB = 0;
-
-  private bgR = 0;
-  private bgG = 0;
-  private bgB = 0;
 
   constructor() {
     this._resetState();
@@ -76,25 +68,31 @@ export class VtOutputDevice implements OutputDevice {
     this.bgRGB = [0, 0, 0];
   }
 
+  getText(): string {
+    return this._textBuffer;
+  }
+
   setForegroundRGB(rgb: [number, number, number]): void {
-    if (this.fgColorMode !== COLOR_MODE_RGB || this.fgR !== rgb[0] || this.fgG !== rgb[1] || this.fgB !== rgb[2]) {
-      this._lineBuffer += `\x1b[38;2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
+    if (this.fgColorMode !== COLOR_MODE_RGB || this.fgRGB[0] !== rgb[0] || this.fgRGB[1] !== rgb[1] ||
+        this.fgRGB[2] !== rgb[2]) {
+      this._textBuffer += `\x1b[38;2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
       this.fgColorMode = COLOR_MODE_RGB;
       this.fgRGB = rgb;
     }
   }
 
   setBackgroundRGB(rgb: [number, number, number]): void {
-    if (this.bgColorMode !== COLOR_MODE_RGB || this.bgR !== rgb[0] || this.bgG !== rgb[1] || this.bgB !== rgb[2]) {
-      this._lineBuffer += `\x1b[48;2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
+    if (this.bgColorMode !== COLOR_MODE_RGB || this.bgRGB[0] !== rgb[0] || this.bgRGB[1] !== rgb[1] ||
+        this.bgRGB[2] !== rgb[2]) {
+      this._textBuffer += `\x1b[48;2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
       this.bgColorMode = COLOR_MODE_RGB;
       this.bgRGB = rgb;
     }
   }
 
-  setForegroundColorIndex(index) {
+  setForegroundColorIndex(index: number): void {
     if (this.fgColorMode !== COLOR_MODE_PALETTE || this.fgIndex !== index) {
-      this._lineBuffer += `\x1b[38;5;${index}m`;
+      this._textBuffer += `\x1b[38;5;${index}m`;
       this.fgColorMode = COLOR_MODE_PALETTE;
       this.fgIndex = index;
     }
@@ -102,7 +100,7 @@ export class VtOutputDevice implements OutputDevice {
 
   setBackgroundColorIndex(index: number): void {
     if (this.bgColorMode !== COLOR_MODE_PALETTE || this.bgIndex !== index) {
-      this._lineBuffer += `\x1b[48;5;${index}m`;
+      this._textBuffer += `\x1b[48;5;${index}m`;
       this.bgColorMode = COLOR_MODE_PALETTE;
       this.bgIndex = index;
     }
@@ -111,17 +109,16 @@ export class VtOutputDevice implements OutputDevice {
   setExtraFont(on: boolean): void {}
 
   print(s: string): void {
-    this._lineBuffer += s;
+    this._textBuffer += s;
   }
 
   cr(): void {
-    console.log(this._lineBuffer);
-    this._lineBuffer = "";
+    this._textBuffer += "\n";
   }
 
   reset(): void {
     this._resetState();
-    this._lineBuffer += "\x1b[0m";
+    this._textBuffer += "\x1b[0m";
   }
 
   flush(): void {
@@ -130,33 +127,33 @@ export class VtOutputDevice implements OutputDevice {
 
   setBold(on) {
     if (on) {
-      this._lineBuffer += "\x1b[1m";
+      this._textBuffer += "\x1b[1m";
     } else {
-      this._lineBuffer += "\x1b[22m";
+      this._textBuffer += "\x1b[22m";
     }
   }
 
   setUnderline(on) {
     if (on) {
-      this._lineBuffer += "\x1b[4m";
+      this._textBuffer += "\x1b[4m";
     } else {
-      this._lineBuffer += "\x1b[24m";
+      this._textBuffer += "\x1b[24m";
     }
   }
 
   setItalic(on) {
     if (on) {
-      this._lineBuffer += "\x1b[3m";
+      this._textBuffer += "\x1b[3m";
     } else {
-      this._lineBuffer += "\x1b[23m";
+      this._textBuffer += "\x1b[23m";
     }
   }
 
   setStrikethrough(on) {
     if (on) {
-      this._lineBuffer += "\x1b[9m";
+      this._textBuffer += "\x1b[9m";
     } else {
-      this._lineBuffer += "\x1b[29m";
+      this._textBuffer += "\x1b[29m";
     }
   }
 }
@@ -324,7 +321,7 @@ export function printTestPattern(output: OutputDevice): void {
 }
 
 export function printCheckerboardPattern(output: OutputDevice, rows: number): void {
-  const checkerPatternFunc = (x, y) => {
+  const checkerPatternFunc = (x: number, y: number): [number, number, number] => {
     if ((x % 2) !== (y % 2)) {
       return [255, 255, 255];
     } else {
@@ -332,7 +329,7 @@ export function printCheckerboardPattern(output: OutputDevice, rows: number): vo
     }
   };
 
-  const negCheckerPatternFunc = (x, y) => {
+  const negCheckerPatternFunc = (x: number, y: number): [number, number, number] => {
     return checkerPatternFunc(x+1, y);
   };
 
@@ -341,7 +338,9 @@ export function printCheckerboardPattern(output: OutputDevice, rows: number): vo
 
 const ALPHABET_COLS = 30;
 
-function printAlphabet(output: OutputDevice, rows: number, fgFunc, bgFunc) {
+function printAlphabet(output: OutputDevice, rows: number, fgFunc: (x: number, y: number) => [number, number, number],
+    bgFunc: (x: number, y: number) => [number, number, number]) {
+
   for (let j=0; j<rows; j++) {
     for (let i="!".codePointAt(0),x=0; i<"~".codePointAt(0); i++,x++) {
       output.setForegroundRGB(fgFunc(x, j));
@@ -354,11 +353,11 @@ function printAlphabet(output: OutputDevice, rows: number, fgFunc, bgFunc) {
   }
 }
 
-export function printRgbGradientPattern(output: OutputDevice) {
+export function printRgbGradientPattern(output: OutputDevice): void {
   output.print("RGB");
   output.cr();
 
-  const gradientPatternFunc = (x, y) => {
+  const gradientPatternFunc = (x: number, y: number): [number, number, number] => {
     const red = [255, 0, 0];
     const green = [0, 255, 0];
     const blue = [0, 0, 255];
@@ -369,7 +368,7 @@ export function printRgbGradientPattern(output: OutputDevice) {
             Math.floor((x/ALPHABET_COLS % 1) * baseColor[2])];
   };
 
-  const whiteFunc = (x, y) => {
+  const whiteFunc = (x: number, y: number): [number, number, number] => {
     return [255, 255, 255];
   };
 

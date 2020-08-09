@@ -1,7 +1,7 @@
 
 import { CharRenderCanvas, Renderer, xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics, MonospaceFontMetrics, WebGLCharRenderCanvas } from "extraterm-char-render-canvas";
 import { CharCellGrid } from "extraterm-char-cell-grid";
-import { printTestPattern, printEmoji, CellGridOutputDevice, printPalette } from "./TestPattern";
+import { printTestPattern, printEmoji, CellGridOutputDevice, printPalette, VtOutputDevice, OutputDevice } from "./TestPattern";
 import { WebGLRendererRepository } from "extraterm-char-render-canvas/dist/WebGLRendererRepository";
 
 const webGLRendererRepository = new WebGLRendererRepository();
@@ -111,6 +111,22 @@ function fillGridWithString(cellGrid: CharCellGrid, str: string): void {
   }
 }
 
+function createDownloadLink(contents: string): void {
+  const aElement = document.createElement("a");
+  const textNode = document.createTextNode("Download Text File");
+  aElement.appendChild(textNode);
+  const encoded = `data:text/plain;base64,${b64EncodeUnicode(contents)}`;
+  aElement.href = encoded;
+  document.body.appendChild(aElement);
+}
+
+function b64EncodeUnicode(str: string): string {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+      function toSolidBytes(match, p1) {
+          return String.fromCharCode(parseInt(p1, 16));
+  }));
+}
+
 function testWebGL(): void {
   const containerDiv = document.getElementById("container");
 
@@ -123,15 +139,23 @@ function testWebGL(): void {
   const renderer = new WebGLRenderer(fontAtlas, false);
   renderer.init();
 
-  const cellGrid = new CharCellGrid(250, 30, xtermPalette());
+  const applyPattern = (outputDevice: OutputDevice) => {
+    printPalette(outputDevice);
+    outputDevice.cr();
+    printEmoji(outputDevice);
+    outputDevice.cr();
+  };
 
+  const cellGrid = new CharCellGrid(250, 30, xtermPalette());
   const outputDevice = new CellGridOutputDevice(cellGrid);
-  printPalette(outputDevice);
-  outputDevice.cr();
-  printEmoji(outputDevice);
-  outputDevice.cr();
+  applyPattern(outputDevice);
+
+  const textOutputDevice = new VtOutputDevice();
+  applyPattern(textOutputDevice);
 
   renderer.render(null, cellGrid);
+  document.body.appendChild(renderer.getCanvas());
+  createDownloadLink(textOutputDevice.getText());
 }
 
 function computeEmojiMetrics(metrics: MonospaceFontMetrics): MonospaceFontMetrics {
@@ -154,6 +178,10 @@ function renderWebGLTestPattern(): void {
   webglRenderCanvas.getCellGrid().clear();
   printTestPattern(new CellGridOutputDevice(webglRenderCanvas.getCellGrid()));
   webglRenderCanvas.render();
+
+  const textOutputDevice = new VtOutputDevice();
+  printTestPattern(textOutputDevice);
+  createDownloadLink(textOutputDevice.getText());
 }
 
 function renderWebGLLowerAlphaPattern(): void {
