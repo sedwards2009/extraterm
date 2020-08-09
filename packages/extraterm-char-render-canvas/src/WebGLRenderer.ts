@@ -93,6 +93,10 @@ export class WebGLRenderer {
     return this._initWebGLContext();
   }
 
+  getCanvas(): HTMLCanvasElement {
+    return this._canvas;
+  }
+
   private _releaseContextRelatedResources(): void {
     this._shaderProgram = null;
     this._vertexPositionAttrib = null;
