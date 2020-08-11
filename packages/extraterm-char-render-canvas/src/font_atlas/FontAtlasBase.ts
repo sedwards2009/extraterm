@@ -222,9 +222,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     const textXPx = xPx + this._metrics.fillTextXOffset;
     const textYPx = yPx + this._metrics.fillTextYOffset;
 
-    const isBoldOrItalic = (style & (STYLE_MASK_BOLD | STYLE_MASK_ITALIC)) !== 0 &&
-                            metrics.widthPx !== metrics.boldItalicWidthPx;
-    if (isBoldOrItalic) {
+    const isItalic = (style & STYLE_MASK_ITALIC) !== 0 && metrics.widthPx !== metrics.boldItalicWidthPx;
+    if (isItalic) {
       ctx.save();
       const m = new DOMMatrix();
       m.translateSelf(textXPx, textYPx);
