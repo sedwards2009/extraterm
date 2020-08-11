@@ -134,7 +134,6 @@ class FontMeasurement {
       const { leftX, rightX } = this._renderAndMeasureText(ctx, sizePx, sampleChar);
       boldItalicWidthPx = Math.max(boldItalicWidthPx, rightX - leftX);
     }
-    this._log.debug(`reported with: ${charWidthPx}, boldItalicWidthPx: ${boldItalicWidthPx}`);
 
     const fillTextYOffset = -ascent;
     const charHeightPx = descent - ascent;
