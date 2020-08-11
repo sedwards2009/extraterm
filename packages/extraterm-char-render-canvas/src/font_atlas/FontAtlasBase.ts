@@ -185,32 +185,40 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
         styleName += "italic ";
       }
 
-      if (fontIndex === 0) {
-        ctx.font = styleName + this._metrics.fontSizePx + "px " + this._metrics.fontFamily;
-      } else {
-        const metrics = this._extraFonts[fontIndex-1];
-        ctx.font = styleName + metrics.fontSizePx + "px " + metrics.fontFamily;
+      let metrics = this._metrics;
+      if (fontIndex !== 0) {
+        metrics = this._extraFonts[fontIndex-1];
       }
+      ctx.font = styleName + metrics.fontSizePx + "px " + metrics.fontFamily;
 
-      ctx.fillText(str, xPx + this._metrics.fillTextXOffset, yPx + this._metrics.fillTextYOffset);
+      const textXPx = xPx + this._metrics.fillTextXOffset;
+      const textYPx = yPx + this._metrics.fillTextYOffset;
+
+      const isBoldOrItalic = (style & (STYLE_MASK_BOLD | STYLE_MASK_ITALIC)) !== 0 &&
+                              metrics.widthPx !== metrics.boldItalicWidthPx;
+      if (isBoldOrItalic) {
+        ctx.save();
+        const m = new DOMMatrix();
+        m.translateSelf(textXPx, textYPx);
+        m.scaleSelf(metrics.widthPx / metrics.boldItalicWidthPx, 1);
+        ctx.setTransform(m);
+        ctx.fillText(str, 0, 0);
+        ctx.restore();
+      } else {
+        ctx.fillText(str, textXPx, textYPx);
+      }
     }
 
     if (style & STYLE_MASK_STRIKETHROUGH) {
-      ctx.fillRect(xPx,
-                              yPx + this._metrics.strikethroughY,
-                              widthPx, this._metrics.strikethroughHeight);
+      ctx.fillRect(xPx, yPx + this._metrics.strikethroughY, widthPx, this._metrics.strikethroughHeight);
     }
 
     const underline = style & STYLE_MASK_UNDERLINE;
     if (underline === UNDERLINE_STYLE_NORMAL || underline === UNDERLINE_STYLE_DOUBLE) {
-      ctx.fillRect(xPx,
-                              yPx + this._metrics.underlineY,
-                              widthPx, this._metrics.underlineHeight);
+      ctx.fillRect(xPx, yPx + this._metrics.underlineY, widthPx, this._metrics.underlineHeight);
     }
     if (underline === UNDERLINE_STYLE_DOUBLE) {
-      ctx.fillRect(xPx,
-                              yPx + this._metrics.secondUnderlineY,
-                              widthPx, this._metrics.underlineHeight);
+      ctx.fillRect(xPx, yPx + this._metrics.secondUnderlineY, widthPx, this._metrics.underlineHeight);
     }
     if (underline === UNDERLINE_STYLE_CURLY) {
       ctx.save();
