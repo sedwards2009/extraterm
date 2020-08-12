@@ -340,11 +340,12 @@ export class WebGLRenderer {
     return result;
   }
 
-  private _gridTexturePositions(cellGrid: CharCellGrid, atlas: TextureFontAtlas): number[] {
-    const result: number[] = [];
+  private _gridTexturePositions(cellGrid: CharCellGrid, atlas: TextureFontAtlas): Float32Array {
+    const result = new Float32Array(2 * cellGrid.height * cellGrid.width);
     const textureCellWidth = atlas.getTextureCellWidth();
     const renderCursor = this._renderBlockCursor;
 
+    let arrayIndex = 0;
     for (let j=0; j<cellGrid.height; j++) {
       for (const normalizedCell of normalizedCellIterator(cellGrid, j)) {
         const codePoint = normalizedCell.codePoint;
@@ -374,8 +375,10 @@ export class WebGLRenderer {
           coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(x, j), fontIndex, fgRGBA, bgRGBA);
         }
 
-        result.push(coord.textureXpx + normalizedCell.segment * textureCellWidth);
-        result.push(coord.textureYpx);
+        result[arrayIndex] = coord.textureXpx + normalizedCell.segment * textureCellWidth;
+        arrayIndex++;
+        result[arrayIndex]= coord.textureYpx;
+        arrayIndex++;
       }
     }
     return result;
@@ -446,8 +449,7 @@ export class WebGLRenderer {
     const glyphTexturePositionBuffer = this._glContext.createBuffer();
     this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, glyphTexturePositionBuffer);
     const glyphPositionArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
-    this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(glyphPositionArray),
-      this._glContext.STATIC_DRAW);
+    this._glContext.bufferData(this._glContext.ARRAY_BUFFER, glyphPositionArray, this._glContext.STATIC_DRAW);
 
     const numComponents = 2;
     const type = this._glContext.FLOAT;
