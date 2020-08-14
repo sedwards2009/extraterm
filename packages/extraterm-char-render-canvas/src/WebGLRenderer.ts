@@ -15,6 +15,8 @@ const CANVAS_SIZE_STEP = 512;
 export class WebGLRenderer {
   private _log: Logger = null;
 
+  private _firstRender = true;
+
   private _metrics: MonospaceFontMetrics = null;
   private _canvas: HTMLCanvasElement = null;
   private _glContext: WebGL2RenderingContext = null;
@@ -98,6 +100,7 @@ export class WebGLRenderer {
   }
 
   private _releaseContextRelatedResources(): void {
+    this._firstRender = true;
     this._shaderProgram = null;
     this._vertexPositionAttrib = null;
     this._textureCoordAttrib = null;
@@ -384,32 +387,19 @@ export class WebGLRenderer {
     return result;
   }
 
-  // Initialize a texture and load an image.
-  // When the image finished loading copy it into the texture.
-  //
   private _loadAtlasTexture(gl: WebGLRenderingContext, atlasCanvas: HTMLCanvasElement): WebGLTexture {
+    gl.bindTexture(gl.TEXTURE_2D, this._texture);
+
     const level = 0;
     const internalFormat = gl.RGBA;
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
-
-    gl.bindTexture(gl.TEXTURE_2D, this._texture);
     gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, atlasCanvas);
 
-    // WebGL1 has different requirements for power of 2 images
-    // vs non power of 2 images so check if the image is a
-    // power of 2 in both dimensions.
-    if (isPowerOf2(atlasCanvas.width) && isPowerOf2(atlasCanvas.height)) {
-      // Yes, it's a power of 2. Generate mips.
-      gl.generateMipmap(gl.TEXTURE_2D);
-    } else {
-      // No, it's not a power of 2. Turn off mips and set
-      // wrapping to clamp to edge
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    }
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
     return this._texture;
   }
@@ -423,11 +413,14 @@ export class WebGLRenderer {
     const rectHeight = this._metrics.heightPx * cellGrid.height;
     this._resizeCanvas(rectWidth, rectHeight);
 
-    this._setupTexturePositions(cellGrid);
+    const textureChanged = this._setupTexturePositions(cellGrid);
+    if (textureChanged || this._firstRender) {
+      this._firstRender = false;
 
-    const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
-    this._glContext.activeTexture(this._glContext.TEXTURE0);
-    this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
+      const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
+      this._glContext.activeTexture(this._glContext.TEXTURE0);
+      this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
+    }
 
     this._setupCellGridVertexes(cellGrid);
 
@@ -445,7 +438,9 @@ export class WebGLRenderer {
     destinationContext.drawImage(this._canvas, 0, 0, rectWidth, rectHeight, 0, 0, rectWidth, rectHeight);
   }
 
-  private _setupTexturePositions(cellGrid: CharCellGrid): void {
+  private _setupTexturePositions(cellGrid: CharCellGrid): boolean {
+    const initialChangeCounter = this._fontAtlas.getChangeCounter();
+
     const glyphTexturePositionBuffer = this._glContext.createBuffer();
     this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, glyphTexturePositionBuffer);
     const glyphPositionArray = this._gridTexturePositions(cellGrid, this._fontAtlas);
@@ -460,6 +455,8 @@ export class WebGLRenderer {
       offset);
     this._glContext.vertexAttribDivisor(this._glyphTexturetPositionAttrib, 1);
     this._glContext.enableVertexAttribArray(this._glyphTexturetPositionAttrib);
+
+    return initialChangeCounter !== this._fontAtlas.getChangeCounter();
   }
 
   private _setupCellGridVertexes(cellGrid: CharCellGrid): void {

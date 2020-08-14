@@ -107,6 +107,10 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     return this._metrics;
   }
 
+  getChangeCounter(): number {
+    return this._monoTime;
+  }
+
   private _makeLookupKey(codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number): number[] {
     return [fgRGBA, bgRGBA, style * TWO_TO_THE_24 + codePoint];
   }
