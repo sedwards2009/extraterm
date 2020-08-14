@@ -473,20 +473,22 @@ export class WebGLRenderer {
     this._glContext.bindBuffer(this._glContext.ARRAY_BUFFER, cellGridVertexBuffer);
 
     const cellGridVertexArray = this._cellGridVertexTopLeft(cellGrid);
-    this._glContext.bufferData(this._glContext.ARRAY_BUFFER, new Float32Array(cellGridVertexArray),
-      this._glContext.STATIC_DRAW);
+    this._glContext.bufferData(this._glContext.ARRAY_BUFFER, cellGridVertexArray, this._glContext.STATIC_DRAW);
 
     this._glContext.vertexAttribPointer(this._cellPositionAttrib, numComponents, type, normalize, stride, offset);
     this._glContext.vertexAttribDivisor(this._cellPositionAttrib, 1);
     this._glContext.enableVertexAttribArray(this._cellPositionAttrib);
   }
 
-  private _cellGridVertexTopLeft(cellGrid: CharCellGrid): number[] {
-    const result: number[] = [];
+  private _cellGridVertexTopLeft(cellGrid: CharCellGrid): Float32Array {
+    const result = new Float32Array(cellGrid.width * cellGrid.height * 2);
+    let index = 0;
     for (let j=0; j<cellGrid.height; j++) {
       for (let i=0; i<cellGrid.width; i++) {
-        result.push(i * this._metrics.widthPx);
-        result.push(j * this._metrics.heightPx);
+        result[index] = i * this._metrics.widthPx;
+        index++;
+        result[index] = j * this._metrics.heightPx;
+        index++;
       }
     }
     return result;
