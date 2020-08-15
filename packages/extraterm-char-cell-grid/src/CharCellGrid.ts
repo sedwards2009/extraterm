@@ -155,6 +155,10 @@ export class CharCellGrid {
     this._reapplyPalette();
   }
 
+  getPalette(): number[] {
+    return this.palette;
+  }
+
   private _reapplyPalette(): void {
     const width = this.width;
     const height = this.height;

@@ -9,6 +9,8 @@ import { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAt
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 import { normalizedCellIterator } from "./NormalizedCellIterator";
 
+export const PALETTE_BG_INDEX = 256;
+export const PALETTE_FG_INDEX = 257;
 
 const CANVAS_SIZE_STEP = 512;
 
@@ -387,6 +389,17 @@ export class WebGLRenderer {
     return result;
   }
 
+  private _prewarmFontAtlas(cellGrid: CharCellGrid, atlas: TextureFontAtlas): void {
+    const palette = cellGrid.getPalette();
+    const bgRGBA = palette[PALETTE_BG_INDEX];
+    const fgRGBA = palette[PALETTE_FG_INDEX];
+    const prewarmChars = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789[]_-$@#./'\"~:()";
+    for (let i=0; i<prewarmChars.length; i++) {
+      const codePoint = prewarmChars.codePointAt(i);
+      atlas.loadCodePoint(codePoint, 0, 0, fgRGBA, bgRGBA);
+    }
+  }
+
   private _loadAtlasTexture(gl: WebGLRenderingContext, atlasCanvas: HTMLCanvasElement): WebGLTexture {
     gl.bindTexture(gl.TEXTURE_2D, this._texture);
 
@@ -413,14 +426,16 @@ export class WebGLRenderer {
     const rectHeight = this._metrics.heightPx * cellGrid.height;
     this._resizeCanvas(rectWidth, rectHeight);
 
+    if (this._firstRender) {
+      this._prewarmFontAtlas(cellGrid, this._fontAtlas);
+    }
     const textureChanged = this._setupTexturePositions(cellGrid);
     if (textureChanged || this._firstRender) {
-      this._firstRender = false;
-
       const texture = this._loadAtlasTexture(this._glContext, this._fontAtlas.getCanvas());
       this._glContext.activeTexture(this._glContext.TEXTURE0);
       this._glContext.bindTexture(this._glContext.TEXTURE_2D, texture);
     }
+    this._firstRender = false;
 
     this._setupCellGridVertexes(cellGrid);
 
