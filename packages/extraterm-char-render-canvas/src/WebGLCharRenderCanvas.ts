@@ -152,6 +152,9 @@ export interface WebGLCharRenderCanvasOptions {
   cursorStyle?: CursorStyle;
 }
 
+interface ExtraFontSlice extends FontSlice {
+  codePointSet: Set<number>;
+}
 
 export class WebGLCharRenderCanvas implements Disposable {
   private _log: Logger = null;
@@ -169,7 +172,7 @@ export class WebGLCharRenderCanvas implements Disposable {
   private _fontFamily = "sans";
   private _fontSizePx = 10;
 
-  // private _extraFontSlices: ExtraFontSlice[] = [];
+  private _extraFontSlices: ExtraFontSlice[] = [];
 
   private cellWidthPx: number = 0;
   private cellHeightPx: number = 0;
@@ -202,6 +205,7 @@ export class WebGLCharRenderCanvas implements Disposable {
 
     this._palette = palette;
     this._cursorStyle = cursorStyle === undefined? CursorStyle.BLOCK : cursorStyle;
+    this._extraFontSlices = this._setupExtraFontSlices(options.extraFonts);
 
     this._fontSizePx = fontSizePx || 10;
     this._fontFamily = fontFamily || "monospace";
@@ -250,6 +254,30 @@ export class WebGLCharRenderCanvas implements Disposable {
     }
   }
 
+  private _setupExtraFontSlices(extraFonts: FontSlice[]): ExtraFontSlice[] {
+    if (extraFonts == null) {
+      return [];
+    }
+
+    return extraFonts.map(extraFont => {
+      let codePointSet: Set<number> = null;
+      if (extraFont.unicodeCodePoints != null) {
+        codePointSet = new Set<number>(extraFont.unicodeCodePoints);
+      }
+
+      if (extraFont.unicodeStart != null && extraFont.unicodeEnd != null) {
+        if (codePointSet == null) {
+          codePointSet = new Set();
+        }
+        for (let c = extraFont.unicodeStart; c <= extraFont.unicodeEnd; c++) {
+          codePointSet.add(c);
+        }
+      }
+
+      return { ...extraFont, codePointSet };
+    });
+  }
+
   private _paintInRightGapBackground(): void {
     const gapPx = this._canvasWidthPx - this._widthChars * this.cellWidthPx;
     if (gapPx !== 0) {
@@ -291,10 +319,37 @@ export class WebGLCharRenderCanvas implements Disposable {
   }
 
   render(): void {
+    this._updateCharGridFlags();
+
     this._webglRenderer.setCursorColor(this._palette[PALETTE_CURSOR_INDEX]);
     this._webglRenderer.setRenderBlockCursor(this._cursorStyle === CursorStyle.BLOCK);
     this._webglRenderer.render(this._canvasCtx, this._cellGrid);
     this._renderCursors(this._canvasCtx);
+  }
+
+  private _updateCharGridFlags(): void {
+    const cellGrid = this._cellGrid;
+    const width = cellGrid.width;
+    const height = cellGrid.height;
+
+    for (let j=0; j<height; j++) {
+      for (let i=0; i<width; i++) {
+        if (this._getExtraFontSliceFromCodePoint(cellGrid.getCodePoint(i, j)) != null) {
+          cellGrid.setExtraFontsFlag(i, j, true);
+        } else {
+          cellGrid.setExtraFontsFlag(i, j, false);
+        }
+      }
+    }
+  }
+
+  private _getExtraFontSliceFromCodePoint(codePoint: number): ExtraFontSlice {
+    for (const fontSlice of this._extraFontSlices) {
+      if (fontSlice.codePointSet.has(codePoint)) {
+        return fontSlice;
+      }
+    }
+    return null;
   }
 
   getFontAtlasCanvasElement(): HTMLCanvasElement {
