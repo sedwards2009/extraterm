@@ -11,7 +11,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "easta": "3.0.1"
+    "easta": "5.0.0"
   },
   "devDependencies": {
     "@types/jest": "23.3.13",
@@ -19,13 +19,14 @@
     "eslint-config-extraterm": "1.0.0",
     "jest": "23.6.0",
     "shx": "^0.3.2",
-    "ts-jest": "23.10.5",
     "typescript": "3.9.6"
   },
   "scripts": {
-    "build": "yarn run build-fast && yarn run lint",
+    "build": "yarn run build-fast && yarn run build:emoji-table && yarn run lint",
     "build-fast": "tsc",
+    "build:emoji-table": "node build_scripts/convert_emoji_table.js > dist/emoji_table.js",
     "clean": "shx rm -rf dist",
+    "dump-test-file": "yarn run build && node dist/DumpEmojiTestFile.js > emoji_test.txt",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "run": "false",

@@ -4353,10 +4353,10 @@ duplexify@^3.4.2, duplexify@^3.6.0:
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
 
-easta@3.0.1:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/easta/-/easta-3.0.1.tgz#7c4b2b957d1401fef9fd412ffaf87f130d19b9fd"
-  integrity sha512-3fgMwIiyh2T2QbYoFYuR0cPOm5tEJj8x3KqkhzVC/3oqFz/U+CDBDoULkyojjBMfxRYh0K7oVl4OcEGoEat21Q==
+easta@5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/easta/-/easta-5.0.0.tgz#12b4bb8f5725adb18c51507d1b26ea501192aaa6"
+  integrity sha512-Ebmbd/kMo4Ke0tCLiqg8OnuHm1r7fZaxpi6ONWZbryfhU/+FEq64o5ct6iajw9gQpojPOUixX2fK62XZ0Fa5Cw==
 
 ebnf-parser@0.1.10:
   version "0.1.10"

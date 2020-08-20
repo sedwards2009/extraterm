@@ -10,7 +10,7 @@
     "typescript": "3.9.6"
   },
   "dependencies": {
-    "easta": "3.0.1",
+    "easta": "5.0.0",
     "extraterm-char-render-canvas": "1.0.0"
   },
   "scripts": {
