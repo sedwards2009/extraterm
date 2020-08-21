@@ -176,7 +176,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     if (isBoxCharacter(codePoint)) {
       drawBoxCharacter(ctx, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx);
     } else {
-      this._drawPlainCharacter(ctx, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx);
+      this._drawPlainCharacter(ctx, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx, widthInCells);
     }
 
     this._drawDecoration(ctx, style, xPx, yPx, widthPx);
@@ -200,7 +200,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   }
 
   private _drawPlainCharacter(ctx: CanvasRenderingContext2D, codePoint: number, alternateCodePoints: number[],
-      style: StyleCode, fontIndex: number, xPx: number, yPx: number): void {
+      style: StyleCode, fontIndex: number, xPx: number, yPx: number, widthInCells: number): void {
 
     let str: string;
     if (alternateCodePoints == null) {
@@ -226,8 +226,18 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     const textXPx = xPx + this._metrics.fillTextXOffset;
     const textYPx = yPx + this._metrics.fillTextYOffset;
 
+    let shrink = false;
+    if (widthInCells === 1 && fontIndex !== 0) {
+      // Scale extra fonts to fit the cell on a per glyph basis.
+      const charMetrics = ctx.measureText(str);
+      const measuredWidth = charMetrics.actualBoundingBoxRight - charMetrics.actualBoundingBoxLeft;
+      if (measuredWidth > this._metrics.widthPx) {
+        shrink = true;
+      }
+    }
+
     const isItalic = (style & STYLE_MASK_ITALIC) !== 0 && metrics.widthPx !== metrics.boldItalicWidthPx;
-    if (isItalic) {
+    if (isItalic && fontIndex === 0) {
       ctx.save();
       const m = new DOMMatrix();
       m.translateSelf(textXPx, textYPx);
@@ -236,7 +246,19 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       ctx.fillText(str, 0, 0);
       ctx.restore();
     } else {
-      ctx.fillText(str, textXPx, textYPx);
+      if (! shrink) {
+        ctx.fillText(str, textXPx, textYPx);
+      } else {
+
+        // Shrink big glyphs by 50%.
+        ctx.save();
+        const m = new DOMMatrix();
+        m.translateSelf(textXPx, textYPx + Math.floor(this._metrics.heightPx/4));
+        m.scaleSelf(0.5, 0.5);
+        ctx.setTransform(m);
+        ctx.fillText(str, 0, 0);
+        ctx.restore();
+      }
     }
   }
 
