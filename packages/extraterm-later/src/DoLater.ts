@@ -60,7 +60,7 @@ export function doLater(func: Function, msec=0, hiPrio=false): Disposable {
 
     // Non-zero timeouts have to get their own timer.
     let execFunction = func;
-    window.setTimeout(() => {
+    setTimeout(() => {
       if (execFunction != null) {
         execFunction();
       }
