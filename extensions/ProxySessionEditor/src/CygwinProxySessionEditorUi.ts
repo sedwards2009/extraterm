@@ -12,11 +12,11 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     template: trimBetweenTags(`
 <div class="gui-layout cols-1-2">
   <label for="name">Name:</label>
-  <input type="text" name="name" v-model="name">
+  <input type="text" name="name" v-model="name" spellcheck="false">
 
   <label for="cygwinPath">Cygwin path:</label>
   <span>
-    <input type="text" name="cygwinPath" v-bind:class="{'has-error': cygwinPathErrorMsg != ''}" v-model="cygwinPath">
+    <input type="text" name="cygwinPath" v-bind:class="{'has-error': cygwinPathErrorMsg != ''}" v-model="cygwinPath" spellcheck="false">
     <span v-if="cygwinPathErrorMsg != ''">&nbsp;
       <i class="fas fa-exclamation-triangle"></i> {{ cygwinPathErrorMsg }}
     </span>
@@ -36,16 +36,16 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
       <input class="input-radio" type="radio" value="0" v-model.number="useDefaultShell">
       Other
     </label>
-    <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell">
+    <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell" spellcheck="false">
     <i v-if="shellErrorMsg != ''" class="fas fa-exclamation-triangle"></i>
     {{ shellErrorMsg }}
   </span>
 
   <label for="name">Arguments:</label>
-  <input type="text" class="form-control" name="args" v-model="args">
+  <input type="text" class="form-control" name="args" v-model="args" spellcheck="false">
 
   <label for="initialDirectory">Initial Directory:</label>
-  <input type="text" name="initialDirectory" v-model="initialDirectory">
+  <input type="text" name="initialDirectory" v-model="initialDirectory" spellcheck="false">
 </div>`)
   }
 )

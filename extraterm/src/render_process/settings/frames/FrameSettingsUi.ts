@@ -51,7 +51,7 @@ export function nextId(): string {
     <div class="gui-layout cols-1-2 width-100pc">
       <label>Match:</label>
       <div class="gui-packed-row width-100pc">
-        <input type="text" class="expand" v-model="commandLineAction.match" debounce="500" />
+        <input type="text" class="expand" v-model="commandLineAction.match" debounce="500" spellcheck="false" />
         <select v-model="commandLineAction.matchType" class="char-width-12">
           <option value="name">Match command name</option>
           <option value="regexp">Match regular expression</option>

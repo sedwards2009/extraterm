@@ -68,6 +68,7 @@ const allKeybindingsSets: KeybindingsInfo[] = [
       v-model="searchText"
       class="expand"
       placeholder="Filter commands by name"
+      spellcheck="false"
       />
 
     <keybindings-key-input v-else

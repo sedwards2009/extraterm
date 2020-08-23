@@ -205,6 +205,7 @@ class FindWidget {
         <input ref="needle" type="text" class="char-width-20"
           v-model="needle"
           placeholder="Find"
+          spellcheck="false"
           v-on:keydown.capture="onNeedleKeyDown"
           v-on:keypress.capture="onNeedleKeyPress"
           />

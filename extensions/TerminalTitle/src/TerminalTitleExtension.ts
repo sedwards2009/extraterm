@@ -121,6 +121,7 @@ class EditTabTitleWidget {
               v-on:input="onTemplateChange"
               v-on:keydown.capture="onTemplateKeyDown"
               v-on:keypress.capture="onTemplateKeyPress"
+              spellcheck="false"
               />
 
             <div class="group compact">

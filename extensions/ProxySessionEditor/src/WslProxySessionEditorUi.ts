@@ -12,7 +12,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     template: trimBetweenTags(`
 <div class="gui-layout cols-1-2">
   <label for="name">Name:</label>
-  <input type="text" name="name" v-model="name">
+  <input type="text" name="name" v-model="name" spellcheck="false">
 
   <label for="distribution">Distribution:</label>
   <select v-model="distribution">
@@ -36,7 +36,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
       Other
     </label>
 
-    <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell" list="etcShells">
+    <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell" list="etcShells" spellcheck="false">
     <span v-if="shellErrorMsg != ''">&nbsp;
       <i class="fas fa-exclamation-triangle"></i> {{ shellErrorMsg }}
     </span>
@@ -46,10 +46,10 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   </span>
 
   <label for="name">Arguments:</label>
-  <input type="text" name="args" v-model="args">
+  <input type="text" name="args" v-model="args" spellcheck="false">
 
   <label for="initialDirectory">Initial Directory:</label>
-  <input type="text" name="initialDirectory" v-model="initialDirectory">
+  <input type="text" name="initialDirectory" v-model="initialDirectory" spellcheck="false">
 </div>
 `)
   }

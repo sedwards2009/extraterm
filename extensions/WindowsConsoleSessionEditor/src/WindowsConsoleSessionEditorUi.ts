@@ -13,11 +13,11 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     template: trimBetweenTags(`
 <div class="gui-layout cols-1-2">
   <label for="name">Name:</label>
-  <input type="text" name="name" v-model="name">
+  <input type="text" name="name" v-model="name" spellcheck="false">
 
   <label>Executable:</label>
   <span>
-    <input type="text" list="exes" name="exe" v-bind:class="{'has-error': exeErrorMsg != ''}" v-model="exe">
+    <input type="text" list="exes" name="exe" v-bind:class="{'has-error': exeErrorMsg != ''}" v-model="exe" spellcheck="false">
     <span v-if="exeErrorMsg != ''">&nbsp;
       <i class="fas fa-exclamation-triangle"></i> {{ exeErrorMsg }}
     </span>
@@ -27,10 +27,10 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
   </span>
 
   <label for="name">Arguments:</label>
-  <input type="text" name="args" v-model="args">
+  <input type="text" name="args" v-model="args" spellcheck="false">
 
   <label for="initialDirectory">Initial Directory:</label>
-  <input type="text" name="initialDirectory" v-model="initialDirectory">
+  <input type="text" name="initialDirectory" v-model="initialDirectory" spellcheck="false">
   <template v-if="initialDirectoryErrorMsg != ''">
     <label></label>
     <span><i class="fas fa-exclamation-triangle"></i> {{ initialDirectoryErrorMsg }}</span>

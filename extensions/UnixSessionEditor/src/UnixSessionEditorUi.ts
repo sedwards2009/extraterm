@@ -26,7 +26,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
         <input v-bind:class="{'has-error': shellErrorMsg != ''}" type="radio" value="0" v-model.number="useDefaultShell">
           Other
       </label>
-      <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell" list="etcShells">
+      <input id="other_shell" type="text" :disabled="useDefaultShell===1" v-model="shell" list="etcShells" spellcheck="false">
     </span>
 
     <template v-if="shellErrorMsg != ''">
@@ -35,10 +35,10 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
     </template>
 
     <label for="args">Arguments:</label>
-    <input type="text" name="args" v-model="args">
+    <input type="text" name="args" v-model="args" spellcheck="false">
 
     <label for="initialDirectory">Initial Directory:</label>
-    <input type="text" name="initialDirectory" v-model="initialDirectory">
+    <input type="text" name="initialDirectory" v-model="initialDirectory" spellcheck="false">
     <template v-if="initialDirectoryErrorMsg != ''">
       <label></label>
       <span><i class="fas fa-exclamation-triangle"></i> {{ initialDirectoryErrorMsg }}</span>
