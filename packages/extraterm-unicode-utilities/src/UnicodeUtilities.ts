@@ -48,10 +48,6 @@ export function isWide(codePoint: number): boolean {
     return false;
   }
 
-  if (codePoint >= 0x10000) {
-    return true;
-  }
-
   const ch = String.fromCodePoint(codePoint);
   switch (easta(ch)) {
     case 'Na': //Narrow
