@@ -1,9 +1,9 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
+import { CustomElement } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from 'extraterm-logging';
 
 import { ViewerElement } from '../viewers/ViewerElement';
@@ -11,7 +11,7 @@ import { TerminalViewer } from '../viewers/TerminalAceViewer';
 import { VirtualScrollCanvas } from '../VirtualScrollCanvas';
 import * as Term from '../emulator/Term';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
-import { VisualState } from '../viewers/ViewerElementTypes';
+import { VisualState, RefreshLevel } from '../viewers/ViewerElementTypes';
 
 export const VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG = "et-vue-terminal-ace-viewer-element";
 
@@ -46,6 +46,8 @@ export class VueTerminalAceViewerElement extends ViewerElement {
       this.appendChild(this._scrollCanvas);
 
       emulator.write(demoContents());
+
+      this._scrollCanvas.refresh(RefreshLevel.RESIZE);
     }
   }
 

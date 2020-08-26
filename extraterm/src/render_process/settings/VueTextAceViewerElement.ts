@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,6 +9,7 @@ import { Logger, getLogger } from 'extraterm-logging';
 import { TextViewer } from '../viewers/TextAceViewer';
 import { BlobBulkFileHandle } from '../bulk_file_handling/BlobBulkFileHandle';
 import { VirtualScrollCanvas } from '../VirtualScrollCanvas';
+import { RefreshLevel } from '../viewers/ViewerElementTypes';
 
 export const VUE_TEXT_ACE_VIEWER_ELEMENT_TAG = "et-vue-text-ace-viewer-element";
 
@@ -39,6 +40,8 @@ export class VueTextAceViewerElement extends ViewerElement {
       this._setMimeType(mimeType);
       this._setWrapLines(this.wrapLines);
       this.appendChild(this._scrollCanvas);
+
+      this._scrollCanvas.refresh(RefreshLevel.RESIZE);
     }
   }
 
