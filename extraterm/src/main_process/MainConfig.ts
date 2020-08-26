@@ -360,7 +360,7 @@ function distributeUserStoredConfig(userStoredConfig: UserStoredConfig, configDa
 
 function broadcastConfigToWindows(event: ConfigChangeEvent): void {
   const newConfigMsg: Messages.ConfigMessage = {
-    type: Messages.MessageType.CONFIG,
+    type: Messages.MessageType.CONFIG_BROADCAST,
     key: event.key,
     config: event.newConfig
   };

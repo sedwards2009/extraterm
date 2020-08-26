@@ -170,7 +170,7 @@ function handleExecuteCommand(msg: Messages.Message): void {
 
 function startUpWebIpcConfigHandling(): void {
   // Default handling for config messages.
-  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG, asyncHandleConfigMessage);
+  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG_BROADCAST, asyncHandleConfigMessage);
 
   // Fetch a fresh version of the config in case
   // we missed an pushed update from main process.
