@@ -10,6 +10,7 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 * Supports Linux and macOS, and on Windows WSL, CMD, PowerShell and Cygwin
 * Multiple tabs and panes, split and tiled any way you like
 * Images in terminal
+* GPU accelerated rendering
 * 24 bit color
 * Color emoji on all platforms
 * Font ligatures

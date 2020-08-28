@@ -26,18 +26,25 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 
 # Features
 
-* Supports Linux, macOS and Cygwin on Windows
-* xterm compatible
+* Supports Linux and macOS, and on Windows WSL, CMD, PowerShell and Cygwin
 * Multiple tabs and panes, split and tiled any way you like
-* Keyboard based selection
-* Show images in the terminal
-* Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
-* Previous command output can be used as input for new commands
-* Command output is editable in place. Multi-cursor editing
-* Keyboard friendly "command palette" for searching menus
+* Images in terminal
+* GPU accelerated rendering
+* 24 bit color
+* Color emoji on all platforms
+* Font ligatures
+* Keyboard friendly "Command Palette"
+* Text selection using cursor/keyboard, block selections, multi-cursor selections
 * Text zoom
+* Configurable key bindings
+* Global shortcuts
 * Unicode support
-* Color emoji
+* Search
+* Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
+* Easy uploads and downloads using the shell integration
+* Command output is editable in place. Multi-cursor editing
+* Previous command output can be used as input for new commands
+* Supports iTerm2 and TextMate themes
 * Multiple windows
 * [MIT license](LICENSE.txt)
 * [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
