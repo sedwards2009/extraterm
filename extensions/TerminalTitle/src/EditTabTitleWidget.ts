@@ -8,15 +8,8 @@ import Vue from 'vue';
 import { ExtensionContext, Terminal, TerminalBorderWidget } from '@extraterm/extraterm-extension-api';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { TemplateString, Segment } from './TemplateString';
-import { TabTemplateEditorComponent } from "./TabTemplateEditorComponent";
+import { TemplateEditorComponent } from "./TemplateEditorComponent";
 
-for (const el of [
-  "et-context-menu",
-]) {
-  if (Vue.config.ignoredElements.indexOf(el) === -1) {
-    Vue.config.ignoredElements.push(el);
-  }
-}
 
 export class EditTabTitleWidget {
 
@@ -37,7 +30,7 @@ export class EditTabTitleWidget {
     this._ui.segments = this._templateString.getSegments();
     this._ui.segmentHtml = this._templateString.getSegmentHtmlList();
 
-    this._ui.$on("templateChange", (template: string) => {
+    this._ui.$on("template-change", (template: string) => {
       this._templateString.setTemplateString(template);
       updateFunc();
       this._ui.segments = this._templateString.getSegments();
@@ -60,17 +53,22 @@ export class EditTabTitleWidget {
 @Component(
   {
     components: {
-      "tab-template-editor": TabTemplateEditorComponent,
+      "template-editor": TemplateEditorComponent,
     },
     template: trimBetweenTags(`
       <div class="gui-packed-row width-100pc">
         <label class="compact"><i class="fas fa-pen"></i></label>
-
-        <tab-template-editor
-          v-bind:template="template"
-          v-bind:segments="segments"
-        />
-
+        <div class="max-width-800px expand">
+          <template-editor
+            ref="template"
+            v-bind:template="template"
+            v-bind:segments="segments"
+            v-bind:segmentHtml="segmentHtml"
+            v-on:template-change="onTemplateChange"
+            v-on:ok="onOk"
+            v-on:close="onCancel"
+          />
+        </div>
         <div class="group compact">
           <button title="Accept" class="inline success char-width-2" v-on:click="onOk">
             <i class="fas fa-check"></i>
@@ -96,8 +94,9 @@ class EditTabTitlePanelUI extends Vue {
     this.segmentHtml = [];
   }
 
-  onTemplateChange(): void {
-    this.$emit('templateChange', this.template);
+  onTemplateChange(template: string): void {
+    this.template = template;
+    this.$emit('template-change', template);
   }
 
   onOk(): void {
@@ -106,7 +105,7 @@ class EditTabTitlePanelUI extends Vue {
 
   onCancel(): void {
     this.template = this.originalTemplate;
-    this.$emit('templateChange', this.template);
+    this.$emit('template-change', this.template);
     this.$emit("close");
   }
 

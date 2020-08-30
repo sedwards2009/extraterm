@@ -9,40 +9,45 @@ import Vue from 'vue';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { Segment } from './TemplateString';
 
+for (const el of [
+  "et-context-menu",
+]) {
+  if (Vue.config.ignoredElements.indexOf(el) === -1) {
+    Vue.config.ignoredElements.push(el);
+  }
+}
 
 @Component(
   {
     props: {
       template: String,
       segments: Array,
+      segmentHtml: Array,
     },
     template: trimBetweenTags(`
-      <div class="width-100pc">
-      Template: {{template}}
-        <div class="gui-packed-row width-100pc">
-          <div class="expand">
-            <div class="gui-packed-row width-100pc">
-              <input ref="template" type="text" class="char-max-width-40 expand"
-                v-model="template"
-                v-on:input="onTemplateChange"
-                v-on:keydown.capture="onTemplateKeyDown"
-                v-on:keypress.capture="onTemplateKeyPress"
-                spellcheck="false"
-                />
-              <div class="group compact">
-                <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
-                <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
-              </div>
+      <div class="gui-packed-row width-100pc">
+        <div class="expand">
+          <div class="gui-packed-row width-100pc">
+            <input ref="template" type="text" class="expand"
+              v-model="template"
+              v-on:input="onTemplateChange"
+              v-on:keydown.capture="onTemplateKeyDown"
+              v-on:keypress.capture="onTemplateKeyPress"
+              spellcheck="false"
+              />
+            <div class="group compact">
+              <button class="inline" ref="insertField" v-on:click="onInsertField">Insert Field</button>
+              <button class="inline" ref="insertIcon" v-on:click="onInsertIcon">Insert Icon</button>
             </div>
-            <div class="width-100pc">
-              &nbsp;
-              <template v-for="(segment, index) in segments">
-                <span v-if="segment.type == 'text'" class="segment_text" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.text }}</span>
-                <span v-if="segment.type == 'field' && segment.error != null" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
-                <span v-if="segment.type == 'field' && segment.error == null" class="segment_field" v-on:click="selectSegment(index)" v-bind:title="segment.text"><span v-html="segmentHtml[index]"></span></span>
-                <span v-if="segment.type == 'error'" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
-              </template>
-            </div>
+          </div>
+          <div class="width-100pc">
+            &nbsp;
+            <template v-for="(segment, index) in segments">
+              <span v-if="segment.type == 'text'" class="segment_text" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.text }}</span>
+              <span v-if="segment.type == 'field' && segment.error != null" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
+              <span v-if="segment.type == 'field' && segment.error == null" class="segment_field" v-on:click="selectSegment(index)" v-bind:title="segment.text"><span v-html="segmentHtml[index]"></span></span>
+              <span v-if="segment.type == 'error'" class="segment_error" v-on:click="selectSegment(index)" v-bind:title="segment.text">{{ segment.error }}</span>
+            </template>
           </div>
         </div>
 
@@ -61,22 +66,19 @@ import { Segment } from './TemplateString';
         </et-context-menu>
       </div>`)
   })
-export class TabTemplateEditorComponent extends Vue {
+export class TemplateEditorComponent extends Vue {
   // Vue props
   template: string;
   segments: Segment[];
+  segmentHtml: string[];
 
   // Normal fields
-  originalTemplate: string;
-  segmentHtml: string[];
   iconList: string[];
   fieldList: [string, string][];
 
   constructor() {
     super();
 
-    this.originalTemplate = "";
-    this.segmentHtml = [];
     this.fieldList = [
       ["Title", "term:title"],
       ["Rows", "term:rows"],
@@ -130,7 +132,7 @@ export class TabTemplateEditorComponent extends Vue {
   }
 
   onTemplateChange(): void {
-    this.$emit('templateChange', this.template);
+    this.$emit('template-change', this.template);
   }
 
   onInsertField(): void {
@@ -140,7 +142,7 @@ export class TabTemplateEditorComponent extends Vue {
   onInsertFieldClick(fieldName: string): void {
     this.template = this.template + `\${${fieldName}}`;
     (<any> this.$refs.insertFieldMenu).close();
-    this.$emit('templateChange', this.template);
+    this.$emit('template-change', this.template);
   }
 
   onInsertIcon(): void {
@@ -150,7 +152,7 @@ export class TabTemplateEditorComponent extends Vue {
   onInsertIconClick(icon: string): void {
     this.template = this.template + `\${icon:${icon}}`;
     (<any> this.$refs.insertIconMenu).close();
-    this.$emit('templateChange', this.template);
+    this.$emit('template-change', this.template);
   }
 
   selectSegment(index: number): void {
@@ -160,12 +162,10 @@ export class TabTemplateEditorComponent extends Vue {
   }
 
   onOk(): void {
-    this.$emit("close");
+    this.$emit("ok");
   }
 
   onCancel(): void {
-    this.template = this.originalTemplate;
-    this.$emit('templateChange', this.template);
     this.$emit("close");
   }
 

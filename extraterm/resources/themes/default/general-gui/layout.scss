@@ -7,12 +7,16 @@
   width: 800px;
 }
 
+.max-width-800px {
+  max-width: 800px;
+}
+
 .gui-layout {
   display: grid;
   grid-auto-flow: row;
   align-items: baseline;
   grid-gap: $layout-vertical-spacing $layout-horizontal-spacing;
-  
+
   margin-bottom: $layout-vertical-spacing;
 
   &.cols-1 {
