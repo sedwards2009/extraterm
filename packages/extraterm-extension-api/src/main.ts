@@ -31,14 +31,14 @@ export interface Tab {
 
   /**
    * Show an input box requesting a number.
-   * 
+   *
    * This shows a picker/dialog on this tab where the user can enter a number.
    * The acceptable range of values can be defined in the `options` parameter.
    * `undefined` is returned if the user canceled the picker by pressing
    * escape, for example. The picker appears with in this tab.
-   * 
+   *
    * See `NumberInputOptions` for more details about how to configure this.
-   * 
+   *
    * @return a promise which resolves to the entered number or undefined if
    *          it was canceled.
    */
@@ -52,9 +52,9 @@ export interface Tab {
    * if an item is selected. `undefined` is returned if the user canceled the
    * picker by pressing escape, for example. The picker appears with in this
    * tab.
-   * 
+   *
    * See `ListPickerOptions` for more details about how to configure this.
-   * 
+   *
    * @return a promise which resolves to the selected item index or
    *          undefined if it was canceled.
    */
@@ -332,6 +332,9 @@ export interface Window {
 
   registerTabTitleWidget(name: string, factory: TabTitleWidgetFactory): void;
   registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void;
+
+  extensionSessionSettingsBaseConstructor: ExtensionSessionSettingsBaseConstructor;
+  registerSessionSettings(name: string, sessionSettingsClass: ExtensionSessionSettingsBaseConstructor): void;
 }
 
 
@@ -570,6 +573,36 @@ export interface Pty {
   onData: Event<string>;
 
   onExit: Event<void>;
+}
+
+/**
+ * Extensions which implement Session Settings must subclass this.
+ *
+ * Note that TypeScript subclasses should not provide a constructor. Pure
+ * JavaScript subclasses can have a constructor but it must pass all of
+ * its arguments to the super class.
+ */
+export interface ExtensionSessionSettingsBase {
+  /**
+   * Extension writers can override method to perform set up and
+   * initialisation after construction.
+   */
+  created(): void;
+
+  /**
+   * Get the container element under which this Viewer's contents can be placed.
+   */
+  getContainerElement(): HTMLElement;
+
+  // setSessionConfiguration(sessionConfiguration: SessionConfiguration): void;
+
+  // getSessionConfiguration(): SessionConfiguration;
+
+  // updateSessionConfiguration(sessionConfigurationChange: object): void;
+}
+
+export interface ExtensionSessionSettingsBaseConstructor {
+  new(...any: any[]): ExtensionSessionSettingsBase;
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -35,6 +35,7 @@ export interface ExtensionContributes {
   menus: ExtensionMenusContribution;
   sessionBackends: ExtensionSessionBackendContribution[];
   sessionEditors: ExtensionSessionEditorContribution[];
+  sessionSettings: ExtensionSessionSettingsContribution[];
   syntaxThemes: ExtensionSyntaxThemeContribution[];
   syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
   tabTitleWidgets: ExtensionTabTitlesWidgetContribution[];
@@ -92,7 +93,7 @@ export interface ExtensionSessionEditorContribution {
   name: string;
 
   /**
-   * Internal symbol used internally for indentifying this type of session.
+   * Internal symbol used internally for identifying this type of session.
    */
   type: string;
   css: ExtensionCss;
@@ -108,6 +109,15 @@ export interface ExtensionSessionBackendContribution {
    * Symbol used internally for identifying this type of session.
    */
   type: string;
+}
+
+export interface ExtensionSessionSettingsContribution {
+  /**
+   * Internal symbol used internally for identifying these groups of settings.
+   */
+  name: string;
+
+  css: ExtensionCss;
 }
 
 export interface ExtensionSyntaxThemeProviderContribution {

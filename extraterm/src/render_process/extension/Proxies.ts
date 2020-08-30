@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -17,12 +17,20 @@ import { WidgetProxy } from './WidgetProxy';
 import { ExtensionTerminalBorderContribution } from '../../ExtensionMetadata';
 import { Viewer } from '@extraterm/extraterm-extension-api';
 import { ViewerElement } from '../viewers/ViewerElement';
+import { WorkspaceSessionSettingsRegistry, ExtensionSessionSettingsBaseImpl } from './WorkspaceSessionSettingsRegistry';
 
+/**
+ * The implementation behind the `Window` object on the `ExtensionContext`
+ * which is given to extensions when loading them.
+ *
+ * Each extension gets its own instance of this.
+ */
 export class WindowProxy implements InternalWindow {
 
   private _log: Logger = null;
 
   private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
+  private _windowSessionSettingsRegistry: WorkspaceSessionSettingsRegistry = null;
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
   private _terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
 
@@ -33,9 +41,11 @@ export class WindowProxy implements InternalWindow {
     this._log = getLogger("WorkspaceProxy", this);
     this.onDidCreateTerminal = this._onDidCreateTerminalEventEmitter.event;
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
+    this._windowSessionSettingsRegistry = new WorkspaceSessionSettingsRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
     this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
+    this.extensionSessionSettingsBaseConstructor = ExtensionSessionSettingsBaseImpl;
   }
 
   newTerminalCreated(newTerminal): void {
@@ -66,7 +76,7 @@ export class WindowProxy implements InternalWindow {
   get activeTerminal(): ExtensionApi.Terminal {
     return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
-  
+
   get activeViewer(): ExtensionApi.Viewer {
     return this._internalExtensionContext.proxyFactory.getViewerProxy(this._commonExtensionState.activeViewerElement);
   }
@@ -82,7 +92,7 @@ export class WindowProxy implements InternalWindow {
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
     this._windowViewerRegistry.registerViewer(name, viewerClass);
   }
-   
+
   findViewerElementTagByMimeType(mimeType: string): string {
     return this._windowViewerRegistry.findViewerElementTagByMimeType(mimeType);
   }
@@ -95,6 +105,10 @@ export class WindowProxy implements InternalWindow {
 
   getSessionEditorTagForType(sessionType: string): string {
     return this._windowSessionEditorRegistry.getSessionEditorTagForType(sessionType);
+  }
+
+  getSessionSettingsTagsForType(sessionType: string): string[] {
+    return this._windowSessionSettingsRegistry.getSessionSettingsTagsForType(sessionType);
   }
 
   registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
@@ -112,12 +126,18 @@ export class WindowProxy implements InternalWindow {
 
     this._internalExtensionContext.logger.warn(
       `Unknown terminal border widget '${name}' given to registerTerminalBorderWidget().`);
-  }  
+  }
 
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory {
     return this._terminalBorderWidgetFactoryMap.get(name);
   }
 
+  extensionSessionSettingsBaseConstructor: ExtensionApi.ExtensionSessionSettingsBaseConstructor;
+
+  registerSessionSettings(type: string,
+      sessionSettingsClass: ExtensionApi.ExtensionSessionSettingsBaseConstructor): void {
+    this._windowSessionSettingsRegistry.registerSessionSettings(type, sessionSettingsClass);
+  }
 }
 
 
@@ -202,7 +222,7 @@ class ProxyTerminalEnvironment implements ExtensionApi.TerminalEnvironment {
 }
 
 export class TerminalProxy implements ExtensionApi.Terminal {
-  
+
   viewerType: 'terminal-output';
 
   private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
@@ -249,7 +269,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     const factory = this._internalExtensionContext.internalWindow.getTerminalBorderWidgetFactory(name);
     if (factory == null) {
       this._internalExtensionContext.logger.warn(
-        `Unknown terminal border widget '${name}' given to createTerminalBorderWidget().`);  
+        `Unknown terminal border widget '${name}' given to createTerminalBorderWidget().`);
       return null;
     }
 
@@ -282,7 +302,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 }
 
 class TerminalBorderWidgetImpl implements InternalTerminalBorderWidget {
-  
+
   private _open = false;
   private _onDidOpenEventEmitter = new EventEmitter<void>();
   onDidOpen: ExtensionApi.Event<void>;

@@ -238,6 +238,18 @@ export class ExtensionManagerImpl implements ExtensionManager {
     return null;
   }
 
+  getSessionSettingsTagsForType(sessionType: string): string[] {
+    const ssExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionSettings != null);
+    let allTags: string[] = [];
+    for (const extension of ssExtensions) {
+      const tags = extension.contextImpl.internalWindow.getSessionSettingsTagsForType(sessionType);
+      if (tags != null) {
+        allTags = [...allTags, ...tags];
+      }
+    }
+    return allTags;
+  }
+
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
     for (const metadata of this._extensionMetadata) {

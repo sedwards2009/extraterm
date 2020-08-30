@@ -33,6 +33,11 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
         v-bind:sessionConfiguration.prop="item"
         v-on:change="handleChange">
       </component>
+      <component
+        v-for="settingsTag in sessionSettingsTypes(item.type)"
+        v-bind:is="settingsTag"
+        v-on:change="handleChange">
+      </component>
     </div>
   </div>
 
@@ -55,7 +60,7 @@ export class SessionSettingsUi extends Vue {
     super();
     this.extensionManagerStamp = Date.now();
   }
-  
+
   setExtensionManager(extensionManager: ExtensionManager): void {
     this._extensionManager = extensionManager;
     this.extensionManagerStamp = Date.now();
@@ -72,6 +77,10 @@ export class SessionSettingsUi extends Vue {
 
   sessionEditor(type: string): string {
     return this._extensionManager.getSessionEditorTagForType(type);
+  }
+
+  sessionSettingsTypes(type: string): string[] {
+    return this._extensionManager.getSessionSettingsTagsForType(type);
   }
 
   handleChange(event: Event): void {

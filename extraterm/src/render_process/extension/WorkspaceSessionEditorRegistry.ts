@@ -48,12 +48,12 @@ export class WorkspaceSessionEditorRegistry {
       protected _getExtensionContext(): InternalExtensionContext {
         return internalExtensionContext;
       }
-    
+
       protected _getExtensionSessionEditorContribution(): ExtensionSessionEditorContribution {
         return sessionEditorMetadata;
       }
     };
-    
+
 // FIXME
     const tag = this._internalExtensionContext.extensionMetadata.name + "-session-editor-" + kebabCase(type);
     this._log.info("Registering custom element ", tag);
@@ -140,7 +140,7 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
 
   _sessionConfigurationChanged(): void {
     const config = this._extensionSessionEditor.getSessionConfiguration();
-    
+
     const changeEvent = new CustomEvent("change", {bubbles: true, composed: true});
     changeEvent.initCustomEvent("change", true, true, null);
     this.dispatchEvent(changeEvent);

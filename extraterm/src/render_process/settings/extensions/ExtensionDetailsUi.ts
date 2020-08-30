@@ -142,6 +142,22 @@ interface MenuPair {
         </table>
       </template>
 
+      <template v-if="extension.metadata.contributes.sessionSettings.length !== 0">
+        <h4>Session settings</h4>
+        <table class="width-100pc cols-1-1">
+          <thead>
+            <tr>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="sessionSettings in extension.metadata.contributes.sessionSettings">
+              <td>{{ sessionSettings.name }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </template>
+
       <template v-if="extension.metadata.contributes.syntaxThemes.length !== 0">
         <h4>Syntax themes</h4>
         <table class="width-100pc">

@@ -1,10 +1,32 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as path from 'path';
-import { ExtensionContributes, ExtensionMetadata, ExtensionViewerContribution, ExtensionCss, ExtensionSessionEditorContribution, ExtensionSessionBackendContribution, ExtensionPlatform, ExtensionSyntaxThemeProviderContribution, ExtensionSyntaxThemeContribution, ExtensionTerminalThemeProviderContribution, ExtensionTerminalThemeContribution, ExtensionKeybindingsContribution, ExtensionCommandContribution, Category, WhenVariables, ExtensionTerminalBorderContribution, BorderDirection, ExtensionMenusContribution, ExtensionMenu, ExtensionTabTitlesWidgetContribution } from "../../ExtensionMetadata";
+import {
+  BorderDirection,
+  Category,
+  ExtensionCommandContribution,
+  ExtensionContributes,
+  ExtensionCss,
+  ExtensionKeybindingsContribution,
+  ExtensionMenu,
+  ExtensionMenusContribution,
+  ExtensionMetadata,
+  ExtensionPlatform,
+  ExtensionSessionBackendContribution,
+  ExtensionSessionEditorContribution,
+  ExtensionSessionSettingsContribution,
+  ExtensionSyntaxThemeContribution,
+  ExtensionSyntaxThemeProviderContribution,
+  ExtensionTabTitlesWidgetContribution,
+  ExtensionTerminalBorderContribution,
+  ExtensionTerminalThemeContribution,
+  ExtensionTerminalThemeProviderContribution,
+  ExtensionViewerContribution,
+  WhenVariables,
+} from "../../ExtensionMetadata";
 import { getLogger, Logger } from "extraterm-logging";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
 import { JsonNode, JsonObject } from "json-to-ast";
@@ -138,6 +160,7 @@ class PackageParser {
         },
         sessionBackends: [],
         sessionEditors: [],
+        sessionSettings: [],
         syntaxThemes: [],
         syntaxThemeProviders: [],
         tabTitleWidgets: [],
@@ -159,6 +182,7 @@ class PackageParser {
       "viewers",
       "sessionEditors",
       "sessionBackends",
+      "sessionSettings",
       "syntaxThemes",
       "syntaxThemeProviders",
       "tabTitleWidgets",
@@ -174,6 +198,7 @@ class PackageParser {
       keybindings: parseObjectListJson(contributes, "keybindings", node => this.parseKeybindingsContributionsJson(node)),
       sessionBackends: parseObjectListJson(contributes, "sessionBackends", node => this.parseSessionBackendConstributionJson(node)),
       sessionEditors: parseObjectListJson(contributes, "sessionEditors", node => this.parseSessionEditorConstributionJson(node)),
+      sessionSettings: parseObjectListJson(contributes, "sessionSettings", node => this.parseSessionSettingsConstributionJson(node)),
       syntaxThemes: parseObjectListJson(contributes, "syntaxThemes", node => this.parseSyntaxThemeContributionsJson(node)),
       syntaxThemeProviders: parseObjectListJson(contributes, "syntaxThemeProviders", node => this.parseSyntaxThemeProviderContributionsJson(node)),
       tabTitleWidgets: parseObjectListJson(contributes, "tabTitleWidgets", node => this.parseTabTitleItemContributionsJson(node)),
@@ -342,6 +367,19 @@ class PackageParser {
     return {
       name: getJsonStringField(packageJson, "name"),
       type: getJsonStringField(packageJson, "type")
+    };
+  }
+
+  private parseSessionSettingsConstributionJson(packageJson: JsonNode): ExtensionSessionSettingsContribution {
+    const knownKeys: (keyof ExtensionSessionSettingsContribution)[] = [
+      "name",
+      "css"
+    ];
+    assertKnownJsonObjectKeys(packageJson, knownKeys);
+
+    return {
+      name: getJsonStringField(packageJson, "name"),
+      css: this.parseCss(packageJson)
     };
   }
 

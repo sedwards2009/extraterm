@@ -45,6 +45,7 @@ export interface ExtensionManager {
 
   getAllSessionTypes(): { name: string, type: string }[];
   getSessionEditorTagForType(type: string): string;
+  getSessionSettingsTagsForType(type: string): string[];
 
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
@@ -106,6 +107,7 @@ export interface ExtensionUiUtils {
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
+  getSessionSettingsTagsForType(sessionType): string[];
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
   newTerminalCreated(newTerminal: EtTerminal): void;
