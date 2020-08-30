@@ -7,13 +7,14 @@ import Component from 'vue-class-component';
 import Vue from 'vue';
 
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { TemplateString, Segment } from './TemplateString';
+import { Segment } from './TemplateString';
 
 
 @Component(
   {
     props: {
-      template: String
+      template: String,
+      segments: Array,
     },
     template: trimBetweenTags(`
       <div class="width-100pc">
@@ -61,18 +62,20 @@ import { TemplateString, Segment } from './TemplateString';
       </div>`)
   })
 export class TabTemplateEditorComponent extends Vue {
+  // Vue props
   template: string;
-  originalTemplate: string;
   segments: Segment[];
+
+  // Normal fields
+  originalTemplate: string;
   segmentHtml: string[];
   iconList: string[];
   fieldList: [string, string][];
 
   constructor() {
     super();
-    this.template = "";
+
     this.originalTemplate = "";
-    this.segments = [];
     this.segmentHtml = [];
     this.fieldList = [
       ["Title", "term:title"],

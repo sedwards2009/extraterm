@@ -65,9 +65,10 @@ export class EditTabTitleWidget {
     template: trimBetweenTags(`
       <div class="gui-packed-row width-100pc">
         <label class="compact"><i class="fas fa-pen"></i></label>
-{{template}}
+
         <tab-template-editor
           v-bind:template="template"
+          v-bind:segments="segments"
         />
 
         <div class="group compact">
