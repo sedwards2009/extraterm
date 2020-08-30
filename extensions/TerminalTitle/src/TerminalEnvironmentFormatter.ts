@@ -7,12 +7,14 @@ import { FieldFormatter } from "./TemplateString";
 import { TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import he = require("he");
 
-
+/***
+ * Translate keys to values from the given terminal environment.
+ */
 export class TerminalEnvironmentFormatter implements FieldFormatter {
 
   constructor(private _namespace: string, private _env: TerminalEnvironment) {
   }
-  
+
   formatHtml(key: string): string {
     const value = this._env.get(this._namespace + ":" + key.toLowerCase());
     return value == null ? "" : he.encode(value);
