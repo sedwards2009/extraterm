@@ -11,7 +11,7 @@ import { TemplateString, Segment } from './TemplateString';
 import { TemplateEditorComponent } from "./TemplateEditorComponent";
 
 
-export class EditTabTitleWidget {
+export class TerminalTitleEditorWidget {
 
   private _ui: EditTabTitlePanelUI = null;
 

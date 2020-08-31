@@ -12,10 +12,13 @@ import { InternalExtensionContext } from './InternalTypes';
 import { ExtensionCss } from '../../ExtensionMetadata';
 import { CustomElement } from 'extraterm-web-component-decorators';
 
-@CustomElement("et-extension-widget-proxy")
-export class WidgetProxy extends ThemeableElementBase  {
+/**
+ * Custom element used to host an isolated DOM subtree from an extension.
+ */
+@CustomElement("et-extension-container-element")
+export class ExtensionContainerElement extends ThemeableElementBase  {
 
-  static TAG_NAME = "et-extension-widget-proxy";
+  static TAG_NAME = "et-extension-container-element";
 
   private _log: Logger = null;
   private _doneSetup = false;
@@ -27,7 +30,7 @@ export class WidgetProxy extends ThemeableElementBase  {
 
   constructor() {
     super();
-    this._log = getLogger("ExtensionWidgetProxy", this);
+    this._log = getLogger("ExtensionContainerElement", this);
   }
 
   connectedCallback(): void {

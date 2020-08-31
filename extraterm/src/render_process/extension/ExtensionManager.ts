@@ -29,7 +29,7 @@ import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
 import { TabWidget } from '../gui/TabWidget';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { DebouncedDoLater } from 'extraterm-later';
-import { WidgetProxy } from './WidgetProxy';
+import { ExtensionContainerElement } from './ExtensionContainerElement';
 import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages";
 
 
@@ -726,14 +726,15 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
     for (const contrib of tabTitleWidgetsContrib) {
       const factory = this._tabTitleWidgetFactoryMap.get(contrib.name);
       if (factory != null) {
-        const htmlWidgetProxy = <WidgetProxy> document.createElement(WidgetProxy.TAG_NAME);
-        htmlWidgetProxy._setExtensionContext(this);
-        htmlWidgetProxy._setExtensionCss(contrib.css);
+        const extensionContainerElement = <ExtensionContainerElement>
+          document.createElement(ExtensionContainerElement.TAG_NAME);
+        extensionContainerElement._setExtensionContext(this);
+        extensionContainerElement._setExtensionCss(contrib.css);
 
-        const tabTitleWidget = new TabTitleWidgetImpl(htmlWidgetProxy);
+        const tabTitleWidget = new TabTitleWidgetImpl(extensionContainerElement);
         const factoryResult = factory(this.proxyFactory.getTerminalProxy(terminal), tabTitleWidget);
 // FIXME record this stuff somewhere, and also may be clean it up.
-        result.push(htmlWidgetProxy);
+        result.push(extensionContainerElement);
       }
     }
     return result;
@@ -742,10 +743,10 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
 
 class TabTitleWidgetImpl implements InternalTabTitleWidget {
 
-  constructor(private _widgetProxy: WidgetProxy) {
+  constructor(private _extensionContainerElement: ExtensionContainerElement) {
   }
 
   getContainerElement(): HTMLElement {
-    return this._widgetProxy.getContainerElement();
+    return this._extensionContainerElement.getContainerElement();
   }
 }

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
-import { EditTabTitleWidget} from "./EditTabTitleWidget";
+import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
 import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
@@ -24,8 +24,8 @@ export function activate(context: ExtensionContext): any {
 
   const commands = context.commands;
   commands.registerCommand("terminal-title:editTitle", () => {
-    const editTabTitleWidget = <EditTabTitleWidget> context.window.activeTerminal.openTerminalBorderWidget("edit-title");
-    editTabTitleWidget.focus();
+    const terminalTitleEditorWidget = <TerminalTitleEditorWidget> context.window.activeTerminal.openTerminalBorderWidget("edit-title");
+    terminalTitleEditorWidget.focus();
   });
 
   context.window.registerTabTitleWidget("title", (terminal: Terminal, widget: TabTitleWidget): any => {
@@ -50,23 +50,23 @@ export function activate(context: ExtensionContext): any {
 
   context.window.registerTerminalBorderWidget("edit-title", (terminal: Terminal, widget: TerminalBorderWidget): any => {
     const tabTitleData = terminalToTemplateMap.get(terminal);
-    return new EditTabTitleWidget(context, terminal, widget, tabTitleData.templateString,
+    return new TerminalTitleEditorWidget(context, terminal, widget, tabTitleData.templateString,
       tabTitleData.updateTitleFunc);
   });
 
-  const settingsClass = createSettingsClass(context);
-  context.window.registerSessionSettings("title", settingsClass);
+  // const settingsClass = createSettingsClass(context);
+  // context.window.registerSessionSettings("title", settingsClass);
 }
 
-function createSettingsClass(context: ExtensionContext): any {
-  class SessionSettings extends context.window.extensionSessionSettingsBaseConstructor {
-    created(): void {
-      const container = this.getContainerElement();
-      const div = document.createElement("DIV");
-      const t = document.createTextNode("Session settings for Terminal title");
-      div.appendChild(t);
-      container.appendChild(div);
-    }
-  }
-  return SessionSettings;
-}
+// function createSettingsClass(context: ExtensionContext): any {
+//   class SessionSettings extends context.window.extensionSessionSettingsBaseConstructor {
+//     created(): void {
+//       const container = this.getContainerElement();
+//       const div = document.createElement("DIV");
+//       const t = document.createTextNode("Session settings for Terminal title");
+//       div.appendChild(t);
+//       container.appendChild(div);
+//     }
+//   }
+//   return SessionSettings;
+// }
