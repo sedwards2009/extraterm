@@ -391,7 +391,7 @@ test("Mark ligatures", async t => {
 test("Speed test", async t => {
   const GRID_WIDTH = 240;
   const GRID_HEIGHT = 50;
-  const LOOPS = 20;
+  const LOOPS = 100;
 
   const spaceCodePoint = " ".codePointAt(0);
   const max = "~".codePointAt(0) - spaceCodePoint;
@@ -413,8 +413,8 @@ test("Speed test", async t => {
     }
   }
   const end = performance.now();
-
-  console.log(`Speed test: ${end-start}ms`);
+  const durationPerLoop = (end - start) / LOOPS;
+  console.log(`Speed test: ${GRID_WIDTH}x${GRID_HEIGHT} ${LOOPS} loops, ${durationPerLoop}ms per loop`);
 
   t.pass();
 });
