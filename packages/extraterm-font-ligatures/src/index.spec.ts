@@ -7,6 +7,8 @@ import { CharCellGrid } from "extraterm-char-cell-grid";
 
 import { load } from './';
 
+const { performance } = require('perf_hooks');
+
 test.before(t => {
   sinon.stub(fontFinder, 'listVariants').callsFake(async (name: string) => {
     switch (name) {
@@ -384,4 +386,35 @@ test("Mark ligatures", async t => {
   t.is(grid.getLigature(3, 0), 0);
   t.is(grid.getLigature(4, 0), 3);
   t.is(grid.getLigature(5, 0), 0);
+});
+
+test("Speed test", async t => {
+  const GRID_WIDTH = 240;
+  const GRID_HEIGHT = 50;
+  const LOOPS = 20;
+
+  const spaceCodePoint = " ".codePointAt(0);
+  const max = "~".codePointAt(0) - spaceCodePoint;
+  const grid = new CharCellGrid(GRID_WIDTH, GRID_HEIGHT);
+  for (let y=0; y<GRID_HEIGHT; y++) {
+    for (let x=0; x<GRID_WIDTH; x++) {
+      const randomChar = Math.floor(Math.random() * Math.floor(max)) + spaceCodePoint;
+      grid.setCodePoint(x, y, randomChar);
+    }
+  }
+
+  const font = await load("Fira Code");
+
+  const start = performance.now();
+
+  for (let l=0; l<LOOPS; l++) {
+    for (let y=0; y<GRID_HEIGHT; y++) {
+      font.markLigaturesCharCellGridRow(grid, y);
+    }
+  }
+  const end = performance.now();
+
+  console.log(`Speed test: ${end-start}ms`);
+
+  t.pass();
 });
