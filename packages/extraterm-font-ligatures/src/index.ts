@@ -18,7 +18,14 @@ import flatten from './flatten';
 class FontImpl implements Font {
   private _font: opentype.Font;
   private _lookupTrees: { tree: FlattenedLookupTree; processForward: boolean; }[] = [];
+
+  private _glyphLookupsFastFailCache: Uint8Array = null;
   private _glyphLookups = new Map<number, number[]>();
+  // Once initialised, for every valid key in the map `_glyphLookups`,
+  // the array element `_glyphLookupsFastFailCache[key]` will be `1`, otherwise `0`.
+  // `_glyphLookupsFastFailCache` is used to quick determine whether we need to
+  // consult `_glyphLookups`.
+
   private _cache?: lru.Cache<string, LigatureData | [number, number][]>;
   private _codePointToGlyphIndexCache = new Map<number, number>();
 
@@ -39,6 +46,9 @@ class FontImpl implements Font {
       .filter((l, i) => lookupIndices.some(idx => idx === i));
 
     const allLookups = this._font.tables.gsub.lookups;
+
+    const glyphLookupsFastFailCache = new Uint8Array(this._font.glyphs.length);
+    this._glyphLookupsFastFailCache = glyphLookupsFastFailCache;
 
     for (const [index, lookup] of lookupGroups.entries()) {
       const trees: LookupTree[] = [];
@@ -78,6 +88,7 @@ class FontImpl implements Font {
         }
 
         this._glyphLookups.get(glyphId).push(index);
+        glyphLookupsFastFailCache[glyphId] = 1;
       }
     }
   }
@@ -165,9 +176,15 @@ class FontImpl implements Font {
     const sequenceLength = sequence.length;
     const glyphLookups = this._glyphLookups;
     const currentLookup = this._lookupTrees[currentLookupIndex];
+    const glyphLookupsFastFailCache = this._glyphLookupsFastFailCache;
 
     for (let i = 0; i < sequenceLength; i++) {
-      const currentLookups = glyphLookups.get(sequence[i]);
+      const glyphId = sequence[i];
+      if (glyphLookupsFastFailCache[glyphId] === 0) {
+        continue;
+      }
+
+      const currentLookups = glyphLookups.get(glyphId);
       if (currentLookups == null || currentLookups.indexOf(currentLookupIndex) === -1) {
         continue;
       }
@@ -184,9 +201,15 @@ class FontImpl implements Font {
     const sequenceLength = sequence.length;
     const glyphLookups = this._glyphLookups;
     const currentLookup = this._lookupTrees[currentLookupIndex];
+    const glyphLookupsFastFailCache = this._glyphLookupsFastFailCache;
 
     for (let i = sequenceLength - 1; i >= 0; i--) {
-      const currentLookups = glyphLookups.get(sequence[i]);
+      const glyphId = sequence[i];
+      if (glyphLookupsFastFailCache[glyphId] === 0) {
+        continue;
+      }
+
+      const currentLookups = glyphLookups.get(glyphId);
       if (currentLookups == null || currentLookups.indexOf(currentLookupIndex) === -1) {
         continue;
       }
@@ -202,9 +225,15 @@ class FontImpl implements Font {
   private _findRelevantLookupsForSequence(sequence: number[]): number[] {
     // Determine which lookups we should examine.
     const glyphLookups = this._glyphLookups;
+    const glyphLookupsFastFailCache = this._glyphLookupsFastFailCache;
     const sequenceLength = sequence.length;
     const seenLookups = new Set<number>();
     for (let i = 0; i < sequenceLength; i++) {
+      const glyphId = sequence[i];
+      if (glyphLookupsFastFailCache[glyphId] === 0) {
+        continue;
+      }
+
       const lookups = glyphLookups.get(sequence[i]);
       if (lookups != null) {
         for (let j = 0; j < lookups.length; j++) {
