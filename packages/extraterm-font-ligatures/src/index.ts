@@ -153,35 +153,48 @@ class FontImpl implements Font {
   }
 
   private _applyLookupToSequence(currentLookupIndex: number, sequence: number[], ranges: [number, number][]): void {
+    const currentLookup = this._lookupTrees[currentLookupIndex];
+    if (currentLookup.processForward) {
+      this._applyLookupToSequenceForward(currentLookupIndex, sequence, ranges);
+    } else {
+      this._applyLookupToSequenceBackward(currentLookupIndex, sequence, ranges);
+    }
+  }
+
+  private _applyLookupToSequenceForward(currentLookupIndex: number, sequence: number[], ranges: [number, number][]): void {
     const sequenceLength = sequence.length;
     const glyphLookups = this._glyphLookups;
     const currentLookup = this._lookupTrees[currentLookupIndex];
 
-    if (currentLookup.processForward) {
-      for (let i = 0; i < sequenceLength; i++) {
-        const currentLookups = glyphLookups.get(sequence[i]);
-        if (currentLookups == null || currentLookups.indexOf(currentLookupIndex) === -1) {
-          continue;
-        }
-
-        const result = walkTree(currentLookup.tree, sequence, i, i);
-        if (result && this._applySubstitutionsToSequence(sequence, result.substitutions, i)) {
-          mergeRange(ranges, result.contextRange[0] + i, result.contextRange[1] + i);
-          i += result.length - 1;
-        }
+    for (let i = 0; i < sequenceLength; i++) {
+      const currentLookups = glyphLookups.get(sequence[i]);
+      if (currentLookups == null || currentLookups.indexOf(currentLookupIndex) === -1) {
+        continue;
       }
-    } else {
-      for (let i = sequenceLength - 1; i >= 0; i--) {
-        const currentLookups = glyphLookups.get(sequence[i]);
-        if (currentLookups == null || currentLookups.indexOf(currentLookupIndex) === -1) {
-          continue;
-        }
 
-        const result = walkTree(currentLookup.tree, sequence, i, i);
-        if (result && this._applySubstitutionsToSequence(sequence, result.substitutions, i)) {
-          mergeRange(ranges, result.contextRange[0] + i, result.contextRange[1] + i);
-          i -= result.length - 1;
-        }
+      const result = walkTree(currentLookup.tree, sequence, i, i);
+      if (result && this._applySubstitutionsToSequence(sequence, result.substitutions, i)) {
+        mergeRange(ranges, result.contextRange[0] + i, result.contextRange[1] + i);
+        i += result.length - 1;
+      }
+    }
+  }
+
+  private _applyLookupToSequenceBackward(currentLookupIndex: number, sequence: number[], ranges: [number, number][]): void {
+    const sequenceLength = sequence.length;
+    const glyphLookups = this._glyphLookups;
+    const currentLookup = this._lookupTrees[currentLookupIndex];
+
+    for (let i = sequenceLength - 1; i >= 0; i--) {
+      const currentLookups = glyphLookups.get(sequence[i]);
+      if (currentLookups == null || currentLookups.indexOf(currentLookupIndex) === -1) {
+        continue;
+      }
+
+      const result = walkTree(currentLookup.tree, sequence, i, i);
+      if (result && this._applySubstitutionsToSequence(sequence, result.substitutions, i)) {
+        mergeRange(ranges, result.contextRange[0] + i, result.contextRange[1] + i);
+        i -= result.length - 1;
       }
     }
   }
@@ -224,19 +237,9 @@ class FontImpl implements Font {
       return;
     }
 
-    const glyphIds: number[] = [];
-    const width = grid.width;
-    for (let i = 0; i < width; i++) {
-      const codePoint = grid.getCodePoint(i, row);
-      let glyphIndex = this._codePointToGlyphIndexCache.get(codePoint);
-      if (glyphIndex === undefined) {
-        const char = String.fromCodePoint(codePoint);
-        glyphIndex = this._font.charToGlyphIndex(char);
-        this._codePointToGlyphIndexCache.set(codePoint, glyphIndex);
-      }
-      glyphIds.push(glyphIndex);
-    }
+    const glyphIds = this._findGlyphIdsInCharCellGridRow(grid, row);
 
+    const width = grid.width;
     const result = this._findInternal(glyphIds);
     let i = 0;
     for (const range of result.ranges) {
@@ -253,6 +256,22 @@ class FontImpl implements Font {
       grid.setLigature(i, row, 0);
       i++;
     }
+  }
+
+  private _findGlyphIdsInCharCellGridRow(grid: CharCellGrid, row: number): number [] {
+    const glyphIds: number[] = [];
+    const width = grid.width;
+    for (let i = 0; i < width; i++) {
+      const codePoint = grid.getCodePoint(i, row);
+      let glyphIndex = this._codePointToGlyphIndexCache.get(codePoint);
+      if (glyphIndex === undefined) {
+        const char = String.fromCodePoint(codePoint);
+        glyphIndex = this._font.charToGlyphIndex(char);
+        this._codePointToGlyphIndexCache.set(codePoint, glyphIndex);
+      }
+      glyphIds.push(glyphIndex);
+    }
+    return glyphIds;
   }
 }
 
