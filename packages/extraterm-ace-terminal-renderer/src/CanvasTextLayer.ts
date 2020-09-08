@@ -12,6 +12,7 @@ import { LigatureMarker } from "./LigatureMarker";
 import { WebGLRendererRepository } from "extraterm-char-render-canvas/dist/WebGLRendererRepository";
 import { PALETTE_BG_INDEX } from "extraterm-char-render-canvas/dist/WebGLCharRenderCanvas";
 
+
 const PROVISION_HEIGHT_FACTOR = 1.5;
 
 const webGLRendererRepository = new WebGLRendererRepository();
@@ -315,7 +316,8 @@ export class CanvasTextLayer implements TextLayer {
         }
 
         if (ligatureMarker != null) {
-          ligatureMarker.markLigaturesCharCellGridRow(grid, canvasRow);
+          const line = this._editSession.getLine(docRow);
+          ligatureMarker.markLigaturesCharCellGridRow(grid, canvasRow, line);
         }
       } else {
         // Just clear the row
@@ -499,7 +501,7 @@ const twemojiCodePoints = [
   0x1fab1, 0x1fab2, 0x1fab3, 0x1fab4, 0x1fab5, 0x1fab6, 0x1fac0, 0x1fac1, 0x1fac2, 0x1fad0,
   0x1fad1, 0x1fad2, 0x1fad3, 0x1fad4, 0x1fad5, 0x1fad6
 ];
-  
+
 
 const windowsColorFontCodePoints = [
   0xa9, 0xae, 0x203c, 0x2049, 0x2122, 0x2139, 0x2194, 0x2195, 0x2196, 0x2197,

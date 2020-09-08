@@ -52,6 +52,7 @@ import { EtViewerTab } from './ViewerTab';
 import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
 import { FontLoader, DpiWatcher } from './gui/Util';
+import { CachingLigatureMarker } from './CachingLigatureMarker';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -186,7 +187,10 @@ async function asyncLoadTerminalTheme(): Promise<void> {
 
   let ligatureMarker: LigatureMarker = null;
   if (config.terminalDisplayLigatures) {
-    ligatureMarker = await loadFontFile(fontFilePath);
+    const plainlLigatureMarker = await loadFontFile(fontFilePath);
+    if (plainlLigatureMarker != null) {
+      ligatureMarker = new CachingLigatureMarker(plainlLigatureMarker);
+    }
   }
 
   terminalVisualConfig = {

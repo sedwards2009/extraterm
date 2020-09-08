@@ -276,6 +276,36 @@ export class CharCellGrid {
     return this._dataView.getUint16(offset + OFFSET_FLAGS);
   }
 
+  getRowFlags(y: number): Uint16Array {
+    const flagsArray = new Uint16Array(this.width);
+    let offset = y * this.width * CELL_SIZE_BYTES + OFFSET_FLAGS;
+    const width = this.width;
+    for (let i=0; i<width; i++) {
+      flagsArray[i] = this._dataView.getUint16(offset);
+      offset += CELL_SIZE_UINT32;
+    }
+    return flagsArray;
+  }
+
+  setRowFlags(y: number, flagsArray: Uint16Array, flagMask=0xffff): void {
+    let offset = y * this.width * CELL_SIZE_BYTES + OFFSET_FLAGS;
+    const width = Math.min(this.width, flagsArray.length);
+
+    if (flagMask === 0xffff) {
+      for (let i=0; i<width; i++) {
+        this._dataView.setUint16(offset, flagsArray[i]);
+      }
+    } else {
+      const invMask = ~flagMask;
+      for (let i=0; i<width; i++) {
+        const oldValue = this._dataView.getUint16(offset);
+        const newValue = (oldValue & invMask) | (flagMask & flagsArray[i]);
+        this._dataView.setUint16(offset, newValue);
+        offset += CELL_SIZE_UINT32;
+      }
+    }
+  }
+
   setString(x: number, y: number, str: string): void {
     const codePointArray = stringToCodePointArray(str);
     for (let i=0; i<codePointArray.length; i++) {
