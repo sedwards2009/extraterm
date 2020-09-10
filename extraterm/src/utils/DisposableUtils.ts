@@ -10,6 +10,9 @@ import {Disposable} from '@extraterm/extraterm-extension-api';
  * Type guard to detecting objects which support the Disposable interface.
  */
 export function isDisposable(it: any): it is Disposable {
+  if (it == null) {
+    return false;
+  }
   return 'dispose' in it;
 }
 
