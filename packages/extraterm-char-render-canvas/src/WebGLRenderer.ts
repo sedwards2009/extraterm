@@ -374,10 +374,10 @@ export class WebGLRenderer {
 
         let coord: TextureCachedGlyph = null;
         if (normalizedCell.isLigature) {
-          coord = atlas.loadCombiningCodePoints(normalizedCell.ligatureCodePoints, cellGrid.getStyle(x, j),
+          coord = atlas.loadCombiningCodePoints(normalizedCell.ligatureCodePoints, style,
             fontIndex, fgRGBA, bgRGBA);
         } else {
-          coord = atlas.loadCodePoint(codePoint, cellGrid.getStyle(x, j), fontIndex, fgRGBA, bgRGBA);
+          coord = atlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
         }
 
         result[arrayIndex] = coord.textureXpx + normalizedCell.segment * textureCellWidth;
