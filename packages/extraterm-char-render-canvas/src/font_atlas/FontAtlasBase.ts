@@ -10,7 +10,7 @@ import { select } from "floyd-rivest";
 import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
-import { ArrayKeyTrie } from "extraterm-array-key-trie";
+import { ArrayKeyTrie } from "extraterm-data-structures";
 import { RGBAToCss } from "../RGBAToCss";
 
 

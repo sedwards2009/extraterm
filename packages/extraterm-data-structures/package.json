@@ -1,11 +1,11 @@
 {
-  "name": "extraterm-array-key-trie",
+  "name": "extraterm-data-structures",
   "version": "1.0.0",
-  "description": "Trie which takes arrays as keys",
+  "description": "Some useful and optimised data structures",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "dist/ArrayKeyTrie.js",
-  "types": "dist/ArrayKeyTrie.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"

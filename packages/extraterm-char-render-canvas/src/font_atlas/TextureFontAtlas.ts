@@ -1,7 +1,7 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-import { ArrayKeyTrie } from "extraterm-array-key-trie";
+import { ArrayKeyTrie } from "extraterm-data-structures";
 import { StyleCode } from "extraterm-char-cell-grid";
 import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase";
 

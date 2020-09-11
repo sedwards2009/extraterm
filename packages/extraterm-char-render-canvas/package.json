@@ -11,7 +11,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "extraterm-array-key-trie": "1.0.0",
+    "extraterm-data-structures": "1.0.0",
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-logging": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0",
