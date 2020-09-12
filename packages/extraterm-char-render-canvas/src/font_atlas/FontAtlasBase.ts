@@ -10,7 +10,7 @@ import { select } from "floyd-rivest";
 import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
-import { ArrayKeyTrie } from "extraterm-data-structures";
+import { TripleKeyMap } from "extraterm-data-structures";
 import { RGBAToCss } from "../RGBAToCss";
 
 
@@ -23,7 +23,9 @@ export interface CachedGlyph {
   widthCells: number;
   widthPx: number;
 
-  key: number[];
+  key1: number;
+  key2: number;
+  key3: number;
   atlasX: number;
   atlasY: number;
   lastUse: number;
@@ -49,7 +51,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   private _monoTime = 1;
   private _nextEmptyCellX: number = 0;
   private _nextEmptyCellY: number = 0;
-  private _lookupTable = new ArrayKeyTrie<CG>();
+  private _lookupTable = new TripleKeyMap<number, number, number, CG>();
 
   constructor(protected readonly _metrics: MonospaceFontMetrics,
       protected readonly _extraFonts: MonospaceFontMetrics[],
@@ -111,14 +113,14 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     return this._monoTime;
   }
 
-  private _makeLookupKey(codePoint: number, style: StyleCode, fgRGBA: number, bgRGBA: number): number[] {
-    return [fgRGBA, bgRGBA, style * TWO_TO_THE_24 + codePoint];
+  private _makeLookupKey(codePoint: number, style: StyleCode): number {
+    return style * TWO_TO_THE_24 + codePoint;
   }
 
   protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
       fgRGBA: number, bgRGBA: number): CG {
 
-    let cachedGlyph = this._lookupTable.get(this._makeLookupKey(codePoint, style, fgRGBA, bgRGBA));
+    let cachedGlyph = this._lookupTable.get(fgRGBA, bgRGBA, this._makeLookupKey(codePoint, style));
     if (cachedGlyph == null) {
       cachedGlyph = this._insertChar(codePoint, alternateCodePoints, style, fontIndex, fgRGBA, bgRGBA);
     }
@@ -150,9 +152,11 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     cachedGlyph.atlasX = this._nextEmptyCellX;
     cachedGlyph.atlasY = this._nextEmptyCellY;
 
-    const key = this._makeLookupKey(codePoint, style, fgRGBA, bgRGBA);
-    cachedGlyph.key = key;
-    this._lookupTable.set(key, cachedGlyph);
+    const key3 = this._makeLookupKey(codePoint, style);
+    cachedGlyph.key1 = fgRGBA;
+    cachedGlyph.key2 = bgRGBA;
+    cachedGlyph.key3 = key3;
+    this._lookupTable.set(fgRGBA, bgRGBA, key3, cachedGlyph);
     for (let i=0; i<widthInCells; i++) {
       this._glyphCellMap[this._nextEmptyCellY][this._nextEmptyCellX + i] = cachedGlyph;
     }
@@ -187,7 +191,9 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       widthCells: widthInCells,
       widthPx,
 
-      key: null,
+      key1: null,
+      key2: null,
+      key3: null,
       atlasX: -1,
       atlasY: -1,
       lastUse: 0,
@@ -360,7 +366,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
         for (let i=0; i<cachedGlyph.widthCells; i++) {
           this._glyphCellMap[cachedGlyph.atlasY][cachedGlyph.atlasX + i] = null;
         }
-        this._lookupTable.delete(cachedGlyph.key);
+        this._lookupTable.delete(cachedGlyph.key1, cachedGlyph.key2, cachedGlyph.key3);
       }
     }
 
