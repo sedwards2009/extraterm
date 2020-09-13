@@ -923,10 +923,18 @@
     global-agent "^2.0.2"
     global-tunnel-ng "^2.7.1"
 
-"@extraterm/ace-ts@0.19.0":
+"@extraterm/ace-ts@0.19.0", "@extraterm/ace-ts@0.20.0":
   version "0.19.0"
   resolved "https://registry.yarnpkg.com/@extraterm/ace-ts/-/ace-ts-0.19.0.tgz#6997f7c5af523a4cefb8efb83431845e4cf4befd"
   integrity sha512-PvRVj2ngkf5+BzLlI22osWcYNfwFd6QY69RzulTWbQo5849fGq9MHq3rAwdjFKG115p/lcZt62O/dOPZ6RLFcQ==
+
+"@extraterm/extraterm-extension-api@0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@extraterm/extraterm-extension-api/-/extraterm-extension-api-0.5.0.tgz#30ea9d0525d224405dccd00d82a5b755868d6b21"
+  integrity sha512-2rt16Ji4SvSKfbi4mRUpEXB8oCvd7MaViYXqStpMFlVNH8xu/oXKTyRbqF7LJ5CGYClol43nz82WtmVbc0T43A==
+  dependencies:
+    "@extraterm/ace-ts" "0.19.0"
+    "@types/node" "^12.6.2"
 
 "@iarna/toml@^2.2.0":
   version "2.2.5"
