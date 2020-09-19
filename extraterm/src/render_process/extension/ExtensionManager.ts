@@ -31,6 +31,7 @@ import { EventEmitter } from '../../utils/EventEmitter';
 import { DebouncedDoLater } from 'extraterm-later';
 import { ExtensionContainerElement } from './ExtensionContainerElement';
 import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages";
+import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 
 
 interface ActiveExtension {
@@ -238,16 +239,17 @@ export class ExtensionManagerImpl implements ExtensionManager {
     return null;
   }
 
-  getSessionSettingsTagsForType(sessionType: string): string[] {
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[] {
     const ssExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionSettings != null);
-    let allTags: string[] = [];
+    let editors: HTMLElement[] = [];
     for (const extension of ssExtensions) {
-      const tags = extension.contextImpl.internalWindow.getSessionSettingsTagsForType(sessionType);
-      if (tags != null) {
-        allTags = [...allTags, ...tags];
+      const newEditors = extension.contextImpl.internalWindow.createSessionSettingsEditors(sessionType,
+        sessionConfiguration);
+      if (newEditors != null) {
+        editors = [...editors, ...newEditors];
       }
     }
-    return allTags;
+    return editors;
   }
 
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {

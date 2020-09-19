@@ -11,9 +11,47 @@ import { createUuid } from 'extraterm-uuid';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
+@Component({
+  props: {
+    extensionManager: Object,
+    sessionConfiguration: Object,
+    sessionType: String,
+  },
+  template: `<div ref="root">Extra session settings</div>`
+})
+class ExtraSessionSettings extends Vue {
+  // Props
+  extensionManager: ExtensionManager;
+  sessionConfiguration: SessionConfiguration;
+  sessionType: string;
+
+  // Fields
+  private _initialized = false;
+
+  mounted(): void {
+    this._setup();
+  }
+
+  private _setup(): void {
+    if ( ! this._initialized) {
+      this._initialized = true;
+      const editorElements = this.extensionManager.createSessionSettingsEditors(this.sessionType, this.sessionConfiguration);
+      // const div = document.createElement("DIV");
+      // const t = document.createTextNode("Ta da!");
+      // div.appendChild(t);
+      for (const editorElement of editorElements) {
+        (<HTMLElement>this.$refs.root).appendChild(editorElement);
+      }
+    }
+  }
+}
+
 
 @Component(
   {
+    components: {
+      "extra-settings": ExtraSessionSettings,
+    },
     template: trimBetweenTags(`
 <div class="settings-page">
   <h2 class="no-user-select"><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
@@ -31,13 +69,13 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
       <component
         v-bind:is="sessionEditor(item.type)"
         v-bind:sessionConfiguration.prop="item"
-        v-on:change="handleChange">
-      </component>
-      <component
-        v-for="settingsTag in sessionSettingsTypes(item.type)"
-        v-bind:is="settingsTag"
-        v-on:change="handleChange">
-      </component>
+        v-on:change="handleChange"
+      />
+      <extra-settings
+        v-bind:extensionManager="getExtensionManager()"
+        v-bind:sessionConfiguration="item"
+        v-bind:sessionType="item.type"
+      />
     </div>
   </div>
 
@@ -66,6 +104,10 @@ export class SessionSettingsUi extends Vue {
     this.extensionManagerStamp = Date.now();
   }
 
+  getExtensionManager(): ExtensionManager {
+    return this._extensionManager;
+  }
+
   get sessionTypes(): {name: string, type: string}[] {
     const bogusReadToTrickVue = this.extensionManagerStamp;
     if (this._extensionManager == null) {
@@ -77,10 +119,6 @@ export class SessionSettingsUi extends Vue {
 
   sessionEditor(type: string): string {
     return this._extensionManager.getSessionEditorTagForType(type);
-  }
-
-  sessionSettingsTypes(type: string): string[] {
-    return this._extensionManager.getSessionSettingsTagsForType(type);
   }
 
   handleChange(event: Event): void {

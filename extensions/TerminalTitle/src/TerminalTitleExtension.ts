@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment, SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
 import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
 import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
@@ -54,19 +54,11 @@ export function activate(context: ExtensionContext): any {
       tabTitleData.updateTitleFunc);
   });
 
-  // const settingsClass = createSettingsClass(context);
-  // context.window.registerSessionSettings("title", settingsClass);
+  context.window.registerSessionSettingsEditor("title", (sessionSettingsEditorBase: SessionSettingsEditorBase) => {
+    const container = sessionSettingsEditorBase.getContainerElement();
+    const div = document.createElement("DIV");
+    const t = document.createTextNode("Session settings editor for Terminal title");
+    div.appendChild(t);
+    container.appendChild(div);
+  });
 }
-
-// function createSettingsClass(context: ExtensionContext): any {
-//   class SessionSettings extends context.window.extensionSessionSettingsBaseConstructor {
-//     created(): void {
-//       const container = this.getContainerElement();
-//       const div = document.createElement("DIV");
-//       const t = document.createTextNode("Session settings for Terminal title");
-//       div.appendChild(t);
-//       container.appendChild(div);
-//     }
-//   }
-//   return SessionSettings;
-// }

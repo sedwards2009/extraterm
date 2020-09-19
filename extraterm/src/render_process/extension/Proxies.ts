@@ -15,7 +15,7 @@ import { EtViewerTab } from '../ViewerTab';
 import { CommonExtensionWindowState } from './CommonExtensionState';
 import { ExtensionContainerElement } from './ExtensionContainerElement';
 import { ExtensionTerminalBorderContribution } from '../../ExtensionMetadata';
-import { Viewer, SessionSettingsEditorFactory } from '@extraterm/extraterm-extension-api';
+import { Viewer, SessionSettingsEditorFactory, SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { ViewerElement } from '../viewers/ViewerElement';
 import { WorkspaceSessionSettingsRegistry } from './WorkspaceSessionSettingsRegistry';
 
@@ -106,11 +106,6 @@ export class WindowProxy implements InternalWindow {
     return this._windowSessionEditorRegistry.getSessionEditorTagForType(sessionType);
   }
 
-  getSessionSettingsTagsForType(sessionType: string): string[] {
-    // return this._windowSessionSettingsRegistry.getSessionSettingsTagsForType(sessionType);
-    return [];
-  }
-
   registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
     this._internalExtensionContext.registerTabTitleWidget(name, factory);
   }
@@ -134,6 +129,10 @@ export class WindowProxy implements InternalWindow {
 
   registerSessionSettingsEditor(name: string, factory: SessionSettingsEditorFactory): void {
     this._windowSessionSettingsRegistry.registerSessionSettingsEditor(name, factory);
+  }
+
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[] {
+    return this._windowSessionSettingsRegistry.createSessionSettingsEditors(sessionType, sessionConfiguration);
   }
 }
 

@@ -15,6 +15,7 @@ import { TextEditor } from '../viewers/TextEditorType';
 import { CommonExtensionWindowState } from './CommonExtensionState';
 import { EventEmitter } from 'extraterm-event-emitter';
 import { TabWidget } from '../gui/TabWidget';
+import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -45,7 +46,6 @@ export interface ExtensionManager {
 
   getAllSessionTypes(): { name: string, type: string }[];
   getSessionEditorTagForType(type: string): string;
-  getSessionSettingsTagsForType(type: string): string[];
 
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
@@ -74,6 +74,7 @@ export interface ExtensionManager {
   commandRegistrationChanged(): void;
 
   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[];
 }
 
 export interface AcceptsExtensionManager {
@@ -107,7 +108,7 @@ export interface ExtensionUiUtils {
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
-  getSessionSettingsTagsForType(sessionType): string[];
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[];
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
   newTerminalCreated(newTerminal: EtTerminal): void;

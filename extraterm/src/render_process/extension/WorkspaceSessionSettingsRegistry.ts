@@ -11,7 +11,12 @@ import { Logger, getLogger } from "extraterm-logging";
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import { CssFile } from '../../theme/Theme';
 import { log } from "extraterm-logging";
-import { SessionSettingsEditorFactory, SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
+import {
+  SessionSettingsEditorFactory,
+  SessionSettingsEditorBase,
+  SessionConfiguration
+} from '@extraterm/extraterm-extension-api';
+import { ExtensionContainerElement } from './ExtensionContainerElement';
 
 
 export class WorkspaceSessionSettingsRegistry {
@@ -23,14 +28,7 @@ export class WorkspaceSessionSettingsRegistry {
   }
 
   registerSessionSettingsEditor(name: string, factory: SessionSettingsEditorFactory): void {
-    let sessionSettingsMetadata: ExtensionSessionSettingsContribution = null;
-    for (const ssm of this._internalExtensionContext.extensionMetadata.contributes.sessionSettings) {
-      if (ssm.name === name) {
-        sessionSettingsMetadata = ssm;
-        break;
-      }
-    }
-
+    const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionByName(name);
     if (sessionSettingsMetadata == null) {
       this._log.warn(`Unable to register session settings '${name}' for extension ` +
         `'${this._internalExtensionContext.extensionMetadata.name}' because the session settings contribution data ` +
@@ -39,5 +37,43 @@ export class WorkspaceSessionSettingsRegistry {
     }
 
     this._registeredSessionSettings.set(sessionSettingsMetadata.name, factory);
+  }
+
+  private _getExtensionSessionSettingsContributionByName(name: string): ExtensionSessionSettingsContribution {
+    for (const ssm of this._internalExtensionContext.extensionMetadata.contributes.sessionSettings) {
+      if (ssm.name === name) {
+        return ssm;
+      }
+    }
+    return null;
+  }
+
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[] {
+    const result: HTMLElement[] = [];
+    for (const name of this._registeredSessionSettings.keys()) {
+      const factory = this._registeredSessionSettings.get(name);
+      const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionByName(name);
+      const extensionContainerElement = <ExtensionContainerElement> document.createElement(ExtensionContainerElement.TAG_NAME);
+
+      extensionContainerElement._setExtensionContext(this._internalExtensionContext);
+      extensionContainerElement._setExtensionCss(sessionSettingsMetadata.css);
+
+      const editorBase = new SessionSettingsEditorBaseImpl(extensionContainerElement);
+
+      factory.call(null, editorBase);
+
+      result.push(extensionContainerElement);
+    }
+    return result;
+  }
+}
+
+class SessionSettingsEditorBaseImpl implements SessionSettingsEditorBase {
+  constructor(private _extensionContainerElement: ExtensionContainerElement) {
+
+  }
+
+  getContainerElement(): HTMLElement {
+    return this._extensionContainerElement.getContainerElement();
   }
 }
