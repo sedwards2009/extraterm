@@ -14,7 +14,7 @@ import { EtTerminal } from '../Terminal';
 import { TextViewer } from'../viewers/TextAceViewer';
 import { ProxyFactoryImpl } from './ProxyFactoryImpl';
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory,
-  isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions, InternalTabTitleWidget } from './InternalTypes';
+  isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions, InternalTabTitleWidget, InternalSessionSettingsEditor } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution, ExtensionDesiredState } from '../../ExtensionMetadata';
@@ -239,17 +239,19 @@ export class ExtensionManagerImpl implements ExtensionManager {
     return null;
   }
 
-  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[] {
+  createSessionSettingsEditors(sessionType: string,
+      sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
+
     const ssExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionSettings != null);
-    let editors: HTMLElement[] = [];
+    let settingsEditors: InternalSessionSettingsEditor[] = [];
     for (const extension of ssExtensions) {
-      const newEditors = extension.contextImpl.internalWindow.createSessionSettingsEditors(sessionType,
+      const newSettingsEditors = extension.contextImpl.internalWindow.createSessionSettingsEditors(sessionType,
         sessionConfiguration);
-      if (newEditors != null) {
-        editors = [...editors, ...newEditors];
+      if (newSettingsEditors != null) {
+        settingsEditors = [...settingsEditors, ...newSettingsEditors];
       }
     }
-    return editors;
+    return settingsEditors;
   }
 
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {

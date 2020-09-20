@@ -35,12 +35,11 @@ class ExtraSessionSettings extends Vue {
   private _setup(): void {
     if ( ! this._initialized) {
       this._initialized = true;
-      const editorElements = this.extensionManager.createSessionSettingsEditors(this.sessionType, this.sessionConfiguration);
-      // const div = document.createElement("DIV");
-      // const t = document.createTextNode("Ta da!");
-      // div.appendChild(t);
-      for (const editorElement of editorElements) {
-        (<HTMLElement>this.$refs.root).appendChild(editorElement);
+      const settingsEditors = this.extensionManager.createSessionSettingsEditors(this.sessionType,
+        this.sessionConfiguration);
+      for (const settingsEditor of settingsEditors) {
+
+        (<HTMLElement>this.$refs.root).appendChild(settingsEditor.getContainerElement());
       }
     }
   }

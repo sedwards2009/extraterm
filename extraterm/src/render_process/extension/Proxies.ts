@@ -7,7 +7,7 @@ import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 
 import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
-import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget, InternalTabTitleWidget } from './InternalTypes';
+import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget, InternalTabTitleWidget, InternalSessionSettingsEditor } from './InternalTypes';
 import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
@@ -131,7 +131,9 @@ export class WindowProxy implements InternalWindow {
     this._windowSessionSettingsRegistry.registerSessionSettingsEditor(name, factory);
   }
 
-  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[] {
+  createSessionSettingsEditors(sessionType: string,
+      sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
+
     return this._windowSessionSettingsRegistry.createSessionSettingsEditors(sessionType, sessionConfiguration);
   }
 }

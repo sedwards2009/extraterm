@@ -583,11 +583,9 @@ export interface SessionSettingsEditorBase {
    */
   getContainerElement(): HTMLElement;
 
-  // setSessionConfiguration(sessionConfiguration: SessionConfiguration): void;
-
-  // getSessionConfiguration(): SessionConfiguration;
-
-  // updateSessionConfiguration(sessionConfigurationChange: object): void;
+  setSettings(settings: Object): void;
+  
+  getSettings(): Object;
 }
 
 export interface SessionSettingsEditorFactory {

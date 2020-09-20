@@ -6,7 +6,7 @@
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 
 import { ExtensionSessionSettingsContribution } from '../../ExtensionMetadata';
-import { InternalExtensionContext } from './InternalTypes';
+import { InternalExtensionContext, InternalSessionSettingsEditor } from './InternalTypes';
 import { Logger, getLogger } from "extraterm-logging";
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import { CssFile } from '../../theme/Theme';
@@ -48,8 +48,10 @@ export class WorkspaceSessionSettingsRegistry {
     return null;
   }
 
-  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[] {
-    const result: HTMLElement[] = [];
+  createSessionSettingsEditors(sessionType: string,
+      sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
+
+    const result: InternalSessionSettingsEditor[] = [];
     for (const name of this._registeredSessionSettings.keys()) {
       const factory = this._registeredSessionSettings.get(name);
       const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionByName(name);
@@ -62,18 +64,26 @@ export class WorkspaceSessionSettingsRegistry {
 
       factory.call(null, editorBase);
 
-      result.push(extensionContainerElement);
+      result.push(editorBase);
     }
     return result;
   }
 }
 
-class SessionSettingsEditorBaseImpl implements SessionSettingsEditorBase {
+class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   constructor(private _extensionContainerElement: ExtensionContainerElement) {
 
   }
 
   getContainerElement(): HTMLElement {
     return this._extensionContainerElement.getContainerElement();
+  }
+
+  getSettings(): Object {
+    return {};
+  }
+
+  setSettings(settings: Object): void {
+    
   }
 }

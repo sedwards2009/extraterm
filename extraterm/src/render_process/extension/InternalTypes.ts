@@ -74,7 +74,7 @@ export interface ExtensionManager {
   commandRegistrationChanged(): void;
 
   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
-  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[];
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
 }
 
 export interface AcceptsExtensionManager {
@@ -108,7 +108,7 @@ export interface ExtensionUiUtils {
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
-  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): HTMLElement[];
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
   newTerminalCreated(newTerminal: EtTerminal): void;
@@ -147,6 +147,11 @@ export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorde
 export interface InternalTabTitleWidget extends ExtensionApi.TabTitleWidget {
 
 }
+
+export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
+
+}
+
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
   return metadata.contributes.sessionBackends.length !== 0 ||
