@@ -491,6 +491,7 @@ export interface SessionConfiguration {
   type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
   args?: string;            // command line arguments to be passed to command
   initialDirectory?: string;
+  extensions?: any;
 }
 
 /**
@@ -584,7 +585,7 @@ export interface SessionSettingsEditorBase {
   getContainerElement(): HTMLElement;
 
   setSettings(settings: Object): void;
-  
+
   getSettings(): Object;
 }
 

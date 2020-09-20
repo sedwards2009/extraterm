@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -8,8 +8,12 @@ import Vue from 'vue';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
-import { ExtensionManager } from '../extension/InternalTypes';
+import { ExtensionManager, SessionSettingsChange } from '../extension/InternalTypes';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+
+interface SessionSettingsChangeEvent extends SessionSettingsChange {
+  uuid: string;
+}
 
 @Component({
   props: {
@@ -38,7 +42,10 @@ class ExtraSessionSettings extends Vue {
       const settingsEditors = this.extensionManager.createSessionSettingsEditors(this.sessionType,
         this.sessionConfiguration);
       for (const settingsEditor of settingsEditors) {
-
+        settingsEditor.onSettingsChanged((changeEvent: SessionSettingsChange) => {
+          const event = {...changeEvent, ...{ uuid: this.sessionConfiguration.uuid }};
+          this.$emit("settings-changed", event);
+        });
         (<HTMLElement>this.$refs.root).appendChild(settingsEditor.getContainerElement());
       }
     }
@@ -46,12 +53,11 @@ class ExtraSessionSettings extends Vue {
 }
 
 
-@Component(
-  {
-    components: {
-      "extra-settings": ExtraSessionSettings,
-    },
-    template: trimBetweenTags(`
+@Component({
+  components: {
+    "extra-settings": ExtraSessionSettings,
+  },
+  template: trimBetweenTags(`
 <div class="settings-page">
   <h2 class="no-user-select"><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
@@ -74,6 +80,7 @@ class ExtraSessionSettings extends Vue {
         v-bind:extensionManager="getExtensionManager()"
         v-bind:sessionConfiguration="item"
         v-bind:sessionType="item.type"
+        v-on:settings-changed="handleSettingsChanged"
       />
     </div>
   </div>
@@ -85,8 +92,7 @@ class ExtraSessionSettings extends Vue {
   </div>
 </div>
 `)
-  }
-)
+})
 export class SessionSettingsUi extends Vue {
   private _extensionManager: ExtensionManager = null;
   sessions: SessionConfiguration[] = [];
@@ -131,8 +137,25 @@ export class SessionSettingsUi extends Vue {
     }
   }
 
+  private _getSessionByUUID(uuid: string): SessionConfiguration {
+    for (const session of this.sessions) {
+      if (session.uuid === uuid) {
+        return session;
+      }
+    }
+    return null;
+  }
+
+  handleSettingsChanged(settingsChangeEvent: SessionSettingsChangeEvent): void {
+    const session = this._getSessionByUUID(settingsChangeEvent.uuid);
+    if (session.extensions == null) {
+      session.extensions = {};
+    }
+    session.extensions[settingsChangeEvent.settingsConfigKey] = settingsChangeEvent.settings;
+  }
+
   newSession(type: string): void {
-    const newSession: SessionConfiguration = { uuid: createUuid(), name: "new " + type, type};
+    const newSession: SessionConfiguration = { uuid: createUuid(), name: "new " + type, type, extensions: {}};
     this.sessions.push(newSession);
   }
 

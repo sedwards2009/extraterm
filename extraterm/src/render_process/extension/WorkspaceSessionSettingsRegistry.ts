@@ -5,18 +5,16 @@
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 
+import { EventEmitter } from 'extraterm-event-emitter';
+import { ExtensionContainerElement } from './ExtensionContainerElement';
 import { ExtensionSessionSettingsContribution } from '../../ExtensionMetadata';
-import { InternalExtensionContext, InternalSessionSettingsEditor } from './InternalTypes';
-import { Logger, getLogger } from "extraterm-logging";
-import { ThemeableElementBase } from '../ThemeableElementBase';
-import { CssFile } from '../../theme/Theme';
+import { InternalExtensionContext, InternalSessionSettingsEditor, SessionSettingsChange } from './InternalTypes';
 import { log } from "extraterm-logging";
+import { Logger, getLogger } from "extraterm-logging";
 import {
   SessionSettingsEditorFactory,
-  SessionSettingsEditorBase,
   SessionConfiguration
 } from '@extraterm/extraterm-extension-api';
-import { ExtensionContainerElement } from './ExtensionContainerElement';
 
 
 export class WorkspaceSessionSettingsRegistry {
@@ -60,7 +58,15 @@ export class WorkspaceSessionSettingsRegistry {
       extensionContainerElement._setExtensionContext(this._internalExtensionContext);
       extensionContainerElement._setExtensionCss(sessionSettingsMetadata.css);
 
-      const editorBase = new SessionSettingsEditorBaseImpl(extensionContainerElement);
+      const settingsConfigKey = `${this._internalExtensionContext.extensionMetadata.name}:${name}`;
+
+      let settings = sessionConfiguration.extensions?.[settingsConfigKey];
+      if (settings == null) {
+        settings = {};
+      }
+
+      const editorBase = new SessionSettingsEditorBaseImpl(extensionContainerElement, settingsConfigKey,
+        settings);
 
       factory.call(null, editorBase);
 
@@ -71,8 +77,16 @@ export class WorkspaceSessionSettingsRegistry {
 }
 
 class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
-  constructor(private _extensionContainerElement: ExtensionContainerElement) {
 
+  private _settings: Object = null;
+  onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
+  private _onSettingsChangedEventEmitter = new EventEmitter<SessionSettingsChange>();
+
+  constructor(private _extensionContainerElement: ExtensionContainerElement, private _settingsConfigKey: string,
+      settings: Object) {
+
+    this._settings = settings;
+    this.onSettingsChanged = this._onSettingsChangedEventEmitter.event;
   }
 
   getContainerElement(): HTMLElement {
@@ -80,10 +94,13 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   }
 
   getSettings(): Object {
-    return {};
+    return this._settings;
   }
 
   setSettings(settings: Object): void {
-    
+    this._onSettingsChangedEventEmitter.fire({
+      settingsConfigKey: this._settingsConfigKey,
+      settings
+    });
   }
 }

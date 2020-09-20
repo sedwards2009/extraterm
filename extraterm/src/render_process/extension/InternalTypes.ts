@@ -148,8 +148,13 @@ export interface InternalTabTitleWidget extends ExtensionApi.TabTitleWidget {
 
 }
 
-export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
+export interface SessionSettingsChange {
+  settingsConfigKey: string;
+  settings: Object;
+}
 
+export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
+  onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
 }
 
 
