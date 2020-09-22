@@ -93,6 +93,10 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
     return this._extensionContainerElement.getContainerElement();
   }
 
+  _getExtensionContainerElement(): ExtensionContainerElement {
+    return this._extensionContainerElement;
+  }
+
   getSettings(): Object {
     return this._settings;
   }

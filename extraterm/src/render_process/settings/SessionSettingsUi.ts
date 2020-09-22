@@ -46,7 +46,7 @@ class ExtraSessionSettings extends Vue {
           const event = {...changeEvent, ...{ uuid: this.sessionConfiguration.uuid }};
           this.$emit("settings-changed", event);
         });
-        (<HTMLElement>this.$refs.root).appendChild(settingsEditor.getContainerElement());
+        (<HTMLElement>this.$refs.root).appendChild(settingsEditor._getExtensionContainerElement());
       }
     }
   }

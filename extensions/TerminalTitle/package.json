@@ -80,7 +80,7 @@
         "css": {
           "directory": "resources/sass",
           "cssFile": [
-            "tab-title.scss"
+            "editor.scss"
           ],
           "fontAwesome": true
         }

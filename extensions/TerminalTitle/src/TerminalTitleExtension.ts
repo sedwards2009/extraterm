@@ -8,6 +8,7 @@ import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
 import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
+import { setupTerminalTitleSessionSettings } from './TerminalTitleSessionSettings';
 
 let log: Logger = null;
 
@@ -55,10 +56,6 @@ export function activate(context: ExtensionContext): any {
   });
 
   context.window.registerSessionSettingsEditor("title", (sessionSettingsEditorBase: SessionSettingsEditorBase) => {
-    const container = sessionSettingsEditorBase.getContainerElement();
-    const div = document.createElement("DIV");
-    const t = document.createTextNode("Session settings editor for Terminal title");
-    div.appendChild(t);
-    container.appendChild(div);
+    setupTerminalTitleSessionSettings(sessionSettingsEditorBase);
   });
 }

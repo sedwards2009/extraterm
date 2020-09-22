@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { FieldFormatter } from "./TemplateString";
-import { TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import he = require("he");
 
 /***
@@ -12,7 +11,7 @@ import he = require("he");
  */
 export class TerminalEnvironmentFormatter implements FieldFormatter {
 
-  constructor(private _namespace: string, private _env: TerminalEnvironment) {
+  constructor(private _namespace: string, private _env: { get(key: string): string; }) {
   }
 
   formatHtml(key: string): string {

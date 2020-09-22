@@ -16,6 +16,7 @@ import { CommonExtensionWindowState } from './CommonExtensionState';
 import { EventEmitter } from 'extraterm-event-emitter';
 import { TabWidget } from '../gui/TabWidget';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
+import { ExtensionContainerElement } from './ExtensionContainerElement';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -155,6 +156,7 @@ export interface SessionSettingsChange {
 
 export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
+  _getExtensionContainerElement(): ExtensionContainerElement;
 }
 
 
