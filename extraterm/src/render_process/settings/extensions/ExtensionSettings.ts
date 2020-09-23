@@ -33,7 +33,7 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
     });
   }
 
-  protected _setConfig(key: ConfigKey, config: any): void {
+  protected _setConfigInUi(key: ConfigKey, config: any): void {
   }
 
   protected _dataChanged(): void {

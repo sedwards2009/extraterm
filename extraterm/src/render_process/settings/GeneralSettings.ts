@@ -21,7 +21,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     this._log = getLogger(GENERAL_SETTINGS_TAG, this);
   }
 
-  protected _setConfig(key: ConfigKey, config: any): void {
+  protected _setConfigInUi(key: ConfigKey, config: any): void {
     const ui = this._getUi();
     if (key === GENERAL_CONFIG) {
       const generalConfig = <GeneralConfig> config;

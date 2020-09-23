@@ -25,12 +25,18 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
     this._log = getLogger(SESSION_SETTINGS_TAG, this);
   }
 
-  protected _setConfig(key: ConfigKey, config: any): void {
+  protected _setConfigInUi(key: ConfigKey, config: any): void {
     if (key === SESSION_CONFIG) {
       const ui = this._getUi();
       const sessions = <SessionConfiguration[]> config;
       if ( ! _.isEqual(ui.sessions, sessions)) {
-        ui.sessions = _.cloneDeep(sessions);
+        const sessionsCopy = _.cloneDeep(sessions);
+        for (const session of sessionsCopy) {
+          if (session.extensions == null) {
+            session.extensions = {};
+          }
+        }
+        ui.sessions = sessionsCopy;
       }
     }
   }

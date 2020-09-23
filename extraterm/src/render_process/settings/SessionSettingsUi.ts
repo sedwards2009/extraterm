@@ -148,10 +148,7 @@ export class SessionSettingsUi extends Vue {
 
   handleSettingsChanged(settingsChangeEvent: SessionSettingsChangeEvent): void {
     const session = this._getSessionByUUID(settingsChangeEvent.uuid);
-    if (session.extensions == null) {
-      session.extensions = {};
-    }
-    session.extensions[settingsChangeEvent.settingsConfigKey] = settingsChangeEvent.settings;
+    Vue.set(session.extensions, settingsChangeEvent.settingsConfigKey, settingsChangeEvent.settings);
   }
 
   newSession(type: string): void {

@@ -10,10 +10,10 @@ import { ConfigKey, ConfigDatabase, ConfigChangeEvent } from '../../Config';
  * the element is added and removed from the DOM. This is important to
  * avoid memory leaks where registered event handlers can keep the main
  * object alive.
- * 
- * The an onChange event is triggered, or when the element is connected to
- * the DOM, then the function passed to the constructor will be called.
- * 
+ *
+ * When an onChange event is triggered, or when the element is connected
+ * to the DOM, the function passed to the constructor will be called.
+ *
  * To use this properly be sure to call the `connecteCallback()` and
  * `disconnectedCallback()` methods from the matching methods in your
  * custom element.

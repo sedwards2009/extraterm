@@ -26,18 +26,18 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     const themeStyle = document.createElement("style");
     themeStyle.id = ThemeableElementBase.ID_THEME;
     shadow.appendChild(themeStyle);
-    
-    this.updateThemeCss();    
+
+    this.updateThemeCss();
   }
 
   private _handleConfigChange(key: ConfigKey, config: any): void {
-    this._setConfig(key, config);
+    this._setConfigInUi(key, config);
   }
 
   protected _getUi(): V {
     return this._ui;
   }
-  
+
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.SETTINGS_TAB, ThemeTypes.CssFile.FONT_AWESOME];
   }
@@ -74,19 +74,12 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     return null;
   }
 
-  protected _getConfig(key: ConfigKey): any {
-    if (this._configBinder.getConfigDatabase() != null) {
-      return this._configBinder.getConfigDatabase().getConfig(key);
-    }
-    return null;
-  }
-
   protected _updateConfig(key: ConfigKey, newConfig: any): void {
     if (this._configBinder.getConfigDatabase() != null) {
       this._configBinder.getConfigDatabase().setConfig(key, newConfig);
     }
   }
 
-  protected abstract _setConfig(key: ConfigKey, config: any): void;
+  protected abstract _setConfigInUi(key: ConfigKey, config: any): void;
   protected abstract _dataChanged(): void;
 }
