@@ -82,12 +82,15 @@ export interface TerminalEnvironment {
   onChange: Event<string[]>;
 }
 
+/**
+ * An active terminal with connected TTY.
+ */
 export interface Terminal {
   /**
    * Type a string of text into the terminal.
    *
    * This is effectively the same as though the user typed into the terminal.
-   * Note that the enter key should be represented as \r.
+   * Note that the enter key should be represented as `\r`.
    */
   type(text: string): void;
 
@@ -117,6 +120,20 @@ export interface Terminal {
   onDidAppendViewer: Event<Viewer>;
 
   environment: TerminalEnvironment;
+
+  /**
+   * The session configuration associated with this terminal.
+   *
+   * Use `getSessionSettings()` to fetch extension settings.
+   */
+  sessionConfiguration: SessionConfiguration;
+
+  /**
+   * Get the extension settings associated with this terminal.
+   *
+   * @param name the same `name` passed to `Window.registerSessionSettingsEditor()`.
+   */
+  getSessionSettings(name: string): Object;
 }
 
 export interface TerminalBorderWidget {
@@ -485,6 +502,9 @@ export interface ExtensionViewerBaseConstructor {
   new(...any: any[]): ExtensionViewerBase;
 }
 
+/**
+ *
+ */
 export interface SessionConfiguration {
   uuid: string;
   name: string;             // Human readable name for the profile.

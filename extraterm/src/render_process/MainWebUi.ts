@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as he from 'he';
-import { BulkFileHandle } from '@extraterm/extraterm-extension-api';
+import { BulkFileHandle, SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -558,6 +558,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       tabWidget = this._splitLayout.firstTabWidget();
     }
 
+    const sessionConfiguration = this._getSessionByUuid(sessionUuid);
+
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setWindowId(this.windowId);
     newTerminal.setBulkFileBroker(this._fileBroker);
@@ -566,15 +568,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     newTerminal.setExtensionManager(this._extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
     newTerminal.setTerminalVisualConfig(this._terminalVisualConfig);
+    newTerminal.setSessionConfiguration(sessionConfiguration);
 
     // Set the default name of the terminal tab to the session name.
-    const sessions = this._configManager.getConfig(SESSION_CONFIG);
-    for (const session of sessions) {
-      if (session.uuid === sessionUuid) {
-        newTerminal.setTerminalTitle(session.name);
-        break;
-      }
-    }
+    newTerminal.setTerminalTitle(sessionConfiguration.name);
 
     this._addTab(tabWidget, newTerminal);
     this._setUpNewTerminalEventHandlers(newTerminal);
@@ -583,6 +580,16 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._sendTabOpenedEvent();
 
     return newTerminal;
+  }
+
+  private _getSessionByUuid(sessionUuid: string): SessionConfiguration {
+    const sessions = this._configManager.getConfigCopy(SESSION_CONFIG);
+    for (const session of sessions) {
+      if (session.uuid === sessionUuid) {
+        return session;
+      }
+    }
+    return null;
   }
 
   private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string): void {

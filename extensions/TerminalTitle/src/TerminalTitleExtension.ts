@@ -8,7 +8,7 @@ import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
 import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
-import { setupTerminalTitleSessionSettings } from './TerminalTitleSessionSettings';
+import { setupTerminalTitleSessionSettings, Settings } from './TerminalTitleSessionSettings';
 
 let log: Logger = null;
 
@@ -33,7 +33,10 @@ export function activate(context: ExtensionContext): any {
     const templateString = new TemplateString();
     templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
     templateString.addFormatter("icon", new IconFormatter());
-    templateString.setTemplateString("${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}");
+
+    const settings = <Settings> terminal.getSessionSettings("title");
+    const template = settings?.template ?? "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
+    templateString.setTemplateString(template);
 
     const newDiv = document.createElement("div");
     newDiv.classList.add("tab_title");

@@ -10,7 +10,7 @@ import { IconFormatter } from './IconFormatter';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
 
 
-interface Settings {
+export interface Settings {
   template?: string;
 }
 

@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as _ from 'lodash';
+
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 
@@ -229,10 +231,16 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   onDidAppendViewer: ExtensionApi.Event<Viewer>;
 
   environment: ProxyTerminalEnvironment;
+  private _sessionConfiguration: SessionConfiguration = null;
+  private _sessionConfigurationExtensions: Object = null;
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
     this.onDidAppendViewer = this._onDidAppendViewerEventEmitter.event;
     this.environment = new ProxyTerminalEnvironment(this._terminal);
+
+    this._sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
+    this._sessionConfigurationExtensions = this._sessionConfiguration.extensions;
+    this._sessionConfiguration.extensions = null;
   }
 
   getTab(): ExtensionApi.Tab {
@@ -253,6 +261,16 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 
   getExtratermCookieName(): string {
     return EXTRATERM_COOKIE_ENV;
+  }
+
+  get sessionConfiguration(): SessionConfiguration {
+    return this._sessionConfiguration;
+  }
+
+  getSessionSettings(name: string): Object {
+    const settingsKey = `${this._internalExtensionContext.extensionMetadata.name}:${name}`;
+    const settings = this._sessionConfigurationExtensions[settingsKey];
+    return settings == null ? null : settings;
   }
 
   openTerminalBorderWidget(name: string): any {
