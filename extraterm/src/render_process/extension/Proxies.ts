@@ -239,7 +239,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     this.environment = new ProxyTerminalEnvironment(this._terminal);
 
     this._sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
-    this._sessionConfigurationExtensions = this._sessionConfiguration.extensions;
+    this._sessionConfigurationExtensions = this._sessionConfiguration.extensions ?? {};
     this._sessionConfiguration.extensions = null;
   }
 
