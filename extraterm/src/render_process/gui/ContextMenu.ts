@@ -10,9 +10,7 @@ import * as DomUtils from "../DomUtils";
 import * as ThemeTypes from "../../theme/Theme";
 import { MenuItem } from "./MenuItem";
 import { CheckboxMenuItem } from "./CheckboxMenuItem";
-import * as Util from "./Util";
 import { Logger, getLogger } from "extraterm-logging";
-import { findFixedPositionOffset } from "../DomUtils";
 import { ThemeableElementBase } from "../ThemeableElementBase";
 
 
@@ -300,9 +298,8 @@ export class ContextMenu extends ThemeableElementBase {
       containerY = targetElementRect.top - containerRect.height;
     }
 
-    const offset = findFixedPositionOffset(container);
-    containerX -= offset.left;
-    containerY -= offset.top;
+    containerX -= coverRect.left;
+    containerY -= coverRect.top;
 
     container.style.left = "" + containerX + "px";
     container.style.top = "" + containerY + "px";
