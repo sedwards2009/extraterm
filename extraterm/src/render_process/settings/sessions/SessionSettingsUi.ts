@@ -8,82 +8,30 @@ import Vue from 'vue';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
-import { ExtensionManager, SessionSettingsChange } from '../../extension/InternalTypes';
+import { ExtensionManager } from '../../extension/InternalTypes';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
-
-interface SessionSettingsChangeEvent extends SessionSettingsChange {
-  uuid: string;
-}
-
-@Component({
-  props: {
-    extensionManager: Object,
-    sessionConfiguration: Object,
-    sessionType: String,
-  },
-  template: `<div ref="root">Extra session settings</div>`
-})
-class ExtraSessionSettings extends Vue {
-  // Props
-  extensionManager: ExtensionManager;
-  sessionConfiguration: SessionConfiguration;
-  sessionType: string;
-
-  // Fields
-  private _initialized = false;
-
-  mounted(): void {
-    this._setup();
-  }
-
-  private _setup(): void {
-    if ( ! this._initialized) {
-      this._initialized = true;
-      const settingsEditors = this.extensionManager.createSessionSettingsEditors(this.sessionType,
-        this.sessionConfiguration);
-      for (const settingsEditor of settingsEditors) {
-        settingsEditor.onSettingsChanged((changeEvent: SessionSettingsChange) => {
-          const event = {...changeEvent, ...{ uuid: this.sessionConfiguration.uuid }};
-          this.$emit("settings-changed", event);
-        });
-        (<HTMLElement>this.$refs.root).appendChild(settingsEditor._getExtensionContainerElement());
-      }
-    }
-  }
-}
+import { SessionCardUi } from './SessionCardUi';
 
 
 @Component({
   components: {
-    "extra-settings": ExtraSessionSettings,
+    "session-card": SessionCardUi,
   },
   template: trimBetweenTags(`
 <div class="settings-page">
   <h2 class="no-user-select"><i class="fa fa-terminal"></i>&nbsp;&nbsp;Session Types</h2>
 
-  <div v-for="(item, index) in sessions" v-bind:key="item.uuid" class="session-configuration card">
-    <h3 class="session-name no-user-select">{{ item.name }}</h3>
-    <div class="session-type no-user-select">{{getSessionTypeName(item.type)}}</div>
-
-    <div class="session-card-buttons">
-      <button v-if="index != 0" class="microtool primary" v-on:click="makeDefault(item.uuid)" title="Make default"><i class="fas fa-angle-double-up"></i></button>
-      <div v-if="index == 0" class="no-user-select"><em>default</em></div>
-      <button v-if="index != 0" class="microtool danger" v-on:click="deleteSession(item.uuid)"><i class="fa fa-times"></i></button>
-    </div>
-    <div>
-      <component
-        v-bind:is="sessionEditor(item.type)"
-        v-bind:sessionConfiguration.prop="item"
-        v-on:change="handleChange"
-      />
-      <extra-settings
-        v-bind:extensionManager="getExtensionManager()"
-        v-bind:sessionConfiguration="item"
-        v-bind:sessionType="item.type"
-        v-on:settings-changed="handleSettingsChanged"
-      />
-    </div>
-  </div>
+  <session-card
+    v-for="(item, index) in sessions"
+    v-bind:uuid="item.uuid"
+    v-bind:extensionManager="getExtensionManager()"
+    v-bind:sessionConfiguration="item"
+    v-bind:isDefault="index === 0"
+    v-on:make-default="makeDefault"
+    v-on:delete-session="deleteSession"
+    v-on:change="handleChange"
+    v-on:settings-change="handleSettingsChanged"
+  />
 
   <div class="gui-layout cols-1">
     <span v-for="item in sessionTypes" v-bind:key="item.type">
@@ -122,12 +70,7 @@ export class SessionSettingsUi extends Vue {
     return this._extensionManager.getAllSessionTypes();
   }
 
-  sessionEditor(type: string): string {
-    return this._extensionManager.getSessionEditorTagForType(type);
-  }
-
-  handleChange(event: Event): void {
-    const newSessionConfig = (<any>event.target).sessionConfiguration;
+  handleChange(newSessionConfig: SessionConfiguration): void {
     let i = 0;
     for (const session of this.sessions) {
       if (session.uuid === newSessionConfig.uuid) {
@@ -146,9 +89,9 @@ export class SessionSettingsUi extends Vue {
     return null;
   }
 
-  handleSettingsChanged(settingsChangeEvent: SessionSettingsChangeEvent): void {
-    const session = this._getSessionByUUID(settingsChangeEvent.uuid);
-    Vue.set(session.extensions, settingsChangeEvent.settingsConfigKey, settingsChangeEvent.settings);
+  handleSettingsChanged(uuid: string, settingsConfigKey: string, settings: Object): void {
+    const session = this._getSessionByUUID(uuid);
+    Vue.set(session.extensions, settingsConfigKey, settings);
   }
 
   newSession(type: string): void {
@@ -176,18 +119,5 @@ export class SessionSettingsUi extends Vue {
       i++;
     }
     return -1;
-  }
-
-  getSessionTypeName(type: string): string {
-    if (this._extensionManager == null) {
-      return "";
-    }
-
-    for (const sessionType of this._extensionManager.getAllSessionTypes()) {
-      if (sessionType.type === type) {
-        return sessionType.name;
-      }
-    }
-    return "";
   }
 }
