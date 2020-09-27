@@ -6,11 +6,11 @@ import { CustomElement } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { SessionSettingsUi } from './SessionSettingsUi';
-import { SESSION_CONFIG, ConfigKey } from '../../Config';
+import { SESSION_CONFIG, ConfigKey } from '../../../Config';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import { SettingsBase } from './SettingsBase';
-import { ExtensionManager } from '../extension/InternalTypes';
+import { SettingsBase } from '../SettingsBase';
+import { ExtensionManager } from '../../extension/InternalTypes';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 
 export const SESSION_SETTINGS_TAG = "et-session-settings";

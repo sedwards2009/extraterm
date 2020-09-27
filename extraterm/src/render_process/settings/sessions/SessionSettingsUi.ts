@@ -8,7 +8,7 @@ import Vue from 'vue';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
-import { ExtensionManager, SessionSettingsChange } from '../extension/InternalTypes';
+import { ExtensionManager, SessionSettingsChange } from '../../extension/InternalTypes';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 interface SessionSettingsChangeEvent extends SessionSettingsChange {
