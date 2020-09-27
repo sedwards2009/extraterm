@@ -23,6 +23,7 @@ import { SessionCardUi } from './SessionCardUi';
 
   <session-card
     v-for="(item, index) in sessions"
+    v-bind:key="item.uuid"
     v-bind:uuid="item.uuid"
     v-bind:extensionManager="getExtensionManager()"
     v-bind:sessionConfiguration="item"

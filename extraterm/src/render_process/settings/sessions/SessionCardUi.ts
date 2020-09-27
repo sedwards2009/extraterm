@@ -6,23 +6,19 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { ExtensionManager, SessionSettingsChange } from '../../extension/InternalTypes';
+import { ExtensionManager, SessionSettingsChange, InternalSessionSettingsEditor } from '../../extension/InternalTypes';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 
 @Component({
   props: {
-    extensionManager: Object,
-    sessionConfiguration: Object,
-    sessionType: String,
+    internalSessionSettingsEditor: Object,
   },
-  template: `<div ref="root">Extra session settings</div>`
+  template: `<div ref="root"></div>`
 })
 class ExtraSessionSettings extends Vue {
   // Props
-  extensionManager: ExtensionManager;
-  sessionConfiguration: SessionConfiguration;
-  sessionType: string;
+  internalSessionSettingsEditor: InternalSessionSettingsEditor;
 
   // Fields
   private _initialized = false;
@@ -34,14 +30,11 @@ class ExtraSessionSettings extends Vue {
   private _setup(): void {
     if ( ! this._initialized) {
       this._initialized = true;
-      const settingsEditors = this.extensionManager.createSessionSettingsEditors(this.sessionType,
-        this.sessionConfiguration);
-      for (const settingsEditor of settingsEditors) {
-        settingsEditor.onSettingsChanged((changeEvent: SessionSettingsChange) => {
-          this.$emit("settings-changed", changeEvent.settingsConfigKey, changeEvent.settings);
-        });
-        (<HTMLElement>this.$refs.root).appendChild(settingsEditor._getExtensionContainerElement());
-      }
+
+      this.internalSessionSettingsEditor.onSettingsChanged((changeEvent: SessionSettingsChange) => {
+        this.$emit("settings-change", changeEvent.settingsConfigKey, changeEvent.settings);
+      });
+      (<HTMLElement>this.$refs.root).appendChild(this.internalSessionSettingsEditor._getExtensionContainerElement());
     }
   }
 }
@@ -73,21 +66,40 @@ class ExtraSessionSettings extends Vue {
       v-bind:sessionConfiguration.prop="sessionConfiguration"
       v-on:change="handleChange"
     />
+
+    <div
+      v-for="(editor, index) in sessionSettingsEditors"
+      v-bind:key="index"
+      class="gui-layout width-100pc cols-1-1"
+    >
+      <h3
+        class="sub-tab"
+        v-bind:class="{selected: selectedSettings === index}"
+        v-on:click.stop="selectedSettings = index"
+      >
+        {{ editor.title }}
+      </h3>
+    </div>
+
     <extra-settings
-      v-bind:extensionManager="extensionManager"
-      v-bind:sessionConfiguration="sessionConfiguration"
-      v-bind:sessionType="sessionConfiguration.type"
-      v-on:settings-changed="handleSettingsChanged"
+      v-for="(editor, index) in sessionSettingsEditors"
+      v-bind:key="uuid + index"
+      v-bind:internalSessionSettingsEditor="editor"
+      v-on:settings-change="handleSettingsChanged"
     />
   </div>
 </div>
 `)
 })
 export class SessionCardUi extends Vue {
+  // Props
   extensionManager: ExtensionManager;
   sessionConfiguration: SessionConfiguration;
   uuid: string;
   isDefault: boolean;
+
+  // Fields
+  selectedSettings = 0;
 
   get name(): string {
     return this.sessionConfiguration.name;
@@ -117,5 +129,10 @@ export class SessionCardUi extends Vue {
 
   handleSettingsChanged(settingsConfigKey: string, settings: Object): void {
     this.$emit("settings-change", this.sessionConfiguration.uuid, settingsConfigKey, settings);
+  }
+
+  get sessionSettingsEditors(): InternalSessionSettingsEditor[] {
+    return this.extensionManager.createSessionSettingsEditors(this.sessionConfiguration.type,
+      this.sessionConfiguration);
   }
 }

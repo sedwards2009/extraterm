@@ -77,7 +77,7 @@ export class WorkspaceSessionSettingsRegistry {
 }
 
 class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
-
+  title: string;
   private _settings: Object = null;
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
   private _onSettingsChangedEventEmitter = new EventEmitter<SessionSettingsChange>();
@@ -85,6 +85,7 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   constructor(private _extensionContainerElement: ExtensionContainerElement, private _settingsConfigKey: string,
       settings: Object) {
 
+    this.title = this._settingsConfigKey;
     this._settings = settings;
     this.onSettingsChanged = this._onSettingsChangedEventEmitter.event;
   }
