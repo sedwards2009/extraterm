@@ -76,7 +76,7 @@
     },
     "sessionSettings": [
       {
-        "name": "title",
+        "id": "title",
         "css": {
           "directory": "resources/sass",
           "cssFile": [

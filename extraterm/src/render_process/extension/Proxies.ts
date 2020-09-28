@@ -129,8 +129,8 @@ export class WindowProxy implements InternalWindow {
     return this._terminalBorderWidgetFactoryMap.get(name);
   }
 
-  registerSessionSettingsEditor(name: string, factory: SessionSettingsEditorFactory): void {
-    this._windowSessionSettingsRegistry.registerSessionSettingsEditor(name, factory);
+  registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void {
+    this._windowSessionSettingsRegistry.registerSessionSettingsEditor(id, factory);
   }
 
   createSessionSettingsEditors(sessionType: string,

@@ -115,7 +115,7 @@ export interface ExtensionSessionSettingsContribution {
   /**
    * Internal symbol used internally for identifying these groups of settings.
    */
-  name: string;
+  id: string;
 
   css: ExtensionCss;
 }

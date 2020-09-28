@@ -25,21 +25,21 @@ export class WorkspaceSessionSettingsRegistry {
     this._log = getLogger("WorkspaceSessionSettingsRegistry", this);
   }
 
-  registerSessionSettingsEditor(name: string, factory: SessionSettingsEditorFactory): void {
-    const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionByName(name);
+  registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void {
+    const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionById(id);
     if (sessionSettingsMetadata == null) {
-      this._log.warn(`Unable to register session settings '${name}' for extension ` +
+      this._log.warn(`Unable to register session settings '${id}' for extension ` +
         `'${this._internalExtensionContext.extensionMetadata.name}' because the session settings contribution data ` +
         `couldn't be found in the extension's package.json file.`);
       return;
     }
 
-    this._registeredSessionSettings.set(sessionSettingsMetadata.name, factory);
+    this._registeredSessionSettings.set(sessionSettingsMetadata.id, factory);
   }
 
-  private _getExtensionSessionSettingsContributionByName(name: string): ExtensionSessionSettingsContribution {
+  private _getExtensionSessionSettingsContributionById(id: string): ExtensionSessionSettingsContribution {
     for (const ssm of this._internalExtensionContext.extensionMetadata.contributes.sessionSettings) {
-      if (ssm.name === name) {
+      if (ssm.id === id) {
         return ssm;
       }
     }
@@ -50,15 +50,15 @@ export class WorkspaceSessionSettingsRegistry {
       sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
 
     const result: InternalSessionSettingsEditor[] = [];
-    for (const name of this._registeredSessionSettings.keys()) {
-      const factory = this._registeredSessionSettings.get(name);
-      const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionByName(name);
+    for (const id of this._registeredSessionSettings.keys()) {
+      const factory = this._registeredSessionSettings.get(id);
+      const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionById(id);
       const extensionContainerElement = <ExtensionContainerElement> document.createElement(ExtensionContainerElement.TAG_NAME);
 
       extensionContainerElement._setExtensionContext(this._internalExtensionContext);
       extensionContainerElement._setExtensionCss(sessionSettingsMetadata.css);
 
-      const settingsConfigKey = `${this._internalExtensionContext.extensionMetadata.name}:${name}`;
+      const settingsConfigKey = `${this._internalExtensionContext.extensionMetadata.name}:${id}`;
 
       let settings = sessionConfiguration.extensions?.[settingsConfigKey];
       if (settings == null) {

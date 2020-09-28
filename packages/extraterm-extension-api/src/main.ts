@@ -350,7 +350,7 @@ export interface Window {
   registerTabTitleWidget(name: string, factory: TabTitleWidgetFactory): void;
   registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void;
 
-  registerSessionSettingsEditor(name: string, factory: SessionSettingsEditorFactory): void;
+  registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void;
 }
 
 
