@@ -77,12 +77,13 @@ class ExtraSessionSettings extends Vue {
         v-bind:class="{selected: selectedSettings === index}"
         v-on:click.stop="selectedSettings = index"
       >
-        {{ editor.title }}
+        {{ editor.name }}
       </h3>
     </div>
 
     <extra-settings
       v-for="(editor, index) in sessionSettingsEditors"
+      v-if="index === selectedSettings"
       v-bind:key="uuid + index"
       v-bind:internalSessionSettingsEditor="editor"
       v-on:settings-change="handleSettingsChanged"

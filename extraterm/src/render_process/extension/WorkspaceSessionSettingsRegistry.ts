@@ -65,8 +65,8 @@ export class WorkspaceSessionSettingsRegistry {
         settings = {};
       }
 
-      const editorBase = new SessionSettingsEditorBaseImpl(extensionContainerElement, settingsConfigKey,
-        settings);
+      const editorBase = new SessionSettingsEditorBaseImpl(extensionContainerElement, sessionSettingsMetadata.name,
+        settingsConfigKey, settings);
 
       factory.call(null, editorBase);
 
@@ -77,15 +77,13 @@ export class WorkspaceSessionSettingsRegistry {
 }
 
 class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
-  title: string;
   private _settings: Object = null;
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
   private _onSettingsChangedEventEmitter = new EventEmitter<SessionSettingsChange>();
 
-  constructor(private _extensionContainerElement: ExtensionContainerElement, private _settingsConfigKey: string,
-      settings: Object) {
+  constructor(private _extensionContainerElement: ExtensionContainerElement, public name: string,
+      private _settingsConfigKey: string, settings: Object) {
 
-    this.title = this._settingsConfigKey;
     this._settings = settings;
     this.onSettingsChanged = this._onSettingsChangedEventEmitter.event;
   }

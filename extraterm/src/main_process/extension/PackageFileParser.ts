@@ -373,12 +373,14 @@ class PackageParser {
   private parseSessionSettingsConstributionJson(packageJson: JsonNode): ExtensionSessionSettingsContribution {
     const knownKeys: (keyof ExtensionSessionSettingsContribution)[] = [
       "id",
+      "name",
       "css"
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
 
     return {
       id: getJsonStringField(packageJson, "id"),
+      name: getJsonStringField(packageJson, "name"),
       css: this.parseCss(packageJson)
     };
   }

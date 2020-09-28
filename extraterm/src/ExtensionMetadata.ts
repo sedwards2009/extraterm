@@ -117,6 +117,11 @@ export interface ExtensionSessionSettingsContribution {
    */
   id: string;
 
+  /**
+   * The name of these settings to show in the UI.
+   */
+  name: string;
+
   css: ExtensionCss;
 }
 
