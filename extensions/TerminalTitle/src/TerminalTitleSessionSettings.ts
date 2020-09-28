@@ -31,7 +31,7 @@ export function setupTerminalTitleSessionSettings(sessionSettingsEditorBase: Ses
   const ui = new TemplateEditorComponent();
   const component = ui.$mount();
   const settings = <Settings> sessionSettingsEditorBase.getSettings();
-console.log("settings: ", settings);
+
   if (settings.template == null) {
     settings.template = "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
     // FIXME call setSettings()
@@ -47,7 +47,6 @@ console.log("settings: ", settings);
 
   ui.$on("template-change", (template: string) => {
     settings.template = template;
-    console.log("settings: ", settings);
     sessionSettingsEditorBase.setSettings(settings);
 
     templateString.setTemplateString(template);

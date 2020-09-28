@@ -3,6 +3,7 @@
  */
 
 import { CustomElement } from 'extraterm-web-component-decorators';
+import { DebouncedDoLater } from 'extraterm-later';
 import * as _ from 'lodash';
 
 import { SessionSettingsUi } from './SessionSettingsUi';
@@ -19,10 +20,15 @@ export const SESSION_SETTINGS_TAG = "et-session-settings";
 export class SessionSettings extends SettingsBase<SessionSettingsUi> {
   private _log: Logger = null;
   private _extensionManager: ExtensionManager = null;
+  private _updateLater: DebouncedDoLater = null;
 
   constructor() {
     super(SessionSettingsUi, [SESSION_CONFIG]);
     this._log = getLogger(SESSION_SETTINGS_TAG, this);
+
+    this._updateLater = new DebouncedDoLater(() => {
+      this._updateConfig(SESSION_CONFIG, this._getUi().sessions);
+    }, 500);
   }
 
   protected _setConfigInUi(key: ConfigKey, config: any): void {
@@ -42,7 +48,7 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
   }
 
   protected _dataChanged(): void {
-    this._updateConfig(SESSION_CONFIG, this._getUi().sessions);
+    this._updateLater.trigger();
   }
 
   set extensionManager(extensionManager: ExtensionManager) {
