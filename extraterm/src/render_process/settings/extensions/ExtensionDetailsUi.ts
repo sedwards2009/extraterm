@@ -148,11 +148,13 @@ interface MenuPair {
           <thead>
             <tr>
               <th>Name</th>
+              <th>ID</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="sessionSettings in extension.metadata.contributes.sessionSettings">
               <td>{{ sessionSettings.name }}</td>
+              <td>{{ sessionSettings.id }}</td>
             </tr>
           </tbody>
         </table>
