@@ -57,7 +57,6 @@ export class TerminalTitleEditorWidget {
     },
     template: trimBetweenTags(`
       <div class="gui-packed-row width-100pc">
-        <label class="compact"><i class="fas fa-pen"></i></label>
         <div class="max-width-800px expand">
           <template-editor
             ref="template"

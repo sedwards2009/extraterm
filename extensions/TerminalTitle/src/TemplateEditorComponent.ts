@@ -26,6 +26,7 @@ for (const el of [
     },
     template: trimBetweenTags(`
       <div class="gui-packed-row width-100pc">
+        <label class="compact"><i class="fas fa-pen"></i></label>
         <div class="expand">
           <div class="gui-packed-row width-100pc">
             <input ref="template" type="text" class="expand"
