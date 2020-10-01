@@ -53,7 +53,8 @@ export class WorkspaceSessionSettingsRegistry {
     for (const id of this._registeredSessionSettings.keys()) {
       const factory = this._registeredSessionSettings.get(id);
       const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionById(id);
-      const extensionContainerElement = <ExtensionContainerElement> document.createElement(ExtensionContainerElement.TAG_NAME);
+      const extensionContainerElement = <ExtensionContainerElement> document.createElement(
+        ExtensionContainerElement.TAG_NAME);
 
       extensionContainerElement._setExtensionContext(this._internalExtensionContext);
       extensionContainerElement._setExtensionCss(sessionSettingsMetadata.css);
@@ -66,15 +67,14 @@ export class WorkspaceSessionSettingsRegistry {
       }
 
       const editorBase = new SessionSettingsEditorBaseImpl(extensionContainerElement, sessionSettingsMetadata.name,
-        settingsConfigKey, settings);
-
-      factory.call(null, editorBase);
-
+        settingsConfigKey, settings, factory);
       result.push(editorBase);
     }
     return result;
   }
 }
+
+
 
 class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   private _settings: Object = null;
@@ -82,10 +82,15 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   private _onSettingsChangedEventEmitter = new EventEmitter<SessionSettingsChange>();
 
   constructor(private _extensionContainerElement: ExtensionContainerElement, public name: string,
-      private _settingsConfigKey: string, settings: Object) {
+      private _settingsConfigKey: string, settings: Object,
+      private _factory: ExtensionApi.SessionSettingsEditorFactory) {
 
     this._settings = settings;
     this.onSettingsChanged = this._onSettingsChangedEventEmitter.event;
+  }
+
+  _init(): void {
+    this._factory.call(null, this);
   }
 
   getContainerElement(): HTMLElement {

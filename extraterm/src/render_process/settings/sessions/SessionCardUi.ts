@@ -34,7 +34,9 @@ class ExtraSessionSettings extends Vue {
       this.internalSessionSettingsEditor.onSettingsChanged((changeEvent: SessionSettingsChange) => {
         this.$emit("settings-change", changeEvent.settingsConfigKey, changeEvent.settings);
       });
+
       (<HTMLElement>this.$refs.root).appendChild(this.internalSessionSettingsEditor._getExtensionContainerElement());
+      this.internalSessionSettingsEditor._init();
     }
   }
 }

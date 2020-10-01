@@ -158,6 +158,7 @@ export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSetti
   name: string;
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
   _getExtensionContainerElement(): ExtensionContainerElement;
+  _init(): void;
 }
 
 

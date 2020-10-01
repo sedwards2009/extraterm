@@ -34,7 +34,7 @@ export function setupTerminalTitleSessionSettings(sessionSettingsEditorBase: Ses
 
   if (settings.template == null) {
     settings.template = "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
-    // FIXME call setSettings()
+    sessionSettingsEditorBase.setSettings(settings);
   }
 
   templateString.setTemplateString(settings.template);
