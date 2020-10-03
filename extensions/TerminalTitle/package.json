@@ -73,6 +73,19 @@
           "show": true
         }
       ]
-    }
+    },
+    "sessionSettings": [
+      {
+        "id": "title",
+        "name": "Tab Title",
+        "css": {
+          "directory": "resources/sass",
+          "cssFile": [
+            "editor.scss"
+          ],
+          "fontAwesome": true
+        }
+      }
+    ]
   }
 }

@@ -1,28 +1,38 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as _ from 'lodash';
+
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 
 import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
-import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget, InternalTabTitleWidget } from './InternalTypes';
+import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget, InternalTabTitleWidget, InternalSessionSettingsEditor } from './InternalTypes';
 import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
 import { EtViewerTab } from '../ViewerTab';
 import { CommonExtensionWindowState } from './CommonExtensionState';
-import { WidgetProxy } from './WidgetProxy';
+import { ExtensionContainerElement } from './ExtensionContainerElement';
 import { ExtensionTerminalBorderContribution } from '../../ExtensionMetadata';
-import { Viewer } from '@extraterm/extraterm-extension-api';
+import { Viewer, SessionSettingsEditorFactory, SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { ViewerElement } from '../viewers/ViewerElement';
+import { WorkspaceSessionSettingsRegistry } from './WorkspaceSessionSettingsRegistry';
 
+/**
+ * The implementation behind the `Window` object on the `ExtensionContext`
+ * which is given to extensions when loading them.
+ *
+ * Each extension gets its own instance of this.
+ */
 export class WindowProxy implements InternalWindow {
 
   private _log: Logger = null;
 
   private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
+  private _windowSessionSettingsRegistry: WorkspaceSessionSettingsRegistry = null;
   private _windowViewerRegistry: WorkspaceViewerRegistry = null;
   private _terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
 
@@ -33,6 +43,7 @@ export class WindowProxy implements InternalWindow {
     this._log = getLogger("WorkspaceProxy", this);
     this.onDidCreateTerminal = this._onDidCreateTerminalEventEmitter.event;
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
+    this._windowSessionSettingsRegistry = new WorkspaceSessionSettingsRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
     this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
@@ -66,7 +77,7 @@ export class WindowProxy implements InternalWindow {
   get activeTerminal(): ExtensionApi.Terminal {
     return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
-  
+
   get activeViewer(): ExtensionApi.Viewer {
     return this._internalExtensionContext.proxyFactory.getViewerProxy(this._commonExtensionState.activeViewerElement);
   }
@@ -82,7 +93,7 @@ export class WindowProxy implements InternalWindow {
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
     this._windowViewerRegistry.registerViewer(name, viewerClass);
   }
-   
+
   findViewerElementTagByMimeType(mimeType: string): string {
     return this._windowViewerRegistry.findViewerElementTagByMimeType(mimeType);
   }
@@ -112,12 +123,21 @@ export class WindowProxy implements InternalWindow {
 
     this._internalExtensionContext.logger.warn(
       `Unknown terminal border widget '${name}' given to registerTerminalBorderWidget().`);
-  }  
+  }
 
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory {
     return this._terminalBorderWidgetFactoryMap.get(name);
   }
 
+  registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void {
+    this._windowSessionSettingsRegistry.registerSessionSettingsEditor(id, factory);
+  }
+
+  createSessionSettingsEditors(sessionType: string,
+      sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
+
+    return this._windowSessionSettingsRegistry.createSessionSettingsEditors(sessionType, sessionConfiguration);
+  }
 }
 
 
@@ -157,13 +177,13 @@ export class ViewerTabProxy implements ExtensionApi.Tab {
 }
 
 interface TerminalBorderWidgetInfo {
-  htmlWidgetProxy: WidgetProxy;
+  extensionContainerElement: ExtensionContainerElement;
   terminalBorderWidget: InternalTerminalBorderWidget;
   factoryResult: unknown;
 }
 
 interface TabTitleWidgetInfo {
-  htmlWidgetProxy: WidgetProxy;
+  extensionContainerElement: ExtensionContainerElement;
   tabTitleWidget: InternalTabTitleWidget;
   factoryResult: unknown;
 }
@@ -202,19 +222,25 @@ class ProxyTerminalEnvironment implements ExtensionApi.TerminalEnvironment {
 }
 
 export class TerminalProxy implements ExtensionApi.Terminal {
-  
+
   viewerType: 'terminal-output';
 
   private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
-  private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>();
+  private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
   _onDidAppendViewerEventEmitter = new EventEmitter<Viewer>();
   onDidAppendViewer: ExtensionApi.Event<Viewer>;
 
   environment: ProxyTerminalEnvironment;
+  private _sessionConfiguration: SessionConfiguration = null;
+  private _sessionConfigurationExtensions: Object = null;
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
     this.onDidAppendViewer = this._onDidAppendViewerEventEmitter.event;
     this.environment = new ProxyTerminalEnvironment(this._terminal);
+
+    this._sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
+    this._sessionConfigurationExtensions = this._sessionConfiguration.extensions ?? {};
+    this._sessionConfiguration.extensions = null;
   }
 
   getTab(): ExtensionApi.Tab {
@@ -237,11 +263,21 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     return EXTRATERM_COOKIE_ENV;
   }
 
+  get sessionConfiguration(): SessionConfiguration {
+    return this._sessionConfiguration;
+  }
+
+  getSessionSettings(name: string): Object {
+    const settingsKey = `${this._internalExtensionContext.extensionMetadata.name}:${name}`;
+    const settings = this._sessionConfigurationExtensions[settingsKey];
+    return settings == null ? null : settings;
+  }
+
   openTerminalBorderWidget(name: string): any {
     if (this._terminalBorderWidgets.has(name)) {
-      const { htmlWidgetProxy, terminalBorderWidget, factoryResult } = this._terminalBorderWidgets.get(name);
+      const { extensionContainerElement, terminalBorderWidget, factoryResult } = this._terminalBorderWidgets.get(name);
       const data = this._findTerminalBorderWidgetMetadata(name);
-      this._terminal.appendElementToBorder(htmlWidgetProxy, data.border);
+      this._terminal.appendElementToBorder(extensionContainerElement, data.border);
       terminalBorderWidget._handleOpen();
       return factoryResult;
     }
@@ -249,23 +285,23 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     const factory = this._internalExtensionContext.internalWindow.getTerminalBorderWidgetFactory(name);
     if (factory == null) {
       this._internalExtensionContext.logger.warn(
-        `Unknown terminal border widget '${name}' given to createTerminalBorderWidget().`);  
+        `Unknown terminal border widget '${name}' given to createTerminalBorderWidget().`);
       return null;
     }
 
     const data = this._findTerminalBorderWidgetMetadata(name);
-    const htmlWidgetProxy = <WidgetProxy> document.createElement(WidgetProxy.TAG_NAME);
-    htmlWidgetProxy._setExtensionContext(this._internalExtensionContext);
-    htmlWidgetProxy._setExtensionCss(data.css);
+    const extensionContainerElement = <ExtensionContainerElement> document.createElement(ExtensionContainerElement.TAG_NAME);
+    extensionContainerElement._setExtensionContext(this._internalExtensionContext);
+    extensionContainerElement._setExtensionCss(data.css);
 
-    this._terminal.appendElementToBorder(htmlWidgetProxy, data.border);
-    const terminalBorderWidget = new TerminalBorderWidgetImpl(htmlWidgetProxy, () => {
-      this._terminal.removeElementFromBorder(htmlWidgetProxy);
+    this._terminal.appendElementToBorder(extensionContainerElement, data.border);
+    const terminalBorderWidget = new TerminalBorderWidgetImpl(extensionContainerElement, () => {
+      this._terminal.removeElementFromBorder(extensionContainerElement);
       terminalBorderWidget._handleClose();
       this._terminal.focus();
     });
     const factoryResult = factory(this, terminalBorderWidget);
-    this._terminalBorderWidgets.set(name, { htmlWidgetProxy, terminalBorderWidget, factoryResult });
+    this._terminalBorderWidgets.set(name, { extensionContainerElement: extensionContainerElement, terminalBorderWidget, factoryResult });
     terminalBorderWidget._handleOpen();
     return factoryResult;
   }
@@ -282,20 +318,20 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 }
 
 class TerminalBorderWidgetImpl implements InternalTerminalBorderWidget {
-  
+
   private _open = false;
   private _onDidOpenEventEmitter = new EventEmitter<void>();
   onDidOpen: ExtensionApi.Event<void>;
   private _onDidCloseEventEmitter = new EventEmitter<void>();
   onDidClose: ExtensionApi.Event<void>;
 
-  constructor(private _widgetProxy: WidgetProxy, private _close: () => void) {
+  constructor(private _extensionContainerElement: ExtensionContainerElement, private _close: () => void) {
     this.onDidOpen = this._onDidOpenEventEmitter.event;
     this.onDidClose = this._onDidCloseEventEmitter.event;
   }
 
   getContainerElement(): HTMLElement {
-    return this._widgetProxy.getContainerElement();
+    return this._extensionContainerElement.getContainerElement();
   }
 
   isOpen(): boolean {

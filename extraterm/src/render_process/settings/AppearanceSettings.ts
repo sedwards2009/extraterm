@@ -44,7 +44,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     });
   }
 
-  protected _setConfig(key: ConfigKey, config: any): void {
+  protected _setConfigInUi(key: ConfigKey, config: any): void {
     if (key === SYSTEM_CONFIG) {
       const ui = this._getUi();
       const systemConfig = <SystemConfig> config;

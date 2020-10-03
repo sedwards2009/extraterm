@@ -15,6 +15,8 @@ import { TextEditor } from '../viewers/TextEditorType';
 import { CommonExtensionWindowState } from './CommonExtensionState';
 import { EventEmitter } from 'extraterm-event-emitter';
 import { TabWidget } from '../gui/TabWidget';
+import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
+import { ExtensionContainerElement } from './ExtensionContainerElement';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -73,6 +75,7 @@ export interface ExtensionManager {
   commandRegistrationChanged(): void;
 
   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
 }
 
 export interface AcceptsExtensionManager {
@@ -106,6 +109,7 @@ export interface ExtensionUiUtils {
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   getSessionEditorTagForType(sessionType): string;
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
   newTerminalCreated(newTerminal: EtTerminal): void;
@@ -144,6 +148,19 @@ export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorde
 export interface InternalTabTitleWidget extends ExtensionApi.TabTitleWidget {
 
 }
+
+export interface SessionSettingsChange {
+  settingsConfigKey: string;
+  settings: Object;
+}
+
+export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
+  name: string;
+  onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
+  _getExtensionContainerElement(): ExtensionContainerElement;
+  _init(): void;
+}
+
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
   return metadata.contributes.sessionBackends.length !== 0 ||

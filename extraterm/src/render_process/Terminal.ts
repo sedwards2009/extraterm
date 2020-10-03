@@ -5,7 +5,7 @@
  */
 
 import * as crypto from 'crypto';
-import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
+import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment, SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
 import { CustomElement } from 'extraterm-web-component-decorators';
 import { log as LogDecorator, Logger, getLogger } from "extraterm-logging";
@@ -116,6 +116,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _fileBroker: BulkFileBroker = null;
   private _downloadHandler: DownloadApplicationModeHandler = null;
   private _terminalVisualConfig: TerminalVisualConfig = null;
+
+  private _sessionConfiguration: SessionConfiguration = null;
 
   private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
   private _bracketStyle: string = null;
@@ -314,6 +316,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     if (this._terminalCanvas != null) {
       this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
     }
+  }
+
+  setSessionConfiguration(sessionConfiguration: SessionConfiguration): void {
+    this._sessionConfiguration = sessionConfiguration;
+  }
+
+  getSessionConfiguration(): SessionConfiguration {
+    return this._sessionConfiguration;
   }
 
   private _commandNeedsFrame(commandLine: string, linesOfOutput=-1): boolean {

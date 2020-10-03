@@ -47,7 +47,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
     return [ThemeTypes.CssFile.KEY_BINDINGS_TAB, ...super._themeCssFiles()];
   }
 
-  protected _setConfig(key: ConfigKey, config: any): void {
+  protected _setConfigInUi(key: ConfigKey, config: any): void {
     const ui = this._getUi();
 
     if (key === GENERAL_CONFIG) {

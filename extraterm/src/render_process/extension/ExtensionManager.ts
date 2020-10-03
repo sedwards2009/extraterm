@@ -14,7 +14,7 @@ import { EtTerminal } from '../Terminal';
 import { TextViewer } from'../viewers/TextAceViewer';
 import { ProxyFactoryImpl } from './ProxyFactoryImpl';
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory,
-  isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions, InternalTabTitleWidget } from './InternalTypes';
+  isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions, InternalTabTitleWidget, InternalSessionSettingsEditor } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
 import { WindowProxy } from './Proxies';
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution, ExtensionDesiredState } from '../../ExtensionMetadata';
@@ -29,8 +29,9 @@ import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
 import { TabWidget } from '../gui/TabWidget';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { DebouncedDoLater } from 'extraterm-later';
-import { WidgetProxy } from './WidgetProxy';
+import { ExtensionContainerElement } from './ExtensionContainerElement';
 import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages";
+import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 
 
 interface ActiveExtension {
@@ -236,6 +237,21 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     }
     return null;
+  }
+
+  createSessionSettingsEditors(sessionType: string,
+      sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
+
+    const ssExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionSettings != null);
+    let settingsEditors: InternalSessionSettingsEditor[] = [];
+    for (const extension of ssExtensions) {
+      const newSettingsEditors = extension.contextImpl.internalWindow.createSessionSettingsEditors(sessionType,
+        sessionConfiguration);
+      if (newSettingsEditors != null) {
+        settingsEditors = [...settingsEditors, ...newSettingsEditors];
+      }
+    }
+    return settingsEditors;
   }
 
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
@@ -714,14 +730,15 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
     for (const contrib of tabTitleWidgetsContrib) {
       const factory = this._tabTitleWidgetFactoryMap.get(contrib.name);
       if (factory != null) {
-        const htmlWidgetProxy = <WidgetProxy> document.createElement(WidgetProxy.TAG_NAME);
-        htmlWidgetProxy._setExtensionContext(this);
-        htmlWidgetProxy._setExtensionCss(contrib.css);
+        const extensionContainerElement = <ExtensionContainerElement>
+          document.createElement(ExtensionContainerElement.TAG_NAME);
+        extensionContainerElement._setExtensionContext(this);
+        extensionContainerElement._setExtensionCss(contrib.css);
 
-        const tabTitleWidget = new TabTitleWidgetImpl(htmlWidgetProxy);
+        const tabTitleWidget = new TabTitleWidgetImpl(extensionContainerElement);
         const factoryResult = factory(this.proxyFactory.getTerminalProxy(terminal), tabTitleWidget);
 // FIXME record this stuff somewhere, and also may be clean it up.
-        result.push(htmlWidgetProxy);
+        result.push(extensionContainerElement);
       }
     }
     return result;
@@ -730,10 +747,10 @@ class InternalExtensionContextImpl implements InternalExtensionContext {
 
 class TabTitleWidgetImpl implements InternalTabTitleWidget {
 
-  constructor(private _widgetProxy: WidgetProxy) {
+  constructor(private _extensionContainerElement: ExtensionContainerElement) {
   }
 
   getContainerElement(): HTMLElement {
-    return this._widgetProxy.getContainerElement();
+    return this._extensionContainerElement.getContainerElement();
   }
 }

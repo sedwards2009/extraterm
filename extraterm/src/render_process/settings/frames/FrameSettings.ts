@@ -22,7 +22,7 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
     this._log = getLogger(FRAME_SETTINGS_TAG, this);
   }
 
-  protected _setConfig(key: ConfigKey, config: any): void {
+  protected _setConfigInUi(key: ConfigKey, config: any): void {
     const ui = this._getUi();
     if (key === COMMAND_LINE_ACTIONS_CONFIG) {
       const commandLineActions = <CommandLineAction[]> config;

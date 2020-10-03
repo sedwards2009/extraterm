@@ -12,7 +12,7 @@ import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
 import { FRAME_SETTINGS_TAG } from './frames/FrameSettings';
 import { GENERAL_SETTINGS_TAG} from './GeneralSettings';
 import { KEY_BINDINGS_SETTINGS_TAG } from './keybindings/KeybindingsSettings';
-import { SESSION_SETTINGS_TAG } from './SessionSettings';
+import { SESSION_SETTINGS_TAG } from './sessions/SessionSettings';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import { doLater } from 'extraterm-later';
 import { ExtensionManager } from '../extension/InternalTypes';
