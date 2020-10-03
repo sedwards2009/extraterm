@@ -335,9 +335,17 @@ export interface TabTitleWidgetFactory {
 }
 
 export interface Window {
+  /**
+   * The currently active/focussed terminal.
+   *
+   * This may be `null`.
+   */
   activeTerminal: Terminal;
+
   activeViewer: Viewer;
+
   getTerminals(): Terminal[];
+
   onDidCreateTerminal: Event<Terminal>;
   // onWillDestroyTerminal: Event<Terminal>;
 
