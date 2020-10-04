@@ -2,7 +2,7 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
- * 
+ *
  */
 /**
  * Get the list of emoji code points (no combining chars though) which a tag on
@@ -26,6 +26,11 @@ async function main() {
   sortCodePoints(codePoints);
 
   dumpCodePoints(codePoints);
+  log("");
+  log("//--------------------------------------------------------------------");
+  log("// Unicode ranges");
+  dumpCodePointRanges(codePoints);
+  log("");
 }
 
 async function fetchSHA1ForTag(tag) {
@@ -118,6 +123,40 @@ function dumpCodePoints(codePoints) {
   parts.push(`];\n`);
 
   log(parts.join(""));
+}
+
+function dumpCodePointRanges(codePoints) {
+  let lastCodePoint = -1;
+  let rangeStart = -1;
+  codePoints = [...codePoints, -1]; // Extra values make terminating the loop easier.
+
+  const parts = [];
+
+  for (const p of codePoints) {
+    if (p >= 0x1f000) {
+      continue;
+    }
+
+    if (p !== lastCodePoint +1) {
+      if (rangeStart !== -1) {
+        if (rangeStart === lastCodePoint) {
+          parts.push(`U+${hex4(rangeStart)}, `);
+        } else {
+          parts.push(`U+${hex4(rangeStart)}-${hex4(lastCodePoint)}, `);
+        }
+      }
+      rangeStart = p;
+    }
+    lastCodePoint = p;
+  }
+
+  parts.push(`U+1f000-1ffff`);
+
+  log(parts.join(""));
+}
+
+function hex4(n) {
+  return n.toString(16).padStart(4, "0");
 }
 
 main();
