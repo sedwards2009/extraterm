@@ -38,7 +38,7 @@
         "title": "Edit Title",
         "category": "terminal",
         "icon": "fas fa-pen",
-        "when": ""
+        "when": "terminalFocus"
       }
     ],
     "tabTitleWidgets": [

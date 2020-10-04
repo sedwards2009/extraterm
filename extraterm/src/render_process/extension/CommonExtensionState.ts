@@ -13,11 +13,9 @@ import { ViewerElement } from '../viewers/ViewerElement';
 export interface CommonExtensionWindowState {
   activeTabContent: HTMLElement;
   activeTerminal: EtTerminal;
-  focusTerminal: EtTerminal;
   activeTextEditor: TextEditor;
-  focusTextEditor: TextEditor;
   activeTabsWidget: TabWidget;
   activeViewerElement: ViewerElement;
-  focusViewerElement: ViewerElement;
+
   isInputFieldFocus: boolean;
 }

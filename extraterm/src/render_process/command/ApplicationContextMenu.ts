@@ -81,6 +81,9 @@ export class ApplicationContextMenu {
 
     doLater( () => {
       this._updateMenu(<ContextMenuType> ev.detail.menuType);
+      if (this._menuEntries == null) {
+        return;
+      }
       this._contextMenuElement.open(ev.detail.x, ev.detail.y);
     });
   }
@@ -89,6 +92,9 @@ export class ApplicationContextMenu {
     this._menuType = menuType;
     doLater( () => {
       this._updateMenu(menuType);
+      if (this._menuEntries == null) {
+        return;
+      }
       this._contextMenuElement.openAround(el);
     });
   }

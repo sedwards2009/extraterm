@@ -65,12 +65,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
     activeTerminal: null,
-    focusTerminal: null,
     activeTextEditor: null,
-    focusTextEditor: null,
     activeTabsWidget: null,
     activeViewerElement: null,
-    focusViewerElement: null,
     isInputFieldFocus: false,
   };
 
@@ -409,23 +406,23 @@ export class ExtensionManagerImpl implements ExtensionManager {
       viewerFocus: false,
     };
 
-    if (state.focusTerminal != null) {
+    if (state.activeTerminal != null) {
       whenVariables.terminalFocus = true;
-      if (state.focusTerminal.getMode() === Mode.CURSOR) {
+      if (state.activeTerminal.getMode() === Mode.CURSOR) {
         whenVariables.isCursorMode = true;
       } else {
         whenVariables.isNormalMode = true;
       }
     } else {
-      if (state.focusViewerElement) {
+      if (state.activeViewerElement) {
         whenVariables.viewerFocus = true;
       }
     }
 
-    if (state.focusTextEditor != null) {
+    if (state.activeTextEditor != null) {
       if ( ! (whenVariables.terminalFocus && whenVariables.isNormalMode)) {
         whenVariables.textEditorFocus = true;
-        if (state.focusTextEditor.getEditable()) {
+        if (state.activeTextEditor.getEditable()) {
           whenVariables.isTextEditing = true;
         }
       }
@@ -528,18 +525,13 @@ export class ExtensionManagerImpl implements ExtensionManager {
     const state = this._commonExtensionWindowState;
 
     if (state.activeTabContent === newState.activeTabContent) {
-      state.activeTerminal = newState.focusTerminal || state.activeTerminal;
-      state.activeTextEditor = newState.focusTextEditor || state.activeTextEditor;
-      state.activeViewerElement = newState.focusViewerElement || state.activeViewerElement;
+      state.activeTerminal = newState.activeTerminal || state.activeTerminal;
+      state.activeTextEditor = newState.activeTextEditor || state.activeTextEditor;
+      state.activeViewerElement = newState.activeViewerElement || state.activeViewerElement;
     } else {
-      state.activeTerminal = newState.focusTerminal;
-      state.focusTerminal = newState.focusTerminal;
-
-      state.activeTextEditor = newState.focusTextEditor;
-      state.focusTextEditor = newState.focusTextEditor;
-
-      state.activeViewerElement = newState.focusViewerElement;
-      state.focusViewerElement = newState.focusViewerElement;
+      state.activeTerminal = newState.activeTerminal;
+      state.activeTextEditor = newState.activeTextEditor;
+      state.activeViewerElement = newState.activeViewerElement;
     }
 
     state.activeTabsWidget = newState.activeTabsWidget;
@@ -557,12 +549,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
     const newState: CommonExtensionWindowState = {
       activeTabContent: null,
       activeTerminal: null,
-      focusTerminal: null,
       activeTextEditor: null,
-      focusTextEditor: null,
       activeTabsWidget: null,
       activeViewerElement: null,
-      focusViewerElement: null,
       isInputFieldFocus: false
     };
 
@@ -589,9 +578,6 @@ export class ExtensionManagerImpl implements ExtensionManager {
         newState.isInputFieldFocus = true;
       }
     }
-    newState.focusTerminal = newState.activeTerminal;
-    newState.focusTextEditor = newState.activeTextEditor;
-    newState.focusViewerElement = newState.activeViewerElement;
     return newState;
   }
 
