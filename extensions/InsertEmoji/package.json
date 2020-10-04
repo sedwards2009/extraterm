@@ -1,0 +1,34 @@
+{
+  "name": "insert-emoji",
+  "displayName": "Insert Emoji",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "shx rm -rf dist data",
+    "update-emoji-data": "node build_scripts/download_data.js",
+    "test": "yarn run build && jest"
+  },
+  "author": "",
+  "license": "MIT",
+  "contributes": {
+    "commands": [
+      {
+        "command": "insert-emoji:insert-emoji",
+        "title": "Insert Emoji",
+        "category": "terminal",
+        "when": "terminalFocus"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.6.0",
+    "@types/jest": "23.3.13",
+    "download-cli": "^1.1.1",
+    "jest": "23.6.0",
+    "shelljs": "0.8.3",
+    "ts-jest": "23.10.5",
+    "typescript": "3.9.6"
+  }
+}
