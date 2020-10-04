@@ -7,8 +7,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist data",
-    "update-emoji-data": "node build_scripts/download_data.js",
-    "test": "yarn run build && jest"
+    "update-emoji-data": "node build_scripts/download_data.js"
   },
   "author": "",
   "license": "MIT",
@@ -29,11 +28,8 @@
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.6.0",
-    "@types/jest": "23.3.13",
     "download-cli": "^1.1.1",
-    "jest": "23.6.0",
     "shelljs": "0.8.3",
-    "ts-jest": "23.10.5",
     "typescript": "3.9.6"
   }
 }
