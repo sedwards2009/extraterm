@@ -1,0 +1,11 @@
+{
+  "extends": "pc-style",
+  "bindings": [
+    {
+      "command": "insert-emoji:insert-emoji",
+      "keys": [
+        "Ctrl-Shift-E"
+      ]
+    }
+  ]
+}

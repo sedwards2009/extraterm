@@ -20,6 +20,11 @@
         "category": "terminal",
         "when": "terminalFocus"
       }
+    ],
+    "keybindings": [
+      {
+        "path": "keybindings"
+      }
     ]
   },
   "devDependencies": {
