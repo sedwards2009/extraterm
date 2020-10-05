@@ -112,6 +112,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
               class="expand"
               type="text"
               id="ID_FILTER"
+              spellcheck="false"
               @input=${this._handleFilterInput}
               @keydown=${filterKeyDown}
               .value=${live(this.filter)}
