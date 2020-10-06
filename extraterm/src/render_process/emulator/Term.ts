@@ -125,7 +125,6 @@ export type Platform = "linux" | "win32" | "darwin";
  */
 interface Options {
   platform: Platform;
-  termName?: string;
   rows?: number;
   columns?: number;
   debug?: boolean;
@@ -249,7 +248,6 @@ export class Emulator implements EmulatorApi {
   private _blinkIntervalId: null | number = null;
   private lines: LineImpl[] = [];
   private cursorBlink: boolean = true;
-  private termName: string;
   debug: boolean;
 
   private applicationModeCookie: string;
@@ -278,7 +276,6 @@ export class Emulator implements EmulatorApi {
 
   constructor(options: Options) {
     this._log = getLogger("Emulator", this);
-    this.termName = options.termName === undefined ? 'xterm-256color' : options.termName;
     this.rows = options.rows === undefined ? 24 : options.rows;
     this.cols = options.columns === undefined ? 80 : options.columns;
     this.debug = options.debug === undefined ? false : options.debug;
@@ -2522,11 +2519,6 @@ export class Emulator implements EmulatorApi {
     return new LineImpl(this.cols, 1);
   }
 
-  private is(term: string): boolean {
-    const name = this.termName;
-    return (name + '').indexOf(term) === 0;
-  }
-
   private handler(data: string): void {
     this._emit(DATA_EVENT, this, data);
   }
@@ -3293,28 +3285,13 @@ export class Emulator implements EmulatorApi {
     if (params.getDefaultInt(0, 0) > 0) {
       return;
     }
-// FIXME Does this need to support different terms? Is the linux one safe with its input echoing?
+
     if ( ! params.prefix) {
-      if (this.is('xterm') || this.is('rxvt-unicode') || this.is('screen')) {
-        this.send('\x1b[?1;2c');
-      } else if (this.is('linux')) {
-        this.send('\x1b[?6c');
-      }
+      // Primary Device Attributes
+      this.send('\x1b[?1;2c');
     } else if (params.prefix === '>') {
-      // xterm and urxvt
-      // seem to spit this
-      // out around ~370 times (?).
-      if (this.is('xterm')) {
-        this.send('\x1b[>0;276;0c');
-      } else if (this.is('rxvt-unicode')) {
-        this.send('\x1b[>85;95;0c');
-      } else if (this.is('linux')) {
-        // not supported by linux console.
-        // linux console echoes parameters.
-        this.send(params[0] + 'c');
-      } else if (this.is('screen')) {
-        this.send('\x1b[>83;40003;0c');
-      }
+      // Secondary Device Attributes
+      this.send('\x1b[>1;1;0c'); // VT220
     }
   }
 
