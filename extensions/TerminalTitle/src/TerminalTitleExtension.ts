@@ -32,6 +32,7 @@ export function activate(context: ExtensionContext): any {
   context.window.registerTabTitleWidget("title", (terminal: Terminal, widget: TabTitleWidget): any => {
     const templateString = new TemplateString();
     templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
+    templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminal.environment));
     templateString.addFormatter("icon", new IconFormatter());
 
     const settings = <Settings> terminal.getSessionSettings("title");

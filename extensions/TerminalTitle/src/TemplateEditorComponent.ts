@@ -5,6 +5,7 @@
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
+import { TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { Segment } from './TemplateString';
@@ -81,9 +82,14 @@ export class TemplateEditorComponent extends Vue {
     super();
 
     this.fieldList = [
-      ["Title", "term:title"],
-      ["Rows", "term:rows"],
-      ["Columns", "term:columns"],
+      ["Title", TerminalEnvironment.TERM_TITLE],
+      ["Rows", TerminalEnvironment.TERM_ROWS],
+      ["Columns", TerminalEnvironment.TERM_COLUMNS],
+      ["Current command", TerminalEnvironment.EXTRATERM_CURRENT_COMMAND],
+      ["Last command", TerminalEnvironment.EXTRATERM_LAST_COMMAND],
+      ["Current command line", TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE],
+      ["Last command line", TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE],
+      ["Exit code", TerminalEnvironment.EXTRATERM_EXIT_CODE],
     ];
     this.iconList = [
       "fab fa-linux",

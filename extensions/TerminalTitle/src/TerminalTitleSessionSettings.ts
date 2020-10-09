@@ -21,11 +21,14 @@ export function setupTerminalTitleSessionSettings(sessionSettingsEditorBase: Ses
   terminalEnvironment.set(TerminalEnvironment.TERM_TITLE, "~/");
   terminalEnvironment.set(TerminalEnvironment.TERM_ROWS, "24");
   terminalEnvironment.set(TerminalEnvironment.TERM_COLUMNS, "80");
-  terminalEnvironment.set(TerminalEnvironment.COMMAND_CURRENT, "dir");
-  terminalEnvironment.set(TerminalEnvironment.COMMAND_LAST, "cd");
-  terminalEnvironment.set(TerminalEnvironment.COMMAND_EXIT_CODE, "0");
+  terminalEnvironment.set(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, "dir");
+  terminalEnvironment.set(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, "dir *.txt");
+  terminalEnvironment.set(TerminalEnvironment.EXTRATERM_LAST_COMMAND, "cd");
+  terminalEnvironment.set(TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, "cd ..");
+  terminalEnvironment.set(TerminalEnvironment.EXTRATERM_EXIT_CODE, "0");
 
   templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminalEnvironment));
+  templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminalEnvironment));
   templateString.addFormatter("icon", new IconFormatter());
 
   const ui = new TemplateEditorComponent();

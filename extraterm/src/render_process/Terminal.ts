@@ -100,7 +100,15 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
   static EVENT_APPENDED_VIEWER = "terminal-appended-viewer";
 
-  environment = new TerminalEnvironmentImpl();
+  environment = new TerminalEnvironmentImpl([
+    { key: TerminalEnvironment.TERM_ROWS, value: "" },
+    { key: TerminalEnvironment.TERM_COLUMNS, value: "" },
+    { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, value: "" },
+    { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: "" },
+    { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
+    { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, value: "" },
+    { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: "" },
+  ]);
 
   private _log: Logger;
   private _pty: Pty = null;
@@ -994,19 +1002,19 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
 
     // Fetch the command line.
-    let cleancommand = this._htmlData;
+    let cleanCommandLine = this._htmlData;
     if (this._bracketStyle === "bash") {
       // Bash includes the history number. Remove it.
       const trimmed = this._htmlData.trim();
-      cleancommand = trimmed.slice(trimmed.indexOf(" ")).trim();
+      cleanCommandLine = trimmed.slice(trimmed.indexOf(" ")).trim();
     }
 
-    if (this._commandNeedsFrame(cleancommand)) {
+    if (this._commandNeedsFrame(cleanCommandLine)) {
       // Create and set up a new command-frame.
       const el = this._createEmbeddedViewerElement();
 
       const defaultMetadata: ViewerMetadata = {
-        title: cleancommand,
+        title: cleanCommandLine,
         posture: ViewerPosture.RUNNING,
         icon: "fa fa-cog",
         moveable: false,
@@ -1025,11 +1033,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._lastCommandTerminalLine = this._terminalViewer.bookmarkCursorLine();
       this._lastCommandTerminalViewer = this._terminalViewer;
     }
-    this._lastCommandLine = cleancommand;
+    this._lastCommandLine = cleanCommandLine;
+
+    const command = cleanCommandLine.split(" ")[0];
 
     this.environment.setList([
-      { key: TerminalEnvironment.COMMAND_CURRENT, value: cleancommand },
-      { key: TerminalEnvironment.COMMAND_EXIT_CODE, value: "" },
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, value: cleanCommandLine },
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: command },
+      { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
     ]);
   }
 
@@ -1112,13 +1123,16 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       const returnCode = this._htmlData;
       this._closeLastEmbeddedViewer(returnCode);
 
-      const lastCommand = this.environment.get(TerminalEnvironment.COMMAND_CURRENT);
+      const lastCommandLine = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE);
+      const lastCommand = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND);
       const newVars = [
-        { key: TerminalEnvironment.COMMAND_EXIT_CODE, value: "" },
-        { key: TerminalEnvironment.COMMAND_CURRENT, value: "" },
+        { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
+        { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, value: "" },
+        { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: "" },
       ];
       if (lastCommand != null) {
-        newVars.push( { key: TerminalEnvironment.COMMAND_LAST, value: lastCommand });
+        newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, value: lastCommandLine });
+        newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: lastCommand });
       }
       this.environment.setList(newVars);
     });
@@ -1438,8 +1452,9 @@ class TerminalEnvironmentImpl implements TerminalEnvironment {
   onChange: Event<string[]>;
   _onChangeEventEmitter = new EventEmitter<string[]>();
 
-  constructor() {
+  constructor(defaultList: {key:string, value: string}[]) {
     this.onChange = this._onChangeEventEmitter.event;
+    this.setList(defaultList);
   }
 
   get(key: string): string {
