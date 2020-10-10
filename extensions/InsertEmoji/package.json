@@ -6,7 +6,7 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsc",
-    "clean": "shx rm -rf dist data",
+    "clean": "shx rm -rf dist",
     "update-emoji-data": "node build_scripts/download_data.js"
   },
   "author": "",
