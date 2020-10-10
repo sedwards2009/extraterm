@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,7 +9,6 @@ const fs = require('fs');
 const packager = require('electron-packager');
 const dependencyPruner = require('./dependency_pruner');
 const log = console.log.bind(console);
-const MODULE_VERSON = 69; // This version number also appears in thememanager.ts
 
 const ignoreRegExp = [
   /^\/build_scripts\b/,
@@ -45,6 +44,10 @@ function pruneTwemoji(versionedOutputDir, platform) {
 
 function hoistSubprojectsModules(versionedOutputDir, platform) {
   const modulesDir = path.join(versionedOutputDir, appDir(platform), "node_modules");
+  echo("");
+  echo("---------------------------------------------------------------------------");
+  echo("Hoisting subproject modules");
+  echo("");
 
   // Delete the symlinks.
   for (const item of ls(modulesDir)) {
@@ -52,11 +55,11 @@ function hoistSubprojectsModules(versionedOutputDir, platform) {
     if (test('-L', itemPath)) {
       echo(`Deleting symlink ${item} in ${modulesDir}`);
       rm(itemPath);
-    } else if (test('-d', itemPath) && itemPath.startsWith('@')) {
+    } else if (test('-d', itemPath) && item.startsWith('@')) {
       for (const item2 of ls(path.join(modulesDir, item))) {
         const itemPath2 = path.join(modulesDir, item, item2);
         if (test('-L', itemPath2)) {
-          echo(`Deleting deeper symlink ${path.join(item, item2)} in ${join(modulesDir, item)}`);
+          echo(`Deleting deeper symlink ${path.join(item, item2)} in ${path.join(modulesDir, item)}`);
           rm(itemPath2);
         }
       }
@@ -119,11 +122,24 @@ function createOutputDirName({version, platform, arch}) {
   return "extraterm-" + version + "-" + platform + "-" + arch;
 }
 
+function fixNodeModulesSubProjects() {
+  // yarn just loves to link to this from the root `node_modules` but we
+  // don't include `test/*` stuff in the final build, which may result in
+  // a broken link.
+  const badLinkPath = "node_modules/extraterm-char-render-canvas-test";
+  if (test('-L', badLinkPath)) {
+    echo(`Deleting bad symlink '${badLinkPath}'`);
+    rm(badLinkPath);
+  }
+}
+
 exports.createOutputDirName = createOutputDirName;
 
 async function makePackage({ arch, platform, electronVersion, version, outputDir, replaceModuleDirs }) {
   log("");
   const SRC_DIR = "" + pwd();
+
+  fixNodeModulesSubProjects();
 
   // Clean up the output dirs and files first.
   const versionedOutputDir = createOutputDirName({version, platform, arch});
