@@ -45,3 +45,9 @@ To explicitly specify where your cygwin installation directory is you can pass t
 ```
 extraterm.exe --cygwinDir=C:\cygwin64
 ```
+
+
+Window maximize/moving/resizing doesn't work
+--------------------------------------------
+
+This can be a problem in situations where Extraterm is running through a X window server such as mobaxterm. This can generally be solved by telling Extraterm to use a "Native" window title bar. Set this in the "Settings", "Appearance" tab, "Interface" section, option "Window Title Bar".
