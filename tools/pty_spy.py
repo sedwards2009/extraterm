@@ -18,9 +18,9 @@ options = parser.parse_args()
 
 mode = 'ab' if options.append else 'wb'
 if options.command is not None:
-  shell = ['/bin/sh','-c', options.command]
+    shell = ['/bin/sh','-c', options.command]
 else:
-  shell = os.environ.get('SHELL', 'sh')
+    shell = os.environ.get('SHELL', 'sh')
 filename = options.filename
 
 with open(filename, mode) as stdin_script:
@@ -29,9 +29,9 @@ with open(filename, mode) as stdin_script:
         return data
 
     def stdin_read(fd):
-      data = os.read(fd, 1024)
-      stdin_script.write(data)
-      return data
+        data = os.read(fd, 1024)
+        stdin_script.write(data)
+        return data
 
     print('Running ', shell, ' and capturing data to file ', filename)
     pty.spawn(shell, read, stdin_read)
