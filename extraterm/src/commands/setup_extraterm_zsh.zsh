@@ -32,7 +32,7 @@ extraterm_install_prompt_integration () {
     
     if [[ ! "$PS1" =~ "$LC_EXTRATERM_COOKIE" ]] ; then
         prefix=`echo -n -e "%{\0033&${LC_EXTRATERM_COOKIE};3\0007%}%?%{\0000%}"`
-        export PS1="${prefix}${PS1}"
+        export PS1="%{${prefix}%}${PS1}"
     fi
 }
 extraterm_install_prompt_integration
