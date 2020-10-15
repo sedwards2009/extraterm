@@ -22,6 +22,12 @@ import * as DomUtils from "../DomUtils";
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
 
+interface RenderWork {
+  updateContents: boolean;
+  scrollToSelected: boolean;
+  focusInput: boolean;
+}
+
 
 /**
  * A Pop Down List Picker.
@@ -40,6 +46,10 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _formatEntries: (filteredEntries: T[], selectedId: string, filterInputValue: string) => DirectiveFn | TemplateResult;
   private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
+
+  private _open = false;
+
+  private _renderWork: RenderWork = null;
 
   constructor() {
     super();
@@ -65,7 +75,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   private _handleFilterInput(): void {
-    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
+    const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
     this.filter = filterInput.value;
   }
 
@@ -80,6 +90,39 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     }
   }
 
+  private _scheduleUpdate(renderWork: Partial<RenderWork>): void {
+    if (this._renderWork == null) {
+      this._renderWork = {
+        updateContents: false,
+        focusInput: false,
+        scrollToSelected: false
+      };
+      window.queueMicrotask(() => {
+        this._performRenderWork();
+      });
+    }
+
+    this._renderWork.focusInput = this._renderWork.focusInput || renderWork.focusInput;
+    this._renderWork.scrollToSelected = this._renderWork.scrollToSelected || renderWork.scrollToSelected;
+    this._renderWork.updateContents = this._renderWork.updateContents || renderWork.updateContents;
+  }
+
+  private _performRenderWork(): void {
+    const renderWork = this._renderWork;
+    this._renderWork = null;
+
+    if (renderWork.updateContents) {
+      this._render();
+    }
+    if (renderWork.scrollToSelected) {
+      this._scrollToSelected();
+    }
+    if (renderWork.focusInput) {
+      const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+      filterInput.focus();
+    }
+  }
+
   protected _render(): void {
     const filterKeyDown = {
       handleEvent: this._handleFilterKeyDown,
@@ -87,7 +130,6 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     };
 
     const filteredEntries = this._filterEntries(this._entries, this.filter);
-
     if (filteredEntries.length === 0) {
       this._setSelected(null);
     } else {
@@ -97,7 +139,6 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
         this._setSelected(newSelected);
       }
     }
-
     const formattedEntries = this._formatEntries(filteredEntries, this.selected, this.filter);
 
     const template = html`${this._styleTag()}
@@ -105,6 +146,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
           id="ID_DIALOG"
           title-primary=${this.titlePrimary}
           title-secondary=${this.titleSecondary}
+          open="${this._open}"
           @ET-POP-DOWN-DIALOG-CLOSE_REQUEST=${this._handleDialogClose}>
         <div id="ID_RESULTS_CONTAINER">
           <div class="gui-packed-row">
@@ -126,6 +168,12 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       `;
 
     render(template, this.shadowRoot);
+    this.installThemeCss();
+
+    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
+    const dialog = this._getDialog();
+    const rect = dialog.getBoundingClientRect();
+    resultsDiv.style.maxHeight = `${Math.floor(rect.height * 0.75)}px`;
   }
 
   private _getDialog(): PopDownDialog {
@@ -147,9 +195,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     if (this._programmaticSet) {
       return;
     }
-
-    this._render();
-    this._scrollToSelected();
+    this._scheduleUpdate({ updateContents: true, scrollToSelected: true });
   }
 
   private _setSelected(id: string): void {
@@ -161,9 +207,9 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   setEntries(entries: T[]): void {
     this._entries = entries;
     this.selected = null;
-
     this.filter = "";
-    this._render();
+
+    this._scheduleUpdate({ updateContents: true });
   }
 
   getEntries(): T[] {
@@ -172,11 +218,17 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   @Attribute titlePrimary = "";
   @Attribute titleSecondary = "";
+
+  @Observe("titlePrimary", "titleSecondary")
+  private _observe(target: string): void {
+    this._scheduleUpdate({ updateContents: true });
+  }
+
   @Attribute filter = "";
 
-  @Observe("titlePrimary", "titleSecondary", "filter")
-  private _observe(target: string): void {
-    this._render();
+  @Observe("filter")
+  private _observeFilter(target: string): void {
+    this._scheduleUpdate({ updateContents: true, scrollToSelected: true });
   }
 
   setFilterAndRankEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {
@@ -198,13 +250,21 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   private _scrollToSelected(): void {
-    const resultsDiv = this._elementById(ID_RESULTS);
+    const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
     const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
     if (selectedElement == null) {
       return;
     }
     const selectedRelativeTop = selectedElement.offsetTop - resultsDiv.offsetTop;
-    resultsDiv.scrollTop = selectedRelativeTop;
+    const top = resultsDiv.scrollTop;
+    if (top > selectedRelativeTop) {
+      resultsDiv.scrollTop = selectedRelativeTop;
+    } else {
+      const selectedElementDimensions = selectedElement.getBoundingClientRect();
+      if (selectedRelativeTop + selectedElementDimensions.height > top + resultsDiv.clientHeight) {
+        resultsDiv.scrollTop = selectedRelativeTop + selectedElementDimensions.height - resultsDiv.clientHeight;
+      }
+    }
   }
 
   private _handleFilterKeyDown(ev: KeyboardEvent): void {
@@ -242,7 +302,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
         }
       } else {
 
-        const resultsDiv = this._elementById(ID_RESULTS);
+        const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
 
         // Determine the step size.
         let stepSize = 1;
@@ -267,55 +327,24 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
           }
         }
 
-        const top = resultsDiv.scrollTop;
-        this._render();
-        resultsDiv.scrollTop = top;
-
-        const selectedElement = <HTMLElement> resultsDiv.querySelector("." + PopDownListPicker.CLASS_RESULT_SELECTED);
-        const selectedRelativeTop = selectedElement.offsetTop - resultsDiv.offsetTop;
-        if (top > selectedRelativeTop) {
-          resultsDiv.scrollTop = selectedRelativeTop;
-        } else {
-          const selectedElementDimensions = selectedElement.getBoundingClientRect();
-          if (selectedRelativeTop + selectedElementDimensions.height > top + resultsDiv.clientHeight) {
-            resultsDiv.scrollTop = selectedRelativeTop + selectedElementDimensions.height - resultsDiv.clientHeight;
-          }
-        }
+        this._scheduleUpdate({ updateContents: true, scrollToSelected: true });
       }
     }
   }
 
   open(): void {
-    const resultsDiv = <HTMLDivElement> this._elementById(ID_RESULTS);
-
-    const dialog = this._getDialog();
-    const rect = dialog.getBoundingClientRect();
-    resultsDiv.style.maxHeight = `${Math.floor(rect.height * 0.75)}px`;
-
+    this._open = true;
     this.filter = "";
-    this._render();
-
-    const filterInput = <HTMLInputElement> this._elementById(ID_FILTER);
-    filterInput.focus();
-
-    this._getDialog().open = true;
-    this._scrollToSelected();
+    this._scheduleUpdate({ updateContents: true, scrollToSelected: true, focusInput: true });
   }
 
   close(): void {
-    const dialog = this._getDialog();
-    if (dialog == null) {
-      return;
-    }
-    dialog.open = false;
+    this._open = false;
+    this._scheduleUpdate({ updateContents: true });
   }
 
   isOpen(): boolean {
-    const dialog = this._getDialog();
-    if (dialog == null) {
-      return false;
-    }
-    return dialog.open;
+    return this._open;
   }
 
   private _okId(selectedId: string): void {
@@ -327,9 +356,5 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
         this.dispatchEvent(event);
       });
     }
-  }
-
-  private _elementById(id: string): HTMLElement {
-    return DomUtils.getShadowId(this, id);
   }
 }
