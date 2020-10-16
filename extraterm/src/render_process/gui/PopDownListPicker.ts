@@ -49,6 +49,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   private _open = false;
 
+  private _neverRendered = true;
   private _renderWork: RenderWork = null;
 
   constructor() {
@@ -70,7 +71,8 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   }
 
   private _handleDialogClose(): void {
-    this._getDialog().open = false;
+    this._open = false;
+    this._scheduleUpdate({updateContents: true});
     this._okId(null);
   }
 
@@ -90,16 +92,23 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     }
   }
 
-  private _scheduleUpdate(renderWork: Partial<RenderWork>): void {
+  private _scheduleUpdate(renderWork: Partial<RenderWork>, nextFrame=false): void {
     if (this._renderWork == null) {
       this._renderWork = {
         updateContents: false,
         focusInput: false,
         scrollToSelected: false
       };
-      window.queueMicrotask(() => {
-        this._performRenderWork();
-      });
+
+      if (nextFrame) {
+        doLater(() => {
+          this._performRenderWork();
+        });
+      } else {
+        window.queueMicrotask(() => {
+          this._performRenderWork();
+        });
+      }
     }
 
     this._renderWork.focusInput = this._renderWork.focusInput || renderWork.focusInput;
@@ -110,6 +119,14 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
   private _performRenderWork(): void {
     const renderWork = this._renderWork;
     this._renderWork = null;
+
+    // Do a very fast and empty render first.
+    if (this._neverRendered) {
+      this._render(true);
+      this._neverRendered = false;
+      this._scheduleUpdate(renderWork, true);
+      return;
+    }
 
     if (renderWork.updateContents) {
       this._render();
@@ -123,23 +140,26 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     }
   }
 
-  protected _render(): void {
+  private _render(fast = false): void {
     const filterKeyDown = {
       handleEvent: this._handleFilterKeyDown,
       capture: true
     };
 
-    const filteredEntries = this._filterEntries(this._entries, this.filter);
-    if (filteredEntries.length === 0) {
-      this._setSelected(null);
-    } else {
-      const newSelectedIndex = filteredEntries.findIndex( (entry) => entry.id === this.selected);
-      const newSelected = filteredEntries[Math.max(0, newSelectedIndex)].id;
-      if (newSelected !== this.selected) {
-        this._setSelected(newSelected);
+    let formattedEntries: DirectiveFn | TemplateResult = html``;
+    if ( ! fast) {
+      const filteredEntries = this._filterEntries(this._entries, this.filter);
+      if (filteredEntries.length === 0) {
+        this._setSelected(null);
+      } else {
+        const newSelectedIndex = filteredEntries.findIndex( (entry) => entry.id === this.selected);
+        const newSelected = filteredEntries[Math.max(0, newSelectedIndex)].id;
+        if (newSelected !== this.selected) {
+          this._setSelected(newSelected);
+        }
       }
+      formattedEntries = this._formatEntries(filteredEntries, this.selected, this.filter);
     }
-    const formattedEntries = this._formatEntries(filteredEntries, this.selected, this.filter);
 
     const template = html`${this._styleTag()}
       <et-pop-down-dialog
@@ -171,13 +191,9 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this.installThemeCss();
 
     const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
-    const dialog = this._getDialog();
+    const dialog = <PopDownDialog> DomUtils.getShadowId(this, "ID_DIALOG");
     const rect = dialog.getBoundingClientRect();
     resultsDiv.style.maxHeight = `${Math.floor(rect.height * 0.75)}px`;
-  }
-
-  private _getDialog(): PopDownDialog {
-    return <PopDownDialog> DomUtils.getShadowId(this, "ID_DIALOG");
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
