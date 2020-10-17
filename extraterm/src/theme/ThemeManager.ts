@@ -10,6 +10,7 @@ import * as _ from 'lodash';
 
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+import { Color as UtilColor } from 'extraterm-color-utilities';
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
   cssFileToFilename, cssFileToExtension, SYNTAX_CSS_THEME, TERMINAL_CSS_THEME} from './Theme';
@@ -17,7 +18,6 @@ import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig } 
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
-import { Color as UtilColor } from '../render_process/gui/Util';
 
 // Dart Sass has the same API as Node Sass, but they don't publish typing files.
 // So we reuse the `node-sass` typing.

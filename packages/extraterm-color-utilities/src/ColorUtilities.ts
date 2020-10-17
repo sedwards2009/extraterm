@@ -20,11 +20,10 @@ export class Color {
   /**
    * Creates a color object.
    *
-   * @param  {string |       number}      redOrString [description]
-   * @param  {number}    green   [description]
-   * @param  {number}    blue    [description]
-   * @param  {number}    opacity [description]
-   * @return {[type]}            [description]
+   * @param redOrString CSS color string or the red component (0-255).
+   * @param green   Green component (0-255).
+   * @param blue    Blue compoennt (0-255).
+   * @param opacity Opacity or alpha (0-255). 0 is fully transparent, 255 is fully opaque.
    */
   constructor(redOrString: string | number, green?: number, blue?: number, opacity?: number) {
     if (typeof redOrString === "string") {
@@ -95,6 +94,9 @@ export class Color {
     return this._rgbaString;
   }
 
+  /**
+   * Return this color packed into a 32 bit number.
+   */
   toRGBA(): number {
     return (this._red << 24) | (this._green << 16) | (this._blue << 8) | this._opacity;
   }
@@ -123,6 +125,14 @@ export class Color {
     return new Color(this._red, this._green, this._blue, newOpacity);
   }
 
+  /**
+   * Mix two colors together
+   *
+   * @param otherColor the color to mix with this color
+   * @param fraction proportion of each color to mix (0-1). 0 is 100% this
+   *        color and 0% of `otherColor`. 1 is 0% this color and 100% of `otherColor`.
+   * @return the new resulting color
+   */
   mix(otherColor: Color, fraction=0.5): Color {
     const rightFraction = fraction;
 
@@ -140,7 +150,7 @@ export class Color {
  * @param  {number} value An integer in the range 0-255 inclusive.
  * @return {string}       the converted number.
  */
-export function to2DigitHex(value: number): string {
+function to2DigitHex(value: number): string {
   const h = value.toString(16);
   return h.length === 1 ? "0" + h : h;
 }

@@ -2,7 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 import { Logger, getLogger, log } from "extraterm-logging";
-import { Color } from "../ColorUtilities";
+import { Color } from "extraterm-color-utilities";
 
 
 const _log = getLogger("BoxDrawingCharacters");

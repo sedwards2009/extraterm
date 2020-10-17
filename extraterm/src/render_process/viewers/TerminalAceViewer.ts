@@ -10,6 +10,7 @@ import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import {doLater, doLaterFrame, DebouncedDoLater} from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
+import { Color } from 'extraterm-color-utilities';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
@@ -27,7 +28,6 @@ import { TextEditor } from './TextEditorType';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
-import { Color } from '../gui/Util';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 import { ConfigCursorStyle } from '../../Config';
 

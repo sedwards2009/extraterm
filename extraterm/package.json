@@ -25,6 +25,7 @@
     "extraterm-ace-terminal-renderer": "0.1.0",
     "extraterm-boolean-expression-evaluator": "1.0.0",
     "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-color-utilities": "1.0.0",
     "extraterm-font-ligatures": "1.0.0",
     "extraterm-later": "1.0.0",
     "extraterm-lit-html": "1.2.1",
