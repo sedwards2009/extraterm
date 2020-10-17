@@ -10,7 +10,7 @@ import {PythonFileFlattener} from '../ScriptBuilders';
 
 
 test("", () => {
-  const flattener = new PythonFileFlattener(path.join(__dirname, 'test_data'));
+  const flattener = new PythonFileFlattener(path.join(__dirname, "..", "..", "src", "test", "test_data"));
   const result = flattener.readAndInlineCommand('command');
 
   expect(result.length).not.toBe(0);

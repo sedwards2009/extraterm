@@ -12,7 +12,7 @@
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
-    "test": "jest",
+    "test": "yarn run build && jest",
     "testsplitlayout": "yarn run build && nodeunit dist/render_process/SplitLayoutTest.js",
     "serve-test": "node src/test/httpserver.js"
   },
@@ -83,7 +83,6 @@
     "serve-static": "1.10.0",
     "shelljs": "0.8.3",
     "shx": "^0.3.2",
-    "ts-jest": "23.10.5",
     "typescript": "3.9.6",
     "webfont": "^4.0.0"
   },

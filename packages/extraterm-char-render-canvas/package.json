@@ -10,6 +10,14 @@
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
+  "scripts": {
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
+    "clean": "shx rm -rf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
+    "run": "false"
+  },
   "dependencies": {
     "extraterm-data-structures": "1.0.0",
     "extraterm-char-cell-grid": "1.0.0",
@@ -25,15 +33,6 @@
     "eslint-config-extraterm": "1.0.0",
     "jest": "23.6.0",
     "shx": "^0.3.2",
-    "ts-jest": "23.10.5",
     "typescript": "3.9.6"
-  },
-  "scripts": {
-    "build": "yarn run build-fast && yarn run lint",
-    "build-fast": "tsc",
-    "clean": "shx rm -rf dist",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
-    "run": "false"
   }
 }
