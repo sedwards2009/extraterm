@@ -186,6 +186,7 @@ class FontMeasurement {
     ctx.fillRect(0, 0, this._canvasWidthPx, this._canvasHeightPx);
     ctx.globalCompositeOperation = "source-over";
     ctx.fillStyle = "#ffffffff";
+    ctx.strokeStyle = "#ffffffff";
 
     const textXY = Math.ceil(fontSizePx);
     ctx.fillText(text, textXY, textXY);

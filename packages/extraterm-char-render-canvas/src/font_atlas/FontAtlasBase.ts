@@ -175,7 +175,9 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     ctx.fillRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
 
     ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = RGBAToCss(fgRGBA);
+    const fgCSS = RGBAToCss(fgRGBA);
+    ctx.fillStyle = fgCSS;
+    ctx.strokeStyle = fgCSS;
 
     if (isBoxCharacter(codePoint)) {
       drawBoxCharacter(ctx, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx);

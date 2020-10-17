@@ -2,6 +2,7 @@
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
 import { Logger, getLogger, log } from "extraterm-logging";
+import { Color } from "../ColorUtilities";
 
 
 const _log = getLogger("BoxDrawingCharacters");
@@ -98,7 +99,7 @@ export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: numbe
     case GlyphRenderer.ARC_DOWN_AND_LEFT:
     case GlyphRenderer.ARC_UP_AND_LEFT:
     case GlyphRenderer.ARC_UP_AND_RIGHT:
-      drawArcDownAndRight(ctx, thisGlyphData.glyphRenderer, dx, dy, width, height);
+      drawRoundArc(ctx, thisGlyphData.glyphRenderer, dx, dy, width, height);
       break;
   }
 }
@@ -301,7 +302,10 @@ function compute8x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
 
 function drawShade(ctx: CanvasRenderingContext2D, dx: number, dy: number, width: number, height: number, alpha: number): void {
   ctx.save();
-  ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+
+  const fillColor = new Color(<string> ctx.fillStyle);
+  ctx.fillStyle = fillColor.opacity(alpha * 255).toRGBAString();
+
   ctx.fillRect(dx, dy, width, height);
   ctx.restore();
 }
@@ -343,7 +347,7 @@ interface ArcStartEndPoint {
   endPointY: number;
 }
 
-const arcStartEndPoints = {
+const arcStartEndPoints: { [index: number]: ArcStartEndPoint } = {
   [GlyphRenderer.ARC_DOWN_AND_RIGHT]: {
     startPointX: 0.5,
     startPointY: 1,
@@ -370,7 +374,7 @@ const arcStartEndPoints = {
   },
 };
 
-function drawArcDownAndRight(ctx: CanvasRenderingContext2D, renderer: GlyphRenderer, dx: number, dy: number,
+function drawRoundArc(ctx: CanvasRenderingContext2D, renderer: GlyphRenderer, dx: number, dy: number,
     width: number, height: number): void {
 
   const metrics = compute5x5GlyphGrid(width, height);
