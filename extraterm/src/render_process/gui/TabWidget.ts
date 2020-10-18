@@ -145,7 +145,7 @@ export class TabWidget extends ThemeableElementBase {
   }
 
   private _handleTabbarResize(target: Element, contentRect: DOMRectReadOnly): void {
-    this._setShowButtons(target.clientWidth !== target.scrollWidth);
+    this._setShowButtons(target.scrollWidth > target.clientWidth);
   }
 
   private _setShowButtons(show: boolean): void {
