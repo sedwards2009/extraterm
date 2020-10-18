@@ -2569,6 +2569,7 @@ export class Emulator implements EmulatorApi {
   // ESC c Full Reset (RIS).
   _fullReset(): void {
     this._resetVariables();
+    this.eraseAllRows();
   }
 
   // ESC H Tab Set (HTS is 0x88).
@@ -2688,15 +2689,19 @@ export class Emulator implements EmulatorApi {
         }
         break;
       case 2:
-        j = this.rows;
-        while (j--) {
-          this._getRow(j);
-          this.eraseLine(j);
-        }
+        this.eraseAllRows();
         break;
       case 3:
         // no saved lines
         break;
+    }
+  }
+
+  private eraseAllRows(): void {
+    let j = this.rows;
+    while (j--) {
+      this._getRow(j);
+      this.eraseLine(j);
     }
   }
 
