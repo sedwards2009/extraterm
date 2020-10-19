@@ -5,7 +5,7 @@
  */
 
 import { BulkFileHandle } from '@extraterm/extraterm-extension-api';
-import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
+import * as MimeTypeDetector from 'extraterm-mimetype-detector';
 
 
 export function guessMimetype(bulkFileHandle: BulkFileHandle): {mimeType: string, charset:string} {

@@ -1,0 +1,36 @@
+{
+  "name": "extraterm-mimetype-detector",
+  "version": "1.0.0",
+  "description": "Detect a mimetype from the first few bytes of a file",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/MimeTypeDetector.js",
+  "types": "dist/MimeTypeDetector.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "dependencies": {
+    "file-type": "^7.6.0",
+    "jschardet": "1.4.1",
+    "mime-types": "^2.1.21"
+  },
+  "devDependencies": {
+    "@types/file-type": "^5.2.1",
+    "@types/jest": "23.3.13",
+    "eslint-config-extraterm": "1.0.0",
+    "eslint": "6.8.0",
+    "jest": "23.6.0",
+    "shx": "^0.3.2",
+    "typescript": "3.9.6"
+  },
+  "scripts": {
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
+    "clean": "shx rm -rf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
+    "test": "yarn run build && jest",
+    "run": "false"
+  }
+}

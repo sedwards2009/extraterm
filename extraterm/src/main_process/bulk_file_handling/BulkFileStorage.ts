@@ -10,12 +10,12 @@ import * as path from 'path';
 import * as net from 'net';
 import {SmartBuffer} from 'smart-buffer';
 import {Transform} from 'stream';
+import * as MimeTypeDetector from 'extraterm-mimetype-detector';
 
 import {BulkFileMetadata, Disposable, Event} from '@extraterm/extraterm-extension-api';
 import {EventEmitter} from '../../utils/EventEmitter';
 import {getLogger, Logger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import * as MimeTypeDetector from '../../mimetype_detector/MimeTypeDetector';
 import {WriterReaderFile} from './WriterReaderFile';
 
 

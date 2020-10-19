@@ -11,7 +11,7 @@ import * as MimeTypeDetector from './MimeTypeDetector';
 
 
 function readTestFile(filename: string): Buffer {
-  const fullPath = path.join('src', 'testfiles', filename);
+  const fullPath = path.join("testfiles", filename);
   return fs.readFileSync(fullPath);
 }
 
