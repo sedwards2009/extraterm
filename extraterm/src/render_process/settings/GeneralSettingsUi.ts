@@ -39,6 +39,9 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
     <span><label><input type="checkbox" v-model="autoCopySelectionToClipboard">Automatically copy selection to clipboard</label></span>
 
     <label></label>
+    <span><label><input type="checkbox" v-model="closeWindowWhenEmpty">Close the window after closing the last tab</label></span>
+
+    <label></label>
     <span class="no-user-select">&nbsp;</span>
 
     <label></label>
@@ -61,6 +64,7 @@ export class GeneralSettingsUi extends Vue {
   maxScrollbackFrames: number;
   autoCopySelectionToClipboard: boolean;
   gpuDriverWorkaroundFlag: boolean;
+  closeWindowWhenEmpty: boolean;
 
   constructor() {
     super();
@@ -70,5 +74,6 @@ export class GeneralSettingsUi extends Vue {
     this.maxScrollbackFrames = 100;
     this.autoCopySelectionToClipboard = true;
     this.gpuDriverWorkaroundFlag = false;
+    this.closeWindowWhenEmpty = true;
   }
 }

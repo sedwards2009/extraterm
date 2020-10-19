@@ -53,6 +53,8 @@ export interface GeneralConfig {
   gpuDriverWorkaround?: GpuDriverWorkaround;
   isHardwareAccelerated?: boolean;
 
+  closeWindowWhenEmpty?: boolean;
+
   activeExtensions?: {[extensionName:string]: boolean;};
 }
 

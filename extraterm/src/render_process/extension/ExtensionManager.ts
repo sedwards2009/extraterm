@@ -32,6 +32,7 @@ import { DebouncedDoLater } from 'extraterm-later';
 import { ExtensionContainerElement } from './ExtensionContainerElement';
 import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages";
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
+import { SplitLayout } from '../SplitLayout';
 
 
 interface ActiveExtension {
@@ -62,6 +63,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   extensionUiUtils: ExtensionUiUtils = null;
 
+  private _splitLayout: SplitLayout = null;
+
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
     activeTerminal: null,
@@ -81,6 +84,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
     this.onCommandsChanged = this._onCommandsChangedEventEmitter.event;
     this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire(undefined));
     this.extensionUiUtils = new ExtensionUiUtilsImpl();
+  }
+
+  setSplitLayout(splitLayout: SplitLayout): void {
+    this._splitLayout = splitLayout;
   }
 
   startUp(): void {
@@ -404,6 +411,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       textEditorFocus: false,
       isTextEditing: false,
       viewerFocus: false,
+      isWindowSplit: this._splitLayout.isSplit(),
     };
 
     if (state.activeTerminal != null) {

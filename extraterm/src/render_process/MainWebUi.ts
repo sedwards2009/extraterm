@@ -177,6 +177,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu)).length;
   }
 
+  getSplitLayout(): SplitLayout {
+    return this._splitLayout;
+  }
+
   closeAllTabs(): void {
     const elements = this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu));
     for (const element of elements) {
@@ -350,8 +354,21 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.setTopLeftElement(this._leftControls());
     this._splitLayout.setTopRightElement(this._menuControls());
 
-    this._splitLayout.setEmptySplitElementFactory( () => {
-      const emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
+    this._splitLayout.setEmptySplitElementFactory( (previousElement: Element): Element => {
+      let emptyPaneMenu: EmptyPaneMenu = <EmptyPaneMenu> previousElement;
+      if (emptyPaneMenu == null) {
+        emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
+        emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
+
+          const windowState = this._extensionManager.getExtensionWindowStateFromEvent(ev);
+          emptyPaneMenu.setFilter("");
+          for (const entry of entriesAndShortcuts) {
+            if (entry.id === ev.detail.selected) {
+              this._extensionManager.executeCommandWithExtensionWindowState(windowState, entry.command);
+            }
+          }
+        });
+      }
 
       const entries = this._extensionManager.queryCommands({
         emptyPaneMenu: true,
@@ -367,16 +384,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       });
 
       emptyPaneMenu.setEntries(entriesAndShortcuts);
-      emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
-
-        const windowState = this._extensionManager.getExtensionWindowStateFromEvent(ev);
-        emptyPaneMenu.setFilter("");
-        for (const entry of entriesAndShortcuts) {
-          if (entry.id === ev.detail.selected) {
-            this._extensionManager.executeCommandWithExtensionWindowState(windowState, entry.command);
-          }
-        }
-      });
       return emptyPaneMenu;
     });
   }
@@ -394,7 +401,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', () => {
       this.focus();
-      this._sendWindowRequestEvent(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST);
+      this._commandCloseWindow();
     });
   }
 
@@ -769,7 +776,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (tabWidgetContents.length >= 2) {
       this._switchToTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);
     } else {
-      this._switchToTab(this._splitLayout.getTabContentsByTabWidget(tabWidget)[0]);
+      const tabContents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
+      if (tabContents.length !== 0) {
+        this._switchToTab(tabContents[0]);
+      }
     }
 
     this._sendTabClosedEvent();
@@ -1012,24 +1022,25 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   private _registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
-    commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
-    commands.registerCommand("extraterm:window.focusTabLeft", (args: any) => this._commandFocusTabLeft());
-    commands.registerCommand("extraterm:window.focusTabRight", (args: any) => this._commandFocusTabRight());
-    commands.registerCommand("extraterm:window.focusPaneLeft", (args: any) => this._commandFocusPaneLeft());
-    commands.registerCommand("extraterm:window.focusPaneRight", (args: any) => this._commandFocusPaneRight());
+    commands.registerCommand("extraterm:application.quit", (args: any) => this._commandApplicationQuit());
+    commands.registerCommand("extraterm:window.closePane", (args: any) => this._commandClosePane());
+    commands.registerCommand("extraterm:window.closeTab", (args: any) => this._commandCloseTab());
+    commands.registerCommand("extraterm:window.closeWindow", (args: any) => this._commandCloseWindow());
     commands.registerCommand("extraterm:window.focusPaneAbove", (args: any) => this._commandFocusPaneAbove());
     commands.registerCommand("extraterm:window.focusPaneBelow", (args: any) => this._commandFocusPaneBelow());
-    commands.registerCommand("extraterm:window.closeTab", (args: any) => this._commandCloseTab());
+    commands.registerCommand("extraterm:window.focusPaneLeft", (args: any) => this._commandFocusPaneLeft());
+    commands.registerCommand("extraterm:window.focusPaneRight", (args: any) => this._commandFocusPaneRight());
+    commands.registerCommand("extraterm:window.focusTabLeft", (args: any) => this._commandFocusTabLeft());
+    commands.registerCommand("extraterm:window.focusTabRight", (args: any) => this._commandFocusTabRight());
     commands.registerCommand("extraterm:window.horizontalSplit", (args: any) => this._commandHorizontalSplit());
-    commands.registerCommand("extraterm:window.verticalSplit", (args: any) => this._commandVerticalSplit());
-    commands.registerCommand("extraterm:window.closePane", (args: any) => this._commandClosePane());
+    commands.registerCommand("extraterm:window.moveTabDown", (args: any) => this._commandMoveTabDown());
     commands.registerCommand("extraterm:window.moveTabLeft", (args: any) => this._commandMoveTabLeft());
     commands.registerCommand("extraterm:window.moveTabRight", (args: any) => this._commandMoveTabRight());
     commands.registerCommand("extraterm:window.moveTabUp", (args: any) => this._commandMoveTabUp());
-    commands.registerCommand("extraterm:window.moveTabDown", (args: any) => this._commandMoveTabDown());
+    commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openAbout", (args: any) => this.commandOpenAboutTab());
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
-    commands.registerCommand("extraterm:application.quit", (args: any) => this._commandApplicationQuit());
+    commands.registerCommand("extraterm:window.verticalSplit", (args: any) => this._commandVerticalSplit());
   }
 
   private _getActiveTabElement(): HTMLElement {
@@ -1105,6 +1116,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   private _commandMoveTabDown(): void {
     this._moveTabElementDown(this._getActiveTabElement());
+  }
+
+  private _commandCloseWindow(): void {
+    this._sendWindowRequestEvent(MainWebUi.EVENT_CLOSE_WINDOW_REQUEST);
   }
 
   private _setupPtyIpc(): void {

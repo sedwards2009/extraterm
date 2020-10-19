@@ -45,6 +45,10 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
       if ((ui.gpuDriverWorkaroundFlag ? "no_blend" : "none") !== generalConfig.gpuDriverWorkaround) {
         ui.gpuDriverWorkaroundFlag = generalConfig.gpuDriverWorkaround === "no_blend";
       }
+
+      if (ui.closeWindowWhenEmpty !== generalConfig.closeWindowWhenEmpty) {
+        ui.closeWindowWhenEmpty = generalConfig.closeWindowWhenEmpty;
+      }
     }
   }
 
@@ -57,7 +61,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     newGeneralConfig.scrollbackMaxFrames = ui.maxScrollbackFrames;
     newGeneralConfig.autoCopySelectionToClipboard = ui.autoCopySelectionToClipboard;
     newGeneralConfig.gpuDriverWorkaround = ui.gpuDriverWorkaroundFlag ? "no_blend" : "none";
-
+    newGeneralConfig.closeWindowWhenEmpty = ui.closeWindowWhenEmpty;    
     this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
   }
 }

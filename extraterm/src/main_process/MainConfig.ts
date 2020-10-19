@@ -296,6 +296,8 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, availableF
   userStoredConfig.windowBackgroundTransparencyPercent = Math.max(Math.min(100,
     userStoredConfig.windowBackgroundTransparencyPercent), 0);
 
+  sanitizeField(userStoredConfig, "closeWindowWhenEmpty", true);
+
   sanitizeField(userStoredConfig, "activeExtensions", {});
 }
 

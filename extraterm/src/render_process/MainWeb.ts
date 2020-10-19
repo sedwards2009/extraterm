@@ -58,8 +58,6 @@ type ThemeInfo = ThemeTypes.ThemeInfo;
 
 SourceMapSupport.install();
 
-const ID_CONTEXT_MENU_CONTAINER = "ID_CONTEXT_MENU_CONTAINER";
-const ID_MAIN_MENU = "ID_MAIN_MENU";
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
 const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
 const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
@@ -110,6 +108,7 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
 
   startUpExtensions();
   startUpMainWebUi();
+  extensionManager.setSplitLayout(mainWebUi.getSplitLayout());
   registerCommands(extensionManager);
   startUpSessions(configDatabase, extensionManager);
 
@@ -152,7 +151,7 @@ function startUpTheming(): void {
 function startUpWebIpc(): void {
   WebIpc.start();
 
-  WebIpc.registerDefaultHandler(Messages.MessageType.QUIT_APPLICATION, handleQuitApplication);
+  WebIpc.registerDefaultHandler(Messages.MessageType.QUIT_APPLICATION, handleCloseWindow);
 
   // Default handling for theme messages.
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
@@ -233,7 +232,8 @@ function startUpMainWebUi(): void {
 
   // Detect when the last tab has closed.
   mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
-    if (mainWebUi.getTabCount() === 0) {
+    const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+    if (generalConfig.closeWindowWhenEmpty && mainWebUi.getTabCount() === 0) {
       WebIpc.windowCloseRequest();
     }
   });
@@ -491,8 +491,9 @@ async function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
   }
 }
 
-function handleQuitApplication(msg: Messages.Message): void {
+function handleCloseWindow(msg: Messages.Message): void {
   mainWebUi.closeAllTabs();
+  WebIpc.windowCloseRequest();
 }
 
 function handleThemeListMessage(msg: Messages.Message): void {

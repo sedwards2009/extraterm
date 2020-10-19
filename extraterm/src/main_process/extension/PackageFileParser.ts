@@ -66,6 +66,7 @@ class PackageParser {
       textEditorFocus: false,
       isTextEditing: false,
       viewerFocus: false,
+      isWindowSplit: false,
     };
     this._bee = new BooleanExpressionEvaluator(variables);
   }

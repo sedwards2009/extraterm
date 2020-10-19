@@ -13,10 +13,10 @@ import { SupportsDialogStack } from '../SupportsDialogStack';
 import { CommandsRegistry } from './CommandsRegistry';
 import { TextEditor } from '../viewers/TextEditorType';
 import { CommonExtensionWindowState } from './CommonExtensionState';
-import { EventEmitter } from 'extraterm-event-emitter';
 import { TabWidget } from '../gui/TabWidget';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { ExtensionContainerElement } from './ExtensionContainerElement';
+import { SplitLayout } from '../SplitLayout';
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -33,6 +33,7 @@ export interface CommandQueryOptions {
 export interface ExtensionManager {
   startUp(): void;
 
+  setSplitLayout(splitLayout: SplitLayout): void;
   getAllExtensions(): ExtensionMetadata[];
   onStateChanged: ExtensionApi.Event<void>;
   isExtensionRunning(name: string):boolean;

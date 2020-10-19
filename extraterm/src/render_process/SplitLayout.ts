@@ -10,7 +10,7 @@ import {Tab} from './gui/Tab';
 import {Logger, getLogger, log} from "extraterm-logging";
 
 interface ElementFactory {
-  (): Element;
+  (previousElement: Element | null): Element;
 }
 
 interface TabContentContainerElementFactory {
@@ -170,6 +170,10 @@ export class SplitLayout {
     }
 
     info.children.push({type: "tabinfo", tab: tab, content: tabContent, container: null});
+  }
+
+  isSplit(): boolean {
+    return this._rootInfoNode.type === "splitter";
   }
 
   /**
@@ -752,7 +756,7 @@ export class SplitLayout {
       leftSpaceElement = this._topLeftElement;
     } else {
       if (this._leftSpaceDefaultElementFactory != null && infoNode.leftSpaceDefaultElement == null) {
-        infoNode.leftSpaceDefaultElement = this._leftSpaceDefaultElementFactory();
+        infoNode.leftSpaceDefaultElement = this._leftSpaceDefaultElementFactory(null);
         leftSpaceElement = infoNode.leftSpaceDefaultElement;
       }
     }
@@ -763,7 +767,7 @@ export class SplitLayout {
       rightSpaceElement = this._topRightElement;
     } else {
       if (this._rightSpaceDefaultElementFactory != null && infoNode.rightSpaceDefaultElement == null) {
-        infoNode.rightSpaceDefaultElement = this._rightSpaceDefaultElementFactory();
+        infoNode.rightSpaceDefaultElement = this._rightSpaceDefaultElementFactory(null);
         rightSpaceElement = infoNode.rightSpaceDefaultElement;
       }
     }
@@ -789,10 +793,13 @@ export class SplitLayout {
         infoNode.emptyTab = <Tab> document.createElement(Tab.TAG_NAME);
         infoNode.emptyTab.id = this._nextTabId();
       }
+
       if (infoNode.emptyTabContent == null) {
-        infoNode.emptyTabContent = this._emptySplitFactory();
+        infoNode.emptyTabContent = this._emptySplitFactory(null);
         infoNode.emptyContainer = this._tabContainerFactory(tabWidget, infoNode.emptyTab, infoNode.emptyTabContent);
         infoNode.emptyContainer.appendChild(infoNode.emptyTabContent);
+      } else {
+        infoNode.emptyTabContent = this._emptySplitFactory(infoNode.emptyTabContent);
       }
 
       targetChildrenList.push(infoNode.emptyTab);

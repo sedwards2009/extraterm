@@ -62,6 +62,7 @@ export interface WhenVariables {
   textEditorFocus: boolean;
   isTextEditing: boolean;
   viewerFocus: boolean;
+  isWindowSplit: boolean;
 }
 
 export interface ExtensionCommandContribution {

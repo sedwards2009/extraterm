@@ -173,7 +173,7 @@
         "title": "Close Tab",
         "category": "window",
         "order": 1100,
-        "icon": "fa fa-times",
+        "icon": "fas fa-window-close",
         "when": ""
       },
       {
@@ -240,7 +240,7 @@
         "category": "window",
         "order": 1402,
         "icon": "far fa-window-close",
-        "when": ""
+        "when": "isWindowSplit"
       },
       {
         "command": "extraterm:window.moveTabLeft",
@@ -302,6 +302,14 @@
         "icon": "far fa-lightbulb",
         "when": ""
       },
+      {
+        "command": "extraterm:window.closeWindow",
+        "title": "Close Window",
+        "category": "window",
+        "icon": "fa fa-times",
+        "when": ""
+      },
+
       {
         "command": "extraterm:textEditor.addCursorAbove",
         "title": "Add Cursor Above",
@@ -736,6 +744,14 @@
         },
         {
           "command": "extraterm:window.closePane",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.closeWindow",
+          "show": true
+        },
+        {
+          "command": "extraterm:application.quit",
           "show": true
         }
       ],
