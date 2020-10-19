@@ -298,9 +298,11 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     }
 
     const isPageKey = ev.key === "PageUp" || ev.key === "PageDown";
-    const isUp = ev.key === "PageUp" || ev.key === "ArrowUp" || ev.key === "Home";
+    const hasMeta = ev.altKey || ev.shiftKey || ev.ctrlKey;
 
-    if (isPageKey || isUp || ev.key === "ArrowDown" || ev.key === "End" || ev.key === "Enter") {
+    const isUp = ev.key === "PageUp" || ev.key === "ArrowUp" || (ev.key === "Home" && ! hasMeta);
+
+    if (isPageKey || isUp || ev.key === "ArrowDown" || (ev.key === "End" && ! hasMeta) || ev.key === "Enter") {
       ev.preventDefault();
       ev.stopPropagation();
 
