@@ -513,14 +513,48 @@ export interface ExtensionViewerBaseConstructor {
 }
 
 /**
+ * A user defined configuration for a terminal session.
  *
+ * This is represented in the UI as a session block in the Settings ->
+ * "Session Types" tab. All of the different types of sessions have
+ * these fields in common.
  */
 export interface SessionConfiguration {
+  /**
+   * Unique identifier for this session type.
+   */
   uuid: string;
-  name: string;             // Human readable name for the profile.
-  type?: string;            // type - "cygwin", "babun" or "native" ("" means "native")
-  args?: string;            // command line arguments to be passed to command
+
+  /**
+   * Human readable name for this session type.
+   */
+  name: string;
+
+  /**
+   * Identifies this type of session and the back-end needed to run it.
+   *
+   * The value here matches that defined in the `contributes` ->
+   * `sessionEditors` -> `type` field in the corresponding extension's
+   * `package.json` file.
+   */
+  type?: string;
+
+  /**
+   * Command line arguments to be passed to shell command.
+   */
+  args?: string;
+
+  /**
+   * The initial directory in which to start the shell command.
+   */
   initialDirectory?: string;
+
+  /**
+   * This is where the data for any extensions which is associated with this
+   * session type are kept.
+   *
+   * Don not touch this.
+   */
   extensions?: any;
 }
 
@@ -558,10 +592,29 @@ export interface EnvironmentMap {
   [key: string]: string;
 }
 
+/**
+ * This interface defines the methods required from every session back-end.
+ */
 export interface SessionBackend {
+  /**
+   * Create some reasonable default session configurations for this back-end
+   */
   defaultSessionConfigurations(): SessionConfiguration[];
 
-  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty;
+  /**
+   * Create a new live session
+   */
+  createSession(sessionConfiguration: SessionConfiguration, options: CreateSessionOptions): Pty;
+}
+
+/**
+ * Extra options passed during session creation.
+ */
+export interface CreateSessionOptions {
+  extraEnv: EnvironmentMap;
+  cols: number;
+  rows: number;
+  workingDirectory?: string;
 }
 
 export interface BufferSizeChange {
