@@ -1128,7 +1128,7 @@ function setupDefaultSessions(): void {
 }
 
 function handlePtyCreate(sender: Electron.WebContents, msg: Messages.CreatePtyRequestMessage): Messages.CreatedPtyMessage {
-  const ptyId = ptyManager.createPty(msg.sessionUuid, msg.env, msg.columns, msg.rows);
+  const ptyId = ptyManager.createPty(msg.sessionUuid, msg.sessionOptions);
   _log.debug(`handlePtyCreate ptyId: ${ptyId}, sender.id: ${sender.id}`);
   ptyToSenderMap.set(ptyId, sender.id);
   const reply: Messages.CreatedPtyMessage = { type: Messages.MessageType.PTY_CREATED, id: ptyId };

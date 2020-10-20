@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
-import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap} from '@extraterm/extraterm-extension-api';
+import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
 
 import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
 import * as SourceDir from './SourceDir';
@@ -101,7 +101,7 @@ export class WslProxySessionBackend implements SessionBackend {
     return result;
   }
 
-  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
+  createSession(sessionConfiguration: SessionConfiguration, sessionOptions: CreateSessionOptions): Pty {
     const sessionConfig = <WslProxySessionConfiguration> sessionConfiguration;
 
     const defaultShell = "/bin/bash";
@@ -112,8 +112,8 @@ export class WslProxySessionBackend implements SessionBackend {
       TERM: "xterm-256color"
     };
 
-    for (const prop in extraEnv) {
-      extraPtyEnv[prop] = extraEnv[prop];
+    for (const prop in sessionOptions.extraEnv) {
+      extraPtyEnv[prop] = sessionOptions.extraEnv[prop];
     }
 
     const options: PtyOptions = {
@@ -121,8 +121,8 @@ export class WslProxySessionBackend implements SessionBackend {
       args,
       env: null,
       extraEnv: extraPtyEnv,
-      cols,
-      rows
+      cols: sessionOptions.cols,
+      rows: sessionOptions.rows
     };
 
     if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {

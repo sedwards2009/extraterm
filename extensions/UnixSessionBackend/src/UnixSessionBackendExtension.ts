@@ -7,7 +7,7 @@ import * as child_process from 'child_process';
 import * as constants from 'constants';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import { UnixPty, PtyOptions } from './UnixPty';
@@ -27,7 +27,7 @@ class UnixBackend implements SessionBackend {
 
   constructor(private _log: Logger) {
   }
-  
+
   defaultSessionConfigurations(): SessionConfiguration[] {
     const loginSessionConfig: UnixSessionConfiguration = {
       uuid: "",
@@ -40,9 +40,9 @@ class UnixBackend implements SessionBackend {
     return [loginSessionConfig];
   }
 
-  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
+  createSession(sessionConfiguration: SessionConfiguration, sessionOptions: CreateSessionOptions): Pty {
     const sessionConfig = <UnixSessionConfiguration> sessionConfiguration;
-    
+
     let shell = sessionConfig.useDefaultShell ? this._readDefaultUserShell(process.env.USER) : sessionConfig.shell;
     let preMessage = "";
     try {
@@ -59,8 +59,8 @@ class UnixBackend implements SessionBackend {
     ptyEnv["TERM"] = "xterm-256color";
 
     let prop: string;
-    for (prop in extraEnv) {
-      ptyEnv[prop] = extraEnv[prop];
+    for (prop in sessionOptions.extraEnv) {
+      ptyEnv[prop] = sessionOptions.extraEnv[prop];
     }
 
     let cwd = sessionConfig.initialDirectory || null;
@@ -78,8 +78,8 @@ class UnixBackend implements SessionBackend {
       exe: shell,
       args,
       env: ptyEnv,
-      cols: cols,
-      rows: rows,
+      cols: sessionOptions.cols,
+      rows: sessionOptions.rows,
       cwd,
       preMessage
     };
@@ -94,17 +94,17 @@ class UnixBackend implements SessionBackend {
       return this._readDefaultUserShellFromEtcPasswd(userName);
     }
   }
-    
+
   private _readDefaultUserShellFromEtcPasswd(userName: string): string {
     let shell = "/bin/bash";
-    const passwdDb = this._readPasswd("/etc/passwd");  
+    const passwdDb = this._readPasswd("/etc/passwd");
     const userRecords = passwdDb.filter( row => row.username === userName);
     if (userRecords.length !== 0) {
       shell = userRecords[0].shell;
     }
     return shell;
   }
-  
+
   private _readDefaultUserShellFromOpenDirectory(userName: string): string {
     try {
       const regResult: string = <any> child_process.execFileSync("dscl",
@@ -119,7 +119,7 @@ class UnixBackend implements SessionBackend {
       return "/bin/bash";
     }
   }
-  
+
   private _readPasswd(filename: string): PasswdLine[] {
     const fileText = fs.readFileSync(filename, {encoding: 'utf8'});
     const lines = fileText.split(/\n/g);
@@ -145,7 +145,7 @@ class UnixBackend implements SessionBackend {
         return "Path isn't readable";
       }
       return "errno: " +  err.errno + ", err.code: " + err.code;
-    } 
+    }
     return null;
   }
 }

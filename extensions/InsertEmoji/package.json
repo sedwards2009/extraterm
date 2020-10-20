@@ -27,7 +27,7 @@
     ]
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.7.0",
+    "@extraterm/extraterm-extension-api": "0.9.0",
     "download-cli": "^1.1.1",
     "shelljs": "0.8.3",
     "typescript": "3.9.6"

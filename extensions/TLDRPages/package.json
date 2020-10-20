@@ -23,7 +23,7 @@
     ]
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.7.0",
+    "@extraterm/extraterm-extension-api": "0.9.0",
     "@types/jest": "23.3.13",
     "download-cli": "^1.1.1",
     "jest": "23.6.0",

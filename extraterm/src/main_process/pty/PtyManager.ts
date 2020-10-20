@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, SessionConfiguration, EnvironmentMap} from '@extraterm/extraterm-extension-api';
+import { Event, SessionConfiguration, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';
@@ -48,7 +48,7 @@ export class PtyManager implements AcceptsConfigDatabase {
     this.onPtyData = this._onPtyDataEventEmitter.event;
     this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
   }
-  
+
   getDefaultSessions(): SessionConfiguration[] {
     const results: SessionConfiguration[] = [];
     for (const backend of this._extensionManager.getSessionBackendContributions()) {
@@ -66,13 +66,12 @@ export class PtyManager implements AcceptsConfigDatabase {
   setConfigDatabase(configDistributor: ConfigDatabase): void  {
     this._configDistributor = configDistributor;
   }
-  
+
   onPtyExit: Event<number>;
   onPtyData: Event<PtyDataEvent>;
   onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
-  createPty(sessionUuid: string, extraEnv: EnvironmentMap, cols: number, rows: number): number {
-    
+  createPty(sessionUuid: string, sessionOptions: CreateSessionOptions): number {
     const sessions = this._configDistributor.getConfig(SESSION_CONFIG);
     let sessionConfiguration: SessionConfiguration = null;
     for (sessionConfiguration of sessions) {
@@ -87,13 +86,13 @@ export class PtyManager implements AcceptsConfigDatabase {
     }
 
     const backend = this._extensionManager.getSessionBackend(sessionConfiguration.type);
-    const ptyTerm = backend.createSession(sessionConfiguration, extraEnv, cols, rows);
+    const ptyTerm = backend.createSession(sessionConfiguration, sessionOptions);
 
     this._ptyCounter++;
     const ptyId = this._ptyCounter;
     const ptyTup = { ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };
     this._ptyMap.set(ptyId, ptyTup);
-    
+
     ptyTerm.onData( (data: string) => {
       if (LOG_FINE) {
         this._log.debug("pty process got data for ptyID=" + ptyId);
@@ -102,7 +101,7 @@ export class PtyManager implements AcceptsConfigDatabase {
 
       this._onPtyDataEventEmitter.fire({ptyId, data});
     });
-  
+
     ptyTerm.onExit( () => {
       if (LOG_FINE) {
         this._log.debug("pty process exited.");
@@ -113,11 +112,11 @@ export class PtyManager implements AcceptsConfigDatabase {
       ptyTerm.destroy();
       this._ptyMap.delete(ptyId);
     });
-  
+
     ptyTerm.onAvailableWriteBufferSizeChange( (bufferSizeChange: BufferSizeChange) => {
       this._onPtyAvailableWriteBufferSizeChangeEventEmitter.fire({ptyId, bufferSizeChange});
     });
-  
+
     return ptyId;
   }
 
@@ -127,9 +126,9 @@ export class PtyManager implements AcceptsConfigDatabase {
       this._log.debug("handlePtyInput() WARNING: Input arrived for a terminal which doesn't exist.");
       return;
     }
-  
+
     ptyTerminalTuple.ptyTerm.write(data);
-  } 
+  }
 
   ptyOutputBufferSize(ptyId: number, size: number): void {
     const ptyTerminalTuple = this._ptyMap.get(ptyId);
@@ -137,13 +136,13 @@ export class PtyManager implements AcceptsConfigDatabase {
       this._log.debug("handlePtyOutputBufferSize() WARNING: Input arrived for a terminal which doesn't exist.");
       return;
     }
-  
+
     if (LOG_FINE) {
       this._log.debug(`Received Output Buffer Size message. id: ${ptyId}, size: ${size}`);
     }
     ptyTerminalTuple.ptyTerm.permittedDataSize(size);
   }
-  
+
   ptyResize(ptyId: number, columns: number, rows: number): void {
     const ptyTerminalTuple = this._ptyMap.get(ptyId);
     if (ptyTerminalTuple === undefined) {
@@ -152,7 +151,7 @@ export class PtyManager implements AcceptsConfigDatabase {
     }
     ptyTerminalTuple.ptyTerm.resize(columns, rows);
   }
-  
+
   closePty(ptyId: number): void {
     const ptyTerminalTuple = this._ptyMap.get(ptyId);
     if (ptyTerminalTuple === undefined) {
@@ -162,7 +161,7 @@ export class PtyManager implements AcceptsConfigDatabase {
     ptyTerminalTuple.ptyTerm.destroy();
     this._ptyMap.delete(ptyId);
   }
-  
+
   private _logData(data: string): void {
     this._log.debug(substituteBadChars(data));
   }
@@ -209,7 +208,7 @@ function formatJSData(data: string, maxLen: number = 60): string {
       buf = "";
     }
   }
-  
+
   if (buf !== "") {
     result += "\"" + buf + "\"\n";
   }

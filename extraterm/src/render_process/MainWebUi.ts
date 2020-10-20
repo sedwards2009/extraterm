@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as he from 'he';
-import { BulkFileHandle, SessionConfiguration } from '@extraterm/extraterm-extension-api';
+import { BulkFileHandle, SessionConfiguration, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -604,8 +604,14 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
       "COLORTERM": "truecolor",   // Advertise that we support 24bit color
     };
-    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, extraEnv, newTerminal.getColumns(),
-      newTerminal.getRows());
+
+    const sessionOptions: CreateSessionOptions = {
+      extraEnv,
+      cols: newTerminal.getColumns(),
+      rows: newTerminal.getRows()
+    };
+
+    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionOptions);
     pty.onExit(() => {
       this.closeTab(newTerminal);
     });

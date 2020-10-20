@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -8,7 +8,7 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
-import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme } from '@extraterm/extraterm-extension-api';
+import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 
 import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
@@ -187,17 +187,7 @@ export interface ThemeRescan extends Message {
 export interface CreatePtyRequestMessage extends Message {
   sessionUuid: string;
 
-  env: EnvironmentMap;
-
-  /**
-   * The width of the terminal screen/area in characters.
-   */
-  columns: number;
-
-  /**
-   * The height of the terminal screen/area in charactors or rows.
-   */
-  rows: number;
+  sessionOptions: CreateSessionOptions;
 }
 
 /**

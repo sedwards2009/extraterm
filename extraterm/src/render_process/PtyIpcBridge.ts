@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Event, EnvironmentMap} from '@extraterm/extraterm-extension-api';
+import {Event, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
 
 import {Pty, BufferSizeChange} from '../pty/Pty';
 import {EventEmitter} from '../utils/EventEmitter';
@@ -32,12 +32,11 @@ export class PtyIpcBridge {
     WebIpc.registerDefaultHandler(Messages.MessageType.PTY_CLOSE, this._handlePtyClose.bind(this));
   }
 
-  createPtyForTerminal(sessionUuid: string, extraEnv: EnvironmentMap, columns: number, rows: number): Pty {
+  createPtyForTerminal(sessionUuid: string, sessionOptions: CreateSessionOptions): Pty {
     const ptyImpl = new PtyImpl();
-    ptyImpl.resize(columns, rows);
+    ptyImpl.resize(sessionOptions.cols, sessionOptions.rows);
 
-    WebIpc.requestPtyCreate(sessionUuid, extraEnv, columns, rows)
-    .then( (msg: Messages.CreatedPtyMessage) => {
+    WebIpc.requestPtyCreate(sessionUuid, sessionOptions).then( (msg: Messages.CreatedPtyMessage) => {
       ptyImpl._ptyId = msg.id;
 
       this._idToPtyImplMap.set(msg.id, ptyImpl);
@@ -89,7 +88,7 @@ export class PtyIpcBridge {
 
 
 class PtyImpl implements Pty {
-  
+
   private _log: Logger;
 
   _ptyId: number = null;
@@ -105,7 +104,7 @@ class PtyImpl implements Pty {
 
   constructor() {
     this._log = getLogger("PtyImpl", this);
-    
+
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
     this.onData = this._onDataEventEmitter.event;
     this.onExit = this._onExitEventEmitter.event;

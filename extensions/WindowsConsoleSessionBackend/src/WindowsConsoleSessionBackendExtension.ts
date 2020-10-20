@@ -7,7 +7,7 @@ import * as constants from 'constants';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
-import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap } from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import { WindowsConsolePty, PtyOptions } from './WindowsConsolePty';
@@ -22,7 +22,7 @@ class WindowsConsoleBackend implements SessionBackend {
 
   constructor(private _log: Logger) {
   }
-  
+
   defaultSessionConfigurations(): SessionConfiguration[] {
     const defaultSessions: WindowsConsoleSessionConfiguration[] = [];
 
@@ -60,9 +60,9 @@ class WindowsConsoleBackend implements SessionBackend {
     return defaultSessions;
   }
 
-  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
+  createSession(sessionConfiguration: SessionConfiguration, sessionOptions: CreateSessionOptions): Pty {
     const sessionConfig = <WindowsConsoleSessionConfiguration> sessionConfiguration;
-    
+
     let exe = sessionConfig.exe;
     let preMessage = "";
     const args = ShellStringParser(sessionConfig.args);
@@ -74,8 +74,8 @@ class WindowsConsoleBackend implements SessionBackend {
 
     const ptyEnv = _.cloneDeep(process.env);
     let prop: string;
-    for (prop in extraEnv) {
-      ptyEnv[prop] = extraEnv[prop];
+    for (prop in sessionOptions.extraEnv) {
+      ptyEnv[prop] = sessionOptions.extraEnv[prop];
     }
 
     let cwd = sessionConfig.initialDirectory || null;
@@ -100,7 +100,7 @@ class WindowsConsoleBackend implements SessionBackend {
     };
     return new WindowsConsolePty(this._log, options);
   }
-  
+
   private _validateExe(exe: string): boolean {
     if (path.isAbsolute(exe)) {
       return this._validateExePath(exe);
@@ -141,7 +141,7 @@ class WindowsConsoleBackend implements SessionBackend {
         return "Path isn't readable";
       }
       return "errno: " +  err.errno + ", err.code: " + err.code;
-    } 
+    }
     return null;
   }
 }

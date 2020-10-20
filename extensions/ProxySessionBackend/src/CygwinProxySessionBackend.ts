@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import { app } from 'electron';
 
-import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap} from '@extraterm/extraterm-extension-api';
+import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import * as SourceDir from './SourceDir';
@@ -28,12 +28,12 @@ interface PasswdLine {
 }
 
 export class CygwinProxySessionBackend implements SessionBackend {
-  
+
   private _connectors = new Map<string, ProxyPtyConnector>();
 
   constructor(private _log: Logger) {
   }
-  
+
   defaultSessionConfigurations(): SessionConfiguration[] {
     // Find a default cygwin installation.
     let cygwinDir = this._findCygwinInstallation();
@@ -63,7 +63,7 @@ export class CygwinProxySessionBackend implements SessionBackend {
       const parts = regResult.split(/\r/g);
       const regsz = parts[2].indexOf("REG_SZ");
       const cygwinDir = parts[2].slice(regsz+6).trim();
-      
+
       if (fs.existsSync(cygwinDir)) {
         this._log.info("Found cygwin installation at " + cygwinDir);
         return cygwinDir;
@@ -77,7 +77,7 @@ export class CygwinProxySessionBackend implements SessionBackend {
       return null;
     }
   }
-  
+
   private _findBabunCygwinInstallation(): string {
     const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
     if (fs.existsSync(cygwinDir)) {
@@ -88,29 +88,29 @@ export class CygwinProxySessionBackend implements SessionBackend {
       return null;
     }
   }
-  
-  createSession(sessionConfiguration: SessionConfiguration, extraEnv: EnvironmentMap, cols: number, rows: number): Pty {
+
+  createSession(sessionConfiguration: SessionConfiguration, sessionOptions: CreateSessionOptions): Pty {
     const sessionConfig = <CygwinProxySessionConfiguration> sessionConfiguration;
     const {homeDir, defaultShell} = this._getDefaultCygwinConfig(sessionConfig.cygwinPath);
     const shell = sessionConfig.useDefaultShell ? defaultShell : sessionConfig.shell;
 
     const args = ["-l"].concat(ShellStringParser(sessionConfig.args));
-    
+
     const ptyEnv = _.cloneDeep(process.env);
     ptyEnv["TERM"] = "xterm-256color";
     ptyEnv["HOME"] = homeDir;
 
     let prop: string;
-    for (prop in extraEnv) {
-      ptyEnv[prop] = extraEnv[prop];
+    for (prop in sessionOptions.extraEnv) {
+      ptyEnv[prop] = sessionOptions.extraEnv[prop];
     }
 
     const options: PtyOptions = {
       exe: shell,
       args,
       env: ptyEnv,
-      cols,
-      rows,
+      cols: sessionOptions.cols,
+      rows: sessionOptions.rows,
     };
 
     if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
@@ -123,7 +123,7 @@ export class CygwinProxySessionBackend implements SessionBackend {
         `Unable to find a suitable python executable in cygwin installation '${sessionConfig.cygwinPath}'`);
     }
     const connector = this._getConnector(pythonExe);
-      
+
     return connector.spawn(options);
   }
 
@@ -138,11 +138,11 @@ export class CygwinProxySessionBackend implements SessionBackend {
     }
     return null;
   }
-  
+
   private _getDefaultCygwinConfig(cygwinDir: string): {defaultShell: string, homeDir: string} {
     let defaultShell: string = null;
     let homeDir: string = null;
-    
+
     const passwdPath = path.join(cygwinDir, "etc", "passwd");
     if (fs.existsSync(passwdPath)) {
       // Get the info from /etc/passwd
@@ -154,13 +154,13 @@ export class CygwinProxySessionBackend implements SessionBackend {
         homeDir = userRecords[0].homeDir;
       }
     }
-    
+
     if (homeDir === null) {
       // Couldn't get the info we needed from /etc/passwd. Cygwin doesn't make a /etc/passwd by default anymore.
       defaultShell = "/bin/bash";
       homeDir = "/home/" + process.env["USERNAME"];
     }
-    
+
     return {defaultShell, homeDir};
   }
 
