@@ -1,13 +1,14 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {EventEmitter} from "extraterm-event-emitter";
 import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from "@extraterm/extraterm-extension-api";
-import * as pty from "node-pty";
 import * as _ from "lodash";
+import * as child_process from 'child_process';
 import * as fs from "fs";
+import * as pty from "node-pty";
 
 
 const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
@@ -137,7 +138,7 @@ export class UnixPty implements Pty {
     if (process.platform === "linux") {
       return this._getLinuxWorkingDirectory();
     } else if (process.platform === "darwin") {
-      return null;
+      return this._getDarwinWorkingDirectory();
     } else {
       return null;
     }
@@ -146,6 +147,25 @@ export class UnixPty implements Pty {
   private async _getLinuxWorkingDirectory(): Promise<string> {
     try {
       const cwd = await fs.promises.readlink(`/proc/${this.realPty.pid}/cwd`, {encoding: "utf8"});
+      return cwd;
+    } catch (err) {
+      this._log.warn(err);
+    }
+    return null;
+  }
+
+  private async _getDarwinWorkingDirectory(): Promise<string> {
+    try {
+      const lsofParams = ["-a", "-d", "cwd", "-p", "" + this.realPty.pid, "-F", "n0"];  // 'n0'=path and nul delimited
+      const output = child_process.execFileSync("/usr/sbin/lsof", lsofParams, {encoding: "utf8"});
+
+      let cwd: string = null;
+      const parts = output.split("\x00");
+      for (const part of parts) {
+        if (part.startsWith("n")) {
+          cwd = part.substring(1);
+        }
+      }
       return cwd;
     } catch (err) {
       this._log.warn(err);
