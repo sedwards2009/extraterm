@@ -134,6 +134,15 @@ export function ptyClose(id: number): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
+export async function ptyGetWorkingDirectory(id: number): Promise<string> {
+  const msg: Messages.PtyGetWorkingDirectoryRequest = {
+    type: Messages.MessageType.PTY_GET_WORKING_DIRECTORY_REQUEST,
+    id
+  };
+  const response = <Messages.PtyGetWorkingDirectory> await request(msg, Messages.MessageType.PTY_GET_WORKING_DIRECTORY);
+  return response.workingDirectory;
+}
+
 export function devToolsRequest(open: boolean): void {
   const msg: Messages.DevToolsRequestMessage = { type: Messages.MessageType.DEV_TOOLS_REQUEST, open: open };
   ipc.send(Messages.CHANNEL_NAME, msg);

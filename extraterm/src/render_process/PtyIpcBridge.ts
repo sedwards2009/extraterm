@@ -168,4 +168,8 @@ class PtyImpl implements Pty {
       WebIpc.ptyClose(this._ptyId);
     }
   }
+
+  async getWorkingDirectory(): Promise<string> {
+    return await WebIpc.ptyGetWorkingDirectory(this._ptyId);
+  }
 }

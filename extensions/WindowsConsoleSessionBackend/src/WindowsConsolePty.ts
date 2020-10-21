@@ -126,4 +126,8 @@ export class WindowsConsolePty implements Pty {
       }
     }
   }
+
+  async getWorkingDirectory(): Promise<string | null> {
+    return null;
+  }
 }

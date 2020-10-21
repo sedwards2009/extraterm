@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -41,8 +41,10 @@ export interface Pty {
    * Destroy the pty and shut down the attached process
    */
   destroy(): void;
-  
+
   onData: Event<string>;
-  
+
   onExit: Event<void>;
+
+  getWorkingDirectory(): Promise<string>;
 }

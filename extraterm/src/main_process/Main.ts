@@ -922,6 +922,10 @@ function handleIpc(event: Electron.IpcMainEvent, arg: any): void {
       handlePtyResize(<Messages.PtyResize> msg);
       break;
 
+    case Messages.MessageType.PTY_GET_WORKING_DIRECTORY_REQUEST:
+      handlePtyGetWorkingDirectory(<Messages.PtyGetWorkingDirectoryRequest> msg, event.sender);
+      break;
+
     case Messages.MessageType.QUIT_APPLICATION_REQUEST:
       handleQuitApplicationRequest();
       break;
@@ -1164,6 +1168,22 @@ function cleanUpPtyWindow(webContentsId: number): void {
   for (const ptyId of closedPtyList) {
     ptyToSenderMap.delete(ptyId);
   }
+}
+
+async function handlePtyGetWorkingDirectory(msg: Messages.PtyGetWorkingDirectoryRequest,
+    sender: Electron.WebContents): Promise<void> {
+  const workingDirectory = await ptyManager.ptyGetWorkingDirectory(msg.id);
+
+  const reply: Messages.PtyGetWorkingDirectory = {
+    type: Messages.MessageType.PTY_GET_WORKING_DIRECTORY,
+    id: msg.id,
+    workingDirectory
+  };
+
+  if (LOG_FINE) {
+    _log.debug("Replying: ", reply);
+  }
+  sender.send(Messages.CHANNEL_NAME, reply);
 }
 
 //-------------------------------------------------------------------------

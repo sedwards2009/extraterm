@@ -327,9 +327,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
             el = el.parentElement;
           }
           if (this._configManager.getConfig(SESSION_CONFIG).length !== 0) {
-            const  newTerminal = this.newTerminalTab(<TabWidget> el, this._configManager.getConfig(SESSION_CONFIG)[0].uuid);
-            this._switchToTab(newTerminal);
-            this._extensionManager.newTerminalCreated(newTerminal);
+            const sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
+            this.commandNewTerminal({sessionUuid});
           }
         }
       }
@@ -560,7 +559,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
-  private newTerminalTab(tabWidget: TabWidget, sessionUuid: string): EtTerminal {
+  private newTerminalTab(tabWidget: TabWidget, sessionUuid: string, workingDirectory: string): EtTerminal {
     if (tabWidget == null) {
       tabWidget = this._splitLayout.firstTabWidget();
     }
@@ -582,7 +581,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     this._addTab(tabWidget, newTerminal);
     this._setUpNewTerminalEventHandlers(newTerminal);
-    this._createPtyForTerminal(newTerminal, sessionUuid);
+    this._createPtyForTerminal(newTerminal, sessionUuid, workingDirectory);
     this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
@@ -599,7 +598,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return null;
   }
 
-  private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string): void {
+  private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string, workingDirectory: string): void {
     const extraEnv = {
       [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
       "COLORTERM": "truecolor",   // Advertise that we support 24bit color
@@ -610,6 +609,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       cols: newTerminal.getColumns(),
       rows: newTerminal.getRows()
     };
+
+    if (workingDirectory != null) {
+      sessionOptions.workingDirectory = workingDirectory;
+    }
 
     const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionOptions);
     pty.onExit(() => {
@@ -1057,13 +1060,20 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return this._extensionManager.getActiveTabWidget();
   }
 
-  commandNewTerminal(args: any): void {
+  async commandNewTerminal(args: {sessionUuid: string}): Promise<void> {
     let sessionUuid = args.sessionUuid;
     if (sessionUuid == null) {
       sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
     }
 
-    const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionUuid);
+    let workingDirectory = null;
+    const activeTerminal = this._extensionManager.getActiveTerminal();
+    if (activeTerminal != null) {
+      workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
+      this._log.debug(`pty.getWorkingDirectory() test : ${workingDirectory}`);
+    }
+
+    const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionUuid, workingDirectory);
     this._switchToTab(newTerminal);
     this._extensionManager.newTerminalCreated(newTerminal);
   }

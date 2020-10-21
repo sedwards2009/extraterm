@@ -67,6 +67,8 @@ export enum MessageType {
   PTY_OUTPUT_BUFFER_SIZE,
   PTY_OUTPUT,
   PTY_RESIZE,
+  PTY_GET_WORKING_DIRECTORY_REQUEST,
+  PTY_GET_WORKING_DIRECTORY,
   QUIT_APPLICATION_REQUEST,
   QUIT_APPLICATION,
   TERMINAL_THEME_REQUEST,
@@ -306,6 +308,24 @@ export interface PtyCloseRequest extends Message {
    */
   id: number;
 }
+
+
+export interface PtyGetWorkingDirectoryRequest extends Message {
+  /**
+   * The ID of the PTY this message refers to.
+   */
+  id: number;
+}
+
+export interface PtyGetWorkingDirectory extends Message {
+  /**
+   * The ID of the PTY this message refers to.
+   */
+  id: number;
+
+  workingDirectory: string;
+}
+
 
 // ********************************************************************
 /**

@@ -3,10 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {EventEmitter} from 'extraterm-event-emitter';
-import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from '@extraterm/extraterm-extension-api';
-import * as pty from 'node-pty';
-import * as _ from 'lodash';
+import {EventEmitter} from "extraterm-event-emitter";
+import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from "@extraterm/extraterm-extension-api";
+import * as pty from "node-pty";
+import * as _ from "lodash";
+import * as fs from "fs";
 
 
 const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
@@ -130,5 +131,25 @@ export class UnixPty implements Pty {
         this.realPty.pause();
       }
     }
+  }
+
+  async getWorkingDirectory(): Promise<string> {
+    if (process.platform === "linux") {
+      return this._getLinuxWorkingDirectory();
+    } else if (process.platform === "darwin") {
+      return null;
+    } else {
+      return null;
+    }
+  }
+
+  private async _getLinuxWorkingDirectory(): Promise<string> {
+    try {
+      const cwd = await fs.promises.readlink(`/proc/${this.realPty.pid}/cwd`, {encoding: "utf8"});
+      return cwd;
+    } catch (err) {
+      this._log.warn(err);
+    }
+    return null;
   }
 }

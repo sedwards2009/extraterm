@@ -162,6 +162,15 @@ export class PtyManager implements AcceptsConfigDatabase {
     this._ptyMap.delete(ptyId);
   }
 
+  async ptyGetWorkingDirectory(ptyId: number): Promise<string> {
+    const ptyTerminalTuple = this._ptyMap.get(ptyId);
+    if (ptyTerminalTuple === undefined) {
+      this._log.debug("handlePtyGetWorkingDirectory() WARNING: Request arrived for a terminal which doesn't exist.");
+      return null;
+    }
+    return await ptyTerminalTuple.ptyTerm.getWorkingDirectory();
+  }
+
   private _logData(data: string): void {
     this._log.debug(substituteBadChars(data));
   }

@@ -194,6 +194,10 @@ class ProxyPty implements Pty {
     const msg: CloseMessage = { type: TYPE_CLOSE, id: this._id };
     this._writeMessage(this._id, msg);
   }
+
+  async getWorkingDirectory(): Promise<string | null> {
+    return null;
+  }
 }
 
 export abstract class ProxyPtyConnector {
