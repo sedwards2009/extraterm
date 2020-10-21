@@ -559,12 +559,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
-  private newTerminalTab(tabWidget: TabWidget, sessionUuid: string, workingDirectory: string): EtTerminal {
+  private newTerminalTab(tabWidget: TabWidget, sessionConfiguration: SessionConfiguration, workingDirectory: string): EtTerminal {
     if (tabWidget == null) {
       tabWidget = this._splitLayout.firstTabWidget();
     }
-
-    const sessionConfiguration = this._getSessionByUuid(sessionUuid);
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setWindowId(this.windowId);
@@ -581,7 +579,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     this._addTab(tabWidget, newTerminal);
     this._setUpNewTerminalEventHandlers(newTerminal);
-    this._createPtyForTerminal(newTerminal, sessionUuid, workingDirectory);
+    this._createPtyForTerminal(newTerminal, sessionConfiguration.uuid, workingDirectory);
     this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
@@ -1066,14 +1064,16 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
     }
 
+    const sessionConfiguration = this._getSessionByUuid(sessionUuid);
+
     let workingDirectory = null;
     const activeTerminal = this._extensionManager.getActiveTerminal();
-    if (activeTerminal != null) {
+    if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
       workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
       this._log.debug(`pty.getWorkingDirectory() test : ${workingDirectory}`);
     }
 
-    const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionUuid, workingDirectory);
+    const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionConfiguration, workingDirectory);
     this._switchToTab(newTerminal);
     this._extensionManager.newTerminalCreated(newTerminal);
   }
