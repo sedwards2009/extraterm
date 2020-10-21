@@ -588,6 +588,9 @@ export interface ExtensionSessionEditorBaseConstructor {
   new(...any: any[]): ExtensionSessionEditorBase;
 }
 
+/**
+ * Simple object based string key to string value map used to hold environment variables.
+ */
 export interface EnvironmentMap {
   [key: string]: string;
 }
@@ -611,9 +614,24 @@ export interface SessionBackend {
  * Extra options passed during session creation.
  */
 export interface CreateSessionOptions {
+  /**
+   * Extra environment variables to set in the new terminal session.
+   */
   extraEnv: EnvironmentMap;
+
+  /**
+   * The initial number of columns this terminal has.
+   */
   cols: number;
+
+  /**
+   * The inital number of rows this terminal has.
+   */
   rows: number;
+
+  /**
+   * A suggested directory in which this terminal session should start in.
+   */
   workingDirectory?: string;
 }
 
@@ -656,6 +674,13 @@ export interface Pty {
   onData: Event<string>;
 
   onExit: Event<void>;
+
+  /**
+   * Get the working directory of the process on the other side of this PTY.
+   *
+   * @return The working directory or null if it could not be determined.
+   */
+  getWorkingDirectory(): Promise<string | null>;
 }
 
 /**
