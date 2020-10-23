@@ -7,7 +7,7 @@ import * as constants from 'constants';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
-import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import { WindowsConsolePty, PtyOptions } from './WindowsConsolePty';
@@ -78,23 +78,39 @@ class WindowsConsoleBackend implements SessionBackend {
       ptyEnv[prop] = sessionOptions.extraEnv[prop];
     }
 
-    let cwd = sessionConfig.initialDirectory || null;
-    if (cwd == null || cwd === "") {
-      cwd = process.env.HOME;
-    } else {
+    let cwd: string = null;
+
+    if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
       const dirError = this._validateDirectoryPath(cwd);
       if (dirError != null) {
         preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${cwd}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
-        cwd = process.env.HOME;
+      } else {
+        cwd = sessionConfig.initialDirectory;
       }
+    }
+
+    if (cwd == null && sessionOptions.workingDirectory != null && sessionOptions.workingDirectory !== "") {
+      const dirError = this._validateDirectoryPath(sessionOptions.workingDirectory);
+      if (dirError == null) {
+        cwd = sessionOptions.workingDirectory;
+      }
+    }
+
+    if (cwd == null) {
+      cwd = process.env.HOME;
+    }
+
+    const dirError = this._validateDirectoryPath(cwd);
+    if (dirError != null) {
+      preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${cwd}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
     }
 
     const options: PtyOptions = {
       exe: exe,
       args: args,
       env: ptyEnv,
-      cols: 80, //cols,
-      rows: 24, //rows,
+      cols: sessionOptions.cols,
+      rows: sessionOptions.rows,
       cwd,
       preMessage
     };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,7 +7,7 @@ import {EventEmitter} from 'extraterm-event-emitter';
 import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from '@extraterm/extraterm-extension-api';
 import * as pty from 'node-pty';
 import * as _ from 'lodash';
-
+const pidCwd = require('pid-cwd');
 
 const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
 
@@ -128,6 +128,10 @@ export class WindowsConsolePty implements Pty {
   }
 
   async getWorkingDirectory(): Promise<string | null> {
-    return null;
+    // Note: This doesn't work for PowerShell processes because PS doesn't
+    // change its working directory on an OS level when you `cd` through your
+    // filesystems.
+    // See https://www.itprotoday.com/powershell/why-powershell-working-directory-and-powershell-location-arent-one-same
+    return pidCwd(this.realPty.pid);
   }
 }
