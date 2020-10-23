@@ -44,5 +44,5 @@ export interface FontSlice {
    */
   sampleChars?: string[];
 
-  unicodeCodePoints?: number[];
+  unicodeCodePoints?: (number | [number, number])[];
 }

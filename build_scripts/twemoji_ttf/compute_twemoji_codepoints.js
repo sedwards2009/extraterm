@@ -25,11 +25,11 @@ async function main() {
   const codePoints = extractCodePointsFromJson(contents);
   sortCodePoints(codePoints);
 
-  dumpCodePoints(codePoints);
+  dumpCodePointRangesJS(codePoints);
   log("");
   log("//--------------------------------------------------------------------");
   log("// Unicode ranges");
-  dumpCodePointRanges(codePoints);
+  dumpCodePointRangesCSS(codePoints);
   log("");
 }
 
@@ -125,7 +125,23 @@ function dumpCodePoints(codePoints) {
   log(parts.join(""));
 }
 
-function dumpCodePointRanges(codePoints) {
+function dumpCodePointRangesCSS(codePoints) {
+  const formatCodePoint = (rangeStart) => `U+${hex4(rangeStart)}, `;
+  const formatCodePointRange = (rangeStart, lastCodePoint) => `U+${hex4(rangeStart)}-${hex4(lastCodePoint)}, `;
+
+  const shortCodePoints = codePoints.filter(cp => cp < 0x1f000);
+
+  log(formatCodePointRanges(shortCodePoints, formatCodePoint, formatCodePointRange));
+  log(formatCodePointRange(0x1f000, 0x1ffff));
+}
+
+function dumpCodePointRangesJS(codePoints) {
+  const formatCodePoint = (rangeStart) => `0x${hex4(rangeStart)}, `;
+  const formatCodePointRange = (rangeStart, lastCodePoint) => `[0x${hex4(rangeStart)}, 0x${hex4(lastCodePoint)}], `;
+  log(formatCodePointRanges(codePoints, formatCodePoint, formatCodePointRange));
+}
+
+function formatCodePointRanges(codePoints, formatCodePoint, formatCodePointRange) {
   let lastCodePoint = -1;
   let rangeStart = -1;
   codePoints = [...codePoints, -1]; // Extra values make terminating the loop easier.
@@ -133,16 +149,12 @@ function dumpCodePointRanges(codePoints) {
   const parts = [];
 
   for (const p of codePoints) {
-    if (p >= 0x1f000) {
-      continue;
-    }
-
     if (p !== lastCodePoint +1) {
       if (rangeStart !== -1) {
         if (rangeStart === lastCodePoint) {
-          parts.push(`U+${hex4(rangeStart)}, `);
+          parts.push(formatCodePoint(rangeStart));
         } else {
-          parts.push(`U+${hex4(rangeStart)}-${hex4(lastCodePoint)}, `);
+          parts.push(formatCodePointRange(rangeStart, lastCodePoint));
         }
       }
       rangeStart = p;
@@ -150,9 +162,7 @@ function dumpCodePointRanges(codePoints) {
     lastCodePoint = p;
   }
 
-  parts.push(`U+1f000-1ffff`);
-
-  log(parts.join(""));
+  return parts.join("");
 }
 
 function hex4(n) {

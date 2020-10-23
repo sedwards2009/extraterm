@@ -262,7 +262,7 @@ export class WebGLCharRenderCanvas implements Disposable {
     return extraFonts.map(extraFont => {
       let codePointSet: Set<number> = null;
       if (extraFont.unicodeCodePoints != null) {
-        codePointSet = new Set<number>(extraFont.unicodeCodePoints);
+        codePointSet = this._createCodePointSet(extraFont.unicodeCodePoints);
       }
 
       if (extraFont.unicodeStart != null && extraFont.unicodeEnd != null) {
@@ -276,6 +276,22 @@ export class WebGLCharRenderCanvas implements Disposable {
 
       return { ...extraFont, codePointSet };
     });
+  }
+
+  private _createCodePointSet(unicodeCodePoints: (number | [number, number])[]): Set<number> {
+    const result = new Set<number>();
+    for (const codePoint of unicodeCodePoints) {
+      if (typeof codePoint === "number") {
+        result.add(codePoint);
+      } else {
+        const startCodePoint = codePoint[0];
+        const endCodePoint = codePoint[1];
+        for (let i=startCodePoint; i<=endCodePoint; i++) {
+          result.add(i);
+        }
+      }
+    }
+    return result;
   }
 
   private _paintInRightGapBackground(): void {
