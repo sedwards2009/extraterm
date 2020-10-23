@@ -122,7 +122,8 @@ export class WslProxySessionBackend implements SessionBackend {
       env: null,
       extraEnv: extraPtyEnv,
       cols: sessionOptions.cols,
-      rows: sessionOptions.rows
+      rows: sessionOptions.rows,
+      suggestedCwd: sessionOptions.workingDirectory || null
     };
 
     if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {

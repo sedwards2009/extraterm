@@ -19,6 +19,7 @@ export interface PtyOptions {
   cwd?: string;
   env?: EnvironmentMap;
   extraEnv?: EnvironmentMap;
+  suggestedCwd?: string;
 }
 
 
@@ -37,6 +38,9 @@ const TYPE_CLOSED = "closed";
 const TYPE_TERMINATE = "terminate";
 const TYPE_PERMIT_DATA_SIZE = "permit-data-size";
 const TYPE_OUTPUT_WRITTEN = "output-written";
+const TYPE_GET_WORKING_DIRECTORY_REQUEST = "get-working-directory";
+const TYPE_GET_WORKING_DIRECTORY = "working-directory";
+
 
 interface ProxyMessage {
   type: string;
@@ -50,6 +54,7 @@ interface CreatePtyMessage extends ProxyMessage {
   env: { [key: string]: string; };
   extraEnv: { [key: string]: string; };
   cwd: string;
+  suggestedCwd: string;
 
   // the id field is not user for this message type.
 }
@@ -88,6 +93,13 @@ interface ClosedMessage extends ProxyMessage {
 interface TerminateMessage extends ProxyMessage {
 }
 
+interface GetWorkingDirectoryRequestMessage extends ProxyMessage {
+}
+
+interface GetWorkingDirectoryMessage extends ProxyMessage {
+  cwd: string;
+}
+
 const NULL_ID = -1;
 
 
@@ -109,6 +121,8 @@ class ProxyPty implements Pty {
   onData: Event<string>;
   onExit: Event<void>;
   onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
+
+  private _workingDirectoryResponseQueue: ( (cwd: string) => void )[] = [];
 
   constructor(writeFunc: (msg: ProxyMessage) => void) {
     this._writeFunc = writeFunc;
@@ -195,8 +209,22 @@ class ProxyPty implements Pty {
     this._writeMessage(this._id, msg);
   }
 
-  async getWorkingDirectory(): Promise<string | null> {
-    return null;
+  getWorkingDirectory(): Promise<string | null> {
+    const msg: GetWorkingDirectoryRequestMessage = { type: TYPE_GET_WORKING_DIRECTORY_REQUEST, id: this._id };
+    return new Promise<string | null>( (resolve, reject) => {
+      this._writeMessage(this._id, msg);
+      this._workingDirectoryResponseQueue.push(resolve);
+    } );
+  }
+
+  workingDirectoryResponse(cwd: string): void {
+    if (this._workingDirectoryResponseQueue.length === 0) {
+      return;
+    }
+    const resolve = this._workingDirectoryResponseQueue[0];
+    this._workingDirectoryResponseQueue.splice(0, 1);
+
+    resolve(cwd);
   }
 }
 
@@ -261,8 +289,17 @@ export abstract class ProxyPtyConnector {
     }
     const pty = new ProxyPty(this._sendMessage.bind(this));
     this._ptys.push(pty);
-    const msg: CreatePtyMessage = { type: TYPE_CREATE, argv: [file, ...args], rows: rows, columns: columns,
-      id: NULL_ID, env: options.env, extraEnv: options.extraEnv == null ? {} : options.extraEnv, cwd: options.cwd || null};
+    const msg: CreatePtyMessage = {
+      type: TYPE_CREATE,
+      argv: [file, ...args],
+      rows,
+      columns,
+      id: NULL_ID,
+      env: options.env,
+      extraEnv: options.extraEnv == null ? {} : options.extraEnv,
+      cwd: options.cwd || null,
+      suggestedCwd: options.suggestedCwd == null ? "" : options.suggestedCwd,
+    };
     this._sendMessage(msg);
     return pty;
   }
@@ -332,6 +369,14 @@ export abstract class ProxyPtyConnector {
       const pty = this._findPtyById(outputWrittenMsg.id);
       if (pty !== null) {
         pty._charsWritten(outputWrittenMsg.chars);
+      }
+    }
+
+    if (msgType === TYPE_GET_WORKING_DIRECTORY) {
+      const getWorkingDirectoryMsg = <GetWorkingDirectoryMessage> msg;
+      const pty = this._findPtyById(getWorkingDirectoryMsg.id);
+      if (pty !== null) {
+        pty.workingDirectoryResponse(getWorkingDirectoryMsg.cwd);
       }
     }
   }
