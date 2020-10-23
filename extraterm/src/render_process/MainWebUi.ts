@@ -1070,7 +1070,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const activeTerminal = this._extensionManager.getActiveTerminal();
     if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
       workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
-      this._log.debug(`pty.getWorkingDirectory() test : ${workingDirectory}`);
     }
 
     const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionConfiguration, workingDirectory);
