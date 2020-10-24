@@ -235,11 +235,17 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     const textYPx = yPx + this._metrics.fillTextYOffset;
 
     let shrink = false;
-    if (widthInCells === 1 && fontIndex !== 0) {
-      // Scale extra fonts to fit the cell on a per glyph basis.
+    if (widthInCells === 1 && (fontIndex !== 0 || this._isSymbol(codePoint))) {
+      // Probe and possibly scale glyphs which fall outside their 1 cell.
+      // * Symbols have a habit of being too big even if the font is meant
+      //   to be a monospace and the glyph is meant to be just one cell.
+      // * Extra fonts often have different width compared to our base font.
+      //   We chell all of them.
       const charMetrics = ctx.measureText(str);
       const measuredWidth = charMetrics.actualBoundingBoxRight - charMetrics.actualBoundingBoxLeft;
-      if (measuredWidth > this._metrics.widthPx) {
+      if (measuredWidth > 1.25 * this._metrics.widthPx) {
+        // We give a 25% leniency to avoid catching glyphs which render
+        // slightly outside the cell.
         shrink = true;
       }
     }
@@ -268,6 +274,10 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
         ctx.restore();
       }
     }
+  }
+
+  private _isSymbol(codePoint: number): boolean {
+    return  (codePoint >= 0x2000 && codePoint < 0x2c00) || (codePoint & 0x1f000) === 0x1f000;
   }
 
   private _drawDecoration(ctx: CanvasRenderingContext2D, style: StyleCode, xPx: number, yPx: number,
