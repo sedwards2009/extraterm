@@ -92,7 +92,7 @@ export class ContextMenu extends ThemeableElementBase {
 
   protected _render(): void {
     const handleCoverContextmenu = {
-      handlEvent: this._handleCoverContextmenu,
+      handleEvent: this._handleCoverContextmenu,
       capture: true,
     };
 
