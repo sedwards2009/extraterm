@@ -200,12 +200,16 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     if ( ! this._elementAttached) {
       this._elementAttached = true;
 
-      const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+      const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
       const clone = this._createClone();
       shadow.appendChild(clone);
 
-      this.addEventListener('focus', this._handleFocus.bind(this));
-      this.addEventListener('blur', this._handleBlur.bind(this));
+      this.addEventListener("focus", this._handleFocus.bind(this));
+      this.addEventListener("blur", this._handleBlur.bind(this));
+      this.addEventListener("drop", this._handleDrop.bind(this));
+      this.addEventListener("dragenter", this._handleDragEnter.bind(this));
+      this.addEventListener("dragover", this._handleDragOver.bind(this));
+      this.addEventListener("dragleave", this._handleDragLeave.bind(this));
 
       this._terminalCanvas = new TerminalCanvas();
       this._terminalCanvas.setConfigDatabase(this._configDatabase);
@@ -218,14 +222,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._terminalCanvas.connectedCallback();
 
       // Set up the emulator
-      this._cookie = crypto.randomBytes(10).toString('hex');
+      this._cookie = crypto.randomBytes(10).toString("hex");
       process.env[EXTRATERM_COOKIE_ENV] = this._cookie;
       this._initEmulator(this._cookie);
       this._appendNewTerminalViewer();
 
       this.updateThemeCss();
 
-      this._terminalCanvas.addEventListener('mousedown', ev => this._handleMouseDownCapture(ev));
+      this._terminalCanvas.addEventListener("mousedown", ev => this._handleMouseDownCapture(ev));
       this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
         const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
         this.sendToPty(detail.text);
@@ -1436,7 +1440,61 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   removeElementFromBorder(element: HTMLElement): void {
     this._containerElement.removeChild(element);
   }
+
+  private _handleDragEnter(ev: DragEvent): void {
+    if (this._isDragTypeSupported(ev)) {
+      ev.preventDefault();
+    }
+  }
+
+  private _handleDragOver(ev: DragEvent): void {
+    if (this._isDragTypeSupported(ev)) {
+      ev.dataTransfer.dropEffect = "copy";
+      ev.preventDefault();
+    }
+  }
+
+  private _handleDragLeave(ev: DragEvent): void {
+    if (this._isDragTypeSupported(ev)) {
+      ev.preventDefault();
+    }
+  }
+
+  private _handleDrop(ev: DragEvent): void {
+    if (this._isDragTypeSupported(ev)) {
+      this._sendDroppedPathsToPty(ev);
+      ev.preventDefault();
+    }
+  }
+
+  private _sendDroppedPathsToPty(ev: DragEvent): void {
+    const filePaths: string[] = [];
+    for (const file of ev.dataTransfer.files) {
+      filePaths.push(shellQuotePath(file.path));
+    }
+    this.sendToPty(filePaths.join(" "));
+  }
+
+  private _isDragTypeSupported(ev: DragEvent): boolean {
+    for (const item of ev.dataTransfer.items) {
+      if (item.kind === "file") {
+        return true;
+      }
+    }
+    return false;
+  }
 }
+
+/**
+ * Apply single quotes and escapes as needed to make a path shell safe.
+ */
+function shellQuotePath(path: string): string {
+  if ( ! path.includes(" ")) {
+    return path;
+  }
+  return `'${path.replace(/\\/g, "\\\\").replace(/'/g, "\\'")}'`;
+}
+
 
 // interface ApplicationModeHandler {
 //   getIdentifier(): string;
