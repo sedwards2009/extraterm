@@ -22,7 +22,9 @@ async function main() {
   const seven2x72SHA1 = await fetchSHA1ForPathComponent(assetsSHA1, "72x72");
   const contents = await fetchUrl(`https://api.github.com/repos/twitter/twemoji/git/trees/${seven2x72SHA1}`);
 
-  const codePoints = extractCodePointsFromJson(contents);
+  let codePoints = extractCodePointsFromJson(contents);
+  codePoints = filterGlyphs(codePoints);
+
   sortCodePoints(codePoints);
 
   dumpCodePointRangesJS(codePoints);
@@ -103,6 +105,19 @@ function extractCodePointsFromJson(contents) {
   }
 
   return codePoints;
+}
+
+function filterGlyphs(codePoints) {
+  return codePoints.filter( cp => {
+    // Remove the Regional indicator symbols and related enclosed forms.
+    // Twemoji only has a handful of these defined but they look really
+    // bad when mixed with glyphs from the base font.
+    if (cp >= 0x1f100 && cp <= 0x1f1ff) {
+      return false;
+    }
+
+    return true;
+  });
 }
 
 function sortCodePoints(codePoints) {
