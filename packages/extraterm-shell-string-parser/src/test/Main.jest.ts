@@ -23,6 +23,9 @@ function arrayEqual(a: any[], b: any[]): boolean {
 
 describe.each([
   ["", []],
+  ["   ", []],
+  ["  One  ", ["One"]],
+  ["One ' Spacey '", ["One", " Spacey "]],
   ["One", ["One"]],
   ["One\'", ["One\'"]],
   ["One Two", ["One", "Two"]],
