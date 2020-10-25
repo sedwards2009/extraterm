@@ -1152,14 +1152,13 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       ev.stopPropagation();
     }
 
-    if (this._emulator === null) {
-      return;
-    }
-    if ( ! this.hasFocus()) {
-      this.focus();
-    }
-    if (this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator))) {
-      return;
+    if (this._emulator != null) {
+      if ( ! this.hasFocus()) {
+        this.focus();
+      }
+      if (this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator))) {
+        return;
+      }
     }
 
     if (isRightMouseButton) {
