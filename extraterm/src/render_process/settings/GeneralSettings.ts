@@ -49,6 +49,25 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
       if (ui.closeWindowWhenEmpty !== generalConfig.closeWindowWhenEmpty) {
         ui.closeWindowWhenEmpty = generalConfig.closeWindowWhenEmpty;
       }
+
+      if (ui.middleMouseButtonAction !== generalConfig.middleMouseButtonAction) {
+        ui.middleMouseButtonAction = generalConfig.middleMouseButtonAction;
+      }
+      if (ui.middleMouseButtonShiftAction !== generalConfig.middleMouseButtonShiftAction) {
+        ui.middleMouseButtonShiftAction = generalConfig.middleMouseButtonShiftAction;
+      }
+      if (ui.middleMouseButtonControlAction !== generalConfig.middleMouseButtonControlAction) {
+        ui.middleMouseButtonControlAction = generalConfig.middleMouseButtonControlAction;
+      }
+      if (ui.rightMouseButtonAction !== generalConfig.rightMouseButtonAction) {
+        ui.rightMouseButtonAction = generalConfig.rightMouseButtonAction;
+      }
+      if (ui.rightMouseButtonShiftAction !== generalConfig.rightMouseButtonShiftAction) {
+        ui.rightMouseButtonShiftAction = generalConfig.rightMouseButtonShiftAction;
+      }
+      if (ui.rightMouseButtonControlAction !== generalConfig.rightMouseButtonControlAction) {
+        ui.rightMouseButtonControlAction = generalConfig.rightMouseButtonControlAction;
+      }
     }
   }
 
@@ -61,7 +80,13 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     newGeneralConfig.scrollbackMaxFrames = ui.maxScrollbackFrames;
     newGeneralConfig.autoCopySelectionToClipboard = ui.autoCopySelectionToClipboard;
     newGeneralConfig.gpuDriverWorkaround = ui.gpuDriverWorkaroundFlag ? "no_blend" : "none";
-    newGeneralConfig.closeWindowWhenEmpty = ui.closeWindowWhenEmpty;    
+    newGeneralConfig.closeWindowWhenEmpty = ui.closeWindowWhenEmpty;
+    newGeneralConfig.middleMouseButtonAction = ui.middleMouseButtonAction;
+    newGeneralConfig.middleMouseButtonShiftAction = ui.middleMouseButtonShiftAction;
+    newGeneralConfig.middleMouseButtonControlAction = ui.middleMouseButtonControlAction;
+    newGeneralConfig.rightMouseButtonAction = ui.rightMouseButtonAction;
+    newGeneralConfig.rightMouseButtonShiftAction = ui.rightMouseButtonShiftAction;
+    newGeneralConfig.rightMouseButtonControlAction = ui.rightMouseButtonControlAction;
     this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
   }
 }

@@ -298,6 +298,13 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, availableF
 
   sanitizeField(userStoredConfig, "closeWindowWhenEmpty", true);
 
+  sanitizeField(userStoredConfig, "middleMouseButtonAction", "paste");
+  sanitizeField(userStoredConfig, "middleMouseButtonShiftAction", "paste");
+  sanitizeField(userStoredConfig, "middleMouseButtonControlAction", "paste");
+  sanitizeField(userStoredConfig, "rightMouseButtonAction", "context_menu");
+  sanitizeField(userStoredConfig, "rightMouseButtonShiftAction", "context_menu");
+  sanitizeField(userStoredConfig, "rightMouseButtonControlAction", "context_menu");
+
   sanitizeField(userStoredConfig, "activeExtensions", {});
 }
 

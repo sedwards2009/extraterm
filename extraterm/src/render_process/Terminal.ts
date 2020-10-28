@@ -43,7 +43,8 @@ import { TerminalCanvas } from './TerminalCanvas';
 import { SidebarLayout, BorderSide } from './gui/SidebarLayout';
 import {FrameFinder} from './FrameFinderType';
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG,
-  GENERAL_CONFIG } from '../Config';
+  GENERAL_CONFIG,
+  MouseButtonAction} from '../Config';
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from './extension/InternalTypes';
@@ -694,19 +695,44 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   private _handleMouseDownCapture(ev: MouseEvent): void {
-    if (ev.buttons === 4) { // Middle mouse button
-      ev.stopPropagation();
-      ev.preventDefault();
-      this._pasteFromClipboard();
+    const key = this._mapEventToMouseButtonActionKey(ev);
+    if (key == null) {
+      return;
     }
 
-    if ((ev.buttons & 2) !== 0) {
-      if (this._terminalViewer !== null) {
+    const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+    const action = <MouseButtonAction> generalConfig[key];
+
+    switch (action) {
+      case "context_menu":
+        if (this._terminalViewer !== null) {
+          ev.stopPropagation();
+          ev.preventDefault();
+          dispatchContextMenuRequest(this._terminalViewer, ev.x, ev.y);
+        }
+        break;
+
+      case "paste":
         ev.stopPropagation();
         ev.preventDefault();
-        dispatchContextMenuRequest(this._terminalViewer, ev.x, ev.y);
-      }
+        this._pasteFromClipboard();
+        break;
+
+      default:
+        break;
     }
+  }
+
+  private _mapEventToMouseButtonActionKey(ev: MouseEvent): string {
+    const isMiddleButton = ev.buttons === 4;
+    const isRightButton = (ev.buttons & 2) !== 0;
+    if ( ! isMiddleButton && ! isRightButton) {
+      return null;
+    }
+
+    const buttonString = isMiddleButton ? "middle" : "right";
+    const modifierString = ev.ctrlKey ? "Control" : (ev.shiftKey ? "Shift" : "");
+    return `${buttonString}MouseButton${modifierString}Action`;
   }
 
   private _handleWriteBufferSize(emulator: Term.Emulator, status: TermApi.WriteBufferStatus): void {

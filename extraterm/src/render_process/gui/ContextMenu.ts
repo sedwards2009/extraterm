@@ -38,7 +38,6 @@ export class ContextMenu extends ThemeableElementBase {
     this._log = getLogger(ContextMenu.TAG_NAME, this);
 
     this._handleCoverMousedown = this._handleCoverMousedown.bind(this);
-    this._handleCoverContextmenu = this._handleCoverContextmenu.bind(this);
     this._handleContainerMousedown = this._handleContainerMousedown.bind(this);
     this._handleContainerMousemove = this._handleContainerMousemove.bind(this);
     this._handleContainerMouseleave = this._handleContainerMouseleave.bind(this);
@@ -54,15 +53,7 @@ export class ContextMenu extends ThemeableElementBase {
   private _handleCoverMousedown(ev: MouseEvent): void {
     ev.stopPropagation();
     ev.preventDefault();
-    if (ev.button === 0) {
-      this._dismiss();
-    }
-  }
-
-  private _handleCoverContextmenu(ev: MouseEvent): void {
-    ev.stopPropagation();
-    ev.preventDefault();
-    this._moveContainerTo(ev.clientX, ev.clientY);
+    this._dismiss();
   }
 
   private _handleContainerMousedown(ev: MouseEvent): void {
@@ -91,16 +82,10 @@ export class ContextMenu extends ThemeableElementBase {
   }
 
   protected _render(): void {
-    const handleCoverContextmenu = {
-      handleEvent: this._handleCoverContextmenu,
-      capture: true,
-    };
-
     const template = html`${this._styleTag()}
       <div
         id=${ID_COVER}
         class=${this._open ? CLASS_COVER_OPEN : CLASS_COVER_CLOSED}
-        @contextmenu=${handleCoverContextmenu}
         @mousedown=${this._handleCoverMousedown}
       ></div>
       <div

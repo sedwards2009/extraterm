@@ -9,10 +9,12 @@ import { KeybindingsSet, LogicalKeybindingsName } from './keybindings/Keybinding
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
 export type GpuDriverWorkaround = "none" | "no_blend";
+export type MouseButtonAction = "none" | "context_menu" | "paste";
 export type ShowTipsStrEnum = "always" | "daily" | "never";
-export type TitleBarStyle = "native" | "theme" | "compact";
 export type TerminalMarginStyle = "none" | "thin" | "normal" | "thick";
+export type TitleBarStyle = "native" | "theme" | "compact";
 export type WindowBackgroundMode = "opaque" | "blur";
+
 
 export interface GeneralConfig {
   blinkingCursor?: boolean;
@@ -54,6 +56,13 @@ export interface GeneralConfig {
   isHardwareAccelerated?: boolean;
 
   closeWindowWhenEmpty?: boolean;
+
+  middleMouseButtonAction?: MouseButtonAction;
+  middleMouseButtonShiftAction?: MouseButtonAction;
+  middleMouseButtonControlAction?: MouseButtonAction;
+  rightMouseButtonAction?: MouseButtonAction;
+  rightMouseButtonShiftAction?: MouseButtonAction;
+  rightMouseButtonControlAction?: MouseButtonAction;
 
   activeExtensions?: {[extensionName:string]: boolean;};
 }

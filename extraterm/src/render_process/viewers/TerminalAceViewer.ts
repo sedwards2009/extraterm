@@ -1146,12 +1146,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _handleMouseDownEvent(ev: MouseEvent): void {
-    const isRightMouseButton = (ev.buttons & 2) !== 0;
-    if (isRightMouseButton) {
-      ev.preventDefault();
-      ev.stopPropagation();
-    }
-
     if (this._emulator != null) {
       if ( ! this.hasFocus()) {
         this.focus();
@@ -1159,10 +1153,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       if (this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator))) {
         return;
       }
-    }
-
-    if (isRightMouseButton) {
-      this._handleContextMenu(ev);
     }
   }
 

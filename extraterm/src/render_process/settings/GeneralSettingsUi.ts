@@ -1,12 +1,12 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import { ShowTipsStrEnum, GpuDriverWorkaround } from '../../Config';
+import { ShowTipsStrEnum, MouseButtonAction } from '../../Config';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 
 const ID_SCROLLBACK = "ID_SCROLLBACK";
@@ -15,6 +15,27 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
 @Component(
   {
+    props: {
+      value: String,
+    },
+    template: trimBetweenTags(`
+<select v-bind:value="value" v-on:input="$emit('input', $event.target.value)" class="char-width-12">
+  <option value="none">None</option>
+  <option value="paste">Paste from Clipboard</option>
+  <option value="context_menu">Context Menu</option>
+</select>
+`)
+  })
+export class MouseActionDropdown extends Vue {
+  // Props
+  value: MouseButtonAction;
+}
+
+@Component(
+  {
+    components: {
+      "mouse-action-dropdown": MouseActionDropdown,
+    },
     template: trimBetweenTags(`
 <div class="settings-page">
   <h2 class="no-user-select"><i class="fa fa-sliders-h"></i>&nbsp;&nbsp;General Settings</h2>
@@ -49,7 +70,27 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
     <label></label>
     <span class="no-user-select">Some graphics hardware and driver combinations can give incorrect colors. Try this option if you are seeing unexpected changes to background colors.</span>
+  </div>
 
+  <h3 class="no-user-select">Mouse Button Actions</h3>
+  <div class="gui-layout cols-1-2">
+    <label>Middle</label>
+    <mouse-action-dropdown v-model="middleMouseButtonAction"></mouse-action-dropdown>
+
+    <label>Middle + Shift</label>
+    <mouse-action-dropdown v-model="middleMouseButtonShiftAction"></mouse-action-dropdown>
+
+    <label>Middle + Control</label>
+    <mouse-action-dropdown v-model="middleMouseButtonControlAction"></mouse-action-dropdown>
+
+    <label>Right</label>
+    <mouse-action-dropdown v-model="rightMouseButtonAction"></mouse-action-dropdown>
+
+    <label>Right + Shift</label>
+    <mouse-action-dropdown v-model="rightMouseButtonShiftAction"></mouse-action-dropdown>
+
+    <label>Right + Control</label>
+    <mouse-action-dropdown v-model="rightMouseButtonControlAction"></mouse-action-dropdown>
   </div>
 </div>
 `)
@@ -65,6 +106,12 @@ export class GeneralSettingsUi extends Vue {
   autoCopySelectionToClipboard: boolean;
   gpuDriverWorkaroundFlag: boolean;
   closeWindowWhenEmpty: boolean;
+  middleMouseButtonAction: MouseButtonAction;
+  middleMouseButtonShiftAction: MouseButtonAction;
+  middleMouseButtonControlAction: MouseButtonAction;
+  rightMouseButtonAction: MouseButtonAction;
+  rightMouseButtonShiftAction: MouseButtonAction;
+  rightMouseButtonControlAction: MouseButtonAction;
 
   constructor() {
     super();
@@ -75,5 +122,11 @@ export class GeneralSettingsUi extends Vue {
     this.autoCopySelectionToClipboard = true;
     this.gpuDriverWorkaroundFlag = false;
     this.closeWindowWhenEmpty = true;
+    this.middleMouseButtonAction = "paste";
+    this.middleMouseButtonShiftAction = "paste";
+    this.middleMouseButtonControlAction = "paste";
+    this.rightMouseButtonAction = "context_menu";
+    this.rightMouseButtonShiftAction = "context_menu";
+    this.rightMouseButtonControlAction = "context_menu";
   }
 }
