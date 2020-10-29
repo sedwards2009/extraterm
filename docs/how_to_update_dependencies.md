@@ -6,10 +6,9 @@ make sure that any native modules (i.e. node-pty) are compatibly with the target
 
 Steps:
 
-* Install the version of node which matches the version used by the version of Electron you are moving to. `node -v` should show the new version number. Note that you may have to reinstall any globally installed node based utilities such as `yarn` and `wsrun`.
 * Bump the version of Electron in `package.json` in the project and also in `extraterm/package.json`.
 * Consider bumping the version of `electron-rebuild` and `electron-packager` in `package.json` too.
-* You may have to update the version of `node-pty` to match the electron version. The `node-pty` version is defined in the root `package.json` and also the `package.json` files under `extensions/UnixSessionBackend` and `extensions/WindowsConsoleSessionBackend`.
+* You may have to update the version of `node-pty` to one which supports the new electron version. The `node-pty` version is defined in the root `package.json` and also the `package.json` files under `extensions/UnixSessionBackend` and `extensions/WindowsConsoleSessionBackend`.
 * Update the version specified for electron in the "electron-rebuild" script definition inside the root `package.json`.
 * Delete the `node_modules` directory.
 * `yarn install`

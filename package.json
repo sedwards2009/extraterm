@@ -14,8 +14,8 @@
     "run-release": "electron extraterm/dist/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 9.1.2",
-    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 9.1.2",
+    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 10.1.5",
+    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 10.1.5",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
     "package": "node build_scripts/build_packages.js",
@@ -32,7 +32,7 @@
   "resolutions": {
     "@types/node": "12.6.2",
     "typescript": "3.9.6",
-    "node-abi": "2.18.0"
+    "node-abi": "2.19.1"
   },
   "private": true,
   "workspaces": {
@@ -50,18 +50,18 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "node-abi": "2.18.0"
+    "node-abi": "2.19.1"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
-    "node-pty": "0.10.0-beta14",
+    "node-pty": "0.10.0-beta18",
     "windows-swca": "2.0.2"
   },
   "devDependencies": {
     "@yarnpkg/lockfile": "^1.1.0",
-    "electron": "9.3.1",
+    "electron": "10.1.5",
     "electron-packager": "14.1.1",
-    "electron-rebuild": "1.8.8",
+    "electron-rebuild": "2.3.2",
     "git-repo-info": "^1.4.1",
     "jest": "23.6.0",
     "modclean": "3.0.0-beta.1",
