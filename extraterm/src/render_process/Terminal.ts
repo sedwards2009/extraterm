@@ -1,54 +1,54 @@
 /*
- * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as crypto from 'crypto';
-import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment, SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { EventEmitter } from 'extraterm-event-emitter';
-import { CustomElement } from 'extraterm-web-component-decorators';
+import * as crypto from "crypto";
+import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment, SessionConfiguration } from "@extraterm/extraterm-extension-api";
+import { EventEmitter } from "extraterm-event-emitter";
+import { CustomElement } from "extraterm-web-component-decorators";
 import { log as LogDecorator, Logger, getLogger } from "extraterm-logging";
-import * as TermApi from 'term-api';
-import { DeepReadonly } from 'extraterm-readonly-toolbox';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import * as TermApi from "term-api";
+import { DeepReadonly } from "extraterm-readonly-toolbox";
+import { trimBetweenTags } from "extraterm-trim-between-tags";
 
-import {BulkFileBroker} from './bulk_file_handling/BulkFileBroker';
-import {BulkFileUploader} from './bulk_file_handling/BulkFileUploader';
-import * as BulkFileUtils from './bulk_file_handling/BulkFileUtils';
-import {DownloadApplicationModeHandler} from './DownloadApplicationModeHandler';
-import {DownloadViewer} from './viewers/DownloadViewer';
-import {Pty} from '../pty/Pty';
-import {ViewerElement} from './viewers/ViewerElement';
-import { SupportsMimeTypes, Mode, VisualState } from './viewers/ViewerElementTypes';
-import {ThemeableElementBase} from './ThemeableElementBase';
-import * as ThemeTypes from '../theme/Theme';
-import {EmbeddedViewer} from './viewers/EmbeddedViewer';
-import {CommandPlaceHolder} from './CommandPlaceholder';
-import {TerminalViewer} from './viewers/TerminalAceViewer';
-import {BookmarkRef} from './viewers/TerminalViewerTypes';
-import {TextViewer} from './viewers/TextAceViewer';
-import {ImageViewer} from './viewers/ImageViewer';
-import {TipViewer} from './viewers/TipViewer';
-import * as GeneralEvents from './GeneralEvents';
-import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from './keybindings/KeyBindingsManager';
-import { dispatchContextMenuRequest } from './command/CommandUtils';
-import * as DomUtils from './DomUtils';
-import {doLater, DebouncedDoLater} from 'extraterm-later';
-import * as Term from './emulator/Term';
-import {UploadProgressBar} from './UploadProgressBar';
-import * as WebIpc from './WebIpc';
-import * as Messages from '../WindowMessages';
-import { TerminalCanvas } from './TerminalCanvas';
-import { SidebarLayout, BorderSide } from './gui/SidebarLayout';
-import {FrameFinder} from './FrameFinderType';
+import {BulkFileBroker} from "./bulk_file_handling/BulkFileBroker";
+import {BulkFileUploader} from "./bulk_file_handling/BulkFileUploader";
+import * as BulkFileUtils from "./bulk_file_handling/BulkFileUtils";
+import {DownloadApplicationModeHandler} from "./DownloadApplicationModeHandler";
+import {DownloadViewer} from "./viewers/DownloadViewer";
+import {Pty} from "../pty/Pty";
+import {ViewerElement} from "./viewers/ViewerElement";
+import { SupportsMimeTypes, Mode, VisualState } from "./viewers/ViewerElementTypes";
+import {ThemeableElementBase} from "./ThemeableElementBase";
+import * as ThemeTypes from "../theme/Theme";
+import {EmbeddedViewer} from "./viewers/EmbeddedViewer";
+import {CommandPlaceHolder} from "./CommandPlaceholder";
+import {TerminalViewer} from "./viewers/TerminalAceViewer";
+import {BookmarkRef} from "./viewers/TerminalViewerTypes";
+import {TextViewer} from "./viewers/TextAceViewer";
+import {ImageViewer} from "./viewers/ImageViewer";
+import {TipViewer} from "./viewers/TipViewer";
+import * as GeneralEvents from "./GeneralEvents";
+import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from "./keybindings/KeyBindingsManager";
+import { dispatchContextMenuRequest } from "./command/CommandUtils";
+import * as DomUtils from "./DomUtils";
+import {doLater, DebouncedDoLater} from "extraterm-later";
+import * as Term from "./emulator/Term";
+import {UploadProgressBar} from "./UploadProgressBar";
+import * as WebIpc from "./WebIpc";
+import * as Messages from "../WindowMessages";
+import { TerminalCanvas } from "./TerminalCanvas";
+import { SidebarLayout, BorderSide } from "./gui/SidebarLayout";
+import {FrameFinder} from "./FrameFinderType";
 import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG,
   GENERAL_CONFIG,
-  MouseButtonAction} from '../Config';
+  MouseButtonAction} from "../Config";
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
-import { ExtensionManager } from './extension/InternalTypes';
-import { TerminalVisualConfig } from './TerminalVisualConfig';
+import { ExtensionManager } from "./extension/InternalTypes";
+import { TerminalVisualConfig } from "./TerminalVisualConfig";
 
 const log = LogDecorator;
 
@@ -374,7 +374,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const cleanCommandLine = command.trim();
     const commandParts = command.trim().split(/\s+/);
 
-    if (cla.matchType === 'name') {
+    if (cla.matchType === "name") {
       const matcherParts = cla.match.split(/\s+/);
       for (let i=0; i < matcherParts.length; i++) {
         if (i >= commandParts.length) {
@@ -412,7 +412,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._resizePollHandle = null;
     }
 
-    this._getWindow().removeEventListener('resize', this._scheduleResizeBound);
+    this._getWindow().removeEventListener("resize", this._scheduleResizeBound);
     if (this._emulator !== null) {
       this._emulator.destroy();
     }
@@ -519,7 +519,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = window.document.createElement('template');
+      template = window.document.createElement("template");
       template.id = ID;
 
       template.innerHTML = trimBetweenTags(`
@@ -544,11 +544,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _showTip(): void {
     const config = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
     switch (config.showTips) {
-      case 'always':
+      case "always":
         break;
-      case 'never':
+      case "never":
         return;
-      case 'daily':
+      case "daily":
         if ( (Date.now() - config.tipTimestamp) < MILLIS_PER_DAY) {
           return;
         }
@@ -1076,7 +1076,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   private _moveCursorToFreshLine(): void {
     const dims = this._emulator.getDimensions();
-    if (dims.cursorX !== 0 && this._emulator.getLineText(dims.cursorY).trim() !== '') {
+    if (dims.cursorX !== 0 && this._emulator.getLineText(dims.cursorY).trim() !== "") {
       this._emulator.newLine();
       this._emulator.carriageReturn();
     }
