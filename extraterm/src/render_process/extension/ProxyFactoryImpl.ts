@@ -3,23 +3,27 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ExtensionApi from '@extraterm/extraterm-extension-api';
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 
-import { ProxyFactory, InternalExtensionContext } from './InternalTypes';
-import { ViewerTabProxy } from './proxy/ViewerTabProxy';
-import { TerminalTabProxy } from "./proxy/TerminalTabProxy";
-import { TerminalProxy } from './proxy/TerminalProxy';
-import { EtTerminal } from '../Terminal';
+import { EmbeddedViewer } from "../viewers/EmbeddedViewer";
+import { EtTerminal } from "../Terminal";
+import { EtViewerTab } from "../ViewerTab";
 import { FrameViewerProxy } from "./proxy/FrameViewerProxy";
+import { InternalExtensionContext, ProxyFactory } from "./InternalTypes";
 import { TerminalOutputProxy } from "./proxy/TerminalOutputProxy";
+import { TerminalProxy } from "./proxy/TerminalProxy";
+import { TerminalTabProxy } from "./proxy/TerminalTabProxy";
+import { TerminalViewer } from "../viewers/TerminalAceViewer";
+import { TextViewer } from"../viewers/TextAceViewer";
 import { TextViewerProxy } from "./proxy/TextViewerProxy";
-import { ViewerElement } from '../viewers/ViewerElement';
-import { TextViewer } from'../viewers/TextAceViewer';
-import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
-import { TerminalViewer } from '../viewers/TerminalAceViewer';
-import { EtViewerTab } from '../ViewerTab';
+import { ViewerElement } from "../viewers/ViewerElement";
+import { ViewerTabProxy } from "./proxy/ViewerTabProxy";
 
-
+/**
+ * Each extension has its own instance of this. It holds and gathers all of
+ * the proxy object instances and allows for mapping internal application
+ * objects to proxies for use in the extension API.
+ */
 export class ProxyFactoryImpl implements ProxyFactory {
   private _terminalTabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
   private _viewerTabProxyMap = new WeakMap<EtViewerTab, ExtensionApi.Tab>();
