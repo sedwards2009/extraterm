@@ -6,7 +6,8 @@
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 
 import { ProxyFactory, InternalExtensionContext } from './InternalTypes';
-import {TerminalProxy, TerminalTabProxy, ViewerTabProxy} from './Proxies';
+import { TerminalTabProxy, ViewerTabProxy } from './Proxies';
+import { TerminalProxy } from './proxy/TerminalProxy';
 import {EtTerminal} from '../Terminal';
 import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';
 import {ViewerElement} from '../viewers/ViewerElement';
