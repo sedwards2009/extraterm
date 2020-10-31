@@ -14,7 +14,8 @@ import { TextViewer } from"../viewers/TextAceViewer";
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
   isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor } from "./InternalTypes";
 import { ExtensionUiUtilsImpl } from "./ExtensionUiUtilsImpl";
-import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution, ExtensionDesiredState } from "../../ExtensionMetadata";
+import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionDesiredState
+} from "../../ExtensionMetadata";
 import * as WebIpc from "../WebIpc";
 import { CommandMenuEntry } from "./CommandsRegistry";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
@@ -29,7 +30,6 @@ import { DebouncedDoLater } from "extraterm-later";
 import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages";
 import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 import { SplitLayout } from "../SplitLayout";
-
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 
 interface ActiveExtension {
@@ -49,7 +49,11 @@ const allCategories: Category[] = [
   "global",
 ];
 
-
+/**
+ * Extension manager for the render process.
+ *
+ * This bridges the between the extensions and the core of the application.
+ */
 export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
   private _extensionMetadata: ExtensionMetadata[] = [];
@@ -209,7 +213,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   findViewerElementTagByMimeType(mimeType: string): string {
     for (const extension of this._getActiveRenderExtensions()) {
-      const tag = extension.contextImpl.findViewerElementTagByMimeType(mimeType);
+      const tag = extension.contextImpl._findViewerElementTagByMimeType(mimeType);
       if (tag !== null) {
         return tag;
       }
@@ -232,7 +236,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   getSessionEditorTagForType(sessionType: string): string {
     const seExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionEditors != null);
     for (const extension of seExtensions) {
-      const tag = extension.contextImpl.internalWindow.getSessionEditorTagForType(sessionType);
+      const tag = extension.contextImpl._internalWindow.getSessionEditorTagForType(sessionType);
       if (tag != null) {
         return tag;
       }
@@ -246,7 +250,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     const ssExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionSettings != null);
     let settingsEditors: InternalSessionSettingsEditor[] = [];
     for (const extension of ssExtensions) {
-      const newSettingsEditors = extension.contextImpl.internalWindow.createSessionSettingsEditors(sessionType,
+      const newSettingsEditors = extension.contextImpl._internalWindow.createSessionSettingsEditors(sessionType,
         sessionConfiguration);
       if (newSettingsEditors != null) {
         settingsEditors = [...settingsEditors, ...newSettingsEditors];
@@ -601,18 +605,18 @@ export class ExtensionManagerImpl implements ExtensionManager {
   newTerminalCreated(newTerminal: EtTerminal): void {
     newTerminal.addEventListener(EtTerminal.EVENT_APPENDED_VIEWER, (ev: CustomEvent) => {
       for (const extension of this._getActiveRenderExtensions()) {
-        extension.contextImpl.internalWindow.terminalAppendedViewer(newTerminal, ev.detail.viewer);
+        extension.contextImpl._internalWindow.terminalAppendedViewer(newTerminal, ev.detail.viewer);
       }
     });
 
     newTerminal.environment.onChange((changeList: string[]) => {
       for (const extension of this._getActiveRenderExtensions()) {
-        extension.contextImpl.internalWindow.terminalEnvironmentChanged(newTerminal, changeList);
+        extension.contextImpl._internalWindow.terminalEnvironmentChanged(newTerminal, changeList);
       }
     });
 
     for (const extension of this._getActiveRenderExtensions()) {
-      extension.contextImpl.internalWindow.newTerminalCreated(newTerminal);
+      extension.contextImpl._internalWindow.newTerminalCreated(newTerminal);
     }
   }
 

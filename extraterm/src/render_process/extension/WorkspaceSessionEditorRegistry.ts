@@ -24,7 +24,7 @@ export class WorkspaceSessionEditorRegistry {
 
   registerSessionEditor(type: string, sessionEditorClass: ExtensionApi.ExtensionSessionEditorBaseConstructor): void {
     let sessionEditorMetadata: ExtensionSessionEditorContribution = null;
-    for (const semd of this._internalExtensionContext.extensionMetadata.contributes.sessionEditors) {
+    for (const semd of this._internalExtensionContext._extensionMetadata.contributes.sessionEditors) {
       if (semd.type === type) {
         sessionEditorMetadata = semd;
         break;
@@ -33,7 +33,7 @@ export class WorkspaceSessionEditorRegistry {
 
     if (sessionEditorMetadata == null) {
       this._log.warn(`Unable to register session editor '${type}' for extension ` +
-        `'${this._internalExtensionContext.extensionMetadata.name}' because the session editor contribution data ` +
+        `'${this._internalExtensionContext._extensionMetadata.name}' because the session editor contribution data ` +
         `couldn't be found in the extension's package.json file.`);
       return;
     }
@@ -55,7 +55,7 @@ export class WorkspaceSessionEditorRegistry {
     };
 
 // FIXME
-    const tag = this._internalExtensionContext.extensionMetadata.name + "-session-editor-" + kebabCase(type);
+    const tag = this._internalExtensionContext._extensionMetadata.name + "-session-editor-" + kebabCase(type);
     this._log.info("Registering custom element ", tag);
     window.customElements.define(tag, sessionEditorProxyClass);
 
@@ -130,7 +130,7 @@ class ExtensionSessionEditorProxy extends ThemeableElementBase  {
 
   protected _themeCssFiles(): CssFile[] {
     const extensionContext = this._getExtensionContext();
-    const name = extensionContext.extensionMetadata.name;
+    const name = extensionContext._extensionMetadata.name;
     const cssDecl = this._getExtensionSessionEditorContribution().css;
     const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + cf);
 

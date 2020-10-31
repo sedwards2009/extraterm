@@ -49,23 +49,23 @@ export class WindowProxy implements InternalWindow {
 
   newTerminalCreated(newTerminal): void {
     if (this._onDidCreateTerminalEventEmitter.hasListeners()) {
-      const terminal = this._internalExtensionContext.proxyFactory.getTerminalProxy(newTerminal);
+      const terminal = this._internalExtensionContext._proxyFactory.getTerminalProxy(newTerminal);
       this._onDidCreateTerminalEventEmitter.fire(terminal);
     }
   }
 
   terminalAppendedViewer(terminal: EtTerminal, viewer: ViewerElement): void {
-    if (this._internalExtensionContext.proxyFactory.hasTerminalProxy(terminal)) {
-      const proxy = <TerminalProxy> this._internalExtensionContext.proxyFactory.getTerminalProxy(terminal);
+    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy._onDidAppendViewerEventEmitter.hasListeners()) {
-        proxy._onDidAppendViewerEventEmitter.fire(this._internalExtensionContext.proxyFactory.getViewerProxy(viewer));
+        proxy._onDidAppendViewerEventEmitter.fire(this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
       }
     }
   }
 
   terminalEnvironmentChanged(terminal: EtTerminal, changeList: string[]): void {
-    if (this._internalExtensionContext.proxyFactory.hasTerminalProxy(terminal)) {
-      const proxy = <TerminalProxy> this._internalExtensionContext.proxyFactory.getTerminalProxy(terminal);
+    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy.environment._onChangeEventEmitter.hasListeners()) {
         proxy.environment._onChangeEventEmitter.fire(changeList);
       }
@@ -73,11 +73,11 @@ export class WindowProxy implements InternalWindow {
   }
 
   get activeTerminal(): ExtensionApi.Terminal {
-    return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
+    return this._internalExtensionContext._proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
 
   get activeViewer(): ExtensionApi.Viewer {
-    return this._internalExtensionContext.proxyFactory.getViewerProxy(this._commonExtensionState.activeViewerElement);
+    return this._internalExtensionContext._proxyFactory.getViewerProxy(this._commonExtensionState.activeViewerElement);
   }
 
   getTerminals(): ExtensionApi.Terminal[] {
@@ -107,11 +107,11 @@ export class WindowProxy implements InternalWindow {
   }
 
   registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
-    this._internalExtensionContext.registerTabTitleWidget(name, factory);
+    this._internalExtensionContext._registerTabTitleWidget(name, factory);
   }
 
   registerTerminalBorderWidget(name: string, factory: ExtensionApi.TerminalBorderWidgetFactory): void {
-    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidgets;
+    const borderWidgetMeta = this._internalExtensionContext._extensionMetadata.contributes.terminalBorderWidgets;
     for (const data of borderWidgetMeta) {
       if (data.name === name) {
         this._terminalBorderWidgetFactoryMap.set(name, factory);

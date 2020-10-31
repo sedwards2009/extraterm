@@ -38,7 +38,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   getTab(): ExtensionApi.Tab {
-    return this._internalExtensionContext.proxyFactory.getTabProxy(this._terminal);
+    return this._internalExtensionContext._proxyFactory.getTabProxy(this._terminal);
   }
 
   type(text: string): void {
@@ -46,7 +46,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   getViewers(): ExtensionApi.Viewer[] {
-    return this._terminal.getViewerElements().map(viewer => this._internalExtensionContext.proxyFactory.getViewerProxy(viewer));
+    return this._terminal.getViewerElements().map(viewer => this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
   }
 
   getExtratermCookieValue(): string {
@@ -62,7 +62,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   getSessionSettings(name: string): Object {
-    const settingsKey = `${this._internalExtensionContext.extensionMetadata.name}:${name}`;
+    const settingsKey = `${this._internalExtensionContext._extensionMetadata.name}:${name}`;
     const settings = this._sessionConfigurationExtensions[settingsKey];
     return settings == null ? null : settings;
   }
@@ -76,7 +76,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
       return factoryResult;
     }
 
-    const factory = this._internalExtensionContext.internalWindow.getTerminalBorderWidgetFactory(name);
+    const factory = this._internalExtensionContext._internalWindow.getTerminalBorderWidgetFactory(name);
     if (factory == null) {
       this._internalExtensionContext.logger.warn(
         `Unknown terminal border widget '${name}' given to createTerminalBorderWidget().`);
@@ -101,7 +101,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   private _findTerminalBorderWidgetMetadata(name: string): ExtensionTerminalBorderContribution {
-    const borderWidgetMeta = this._internalExtensionContext.extensionMetadata.contributes.terminalBorderWidgets;
+    const borderWidgetMeta = this._internalExtensionContext._extensionMetadata.contributes.terminalBorderWidgets;
     for (const data of borderWidgetMeta) {
       if (data.name === name) {
         return data;

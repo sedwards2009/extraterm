@@ -78,7 +78,7 @@ export class ExtensionContainerElement extends ThemeableElementBase  {
   protected _themeCssFiles(): CssFile[] {
     const cssDecl = this._extensionCss;
     if (cssDecl != null && this._extensionContext != null) {
-      const name = this._extensionContext.extensionMetadata.name;
+      const name = this._extensionContext._extensionMetadata.name;
       const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + path.join(cssDecl.directory, cf));
       const fontAwesomeCss = cssDecl.fontAwesome ? [CssFile.FONT_AWESOME] : [];
       return [CssFile.GENERAL_GUI, ...fontAwesomeCss, ...cssFiles];

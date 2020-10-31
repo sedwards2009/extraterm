@@ -29,7 +29,7 @@ export class WorkspaceSessionSettingsRegistry {
     const sessionSettingsMetadata = this._getExtensionSessionSettingsContributionById(id);
     if (sessionSettingsMetadata == null) {
       this._log.warn(`Unable to register session settings '${id}' for extension ` +
-        `'${this._internalExtensionContext.extensionMetadata.name}' because the session settings contribution data ` +
+        `'${this._internalExtensionContext._extensionMetadata.name}' because the session settings contribution data ` +
         `couldn't be found in the extension's package.json file.`);
       return;
     }
@@ -38,7 +38,7 @@ export class WorkspaceSessionSettingsRegistry {
   }
 
   private _getExtensionSessionSettingsContributionById(id: string): ExtensionSessionSettingsContribution {
-    for (const ssm of this._internalExtensionContext.extensionMetadata.contributes.sessionSettings) {
+    for (const ssm of this._internalExtensionContext._extensionMetadata.contributes.sessionSettings) {
       if (ssm.id === id) {
         return ssm;
       }
@@ -59,7 +59,7 @@ export class WorkspaceSessionSettingsRegistry {
       extensionContainerElement._setExtensionContext(this._internalExtensionContext);
       extensionContainerElement._setExtensionCss(sessionSettingsMetadata.css);
 
-      const settingsConfigKey = `${this._internalExtensionContext.extensionMetadata.name}:${id}`;
+      const settingsConfigKey = `${this._internalExtensionContext._extensionMetadata.name}:${id}`;
 
       let settings = sessionConfiguration.extensions?.[settingsConfigKey];
       if (settings == null) {

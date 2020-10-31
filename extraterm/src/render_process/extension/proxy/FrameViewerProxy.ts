@@ -21,7 +21,7 @@ export class FrameViewerProxy extends AbstractViewerProxy implements ExtensionAp
   getContents(): ExtensionApi.Viewer {
     const viewerElement = this._embeddedViewer.getViewerElement();
     if (viewerElement !== null) {
-      return this._internalExtensionContext.proxyFactory.getViewerProxy(viewerElement);
+      return this._internalExtensionContext._proxyFactory.getViewerProxy(viewerElement);
     }
     return null;
   }

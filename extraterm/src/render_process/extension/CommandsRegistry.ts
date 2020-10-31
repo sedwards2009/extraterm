@@ -129,7 +129,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
   }
 
   executeCommand<T>(name: string, args: any): Promise<T> {
-    return this._internalExtensionContext.extensionManager.executeCommand(name, args);
+    return this._internalExtensionContext._extensionManager.executeCommand(name, args);
   }
 
   getCommands(): string[] {

@@ -405,7 +405,7 @@ function registerCommands(extensionManager: ExtensionManager): void {
   TextCommandsRegisterCommands(extensionManager);
   EtViewerTab.registerCommands(extensionManager);
 
-  extensionManager.getExtensionContextByName("internal-commands").debugRegisteredCommands();
+  extensionManager.getExtensionContextByName("internal-commands")._debugRegisteredCommands();
 }
 
 function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: ExtensionManager): void {
@@ -427,12 +427,12 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
         when: "",
         icon: "fa fa-plus",
       };
-      disposables.add(extensionContext.registerCommandContribution(contrib));
+      disposables.add(extensionContext._registerCommandContribution(contrib));
 
-      extensionContext.setCommandMenu(command, "contextMenu", true);
-      extensionContext.setCommandMenu(command, "commandPalette", true);
-      extensionContext.setCommandMenu(command, "emptyPane", true);
-      extensionContext.setCommandMenu(command, "newTerminal", true);
+      extensionContext._setCommandMenu(command, "contextMenu", true);
+      extensionContext._setCommandMenu(command, "commandPalette", true);
+      extensionContext._setCommandMenu(command, "emptyPane", true);
+      extensionContext._setCommandMenu(command, "newTerminal", true);
     }
   };
 

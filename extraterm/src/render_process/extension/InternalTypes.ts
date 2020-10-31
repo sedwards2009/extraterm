@@ -1,22 +1,22 @@
 /*
- * Copyright 2017-2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { EtTerminal } from '../Terminal';
-import { TextViewer } from'../viewers/TextAceViewer';
-import { ViewerElement } from '../viewers/ViewerElement';
-import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from '../../ExtensionMetadata';
-import { EtViewerTab } from '../ViewerTab';
-import { SupportsDialogStack } from '../SupportsDialogStack';
-import { CommandsRegistry } from './CommandsRegistry';
-import { TextEditor } from '../viewers/TextEditorType';
-import { CommonExtensionWindowState } from './CommonExtensionState';
-import { TabWidget } from '../gui/TabWidget';
-import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { ExtensionContainerElement } from './ExtensionContainerElement';
-import { SplitLayout } from '../SplitLayout';
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+
+import { EtTerminal } from "../Terminal";
+import { ViewerElement } from "../viewers/ViewerElement";
+import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "../../ExtensionMetadata";
+import { EtViewerTab } from "../ViewerTab";
+import { SupportsDialogStack } from "../SupportsDialogStack";
+import { CommandsRegistry } from "./CommandsRegistry";
+import { TextEditor } from "../viewers/TextEditorType";
+import { CommonExtensionWindowState } from "./CommonExtensionState";
+import { TabWidget } from "../gui/TabWidget";
+import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
+import { ExtensionContainerElement } from "./ExtensionContainerElement";
+import { SplitLayout } from "../SplitLayout";
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -126,18 +126,21 @@ export interface InternalWindow extends ExtensionApi.Window {
  * provided.
  */
 export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
-  extensionManager: ExtensionManager;
+   // Note: Most of these fields start with `_` to signal to any extension
+   // developers that these fields are internal.
+
+  _extensionManager: ExtensionManager;
   commands: CommandsRegistry;
-  extensionMetadata: ExtensionMetadata;
-  internalWindow: InternalWindow;
-  proxyFactory: ProxyFactory;
+  _extensionMetadata: ExtensionMetadata;
+  _internalWindow: InternalWindow;
+  _proxyFactory: ProxyFactory;
 
-  findViewerElementTagByMimeType(mimeType: string): string;
-  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
-  setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean);
-  debugRegisteredCommands(): void;
+  _findViewerElementTagByMimeType(mimeType: string): string;
+  _registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
+  _setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean);
+  _debugRegisteredCommands(): void;
 
-  registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void;
+  _registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void;
   _createTabTitleWidgets(terminal: EtTerminal): HTMLElement[];
 }
 
