@@ -140,21 +140,3 @@ export class WindowProxy implements InternalWindow {
     return this._windowSessionSettingsRegistry.createSessionSettingsEditors(sessionType, sessionConfiguration);
   }
 }
-
-
-export class ViewerTabProxy implements ExtensionApi.Tab {
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _viewerTab: EtViewerTab) {
-  }
-
-  getTerminal(): ExtensionApi.Terminal {
-    return null;
-  }
-
-  showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionManager.extensionUiUtils.showNumberInput(this._viewerTab, options);
-  }
-
-  showListPicker(options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionManager.extensionUiUtils.showListPicker(this._viewerTab, options);
-  }
-}
