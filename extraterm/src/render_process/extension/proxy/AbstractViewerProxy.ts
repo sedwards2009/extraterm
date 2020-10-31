@@ -22,11 +22,11 @@ export abstract class AbstractViewerProxy implements ExtensionApi.ViewerBase {
   getTab(): ExtensionApi.Tab {
     const terminal = this._getOwningEtTerminal();
     if (terminal != null) {
-      return this._internalExtensionContext.proxyFactory.getTabProxy(terminal);
+      return this._internalExtensionContext._proxyFactory.getTabProxy(terminal);
     }
     const viewerTab = this._getOwningEtViewerTab();
     if (viewerTab != null) {
-      return this._internalExtensionContext.proxyFactory.getTabProxy(viewerTab);
+      return this._internalExtensionContext._proxyFactory.getTabProxy(viewerTab);
     }
     return null;
   }
@@ -53,7 +53,7 @@ export abstract class AbstractViewerProxy implements ExtensionApi.ViewerBase {
 
   getOwningTerminal(): ExtensionApi.Terminal {
     const terminal = this._getOwningEtTerminal();
-    return terminal == null ? null : this._internalExtensionContext.proxyFactory.getTerminalProxy(terminal);
+    return terminal == null ? null : this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
   }
 }
 

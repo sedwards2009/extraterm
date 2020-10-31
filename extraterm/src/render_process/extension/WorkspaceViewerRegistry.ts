@@ -28,7 +28,7 @@ export class WorkspaceViewerRegistry {
 
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
     let viewerMetadata: ExtensionViewerContribution = null;
-    for (const vmd of this._internalExtensionContext.extensionMetadata.contributes.viewers) {
+    for (const vmd of this._internalExtensionContext._extensionMetadata.contributes.viewers) {
       if (vmd.name === name) {
         viewerMetadata = vmd;
         break;
@@ -37,7 +37,7 @@ export class WorkspaceViewerRegistry {
 
     if (viewerMetadata == null) {
       this._log.warn(`Unable to register viewer '${name}' for extension ` +
-        `'${this._internalExtensionContext.extensionMetadata.name}' because the viewer contribution data couldn't ` +
+        `'${this._internalExtensionContext._extensionMetadata.name}' because the viewer contribution data couldn't ` +
         `be found in the extension's package.json file.`);
       return;
     }
@@ -52,14 +52,14 @@ export class WorkspaceViewerRegistry {
       protected _getExtensionContext(): InternalExtensionContext {
         return internalExtensionContext;
       }
-    
+
       protected _getExtensionViewerContribution(): ExtensionViewerContribution {
         return viewerMetadata;
       }
     };
-    
+
 // FIXME
-    const tag = this._internalExtensionContext.extensionMetadata.name + "-" + kebabCase(name);
+    const tag = this._internalExtensionContext._extensionMetadata.name + "-" + kebabCase(name);
     this._log.info("Registering custom element ", tag);
     window.customElements.define(tag, viewerElementProxyClass);
 
@@ -105,7 +105,7 @@ class ExtensionViewerProxy extends SimpleViewerElement {
 
   protected _themeCssFiles(): CssFile[] {
     const extensionContext = this._getExtensionContext();
-    const name = extensionContext.extensionMetadata.name;
+    const name = extensionContext._extensionMetadata.name;
     const cssDecl = this._getExtensionViewerContribution().css;
     const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + cf);
 
@@ -116,7 +116,7 @@ class ExtensionViewerProxy extends SimpleViewerElement {
   getMetadata(): ExtensionApi.ViewerMetadata {
     return this._extensionViewer.getMetadata();
   }
-  
+
   _metadataUpdated(): void {
     const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
     this.dispatchEvent(event);
@@ -157,7 +157,7 @@ export class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase
   getMetadata(): ExtensionApi.ViewerMetadata {
     return this.__ExtensionViewerBaseImpl_metadata;
   }
-  
+
   updateMetadata(changes: ExtensionApi.ViewerMetadataChange): void {
     let changed = false;
     for (const key of Object.getOwnPropertyNames(changes)) {

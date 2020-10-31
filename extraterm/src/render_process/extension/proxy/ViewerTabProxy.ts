@@ -19,10 +19,10 @@ export class ViewerTabProxy implements ExtensionApi.Tab {
   }
 
   showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionManager.extensionUiUtils.showNumberInput(this._viewerTab, options);
+    return this._internalExtensionContext._extensionManager.extensionUiUtils.showNumberInput(this._viewerTab, options);
   }
 
   showListPicker(options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionManager.extensionUiUtils.showListPicker(this._viewerTab, options);
+    return this._internalExtensionContext._extensionManager.extensionUiUtils.showListPicker(this._viewerTab, options);
   }
 }

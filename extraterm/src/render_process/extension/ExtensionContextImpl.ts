@@ -24,30 +24,30 @@ export class ExtensionContextImpl implements InternalExtensionContext {
 
   commands: CommandsRegistry = null;
   window: ExtensionApi.Window = null;
-  internalWindow: InternalWindow = null;
+  _internalWindow: InternalWindow = null;
   aceModule: typeof Ace = Ace;
   logger: ExtensionApi.Logger = null;
   isBackendProcess = false;
 
-  proxyFactory: ProxyFactory = null;
+  _proxyFactory: ProxyFactory = null;
 
   extensionPath: string = null;
 
   private _tabTitleWidgetFactoryMap = new Map<string, ExtensionApi.TabTitleWidgetFactory>();
 
-  constructor(public extensionManager: ExtensionManager, public extensionMetadata: ExtensionMetadata,
+  constructor(public _extensionManager: ExtensionManager, public _extensionMetadata: ExtensionMetadata,
               commonExtensionState: CommonExtensionWindowState) {
 
     this._log = getLogger("InternalExtensionContextImpl", this);
-    this.proxyFactory = new ProxyFactoryImpl(this);
-    this.commands = new CommandsRegistry(this, extensionMetadata.name,
-                                          extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
-    this.internalWindow = new WindowProxy(this, commonExtensionState);
-    this.window = this.internalWindow;
+    this._proxyFactory = new ProxyFactoryImpl(this);
+    this.commands = new CommandsRegistry(this, _extensionMetadata.name,
+                                          _extensionMetadata.contributes.commands, _extensionMetadata.contributes.menus);
+    this._internalWindow = new WindowProxy(this, commonExtensionState);
+    this.window = this._internalWindow;
 
-    this.extensionPath = this.extensionMetadata.path;
+    this.extensionPath = this._extensionMetadata.path;
 
-    this.logger = getLogger(extensionMetadata.name);
+    this.logger = getLogger(_extensionMetadata.name);
   }
 
   get backend(): never {
@@ -55,33 +55,33 @@ export class ExtensionContextImpl implements InternalExtensionContext {
     throw Error("'ExtensionContext.backend' is not available from a render process.");
   }
 
-  findViewerElementTagByMimeType(mimeType: string): string {
-    return this.internalWindow.findViewerElementTagByMimeType(mimeType);
+  _findViewerElementTagByMimeType(mimeType: string): string {
+    return this._internalWindow.findViewerElementTagByMimeType(mimeType);
   }
 
-  debugRegisteredCommands(): void {
-    for (const command of this.extensionMetadata.contributes.commands) {
+  _debugRegisteredCommands(): void {
+    for (const command of this._extensionMetadata.contributes.commands) {
       if (this.commands.getCommandFunction(command.command) == null) {
-        this._log.debug(`Command '${command.command}' from extension '${this.extensionMetadata.name}' has no function registered.`);
+        this._log.debug(`Command '${command.command}' from extension '${this._extensionMetadata.name}' has no function registered.`);
       }
     }
   }
 
-  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable {
-    this.extensionMetadata.contributes.commands.push(contribution);
+  _registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable {
+    this._extensionMetadata.contributes.commands.push(contribution);
     const commandDisposable = this.commands.registerCommandContribution(contribution);
-    this.extensionManager.commandRegistrationChanged();
+    this._extensionManager.commandRegistrationChanged();
     return {
       dispose: () => {
-        this.extensionManager.commandRegistrationChanged();
+        this._extensionManager.commandRegistrationChanged();
         commandDisposable.dispose();
-        const index = this.extensionMetadata.contributes.commands.indexOf(contribution);
-        this.extensionMetadata.contributes.commands.splice(index, 1);
+        const index = this._extensionMetadata.contributes.commands.indexOf(contribution);
+        this._extensionMetadata.contributes.commands.splice(index, 1);
       }
     };
   }
 
-  setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void {
+  _setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void {
     const entryList = this.commands._commandToMenuEntryMap.get(command);
     if (entryList == null) {
       return;
@@ -91,8 +91,8 @@ export class ExtensionContextImpl implements InternalExtensionContext {
     }
   }
 
-  registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
-    const tabTitleWidgetMeta = this.extensionMetadata.contributes.tabTitleWidgets;
+  _registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
+    const tabTitleWidgetMeta = this._extensionMetadata.contributes.tabTitleWidgets;
     for (const data of tabTitleWidgetMeta) {
       if (data.name === name) {
         this._tabTitleWidgetFactoryMap.set(name, factory);
@@ -105,7 +105,7 @@ export class ExtensionContextImpl implements InternalExtensionContext {
   }
 
   _createTabTitleWidgets(terminal: EtTerminal): HTMLElement[] {
-    const tabTitleWidgetsContrib = this.extensionMetadata.contributes.tabTitleWidgets;
+    const tabTitleWidgetsContrib = this._extensionMetadata.contributes.tabTitleWidgets;
     const result: HTMLElement[] = [];
     for (const contrib of tabTitleWidgetsContrib) {
       const factory = this._tabTitleWidgetFactoryMap.get(contrib.name);
@@ -116,7 +116,7 @@ export class ExtensionContextImpl implements InternalExtensionContext {
         extensionContainerElement._setExtensionCss(contrib.css);
 
         const tabTitleWidget = new TabTitleWidgetImpl(extensionContainerElement);
-        const factoryResult = factory(this.proxyFactory.getTerminalProxy(terminal), tabTitleWidget);
+        const factoryResult = factory(this._proxyFactory.getTerminalProxy(terminal), tabTitleWidget);
 // FIXME record this stuff somewhere, and also may be clean it up.
         result.push(extensionContainerElement);
       }

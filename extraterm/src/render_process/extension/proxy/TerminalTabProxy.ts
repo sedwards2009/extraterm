@@ -14,14 +14,14 @@ export class TerminalTabProxy implements ExtensionApi.Tab {
   }
 
   getTerminal(): ExtensionApi.Terminal {
-    return this._internalExtensionContext.proxyFactory.getTerminalProxy(this._terminal);
+    return this._internalExtensionContext._proxyFactory.getTerminalProxy(this._terminal);
   }
 
   showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionManager.extensionUiUtils.showNumberInput(this._terminal, options);
+    return this._internalExtensionContext._extensionManager.extensionUiUtils.showNumberInput(this._terminal, options);
   }
 
   showListPicker(options: ExtensionApi.ListPickerOptions): Promise<number | undefined> {
-    return this._internalExtensionContext.extensionManager.extensionUiUtils.showListPicker(this._terminal, options);
+    return this._internalExtensionContext._extensionManager.extensionUiUtils.showListPicker(this._terminal, options);
   }
 }
