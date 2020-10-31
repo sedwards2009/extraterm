@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,12 +9,14 @@ import { ProxyFactory, InternalExtensionContext } from './InternalTypes';
 import { ViewerTabProxy } from './proxy/ViewerTabProxy';
 import { TerminalTabProxy } from "./proxy/TerminalTabProxy";
 import { TerminalProxy } from './proxy/TerminalProxy';
-import {EtTerminal} from '../Terminal';
-import {FrameViewerProxy, TerminalOutputProxy, TextViewerProxy} from './ViewerProxies';
-import {ViewerElement} from '../viewers/ViewerElement';
-import {TextViewer} from'../viewers/TextAceViewer';
-import {EmbeddedViewer} from '../viewers/EmbeddedViewer';
-import {TerminalViewer} from '../viewers/TerminalAceViewer';
+import { EtTerminal } from '../Terminal';
+import { FrameViewerProxy } from "./proxy/FrameViewerProxy";
+import { TerminalOutputProxy } from "./proxy/TerminalOutputProxy";
+import { TextViewerProxy } from "./proxy/TextViewerProxy";
+import { ViewerElement } from '../viewers/ViewerElement';
+import { TextViewer } from'../viewers/TextAceViewer';
+import { EmbeddedViewer } from '../viewers/EmbeddedViewer';
+import { TerminalViewer } from '../viewers/TerminalAceViewer';
 import { EtViewerTab } from '../ViewerTab';
 
 
