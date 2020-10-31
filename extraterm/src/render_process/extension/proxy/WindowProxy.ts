@@ -3,24 +3,21 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
-import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-import { EventEmitter } from 'extraterm-event-emitter';
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { EventEmitter } from "extraterm-event-emitter";
 
-import { EtTerminal, EXTRATERM_COOKIE_ENV } from '../Terminal';
-import { InternalExtensionContext, InternalWindow, InternalTerminalBorderWidget, InternalTabTitleWidget, InternalSessionSettingsEditor } from './InternalTypes';
+import { EtTerminal } from "../../Terminal";
+import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor } from "../InternalTypes";
 import { Logger, getLogger, log } from "extraterm-logging";
-import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from './WorkspaceSessionEditorRegistry';
-import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from './WorkspaceViewerRegistry';
-import { EtViewerTab } from '../ViewerTab';
-import { CommonExtensionWindowState } from './CommonExtensionState';
-import { ExtensionContainerElement } from './ExtensionContainerElement';
-import { ExtensionTerminalBorderContribution } from '../../ExtensionMetadata';
-import { Viewer, SessionSettingsEditorFactory, SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { ViewerElement } from '../viewers/ViewerElement';
-import { WorkspaceSessionSettingsRegistry } from './WorkspaceSessionSettingsRegistry';
-import { TerminalProxy } from "./proxy/TerminalProxy";
+import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from "../WorkspaceSessionEditorRegistry";
+import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from "../WorkspaceViewerRegistry";
+import { CommonExtensionWindowState } from "../CommonExtensionState";
+import { SessionSettingsEditorFactory, SessionConfiguration } from "@extraterm/extraterm-extension-api";
+import { ViewerElement } from "../../viewers/ViewerElement";
+import { WorkspaceSessionSettingsRegistry } from "../WorkspaceSessionSettingsRegistry";
+import { TerminalProxy } from "../proxy/TerminalProxy";
 
 /**
  * The implementation behind the `Window` object on the `ExtensionContext`

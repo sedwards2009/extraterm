@@ -16,7 +16,7 @@ import { ProxyFactoryImpl } from './ProxyFactoryImpl';
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, InternalWindow, ProxyFactory,
   isMainProcessExtension, isSupportedOnThisPlatform, CommandQueryOptions, InternalTabTitleWidget, InternalSessionSettingsEditor } from './InternalTypes';
 import { ExtensionUiUtilsImpl } from './ExtensionUiUtilsImpl';
-import { WindowProxy } from './Proxies';
+import { WindowProxy } from './proxy/WindowProxy';
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionMenusContribution, ExtensionDesiredState } from '../../ExtensionMetadata';
 import * as WebIpc from '../WebIpc';
 import { CommandsRegistry, CommandMenuEntry } from './CommandsRegistry';
