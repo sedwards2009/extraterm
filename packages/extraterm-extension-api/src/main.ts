@@ -59,6 +59,13 @@ export interface Tab {
    *          undefined if it was canceled.
    */
   showListPicker(options: ListPickerOptions): Promise<number | undefined>;
+
+  /**
+   * True if this terminal is still open.
+   *
+   * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
+   */
+  isAlive(): boolean;
 }
 
 export const TerminalEnvironment = {
@@ -136,6 +143,13 @@ export interface Terminal {
    * @param name the same `name` passed to `Window.registerSessionSettingsEditor()`.
    */
   getSessionSettings(name: string): Object;
+
+  /**
+   * True if this terminal is still open.
+   *
+   * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
+   */
+  isAlive(): boolean;
 }
 
 export interface TerminalBorderWidget {

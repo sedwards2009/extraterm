@@ -166,6 +166,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _copyToClipboardLater: DebouncedDoLater = null;
   private _windowId: string = null;
 
+  onDispose: Event<void>;
+  _onDisposeEventEmitter = new EventEmitter<void>();
+
   static registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
     commands.registerCommand("extraterm:terminal.enterCursorMode", (args: any) => extensionManager.getActiveTerminal().commandEnterCursorMode());
@@ -194,6 +197,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._log = getLogger(EtTerminal.TAG_NAME, this);
     this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
     this._fetchNextTag();
+    this.onDispose = this._onDisposeEventEmitter.event;
   }
 
   connectedCallback(): void {
@@ -257,6 +261,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   dispose(): void {
+    this._onDisposeEventEmitter.fire();
+
     this._copyToClipboardLater.cancel();
     this._terminalCanvas.dispose();
   }

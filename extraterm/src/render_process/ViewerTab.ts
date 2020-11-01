@@ -1,30 +1,30 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {BulkFileHandle, Disposable, ViewerMetadata} from '@extraterm/extraterm-extension-api';
-import { CustomElement } from 'extraterm-web-component-decorators';
+import { BulkFileHandle, Disposable, Event, ViewerMetadata } from "@extraterm/extraterm-extension-api";
+import { CustomElement } from "extraterm-web-component-decorators";
+import { doLater, DebouncedDoLater } from "extraterm-later";
+import { EventEmitter } from "extraterm-event-emitter";
+import { log, Logger, getLogger } from "extraterm-logging";
+import { trimBetweenTags } from "extraterm-trim-between-tags";
 
-import {doLater, DebouncedDoLater} from 'extraterm-later';
-import * as DomUtils from './DomUtils';
-import {EmbeddedViewer} from './viewers/EmbeddedViewer';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
-import {ResizeCanary} from './ResizeCanary';
-import {ScrollBar} from'./gui/ScrollBar';
+import * as DomUtils from "./DomUtils";
+import { ResizeCanary } from "./ResizeCanary";
+import { ScrollBar } from"./gui/ScrollBar";
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
-import { CssFile } from '../theme/Theme';
-import {ThemeableElementBase} from './ThemeableElementBase';
-import {ViewerElement} from "./viewers/ViewerElement";
-import { RefreshLevel, Mode, VisualState } from './viewers/ViewerElementTypes';
-import * as VirtualScrollArea from './VirtualScrollArea';
-import * as WebIpc from './WebIpc';
-import { AcceptsConfigDatabase, ConfigDatabase } from '../Config';
-import { ExtensionManager } from './extension/InternalTypes';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
+import { CssFile } from "../theme/Theme";
+import { ThemeableElementBase } from "./ThemeableElementBase";
+import { ViewerElement } from "./viewers/ViewerElement";
+import { RefreshLevel, Mode, VisualState } from "./viewers/ViewerElementTypes";
+import * as VirtualScrollArea from "./VirtualScrollArea";
+import * as WebIpc from "./WebIpc";
+import { AcceptsConfigDatabase, ConfigDatabase } from "../Config";
+import { ExtensionManager } from "./extension/InternalTypes";
+
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 type ScrollableElement = VirtualScrollable & HTMLElement;
@@ -83,9 +83,13 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     });
   }
 
+  onDispose: Event<void>;
+  _onDisposeEventEmitter = new EventEmitter<void>();
+
   constructor() {
     super();
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
+    this.onDispose = this._onDisposeEventEmitter.event;
     this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
   }
 
@@ -163,6 +167,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   }
 
   dispose(): void {
+    this._onDisposeEventEmitter.fire();
     this._copyToClipboardLater.cancel();
     const element = this.getViewerElement();
     if (element !== null) {

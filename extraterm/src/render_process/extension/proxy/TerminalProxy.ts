@@ -7,6 +7,7 @@ import * as _ from "lodash";
 
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
+import { log, Logger, getLogger } from "extraterm-logging";
 
 import { EtTerminal, EXTRATERM_COOKIE_ENV } from "../../Terminal";
 import { InternalExtensionContext, InternalTerminalBorderWidget, InternalTabTitleWidget } from "../InternalTypes";
@@ -16,9 +17,8 @@ import { Viewer,SessionConfiguration } from "@extraterm/extraterm-extension-api"
 
 
 export class TerminalProxy implements ExtensionApi.Terminal {
-
+  private _log: Logger = null;
   viewerType: "terminal-output";
-
   private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
   private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
   _onDidAppendViewerEventEmitter = new EventEmitter<Viewer>();
@@ -29,6 +29,8 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   private _sessionConfigurationExtensions: Object = null;
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
+    this._log = getLogger("TerminalProxy", this);
+    this._terminal.onDispose(this._handleTerminalDispose.bind(this));
     this.onDidAppendViewer = this._onDidAppendViewerEventEmitter.event;
     this.environment = new TerminalEnvironmentProxy(this._terminal);
 
@@ -37,23 +39,42 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     this._sessionConfiguration.extensions = null;
   }
 
+  private _handleTerminalDispose(): void {
+    this._terminal = null;
+  }
+
+  private _checkIsAlive(): void {
+    if ( ! this.isAlive()) {
+      throw new Error("Terminal is not alive and can no longer be used.");
+    }
+  }
+
+  isAlive(): boolean {
+    return this._terminal != null;
+  }
+
   getTab(): ExtensionApi.Tab {
+    this._checkIsAlive();
     return this._internalExtensionContext._proxyFactory.getTabProxy(this._terminal);
   }
 
   type(text: string): void {
+    this._checkIsAlive();
     this._terminal.sendToPty(text);
   }
 
   getViewers(): ExtensionApi.Viewer[] {
+    this._checkIsAlive();
     return this._terminal.getViewerElements().map(viewer => this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
   }
 
   getExtratermCookieValue(): string {
+    this._checkIsAlive();
     return this._terminal.getExtratermCookieValue();
   }
 
   getExtratermCookieName(): string {
+    this._checkIsAlive();
     return EXTRATERM_COOKIE_ENV;
   }
 
@@ -68,6 +89,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   openTerminalBorderWidget(name: string): any {
+    this._checkIsAlive();
     if (this._terminalBorderWidgets.has(name)) {
       const { extensionContainerElement, terminalBorderWidget, factoryResult } = this._terminalBorderWidgets.get(name);
       const data = this._findTerminalBorderWidgetMetadata(name);
