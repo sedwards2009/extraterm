@@ -109,14 +109,14 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     }
     this._elementAttached = true;
 
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
+    const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
 
     const clone = this._createClone();
     shadow.appendChild(clone);
     this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
 
-    this.addEventListener('focus', this._handleFocus.bind(this));
-    this.addEventListener('blur', this._handleBlur.bind(this));
+    this.addEventListener("focus", this._handleFocus.bind(this));
+    this.addEventListener("blur", this._handleBlur.bind(this));
 
     const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
@@ -129,12 +129,12 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     });
     this._virtualScrollArea.setScrollbar(scrollbar);
 
-    scrollerArea.addEventListener('wheel', this._handleMouseWheel.bind(this), true);
-    scrollbar.addEventListener('scroll', (ev: CustomEvent) => {
+    scrollerArea.addEventListener("wheel", this._handleMouseWheel.bind(this), true);
+    scrollbar.addEventListener("scroll", (ev: CustomEvent) => {
       this._virtualScrollArea.scrollTo(scrollbar.position);
     });
 
-    scrollerArea.addEventListener('mousedown', this._handleMouseDown.bind(this), true);
+    scrollerArea.addEventListener("mousedown", this._handleMouseDown.bind(this), true);
 
     scrollerArea.addEventListener(VirtualScrollArea.EVENT_RESIZE, this._handleVirtualScrollableResize.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
@@ -149,7 +149,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
         font-size: var(--terminal-font-size);
     `);
     containerDiv.appendChild(resizeCanary);
-    resizeCanary.addEventListener('resize', () => {
+    resizeCanary.addEventListener("resize", () => {
       if (this._armResizeCanary) {
         this._armResizeCanary = false;
         this.refresh(RefreshLevel.COMPLETE);
@@ -309,7 +309,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   private _createClone(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
-      template = window.document.createElement('template');
+      template = window.document.createElement("template");
       template.id = ID;
 
       template.innerHTML = trimBetweenTags(`
@@ -381,17 +381,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     }
   }
 
-  // ----------------------------------------------------------------------
-  //
-  //    #####                                                          ##        #####
-  //   #     #  ####  #####   ####  #      #      # #    #  ####      #  #      #     # # ###### # #    #  ####
-  //   #       #    # #    # #    # #      #      # ##   # #    #      ##       #       #     #  # ##   # #    #
-  //    #####  #      #    # #    # #      #      # # #  # #          ###        #####  #    #   # # #  # #
-  //         # #      #####  #    # #      #      # #  # # #  ###    #   # #          # #   #    # #  # # #  ###
-  //   #     # #    # #   #  #    # #      #      # #   ## #    #    #    #     #     # #  #     # #   ## #    #
-  //    #####   ####  #    #  ####  ###### ###### # #    #  ####      ###  #     #####  # ###### # #    #  ####
-  //
-  // ----------------------------------------------------------------------
   private _handleMouseWheel(ev: WheelEvent): void {
     ev.stopPropagation();
     ev.preventDefault();
