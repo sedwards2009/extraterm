@@ -16,7 +16,7 @@ export class TerminalTabProxy implements ExtensionApi.Tab {
 
   private _checkIsAlive(): void {
     if ( ! this.isAlive()) {
-      throw new Error("Terminal is not alive and can no longer be used.");
+      throw new Error("TerminalTab is not alive and can no longer be used.");
     }
   }
 

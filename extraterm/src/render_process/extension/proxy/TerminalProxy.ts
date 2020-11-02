@@ -41,11 +41,12 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 
   private _handleTerminalDispose(): void {
     this._terminal = null;
+    this.environment._terminal = null;
   }
 
   private _checkIsAlive(): void {
     if ( ! this.isAlive()) {
-      throw new Error("Terminal is not alive and can no longer be used.");
+      throw new Error("Terminal is no longer alive and cannot be used.");
     }
   }
 
@@ -150,31 +151,43 @@ class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
   onChange: ExtensionApi.Event<string[]>;
   _onChangeEventEmitter = new EventEmitter<string[]>();
 
-  constructor(private _terminal: EtTerminal) {
+  constructor(public _terminal: EtTerminal) {
     this.onChange = this._onChangeEventEmitter.event;
   }
 
+  private _checkIsAlive(): void {
+    if (this._terminal == null) {
+      throw new Error("Terminal environment is no longer alive and cannot be used.");
+    }
+  }
+
   get(key: string): string {
+    this._checkIsAlive();
     return this._terminal.environment.get(key);
   }
 
   has(key: string): boolean {
+    this._checkIsAlive();
     return this._terminal.environment.has(key);
   }
 
   set(key: string, value: string): void {
+    this._checkIsAlive();
     this._terminal.environment.set(key, value);
   }
 
   setList(list: {key: string, value: string}[]): void {
+    this._checkIsAlive();
     this._terminal.environment.setList(list);
   }
 
   [Symbol.iterator](): IterableIterator<[string, string]> {
+    this._checkIsAlive();
     return this.entries();
   }
 
   entries(): IterableIterator<[string, string]> {
+    this._checkIsAlive();
     return this._terminal.environment.entries();
   }
 }

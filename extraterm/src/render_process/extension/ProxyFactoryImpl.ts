@@ -25,10 +25,11 @@ import { ViewerTabProxy } from "./proxy/ViewerTabProxy";
  * objects to proxies for use in the extension API.
  */
 export class ProxyFactoryImpl implements ProxyFactory {
-  private _terminalTabProxyMap = new WeakMap<EtTerminal, ExtensionApi.Tab>();
-  private _viewerTabProxyMap = new WeakMap<EtViewerTab, ExtensionApi.Tab>();
-  private _terminalProxyMap = new WeakMap<EtTerminal, ExtensionApi.Terminal>();
-  private _viewerProxyMap = new WeakMap<ViewerElement, ExtensionApi.Viewer>();
+
+  private _terminalTabProxyMap = new Map<EtTerminal, ExtensionApi.Tab>();
+  private _viewerTabProxyMap = new Map<EtViewerTab, ExtensionApi.Tab>();
+  private _terminalProxyMap = new Map<EtTerminal, ExtensionApi.Terminal>();
+  private _viewerProxyMap = new Map<ViewerElement, ExtensionApi.Viewer>();
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {
   }
@@ -39,14 +40,22 @@ export class ProxyFactoryImpl implements ProxyFactory {
     }
     if (tabLike instanceof EtTerminal) {
       if ( ! this._terminalTabProxyMap.has(tabLike)) {
-        this._terminalTabProxyMap.set(tabLike, new TerminalTabProxy(this._internalExtensionContext, tabLike));
+        const proxy = new TerminalTabProxy(this._internalExtensionContext, tabLike);
+        tabLike.onDispose(() => {
+          this._terminalTabProxyMap.delete(tabLike);
+        });
+        this._terminalTabProxyMap.set(tabLike, proxy);
       }
       return this._terminalTabProxyMap.get(tabLike);
     }
 
     if (tabLike instanceof EtViewerTab) {
       if ( ! this._viewerTabProxyMap.has(tabLike)) {
-        this._viewerTabProxyMap.set(tabLike, new ViewerTabProxy(this._internalExtensionContext, tabLike));
+        const proxy = new ViewerTabProxy(this._internalExtensionContext, tabLike);
+        tabLike.onDispose(() => {
+          this._viewerTabProxyMap.delete(tabLike);
+        });
+        this._viewerTabProxyMap.set(tabLike, proxy);
       }
       return this._viewerTabProxyMap.get(tabLike);
     }
@@ -58,7 +67,11 @@ export class ProxyFactoryImpl implements ProxyFactory {
       return null;
     }
     if ( ! this._terminalProxyMap.has(terminal)) {
-      this._terminalProxyMap.set(terminal, new TerminalProxy(this._internalExtensionContext, terminal));
+      const proxy = new TerminalProxy(this._internalExtensionContext, terminal);
+      terminal.onDispose(() => {
+        this._terminalProxyMap.delete(terminal);
+      });
+      this._terminalProxyMap.set(terminal, proxy);
     }
     return this._terminalProxyMap.get(terminal);
   }
@@ -76,6 +89,9 @@ export class ProxyFactoryImpl implements ProxyFactory {
       if (proxy === null) {
         return null;
       }
+      viewer.onDispose(() => {
+        this._viewerProxyMap.delete(viewer);
+      });
       this._viewerProxyMap.set(viewer, proxy);
     }
     return this._viewerProxyMap.get(viewer);
