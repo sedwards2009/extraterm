@@ -83,13 +83,10 @@ export class TabWidget extends ThemeableElementBase {
     this._render();
     this._applySlotAttributes();
 
-    this._mutationObserver = new MutationObserver( (mutations) => {
-      this._syncDom();
-    });
+    this._mutationObserver = new MutationObserver(this._syncDom.bind(this));
     this._mutationObserver.observe(this, { childList: true });
 
-    const tabbar = this._getTabbar();
-    TabWidget._resizeNotifier.observe(tabbar, this._handleTabbarResize.bind(this));
+    TabWidget._resizeNotifier.observe(this._getTabbar(), this._handleTabbarResize.bind(this));
 
     this._setupDragAndDrop();
   }

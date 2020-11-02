@@ -108,11 +108,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     }
 
     this._initialized = true;
-
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-
-    const clone = this._createClone();
-    shadow.appendChild(clone);
+    this._setupShadowDOM();
 
     this._scrollContainer = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_CONTAINER);
     this._scrollArea = <HTMLDivElement> DomUtils.getShadowId(this, ID_SCROLL_AREA);
@@ -186,6 +182,12 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     this._scheduleResize();
   }
 
+  private _setupShadowDOM(): void {
+    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
+    const clone = this._createShadowContents();
+    shadow.appendChild(clone);
+  }
+
   private _handleResize(): void {
     if ( ! this.isConnected) {
       return;
@@ -250,8 +252,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
       return;
     }
 
-    const composedPath = ev.composedPath();
-    if (composedPath[0] instanceof HTMLSelectElement) {
+    if (ev.composedPath()[0] instanceof HTMLSelectElement) {
       // Don't steal the focus away from SELECT elements, otherwise they can't be used.
       return;
     }

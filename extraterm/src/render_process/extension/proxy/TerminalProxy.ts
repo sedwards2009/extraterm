@@ -117,7 +117,8 @@ export class TerminalProxy implements ExtensionApi.Terminal {
       this._terminal.focus();
     });
     const factoryResult = factory(this, terminalBorderWidget);
-    this._terminalBorderWidgets.set(name, { extensionContainerElement: extensionContainerElement, terminalBorderWidget, factoryResult });
+    this._terminalBorderWidgets.set(name, { extensionContainerElement: extensionContainerElement, terminalBorderWidget,
+      factoryResult });
     terminalBorderWidget._handleOpen();
     return factoryResult;
   }

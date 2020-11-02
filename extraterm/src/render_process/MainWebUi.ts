@@ -487,7 +487,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     newTab.tabIndex = -1;
 
     const contentsHtml = isTerminal ?
-      `<div id="tab_title_extensions_${newId}" class="tab_title_extensions"></div>` :
+      `<div id="tab_title_extensions_${newId}" class="tab_title_extensions"></div>`
+      :
       `<div class="${CLASS_TAB_HEADER_ICON}"></div>
       <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
       <div class="${CLASS_TAB_HEADER_TAG}"></div>`;
@@ -797,8 +798,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._focusTabContent(tabContentElement);
 
     // FIXME This is a work-around for the problem where new tabs can't get the focus immediately.
-    const elements = DomUtils.activeNestedElements();
-    if ( ! elements.includes(tabContentElement)) {
+    if ( ! DomUtils.activeNestedElements().includes(tabContentElement)) {
       this._log.warn(`Failed to focus content element: `, tabContentElement);
       doLater(() => {
         this._splitLayout.showTabByTabContent(tabContentElement);

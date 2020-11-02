@@ -82,13 +82,17 @@ export class SplitLayout {
   private _windowId: string = null;
 
   constructor() {
-    this._tabContainerFactory = () => document.createElement("DIV");
+    this._tabContainerFactory = this._divTabContainerFactory.bind(this);
 
     const tabWidget = <TabWidget> document.createElement(TabWidget.TAG_NAME);
     tabWidget.id = this._nextTabWidgetId();
     tabWidget.showFrame = false;
     this._rootInfoNode = {type: "tabwidget", children: [], tabWidget: tabWidget, emptyTab: null,
       emptyTabContent: null, emptyContainer: null, leftSpaceDefaultElement: null, rightSpaceDefaultElement: null};
+  }
+
+  private _divTabContainerFactory(): Element {
+    return document.createElement("DIV");
   }
 
   setWindowId(windowId: string): void {

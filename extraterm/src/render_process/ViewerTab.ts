@@ -90,7 +90,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     super();
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
     this.onDispose = this._onDisposeEventEmitter.event;
-    this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
+    this._copyToClipboardLater = new DebouncedDoLater(this.copyToClipboard.bind(this), 100);
   }
 
   getMetadata(): ViewerMetadata {
@@ -109,20 +109,30 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     }
     this._elementAttached = true;
 
-    const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
-
-    const clone = this._createClone();
-    shadow.appendChild(clone);
-    this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
+    this._setupShadowDOM();
 
     this.addEventListener("focus", this._handleFocus.bind(this));
     this.addEventListener("blur", this._handleBlur.bind(this));
 
+    this._setupScrolling();
+    this.updateThemeCss();
+    this._setupResizeCanary();
+
+    doLater(this._processResize.bind(this));
+  }
+
+  private _setupShadowDOM(): void {
+    const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
+    const clone = this._createClone();
+    shadow.appendChild(clone);
+  }
+
+  private _setupScrolling(): void {
+    this._virtualScrollArea = new VirtualScrollArea.VirtualScrollArea();
     const scrollbar = <ScrollBar> DomUtils.getShadowId(this, ID_SCROLLBAR);
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
 
-    const scrollContainer = DomUtils.getShadowId(this, ID_CONTAINER);
-    DomUtils.preventScroll(scrollContainer);
+    DomUtils.preventScroll(DomUtils.getShadowId(this, ID_CONTAINER));
 
     this._virtualScrollArea.setScrollFunction( (offset: number): void => {
       scrollerArea.scrollTop = offset;
@@ -140,8 +150,10 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     scrollerArea.addEventListener(ViewerElement.EVENT_CURSOR_MOVE, this._handleTerminalViewerCursor.bind(this));
     scrollerArea.addEventListener(ViewerElement.EVENT_BEFORE_SELECTION_CHANGE,
         this._handleBeforeSelectionChange.bind(this));
+  }
 
-        // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
+  private _setupResizeCanary(): void {
+    // A Resize Canary for tracking when terminal fonts are effectively changed in the DOM.
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
     const resizeCanary = <ResizeCanary> document.createElement(ResizeCanary.TAG_NAME);
     resizeCanary.setCss(`
@@ -155,10 +167,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
         this.refresh(RefreshLevel.COMPLETE);
       }
     });
-
-    this.updateThemeCss();
-
-    doLater(this._processResize.bind(this));
   }
 
   disconnectedCallback(): void {
