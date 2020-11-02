@@ -3,10 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {BulkFileHandle, Disposable, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
+import {BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail, RefreshLevel} from './ViewerElementTypes';
+import { EventEmitter } from 'extraterm-event-emitter';
 
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
@@ -15,6 +16,9 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   static EVENT_CURSOR_MOVE = "cursor-move";
   static EVENT_CURSOR_EDGE = "cursor-edge";
   static EVENT_METADATA_CHANGE = "metadata-change";
+  
+  onDispose: Event<void>;
+  _onDisposeEventEmitter = new EventEmitter<void>();
 
   /**
    * Type guard for detecting a ViewerElement instance.
@@ -24,6 +28,11 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
    */
   static isViewerElement(node: Node): node is ViewerElement {
     return node !== null && node !== undefined && node instanceof ViewerElement;
+  }
+
+  constructor() {
+    super();
+    this.onDispose = this._onDisposeEventEmitter.event; 
   }
 
   getMetadata(): ViewerMetadata {
@@ -146,6 +155,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
 
   dispose(): void {
+    this._onDisposeEventEmitter.fire();
   }
 
   refresh(level: RefreshLevel): void {
