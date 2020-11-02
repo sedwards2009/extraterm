@@ -25,7 +25,6 @@ export class ExtensionContainerElement extends ThemeableElementBase  {
 
   private _extensionContext: InternalExtensionContext = null;
   private _extensionCss: ExtensionCss = null;
-  private _styleElement: HTMLStyleElement = null;
   private _containerDivElement: HTMLDivElement = null;
 
   constructor() {
@@ -48,9 +47,9 @@ export class ExtensionContainerElement extends ThemeableElementBase  {
   private _setupDOM(): void {
     this.attachShadow({ mode: 'open', delegatesFocus: false });
 
-    this._styleElement = document.createElement("style");
-    this._styleElement.id = ThemeableElementBase.ID_THEME;
-    this.shadowRoot.appendChild(this._styleElement);
+    const styleElement = document.createElement("style");
+    styleElement.id = ThemeableElementBase.ID_THEME;
+    this.shadowRoot.appendChild(styleElement);
 
     this._containerDivElement = document.createElement("div");
     this.shadowRoot.appendChild(this._containerDivElement);

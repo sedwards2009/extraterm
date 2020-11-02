@@ -195,7 +195,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   constructor() {
     super();
     this._log = getLogger(EtTerminal.TAG_NAME, this);
-    this._copyToClipboardLater = new DebouncedDoLater(() => this.copyToClipboard(), 100);
+    this._copyToClipboardLater = new DebouncedDoLater(this.copyToClipboard.bind(this), 100);
     this._fetchNextTag();
     this.onDispose = this._onDisposeEventEmitter.event;
   }
@@ -222,7 +222,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._containerElement = DomUtils.getShadowId(this, ID_CONTAINER);
       this._containerElement.appendChild(this._terminalCanvas);
 
-      this._terminalCanvas.onBeforeSelectionChange(ev => this._handleBeforeSelectionChange(ev));
+      this._terminalCanvas.onBeforeSelectionChange(this._handleBeforeSelectionChange.bind(this));
 
       this._terminalCanvas.connectedCallback();
 
@@ -234,11 +234,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
       this.updateThemeCss();
 
-      this._terminalCanvas.addEventListener("mousedown", ev => this._handleMouseDownCapture(ev));
-      this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, (ev: CustomEvent) => {
-        const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
-        this.sendToPty(detail.text);
-      });
+      this._terminalCanvas.addEventListener("mousedown", this._handleMouseDownCapture.bind(this));
+      this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, this._handleTypeText.bind(this));
 
       this._showTip();
     } else {
@@ -246,6 +243,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       // This was already attached at least once.
       this._terminalCanvas.scheduleResize();
     }
+  }
+
+  private _handleTypeText(ev: CustomEvent): void {
+    const detail: GeneralEvents.TypeTextEventDetail = ev.detail;
+    this.sendToPty(detail.text);
   }
 
   /**

@@ -22,44 +22,50 @@ const terminalToTemplateMap = new WeakMap<Terminal, TabTitleData>();
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
+  context.commands.registerCommand("terminal-title:editTitle", commandEditTitle.bind(context));
+  context.window.registerTabTitleWidget("title", tabTitleWidgetFactory);
+  context.window.registerTerminalBorderWidget("edit-title", terminalBorderWidgetFactory.bind(context));
+  context.window.registerSessionSettingsEditor("title", sessionSettingsEditorFactory);
+}
 
-  const commands = context.commands;
-  commands.registerCommand("terminal-title:editTitle", () => {
-    const terminalTitleEditorWidget = <TerminalTitleEditorWidget> context.window.activeTerminal.openTerminalBorderWidget("edit-title");
-    terminalTitleEditorWidget.focus();
-  });
+function commandEditTitle(context: ExtensionContext): void {
+  const terminalTitleEditorWidget = <TerminalTitleEditorWidget>
+    context.window.activeTerminal.openTerminalBorderWidget("edit-title");
+  terminalTitleEditorWidget.focus();
+}
 
-  context.window.registerTabTitleWidget("title", (terminal: Terminal, widget: TabTitleWidget): any => {
-    const templateString = new TemplateString();
-    templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
-    templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminal.environment));
-    templateString.addFormatter("icon", new IconFormatter());
+function tabTitleWidgetFactory(terminal: Terminal, widget: TabTitleWidget): any {
+  const templateString = new TemplateString();
+  templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
+  templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminal.environment));
+  templateString.addFormatter("icon", new IconFormatter());
 
-    const settings = <Settings> terminal.getSessionSettings("title");
-    const template = settings?.template ?? "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
-    templateString.setTemplateString(template);
+  const settings = <Settings> terminal.getSessionSettings("title");
+  const template = settings?.template ?? "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
+  templateString.setTemplateString(template);
 
-    const newDiv = document.createElement("div");
-    newDiv.classList.add("tab_title");
-    widget.getContainerElement().appendChild(newDiv);
+  const newDiv = document.createElement("div");
+  newDiv.classList.add("tab_title");
+  widget.getContainerElement().appendChild(newDiv);
 
-    const updateTitleFunc = () => {
-      newDiv.innerHTML = templateString.formatHtml();
-    };
-    terminal.environment.onChange(updateTitleFunc);
-    updateTitleFunc();
+  const boundUpdateTitleFunc = updateTitleFunc.bind(newDiv, templateString);
+  terminal.environment.onChange(boundUpdateTitleFunc);
+  updateTitleFunc(newDiv, templateString);
 
-    terminalToTemplateMap.set(terminal, { templateString, updateTitleFunc });
-    return null;
-  });
+  terminalToTemplateMap.set(terminal, { templateString, updateTitleFunc: boundUpdateTitleFunc });
+  return null;
+}
 
-  context.window.registerTerminalBorderWidget("edit-title", (terminal: Terminal, widget: TerminalBorderWidget): any => {
-    const tabTitleData = terminalToTemplateMap.get(terminal);
-    return new TerminalTitleEditorWidget(context, terminal, widget, tabTitleData.templateString,
-      tabTitleData.updateTitleFunc);
-  });
+function updateTitleFunc(newDiv: HTMLDivElement, templateString: TemplateString): void {
+  newDiv.innerHTML = templateString.formatHtml();
+}
 
-  context.window.registerSessionSettingsEditor("title", (sessionSettingsEditorBase: SessionSettingsEditorBase) => {
-    setupTerminalTitleSessionSettings(sessionSettingsEditorBase);
-  });
+function terminalBorderWidgetFactory(context: ExtensionContext, terminal: Terminal, widget: TerminalBorderWidget): any {
+  const tabTitleData = terminalToTemplateMap.get(terminal);
+  return new TerminalTitleEditorWidget(context, terminal, widget, tabTitleData.templateString,
+    tabTitleData.updateTitleFunc);
+}
+
+function sessionSettingsEditorFactory(sessionSettingsEditorBase: SessionSettingsEditorBase): any {
+  setupTerminalTitleSessionSettings(sessionSettingsEditorBase);
 }
