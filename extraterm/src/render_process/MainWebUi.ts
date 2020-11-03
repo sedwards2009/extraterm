@@ -770,7 +770,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     if (tabContentElement instanceof EtTerminal) {
       const pty = tabContentElement.getPty();
-      tabContentElement.destroy();
       if (pty !== null) {
         pty.destroy();
       }

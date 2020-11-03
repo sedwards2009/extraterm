@@ -263,10 +263,44 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   dispose(): void {
-    this._onDisposeEventEmitter.fire();
+    if (this._resizePollHandle !== null) {
+      this._resizePollHandle.dispose();
+      this._resizePollHandle = null;
+    }
 
-    this._copyToClipboardLater.cancel();
+    this._getWindow().removeEventListener("resize", this._scheduleResizeBound);
+
+    if (this._emulator !== null) {
+      this._emulator.destroy();
+    }
+    this._emulator = null;
+
+    this._timeHackTerminal = document.createElement("time");
+
+    this._onDisposeEventEmitter.fire();
+    this._onDisposeEventEmitter.dispose();
+
+    this._copyToClipboardLater.dispose();
+    this._copyToClipboardLater = null;
+
     this._terminalCanvas.dispose();
+    this._containerElement.removeChild(this._terminalCanvas);
+    this._terminalCanvas = null;
+
+    while(this.shadowRoot.childElementCount !== 0) {
+      this.shadowRoot.removeChild(this.shadowRoot.childNodes[0]);
+    }
+
+
+    this._pty = null;
+    this._containerElement = null;
+    this._terminalViewer = null;
+    this._emulator = null;
+    this._cookie = null;
+    this._htmlData = null;
+    this._fileBroker = null;
+    this._downloadHandler = null;
+    this._terminalVisualConfig = null;
   }
 
   setWindowId(windowId: string): void {
@@ -412,19 +446,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   setTerminalTitle(title: string): void {
     this._title = title;
     this._sendTitleEvent(title);
-  }
-
-  destroy(): void {
-    if (this._resizePollHandle !== null) {
-      this._resizePollHandle.dispose();
-      this._resizePollHandle = null;
-    }
-
-    this._getWindow().removeEventListener("resize", this._scheduleResizeBound);
-    if (this._emulator !== null) {
-      this._emulator.destroy();
-    }
-    this._emulator = null;
   }
 
   focus(): void {
