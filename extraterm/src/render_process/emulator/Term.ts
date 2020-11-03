@@ -314,6 +314,7 @@ export class Emulator implements EmulatorApi {
     this._events = {};
     this.handler = function() {};
     this.write = () => ( { bufferSize: 0 } );
+    this._applicationModeHandler = null;
   }
 
   private _resetVariables(): void {
