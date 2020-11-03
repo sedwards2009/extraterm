@@ -41,7 +41,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 
   private _handleTerminalDispose(): void {
     this._terminal = null;
-    this.environment._terminal = null;
+    this.environment.dispose();
   }
 
   private _checkIsAlive(): void {
@@ -151,7 +151,7 @@ class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
   onChange: ExtensionApi.Event<string[]>;
   _onChangeEventEmitter = new EventEmitter<string[]>();
 
-  constructor(public _terminal: EtTerminal) {
+  constructor(private _terminal: EtTerminal) {
     this.onChange = this._onChangeEventEmitter.event;
   }
 
@@ -159,6 +159,11 @@ class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
     if (this._terminal == null) {
       throw new Error("Terminal environment is no longer alive and cannot be used.");
     }
+  }
+
+  dispose(): void {
+    this._terminal = null;
+    this._onChangeEventEmitter.dispose();
   }
 
   get(key: string): string {
