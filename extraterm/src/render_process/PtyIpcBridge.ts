@@ -1,17 +1,15 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Event, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
+import { Event, CreateSessionOptions } from "@extraterm/extraterm-extension-api";
+import { EventEmitter } from "extraterm-event-emitter";
+import { Logger, getLogger, log } from "extraterm-logging";
 
-import {Pty, BufferSizeChange} from '../pty/Pty';
-import {EventEmitter} from '../utils/EventEmitter';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
-
-import * as WebIpc from './WebIpc';
-import * as Messages from '../WindowMessages';
+import { Pty, BufferSizeChange } from "../pty/Pty";
+import * as WebIpc from "./WebIpc";
+import * as Messages from "../WindowMessages";
 
 
 /**
@@ -167,6 +165,11 @@ class PtyImpl implements Pty {
     if (this._ptyId != null) {
       WebIpc.ptyClose(this._ptyId);
     }
+
+    this._onAvailableWriteBufferSizeChangeEventEmitter.dispose();
+    this._onDataEventEmitter.dispose();
+    this._onExitEventEmitter.dispose();
+    this._onWillDestroyEventEmitter.dispose();  
   }
 
   async getWorkingDirectory(): Promise<string> {
