@@ -111,7 +111,7 @@ export function doLaterFrame(func: Function): Disposable {
  * but will only fire the callback once. After the callback has been
  * run then it can be immediately reused.
  */
-export class DebouncedDoLater {
+export class DebouncedDoLater implements Disposable {
   private _laterDisposable: Disposable = null;
 
   constructor(private _callback: () => void, public delayMillis=0) {
@@ -136,5 +136,10 @@ export class DebouncedDoLater {
   doNow(): void {
     this.cancel();
     this._callback();
+  }
+
+  dispose(): void {
+    this.cancel();
+    this._callback = null;
   }
 }
