@@ -287,3 +287,21 @@ export function findFixedPositionOffset(element: HTMLElement): { left: number, t
   }
   return { left: 0, top: 0 };
 }
+
+/**
+ * Disassemble all of the node below a DOM subtree
+ *
+ * This removes all the child nodes from every child and grandchild etc in
+ * the subtree.
+ *
+ * @param subtree The DOM tree to disassemble
+ */
+export function disassembleDOMTree(subtree: ChildNode | ShadowRoot): void {
+  if (subtree == null) {
+    return;
+  }
+  for (const node of subtree.childNodes) {
+    disassembleDOMTree(node);
+    subtree.removeChild(node);
+  }
+}
