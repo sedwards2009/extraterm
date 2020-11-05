@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -46,6 +46,11 @@ export class ResizeCanary extends HTMLElement {
       const event = new CustomEvent("resize", { detail: { } });
       this.dispatchEvent(event);
     });
+  }
+
+  disconnectedCallback(): void {
+    const container = <HTMLDivElement> getShadowId(this, ID_SIZER);
+    ResizeCanary._resizeNotifier.unobserve(container);
   }
 
   private _createNodes(): Node {
