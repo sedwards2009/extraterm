@@ -505,22 +505,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._splitLayout.update();
 
     const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tab_id_" + newId);
-    closeTabButton.addEventListener('click', (ev: MouseEvent): void => {
-      this.closeTab(tabContentElement);
-    });
+    closeTabButton.addEventListener('click', this.closeTab.bind(this, tabContentElement));
 
     const tabHeader = DomUtils.getShadowRoot(this).getElementById("tab_id_" + newId);
-    tabHeader.addEventListener('contextmenu', ev => {
-      ev.stopImmediatePropagation();
-      ev.preventDefault();
-
-      const override: ExtensionContextOverride = {};
-      if (tabContentElement instanceof EtTerminal) {
-        override.activeTerminal = tabContentElement;
-      }
-
-      dispatchContextMenuRequest(this, ev.clientX, ev.clientY, ContextMenuType.TERMINAL_TAB, override);
-    }, true);
+    tabHeader.addEventListener('contextmenu', this._handleTabHeaderContextMenu.bind(this, tabContentElement), true);
 
     if (isTerminal) {
       const extensionsDiv = <HTMLDivElement> DomUtils.getShadowRoot(this).getElementById("tab_title_extensions_" + newId);
@@ -528,6 +516,18 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
 
     return newTab;
+  }
+
+  private _handleTabHeaderContextMenu(tabContentElement: Element, ev: MouseEvent): void {
+    ev.stopImmediatePropagation();
+    ev.preventDefault();
+
+    const override: ExtensionContextOverride = {};
+    if (tabContentElement instanceof EtTerminal) {
+      override.activeTerminal = tabContentElement;
+    }
+
+    dispatchContextMenuRequest(this, ev.clientX, ev.clientY, ContextMenuType.TERMINAL_TAB, override);
   }
 
   private _addTabTitleWidgets(extensionsDiv: HTMLDivElement, terminal: EtTerminal): void {
