@@ -3,11 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, render } from "extraterm-lit-html";
+import { html, render, parts } from "extraterm-lit-html";
 import { CustomElement } from "extraterm-web-component-decorators";
 import { getLogger, Logger } from "extraterm-logging";
 import { CssFile } from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
+import { disassembleDOMTree } from "../DomUtils";
 
 
 export type BorderSide = "north" | "south" | "east" | "west";
@@ -26,6 +27,12 @@ export class SidebarLayout extends ThemeableElementBase {
     this.attachShadow({ mode: "open", delegatesFocus: false });
     this.updateThemeCss();
     this._render();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    parts.set(this.shadowRoot, undefined);
+    disassembleDOMTree(this.shadowRoot);
   }
 
   private _handleSlotChange(ev: Event): void {

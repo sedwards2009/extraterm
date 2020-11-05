@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, render, TemplateResult } from "extraterm-lit-html";
+import { html, render, TemplateResult, parts } from "extraterm-lit-html";
 import { DirectiveFn } from "extraterm-lit-html/lib/directive";
 import { live } from "extraterm-lit-html/directives/live";
 import { repeat } from "extraterm-lit-html/directives/repeat";
@@ -17,6 +17,7 @@ import * as ThemeTypes from "../../theme/Theme";
 import {PopDownDialog} from "./PopDownDialog";
 import { ThemeableElementBase } from "../ThemeableElementBase";
 import * as DomUtils from "../DomUtils";
+import { disassembleDOMTree } from "../DomUtils";
 
 
 const ID_FILTER = "ID_FILTER";
@@ -68,6 +69,12 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
     this._formatEntries = (filteredEntries: T[], selectedId: string, filter: string): DirectiveFn | TemplateResult =>
       repeat(filteredEntries, (entry) => entry.id,
         (entry, index) => html`<div data-id=${entry.id}>${entry.id}</div>`);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    parts.set(this.shadowRoot, undefined);
+    disassembleDOMTree(this.shadowRoot);
   }
 
   private _handleDialogClose(): void {

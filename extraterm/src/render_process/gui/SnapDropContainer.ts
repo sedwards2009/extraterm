@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, render } from "extraterm-lit-html";
+import { html, render, parts } from "extraterm-lit-html";
 import { log, Logger, getLogger} from "extraterm-logging";
 import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 
@@ -11,6 +11,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import {ElementMimeType, FrameMimeType} from '../InternalMimeTypes';
+import { disassembleDOMTree } from "../DomUtils";
 
 
 const ID_TOP = "ID_TOP";
@@ -76,6 +77,12 @@ export class SnapDropContainer extends ThemeableElementBase {
   private _updateSupportedMimeTypes(): void {
     const mimeTypeParams = this.windowId != null && this.windowId !== "" ? `;windowid=${this.windowId}` : "";
     this._supportedMimeTypes = SUPPORTED_MIMETYPES.map(mt => mt + mimeTypeParams);
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    parts.set(this.shadowRoot, undefined);
+    disassembleDOMTree(this.shadowRoot);
   }
 
   @Attribute windowId = "";
