@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as _ from "lodash";
-import { html, render, TemplateResult } from "extraterm-lit-html";
+import { html, render, TemplateResult, parts } from "extraterm-lit-html";
 import { Attribute, Observe, CustomElement, Filter } from "extraterm-web-component-decorators";
 import { classMap } from "extraterm-lit-html/directives/class-map.js";
 
@@ -21,6 +21,7 @@ import { SnapDropContainer } from "./SnapDropContainer";
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from "../GeneralEvents";
 import { ElementMimeType, FrameMimeType } from "../InternalMimeTypes";
 import { ThemeableElementBase } from "../ThemeableElementBase";
+import { disassembleDOMTree } from "../DomUtils";
 
 const ATTR_TAG_REST_LEFT = "rest-left";
 const ATTR_TAG_REST_RIGHT = "rest";
@@ -89,6 +90,12 @@ export class TabWidget extends ThemeableElementBase {
     TabWidget._resizeNotifier.observe(this._getTabbar(), this._handleTabbarResize.bind(this));
 
     this._setupDragAndDrop();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    parts.set(this.shadowRoot, undefined);
+    disassembleDOMTree(this.shadowRoot);
   }
 
   private _syncDom(): void {

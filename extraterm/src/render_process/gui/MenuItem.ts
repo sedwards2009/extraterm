@@ -3,13 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, render, TemplateResult } from "extraterm-lit-html";
+import { html, parts, render, TemplateResult } from "extraterm-lit-html";
 import { classMap } from "extraterm-lit-html/directives/class-map.js";
 import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
 import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
+import { disassembleDOMTree } from "../DomUtils";
 
 
 /**
@@ -34,6 +35,12 @@ export class MenuItem extends ThemeableElementBase {
   @Observe("selected", "shortcut", "icon")
   private observeAttrChange(): void {
     this._render();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    parts.set(this.shadowRoot, undefined);
+    disassembleDOMTree(this.shadowRoot);
   }
 
   protected _render(): void {

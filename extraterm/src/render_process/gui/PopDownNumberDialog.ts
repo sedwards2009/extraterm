@@ -5,13 +5,14 @@
  */
 import {Disposable} from "@extraterm/extraterm-extension-api";
 import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
-import { html, render } from "extraterm-lit-html";
+import { html, parts, render } from "extraterm-lit-html";
 
 import * as DomUtils from "../DomUtils";
 import {doLater} from "extraterm-later";
 import {PopDownDialog} from "./PopDownDialog";
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
+import { disassembleDOMTree } from "../DomUtils";
 
 const ID_INPUT = "ID_INPUT";
 
@@ -33,6 +34,12 @@ export class PopDownNumberDialog extends ThemeableElementBase {
     this._handleInputChange = this._handleInputChange.bind(this);
     this.attachShadow({ mode: "open", delegatesFocus: true });
     this._render();
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    parts.set(this.shadowRoot, undefined);
+    disassembleDOMTree(this.shadowRoot);
   }
 
   protected _render(): void {

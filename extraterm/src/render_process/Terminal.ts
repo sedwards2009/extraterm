@@ -301,6 +301,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._fileBroker = null;
     this._downloadHandler = null;
     this._terminalVisualConfig = null;
+    this._lastCommandTerminalViewer = null;
   }
 
   setWindowId(windowId: string): void {

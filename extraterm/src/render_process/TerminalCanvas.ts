@@ -6,6 +6,7 @@
 import {Logger, getLogger, log} from "extraterm-logging";
 import { ResizeNotifier } from "extraterm-resize-notifier";
 import { Disposable, Event } from '@extraterm/extraterm-extension-api';
+import { EventEmitter } from "extraterm-event-emitter";
 
 import * as DisposableUtils from '../utils/DisposableUtils';
 import { ScrollBar } from "./gui/ScrollBar";
@@ -19,7 +20,6 @@ import * as DomUtils from './DomUtils';
 import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
 import { TextViewer } from "./viewers/TextAceViewer";
 import { VisualState, Mode, CursorEdgeDetail, Edge, RefreshLevel } from "./viewers/ViewerElementTypes";
-import { EventEmitter } from "../utils/EventEmitter";
 import { ResizeCanary } from "./ResizeCanary";
 import { CustomElement } from "extraterm-web-component-decorators";
 import { ThemeableElementBase } from "./ThemeableElementBase";
@@ -27,6 +27,7 @@ import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { CssFile } from '../theme/Theme';
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
 import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
+import { disassembleDOMTree } from "./DomUtils";
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;

@@ -623,7 +623,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   createNewTerminalTabTitleWidgets(newTerminal: EtTerminal): HTMLElement[] {
     let result: HTMLElement[] = [];
     for (const extension of this._getActiveRenderExtensions()) {
-      result = [...result, ...extension.contextImpl. _createTabTitleWidgets(newTerminal)];
+      result = [...result, ...extension.contextImpl._createTabTitleWidgets(newTerminal)];
     }
     return result;
   }
