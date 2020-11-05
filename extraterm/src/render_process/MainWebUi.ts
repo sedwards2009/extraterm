@@ -798,7 +798,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     // FIXME This is a work-around for the problem where new tabs can't get the focus immediately.
     if ( ! DomUtils.activeNestedElements().includes(tabContentElement)) {
-      this._log.warn(`Failed to focus content element: `, tabContentElement);
+      this._log.warn(`Failed to focus content element: `, tabContentElement.tagName);
       doLater(() => {
         this._splitLayout.showTabByTabContent(tabContentElement);
         this._focusTabContent(tabContentElement);
