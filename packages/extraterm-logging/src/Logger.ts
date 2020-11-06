@@ -125,11 +125,12 @@ export interface Logger {
   getFormattedLogMessages(): string;
 }
 
-
-const finalizationRegistry = new FinalizationRegistry( (log: Logger) => {
-  log.debug(`Object destroyed.`);
-});
-
+let finalizationRegistry: FinalizationRegistry = null;
+if (typeof FinalizationRegistry !== "undefined") {
+  finalizationRegistry = new FinalizationRegistry( (log: Logger) => {
+    log.debug(`Object destroyed.`);
+  });
+}
 
 export function getLogger(name?: string, instance?: any): Logger {
   if (instance != null) {
@@ -147,7 +148,7 @@ export function getLogger(name?: string, instance?: any): Logger {
     }
     const logger = new LoggerImpl(loggerName);
     loggersMap.set(instance, logger);
-    if (logLifecycle) {
+    if (logLifecycle && finalizationRegistry != null) {
       finalizationRegistry.register(instance, logger);
       logger.debug("Object created.");
     }
