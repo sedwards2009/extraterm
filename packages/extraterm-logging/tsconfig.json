@@ -2,7 +2,10 @@
     "extends": "../../tsconfig",
     "compilerOptions": {
         "outDir": "dist",
-        "rootDir": "src"
+        "rootDir": "src",
+        "paths": {
+            "*": ["./src/typings/*"]
+        }
     },
     "include": [
         "./src/**/*.ts"
