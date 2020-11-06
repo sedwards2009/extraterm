@@ -152,8 +152,8 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     if (DomUtils.getShadowRoot(this) === null) {
       this.tabIndex = 0;
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: true });
-      const clone = this.createClone();
-      shadow.appendChild(clone);
+      const shadowContents = this._createShadowContents();
+      shadow.appendChild(shadowContents);
 
       this.installThemeCss();
 
@@ -981,29 +981,32 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     }
   }
 
-  private createClone(): Node {
+  private _createShadowContents(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
       template = <HTMLTemplateElement>window.document.createElement('template');
       template.id = ID;
-      template.innerHTML = `<style id="${ID_MAIN_STYLE}">
-
-        /* The idea is that this rule will be quickly applied. We can then monitor
-           the computed style to see when the proper theme font is applied and
-           NO_STYLE_HACK disappears from the reported computed style. */
-        .terminal {
-          font-family: sans-serif, ${NO_STYLE_HACK};
-        }
-
-        </style>
-        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
-        <style id="${ThemeableElementBase.ID_THEME}"></style>
-        <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`;
-
+      template.innerHTML = this._templateContentsString();
       window.document.body.appendChild(template);
     }
 
     return window.document.importNode(template.content, true);
+  }
+
+  private _templateContentsString(): string {
+    return `<style id="${ID_MAIN_STYLE}">
+
+    /* The idea is that this rule will be quickly applied. We can then monitor
+       the computed style to see when the proper theme font is applied and
+       NO_STYLE_HACK disappears from the reported computed style. */
+    .terminal {
+      font-family: sans-serif, ${NO_STYLE_HACK};
+    }
+
+    </style>
+    <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
+    <style id="${ThemeableElementBase.ID_THEME}"></style>
+    <div id="${ID_CONTAINER}" class="terminal_viewer terminal ${CLASS_UNFOCUSED}"></div>`;
   }
 
   private _getCssVarsRules(): string {

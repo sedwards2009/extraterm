@@ -154,8 +154,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
 
-  private _scheduleResizeBound: any;
-
   // The current size of the emulator. This is used to detect changes in size.
   private _columns = -1;
   private _rows = -1;
@@ -206,8 +204,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._elementAttached = true;
 
       const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
-      const clone = this._createClone();
-      shadow.appendChild(clone);
+      const shadowContents = this._createShadowContents();
+      shadow.appendChild(shadowContents);
 
       this.addEventListener("focus", this._handleFocus.bind(this));
       this.addEventListener("blur", this._handleBlur.bind(this));
@@ -268,14 +266,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._resizePollHandle = null;
     }
 
-    this._getWindow().removeEventListener("resize", this._scheduleResizeBound);
-
     if (this._emulator !== null) {
       this._emulator.destroy();
     }
     this._emulator = null;
-
-    this._timeHackTerminal = document.createElement("time");
 
     this._onDisposeEventEmitter.fire();
     this._onDisposeEventEmitter.dispose();
@@ -290,7 +284,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     while(this.shadowRoot.childElementCount !== 0) {
       this.shadowRoot.removeChild(this.shadowRoot.childNodes[0]);
     }
-
 
     this._pty = null;
     this._containerElement = null;
@@ -546,20 +539,24 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     };
   }
 
-  private _createClone(): Node {
+  private _createShadowContents(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
       template = window.document.createElement("template");
       template.id = ID;
 
-      template.innerHTML = trimBetweenTags(`
-        <style id="${ThemeableElementBase.ID_THEME}"></style>
-        <${SidebarLayout.TAG_NAME} id='${ID_CONTAINER}'></${SidebarLayout.TAG_NAME}>
-        `);
+      template.innerHTML = this._templateContentsString();
       window.document.body.appendChild(template);
     }
 
     return window.document.importNode(template.content, true);
+  }
+
+  private _templateContentsString(): string {
+    return trimBetweenTags(`
+<style id="${ThemeableElementBase.ID_THEME}"></style>
+<${SidebarLayout.TAG_NAME} id='${ID_CONTAINER}'></${SidebarLayout.TAG_NAME}>
+`);
   }
 
   /**

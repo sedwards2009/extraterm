@@ -196,27 +196,31 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     this.refresh(RefreshLevel.COMPLETE);
   }
 
-  private _createClone(): Node {
+  private _createShadowContents(): Node {
     let template = <HTMLTemplateElement>window.document.getElementById(ID);
     if (template === null) {
       template = window.document.createElement('template');
       template.id = ID;
-
-      template.innerHTML = trimBetweenTags(`
-        <style id="${ThemeableElementBase.ID_THEME}"></style>
-        <style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
-        <div id='${ID_CONTAINER}'>
-          <div id='${ID_SCROLL_CONTAINER}'>
-            <div id='${ID_SCROLL_AREA}'></div>
-          </div>
-          <div id='${ID_SCROLLBAR_CONTAINER}'>
-            <et-scroll-bar id='${ID_SCROLLBAR}'></et-scroll-bar>
-          </div>
-        </div>`);
+      template.innerHTML = this._templateContentsString();
       window.document.body.appendChild(template);
     }
 
     return window.document.importNode(template.content, true);
+  }
+
+  private _templateContentsString(): string {
+    return trimBetweenTags(`
+<style id="${ThemeableElementBase.ID_THEME}"></style>
+<style id="${ID_CSS_VARS}">${this._getCssVarsRules()}</style>
+<div id='${ID_CONTAINER}'>
+  <div id='${ID_SCROLL_CONTAINER}'>
+    <div id='${ID_SCROLL_AREA}'></div>
+  </div>
+  <div id='${ID_SCROLLBAR_CONTAINER}'>
+    <et-scroll-bar id='${ID_SCROLLBAR}'></et-scroll-bar>
+  </div>
+</div>
+`);
   }
 
   protected _themeCssFiles(): CssFile[] {
