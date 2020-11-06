@@ -305,10 +305,27 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
         kid.element.dispose();
       }
     }
+    this._childElementList = [];
+
+    while(this._scrollArea.hasChildNodes()) {
+      this._scrollArea.removeChild(this._scrollArea.children[0]);
+    }
+
+    this._virtualScrollArea = null;
+    this._stashArea = null;
 
     if (this._scrollContainer != null) {
       TerminalCanvas._resizeNotifier.unobserve(this._scrollContainer);
     }
+    this._scrollContainer = null;
+
+    this._scrollBar = null;
+    this._cssStyleElement = null;
+    this._terminalViewer = null;
+    this._lastChildWithFocus = null;
+    this._scrollArea = null;
+
+    this._onBeforeSelectionChangeEmitter.dispose();
   }
 
   setConfigDatabase(configManager: ConfigDatabase): void {
