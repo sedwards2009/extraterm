@@ -22,9 +22,9 @@ const terminalToTemplateMap = new WeakMap<Terminal, TabTitleData>();
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  context.commands.registerCommand("terminal-title:editTitle", commandEditTitle.bind(context));
+  context.commands.registerCommand("terminal-title:editTitle", commandEditTitle.bind(null, context));
   context.window.registerTabTitleWidget("title", tabTitleWidgetFactory);
-  context.window.registerTerminalBorderWidget("edit-title", terminalBorderWidgetFactory.bind(context));
+  context.window.registerTerminalBorderWidget("edit-title", terminalBorderWidgetFactory.bind(null, context));
   context.window.registerSessionSettingsEditor("title", sessionSettingsEditorFactory);
 }
 
@@ -48,7 +48,7 @@ function tabTitleWidgetFactory(terminal: Terminal, widget: TabTitleWidget): any 
   newDiv.classList.add("tab_title");
   widget.getContainerElement().appendChild(newDiv);
 
-  const boundUpdateTitleFunc = updateTitleFunc.bind(newDiv, templateString);
+  const boundUpdateTitleFunc = updateTitleFunc.bind(null, newDiv, templateString);
   terminal.environment.onChange(boundUpdateTitleFunc);
   updateTitleFunc(newDiv, templateString);
 
