@@ -12,6 +12,7 @@ import { trimBetweenTags } from 'extraterm-trim-between-tags';
 const ID_SCROLLBACK = "ID_SCROLLBACK";
 const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 
+const isLinux = process.platform === "linux";
 
 @Component(
   {
@@ -19,9 +20,10 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
       value: String,
     },
     template: trimBetweenTags(`
-<select v-bind:value="value" v-on:input="$emit('input', $event.target.value)" class="char-width-12">
+<select v-bind:value="value" v-on:input="$emit('input', $event.target.value)" class="char-width-20">
   <option value="none">None</option>
   <option value="paste">Paste from Clipboard</option>
+  <option v-if="isLinux" value="paste_selection">Paste from Selection Clipboard</option>
   <option value="context_menu">Context Menu</option>
 </select>
 `)
@@ -29,6 +31,10 @@ const ID_SCROLLBACK_FRAMES = "ID_SCROLLBACK_FRAMES";
 export class MouseActionDropdown extends Vue {
   // Props
   value: MouseButtonAction;
+
+  get isLinux(): boolean {
+    return isLinux;
+  }
 }
 
 @Component(

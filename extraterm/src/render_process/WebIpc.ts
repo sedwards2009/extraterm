@@ -15,6 +15,7 @@ import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
 import { LogicalKeybindingsName, CustomKeybindingsSet } from '../keybindings/KeybindingsTypes';
+import { ClipboardType } from '../WindowMessages';
 
 const _log = getLogger("WebIPC");
 
@@ -153,8 +154,11 @@ export function clipboardWrite(text: string): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function clipboardReadRequest(): void {
-  const msg: Messages.ClipboardReadRequestMessage = { type: Messages.MessageType.CLIPBOARD_READ_REQUEST };
+export function clipboardReadRequest(clipboardType=ClipboardType.DEFAULT): void {
+  const msg: Messages.ClipboardReadRequestMessage = {
+    type: Messages.MessageType.CLIPBOARD_READ_REQUEST,
+    clipboardType
+  };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 

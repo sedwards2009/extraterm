@@ -362,6 +362,11 @@ export interface ClipboardWriteMessage extends Message {
   text: string;
 }
 
+export enum ClipboardType {
+  DEFAULT = "clipboard",
+  SELECTION = "selection",
+}
+
 /**
  * Clipboard read request.
  *
@@ -369,6 +374,7 @@ export interface ClipboardWriteMessage extends Message {
  * See ClipboardReadMessage.
  */
 export interface ClipboardReadRequestMessage extends Message {
+  clipboardType: ClipboardType;
 }
 
 /**

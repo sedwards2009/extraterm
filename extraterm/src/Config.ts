@@ -9,7 +9,7 @@ import { KeybindingsSet, LogicalKeybindingsName } from './keybindings/Keybinding
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
 export type GpuDriverWorkaround = "none" | "no_blend";
-export type MouseButtonAction = "none" | "context_menu" | "paste";
+export type MouseButtonAction = "none" | "context_menu" | "paste" | "paste_selection";
 export type ShowTipsStrEnum = "always" | "daily" | "never";
 export type TerminalMarginStyle = "none" | "thin" | "normal" | "thick";
 export type TitleBarStyle = "native" | "theme" | "compact";

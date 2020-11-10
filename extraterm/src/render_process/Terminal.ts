@@ -49,6 +49,7 @@ import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from "./extension/InternalTypes";
 import { TerminalVisualConfig } from "./TerminalVisualConfig";
+import { ClipboardType } from "../WindowMessages";
 
 const log = LogDecorator;
 
@@ -745,6 +746,12 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         this._pasteFromClipboard();
         break;
 
+      case "paste_selection":
+        ev.stopPropagation();
+        ev.preventDefault();
+        this._pasteFromClipboard(ClipboardType.SELECTION);
+        break;
+
       default:
         break;
     }
@@ -1334,8 +1341,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
    *
    * This method is async and returns before the paste is done.
    */
-  private _pasteFromClipboard(): void {
-    WebIpc.clipboardReadRequest();
+  private _pasteFromClipboard(clipboardType=ClipboardType.DEFAULT): void {
+    WebIpc.clipboardReadRequest(clipboardType);
   }
 
   private _embeddedViewerPopOutEvent(viewerElement: EmbeddedViewer): void {

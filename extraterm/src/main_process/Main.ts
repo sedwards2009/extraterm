@@ -1208,7 +1208,7 @@ function handleClipboardWrite(msg: Messages.ClipboardWriteMessage): void {
 }
 
 function handleClipboardReadRequest(msg: Messages.ClipboardReadRequestMessage): Messages.ClipboardReadMessage {
-  const text = clipboard.readText();
+  const text = clipboard.readText(msg.clipboardType);
   const reply: Messages.ClipboardReadMessage = { type: Messages.MessageType.CLIPBOARD_READ, text: text };
   return reply;
 }
