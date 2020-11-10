@@ -3,13 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from 'lodash';
-import * as fse from 'fs-extra';
-import * as constants from 'constants';
-import * as child_process from 'child_process';
+import * as _ from "lodash";
+import * as child_process from "child_process";
 
-import {ExtensionContext, Logger, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import {WslProxySessionEditorUi} from './WslProxySessionEditorUi';
+import { Logger, SessionConfiguration, SessionEditorBase } from "@extraterm/extraterm-extension-api";
+import { WslProxySessionEditorUi } from "./WslProxySessionEditorUi";
 
 
 interface WslProxySessionConfiguration extends SessionConfiguration {
@@ -18,77 +16,59 @@ interface WslProxySessionConfiguration extends SessionConfiguration {
   distribution?: string;
 }
 
-let log: Logger = null;
-
-export function getWslProxySessionEditorClass(context: ExtensionContext): any {
-  log = context.logger;
-
-  log.info("WslProxySessionEditorExtension activate");
+export function init(): void {
   readEtcShellsSpawn();
   readDistributionsSpawn();
+}
 
-  class WslProxySessionEditor extends context.window.extensionSessionEditorBaseConstructor {
-    private _ui: WslProxySessionEditorUi = null;
-    private _debouncedDataChanged: ()=> void = null;
+export function wslProxySessionEditorFactory(log: Logger, sessionEditorBase: SessionEditorBase): any {
+  const ui = new WslProxySessionEditorUi();
+  const debouncedDataChanged = _.debounce(dataChanged.bind(null, sessionEditorBase, ui), 500);
 
-    created(): void {
-      super.created();
+  const component = ui.$mount();
+  ui.$watch("$data", debouncedDataChanged, { deep: true, immediate: false } );
 
-      this._debouncedDataChanged = _.debounce(this._dataChanged.bind(this), 500);
+  const config = <WslProxySessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  loadConfig(ui, config);
 
-      this._ui = new WslProxySessionEditorUi();
-      const component = this._ui.$mount();
-      this._ui.$watch('$data', this._debouncedDataChanged.bind(this), { deep: true, immediate: false } );
+  sessionEditorBase.getContainerElement().appendChild(component.$el);
+}
 
-      const config = <WslProxySessionConfiguration> this.getSessionConfiguration();
-      this._loadConfig(config);
-
-      this.getContainerElement().appendChild(component.$el);
-    }
-
-    setSessionConfiguration(config: SessionConfiguration): void {
-      super.setSessionConfiguration(config);
-      this._loadConfig(config);
-    }
-
-    _loadConfig(config: WslProxySessionConfiguration): void {
-      let fixedConfig = config;
-      if (config.shell == null) {
-        fixedConfig = {
-          uuid: config.uuid,
-          name: config.name,
-          useDefaultShell: true,
-          shell: "",
-          args: "",
-          initialDirectory: "",
-          distribution: "",
-        };
-      }
-
-      this._ui.name = fixedConfig.name;
-      this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
-      this._ui.shell = fixedConfig.shell;
-      this._ui.etcShells = [...etcShells];
-      this._ui.distribution = fixedConfig.distribution == null ? "" : fixedConfig.distribution;
-      this._ui.distributions = [...distributions];
-      this._ui.args = fixedConfig.args;
-      this._ui.initialDirectory = fixedConfig.initialDirectory || "";
-    }
-
-    _dataChanged(): void {
-      const changes = {
-        name: this._ui.name,
-        useDefaultShell: this._ui.useDefaultShell === 1,
-        shell: this._ui.shell,
-        args: this._ui.args,
-        initialDirectory: this._ui.initialDirectory,
-        distribution: this._ui.distribution,
-      };
-      this.updateSessionConfiguration(changes);
-    }
+function loadConfig(ui: WslProxySessionEditorUi, config: WslProxySessionConfiguration): void {
+  let fixedConfig = config;
+  if (config.shell == null) {
+    fixedConfig = {
+      uuid: config.uuid,
+      name: config.name,
+      useDefaultShell: true,
+      shell: "",
+      args: "",
+      initialDirectory: "",
+      distribution: "",
+    };
   }
 
-  return WslProxySessionEditor;
+  ui.name = fixedConfig.name;
+  ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
+  ui.shell = fixedConfig.shell;
+  ui.etcShells = [...etcShells];
+  ui.distribution = fixedConfig.distribution == null ? "" : fixedConfig.distribution;
+  ui.distributions = [...distributions];
+  ui.args = fixedConfig.args;
+  ui.initialDirectory = fixedConfig.initialDirectory || "";
+}
+
+function dataChanged(sessionEditorBase: SessionEditorBase, ui: WslProxySessionEditorUi): void {
+  const config = <WslProxySessionConfiguration> sessionEditorBase.getSessionConfiguration();
+
+  config.name = ui.name;
+  config.useDefaultShell = ui.useDefaultShell === 1;
+  config.shell = ui.shell;
+  config.args = ui.args;
+  config.initialDirectory = ui.initialDirectory;
+  config.distribution = ui.distribution;
+
+  sessionEditorBase.setSessionConfiguration(config);
 }
 
 let etcShells: string[] = [];
@@ -100,8 +80,7 @@ function readEtcShellsSpawn(): void {
 function spawnWsl(parameters: string[], encoding: string, onExit: (text: string) => void): void {
   // For some reason child_process.exec() doesn't want to work properly on Windows.
   // spawn still does though, but it is a bit more fiddly to use.
-
-  const wslProcess = child_process.spawn("wsl.exe", parameters, {shell: false, stdio: 'pipe'});
+  const wslProcess = child_process.spawn("wsl.exe", parameters, {shell: false, stdio: "pipe"});
 
   let text = "";
   wslProcess.stdout.on("data", data => {
