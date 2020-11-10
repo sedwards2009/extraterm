@@ -6,8 +6,40 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { ExtensionManager, SessionSettingsChange, InternalSessionSettingsEditor } from '../../extension/InternalTypes';
+import { ExtensionManager, SessionSettingsChange, InternalSessionSettingsEditor, InternalSessionEditor, SessionConfigurationChange } from '../../extension/InternalTypes';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
+
+
+@Component({
+  props: {
+    internalSessionEditor: Object,
+  },
+  template: `<div ref="root"></div>`
+})
+class SessionSettingsBridge extends Vue {
+  // Props
+  internalSessionEditor: InternalSessionEditor;
+
+  // Fields
+  private _initialized = false;
+
+  mounted(): void {
+    this._setup();
+  }
+
+  private _setup(): void {
+    if ( ! this._initialized) {
+      this._initialized = true;
+
+      this.internalSessionEditor.onSessionConfigurationChanged((changeEvent: SessionConfigurationChange) => {
+        this.$emit("change", changeEvent.sessionConfiguration);
+      });
+
+      (<HTMLElement>this.$refs.root).appendChild(this.internalSessionEditor._getExtensionContainerElement());
+      this.internalSessionEditor._init();
+    }
+  }
+}
 
 
 @Component({
@@ -44,6 +76,7 @@ class ExtraSessionSettings extends Vue {
 
 @Component({
   components: {
+    "editor-bridge": SessionSettingsBridge,
     "extra-settings": ExtraSessionSettings
   },
   props: {
@@ -63,9 +96,9 @@ class ExtraSessionSettings extends Vue {
     <button v-if="! isDefault" class="microtool danger" v-on:click="$emit('delete-session', uuid)"><i class="fa fa-times"></i></button>
   </div>
   <div>
-    <component
-      v-bind:is="sessionEditor"
+    <editor-bridge
       v-bind:sessionConfiguration.prop="sessionConfiguration"
+      v-bind:internalSessionEditor="sessionEditor"
       v-on:change="handleChange"
     />
 
@@ -121,13 +154,12 @@ export class SessionCardUi extends Vue {
     return "";
   }
 
-  get sessionEditor(): string {
-    return this.extensionManager.getSessionEditorTagForType(this.sessionConfiguration.type);
+  get sessionEditor(): InternalSessionEditor {
+    return this.extensionManager.createSessionEditor(this.sessionConfiguration.type, this.sessionConfiguration);
   }
 
-  handleChange(event: Event): void {
-    const newSessionConfig = (<any>event.target).sessionConfiguration;
-    this.$emit("change", newSessionConfig);
+  handleChange(sessionConfiguration: SessionConfiguration): void {
+    this.$emit("change", sessionConfiguration);
   }
 
   handleSettingsChanged(settingsConfigKey: string, settings: Object): void {

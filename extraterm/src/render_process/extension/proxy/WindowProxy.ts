@@ -9,9 +9,9 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 
 import { EtTerminal } from "../../Terminal";
-import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor } from "../InternalTypes";
+import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor, InternalSessionEditor } from "../InternalTypes";
 import { Logger, getLogger, log } from "extraterm-logging";
-import { WorkspaceSessionEditorRegistry, ExtensionSessionEditorBaseImpl } from "../WorkspaceSessionEditorRegistry";
+import { WorkspaceSessionEditorRegistry } from "../WorkspaceSessionEditorRegistry";
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from "../WorkspaceViewerRegistry";
 import { CommonExtensionWindowState } from "../CommonExtensionState";
 import { SessionSettingsEditorFactory, SessionConfiguration } from "@extraterm/extraterm-extension-api";
@@ -43,11 +43,10 @@ export class WindowProxy implements InternalWindow {
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
     this._windowSessionSettingsRegistry = new WorkspaceSessionSettingsRegistry(this._internalExtensionContext);
     this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
-    this.extensionSessionEditorBaseConstructor = ExtensionSessionEditorBaseImpl;
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
 
-  newTerminalCreated(newTerminal): void {
+  newTerminalCreated(newTerminal: EtTerminal): void {
     if (this._onDidCreateTerminalEventEmitter.hasListeners()) {
       const terminal = this._internalExtensionContext._proxyFactory.getTerminalProxy(newTerminal);
       this._onDidCreateTerminalEventEmitter.fire(terminal);
@@ -86,6 +85,7 @@ export class WindowProxy implements InternalWindow {
     //   .map(terminal => this._internalExtensionContext.getTerminalProxy(terminal));
   }
 
+  // ---- Viewers ----
   extensionViewerBaseConstructor: ExtensionApi.ExtensionViewerBaseConstructor;
 
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
@@ -96,20 +96,21 @@ export class WindowProxy implements InternalWindow {
     return this._windowViewerRegistry.findViewerElementTagByMimeType(mimeType);
   }
 
-  extensionSessionEditorBaseConstructor: ExtensionApi.ExtensionSessionEditorBaseConstructor;
-
-  registerSessionEditor(type: string, sessionEditorClass: ExtensionApi.ExtensionSessionEditorBaseConstructor): void {
-    this._windowSessionEditorRegistry.registerSessionEditor(type, sessionEditorClass);
+  // ---- Session Editors ----
+  registerSessionEditor(type: string, factory: ExtensionApi.SessionEditorFactory): void {
+    this._windowSessionEditorRegistry.registerSessionEditor(type, factory);
   }
 
-  getSessionEditorTagForType(sessionType: string): string {
-    return this._windowSessionEditorRegistry.getSessionEditorTagForType(sessionType);
+  createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor {
+    return this._windowSessionEditorRegistry.createSessionEditor(sessionType, sessionConfiguration);
   }
 
+  // ---- Tab Title Widgets ----
   registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
     this._internalExtensionContext._registerTabTitleWidget(name, factory);
   }
 
+  // ---- Terminal Border Widgets ----
   registerTerminalBorderWidget(name: string, factory: ExtensionApi.TerminalBorderWidgetFactory): void {
     const borderWidgetMeta = this._internalExtensionContext._extensionMetadata.contributes.terminalBorderWidgets;
     for (const data of borderWidgetMeta) {
@@ -127,6 +128,7 @@ export class WindowProxy implements InternalWindow {
     return this._terminalBorderWidgetFactoryMap.get(name);
   }
 
+  // ---- Session Settings editors ----
   registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void {
     this._windowSessionSettingsRegistry.registerSessionSettingsEditor(id, factory);
   }

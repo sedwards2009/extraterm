@@ -47,7 +47,6 @@ export interface ExtensionManager {
   findViewerElementTagByMimeType(mimeType: string): string;
 
   getAllSessionTypes(): { name: string, type: string }[];
-  getSessionEditorTagForType(type: string): string;
 
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
@@ -76,6 +75,7 @@ export interface ExtensionManager {
   commandRegistrationChanged(): void;
 
   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
+  createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor;
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
 }
 
@@ -109,7 +109,7 @@ export interface ExtensionUiUtils {
 
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
-  getSessionEditorTagForType(sessionType): string;
+  createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor;
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
@@ -161,6 +161,16 @@ export interface SessionSettingsChange {
 export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
   name: string;
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
+  _getExtensionContainerElement(): ExtensionContainerElement;
+  _init(): void;
+}
+
+export interface SessionConfigurationChange {
+  sessionConfiguration: SessionConfiguration;
+}
+
+export interface InternalSessionEditor extends ExtensionApi.SessionEditorBase {
+  onSessionConfigurationChanged: ExtensionApi.Event<SessionConfigurationChange>;
   _getExtensionContainerElement(): ExtensionContainerElement;
   _init(): void;
 }

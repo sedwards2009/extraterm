@@ -75,6 +75,7 @@ export class SessionSettingsUi extends Vue {
     let i = 0;
     for (const session of this.sessions) {
       if (session.uuid === newSessionConfig.uuid) {
+        newSessionConfig.extensions = session.extensions;
         this.sessions.splice(i, 1, newSessionConfig);
       }
       i++;

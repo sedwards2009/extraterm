@@ -12,7 +12,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { EtTerminal } from "../Terminal";
 import { TextViewer } from"../viewers/TextAceViewer";
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
-  isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor } from "./InternalTypes";
+  isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor } from "./InternalTypes";
 import { ExtensionUiUtilsImpl } from "./ExtensionUiUtilsImpl";
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionDesiredState
 } from "../../ExtensionMetadata";
@@ -233,14 +233,16 @@ export class ExtensionManagerImpl implements ExtensionManager {
     );
   }
 
-  getSessionEditorTagForType(sessionType: string): string {
+  createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor {
     const seExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionEditors != null);
     for (const extension of seExtensions) {
-      const tag = extension.contextImpl._internalWindow.getSessionEditorTagForType(sessionType);
-      if (tag != null) {
-        return tag;
+      const editor = extension.contextImpl._internalWindow.createSessionEditor(sessionType, sessionConfiguration);
+      if (editor != null) {
+        return editor;
       }
     }
+
+    this._log.warn(`Unable to find SessionEditor for session type '${sessionType}'.`);
     return null;
   }
 

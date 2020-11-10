@@ -366,14 +366,12 @@ export interface Window {
   // onWillDestroyTerminal: Event<Terminal>;
 
   extensionViewerBaseConstructor: ExtensionViewerBaseConstructor;
+
   registerViewer(name: string, viewerClass: ExtensionViewerBaseConstructor): void;
 
-  extensionSessionEditorBaseConstructor: ExtensionSessionEditorBaseConstructor;
-  registerSessionEditor(type: string, sessionEditorClass: ExtensionSessionEditorBaseConstructor): void;
-
+  registerSessionEditor(type: string, factory: SessionEditorFactory): void;
   registerTabTitleWidget(name: string, factory: TabTitleWidgetFactory): void;
   registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void;
-
   registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void;
 }
 
@@ -573,33 +571,22 @@ export interface SessionConfiguration {
 }
 
 /**
- * Extensions which implement Session Editor must subclass this.
- *
- * Note that TypeScript subclasses should not provide a constructor. Pure
- * JavaScript subclasses can have a constructor but it must pass all of
- * its arguments to the super class.
+ * Extensions which implement Session Editors are given an instance of this.
  */
-export interface ExtensionSessionEditorBase {
+export interface SessionEditorBase {
   /**
-   * Extension writers can override method to perform set up and
-   * initialisation after construction.
-   */
-  created(): void;
-
-  /**
-   * Get the container element under which this Viewer's contents can be placed.
+   * Get the container element under which this editor's DOM contents can be placed.
    */
   getContainerElement(): HTMLElement;
 
   setSessionConfiguration(sessionConfiguration: SessionConfiguration): void;
 
   getSessionConfiguration(): SessionConfiguration;
-
-  updateSessionConfiguration(sessionConfigurationChange: object): void;
 }
 
-export interface ExtensionSessionEditorBaseConstructor {
-  new(...any: any[]): ExtensionSessionEditorBase;
+
+export interface SessionEditorFactory {
+  (sessionEditorBase: SessionEditorBase): any;
 }
 
 /**
@@ -702,7 +689,7 @@ export interface Pty {
  */
 export interface SessionSettingsEditorBase {
   /**
-   * Get the container element under which this Viewer's contents can be placed.
+   * Get the container element under which this session settings editor's contents can be placed.
    */
   getContainerElement(): HTMLElement;
 

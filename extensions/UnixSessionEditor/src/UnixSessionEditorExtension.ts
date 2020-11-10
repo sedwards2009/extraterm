@@ -1,14 +1,14 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from 'lodash';
-import * as fse from 'fs-extra';
-import * as constants from 'constants';
+import * as _ from "lodash";
+import * as fse from "fs-extra";
+import * as constants from "constants";
 
-import {ExtensionContext, Logger, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import {UnixSessionEditorUi} from './UnixSessionEditorUi';
+import {ExtensionContext, Logger, SessionConfiguration, SessionEditorBase} from "@extraterm/extraterm-extension-api";
+import {UnixSessionEditorUi} from "./UnixSessionEditorUi";
 
 
 let log: Logger = null;
@@ -22,141 +22,131 @@ let etcShells: string[] = [];
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  
+
   log.info("UnixSessionEditorExtension activate");
-  
-  class UnixSessionEditor extends context.window.extensionSessionEditorBaseConstructor {
-    private _ui: UnixSessionEditorUi = null;
-    private _debouncedDataChanged: ()=> void = null;
 
-    created(): void {
-      super.created();
+  context.window.registerSessionEditor("unix", SessionEditorFactory);
 
-      this._debouncedDataChanged = _.debounce(this._dataChanged.bind(this), 500);
-
-      this._ui = new UnixSessionEditorUi();
-      const component = this._ui.$mount();
-      this._ui.$watch('$data', this._debouncedDataChanged.bind(this), { deep: true, immediate: false } );
-
-      const config = <UnixSessionConfiguration> this.getSessionConfiguration();
-      this._loadConfig(config);
-
-      this.getContainerElement().appendChild(component.$el);
-    }
-
-    setSessionConfiguration(config: SessionConfiguration): void {
-      super.setSessionConfiguration(config);
-      this._loadConfig(config);
-    }
-
-    private _loadConfig(config: UnixSessionConfiguration): void {
-      let fixedConfig = config;
-      if (config.shell == null) {
-        fixedConfig = {
-          uuid: config.uuid,
-          name: config.name,
-          useDefaultShell: true,
-          shell: "",
-          args: "",
-          initialDirectory: ""
-        };
-      }
-
-      this._ui.name = fixedConfig.name;
-      this._ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
-      this._ui.shell = fixedConfig.shell;
-      this._ui.etcShells = etcShells;
-      this._ui.args = fixedConfig.args;
-      this._ui.initialDirectory = fixedConfig.initialDirectory || "";
-    }
-
-    private _dataChanged(): void {
-      const changes = {
-        name: this._ui.name,
-        useDefaultShell: this._ui.useDefaultShell === 1,
-        shell: this._ui.shell,
-        args: this._ui.args,
-        initialDirectory: this._ui.initialDirectory,
-      };
-      this._checkShellPath();
-      this._checkInitialDirectory();
-      this.updateSessionConfiguration(changes);
-    }
-
-    private _checkShellPath(): void {
-      if ( ! this._ui.useDefaultShell && this._ui.shell !== "") {
-        const shellPath = this._ui.shell;
-
-        this._checkExecutablePath(shellPath).then(resultMsg => {
-          if (shellPath === this._ui.shell) {
-            this._ui.shellErrorMsg = resultMsg;
-          }
-        });
-      } else {
-        this._ui.shellErrorMsg = "";
-      }
-    }
-
-    private async _checkExecutablePath(exePath: string): Promise<string> {
-      try {
-        const metadata = await fse.stat(exePath);
-        if ( ! metadata.isFile()) {
-          return "Path isn't a file";
-        }
-
-        await fse.access(exePath, fse.constants.X_OK);
-      } catch(err) {
-        if (err.errno === -constants.ENOENT) {
-          return "Path doesn't exist";
-        }
-        if (err.errno === -constants.EACCES) {
-          return "Path isn't executable";
-        }
-        return "errno: " +  err.errno + ", err.code: " + err.code;
-      } 
-      return "";
-    }
-
-    private _checkInitialDirectory(): void {
-      if ( this._ui.initialDirectory !== "") {
-        const initialDirectory = this._ui.initialDirectory;
-  
-        this._checkDirectoryPath(initialDirectory).then(resultMsg => {
-          if (initialDirectory === this._ui.initialDirectory) {
-            this._ui.initialDirectoryErrorMsg = resultMsg;
-          }
-        });
-      } else {
-        this._ui.initialDirectoryErrorMsg = "";
-      }
-    }  
-
-    private async _checkDirectoryPath(exePath: string): Promise<string> {
-      try {
-        const metadata = await fse.stat(exePath);
-        if ( ! metadata.isDirectory()) {
-          return "Path isn't a directory";
-        }
-
-        await fse.access(exePath, fse.constants.R_OK);
-      } catch(err) {
-        if (err.errno === -constants.ENOENT) {
-          return "Path doesn't exist";
-        }
-        if (err.errno === -constants.EACCES) {
-          return "Path isn't readable";
-        }
-        return "errno: " +  err.errno + ", err.code: " + err.code;
-      } 
-      return "";
-    }
-  }
-
-  context.window.registerSessionEditor("unix", UnixSessionEditor);
-  
   readEtcShells().then(result => {
     etcShells = result;
   });
+}
+
+function SessionEditorFactory(sessionEditorBase: SessionEditorBase): void {
+  const ui: UnixSessionEditorUi = new UnixSessionEditorUi();
+  const debouncedDataChanged = _.debounce(_dataChanged.bind(null, sessionEditorBase, ui), 500);
+
+  const component = ui.$mount();
+  ui.$watch("$data", debouncedDataChanged, { deep: true, immediate: false } );
+
+  const config = <UnixSessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  loadConfig(ui, config);
+
+  sessionEditorBase.getContainerElement().appendChild(component.$el);
+}
+
+function loadConfig(ui: UnixSessionEditorUi, config: UnixSessionConfiguration): void {
+  let fixedConfig = config;
+  if (config.shell == null) {
+    fixedConfig = {
+      uuid: config.uuid,
+      name: config.name,
+      useDefaultShell: true,
+      shell: "",
+      args: "",
+      initialDirectory: ""
+    };
+  }
+
+  ui.name = fixedConfig.name;
+  ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
+  ui.shell = fixedConfig.shell;
+  ui.etcShells = etcShells;
+  ui.args = fixedConfig.args;
+  ui.initialDirectory = fixedConfig.initialDirectory || "";
+}
+
+function _dataChanged(sessionEditorBase: SessionEditorBase, ui: UnixSessionEditorUi): void {
+  const config = <UnixSessionConfiguration> sessionEditorBase.getSessionConfiguration();
+
+  config.name = ui.name;
+  config.useDefaultShell = ui.useDefaultShell === 1;
+  config.shell = ui.shell;
+  config.args = ui.args;
+  config.initialDirectory = ui.initialDirectory;
+
+  checkShellPath(ui);
+  checkInitialDirectory(ui);
+
+  sessionEditorBase.setSessionConfiguration(config);
+}
+
+function checkShellPath(_ui: UnixSessionEditorUi): void {
+  if ( ! _ui.useDefaultShell && _ui.shell !== "") {
+    const shellPath = _ui.shell;
+
+    _checkExecutablePath(shellPath).then(resultMsg => {
+      if (shellPath === _ui.shell) {
+        _ui.shellErrorMsg = resultMsg;
+      }
+    });
+  } else {
+    _ui.shellErrorMsg = "";
+  }
+}
+
+async function _checkExecutablePath(exePath: string): Promise<string> {
+  try {
+    const metadata = await fse.stat(exePath);
+    if ( ! metadata.isFile()) {
+      return "Path isn't a file";
+    }
+
+    await fse.access(exePath, fse.constants.X_OK);
+  } catch(err) {
+    if (err.errno === -constants.ENOENT) {
+      return "Path doesn't exist";
+    }
+    if (err.errno === -constants.EACCES) {
+      return "Path isn't executable";
+    }
+    return "errno: " +  err.errno + ", err.code: " + err.code;
+  }
+  return "";
+}
+
+function checkInitialDirectory(_ui: UnixSessionEditorUi): void {
+  if (_ui.initialDirectory !== "") {
+    const initialDirectory = _ui.initialDirectory;
+
+    checkDirectoryPath(initialDirectory).then(resultMsg => {
+      if (initialDirectory === _ui.initialDirectory) {
+        _ui.initialDirectoryErrorMsg = resultMsg;
+      }
+    });
+  } else {
+    _ui.initialDirectoryErrorMsg = "";
+  }
+}
+
+async function checkDirectoryPath(exePath: string): Promise<string> {
+  try {
+    const metadata = await fse.stat(exePath);
+    if ( ! metadata.isDirectory()) {
+      return "Path isn't a directory";
+    }
+
+    await fse.access(exePath, fse.constants.R_OK);
+  } catch(err) {
+    if (err.errno === -constants.ENOENT) {
+      return "Path doesn't exist";
+    }
+    if (err.errno === -constants.EACCES) {
+      return "Path isn't readable";
+    }
+    return "errno: " +  err.errno + ", err.code: " + err.code;
+  }
+  return "";
 }
 
 const ETC_SHELLS = "/etc/shells";

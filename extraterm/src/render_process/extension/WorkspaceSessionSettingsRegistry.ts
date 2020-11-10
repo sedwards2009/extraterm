@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
+import * as _ from 'lodash';
 
 import { EventEmitter } from 'extraterm-event-emitter';
 import { ExtensionContainerElement } from './ExtensionContainerElement';
@@ -75,7 +76,6 @@ export class WorkspaceSessionSettingsRegistry {
 }
 
 
-
 class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   private _settings: Object = null;
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
@@ -85,7 +85,7 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
       private _settingsConfigKey: string, settings: Object,
       private _factory: ExtensionApi.SessionSettingsEditorFactory) {
 
-    this._settings = settings;
+    this._settings = _.cloneDeep(settings);
     this.onSettingsChanged = this._onSettingsChangedEventEmitter.event;
   }
 
@@ -106,9 +106,10 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   }
 
   setSettings(settings: Object): void {
+    this._settings = settings;
     this._onSettingsChangedEventEmitter.fire({
       settingsConfigKey: this._settingsConfigKey,
-      settings
+      settings: _.cloneDeep(settings)
     });
   }
 }
