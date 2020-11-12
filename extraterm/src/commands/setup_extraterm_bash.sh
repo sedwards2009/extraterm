@@ -1,9 +1,9 @@
 # This file should be sourced from your .bashrc file.
 #
-# Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
+# Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
 #
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
-# 
+#
 
 # Early-out in case this has been sourced and enabled already
 # https://github.com/sedwards2009/extraterm/pull/148
@@ -34,28 +34,34 @@ fi
 
 export PATH="$filedir:$PATH"
 
-PREVIOUS_PROMPT_COMMAND=$PROMPT_COMMAND
-postexec () {
+export EXTRATERM_PREVIOUS_PROMPT_COMMAND=$PROMPT_COMMAND
+extraterm_postexec () {
   echo -n -e "\033&${LC_EXTRATERM_COOKIE};3\007"
   echo -n $1
   echo -n -e "\000"
-  $PREVIOUS_PROMPT_COMMAND
+  if [ "$EXTRATERM_PREVIOUS_PROMPT_COMMAND" != "" ];
+  then
+      if [ "$EXTRATERM_PREVIOUS_PROMPT_COMMAND" != "extraterm_postexec \$?" ]; then
+          $EXTRATERM_PREVIOUS_PROMPT_COMMAND
+      fi
+  fi
 }
-export PROMPT_COMMAND="postexec \$?"
 
-preexec () {
+export PROMPT_COMMAND="extraterm_postexec \$?"
+
+extraterm_preexec () {
     echo -n -e "\033&${LC_EXTRATERM_COOKIE};2;bash\007"
     echo -n $1
     echo -n -e "\000"
 }
 
-preexec_invoke_exec () {
+extraterm_preexec_invoke_exec () {
     [ -n "$COMP_LINE" ] && return                     # do nothing if completing
     [ "$BASH_COMMAND" = "$PROMPT_COMMAND" ] && return # don't cause a preexec for $PROMPT_COMMAND
     local this_command=`history 1`; # obtain the command from the history
-    preexec "$this_command"
+    extraterm_preexec "$this_command"
 }
-trap 'preexec_invoke_exec' DEBUG
+trap 'extraterm_preexec_invoke_exec' DEBUG
 
 # Look for Python 3 support.
 if ! which python3 > /dev/null; then
