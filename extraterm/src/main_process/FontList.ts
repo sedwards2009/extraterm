@@ -32,7 +32,7 @@ export function getAvailableFontsSync(): FontDescriptor[] {
     const listFontsJsonExe = path.join(SourceDir.path,
       `../resources/list-fonts-json-binary/${process.platform}-${process.arch}/${exeName}`);
 
-    const fontJson = child_process.execFileSync(listFontsJsonExe, []);
+    const fontJson = child_process.execFileSync(listFontsJsonExe, [], { maxBuffer: 10*1024*1024 });
     fonts = <FontDescriptor[]> JSON.parse(fontJson);
   }
   return fonts;
