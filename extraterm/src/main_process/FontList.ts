@@ -12,7 +12,7 @@ import * as SourceDir from '../SourceDir';
  * See `list-fonts-json` at https://github.com/sedwards2009/list-fonts-json
  */
 
-export interface FontDescriptor {  
+export interface FontDescriptor {
   path: string;            // The path to the font file in the filesystem. (not applicable for queries, only for results)
   postscriptName: string;  // The PostScript name of the font (e.g 'Arial-BoldMT'). This uniquely identities a font in most cases.
   family: string;          // The font family name (e.g 'Arial')
@@ -32,7 +32,7 @@ export function getAvailableFontsSync(): FontDescriptor[] {
     const listFontsJsonExe = path.join(SourceDir.path,
       `../resources/list-fonts-json-binary/${process.platform}-${process.arch}/${exeName}`);
 
-    const fontJson = child_process.execFileSync(listFontsJsonExe, []);
+    const fontJson = child_process.execFileSync(listFontsJsonExe, [], { encoding: "utf8", maxBuffer: 10*1024*1024} );
     fonts = <FontDescriptor[]> JSON.parse(fontJson);
   }
   return fonts;
