@@ -511,6 +511,34 @@ test("ligature length reset", () => {
   expect(grid.getLigature(4, 0)).toBe(0);
 });
 
+test("Get/set row of flags", () => {
+  const createGrid = () => {
+    const grid = new CharCellGrid(40, 5);
+    for (let i=0; i<5; i++) {
+      grid.setString(0, i, "Foo --> Bar and some random =!= stuff");
+    }
+    return grid;
+  };
+  const ROW = 1;
+
+  const firstGrid = createGrid();
+  firstGrid.setLigature(4, ROW, 3);
+  firstGrid.setLigature(20, ROW, 2);
+  const flags = firstGrid.getRowFlags(ROW);
+
+  for (let x=0; x<firstGrid.width; x++) {
+    expect(flags[x]).toBe(firstGrid.getFlags(x, ROW));
+  }
+
+  const secondGrid = createGrid();
+  secondGrid.setRowFlags(ROW, flags);
+
+  for (let x=0; x<firstGrid.width; x++) {
+    expect(firstGrid.getFlags(x, ROW)).toBe(secondGrid.getFlags(x, ROW));
+  }
+
+});
+
 function printHorizontalBorder(width: number): string {
   const chars = [];
   for (let x=0; x<width; x++) {

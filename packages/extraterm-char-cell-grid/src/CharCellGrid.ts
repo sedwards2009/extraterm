@@ -282,7 +282,7 @@ export class CharCellGrid {
     const width = this.width;
     for (let i=0; i<width; i++) {
       flagsArray[i] = this._dataView.getUint16(offset);
-      offset += CELL_SIZE_UINT32;
+      offset += CELL_SIZE_BYTES;
     }
     return flagsArray;
   }
@@ -294,6 +294,7 @@ export class CharCellGrid {
     if (flagMask === 0xffff) {
       for (let i=0; i<width; i++) {
         this._dataView.setUint16(offset, flagsArray[i]);
+        offset += CELL_SIZE_BYTES;
       }
     } else {
       const invMask = ~flagMask;
@@ -301,7 +302,7 @@ export class CharCellGrid {
         const oldValue = this._dataView.getUint16(offset);
         const newValue = (oldValue & invMask) | (flagMask & flagsArray[i]);
         this._dataView.setUint16(offset, newValue);
-        offset += CELL_SIZE_UINT32;
+        offset += CELL_SIZE_BYTES;
       }
     }
   }
