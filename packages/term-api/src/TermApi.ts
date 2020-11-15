@@ -36,12 +36,6 @@ import { CharCellGrid } from 'extraterm-char-cell-grid';
 
 export type CharAttr = number;
 
-// FIXME remove
-export interface OldLine {
-  chars: Uint32Array;
-  attrs: Uint32Array;
-}
-
 export interface Line extends CharCellGrid {
   wrapped: boolean;
   clone(): Line;
