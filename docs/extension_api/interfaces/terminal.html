@@ -66,6 +66,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>An active terminal with connected TTY.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -83,6 +90,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="terminal.html#environment" class="tsd-kind-icon">environment</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="terminal.html#ondidappendviewer" class="tsd-kind-icon">on<wbr>Did<wbr>Append<wbr>Viewer</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="terminal.html#sessionconfiguration" class="tsd-kind-icon">session<wbr>Configuration</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -90,8 +98,10 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#getextratermcookiename" class="tsd-kind-icon">get<wbr>Extraterm<wbr>Cookie<wbr>Name</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#getextratermcookievalue" class="tsd-kind-icon">get<wbr>Extraterm<wbr>Cookie<wbr>Value</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#getsessionsettings" class="tsd-kind-icon">get<wbr>Session<wbr>Settings</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#gettab" class="tsd-kind-icon">get<wbr>Tab</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#getviewers" class="tsd-kind-icon">get<wbr>Viewers</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#isalive" class="tsd-kind-icon">is<wbr>Alive</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#openterminalborderwidget" class="tsd-kind-icon">open<wbr>Terminal<wbr>Border<wbr>Widget</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="terminal.html#type" class="tsd-kind-icon">type</a></li>
 							</ul>
@@ -107,7 +117,7 @@
 					<div class="tsd-signature tsd-kind-icon">environment<span class="tsd-signature-symbol">:</span> <a href="terminalenvironment.html" class="tsd-signature-type">TerminalEnvironment</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L119">main.ts:119</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L131">main.ts:131</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -117,9 +127,25 @@
 					<div class="tsd-signature tsd-kind-icon">on<wbr>Did<wbr>Append<wbr>Viewer<span class="tsd-signature-symbol">:</span> <a href="event.html" class="tsd-signature-type">Event</a><span class="tsd-signature-symbol">&lt;</span><a href="../globals.html#viewer" class="tsd-signature-type">Viewer</a><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L117">main.ts:117</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L129">main.ts:129</a></li>
 						</ul>
 					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="sessionconfiguration" class="tsd-anchor"></a>
+					<h3>session<wbr>Configuration</h3>
+					<div class="tsd-signature tsd-kind-icon">session<wbr>Configuration<span class="tsd-signature-symbol">:</span> <a href="sessionconfiguration.html" class="tsd-signature-type">SessionConfiguration</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L138">main.ts:138</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The session configuration associated with this terminal.</p>
+						</div>
+						<p>Use <code>getSessionSettings()</code> to fetch extension settings.</p>
+					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
@@ -134,7 +160,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L113">main.ts:113</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L125">main.ts:125</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -156,7 +182,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L108">main.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L120">main.ts:120</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -170,6 +196,37 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="getsessionsettings" class="tsd-anchor"></a>
+					<h3>get<wbr>Session<wbr>Settings</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">get<wbr>Session<wbr>Settings<span class="tsd-signature-symbol">(</span>name<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Object</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L145">main.ts:145</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get the extension settings associated with this terminal.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>name: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>the same <code>name</code> passed to <code>Window.registerSessionSettingsEditor()</code>.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Object</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
 					<a name="gettab" class="tsd-anchor"></a>
 					<h3>get<wbr>Tab</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
@@ -179,7 +236,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L102">main.ts:102</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L114">main.ts:114</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -201,7 +258,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L97">main.ts:97</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L109">main.ts:109</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -210,6 +267,29 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="../globals.html#viewer" class="tsd-signature-type">Viewer</a><span class="tsd-signature-symbol">[]</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="isalive" class="tsd-anchor"></a>
+					<h3>is<wbr>Alive</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Alive<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L152">main.ts:152</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>True if this terminal is still open.</p>
+								</div>
+								<p>Once the uesr closes a terminal tab and the tab disappears, then this will return <code>false</code>.</p>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -223,7 +303,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L115">main.ts:115</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L127">main.ts:127</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -246,7 +326,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L92">main.ts:92</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L104">main.ts:104</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -254,7 +334,7 @@
 									<p>Type a string of text into the terminal.</p>
 								</div>
 								<p>This is effectively the same as though the user typed into the terminal.
-								Note that the enter key should be represented as \r.</p>
+								Note that the enter key should be represented as <code>\r</code>.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
@@ -289,6 +369,9 @@
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="terminal.html#ondidappendviewer" class="tsd-kind-icon">on<wbr>Did<wbr>Append<wbr>Viewer</a>
 							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="terminal.html#sessionconfiguration" class="tsd-kind-icon">session<wbr>Configuration</a>
+							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="terminal.html#getextratermcookiename" class="tsd-kind-icon">get<wbr>Extraterm<wbr>Cookie<wbr>Name</a>
 							</li>
@@ -296,10 +379,16 @@
 								<a href="terminal.html#getextratermcookievalue" class="tsd-kind-icon">get<wbr>Extraterm<wbr>Cookie<wbr>Value</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="terminal.html#getsessionsettings" class="tsd-kind-icon">get<wbr>Session<wbr>Settings</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="terminal.html#gettab" class="tsd-kind-icon">get<wbr>Tab</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="terminal.html#getviewers" class="tsd-kind-icon">get<wbr>Viewers</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="terminal.html#isalive" class="tsd-kind-icon">is<wbr>Alive</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="terminal.html#openterminalborderwidget" class="tsd-kind-icon">open<wbr>Terminal<wbr>Border<wbr>Widget</a>

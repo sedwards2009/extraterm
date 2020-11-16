@@ -69,8 +69,8 @@
 				</a>
 				<p>This module holds the TypeScript definitions of the Extraterm extension API and is published as a packge up on npmjs.com.</p>
 				<p><a href="https://github.com/sedwards2009/extraterm">https://github.com/sedwards2009/extraterm</a></p>
-				<a href="#publishing" id="publishing" style="color: inherit; text-decoration: none;">
-					<h2>Publishing</h2>
+				<a href="#publishing-api-package" id="publishing-api-package" style="color: inherit; text-decoration: none;">
+					<h2>Publishing API package</h2>
 				</a>
 				<p>When this API changes it needs to be published.</p>
 				<p>Steps:</p>
@@ -79,6 +79,14 @@
 					<li>Commit that change.</li>
 					<li>Run <code>yarn publish</code> to publish and have the password for npmjs ready.</li>
 					<li>Done.</li>
+				</ul>
+				<a href="#publishing-api-reference-docs" id="publishing-api-reference-docs" style="color: inherit; text-decoration: none;">
+					<h2>Publishing API reference docs</h2>
+				</a>
+				<p>Do this on <code>master</code> branch.</p>
+				<ul>
+					<li>In this folder run <code>yarn run build-docs</code></li>
+					<li>Commit the changes in <root>/docs/extension_api/* also keep an eye open for new files.</li>
 				</ul>
 			</div>
 		</div>
@@ -117,6 +125,9 @@
 						<a href="interfaces/commands.html" class="tsd-kind-icon">Commands</a>
 					</li>
 					<li class=" tsd-kind-interface">
+						<a href="interfaces/createsessionoptions.html" class="tsd-kind-icon">Create<wbr>Session<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
 						<a href="interfaces/customizedcommand.html" class="tsd-kind-icon">Customized<wbr>Command</a>
 					</li>
 					<li class=" tsd-kind-interface">
@@ -133,12 +144,6 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/extensionmodule.html" class="tsd-kind-icon">Extension<wbr>Module</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="interfaces/extensionsessioneditorbase.html" class="tsd-kind-icon">Extension<wbr>Session<wbr>Editor<wbr>Base</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="interfaces/extensionsessioneditorbaseconstructor.html" class="tsd-kind-icon">Extension<wbr>Session<wbr>Editor<wbr>Base<wbr>Constructor</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/extensionviewerbase.html" class="tsd-kind-icon">Extension<wbr>Viewer<wbr>Base</a>
@@ -169,6 +174,18 @@
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/sessionconfiguration.html" class="tsd-kind-icon">Session<wbr>Configuration</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/sessioneditorbase.html" class="tsd-kind-icon">Session<wbr>Editor<wbr>Base</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/sessioneditorfactory.html" class="tsd-kind-icon">Session<wbr>Editor<wbr>Factory</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/sessionsettingseditorbase.html" class="tsd-kind-icon">Session<wbr>Settings<wbr>Editor<wbr>Base</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/sessionsettingseditorfactory.html" class="tsd-kind-icon">Session<wbr>Settings<wbr>Editor<wbr>Factory</a>
 					</li>
 					<li class=" tsd-kind-interface">
 						<a href="interfaces/syntaxtheme.html" class="tsd-kind-icon">Syntax<wbr>Theme</a>

@@ -83,7 +83,6 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="window.html#activeterminal" class="tsd-kind-icon">active<wbr>Terminal</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="window.html#activeviewer" class="tsd-kind-icon">active<wbr>Viewer</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="window.html#extensionsessioneditorbaseconstructor" class="tsd-kind-icon">extension<wbr>Session<wbr>Editor<wbr>Base<wbr>Constructor</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="window.html#extensionviewerbaseconstructor" class="tsd-kind-icon">extension<wbr>Viewer<wbr>Base<wbr>Constructor</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="window.html#ondidcreateterminal" class="tsd-kind-icon">on<wbr>Did<wbr>Create<wbr>Terminal</a></li>
 							</ul>
@@ -93,6 +92,7 @@
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="window.html#getterminals" class="tsd-kind-icon">get<wbr>Terminals</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="window.html#registersessioneditor" class="tsd-kind-icon">register<wbr>Session<wbr>Editor</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="window.html#registersessionsettingseditor" class="tsd-kind-icon">register<wbr>Session<wbr>Settings<wbr>Editor</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="window.html#registertabtitlewidget" class="tsd-kind-icon">register<wbr>Tab<wbr>Title<wbr>Widget</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="window.html#registerterminalborderwidget" class="tsd-kind-icon">register<wbr>Terminal<wbr>Border<wbr>Widget</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="window.html#registerviewer" class="tsd-kind-icon">register<wbr>Viewer</a></li>
@@ -109,9 +109,15 @@
 					<div class="tsd-signature tsd-kind-icon">active<wbr>Terminal<span class="tsd-signature-symbol">:</span> <a href="terminal.html" class="tsd-signature-type">Terminal</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L321">main.ts:321</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L359">main.ts:359</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The currently active/focussed terminal.</p>
+						</div>
+						<p>This may be <code>null</code>.</p>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="activeviewer" class="tsd-anchor"></a>
@@ -119,17 +125,7 @@
 					<div class="tsd-signature tsd-kind-icon">active<wbr>Viewer<span class="tsd-signature-symbol">:</span> <a href="../globals.html#viewer" class="tsd-signature-type">Viewer</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L322">main.ts:322</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="extensionsessioneditorbaseconstructor" class="tsd-anchor"></a>
-					<h3>extension<wbr>Session<wbr>Editor<wbr>Base<wbr>Constructor</h3>
-					<div class="tsd-signature tsd-kind-icon">extension<wbr>Session<wbr>Editor<wbr>Base<wbr>Constructor<span class="tsd-signature-symbol">:</span> <a href="extensionsessioneditorbaseconstructor.html" class="tsd-signature-type">ExtensionSessionEditorBaseConstructor</a></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L330">main.ts:330</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L361">main.ts:361</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -139,7 +135,7 @@
 					<div class="tsd-signature tsd-kind-icon">extension<wbr>Viewer<wbr>Base<wbr>Constructor<span class="tsd-signature-symbol">:</span> <a href="extensionviewerbaseconstructor.html" class="tsd-signature-type">ExtensionViewerBaseConstructor</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L327">main.ts:327</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L368">main.ts:368</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -149,7 +145,7 @@
 					<div class="tsd-signature tsd-kind-icon">on<wbr>Did<wbr>Create<wbr>Terminal<span class="tsd-signature-symbol">:</span> <a href="event.html" class="tsd-signature-type">Event</a><span class="tsd-signature-symbol">&lt;</span><a href="terminal.html" class="tsd-signature-type">Terminal</a><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L324">main.ts:324</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L365">main.ts:365</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -166,7 +162,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L323">main.ts:323</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L363">main.ts:363</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="terminal.html" class="tsd-signature-type">Terminal</a><span class="tsd-signature-symbol">[]</span></h4>
@@ -177,13 +173,13 @@
 					<a name="registersessioneditor" class="tsd-anchor"></a>
 					<h3>register<wbr>Session<wbr>Editor</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">register<wbr>Session<wbr>Editor<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, sessionEditorClass<span class="tsd-signature-symbol">: </span><a href="extensionsessioneditorbaseconstructor.html" class="tsd-signature-type">ExtensionSessionEditorBaseConstructor</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">register<wbr>Session<wbr>Editor<span class="tsd-signature-symbol">(</span>type<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, factory<span class="tsd-signature-symbol">: </span><a href="sessioneditorfactory.html" class="tsd-signature-type">SessionEditorFactory</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L331">main.ts:331</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L372">main.ts:372</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -192,7 +188,33 @@
 									<h5>type: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>sessionEditorClass: <a href="extensionsessioneditorbaseconstructor.html" class="tsd-signature-type">ExtensionSessionEditorBaseConstructor</a></h5>
+									<h5>factory: <a href="sessioneditorfactory.html" class="tsd-signature-type">SessionEditorFactory</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="registersessionsettingseditor" class="tsd-anchor"></a>
+					<h3>register<wbr>Session<wbr>Settings<wbr>Editor</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">register<wbr>Session<wbr>Settings<wbr>Editor<span class="tsd-signature-symbol">(</span>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, factory<span class="tsd-signature-symbol">: </span><a href="sessionsettingseditorfactory.html" class="tsd-signature-type">SessionSettingsEditorFactory</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L375">main.ts:375</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>id: <span class="tsd-signature-type">string</span></h5>
+								</li>
+								<li>
+									<h5>factory: <a href="sessionsettingseditorfactory.html" class="tsd-signature-type">SessionSettingsEditorFactory</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -209,7 +231,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L333">main.ts:333</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L373">main.ts:373</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -235,7 +257,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L334">main.ts:334</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L374">main.ts:374</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -261,7 +283,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L328">main.ts:328</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L370">main.ts:370</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -301,9 +323,6 @@
 								<a href="window.html#activeviewer" class="tsd-kind-icon">active<wbr>Viewer</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="window.html#extensionsessioneditorbaseconstructor" class="tsd-kind-icon">extension<wbr>Session<wbr>Editor<wbr>Base<wbr>Constructor</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="window.html#extensionviewerbaseconstructor" class="tsd-kind-icon">extension<wbr>Viewer<wbr>Base<wbr>Constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
@@ -314,6 +333,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="window.html#registersessioneditor" class="tsd-kind-icon">register<wbr>Session<wbr>Editor</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="window.html#registersessionsettingseditor" class="tsd-kind-icon">register<wbr>Session<wbr>Settings<wbr>Editor</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="window.html#registertabtitlewidget" class="tsd-kind-icon">register<wbr>Tab<wbr>Title<wbr>Widget</a>
