@@ -10,6 +10,7 @@ A bug fix release.
 
 * Added "Paste from selection clipboard" option to the mouse button configuration on Linux. [#195](https://github.com/sedwards2009/extraterm/issues/195)
 * The terminal session extension API now uses less subclassing for editors.
+* Terminals only stay open on exit if the shell returned a non-zero exit code. [#274](https://github.com/sedwards2009/extraterm/issues/274)
 
 **Bug fixes**
 
