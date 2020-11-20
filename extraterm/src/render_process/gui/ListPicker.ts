@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, parts, render, TemplateResult } from "extraterm-lit-html";
+import { html, render, TemplateResult } from "extraterm-lit-html";
 import { DirectiveFn } from "extraterm-lit-html/lib/directive";
 import { repeat } from "extraterm-lit-html/directives/repeat";
 import { Disposable } from "@extraterm/extraterm-extension-api";
@@ -15,7 +15,6 @@ import {doLater} from "extraterm-later";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { ThemeableElementBase } from "../ThemeableElementBase";
-import { disassembleDOMTree } from "../DomUtils";
 
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
@@ -52,12 +51,6 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._formatEntries = (filteredEntries: T[], selectedId: string, filterInputValue: string): DirectiveFn =>
       repeat(filteredEntries, (entry) => entry.id, (entry, index) => html`<div data-id=${entry.id}>${entry.id}</div>`);
     this._render();
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    parts.set(this.shadowRoot, undefined);
-    disassembleDOMTree(this.shadowRoot);
   }
 
   private _handleFilterInput(): void {

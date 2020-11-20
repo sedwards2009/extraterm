@@ -4,11 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Attribute, Filter, Observe, CustomElement } from "extraterm-web-component-decorators";
-import { html, parts, render, TemplateResult } from "extraterm-lit-html";
+import { html, render, TemplateResult } from "extraterm-lit-html";
 
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
-import { disassembleDOMTree } from "../DomUtils";
 
 
 /**
@@ -36,12 +35,6 @@ export class StackedWidget extends ThemeableElementBase {
       this._render();
     });
     this._mutationObserver.observe(this, { childList: true });
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    parts.set(this.shadowRoot, undefined);
-    disassembleDOMTree(this.shadowRoot);
   }
 
   protected _render(): void {

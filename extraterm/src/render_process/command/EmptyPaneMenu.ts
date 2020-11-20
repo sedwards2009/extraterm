@@ -5,7 +5,7 @@
  */
 
 import { CustomElement } from "extraterm-web-component-decorators";
-import { html, render, parts } from "extraterm-lit-html";
+import { html, render } from "extraterm-lit-html";
 
 import * as ThemeTypes from "../../theme/Theme";
 import {ThemeableElementBase} from "../ThemeableElementBase";
@@ -14,7 +14,6 @@ import * as DomUtils from "../DomUtils";
 import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandAndShortcut } from "./CommandPalette";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
-import { disassembleDOMTree } from "../DomUtils";
 
 const ID_LIST_PICKER = "ID_LIST_PICKER";
 
@@ -47,12 +46,6 @@ export class EmptyPaneMenu extends ThemeableElementBase {
     listPicker.setFormatEntriesFunc(commandPaletteFormatEntries);
     listPicker.addExtraCss([ThemeTypes.CssFile.COMMAND_PALETTE]);
     listPicker.setEntries(this._entries);
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    parts.set(this.shadowRoot, undefined);
-    disassembleDOMTree(this.shadowRoot);
   }
 
   protected _render(): void {
