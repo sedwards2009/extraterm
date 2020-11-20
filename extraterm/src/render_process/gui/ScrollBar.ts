@@ -3,14 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, render, parts } from "extraterm-lit-html";
+import { html, render } from "extraterm-lit-html";
 import { Attribute, Filter, Observe, CustomElement } from "extraterm-web-component-decorators";
 
 import { log, Logger, getLogger } from "extraterm-logging";
 import * as DomUtils from "../DomUtils";
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
-import { disassembleDOMTree } from "../DomUtils";
 
 const ID_AREA = "ID_AREA";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -58,12 +57,6 @@ export class ScrollBar extends ThemeableElementBase {
   connectedCallback(): void {
     super.connectedCallback();
     this._updatePosition("position");
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    parts.set(this.shadowRoot, undefined);
-    disassembleDOMTree(this.shadowRoot);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

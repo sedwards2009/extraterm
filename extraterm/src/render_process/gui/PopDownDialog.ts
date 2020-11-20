@@ -4,11 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
-import { html, parts, render } from "extraterm-lit-html";
+import { html, render } from "extraterm-lit-html";
 
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
-import { disassembleDOMTree } from "../DomUtils";
 
 const CLASS_CONTEXT_COVER_OPEN = "CLASS_CONTEXT_COVER_OPEN";
 const CLASS_CONTEXT_COVER_CLOSED = "CLASS_CONTEXT_COVER_CLOSED";
@@ -33,12 +32,6 @@ export class PopDownDialog extends ThemeableElementBase {
 
     this.attachShadow({ mode: "open", delegatesFocus: true });
     this._render();
-  }
-
-  disconnectedCallback(): void {
-    super.disconnectedCallback();
-    parts.set(this.shadowRoot, undefined);
-    disassembleDOMTree(this.shadowRoot);
   }
 
   private _handleContainerContextMenu(): void {
