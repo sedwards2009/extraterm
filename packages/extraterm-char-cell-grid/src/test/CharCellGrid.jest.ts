@@ -5,7 +5,7 @@
  */
 
 import "jest";
-import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE } from "../CharCellGrid";
+import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_HYPERLINK } from "../CharCellGrid";
 
 
 function makeGrid(): CharCellGrid {
@@ -536,8 +536,19 @@ test("Get/set row of flags", () => {
   for (let x=0; x<firstGrid.width; x++) {
     expect(firstGrid.getFlags(x, ROW)).toBe(secondGrid.getFlags(x, ROW));
   }
-
 });
+
+test("Link style", () => {
+  const grid = new CharCellGrid(40, 5);
+  grid.setLinkID(1, 2, 1);
+  expect(grid.getLinkID(1, 2)).toBe(1);
+  expect(grid.getStyle(1, 2) & STYLE_MASK_HYPERLINK).toBe(STYLE_MASK_HYPERLINK);
+
+  grid.setLinkID(1, 2, 0);
+  expect(grid.getLinkID(1, 2)).toBe(0);
+  expect(grid.getStyle(1, 2) & STYLE_MASK_HYPERLINK).toBe(0);
+});
+
 
 function printHorizontalBorder(width: number): string {
   const chars = [];
