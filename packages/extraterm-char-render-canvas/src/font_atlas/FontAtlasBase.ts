@@ -2,7 +2,7 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE,
-  STYLE_MASK_OVERLINE, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE,
+  STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE,
   UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
 import { isWide as isFullWidth } from "extraterm-unicode-utilities";
 import { select } from "floyd-rivest";
@@ -309,6 +309,17 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
 
     if (style & STYLE_MASK_OVERLINE) {
       ctx.fillRect(xPx, yPx + this._metrics.overlineY, widthPx, this._metrics.overlineHeight);
+    }
+
+    if (style & STYLE_MASK_HYPERLINK) {
+      // Two litle dashes at underline height.
+      const dashWidthPx = Math.max(1, Math.floor(widthPx / 6));
+      const firstXPx = Math.floor(widthPx / 6);
+      const secondXPx = Math.floor(4 * widthPx / 6);
+      ctx.fillRect(xPx + firstXPx, yPx + this._metrics.secondUnderlineY, dashWidthPx,
+        this._metrics.underlineHeight);
+      ctx.fillRect(xPx + secondXPx, yPx + this._metrics.secondUnderlineY, dashWidthPx,
+        this._metrics.underlineHeight);
     }
   }
 
