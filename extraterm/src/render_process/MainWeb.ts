@@ -280,10 +280,6 @@ function startUpMainWebUi(): void {
 
   window.addEventListener("keydown", handleKeyDownCapture, true);
   window.addEventListener("keypress", handleKeyPressCapture, true);
-  window.addEventListener("focus", handleFocusCapture, true);
-  // ^ It would be nice to just have these on mainWebUi too, but bug
-  // https://github.com/whatwg/dom/issues/685 prevents event capture on shadow DOM hosts from working as expected and
-  // arriving in the right order wrt to things deeper in the tree. The fix arrives in Chrome 71.
 }
 
 function handleKeyDownCapture(ev: KeyboardEvent): void {
@@ -315,10 +311,6 @@ function handleKeyCapture(ev: KeyboardEvent): void {
     ev.stopPropagation();
     ev.preventDefault();
   }
-}
-
-function handleFocusCapture(ev: FocusEvent): void {
-  extensionManager.updateExtensionWindowStateFromEvent(ev);
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";
