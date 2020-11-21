@@ -66,6 +66,16 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>A user defined configuration for a terminal session.</p>
+					</div>
+					<p>This is represented in the UI as a session block in the Settings -&gt;
+						&quot;Session Types&quot; tab. All of the different types of sessions have
+					these fields in common.</p>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -82,6 +92,7 @@
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionconfiguration.html#args" class="tsd-kind-icon">args</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionconfiguration.html#extensions" class="tsd-kind-icon">extensions</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionconfiguration.html#initialdirectory" class="tsd-kind-icon">initial<wbr>Directory</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionconfiguration.html#name" class="tsd-kind-icon">name</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="sessionconfiguration.html#type" class="tsd-kind-icon">type</a></li>
@@ -99,9 +110,31 @@
 					<div class="tsd-signature tsd-kind-icon">args<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L490">main.ts:490</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L557">main.ts:557</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Command line arguments to be passed to shell command.</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
+					<a name="extensions" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> extensions</h3>
+					<div class="tsd-signature tsd-kind-icon">extensions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L570">main.ts:570</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>This is where the data for any extensions which is associated with this
+							session type are kept.</p>
+						</div>
+						<p>Don not touch this.</p>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="initialdirectory" class="tsd-anchor"></a>
@@ -109,9 +142,14 @@
 					<div class="tsd-signature tsd-kind-icon">initial<wbr>Directory<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L491">main.ts:491</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L562">main.ts:562</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The initial directory in which to start the shell command.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="name" class="tsd-anchor"></a>
@@ -119,9 +157,14 @@
 					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L488">main.ts:488</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L543">main.ts:543</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Human readable name for this session type.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="type" class="tsd-anchor"></a>
@@ -129,9 +172,17 @@
 					<div class="tsd-signature tsd-kind-icon">type<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L489">main.ts:489</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L552">main.ts:552</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Identifies this type of session and the back-end needed to run it.</p>
+						</div>
+						<p>The value here matches that defined in the <code>contributes</code> -&gt;
+							<code>sessionEditors</code> -&gt; <code>type</code> field in the corresponding extension&#39;s
+						<code>package.json</code> file.</p>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
 					<a name="uuid" class="tsd-anchor"></a>
@@ -139,9 +190,14 @@
 					<div class="tsd-signature tsd-kind-icon">uuid<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L487">main.ts:487</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L538">main.ts:538</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Unique identifier for this session type.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -162,6 +218,9 @@
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="sessionconfiguration.html#args" class="tsd-kind-icon">args</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="sessionconfiguration.html#extensions" class="tsd-kind-icon">extensions</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
 								<a href="sessionconfiguration.html#initialdirectory" class="tsd-kind-icon">initial<wbr>Directory</a>

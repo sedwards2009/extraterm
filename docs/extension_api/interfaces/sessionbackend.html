@@ -66,6 +66,13 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>This interface defines the methods required from every session back-end.</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -94,28 +101,27 @@
 					<a name="createsession" class="tsd-anchor"></a>
 					<h3>create<wbr>Session</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
-						<li class="tsd-signature tsd-kind-icon">create<wbr>Session<span class="tsd-signature-symbol">(</span>sessionConfiguration<span class="tsd-signature-symbol">: </span><a href="sessionconfiguration.html" class="tsd-signature-type">SessionConfiguration</a>, extraEnv<span class="tsd-signature-symbol">: </span><a href="environmentmap.html" class="tsd-signature-type">EnvironmentMap</a>, cols<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, rows<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="pty.html" class="tsd-signature-type">Pty</a></li>
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Session<span class="tsd-signature-symbol">(</span>sessionConfiguration<span class="tsd-signature-symbol">: </span><a href="sessionconfiguration.html" class="tsd-signature-type">SessionConfiguration</a>, options<span class="tsd-signature-symbol">: </span><a href="createsessionoptions.html" class="tsd-signature-type">CreateSessionOptions</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="pty.html" class="tsd-signature-type">Pty</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L531">main.ts:531</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L611">main.ts:611</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a new live session</p>
+								</div>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>sessionConfiguration: <a href="sessionconfiguration.html" class="tsd-signature-type">SessionConfiguration</a></h5>
 								</li>
 								<li>
-									<h5>extraEnv: <a href="environmentmap.html" class="tsd-signature-type">EnvironmentMap</a></h5>
-								</li>
-								<li>
-									<h5>cols: <span class="tsd-signature-type">number</span></h5>
-								</li>
-								<li>
-									<h5>rows: <span class="tsd-signature-type">number</span></h5>
+									<h5>options: <a href="createsessionoptions.html" class="tsd-signature-type">CreateSessionOptions</a></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <a href="pty.html" class="tsd-signature-type">Pty</a></h4>
@@ -132,9 +138,14 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L529">main.ts:529</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L606">main.ts:606</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create some reasonable default session configurations for this back-end</p>
+								</div>
+							</div>
 							<h4 class="tsd-returns-title">Returns <a href="sessionconfiguration.html" class="tsd-signature-type">SessionConfiguration</a><span class="tsd-signature-symbol">[]</span></h4>
 						</li>
 					</ul>

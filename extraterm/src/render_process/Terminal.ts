@@ -477,6 +477,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   resizeToContainer(): void {
+    if (this._terminalCanvas == null) {
+      return;
+    }
     this._terminalCanvas.scheduleResize();
   }
 

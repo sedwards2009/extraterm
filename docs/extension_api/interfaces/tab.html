@@ -82,6 +82,7 @@
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="tab.html#getterminal" class="tsd-kind-icon">get<wbr>Terminal</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="tab.html#isalive" class="tsd-kind-icon">is<wbr>Alive</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="tab.html#showlistpicker" class="tsd-kind-icon">show<wbr>List<wbr>Picker</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-interface"><a href="tab.html#shownumberinput" class="tsd-kind-icon">show<wbr>Number<wbr>Input</a></li>
 							</ul>
@@ -101,7 +102,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L30">main.ts:30</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L30">main.ts:30</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -110,6 +111,29 @@
 								</div>
 							</div>
 							<h4 class="tsd-returns-title">Returns <a href="terminal.html" class="tsd-signature-type">Terminal</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-interface">
+					<a name="isalive" class="tsd-anchor"></a>
+					<h3>is<wbr>Alive</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>Alive<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L68">main.ts:68</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>True if this terminal is still open.</p>
+								</div>
+								<p>Once the uesr closes a terminal tab and the tab disappears, then this will return <code>false</code>.</p>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -123,7 +147,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L61">main.ts:61</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L61">main.ts:61</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -159,7 +183,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/2152b55c/packages/extraterm-extension-api/src/main.ts#L45">main.ts:45</a></li>
+									<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/4b49a9a6/packages/extraterm-extension-api/src/main.ts#L45">main.ts:45</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -203,6 +227,9 @@
 						<ul>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="tab.html#getterminal" class="tsd-kind-icon">get<wbr>Terminal</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-interface">
+								<a href="tab.html#isalive" class="tsd-kind-icon">is<wbr>Alive</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-interface">
 								<a href="tab.html#showlistpicker" class="tsd-kind-icon">show<wbr>List<wbr>Picker</a>

@@ -27,7 +27,6 @@ import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { CssFile } from '../theme/Theme';
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
 import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
-import { disassembleDOMTree } from "./DomUtils";
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;

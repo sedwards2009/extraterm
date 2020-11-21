@@ -88,6 +88,7 @@ interface OutputWrittenMessage extends ProxyMessage {
 }
 
 interface ClosedMessage extends ProxyMessage {
+  exitCode: number;
 }
 
 interface TerminateMessage extends ProxyMessage {
@@ -103,15 +104,22 @@ interface GetWorkingDirectoryMessage extends ProxyMessage {
 const NULL_ID = -1;
 
 
+enum PtyState {
+  NEW,
+  LIVE,
+  WAIT_EXIT_CONFIRM,
+  DEAD
+}
+
+
 class ProxyPty implements Pty {
 
   private _id: number = NULL_ID;
   private _writeFunc: (msg: ProxyMessage) => void = null;
-  private _waitingExitConfirmation = false;
+  private _state = PtyState.NEW;
 
   // Pre-open write queue.
   private _writeQueue: ProxyMessage[] = [];
-  private _live = true;
   private _outstandingWriteDataCount = 0;
 
   private _onDataEventEmitter = new EventEmitter<string>();
@@ -130,6 +138,7 @@ class ProxyPty implements Pty {
     this.onData = this._onDataEventEmitter.event;
     this.onExit = this._onExitEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
+    this._state = PtyState.LIVE;
   }
 
   getId(): number {
@@ -138,7 +147,7 @@ class ProxyPty implements Pty {
 
   setId(id: number): void {
     this._id = id;
-    if (this._live) {
+    if (this._state !== PtyState.DEAD) {
       this._writeQueue.forEach( (msg) => {
         msg.id = this._id;
         this._writeFunc(msg);
@@ -148,14 +157,16 @@ class ProxyPty implements Pty {
   }
 
   private _writeMessage(id: number, msg: ProxyMessage): void {
-    if (this._live) {
-      if (this._id === -1) {
-        // We don't know what the ID of the pty in the proxy is.
-        // Queue up this message for later.
-        this._writeQueue.push(msg);
-      } else {
-        this._writeFunc(msg);
-      }
+    if (this._state === PtyState.DEAD) {
+      return;
+    }
+
+    if (this._id === -1) {
+      // We don't know what the ID of the pty in the proxy is.
+      // Queue up this message for later.
+      this._writeQueue.push(msg);
+    } else {
+      this._writeFunc(msg);
     }
   }
 
@@ -166,11 +177,11 @@ class ProxyPty implements Pty {
   }
 
   write(data: string): void {
-    if ( ! this._waitingExitConfirmation) {
+    if (this._state === PtyState.LIVE) {
       this._outstandingWriteDataCount += data.length;
       const msg: WriteMessage = { type: TYPE_WRITE, id: this._id, data: data };
       this._writeMessage(this._id, msg);
-    } else {
+    } else if (this._state === PtyState.WAIT_EXIT_CONFIRM) {
       // See if the user hit the Enter key to fully close the terminal.
       if (data.indexOf("\r") !== -1) {
         this._onExitEventEmitter.fire(undefined);
@@ -183,30 +194,46 @@ class ProxyPty implements Pty {
   }
 
   resize(cols: number, rows: number): void {
+    if (this._state !== PtyState.LIVE) {
+      return;
+    }
+
     const msg: ResizeMessage = { type: TYPE_RESIZE, id: this._id, rows: rows, columns: cols };
     this._writeMessage(this._id, msg);
   }
 
   permittedDataSize(size: number): void {
+    if (this._state !== PtyState.LIVE) {
+      return;
+    }
+
     const msg: PermitDataSizeMessage = { type: TYPE_PERMIT_DATA_SIZE, id: this._id, size: size };
     this._writeMessage(this._id, msg);
   }
 
   data(data: string): void {
-    if (this._live) {
+    if (this._state !== PtyState.DEAD) {
       this._onDataEventEmitter.fire(data);
     }
   }
 
-  exit(): void {
-    this._waitingExitConfirmation = true;
-    this._onDataEventEmitter.fire("\n\r\n\r[Process exited. Press Enter to close this terminal.]");
-    this._live = false;
+  exit(exitCode: number): void {
+    if (exitCode === 0) {
+      this._onExitEventEmitter.fire(undefined);
+    } else {
+      this._state = PtyState.WAIT_EXIT_CONFIRM;
+      this._onDataEventEmitter.fire(`\n\r\n\n[Process exited with code ${exitCode}. Press Enter to close this terminal.]`);
+    }
   }
 
   destroy(): void {
+    if (this._state === PtyState.DEAD) {
+      return;
+    }
+
     const msg: CloseMessage = { type: TYPE_CLOSE, id: this._id };
     this._writeMessage(this._id, msg);
+    this._state = PtyState.DEAD;
   }
 
   getWorkingDirectory(): Promise<string | null> {
@@ -359,7 +386,7 @@ export abstract class ProxyPtyConnector {
       const closedMsg = <ClosedMessage> msg;
       const pty = this._findPtyById(closedMsg.id);
       if (pty !== null) {
-        pty.exit();
+        pty.exit(closedMsg.exitCode);
       }
       return;
     }
@@ -406,7 +433,7 @@ export abstract class ProxyPtyConnector {
   private _gracefullyAbortAll(): void {
     for (const pty of this._ptys) {
       pty.data("\n\r\n\r[PTY closed unexpectedly.]");
-      pty.exit();
+      pty.exit(0);
     }
     this._ptys = [];
 

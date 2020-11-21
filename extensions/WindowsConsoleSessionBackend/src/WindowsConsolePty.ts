@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {EventEmitter} from 'extraterm-event-emitter';
-import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from '@extraterm/extraterm-extension-api';
-import * as pty from 'node-pty';
-import * as _ from 'lodash';
-const pidCwd = require('pid-cwd');
+import {EventEmitter} from "extraterm-event-emitter";
+import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from "@extraterm/extraterm-extension-api";
+import * as pty from "node-pty";
+import * as _ from "lodash";
+const pidCwd = require("pid-cwd");
 
 const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
 
@@ -22,19 +22,25 @@ export interface PtyOptions {
   preMessage?: string;
 }
 
+enum PtyState {
+  NEW,
+  LIVE,
+  WAIT_EXIT_CONFIRM,
+  DEAD
+}
+
 export class WindowsConsolePty implements Pty {
 
   private realPty: pty.IPty;
   private _permittedDataSize = 0;
   private _paused = true;
-  private _waitingExitConfirmation = false;
-  private _destroyed = false;
+  private _state = PtyState.NEW;
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
   private _emitBufferSizeLater: (() => void) & _.Cancelable = null;
 
-  // Amount of data which went directly to the OS but still needs to 'announced' via an event.
+  // Amount of data which went directly to the OS but still needs to "announced" via an event.
   private _directWrittenDataCount = 0;
 
   onData: Event<string>;
@@ -48,19 +54,25 @@ export class WindowsConsolePty implements Pty {
 
     this.realPty = pty.spawn(options.exe, options.args, options);
 
-    this.realPty.on('data', (data: any): void => {
+    this.realPty.on("data", (data: any): void => {
       this._onDataEventEmitter.fire(data);
       this.permittedDataSize(this._permittedDataSize - data.length);
     });
 
-    this.realPty.on('exit', () => {
-      this._waitingExitConfirmation = true;
-      this._onDataEventEmitter.fire("\n\n[Process exited. Press Enter to close this terminal.]");
+    this.realPty.on("exit", (exitCode: number, signal: number) => {
+      if (exitCode !== 0) {
+        this._state = PtyState.WAIT_EXIT_CONFIRM;
+        this._onDataEventEmitter.fire(`\n\n[Process exited with code ${exitCode}. Press Enter to close this terminal.]`);
+      } else {
+        this._state = PtyState.DEAD;
+        this._onExitEventEmitter.fire(undefined);
+      }
     });
 
     this._emitBufferSizeLater = _.throttle(this._emitAvailableWriteBufferSizeChange.bind(this), 0, {leading: false});
 
     this.realPty.pause();
+    this._state = PtyState.LIVE;
 
     if (options.preMessage != null && options.preMessage !== "") {
       process.nextTick(() => {
@@ -70,12 +82,12 @@ export class WindowsConsolePty implements Pty {
   }
 
   write(data: string): void {
-    if ( ! this._waitingExitConfirmation) {
+    if (this._state === PtyState.LIVE) {
       this.realPty.write(data);
 
       this._directWrittenDataCount += data.length;
       this._emitBufferSizeLater();
-    } else {
+    } else if (this._state === PtyState.WAIT_EXIT_CONFIRM) {
       // See if the user hit the Enter key to fully close the terminal.
       if (data.indexOf("\r") !== -1) {
         this._onExitEventEmitter.fire(undefined);
@@ -99,17 +111,22 @@ export class WindowsConsolePty implements Pty {
   }
 
   resize(cols: number, rows: number): void {
+    if (this._state !== PtyState.LIVE) {
+      return;
+    }
+
     this.realPty.resize(cols, rows);
   }
 
   destroy(): void {
-    if (this._destroyed) {
+    if (this._state === PtyState.DEAD) {
       return;
     }
-    this._destroyed = true;
+
     this._log.warn("WindowsConsolePty.destroy()");
     this._emitBufferSizeLater.cancel();
     this.realPty.destroy();
+    this._state = PtyState.DEAD;
   }
 
   permittedDataSize(size: number): void {

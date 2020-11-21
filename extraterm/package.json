@@ -57,7 +57,7 @@
     "xregexp": "4.2.4"
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.10.0",
+    "@extraterm/extraterm-extension-api": "0.11.0",
     "@types/commander": "2.3.31",
     "@types/he": "1.1.0",
     "@types/jest": "23.3.13",
