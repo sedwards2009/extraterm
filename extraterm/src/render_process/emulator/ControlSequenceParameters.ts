@@ -7,6 +7,7 @@
 export interface Parameter {
   intValue: number;
   stringValue: string;
+  rawStringValue: string;
   subparameters: ControlSequenceParameters;
 }
 
@@ -69,6 +70,7 @@ export class ControlSequenceParameters {
   nextParameter(): void {
     this._initializeCurrentParameter();
     if (this._mode === ParameterMode.Parameter) {
+      this._currentParameter.rawStringValue = this._currentParameter.stringValue;
       if (this._currentParameter.stringValue === null) {
         this._currentParameter.stringValue = "" + this._currentParameter.intValue;
       }
@@ -90,6 +92,7 @@ export class ControlSequenceParameters {
     return {
       intValue: 0,
       stringValue: null,
+      rawStringValue: null,
       subparameters: new ControlSequenceParameters(),
     };
   }

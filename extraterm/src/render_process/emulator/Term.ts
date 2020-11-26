@@ -1685,6 +1685,14 @@ export class Emulator implements EmulatorApi {
         case 5:
           // change dynamic colors
           break;
+        case 8:
+          // Hyperlink
+          let url = this._params[2].rawStringValue;
+          if (url === "") {
+            url = null;
+          }
+          this.curAttr.hyperlinkURL = url;
+          break;
         case 10:
         case 11:
         case 12:
@@ -1728,14 +1736,18 @@ export class Emulator implements EmulatorApi {
       this.state = ParserState.NORMAL;
 
     } else {
-      if ( ! this._params.length) {
+      if (this._params.length === 0) {
         if (ch >= '0' && ch <= '9') {
           this._params.appendDigit(ch);
         } else if (ch === ';') {
           this._params.nextParameter();
         }
       } else {
-        this._params.appendString(ch);
+        if (ch === ';') {
+          this._params.nextParameter();
+        } else {
+          this._params.appendString(ch);
+        }
       }
     }
     return i;
