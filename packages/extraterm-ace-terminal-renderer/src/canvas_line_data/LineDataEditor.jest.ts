@@ -9,21 +9,8 @@ import { LineData } from "./LineData";
 import { Line } from "term-api";
 import { CharCellGrid } from "extraterm-char-cell-grid";
 import { Delta } from "@extraterm/ace-ts";
+import { LineImpl } from "term-api-lineimpl";
 
-// FIXME de-duplicate this class
-class LineImpl extends CharCellGrid implements Line {
-  wrapped = false;
-
-  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
-    super(width, height, _palette, __bare__);
-  }
-
-  clone(): Line {
-    const grid = new LineImpl(this.width, this.height, this.palette);
-    this.cloneInto(grid);
-    return grid;
-  }
-}
 
 class LineDataImpl implements LineData {
 

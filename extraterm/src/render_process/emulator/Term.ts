@@ -1,7 +1,7 @@
 /**
  * term.js - an xterm emulator
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
- * Copyright (c) 2014-2019, Simon Edwards <simon@simonzone.com>
+ * Copyright (c) 2014-2020, Simon Edwards <simon@simonzone.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,7 +39,6 @@ import {
   DataEventListener,
   EmulatorApi,
   Line,
-  TerminalCoord,
   TerminalSize,
   TitleChangeEventListener,
   MouseEventOptions,
@@ -54,7 +53,6 @@ import { log, Logger, getLogger } from "extraterm-logging";
 import { isWide } from "extraterm-unicode-utilities";
 
 import {
-  CharCellGrid,
   Cell,
   FLAG_MASK_FG_CLUT,
   FLAG_MASK_BG_CLUT,
@@ -76,6 +74,7 @@ import {
   setCellFgClutFlag,
   setCellBgClutFlag,
 } from 'extraterm-char-cell-grid';
+import { CellWithHyperlink, LineImpl } from "term-api-lineimpl";
 import { ControlSequenceParameters } from "./ControlSequenceParameters";
 import { MouseEncoder } from "./MouseEncoder";
 
@@ -155,21 +154,6 @@ const WRITE_BUFFER_SIZE_EVENT = "WRITE_BUFFER_SIZE_EVENT";
 
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
-// FIXME de-duplicate this class
-class LineImpl extends CharCellGrid implements Line {
-
-  wrapped = false;
-
-  constructor(width: number, height: number, palette: number[]=null, __bare__=false) {
-    super(width, height, palette, __bare__);
-  }
-
-  clone(): Line {
-    const grid = new LineImpl(this.width, this.height, this.palette);
-    this.cloneInto(grid);
-    return grid;
-  }
-}
 
 export class Emulator implements EmulatorApi {
   private _log: Logger = null;
@@ -213,10 +197,13 @@ export class Emulator implements EmulatorApi {
   private charsets: CharSet[] = [null];
 
   // Default character style
-  static defAttr: Cell = {
+  static defAttr: CellWithHyperlink = {
     codePoint: " ".codePointAt(0),
     flags: FLAG_MASK_FG_CLUT | FLAG_MASK_BG_CLUT,
     style: 0,
+    linkID: 0,
+    hyperlinkID: null,
+    hyperlinkURL: null,
     fgClutIndex: 257,
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
@@ -224,20 +211,26 @@ export class Emulator implements EmulatorApi {
   };
 
   // Current character style.
-  private readonly curAttr: Cell = {
+  private readonly curAttr: CellWithHyperlink = {
     codePoint: " ".codePointAt(0),
     flags: FLAG_MASK_FG_CLUT | FLAG_MASK_BG_CLUT,
     style: 0,
+    linkID: 0,
+    hyperlinkID: null,
+    hyperlinkURL: null,
     fgClutIndex: 257,
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
     bgRGBA: 0x00000000,
   };
 
-  private savedCurAttr: Cell = {
+  private readonly savedCurAttr: CellWithHyperlink = {
     codePoint: " ".codePointAt(0),
     flags: 0,
     style: 0,
+    linkID: 0,
+    hyperlinkID: null,
+    hyperlinkURL: null,
     fgClutIndex: 257,
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
@@ -877,7 +870,7 @@ export class Emulator implements EmulatorApi {
                   }
                 }
 
-                line.setCell(this.x, 0, this.curAttr);
+                line.setCellAndLink(this.x, 0, this.curAttr);
                 line.setCodePoint(this.x, 0 ,codePoint);
 
                 this.x++;
@@ -887,11 +880,11 @@ export class Emulator implements EmulatorApi {
                   const j = this.y;
                   const line = this._getRow(j);
                   if (this.cols < 2 || this.x >= this.cols) {
-                    line.setCell(this.x - 1, 0, this.curAttr);
+                    line.setCellAndLink(this.x - 1, 0, this.curAttr);
                     line.setCodePoint(this.x - 1, 0, ' '.codePointAt(0));
                     break;
                   }
-                  line.setCell(this.x, 0, this.curAttr);
+                  line.setCellAndLink(this.x, 0, this.curAttr);
                   line.setCodePoint(this.x, 0, ' '.codePointAt(0));
                   this.x++;
                 }
@@ -2349,7 +2342,7 @@ export class Emulator implements EmulatorApi {
       newLine.pasteGrid(line, 0, 0);
 
       for(let j=line.width; j<newcols; j++) {
-        newLine.setCell(j, 0, Emulator.defAttr);
+        newLine.setCellAndLink(j, 0, Emulator.defAttr);
       }
 
       this.lines[i] = newLine;
@@ -2483,7 +2476,7 @@ export class Emulator implements EmulatorApi {
 
     const chCodePoint = ch.codePointAt(0);
     for (; x < this.cols; x++) {
-      line.setCell(x, 0, this.curAttr);
+      line.setCellAndLink(x, 0, this.curAttr);
       line.setCodePoint(x, 0, chCodePoint);
     }
 
@@ -2506,7 +2499,7 @@ export class Emulator implements EmulatorApi {
     x++;
     while (x !== 0) {
       x--;
-      line.setCell(x, 0, clearCellAttrs);
+      line.setCellAndLink(x, 0, clearCellAttrs);
     }
 
     this.markRowForRefresh(y);
@@ -3823,11 +3816,11 @@ export class Emulator implements EmulatorApi {
     let param = params[0].intValue || 1;
     const line = this._getRow(this.y);
 
-    const cell = this.x === 0 ? Emulator.defAttr : line.getCell(this.x-1, 0);
+    const cell = this.x === 0 ? Emulator.defAttr : line.getCellAndLink(this.x-1, 0);
     const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : line.getCodePoint(this.x-1, 0);
 
     while (param--) {
-      line.setCell(this.x, 0, cell);
+      line.setCellAndLink(this.x, 0, cell);
       line.setCodePoint(this.x, 0, chCodePoint);
       this.x++;
     }

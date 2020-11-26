@@ -6,6 +6,10 @@ import { TerminalCanvasAceEditor } from "../TerminalCanvasAceEditor";
 import * as TermApi from "term-api";
 import { TerminalDocument } from "../TerminalDocument";
 import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_BLINK, STYLE_MASK_INVERSE, STYLE_MASK_INVISIBLE, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_FAINT } from "extraterm-char-cell-grid";
+import { TerminalCanvasRenderer, TerminalCanvasRendererConfig } from "../TerminalCanvasRenderer";
+import { CursorStyle } from "extraterm-char-render-canvas";
+import { LineImpl } from "term-api-lineimpl";
+
 
 function createEditSession(text, mode?): EditSession {
   const doc = new EditSession(text, mode);
@@ -39,7 +43,19 @@ function terminalEditor(elementOrString: HTMLElement | string): TerminalCanvasAc
   const editSession = new TerminalCanvasEditSession(new TerminalDocument(value));
   editSession.setUndoManager(new UndoManager());
 
-  const editor = new TerminalCanvasAceEditor(new Renderer(el as HTMLElement), editSession);
+  // FIXME These are bogus values.
+  const terminalCanvasRendererConfig: TerminalCanvasRendererConfig = {
+    cursorStyle: CursorStyle.BLOCK,
+    palette: [],
+    devicePixelRatio: 1,
+    fontFamily: "",
+    fontSizePx: 11,
+    fontFilePath: "",
+    ligatureMarker: null,
+    transparentBackground: false
+  };
+
+  const editor = new TerminalCanvasAceEditor(new TerminalCanvasRenderer(el as HTMLElement, terminalCanvasRendererConfig), editSession);
   editor.addCommand({
       name: "pasteSomething",
       bindKey: {win: "Ctrl-V", mac: "Command-V"},
@@ -64,20 +80,6 @@ function terminalEditor(elementOrString: HTMLElement | string): TerminalCanvasAc
   return editor;
 }
 
-// FIXME de-duplicate this class
-class LineImpl extends CharCellGrid implements TermApi.Line {
-  wrapped = false;
-
-  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
-    super(width, height, _palette, __bare__);
-  }
-
-  clone(): TermApi.Line {
-    const grid = new LineImpl(this.width, this.height, this.palette);
-    this.cloneInto(grid);
-    return grid;
-  }
-}
 
 function getLine(): TermApi.Line {
   const input = <HTMLInputElement> document.getElementById("input_line");

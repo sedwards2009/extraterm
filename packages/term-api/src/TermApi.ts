@@ -39,6 +39,10 @@ export type CharAttr = number;
 export interface Line extends CharCellGrid {
   wrapped: boolean;
   clone(): Line;
+  hasLinks(): boolean;
+  getLinkURL(linkID: number): string;
+  getAllLinkIDs(): number[];
+  pasteGridWithLinks(sourceGrid: Line, x: number, y: number): void;
 }
 
 export interface TerminalCoord {
@@ -54,11 +58,11 @@ export interface RenderEvent {
   rows: number;         // the current number of rows in the emulator screen.
   columns: number;      // the current number of columns comprising the emulator screen.
   realizedRows: number; // the current number of realised rows which have been touched.
-  
+
   refreshStartRow: number;  // The start row of a range on the screen which needs to be refreshed.
                             // -1 indicates no refresh needed.
   refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
-  
+
   scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
   cursorRow: number;
   cursorColumn: number;
@@ -102,24 +106,24 @@ export interface WriteBufferStatus {
 
 /**
  * Handler for processing the application mode escape code.
- * 
+ *
  * Application mode is a feature specific to Extraterm. It is a generic
  * escape code intend for sending large amounts of data from an application
  * running on the remote end of the pty to the terminal emulator application.
- * 
+ *
  * The structure of the escape code is:
- * 
+ *
  *   ESC "&" [parameters separated by semicolon] 0x07 [data] 0x00
- * 
+ *
  * In english, the escape character followed by ampersand then multiple
  * parameters separated by semicolons, then the 0x07 character (BEL),
  * raw data then terminated by a NUL byte.
- * 
+ *
  * Once the 0x07 (BEL) character is received then the `start()` method is
  * called with the parameters. Then the `data()` method is called multiple
  * times as chunks of data are received, finally `end()` is called once the
  * NUL byte is seen.
- * 
+ *
  * The `start()` and `data()` methods respond with an
  * `ApplicationModeResponse` object. This is usually just
  * `{action: ApplicationModeResponseAction.CONTINUE}` but in the even that
@@ -129,24 +133,24 @@ export interface WriteBufferStatus {
  * return to normal processing. It is also possible to 'push back' the unused
  * part of the data buffer in this case by using the `remainingData` field in
  * the `ApplicationModeResponse` object.
- * 
+ *
  * `ApplicationModeResponseAction.PAUSE`
  * can be used to pause processing of the PTY output stream by the emulator.
- * See `pauseProcessing()` and `resumeProcessing()` in the `EmulatorAPI`. 
+ * See `pauseProcessing()` and `resumeProcessing()` in the `EmulatorAPI`.
  */
 export interface ApplicationModeHandler {
   /**
    * Called once the start of the escape code and its parameters have been received.
-   * 
+   *
    * @param params the parameters to the code.
    */
   start(params: any[]): ApplicationModeResponse;
 
   /**
    * Called to send the next block of body data.
-   * 
+   *
    * This method is called multiple times.
-   * 
+   *
    * @param data the received data.
    */
   data(data: string): ApplicationModeResponse;
@@ -179,13 +183,13 @@ export interface MinimalKeyboardEvent {
 
 
 export interface EmulatorApi {
-  
+
   size(): TerminalSize;
-  
+
   lineAtRow(row: number, showCursor?: boolean): Line;
-  
+
   refreshScreen(): void;
-  
+
   resize(newSize: TerminalSize): void;
 
   /**
@@ -200,7 +204,7 @@ export interface EmulatorApi {
 
   /**
    * Get the row the cursor is in.
-   * 
+   *
    * @return The row the cursor is in. 0 based.
    */
   getCursorRow(): number;
@@ -210,13 +214,13 @@ export interface EmulatorApi {
    * @return true if the event has been fully handled.
    */
   mouseDown(ev: MouseEventOptions): boolean;
-  
+
   /**
    *
    * @return true if the event has been fully handled.
    */
   mouseUp(ev: MouseEventOptions): boolean;
-  
+
   /**
    *
    * @return true if the event has been fully handled.
@@ -230,7 +234,7 @@ export interface EmulatorApi {
   pasteText(text: string): void;
 
   write(data: string): WriteBufferStatus;
-  
+
   focus(): void;
   blur(): void;
   hasFocus(): boolean;
@@ -243,7 +247,7 @@ export interface EmulatorApi {
 
   /**
    * Suspend processing of terminal output.
-   * 
+   *
    * This doesn't affect input processing like keystrokes.
    */
   pauseProcessing(): void;
@@ -264,7 +268,7 @@ export interface EmulatorApi {
   addDataEventListener(eventHandler: DataEventListener): void;
   addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
   addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void;
-  
+
   registerApplicationModeHandler(handler: ApplicationModeHandler): void;
 }
 

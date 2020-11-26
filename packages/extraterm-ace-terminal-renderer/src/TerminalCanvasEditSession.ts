@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 import { Document,
          EditSession,
@@ -14,25 +14,10 @@ import { Document,
 import * as TermApi from "term-api";
 import { LineData } from "./canvas_line_data/LineData";
 import { LineDataEditor } from "./canvas_line_data/LineDataEditor";
-import { CharCellGrid } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { TermLineHeavyString } from "./TermLineHeavyString";
 import { stringToCodePointArray } from "extraterm-unicode-utilities";
-
-// FIXME de-duplicate this class
-class LineImpl extends CharCellGrid implements TermApi.Line {
-  wrapped = false;
-
-  constructor(width: number, height: number, _palette: number[]=null, __bare__=false) {
-    super(width, height, _palette, __bare__);
-  }
-
-  clone(): TermApi.Line {
-    const grid = new LineImpl(this.width, this.height, this.palette);
-    this.cloneInto(grid);
-    return grid;
-  }
-}
+import { LineImpl } from "term-api-lineimpl";
 
 
 export class TerminalCanvasEditSession extends EditSession {

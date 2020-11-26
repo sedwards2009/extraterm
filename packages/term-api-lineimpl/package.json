@@ -1,0 +1,34 @@
+{
+  "name": "term-api-lineimpl",
+  "version": "1.0.0",
+  "description": "Implementation of TermAPI's Line interface",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "dependencies": {
+    "extraterm-char-cell-grid": "1.0.0",
+    "term-api": "1.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "23.3.13",
+    "@types/node": "^12.6.2",
+    "eslint": "6.8.0",
+    "eslint-config-extraterm": "1.0.0",
+    "jest": "23.6.0",
+    "shx": "^0.3.2",
+    "typescript": "3.9.6"
+  },
+  "scripts": {
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
+    "clean": "shx rm -rf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
+    "test": "yarn run build && jest"
+  }
+}

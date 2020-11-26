@@ -56,7 +56,7 @@ export class LineDataEditor {
     if ((usedLength + strLength) > line.width) {
       // Resize the line
       const newLine = this._lineData.createLine(usedLength + strLength);
-      newLine.pasteGrid(line, 0, 0);
+      newLine.pasteGridWithLinks(line, 0, 0);
 
       this._insertIntoLineNoResize(newLine, pos, insertLine);
       return newLine;
@@ -69,7 +69,7 @@ export class LineDataEditor {
 
   private _insertIntoLineNoResize(line: Line, pos: number, insertLine: Line): void {
     line.shiftCellsRight(pos, 0, insertLine.width);
-    line.pasteGrid(insertLine, pos, 0);
+    line.pasteGridWithLinks(insertLine, pos, 0);
   }
 
   private _insertRows(delta: Delta): void {
@@ -77,12 +77,12 @@ export class LineDataEditor {
     const strLines = delta.lines;
 
     let leftLine = this._lineData.createLine(delta.start.column);
-    leftLine.pasteGrid(firstLineOfChange, 0, 0);
+    leftLine.pasteGridWithLinks(firstLineOfChange, 0, 0);
     leftLine = this._insertIntoLine(leftLine, delta.start.column, this._getLineFromDeltaLine(strLines[0]));
     this._lineData.setLine(delta.start.row, leftLine);
 
     let rightLine = this._lineData.createLine(firstLineOfChange.width - delta.start.column);
-    rightLine.pasteGrid(firstLineOfChange, -delta.start.column, 0);
+    rightLine.pasteGridWithLinks(firstLineOfChange, -delta.start.column, 0);
     rightLine = this._insertIntoLine(rightLine, 0, this._getLineFromDeltaLine(strLines[strLines.length-1]));
 
     const insertLineList: Line[] = [];
@@ -112,11 +112,11 @@ export class LineDataEditor {
       const line = this._lineData.getLine(delta.start.row);
 
       const leftLine = this._lineData.createLine(delta.start.column);
-      leftLine.pasteGrid(line, 0, 0);
+      leftLine.pasteGridWithLinks(line, 0, 0);
 
       const newLine = this._lineData.createLine(Math.max(0, delta.start.column + line.width-delta.end.column));
-      newLine.pasteGrid(line, -delta.end.column+delta.start.column, 0);
-      newLine.pasteGrid(leftLine, 0, 0);
+      newLine.pasteGridWithLinks(line, -delta.end.column+delta.start.column, 0);
+      newLine.pasteGridWithLinks(leftLine, 0, 0);
       this._lineData.setLine(delta.start.row, newLine);
     } else {
       const firstLine = this._lineData.getLine(delta.start.row);
@@ -131,20 +131,20 @@ export class LineDataEditor {
 
   private _lineLeft(line: Line, column: number): Line {
     const newLine = this._lineData.createLine(column);
-    newLine.pasteGrid(line, 0, 0);
+    newLine.pasteGridWithLinks(line, 0, 0);
     return newLine;
   }
 
   private _lineRight(line: Line, column: number): Line {
     const newLine = this._lineData.createLine(Math.max(line.width-column, 0));
-    newLine.pasteGrid(line, -column, 0);
+    newLine.pasteGridWithLinks(line, -column, 0);
     return newLine;
   }
 
   private _joinLines(leftLine: Line, rightLine: Line): Line {
     const newLine = this._lineData.createLine(leftLine.width + rightLine.width);
-    newLine.pasteGrid(leftLine, 0, 0);
-    newLine.pasteGrid(rightLine, leftLine.width, 0);
+    newLine.pasteGridWithLinks(leftLine, 0, 0);
+    newLine.pasteGridWithLinks(rightLine, leftLine.width, 0);
     return newLine;
   }
 }
