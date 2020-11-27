@@ -25,7 +25,6 @@ import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer, CursorStyle } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "@extraterm/ace-ts";
 import { TextEditor } from './TextEditorType';
-import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
@@ -1260,13 +1259,6 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         return;
       }
     }
-  }
-
-  private _handleContextMenu(ev: MouseEvent): void {
-    // Prevent Ace from seeing this event and messing with the hidden textarea and the focus.
-    ev.stopImmediatePropagation();
-    ev.preventDefault();
-    dispatchContextMenuRequest(this, ev.clientX, ev.clientY);
   }
 
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
