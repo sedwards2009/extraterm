@@ -233,7 +233,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
       this.updateThemeCss();
 
-      this._terminalCanvas.addEventListener("mousedown", this._handleMouseDownCapture.bind(this));
+      this._terminalCanvas.addEventListener("mousedown", this._handleMouseDown.bind(this));
       this._terminalCanvas.addEventListener(GeneralEvents.EVENT_TYPE_TEXT, this._handleTypeText.bind(this));
 
       this._showTip();
@@ -725,7 +725,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
   }
 
-  private _handleMouseDownCapture(ev: MouseEvent): void {
+  private _handleMouseDown(ev: MouseEvent): void {
     const key = this._mapEventToMouseButtonActionKey(ev);
     if (key == null) {
       return;

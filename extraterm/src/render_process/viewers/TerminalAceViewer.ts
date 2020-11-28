@@ -7,7 +7,7 @@ import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture,
 import * as XRegExp from "xregexp";
 
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import {doLater, doLaterFrame, DebouncedDoLater} from 'extraterm-later';
+import {doLater, DebouncedDoLater} from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
 import { Color } from 'extraterm-color-utilities';
@@ -29,6 +29,8 @@ import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 import { ConfigCursorStyle } from '../../Config';
+import { dispatchContextMenuRequest, ContextMenuType } from '../command/CommandUtils';
+import { ConfigDatabase, AcceptsConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -45,8 +47,8 @@ const DEBUG_RESIZE = false;
 
 
 @CustomElement("et-terminal-ace-viewer")
-export class TerminalViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
-    TextEditor, AcceptsTerminalVisualConfig, Disposable {
+export class TerminalViewer extends ViewerElement implements AcceptsConfigDatabase,
+    SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, AcceptsTerminalVisualConfig, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
   static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
@@ -62,6 +64,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   private _log: Logger;
+  private _configDatabase: ConfigDatabase = null;
   private _emulator: Term.Emulator = null;
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
@@ -120,6 +123,10 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   }
 
   dispose(): void {
+  }
+
+  setConfigDatabase(configDatabase: ConfigDatabase): void {
+    this._configDatabase = configDatabase;
   }
 
   getMetadata(): ViewerMetadata {
@@ -267,10 +274,10 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
       containerDiv.addEventListener('keydown', ev => this._handleContainerKeyDownCapture(ev), true);
 
       const aceElement = this._aceEditor.renderer.scrollerElement;
-      aceElement.addEventListener("mousedown", ev => this._handleMouseDownEvent(ev), true);
-      aceElement.addEventListener("mouseup", ev => this._handleMouseUpEvent(ev), true);
-      aceElement.addEventListener("mousemove", ev => this._handleMouseMoveEvent(ev), true);
-      aceElement.addEventListener("wheel", ev => this._handleMouseWheelEvent(ev), true);
+      aceElement.addEventListener("mousedown", ev => this._handleMouseDown(ev), true);
+      aceElement.addEventListener("mouseup", ev => this._handleMouseUp(ev), true);
+      aceElement.addEventListener("mousemove", ev => this._handleMouseMove(ev), true);
+      aceElement.addEventListener("wheel", ev => this._handleMouseWheel(ev), true);
 
       if (this._visualState != null) {
         this._forceSetVisualState(this._visualState);
@@ -1111,6 +1118,10 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._aceEditSession.setScrollTopPx(yCoord);
   }
 
+  /**
+   *
+   * @returns True if the mouse event was consumed.
+   */
   private _handleEmulatorMouseEvent(ev: MouseEvent, emulatorHandler: (opts: TermApi.MouseEventOptions) => boolean): boolean {
     // Ctrl click prevents the mouse being taken over by
     // the application and allows the user to select stuff.
@@ -1147,7 +1158,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     return false;
   }
 
-  private _handleMouseDownEvent(ev: MouseEvent): void {
+  private _handleMouseDown(ev: MouseEvent): void {
     if (this._emulator != null) {
       if ( ! this.hasFocus()) {
         this.focus();
@@ -1156,13 +1167,49 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
         return;
       }
     }
+
+    const key = this._mapEventToMouseButtonActionKey(ev);
+    if (key != null) {
+      const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const action = <MouseButtonAction> generalConfig[key];
+      if (action === "context_menu") {
+        let hyperlinkURL: string = null;
+        // Check for hyperlinks
+        const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
+        if (pos != null) {
+          hyperlinkURL = this._aceEditor.getHyperlinkAtTextCoordinates(pos);
+        }
+
+        ev.stopPropagation();
+        ev.preventDefault();
+        dispatchContextMenuRequest(this, ev.x, ev.y, ContextMenuType.NORMAL, { terminalHyperlinkURL: hyperlinkURL });
+        return;
+      }
+    }
   }
 
-  private _handleMouseUpEvent(ev: MouseEvent): void {
-    const isRightMouseButton = (ev.buttons & 2) !== 0;
-    if (isRightMouseButton) {
-      ev.preventDefault();
-      ev.stopPropagation();
+  private _mapEventToMouseButtonActionKey(ev: MouseEvent): string {
+    const isMiddleButton = ev.buttons === 4;
+    const isRightButton = (ev.buttons & 2) !== 0;
+    if ( ! isMiddleButton && ! isRightButton) {
+      return null;
+    }
+
+    const buttonString = isMiddleButton ? "middle" : "right";
+    const modifierString = ev.ctrlKey ? "Control" : (ev.shiftKey ? "Shift" : "");
+    return `${buttonString}MouseButton${modifierString}Action`;
+  }
+
+  private _handleMouseUp(ev: MouseEvent): void {
+    const key = this._mapEventToMouseButtonActionKey(ev);
+    if (key != null) {
+      const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const action = <MouseButtonAction> generalConfig[key];
+      if (action === "context_menu") {
+        ev.preventDefault();
+        ev.stopPropagation();
+        return;
+      }
     }
 
     if (this._emulator === null) {
@@ -1171,14 +1218,14 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseUp.bind(this._emulator));
   }
 
-  private _handleMouseMoveEvent(ev: MouseEvent): void {
+  private _handleMouseMove(ev: MouseEvent): void {
     if (this._emulator === null) {
       return;
     }
     this._handleEmulatorMouseEvent(ev, this._emulator.mouseMove.bind(this._emulator));
   }
 
-  private _handleMouseWheelEvent(ev: WheelEvent): void {
+  private _handleMouseWheel(ev: WheelEvent): void {
     ev.stopPropagation();
     ev.preventDefault();
 
