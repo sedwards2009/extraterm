@@ -1,8 +1,8 @@
 /**
  * Copyright 2019 Simon Edwards <simon@simonzone.com>
  */
-import { TextLayer, EditSession, ViewPortSize } from "@extraterm/ace-ts";
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { TextLayer, EditSession, Position, ViewPortSize } from "@extraterm/ace-ts";
+import { CharCellGrid, STYLE_MASK_HYPERLINK_HIGHLIGHT } from "extraterm-char-cell-grid";
 import { WebGLCharRenderCanvas, CursorStyle } from "extraterm-char-render-canvas";
 import { LayerConfig } from "@extraterm/ace-ts";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
@@ -53,6 +53,8 @@ export class CanvasTextLayer implements TextLayer {
 
   private _clipDiv: HTMLDivElement = null;
   private _transparentBackground = false;
+
+  #hoveredURL: string = null;
 
   constructor(options: CanvasTextLayerOptions) {
     const { palette, fontFamily, fontSizePx, cursorStyle, ligatureMarker, contentDiv, transparentBackground } = options;
@@ -307,6 +309,12 @@ export class CanvasTextLayer implements TextLayer {
       const terminalLine = this._editSession.getTerminalLine(docRow);
       if (terminalLine != null) {
         grid.pasteGrid(terminalLine, 0, canvasRow);
+        if (this.#hoveredURL != null) {
+          const linkID = terminalLine.getLinkIDByURL(this.#hoveredURL);
+          if (linkID !== 0) {
+            this._highlightLinkID(grid, canvasRow, 0, terminalLine.width, linkID);
+          }
+        }
 
         if (terminalLine.width < grid.width) {
           for (let i = terminalLine.width; i < grid.width; i++) {
@@ -329,6 +337,16 @@ export class CanvasTextLayer implements TextLayer {
 
       if (canvasRow >= grid.height) {
         break;
+      }
+    }
+  }
+
+  private _highlightLinkID(grid: CharCellGrid, canvasRow: number, startX: number, endX: number, linkID: number): void {
+    for (let i=startX; i<endX; i++) {
+      const cellLinkID = grid.getLinkID(i, canvasRow);
+      if (cellLinkID === linkID) {
+        const style = grid.getStyle(i, canvasRow);
+        grid.setStyle(i, canvasRow, style | STYLE_MASK_HYPERLINK_HIGHLIGHT);
       }
     }
   }
@@ -360,6 +378,28 @@ export class CanvasTextLayer implements TextLayer {
       row++;
     }
     return visibleRows;
+  }
+
+  mouseOver(pos: Position): void {
+    const line = this._editSession.getTerminalLine(pos.row);
+    const linkID = line.getLinkID(pos.column, 0);
+
+    const previousURL = this.#hoveredURL;
+    if (linkID === 0) {
+      this.#hoveredURL = null;
+    } else {
+      this.#hoveredURL = line.getLinkURLByID(linkID);
+    }
+
+    if (previousURL !== this.#hoveredURL) {
+      this.rerender();
+    }
+  }
+
+  getHyperlinkAtTextCoordinates(pos: Position): string {
+    const line = this._editSession.getTerminalLine(pos.row);
+    const linkID = line.getLinkID(pos.column, 0);
+    return linkID === 0? null : line.getLinkURLByID(linkID);
   }
 }
 
