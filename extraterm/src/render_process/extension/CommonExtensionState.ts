@@ -18,4 +18,6 @@ export interface CommonExtensionWindowState {
   activeViewerElement: ViewerElement;
 
   isInputFieldFocus: boolean;
+
+  terminalHyperlinkURL: string;
 }

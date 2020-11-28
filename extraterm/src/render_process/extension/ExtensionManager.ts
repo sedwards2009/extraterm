@@ -73,6 +73,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     activeTabsWidget: null,
     activeViewerElement: null,
     isInputFieldFocus: false,
+    terminalHyperlinkURL: null,
   };
 
   private _onCommandsChangedEventEmitter = new EventEmitter<void>();
@@ -563,7 +564,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
       activeTextEditor: null,
       activeTabsWidget: null,
       activeViewerElement: null,
-      isInputFieldFocus: false
+      isInputFieldFocus: false,
+      terminalHyperlinkURL: null,
     };
 
     const composedPath = ev.composedPath();
