@@ -28,6 +28,7 @@ import { stringToCodePointArray, isWide, utf16LengthOfCodePoint } from "extrater
  *            * 0x0200 (bit 9) - true if the cursor is in this cell
  *            * 0x0400 (bit 10) - true if overline style
  *            * 0x0800 (bit 11) - true if hyperlink style
+ *            * 0x1000 (bit 12) - true if hyperlink highlight style
  * 2 byte   - Foreground Colour Lookup Table (palette / CLUT) index
  * 2 byte   - Background Colour Lookup Table (palette / CLUT) index
  * 4 bytes  - Foreground RGBA bytes
@@ -52,6 +53,7 @@ export const STYLE_MASK_FAINT = 256;
 export const STYLE_MASK_CURSOR = 512;
 export const STYLE_MASK_OVERLINE = 1024;
 export const STYLE_MASK_HYPERLINK = 2048;
+export const STYLE_MASK_HYPERLINK_HIGHLIGHT = 4096;
 
 export const UNDERLINE_STYLE_OFF = 0;
 export const UNDERLINE_STYLE_NORMAL = 1;

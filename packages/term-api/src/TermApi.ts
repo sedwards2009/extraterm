@@ -40,7 +40,8 @@ export interface Line extends CharCellGrid {
   wrapped: boolean;
   clone(): Line;
   hasLinks(): boolean;
-  getLinkURL(linkID: number): string;
+  getLinkURLByID(linkID: number): string;
+  getLinkIDByURL(url: string): number;
   getAllLinkIDs(): number[];
   pasteGridWithLinks(sourceGrid: Line, x: number, y: number): void;
 }

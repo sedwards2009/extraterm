@@ -2,8 +2,8 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE,
-  STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, UNDERLINE_STYLE_NORMAL, UNDERLINE_STYLE_DOUBLE,
-  UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
+  STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, STYLE_MASK_HYPERLINK_HIGHLIGHT, UNDERLINE_STYLE_NORMAL,
+  UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
 import { isWide as isFullWidth } from "extraterm-unicode-utilities";
 import { select } from "floyd-rivest";
 
@@ -291,7 +291,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     if (underline === UNDERLINE_STYLE_NORMAL || underline === UNDERLINE_STYLE_DOUBLE) {
       ctx.fillRect(xPx, yPx + this._metrics.underlineY, widthPx, this._metrics.underlineHeight);
     }
-    if (underline === UNDERLINE_STYLE_DOUBLE) {
+    if (underline === UNDERLINE_STYLE_DOUBLE || style & STYLE_MASK_HYPERLINK_HIGHLIGHT) {
       ctx.fillRect(xPx, yPx + this._metrics.secondUnderlineY, widthPx, this._metrics.underlineHeight);
     }
     if (underline === UNDERLINE_STYLE_CURLY) {
@@ -311,7 +311,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       ctx.fillRect(xPx, yPx + this._metrics.overlineY, widthPx, this._metrics.overlineHeight);
     }
 
-    if (style & STYLE_MASK_HYPERLINK) {
+    if (style & STYLE_MASK_HYPERLINK && ! (style & STYLE_MASK_HYPERLINK_HIGHLIGHT)) {
       // Two litle dashes at underline height.
       const dashWidthPx = Math.max(1, Math.floor(widthPx / 6));
       const firstXPx = Math.floor(widthPx / 6);

@@ -27,14 +27,24 @@ export class LineImpl extends CharCellGrid implements Line {
     return this._hyperlinkIDToURLMapping != null;
   }
 
-  getLinkURL(linkID: number): string {
+  getLinkURLByID(linkID: number): string {
     if (this._hyperlinkIDToURLMapping == null) {
       return null;
     }
     return this._hyperlinkIDToURLMapping.get(linkID);
   }
 
-  getOrCreateLinkID(url: string): number {
+  getLinkIDByURL(url: string): number {
+    if (this._hyperlinkIDToURLMapping == null) {
+      return 0;
+    }
+    if (this._hyperlinkURLToIDMapping.has(url)) {
+      return this._hyperlinkURLToIDMapping.get(url);
+    }
+    return 0;
+  }
+
+  getOrCreateLinkIDForURL(url: string): number {
     if (this._hyperlinkIDToURLMapping == null) {
       this._hyperlinkIDToURLMapping = new Map<number, string>();
       this._hyperlinkURLToIDMapping = new Map<string, number>();
@@ -73,7 +83,7 @@ export class LineImpl extends CharCellGrid implements Line {
         const linkID = this.getLinkID(x, y);
         if (linkID !== 0) {
           const url = oldLinkIDMapping.get(linkID);
-          const newLinkID = this.getOrCreateLinkID(url);
+          const newLinkID = this.getOrCreateLinkIDForURL(url);
           this.setLinkID(x, y, newLinkID);
         }
       }
@@ -90,7 +100,7 @@ export class LineImpl extends CharCellGrid implements Line {
   setCellAndLink(x: number, y: number, cellAttr: CellWithHyperlink): void {
     const hyperlinkURL = cellAttr.hyperlinkURL;
     if (hyperlinkURL != null) {
-      cellAttr.linkID = this.getOrCreateLinkID(hyperlinkURL);
+      cellAttr.linkID = this.getOrCreateLinkIDForURL(hyperlinkURL);
     } else {
       cellAttr.linkID = 0;
     }
@@ -149,8 +159,8 @@ export class LineImpl extends CharCellGrid implements Line {
 // console.log(`getLinkID(${h+sx}, ${sv})`);
         const sourceLinkID = sourceGrid.getLinkID(h+sx, sv);
         if (sourceLinkID !== 0) {
-          const url = sourceGrid.getLinkURL(sourceLinkID);
-          const newLinkID = this.getOrCreateLinkID(url);
+          const url = sourceGrid.getLinkURLByID(sourceLinkID);
+          const newLinkID = this.getOrCreateLinkIDForURL(url);
 // console.log(`setLinkID(${h+x}, ${v+y})`);
           this.setLinkID(h, v, newLinkID);
         }
