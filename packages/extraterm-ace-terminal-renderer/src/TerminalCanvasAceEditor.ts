@@ -1,12 +1,33 @@
 /**
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018-2020 Simon Edwards <simon@simonzone.com>
  */
+import { Position } from "@extraterm/ace-ts";
 import { Line } from "term-api";
 import { ExtratermAceEditor } from "./ExtratermAceEditor";
 import { TerminalCanvasEditSession } from "./TerminalCanvasEditSession";
+import { TerminalCanvasRenderer } from "./TerminalCanvasRenderer";
 
 
 export class TerminalCanvasAceEditor extends ExtratermAceEditor {
+
+  #terminalCanvasRenderer: TerminalCanvasRenderer = null;
+
+  constructor(renderer: TerminalCanvasRenderer | undefined, session: TerminalCanvasEditSession | undefined) {
+    super(renderer, session);
+
+    this.#terminalCanvasRenderer = renderer;
+    const mouseTarget = renderer.getMouseEventTarget();
+    mouseTarget.addEventListener("mousemove", this._handleMouseMove.bind(this));
+  }
+
+  private _handleMouseMove(ev: MouseEvent): void {
+    const coord = this.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
+    this.#terminalCanvasRenderer.mouseOver(coord);
+  }
+
+  getHyperlinkAtTextCoordinates(pos: Position): string {
+    return this.#terminalCanvasRenderer.getHyperlinkAtTextCoordinates(pos);
+  }
 
   setTerminalLines(startRow: number, lines: Line[]): void {
     const session = <TerminalCanvasEditSession> this.sessionOrThrow();

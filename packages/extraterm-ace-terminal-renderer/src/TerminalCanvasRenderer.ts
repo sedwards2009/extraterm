@@ -2,7 +2,7 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-import { Renderer, HScrollBar, HScrollTracking, VScrollBar, TextLayer, FontMetricsMonitor, FontMetrics } from "@extraterm/ace-ts";
+import { Renderer, HScrollBar, HScrollTracking, Position, VScrollBar, TextLayer, FontMetricsMonitor, FontMetrics } from "@extraterm/ace-ts";
 import { CanvasTextLayer } from "./CanvasTextLayer";
 import { computeDpiFontMetrics } from "extraterm-char-render-canvas";
 import { Event } from '@extraterm/extraterm-extension-api';
@@ -109,6 +109,14 @@ export class TerminalCanvasRenderer extends Renderer {
     if (this._canvasTextLayer != null) {
       this._canvasTextLayer.rerender();
     }
+  }
+
+  mouseOver(pos: Position): void {
+    this._canvasTextLayer.mouseOver(pos);
+  }
+
+  getHyperlinkAtTextCoordinates(pos: Position): string {
+    return this._canvasTextLayer.getHyperlinkAtTextCoordinates(pos);
   }
 }
 
