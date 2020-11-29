@@ -1,0 +1,37 @@
+{
+  "name": "open-link",
+  "displayName": "Open Link",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/OpenLink.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "shx rm -rf dist data"
+  },
+  "author": "",
+  "license": "MIT",
+  "contributes": {
+    "commands": [
+      {
+        "command": "open-link:open-link",
+        "title": "Open Link",
+        "category": "terminal",
+        "when": "terminalFocus"
+      }
+    ],
+    "menus": {
+      "contextMenu": [
+        {
+          "command": "open-link:open-link",
+          "show": true
+        }
+      ]
+    }
+
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.11.0",
+    "shelljs": "0.8.3",
+    "typescript": "3.9.6"
+  }
+}
