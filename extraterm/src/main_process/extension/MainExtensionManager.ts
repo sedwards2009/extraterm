@@ -1,21 +1,24 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-import { EventEmitter } from 'extraterm-event-emitter';
-import * as fs from 'fs';
-import * as _ from 'lodash';
-import * as path from 'path';
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { EventEmitter } from "extraterm-event-emitter";
+import * as fs from "fs";
+import * as _ from "lodash";
+import * as path from "path";
 
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionSessionBackendContribution, ExtensionDesiredState } from "../../ExtensionMetadata";
-import { parsePackageJsonString } from './PackageFileParser';
-import { ExtensionContext, Event, Backend, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from '@extraterm/extraterm-extension-api';
+import { ExtensionMetadata, ExtensionDesiredState } from "../../ExtensionMetadata";
+import { parsePackageJsonString } from "./PackageFileParser";
+import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
-import { isMainProcessExtension, isSupportedOnThisPlatform } from '../../render_process/extension/InternalTypes';
-import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from '../../Config';
+import { isMainProcessExtension, isSupportedOnThisPlatform } from "../../render_process/extension/InternalTypes";
+import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from "../../Config";
+import { ExtensionContextImpl } from "./ExtensionContextImpl";
+import { LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution,
+  LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
 
 
 interface ActiveExtension {
@@ -24,23 +27,6 @@ interface ActiveExtension {
   contextImpl: ExtensionContextImpl;
   module: any;
 }
-
-export interface LoadedSessionBackendContribution {
-  metadata: ExtensionMetadata;
-  sessionBackendMetadata: ExtensionSessionBackendContribution;
-  sessionBackend: SessionBackend;
-}
-
-export interface LoadedSyntaxThemeProviderContribution {
-  metadata: ExtensionMetadata;
-  syntaxThemeProvider: SyntaxThemeProvider;
-}
-
-export interface LoadedTerminalThemeProviderContribution {
-  metadata: ExtensionMetadata;
-  terminalThemeProvider: TerminalThemeProvider;
-}
-
 
 export class MainExtensionManager implements AcceptsConfigDatabase {
 
@@ -300,95 +286,5 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
     return _.flatten(this._getActiveBackendExtensions().map(
       ae => ae.contextImpl.backend.__BackendImpl__terminalThemeProviders));
-  }
-}
-
-class ExtensionContextImpl implements ExtensionContext {
-  get commands(): never {
-    this.logger.warn("'ExtensionContext.commands' is only available from a window process, not the main process.");
-    throw Error("'ExtensionContext.commands' is only available from a window process, not the main process.");
-  }
-  logger: ExtensionApi.Logger = null;
-  isBackendProcess = true;
-  backend: BackendImpl = null;
-  extensionPath: string = null;
-
-  constructor(public __extensionMetadata: ExtensionMetadata) {
-    this.logger = getLogger("[Main]" + this.__extensionMetadata.name);
-    this.extensionPath = this.__extensionMetadata.path;
-    this.backend = new BackendImpl(this.__extensionMetadata);
-  }
-
-  get window(): never {
-    this.logger.warn("'ExtensionContext.window' is only available from a window process, not the main process.");
-    throw Error("'ExtensionContext.window' is only available from a window process, not the main process.");
-  }
-
-  get aceModule(): never {
-    this.logger.warn("'ExtensionContext.aceModule' is only available from a window process, not the main process.");
-    throw Error("'ExtensionContext.aceModule' is only available from a window process, not the main process.");
-  }
-}
-
-class BackendImpl implements Backend {
-  private _log: Logger = null;
-  __BackendImpl__sessionBackends: LoadedSessionBackendContribution[] = [];
-  __BackendImpl__syntaxThemeProviders: LoadedSyntaxThemeProviderContribution[] = [];
-  __BackendImpl__terminalThemeProviders: LoadedTerminalThemeProviderContribution[] = [];
-
-  constructor(public __extensionMetadata: ExtensionMetadata) {
-    this._log = getLogger("Backend (" + this.__extensionMetadata.name + ")", this);
-  }
-
-  registerSessionBackend(name: string, backend: SessionBackend): void {
-    for (const backendMeta of this.__extensionMetadata.contributes.sessionBackends) {
-      if (backendMeta.name === name) {
-        this.__BackendImpl__sessionBackends.push({
-          metadata: this.__extensionMetadata,
-          sessionBackendMetadata: backendMeta,
-          sessionBackend: backend
-        });
-        return;
-      }
-    }
-
-    this._log.warn(`Unable to register session backend '${name}' for extension ` +
-      `'${this.__extensionMetadata.name}' because the session backend contribution data ` +
-      `couldn't be found in the extension's package.json file.`);
-    return;
-  }
-
-  registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void {
-    for (const backendMeta of this.__extensionMetadata.contributes.syntaxThemeProviders) {
-      if (backendMeta.name === name) {
-        this.__BackendImpl__syntaxThemeProviders.push({
-          metadata: this.__extensionMetadata,
-          syntaxThemeProvider: provider
-        } );
-        return;
-      }
-    }
-
-    this._log.warn(`Unable to register syntax theme provider '${name}' for extension ` +
-      `'${this.__extensionMetadata.name}' because the syntax theme provider contribution data ` +
-      `couldn't be found in the extension's package.json file.`);
-    return;
-  }
-
-  registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void {
-    for (const backendMeta of this.__extensionMetadata.contributes.terminalThemeProviders) {
-      if (backendMeta.name === name) {
-        this.__BackendImpl__terminalThemeProviders.push({
-          metadata: this.__extensionMetadata,
-          terminalThemeProvider: provider
-        } );
-        return;
-      }
-    }
-
-    this._log.warn(`Unable to register terminal theme provider '${name}' for extension ` +
-      `'${this.__extensionMetadata.name}' because the terminal theme provider contribution data ` +
-      `couldn't be found in the extension's package.json file.`);
-    return;
   }
 }
