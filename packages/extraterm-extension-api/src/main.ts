@@ -882,6 +882,20 @@ export interface Backend {
 }
 
 /**
+ * Holds application wide values and utility funcions.
+ */
+export interface Application {
+  // version: string;
+
+  /**
+   * Open the given URL using the desktop's default application.
+   *
+   * @param url the url to open.
+   */
+  openExternal(url: string): void;
+}
+
+/**
  * Access to the Extraterm extension API
  *
  * This provides extensions access to the whole Extraterm extension API, as
@@ -892,6 +906,8 @@ export interface Backend {
 export interface ExtensionContext {
 
   readonly commands: Commands;
+
+  readonly application: Application;
 
   /**
    * Extension APIs which can be used from a front-end render process.

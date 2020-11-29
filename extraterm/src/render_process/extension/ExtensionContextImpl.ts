@@ -17,11 +17,13 @@ import { ExtensionMetadata, ExtensionCommandContribution, ExtensionMenusContribu
 import { CommandsRegistry } from "./CommandsRegistry";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { ExtensionContainerElement } from "./ExtensionContainerElement";
+import { ApplicationImpl } from "../../ApplicationImpl";
 
 
 export class ExtensionContextImpl implements InternalExtensionContext {
   private _log: Logger = null;
 
+  application: ApplicationImpl = null;
   commands: CommandsRegistry = null;
   window: ExtensionApi.Window = null;
   _internalWindow: InternalWindow = null;
@@ -40,6 +42,7 @@ export class ExtensionContextImpl implements InternalExtensionContext {
 
     this._log = getLogger("InternalExtensionContextImpl", this);
     this._proxyFactory = new ProxyFactoryImpl(this);
+    this.application = new ApplicationImpl();
     this.commands = new CommandsRegistry(this, _extensionMetadata.name,
                                           _extensionMetadata.contributes.commands, _extensionMetadata.contributes.menus);
     this._internalWindow = new WindowProxy(this, commonExtensionState);
