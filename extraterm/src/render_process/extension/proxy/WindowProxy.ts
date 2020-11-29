@@ -79,6 +79,10 @@ export class WindowProxy implements InternalWindow {
     return this._internalExtensionContext._proxyFactory.getViewerProxy(this._commonExtensionState.activeViewerElement);
   }
 
+  get activeHyperlinkURL(): string {
+    return this._commonExtensionState.activeHyperlinkURL;
+  }
+
   getTerminals(): ExtensionApi.Terminal[] {
     return []; // FIXME
     // return this._internalExtensionContext.extensionBridge.workspaceGetTerminals()

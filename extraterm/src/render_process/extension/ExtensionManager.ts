@@ -73,7 +73,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     activeTabsWidget: null,
     activeViewerElement: null,
     isInputFieldFocus: false,
-    terminalHyperlinkURL: null,
+    activeHyperlinkURL: null,
   };
 
   private _onCommandsChangedEventEmitter = new EventEmitter<void>();
@@ -382,7 +382,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
             const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
                                 commandEntry.commandContribution.command);
             if (customizer != null) {
-              entries.push( {...commandEntry.commandContribution, ...customizer() });
+              this._executeFuncWithExtensionWindowState(context, () => {
+                entries.push( {...commandEntry.commandContribution, ...customizer() });
+              });
             } else {
               entries.push(commandEntry.commandContribution);
             }
@@ -463,12 +465,21 @@ export class ExtensionManagerImpl implements ExtensionManager {
     return 0;
   }
 
-  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any {
+  /**
+   * Execute a function with a different temporary extension context.
+   */
+  private _executeFuncWithExtensionWindowState<R>(tempState: CommonExtensionWindowState, func: () => R): R {
     const oldState = this.copyExtensionWindowState();
     this._setExtensionWindowState(tempState);
-    const result = this.executeCommand(command, args);
+    const result = func();
     this._setExtensionWindowState(oldState);
     return result;
+  }
+
+  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any {
+    return this._executeFuncWithExtensionWindowState(tempState, () => {
+      return this.executeCommand(command, args);
+    });
   }
 
   copyExtensionWindowState(): CommonExtensionWindowState {
@@ -565,7 +576,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       activeTabsWidget: null,
       activeViewerElement: null,
       isInputFieldFocus: false,
-      terminalHyperlinkURL: null,
+      activeHyperlinkURL: null,
     };
 
     const composedPath = ev.composedPath();

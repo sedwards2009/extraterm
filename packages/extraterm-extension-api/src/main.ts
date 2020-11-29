@@ -360,6 +360,8 @@ export interface Window {
 
   activeViewer: Viewer;
 
+  activeHyperlinkURL: string;
+
   getTerminals(): Terminal[];
 
   onDidCreateTerminal: Event<Terminal>;

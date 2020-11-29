@@ -19,5 +19,5 @@ export interface CommonExtensionWindowState {
 
   isInputFieldFocus: boolean;
 
-  terminalHyperlinkURL: string;
+  activeHyperlinkURL: string;
 }

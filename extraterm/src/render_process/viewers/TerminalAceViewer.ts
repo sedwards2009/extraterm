@@ -1173,16 +1173,16 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
       const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
       const action = <MouseButtonAction> generalConfig[key];
       if (action === "context_menu") {
-        let hyperlinkURL: string = null;
+        let activeHyperlinkURL: string = null;
         // Check for hyperlinks
         const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
         if (pos != null) {
-          hyperlinkURL = this._aceEditor.getHyperlinkAtTextCoordinates(pos);
+          activeHyperlinkURL = this._aceEditor.getHyperlinkAtTextCoordinates(pos);
         }
 
         ev.stopPropagation();
         ev.preventDefault();
-        dispatchContextMenuRequest(this, ev.x, ev.y, ContextMenuType.NORMAL, { terminalHyperlinkURL: hyperlinkURL });
+        dispatchContextMenuRequest(this, ev.x, ev.y, ContextMenuType.NORMAL, { activeHyperlinkURL });
         return;
       }
     }
