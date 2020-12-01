@@ -4,6 +4,23 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+export interface ASTString {
+  type: "string";
+  value: string;
+}
+
+export interface Equality {
+  type: "==";
+  left: AST;
+  right: AST;
+}
+
+export interface Inequality {
+  type: "!=";
+  left: AST;
+  right: AST;
+}
+
 export interface Symbol {
   type: "symbol";
   name: string;
@@ -31,7 +48,7 @@ export interface Brackets {
   operand: AST;
 }
 
-export type AST = Symbol | And | Or | Not | Brackets;
+export type AST = ASTString | Equality | Inequality | Symbol | And | Or | Not | Brackets;
 
 export declare namespace parser {
   function parse(input: string): AST;

@@ -23,12 +23,23 @@ const testCases: [string, boolean][] = [
   ["(Atrue || Bfalse) && Ctrue", true],
   ["Atrue && ! Bfalse", true],
   ["! Bfalse || Ctrue", true],
+  ["Sfoo == 'foo'", true],
+  ["Sfoo == 'bar'", false],
+  ["Sfoo != 'bar'", true],
+  ["'bar' == 'bar'", true],
+  ["'bar' != 'bar'", false],
+  ["Sfoobar == 'foo bar'", true],
+  ["Sfoobar != 'foo bar'", false],
+  ["Atrue == 'true'", false],
+  ["Atrue == 'Atrue'", false],
+  ["Atrue == 'false'", false]
 ];
 
 const testValues = {
   Atrue: true, Afalse: false,
   Btrue: true, Bfalse: false,
-  Ctrue: true, Cfalse: false
+  Ctrue: true, Cfalse: false,
+  Sfoo: "foo", Sfoobar: "foo bar"
 };
 
 describe.each(testCases)("Evaluate", (input: string, output: boolean) => {

@@ -6,6 +6,9 @@
 import { parser, AST } from "extraterm-boolean-expression-parser";
 
 
+type Value = boolean | string;
+
+
 export class BooleanExpressionEvaluator {
 
   private _resultCache = new Map<string, boolean>();
@@ -18,12 +21,16 @@ export class BooleanExpressionEvaluator {
       return this._resultCache.get(input);
     }
     const ast = parser.parse(input);
-    const result = this._evaluateTree(ast);
+    let result = this._evaluateTree(ast);
+
+    if (typeof result === "string") {
+      result = false;
+    }
     this._resultCache.set(input, result);
     return result;
   }
 
-  private _evaluateTree(ast: AST): boolean {
+  private _evaluateTree(ast: AST): Value {
     switch (ast.type) {
       case "symbol":
         const value =  this._values[ast.name];
@@ -39,6 +46,19 @@ export class BooleanExpressionEvaluator {
         return ! this._evaluateTree(ast.operand);
       case "brackets":
         return this._evaluateTree(ast.operand);
+      case "==":
+        return this._compare(this._evaluateTree(ast.left), this._evaluateTree(ast.right));
+      case "!=":
+        return ! this._compare(this._evaluateTree(ast.left), this._evaluateTree(ast.right));
+      case "string":
+        return ast.value;
     }
+  }
+
+  private _compare(a: Value, b: Value): boolean {
+    if (typeof a === typeof b) {
+      return a === b;
+    }
+    return false;
   }
 }

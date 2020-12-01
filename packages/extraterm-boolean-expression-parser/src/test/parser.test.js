@@ -87,3 +87,32 @@ test("precedence NOT", () => {
   expect(tree.left.type).toBe("!");
   expect(tree.right.type).toBe("symbol");
 });
+
+test("symbol to string compare", () => {
+  const tree  = parser.parse("today == 'monday'");
+  expect(tree.type).toBe("==");
+  expect(tree.left.type).toBe("symbol");
+  expect(tree.right.type).toBe("string");
+});
+
+test("string to string compare", () => {
+  const tree  = parser.parse("'sunday' == 'monday'");
+  expect(tree.type).toBe("==");
+  expect(tree.left.type).toBe("string");
+  expect(tree.right.type).toBe("string");
+});
+
+test("compare ==", () => {
+  const tree  = parser.parse("A == B");
+  expect(tree.type).toBe("==");
+  expect(tree.left.type).toBe("symbol");
+  expect(tree.right.type).toBe("symbol");
+});
+
+test("compare == with precidence", () => {
+  const tree  = parser.parse("A && B == 'b'");
+  expect(tree.type).toBe("&&");
+  expect(tree.left.type).toBe("symbol");
+  expect(tree.right.left.type).toBe("symbol");
+  expect(tree.right.right.type).toBe("string");
+});
