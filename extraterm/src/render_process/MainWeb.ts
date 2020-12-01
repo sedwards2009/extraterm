@@ -429,10 +429,11 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
       };
       disposables.add(extensionContext._registerCommandContribution(contrib));
 
-      extensionContext._setCommandMenu(command, "contextMenu", true);
+      extensionContext._setCommandMenu(command, "contextMenu", false);
       extensionContext._setCommandMenu(command, "commandPalette", true);
       extensionContext._setCommandMenu(command, "emptyPane", true);
       extensionContext._setCommandMenu(command, "newTerminal", true);
+      extensionContext._setCommandMenu(command, "windowMenu", true);
     }
   };
 

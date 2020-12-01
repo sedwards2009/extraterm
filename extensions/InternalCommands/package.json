@@ -707,10 +707,6 @@
           "show": true
         },
         {
-          "command": "extraterm:window.newTerminal",
-          "show": true
-        },
-        {
           "command": "extraterm:window.horizontalSplit",
           "show": true
         },
@@ -758,6 +754,10 @@
       "windowMenu": [
         {
           "command": "extraterm:application.newWindow",
+          "show": true
+        },
+        {
+          "command": "extraterm:window.newTerminal",
           "show": true
         },
         {
