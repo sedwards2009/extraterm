@@ -35,7 +35,7 @@ export class BooleanExpressionEvaluator {
       case "symbol":
         const value =  this._values[ast.name];
         if (value === undefined) {
-          throw Error("Undefined value '${ast.name}'");
+          throw Error(`Undefined variable '${ast.name}'`);
         }
         return value;
       case "||":
