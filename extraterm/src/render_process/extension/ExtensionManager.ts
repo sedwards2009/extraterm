@@ -40,6 +40,7 @@ interface ActiveExtension {
 }
 
 const allCategories: Category[] = [
+  "hyperlink",
   "textEditing",
   "terminalCursorMode",
   "terminal",

@@ -47,6 +47,7 @@ const categoryList: Category[] = [
   "textEditing",
   "terminal",
   "terminalCursorMode",
+  "hyperlink",
   "viewer"
 ];
 

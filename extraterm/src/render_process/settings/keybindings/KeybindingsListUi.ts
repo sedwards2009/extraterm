@@ -57,6 +57,7 @@ export class KeybindingsList extends Vue {
       "textEditing",
       "terminal",
       "terminalCursorMode",
+      "hyperlink",
       "viewer"
     ];
     return categories;
@@ -74,5 +75,6 @@ const categoryNames = {
   "textEditing": "Text Editor",
   "terminal": "Terminal",
   "terminalCursorMode": "Terminal: Cursor Mode",
+  "hyperlink": "Hyperlink",
   "viewer": "Viewer Tabs"
 };

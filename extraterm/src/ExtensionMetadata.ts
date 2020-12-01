@@ -51,6 +51,7 @@ export type Category = "global" |
                         "textEditing" |
                         "terminal" |
                         "terminalCursorMode" |
+                        "hyperlink" |
                         "viewer";
 
 export interface WhenVariables {
