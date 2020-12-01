@@ -13,16 +13,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "open-link:open-link",
+        "command": "open-link:openLink",
         "title": "Open Link",
-        "category": "terminal",
-        "when": "terminalFocus"
+        "category": "hyperlink",
+        "order": 800,
+        "icon": "fas fa-external-link-alt",
+        "when": "isHyperlink"
       }
     ],
     "menus": {
       "contextMenu": [
         {
-          "command": "open-link:open-link",
+          "command": "open-link:openLink",
           "show": true
         }
       ]

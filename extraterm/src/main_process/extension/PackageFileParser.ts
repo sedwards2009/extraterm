@@ -68,6 +68,11 @@ class PackageParser {
       isTextEditing: false,
       viewerFocus: false,
       isWindowSplit: false,
+      isHyperlink: false,
+      hyperlinkURL: null,
+      hyperlinkProtocol: null,
+      hyperlinkDomain: null,
+      hyperlinkFileExtension: null
     };
     this._bee = new BooleanExpressionEvaluator(variables);
   }

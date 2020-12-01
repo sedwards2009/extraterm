@@ -419,6 +419,11 @@ export class ExtensionManagerImpl implements ExtensionManager {
       isTextEditing: false,
       viewerFocus: false,
       isWindowSplit: this._splitLayout.isSplit(),
+      isHyperlink: false,
+      hyperlinkURL: null,
+      hyperlinkProtocol: null,
+      hyperlinkDomain: null,
+      hyperlinkFileExtension: null,
     };
 
     if (state.activeTerminal != null) {
@@ -442,7 +447,31 @@ export class ExtensionManagerImpl implements ExtensionManager {
         }
       }
     }
+
+    if (state.activeHyperlinkURL != null) {
+      whenVariables.isHyperlink = true;
+      whenVariables.hyperlinkURL = state.activeHyperlinkURL;
+      try {
+        const url = new URL(state.activeHyperlinkURL);
+        whenVariables.hyperlinkProtocol = url.protocol;
+        whenVariables.hyperlinkDomain = url.hostname;
+        whenVariables.hyperlinkFileExtension = this._getExtensionFromPath(url.pathname);
+      } catch (e) {
+        whenVariables.hyperlinkProtocol = "";
+        whenVariables.hyperlinkDomain = "";
+        whenVariables.hyperlinkFileExtension = this._getExtensionFromPath(state.activeHyperlinkURL);
+      }
+    }
     return whenVariables;
+  }
+
+  private _getExtensionFromPath(path: string): string {
+    const pathParts = path.split("/");
+    const lastPathPart = pathParts[pathParts.length -1];
+    if (lastPathPart.includes(".")) {
+      return lastPathPart.substr(lastPathPart.lastIndexOf(".") + 1);
+    }
+    return "";
   }
 
   private _sortCommandsInPlace(entries: ExtensionCommandContribution[]): void {

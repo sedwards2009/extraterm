@@ -12,7 +12,7 @@ let context: ExtensionContext = null;
 export function activate(_context: ExtensionContext): any {
   context = _context;
   log = context.logger;
-  context.commands.registerCommand("open-link:open-link", openLinkCommand, commandNameFunc);
+  context.commands.registerCommand("open-link:openLink", openLinkCommand, commandNameFunc);
 }
 
 function commandNameFunc(): CustomizedCommand {

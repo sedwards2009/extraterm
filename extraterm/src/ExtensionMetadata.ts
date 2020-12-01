@@ -64,6 +64,11 @@ export interface WhenVariables {
   isTextEditing: boolean;
   viewerFocus: boolean;
   isWindowSplit: boolean;
+  isHyperlink: boolean;
+  hyperlinkURL: string;
+  hyperlinkProtocol: string;
+  hyperlinkDomain: string;
+  hyperlinkFileExtension: string;
 }
 
 export interface ExtensionCommandContribution {
