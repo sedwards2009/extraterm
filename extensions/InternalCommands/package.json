@@ -112,7 +112,7 @@
         "title": "Open Last Frame",
         "category": "terminal",
         "order": 1600,
-        "icon": "fa fa-external-link-alt",
+        "icon": "fas fa-external-link-square-alt",
         "when": "terminalFocus"
       },
       {

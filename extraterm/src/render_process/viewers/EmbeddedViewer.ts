@@ -68,7 +68,7 @@ const DND_TEXT_SIZE_THRESHOLD = 1024 * 1024;
       <div class="spacer"></div>
 ` +//              <button id="${ID_EXPAND_BUTTON}" title="Expand/Collapse"><i id="${ID_EXPAND_ICON}" class="fa fa-plus-square-o"></i></button>
 //              <div class="spacer"></div>
-`              <button v-if="enablePopOut" id="ID_POP_OUT_BUTTON" v-on:click="popOutClick"><i class="fa fa-external-link-alt"></i></button>
+`              <button v-if="enablePopOut" id="ID_POP_OUT_BUTTON" v-on:click="popOutClick"><i class="fas fa-external-link-square-alt"></i></button>
       <div class="spacer"></div>
       <button v-if="enableClose" id="ID_CLOSE_BUTTON" v-on:click="closeClick" title="Close"><i class="fa fa-times-circle"></i></button>
     </div>
