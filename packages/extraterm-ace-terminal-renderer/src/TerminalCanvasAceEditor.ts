@@ -18,11 +18,16 @@ export class TerminalCanvasAceEditor extends ExtratermAceEditor {
     this.#terminalCanvasRenderer = renderer;
     const mouseTarget = renderer.getMouseEventTarget();
     mouseTarget.addEventListener("mousemove", this._handleMouseMove.bind(this));
+    mouseTarget.addEventListener("mouseout", this._handleMouseOut.bind(this));
   }
 
   private _handleMouseMove(ev: MouseEvent): void {
     const coord = this.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
     this.#terminalCanvasRenderer.mouseOver(coord);
+  }
+
+  private _handleMouseOut(ev: MouseEvent): void {
+    this.#terminalCanvasRenderer.mouseOver(null);
   }
 
   getHyperlinkAtTextCoordinates(pos: Position): string {

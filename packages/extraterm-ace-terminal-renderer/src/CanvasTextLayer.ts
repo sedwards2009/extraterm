@@ -381,16 +381,19 @@ export class CanvasTextLayer implements TextLayer {
   }
 
   mouseOver(pos: Position): void {
-    const line = this._editSession.getTerminalLine(pos.row);
-    const linkID = line.getLinkID(pos.column, 0);
-
     const previousURL = this.#hoveredURL;
-    if (linkID === 0) {
+    if (pos == null) {
       this.#hoveredURL = null;
     } else {
-      this.#hoveredURL = line.getLinkURLByID(linkID);
-    }
+      const line = this._editSession.getTerminalLine(pos.row);
+      const linkID = line.getLinkID(pos.column, 0);
 
+      if (linkID === 0) {
+        this.#hoveredURL = null;
+      } else {
+        this.#hoveredURL = line.getLinkURLByID(linkID);
+      }
+    }
     if (previousURL !== this.#hoveredURL) {
       this.rerender();
     }
