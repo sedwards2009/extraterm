@@ -185,7 +185,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       this._drawPlainCharacter(ctx, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx, widthInCells);
     }
 
-    this._drawDecoration(ctx, style, xPx, yPx, widthPx);
+    this._drawDecoration(ctx, style, xPx, yPx, widthPx, fgRGBA);
 
     const cachedGlyph = this._createCachedGlyphStruct({
       xPixels: xPx,
@@ -281,7 +281,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   }
 
   private _drawDecoration(ctx: CanvasRenderingContext2D, style: StyleCode, xPx: number, yPx: number,
-      widthPx: number): void {
+      widthPx: number, fgRGBA: number): void {
 
     if (style & STYLE_MASK_STRIKETHROUGH) {
       ctx.fillRect(xPx, yPx + this._metrics.strikethroughY, widthPx, this._metrics.strikethroughHeight);
@@ -312,13 +312,15 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     }
 
     if (style & STYLE_MASK_HYPERLINK && ! (style & STYLE_MASK_HYPERLINK_HIGHLIGHT)) {
-      // Two litle dashes at underline height.
-      const dashWidthPx = Math.max(1, Math.floor(widthPx / 6));
-      const firstXPx = Math.floor(widthPx / 6);
-      const secondXPx = Math.floor(4 * widthPx / 6);
+      const halfAlphaFgRGBA = (fgRGBA & 0xffffff00) | ((fgRGBA >> 1) & 0x7f);
+      const fgCSS = RGBAToCss(halfAlphaFgRGBA);
+      ctx.fillStyle = fgCSS;
+      ctx.strokeStyle = fgCSS;
+  
+      // One litle dash at second underline height.
+      const dashWidthPx = Math.max(1, Math.floor(widthPx / 3));
+      const firstXPx = Math.floor(widthPx / 3);
       ctx.fillRect(xPx + firstXPx, yPx + this._metrics.secondUnderlineY, dashWidthPx,
-        this._metrics.underlineHeight);
-      ctx.fillRect(xPx + secondXPx, yPx + this._metrics.secondUnderlineY, dashWidthPx,
         this._metrics.underlineHeight);
     }
   }
