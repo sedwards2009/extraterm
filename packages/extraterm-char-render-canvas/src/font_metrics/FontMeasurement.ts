@@ -145,8 +145,16 @@ class FontMeasurement {
     // this._log.debug(`m: topY: ${mTopY}, bottomY: ${mBottomY}`);
 
     const underlineHeight = 1;
-    const underlineY = Math.round(mBottomY + 2) + fillTextYOffset;
-    const secondUnderlineY = underlineY + 2 * underlineHeight;
+    let underlineY = 0;
+    let secondUnderlineY = 0;
+    const clearanceUnderChar = charHeightPx - Math.round(mBottomY);
+    if (clearanceUnderChar < 4) {
+      underlineY = Math.round(mBottomY) + 1 + fillTextYOffset;
+      secondUnderlineY = Math.min(underlineY + 2 * underlineHeight, charHeightPx-1);
+    } else {
+      underlineY = Math.round(mBottomY) + 2 + fillTextYOffset;
+      secondUnderlineY = Math.min(underlineY + 2 * underlineHeight, charHeightPx-1);
+    }
 
     const curlyThickness = 1;
     const curlyHeight = 4;
@@ -159,7 +167,7 @@ class FontMeasurement {
       widthPx: charWidthPx,
       heightPx: charHeightPx,
       boldItalicWidthPx,
-  
+
       fillTextYOffset,
       fillTextXOffset: 0,
 
