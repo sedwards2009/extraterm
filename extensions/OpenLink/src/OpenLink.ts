@@ -16,8 +16,17 @@ export function activate(_context: ExtensionContext): any {
 }
 
 function commandNameFunc(): CustomizedCommand {
+  let text = context.window.activeHyperlinkURL;
+  try {
+    const url = new URL(text);
+    if (url.protocol === "file:") {
+      text = url.pathname;
+    }
+  } catch(e) {
+  }
+
   return {
-    title: `Open ${shortenURL(context.window.activeHyperlinkURL)}`
+    title: `Open ${shortenURL(text)}`
   }
 }
 
