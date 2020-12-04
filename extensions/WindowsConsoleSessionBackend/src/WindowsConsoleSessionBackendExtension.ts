@@ -68,7 +68,8 @@ class WindowsConsoleBackend implements SessionBackend {
     const args = ShellStringParser(sessionConfig.args);
 
     if ( ! this._validateExe(exe)) {
-      preMessage = `\x0a\x0d\x0a\x0d*** Program '${exe}' couldn't be executed, falling back to 'cmd.exe' ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+      preMessage = `\x0a\x0d\x0a\x0d*** Program '${exe}' couldn't be executed, falling back to 'cmd.exe'. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+      this._log.warn(`Program '${exe}' couldn't be executed, falling back to 'cmd.exe'.`);
       exe = "cmd.exe";
     }
 
@@ -81,9 +82,10 @@ class WindowsConsoleBackend implements SessionBackend {
     let cwd: string = null;
 
     if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
-      const dirError = this._validateDirectoryPath(cwd);
+      const dirError = this._validateDirectoryPath(sessionConfig.initialDirectory);
       if (dirError != null) {
-        preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${cwd}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+        preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${sessionConfig.initialDirectory}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+        this._log.warn(`Initial directory '${sessionConfig.initialDirectory}' couldn't be found.`);
       } else {
         cwd = sessionConfig.initialDirectory;
       }
@@ -103,6 +105,7 @@ class WindowsConsoleBackend implements SessionBackend {
     const dirError = this._validateDirectoryPath(cwd);
     if (dirError != null) {
       preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${cwd}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
+      this._log.warn(`Initial directory '${cwd}' couldn't be found.`);
     }
 
     const options: PtyOptions = {
