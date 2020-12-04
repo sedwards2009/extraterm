@@ -10,7 +10,7 @@ import { getLogger } from "extraterm-logging";
 import { ExtensionMetadata } from "../../ExtensionMetadata";
 import { ExtensionContext } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
-import { ApplicationImpl } from "../../ApplicationImpl";
+import { ApplicationImpl } from "./ApplicationImpl";
 import { BackendImpl } from "./BackendImpl";
 
 

@@ -17,7 +17,7 @@ import { ExtensionMetadata, ExtensionCommandContribution, ExtensionMenusContribu
 import { CommandsRegistry } from "./CommandsRegistry";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { ExtensionContainerElement } from "./ExtensionContainerElement";
-import { ApplicationImpl } from "../../ApplicationImpl";
+import { ApplicationImpl } from "./ApplicationImpl";
 
 
 export class ExtensionContextImpl implements InternalExtensionContext {

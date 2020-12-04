@@ -884,10 +884,22 @@ export interface Backend {
 }
 
 /**
+ * Access to the system clipboard.
+ */
+export interface Clipboard {
+  /**
+   * Write some text to the clipboard.
+   */
+  writeText(text: string): void;
+}
+
+/**
  * Holds application wide values and utility funcions.
  */
 export interface Application {
   // version: string;
+
+  clipboard: Clipboard;
 
   /**
    * Open the given URL using the desktop's default application.
