@@ -17,13 +17,13 @@ import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
-import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType } from './command/CommandUtils';
+import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType, EVENT_HYPERLINK_CLICK, HyperlinkEventDetail } from './command/CommandUtils';
 
 import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
-import {ExtensionManager} from './extension/InternalTypes';
+import {ExtensionManager, CommandQueryOptions} from './extension/InternalTypes';
 import {EVENT_DRAG_STARTED, EVENT_DRAG_ENDED} from './GeneralEvents';
 import {Logger, getLogger} from "extraterm-logging";
 import {MainWebUi} from './MainWebUi';
@@ -278,6 +278,8 @@ function startUpMainWebUi(): void {
     applicationContextMenu.open(ev);
   });
 
+  mainWebUi.addEventListener(EVENT_HYPERLINK_CLICK, handleHyperlinkClick);
+
   window.addEventListener("keydown", handleKeyDownCapture, true);
   window.addEventListener("keypress", handleKeyPressCapture, true);
   window.addEventListener("focus", handleFocusCapture, true);
@@ -319,6 +321,25 @@ function handleKeyCapture(ev: KeyboardEvent): void {
 
 function handleFocusCapture(ev: FocusEvent): void {
   extensionManager.updateExtensionWindowStateFromEvent(ev);
+}
+
+function handleHyperlinkClick(ev: CustomEvent): void {
+  const details = <HyperlinkEventDetail> ev.detail;
+  extensionManager.updateExtensionWindowStateFromEvent(ev);
+
+  const options: CommandQueryOptions = {
+    when: true,
+    categories: ["hyperlink"]
+  };
+  const contextWindowState = extensionManager.getExtensionWindowStateFromEvent(ev);
+  contextWindowState.activeHyperlinkURL = details.url;
+  const entries = extensionManager.queryCommandsWithExtensionWindowState(options, contextWindowState);
+  if (entries.length === 0) {
+    return;
+  }
+
+  const commandName = entries[0].command;
+  extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";

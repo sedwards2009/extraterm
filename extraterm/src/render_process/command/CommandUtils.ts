@@ -6,7 +6,6 @@ import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 export const EVENT_CONTEXT_MENU_REQUEST = "EVENT_CONTEXT_MENU_REQUEST";
-export const COMMAND_OPEN_CONTEXT_MENU = "COMMAND_OPEN_CONTEXT_MENU";
 
 export enum ContextMenuType {
   NORMAL,
@@ -32,4 +31,17 @@ export function dispatchContextMenuRequest(element: HTMLElement, x: number, y: n
                                                      {bubbles: true, composed: true, detail});
   commandPaletteRequestEvent.initCustomEvent(EVENT_CONTEXT_MENU_REQUEST, true, true, detail);
   element.dispatchEvent(commandPaletteRequestEvent);
+}
+
+export const EVENT_HYPERLINK_CLICK = "EVENT_HYPERLINK_CLICK";
+
+export interface HyperlinkEventDetail {
+  url: string;
+}
+
+export function dispatchHyperlinkClick(element: HTMLElement, url: string): void {
+  const detail: HyperlinkEventDetail = { url };
+  const hyperlinkClickEvent = new CustomEvent(EVENT_HYPERLINK_CLICK, {bubbles: true, composed: true, detail});
+  hyperlinkClickEvent.initCustomEvent(EVENT_HYPERLINK_CLICK, true, true, detail);
+  element.dispatchEvent(hyperlinkClickEvent);
 }

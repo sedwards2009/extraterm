@@ -29,7 +29,7 @@ import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 import { ConfigCursorStyle } from '../../Config';
-import { dispatchContextMenuRequest, ContextMenuType } from '../command/CommandUtils';
+import { dispatchContextMenuRequest, ContextMenuType, dispatchHyperlinkClick } from '../command/CommandUtils';
 import { ConfigDatabase, AcceptsConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
 
 const ID = "EtTerminalAceViewerTemplate";
@@ -1159,6 +1159,19 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
   }
 
   private _handleMouseDown(ev: MouseEvent): void {
+    if (ev.ctrlKey) {
+      const pos = this._aceEditor.renderer.screenToTextCoordinates(ev.clientX, ev.clientY);
+      if (pos != null) {
+        const activeHyperlinkURL = this._aceEditor.getHyperlinkAtTextCoordinates(pos);
+        if (activeHyperlinkURL != null) {
+          dispatchHyperlinkClick(this, activeHyperlinkURL);
+          ev.stopPropagation();
+          ev.preventDefault();
+          return;
+        }
+      }
+    }
+
     if (this._emulator != null) {
       if ( ! this.hasFocus()) {
         this.focus();
