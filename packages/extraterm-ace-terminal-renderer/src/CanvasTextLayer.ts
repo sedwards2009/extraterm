@@ -386,7 +386,10 @@ export class CanvasTextLayer implements TextLayer {
       this.#hoveredURL = null;
     } else {
       const line = this._editSession.getTerminalLine(pos.row);
-      const linkID = line.getLinkID(pos.column, 0);
+      let linkID = 0;
+      if (pos.column < line.width) {
+        linkID = line.getLinkID(pos.column, 0);
+      }
 
       if (linkID === 0) {
         this.#hoveredURL = null;
