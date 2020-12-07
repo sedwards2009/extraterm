@@ -24,6 +24,7 @@ import * as VirtualScrollArea from "./VirtualScrollArea";
 import * as WebIpc from "./WebIpc";
 import { AcceptsConfigDatabase, ConfigDatabase } from "../Config";
 import { ExtensionManager } from "./extension/InternalTypes";
+import { ResizeNotifier } from "extraterm-resize-notifier";
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -50,6 +51,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     SupportsClipboardPaste.SupportsClipboardPaste, SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-VIEWER-TAB";
+  private static _resizeNotifier = new ResizeNotifier();
 
   private _log: Logger;
   private _virtualScrollArea: VirtualScrollArea.VirtualScrollArea = null;
@@ -58,7 +60,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   private _tag: string = null;
 
   private _configDatabase: ConfigDatabase = null;
-  private _resizePollHandle: Disposable = null;
   private _elementAttached = false;
   private _needsCompleteRefresh = true;
   private _fontSizeAdjustment = 0;
@@ -117,6 +118,11 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     this._setupScrolling();
     this.updateThemeCss();
     this._setupResizeCanary();
+
+    const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
+    EtViewerTab._resizeNotifier.observe(containerDiv, (target: Element, contentRect: DOMRectReadOnly) => {
+      this._processResize();
+    });
 
     doLater(this._processResize.bind(this));
   }
@@ -180,10 +186,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     const element = this.getViewerElement();
     if (element !== null) {
       element.dispose();
-    }
-    if (this._resizePollHandle !== null) {
-      this._resizePollHandle.dispose();
-      this._resizePollHandle = null;
     }
   }
 
