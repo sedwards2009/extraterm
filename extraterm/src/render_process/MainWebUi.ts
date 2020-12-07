@@ -338,6 +338,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _setUpSplitLayout(): void {
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
 
+    mainContainer.addEventListener("focus", (ev: FocusEvent) => {
+      this._extensionManager.updateExtensionWindowStateFromEvent(ev);
+    }, true);
+
     this._splitLayout.setRootContainer(mainContainer);
     this._splitLayout.setTabContainerFactory( (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element => {
       const divContainer = document.createElement("DIV");
