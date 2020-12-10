@@ -590,6 +590,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     state.activeTabsWidget = newState.activeTabsWidget;
     state.activeTabContent = newState.activeTabContent;
     state.isInputFieldFocus = newState.isInputFieldFocus;
+    state.activeHyperlinkURL = newState.activeHyperlinkURL;
   }
 
   private _setExtensionWindowState(newState: CommonExtensionWindowState): void {
@@ -632,6 +633,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
         newState.isInputFieldFocus = true;
       }
     }
+
+    if (newState.activeViewerElement != null) {
+      const extraState = newState.activeViewerElement.getPartialCommonExtensionWindowState();
+      if (extraState != null && extraState.activeHyperlinkURL != null) {
+        newState.activeHyperlinkURL = extraState.activeHyperlinkURL;
+      }
+    }
+
     return newState;
   }
 

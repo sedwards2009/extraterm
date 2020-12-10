@@ -58,11 +58,11 @@ export class CommandPalette {
     this._extensionWindowState = this.extensionManager.copyExtensionWindowState();
 
     doLater( () => {
-      const entries = this.extensionManager.queryCommands({
+      const entries = this.extensionManager.queryCommandsWithExtensionWindowState({
         commandPalette: true,
-        categories: ["application", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
+        categories: ["application", "hyperlink", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
         when: true
-      });
+      }, this._extensionWindowState);
 
       const termKeybindingsMapping = this.keybindingsManager.getKeybindingsMapping();
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {

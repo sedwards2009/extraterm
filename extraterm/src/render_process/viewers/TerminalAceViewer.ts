@@ -31,6 +31,7 @@ import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 import { ConfigCursorStyle } from '../../Config';
 import { dispatchContextMenuRequest, ContextMenuType, dispatchHyperlinkClick } from '../command/CommandUtils';
 import { ConfigDatabase, AcceptsConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
+import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -635,6 +636,21 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
         this._exitCursorMode();
         break;
     }
+  }
+
+  getPartialCommonExtensionWindowState(): Partial<CommonExtensionWindowState> {
+    if (this._mode === Mode.CURSOR) {
+      const pos = this._aceEditor.getCursorPositionScreen();
+      if (pos != null) {
+        const activeHyperlinkURL = this._aceEditor.getHyperlinkAtTextCoordinates(pos);
+        if (activeHyperlinkURL != null) {
+          return {
+            activeHyperlinkURL
+          };
+        }
+      }
+    }
+    return null;
   }
 
   find(needle: string, options?: FindOptions): boolean {

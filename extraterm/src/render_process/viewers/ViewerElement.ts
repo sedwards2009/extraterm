@@ -8,21 +8,22 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail, RefreshLevel} from './ViewerElementTypes';
 import { EventEmitter } from 'extraterm-event-emitter';
+import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
-  
+
   static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
   static EVENT_CURSOR_MOVE = "cursor-move";
   static EVENT_CURSOR_EDGE = "cursor-edge";
   static EVENT_METADATA_CHANGE = "metadata-change";
-  
+
   onDispose: Event<void>;
   _onDisposeEventEmitter = new EventEmitter<void>();
 
   /**
    * Type guard for detecting a ViewerElement instance.
-   * 
+   *
    * @param  node the node to test
    * @return      True if the node is a ViewerElement
    */
@@ -32,7 +33,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
 
   constructor() {
     super();
-    this.onDispose = this._onDisposeEventEmitter.event; 
+    this.onDispose = this._onDisposeEventEmitter.event;
   }
 
   getMetadata(): ViewerMetadata {
@@ -45,11 +46,11 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
       toolTip: null
     };
   }
-  
+
   hasFocus(): boolean {
     return false;
   }
-  
+
   /**
    * Gets the selected text.
    *
@@ -65,14 +66,14 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
 
   clearSelection(): void {
   }
- 
+
   isFocusable(): boolean {
     return false;
   }
-  
+
   setFocusable(value: boolean) {
   }
-  
+
   getVisualState(): VisualState {
     return VisualState.AUTO;
   }
@@ -83,14 +84,14 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   getMode(): Mode {
     return Mode.DEFAULT;
   }
-  
+
   setMode(mode: Mode): void {
   }
 
   getMimeType(): string {
     return null;
   }
-  
+
   setMimeType(mimetype: string): void {
   }
 
@@ -100,7 +101,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
 
   setEditable(editable: boolean): void {
   }
-    
+
   // VirtualScrollable
   getMinHeight(): number {
     return 0;
@@ -110,12 +111,12 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   getVirtualHeight(containerHeight: number): number {
     return 0;
   }
-  
+
   // VirtualScrollable
   getReserveViewportHeight(containerHeight: number): number {
     return 0;
   }
-  
+
   // VirtualScrollable
   setDimensionsAndScroll(setterState: SetterState): void {
   }
@@ -131,18 +132,18 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
       viewPortTop: 0
     };
   }
-   
+
   setCursorPositionBottom(x: number): boolean {
     return false;
   }
-  
+
   setCursorPositionTop(x: number): boolean {
     return false;
   }
 
   /**
    * Set the bulk file to display in the viewer.
-   * 
+   *
    * @param handle the file to load and display
    * @return A promise which is resolved once the file data has been loaded.
    */
@@ -159,6 +160,13 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
 
   refresh(level: RefreshLevel): void {
-    
+
+  }
+
+  /**
+   * Provide additional context state for extensions.
+   */
+  getPartialCommonExtensionWindowState(): Partial<CommonExtensionWindowState> {
+    return null;
   }
 }
