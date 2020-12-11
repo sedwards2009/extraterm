@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 /* top UI */
@@ -39,8 +39,7 @@
   #ID_TOP_LAYOUT {
     display: flex;
     flex-direction: column;
-  }  
-
+  }
 
   #ID_MAIN_CONTENTS {
     flex-grow: 1;
@@ -48,16 +47,19 @@
 }
 
 @if($extraterm-titlebar-style == "compact") {
-
   #ID_TITLE_BAR {
     position: absolute;
     left: 0;
     top: 0;
     width: 1rem;
     height: $tab-height;
-    -webkit-app-region: drag;
   }
-  
+
+  :host.CLASS_ENABLE_WINDOW_MOVE #ID_TITLE_BAR {
+    -webkit-app-region: drag;
+    background-color: red;
+  }
+
   #ID_MAIN_CONTENTS {
     position: absolute;
     width: 100%;
@@ -69,10 +71,6 @@
   display: flex;
   flex-grow: 1;
   height: 100%;
-
-  & > div.CLASS_SPACE {
-    flex-grow: 1;
-  }
 
   & > button {
     flex-grow: 0;
@@ -89,13 +87,6 @@
   }
 }
 
-
-#ID_MAIN_CONTENTS.CLASS_MAIN_NOT_DRAGGING div.CLASS_SPACE {
-  @if $extraterm-titlebar-style != "native" {
-    -webkit-app-region: drag;
-  }
-}
-
 /* Contents of the tabs at the top of the window. */
 DIV.tab_content {
   height: 100%;
@@ -106,7 +97,7 @@ DIV.tab_content {
 DIV.tab_content > * {
   position: absolute;
   width: 100%;
-  
+
   top: 0;
   bottom: 0;
   left: 0;
@@ -120,7 +111,6 @@ ET-TAB:focus {
 DIV.tab_header_container {
   display: flex;
   width: 100%;
-  // position: relative;
   z-index: 1;
   font-size: 1rem;
 }
@@ -155,7 +145,7 @@ DIV.tab_title_extensions {
 
   & > et-extension-widget-proxy {
     width: 100%;
-  }  
+  }
 }
 
 DIV.tab_header_close {
@@ -181,7 +171,7 @@ DIV.tab_header_container:hover > DIV.tab_header_close > BUTTON > I {
 
 DIV.tab_header_close > BUTTON.microtool.danger {
   background-image: none;
-  
+
   &:hover {
     color: $tab-background-color;
     background-color: $accent-color;

@@ -59,8 +59,8 @@ type ThemeInfo = ThemeTypes.ThemeInfo;
 SourceMapSupport.install();
 
 const ID_MENU_BUTTON = "ID_MENU_BUTTON";
-const CLASS_MAIN_DRAGGING = "CLASS_MAIN_DRAGGING";
-const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
+const CLASS_DISABLE_WINDOW_MOVE = "CLASS_DISABLE_WINDOW_MOVE";
+const CLASS_ENABLE_WINDOW_MOVE = "CLASS_ENABLE_WINDOW_MOVE";
 
 const _log = getLogger("mainweb");
 
@@ -104,7 +104,7 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   await asyncLoadTerminalTheme();
 
   const doc = window.document;
-  doc.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
+  doc.body.classList.add(CLASS_ENABLE_WINDOW_MOVE);
 
   startUpExtensions();
   startUpMainWebUi();
@@ -263,18 +263,12 @@ function startUpMainWebUi(): void {
     WebIpc.requestQuitApplication();
   });
 
-  mainWebUi.addEventListener(EVENT_DRAG_STARTED, (ev: CustomEvent): void => {
-    window.document.body.classList.add(CLASS_MAIN_DRAGGING);
-    window.document.body.classList.remove(CLASS_MAIN_NOT_DRAGGING);
-  });
-
-  mainWebUi.addEventListener(EVENT_DRAG_ENDED, (ev: CustomEvent): void => {
-    window.document.body.classList.remove(CLASS_MAIN_DRAGGING);
-    window.document.body.classList.add(CLASS_MAIN_NOT_DRAGGING);
-  });
+  mainWebUi.addEventListener(EVENT_DRAG_STARTED, disableWindowMoveArea);
+  mainWebUi.addEventListener(EVENT_DRAG_ENDED, enableWindowMoveArea);
 
   mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
     extensionManager.updateExtensionWindowStateFromEvent(ev);
+    disableWindowMoveArea();
     applicationContextMenu.open(ev);
   });
 
@@ -332,6 +326,22 @@ function handleHyperlinkClick(ev: CustomEvent): void {
 
   const commandName = entries[0].command;
   extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
+}
+
+function disableWindowMoveArea(): void {
+  window.document.body.classList.add(CLASS_DISABLE_WINDOW_MOVE);
+  window.document.body.classList.remove(CLASS_ENABLE_WINDOW_MOVE);
+
+  mainWebUi.classList.add(CLASS_DISABLE_WINDOW_MOVE);
+  mainWebUi.classList.remove(CLASS_ENABLE_WINDOW_MOVE);
+}
+
+function enableWindowMoveArea(): void {
+  window.document.body.classList.remove(CLASS_DISABLE_WINDOW_MOVE);
+  window.document.body.classList.add(CLASS_ENABLE_WINDOW_MOVE);
+
+  mainWebUi.classList.remove(CLASS_DISABLE_WINDOW_MOVE);
+  mainWebUi.classList.add(CLASS_ENABLE_WINDOW_MOVE);
 }
 
 const ID_CONTROLS_SPACE = "ID_CONTROLS_SPACE";
@@ -722,6 +732,7 @@ function startUpCommandPalette(): void {
 
 function startUpApplicationContextMenu(): void {
   applicationContextMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
+  applicationContextMenu.onClose(enableWindowMoveArea);
 }
 
 class ConfigDatabaseImpl implements ConfigDatabase {

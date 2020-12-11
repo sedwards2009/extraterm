@@ -5,19 +5,20 @@
  */
 import { html, render, TemplateResult, DirectiveFn } from "extraterm-lit-html";
 import { repeat } from "extraterm-lit-html/directives/repeat";
-
 import { getLogger } from "extraterm-logging";
-import { Logger } from "@extraterm/extraterm-extension-api";
+import { Event, Logger } from "@extraterm/extraterm-extension-api";
 import { ContextMenu } from "../gui/ContextMenu";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
-import * as DomUtils from "../DomUtils";
+import { EventEmitter } from "extraterm-event-emitter";
 import { doLater } from "extraterm-later";
+
+import * as DomUtils from "../DomUtils";
 import { ExtensionManager, CommandQueryOptions } from "../extension/InternalTypes";
 import { CommandAndShortcut } from "./CommandPalette";
 import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 import { ContextMenuType, ContextMenuRequestEventDetail } from "./CommandUtils";
-import { ExtensionCommandContribution } from "extraterm/src/ExtensionMetadata";
+import { ExtensionCommandContribution } from "../../ExtensionMetadata";
 
 const ID_APPLICATION_CONTEXT_MENU = "ID_APPLICATION_CONTEXT_MENU";
 
@@ -40,8 +41,12 @@ export class ApplicationContextMenu {
   private _contextWindowState : CommonExtensionWindowState = null;
   private _menuType = ContextMenuType.NORMAL;
 
+  onClose: Event<void>;
+  private _onCloseEventEmitter = new EventEmitter<void>();
+
   constructor(private extensionManager: ExtensionManager, private keybindingsManager: KeybindingsManager) {
     this._log = getLogger("ApplicationContextMenu", this);
+    this.onClose = this._onCloseEventEmitter.event;
 
     const contextMenuFragment = DomUtils.htmlToFragment(trimBetweenTags(`
     <${ContextMenu.TAG_NAME} id="${ID_APPLICATION_CONTEXT_MENU}">
@@ -58,6 +63,7 @@ export class ApplicationContextMenu {
       }
       this._menuEntries = null;
       this._contextWindowState = null;
+      this._onCloseEventEmitter.fire();
     });
 
     this._contextMenuElement.addEventListener("dismissed", (ev: CustomEvent) => {
@@ -66,6 +72,7 @@ export class ApplicationContextMenu {
       }
       this._menuEntries = null;
       this._contextWindowState = null;
+      this._onCloseEventEmitter.fire();
     });
   }
 

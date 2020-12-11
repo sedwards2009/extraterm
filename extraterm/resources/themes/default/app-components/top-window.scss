@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
 /* top-window */
@@ -18,14 +18,13 @@ $control-size: pxToRem(21px);
 DIV.tab_bar_rest {
   display: flex;
   flex-grow: 1;
-  
+
   & > DIV.space {
     flex-grow: 1;
-    -webkit-app-region: drag;
   }
 }
 
-BODY {
+body {
   position: absolute;
   top: 0;
   bottom: 0;
@@ -33,8 +32,8 @@ BODY {
   right: 0;
   background: $root-background-color;
 
-  &.CLASS_MAIN_NOT_DRAGGING DIV.space {
-    @if $extraterm-titlebar-style == "native" {
+  @if($extraterm-titlebar-style == "native" or $extraterm-titlebar-style == "compact") {
+    &.CLASS_ENABLE_WINDOW_MOVE div.space {
       -webkit-app-region: drag;
     }
   }
