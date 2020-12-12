@@ -193,6 +193,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
       }
       this._aceEditor.setRelayInput(true);
       this._aceEditor.setReadOnly(true);
+      this._aceEditor.setBehavioursEnabled(false);
       this._aceEditor.setAutoscroll(false);
       this._aceEditor.setHighlightActiveLine(false);
 
