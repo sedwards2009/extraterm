@@ -92,7 +92,7 @@ const isDarwin = process.platform === "darwin";
       <p class="minor no-user-select">{{themeTerminalFormatsMessage}}</p>
     </div>
 
-    <label>Cursor style:</label>
+    <label>Cursor Style:</label>
     <span class="group">
       <button class="inline char-width-3" v-on:click="cursorStyle = 'block';" :class="{ selected: cursorStyle==='block' }">&#x2588;</button>
       <button class="inline char-width-3" v-on:click="cursorStyle = 'underscore';"  :class="{ selected: cursorStyle==='underscore' }">&#x2582;</button>
