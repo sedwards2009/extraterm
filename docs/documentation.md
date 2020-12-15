@@ -2,7 +2,7 @@
 title: Documentation
 ---
 
-[User Guide](guide.html) - People new to Extraterm should start here.
+[Guide](guide.html) - People new to Extraterm should start here.
 
 [Frequently Asked Questions](faq.html)
 

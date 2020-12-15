@@ -1,5 +1,5 @@
 ---
-title: User Guide
+title: Guide
 ---
 
 - [Getting Started](#getting-started)
@@ -16,6 +16,18 @@ title: User Guide
 - [Editing in Cursor Mode](#editing-in-cursor-mode)
 - [Viewing content with the Show Command](#viewing-content-with-the-show-command)
   - [Frames viewing Text](#frames-viewing-text)
+- [Settings](#settings)
+  - [General Settings](#general-settings)
+    - [Mouse Button Actions](#mouse-button-actions)
+  - [Appearance](#appearance)
+    - [Terminal](#terminal)
+    - [Interface](#interface)
+    - [Text Viewer](#text-viewer)
+  - [Session Types](#session-types)
+    - [Tab Title](#tab-title)
+  - [Keybindings](#keybindings)
+  - [Frames](#frames)
+  - [Extensions](#extensions)
 - [Tips](#tips)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [Mouse selections when an app grabs the mouse](#mouse-selections-when-an-app-grabs-the-mouse)
@@ -29,23 +41,16 @@ Note: Keyboard shortcuts given in the documentation apply to the default Windows
 
 ## Installation
 
-Extraterm supports Linux, macOS and WSL, CMD, PowerShell and Cygwin on Windows. Download the zip file, installer or DMG for your operating system on the [github releases page](https://github.com/sedwards2009/extraterm/releases).
-
-
-Start Extraterm:
-
-* **Linux** - Unzip the file somewhere convenient. Click to run the `extraterm` file inside the unzip directory.
-* **macOS** - Open the DMG file and drag the Extraterm onto the Applications folder. Just start Extraterm via the Finder.
-* **Windows** - Run the installer to install. Start Extraterm from the start menu. Note you must have Python 3 installed inside cygwin for Extraterm to run (see the [FAQ](faq.md) ). If you have trouble starting Extraterm on cygwin also consult the [FAQ](faq.md).
+Extraterm supports Linux, macOS, and Windows. The [download page](download.html) describes the different installation methods.
 
 
 -----------
 
 # Basics
 
-When Extraterm starts it opens one tab and runs your default shell inside it. The basic functioning of the terminal should feel quite familiar.
+When Extraterm starts it opens one tab and runs your default shell inside it. If you have used any terminal before, then the basic functionality will be familiar.
 
-Multiple terminals can be open at the same time in different tabs. The plus sign next to the tab at the top of the window opens a new tab (shortcut `Ctrl+Shift+T`). Close a tab by using the little cross icon/button on the right side of the tab, or just exist the shell. `Ctrl+Shift+Q` is the shortcut for closing a tab directly.
+Multiple terminals can be open at the same time in different tabs. The plus button at the top, next to the tabs, opens new terminal tabs (shortcut `Ctrl+Shift+T`). Close a tab by using the little cross icon/button on the right side of the tab, or just exit the shell. `Ctrl+Shift+Q` is the shortcut for closing a tab directly.
 
 Use the `Ctrl+,` and `Ctrl+.` shortcuts to move left and right between tabs.
 
@@ -53,8 +58,11 @@ Selections can be made with the mouse and are automatically copied to the system
 
 The scrollbar on the right or `Shift+PageUp` and `Shift+PageDown` let you can scroll through and view previous output.
 
-The "hamburger" menu is in the top right corner of the window.
+The "hamburger" menu in the top right corner of the Window provides access to new windows, new terminal tabs, and the Settings.
 
+The right mouse button opens context menus. The context menu for the plus button on the tab bar shows alternate terminal sessions. Tabs themselves also have options for customizing the tab. The contents of a terminal tab also supports context menus.
+
+Files and directories can be dropped onto Extraterm terminals. The path of the dropped file or directory will be typed into the terminal.
 
 ## Cursor Mode
 
@@ -179,6 +187,7 @@ Extraterm supports mouse based gestures for rearranging tabs in the tab bar, mov
 * The main content area of every tab can be split different ways depending on where a tab or frame is dropped. Drops towwards the top or bottom will split it horizontally, while drops to the far left or right will split it vertically. A drop in the center of the content will simply move the tab or frame up into the tab group.
 * Frames can also be dragged right out of Extraterm and dropped on other applications which will accept text.
 
+
 -----------
 
 # Editing in Cursor Mode
@@ -194,6 +203,135 @@ TODO
 ## Frames viewing Text
 
 
+# Settings
+
+The Settings tab is accessible via the "hamburger" menu in the top right corner of the window.
+
+
+## General Settings
+
+![settings_general.png](settings_general.png)
+
+* **Show Tips** - Sets how often Tips are shown inside new terminals. Options are: *Everytime*, *Daily*, and *Never*.
+* **Max. Scrollback Lines** - Sets the maximum number of lines the scrollback area (the lines of text which have moved up out of the window) can be before rows are deleted.
+* **Max. Scrollback Frames** - Sets the maximum number of frames permitted in the scrollback area before they are deleted.
+* **Automatically copy selection to clipboard** - If this is on, then any selection is automatically copied to the system clipboard.
+* **Close the window after closing the last tab** - If this is on, then the window will automatically close once the last tab has been closed. Otherwise the window will remain open.
+* **Reduce graphic effects** - Some graphics hardware and drivers can show incorrect colors in some parts of the Extraterm interface. Turning this on will reduce the use of graphic features which may cause trouble.
+
+### Mouse Button Actions
+
+The actions attached to the middle and right mouse buttons can be set here. Combinations of modifier keys and mouse buttons are supported. The different available actions which can be set are:
+
+* **None** - No action.
+* **Context Menu** - Show the context menu.
+* **Paste from Clipboard** - Paste the contents of the clipboard into the terminal.
+* **Paste from Selection Clipboard** - (Linux only) Paste the contents of the special selection clipboard into the terminal.
+
+
+## Appearance
+
+The Appearance tab is grouped into a few sections.
+
+### Terminal
+
+Settings related to how terminal tabs and their contents appear.
+
+![settings_appearance.png](settings_appearance.png)
+
+
+* **Font** - The font to use for text inside a terminal. The default is "Liga DejaVu Sans Mono" which ships as part of Extraterm itself. This mono-space font has wide Unicode coverage and support for technical ligatures.
+* **Font Size** - The font size to use for text inside a terminal.
+* **Enable ligatures** - If your terminal font support ligatures and this is enabled, then ligatures will be applied to text inside the terminal. See "What are ligatures?" below.
+* **Theme** - The color theme for terminals can be selected here. The button "User themes" opens the directory in the system file manger where your own theme files can be placed. The reload button rescans this directory. The list of different theme file formats is shown below the buttons.
+* **Cursor Style** - Sets the cursor style to use inside terminals. Options are *block*, *lower bar*, and *vertical bar*.
+* **Blink Cursor** - If this on, then cursor will blink. Defaults to off.
+* **Margin** - Sets the size of the margin surrounding the terminal text and edge of the tab containing it. Options are *None*, *Thin*, *Normal*, and *Thick*.
+* **Preview** - The colored text below the options show a preview of the selected theme, font, cursor and ligature settings.
+
+💡 *What are ligatures?*
+
+Ligatures are visual replacements for groups of characters (actually called "glyphs") when displaying text. In traditional typesetting, groups of characters like "fi" may be replaced with a different image which combines the two in a more visually pleasant way. In the context of computer text editors and mono-space terminals, the idea of ligatures is being used to create better looking images for common groups of symbols. For example, it is common to use a dash and greater than sign, "->" to represent an arrow. A ligature for this combination will show a real arrow instead.
+
+### Interface
+
+Settings related to the general appearance of the whole application.
+
+![settings_appearance_2.png](settings_appearance_2.png)
+
+* **Theme** - The theme for the interface. Defaults to *Two Dark UI theme*, a modern dark and mostly flat theme which also integrates with the terminal color theme. It is based on the *One Dark* them from the Atom text editor. Other themes are *Atomic Light UI theme* and *Atomic Dark UI theme* which are also based on similar themes from Atom.
+* **Zoom** - Increases or decreases the size of all elements and text in the user interface of the whole application.
+* **Window Title Bar** - Sets type of title bar for the Extraterm window. *Native* is just the normal operating system title bar. *Theme* is a themed title bar. *Compact Theme* is also themed but is more compact with tabs integrated into the bar itself and the window controls.
+* **Show icon in system tray** - If this is on, then Extraterm icon will appear in the desktop tray.
+* **Minimize window to tray** - If this is on, then the Extraterm window will disappear from your desktop taskbar when it is minimized. The window can be shown again by using the icon in the system tray.
+
+
+### Text Viewer
+
+Extraterm's `show` command can display text in its own custom viewer. This viewer supports syntax highlighting and has its own themes.
+
+* **Theme** - The theme for the text viewer. The button "User themes" opens the directory in the system file manger where your own theme files can be placed. The reload button rescans this directory. The list of different theme file formats is shown below the buttons.
+* **Preview** - Preview text is also shown. Example text for different fiel types can be selected.
+
+
+## Session Types
+
+Extraterm supports different terminal session types. The most common type for Linux and macOS systems is just the user's default shell. Windows has different types like CMD, PowerShell, WSL, and WSL2. By default the most common session types are available, but it is also possible to modify them, add new ones, and remove unwanted ones.
+
+![settings_session.png](settings_session.png)
+
+The session at the top of the list is used as the default session type when Extraterm starts up, or when the plus button in the tab bar is used. A session type can be promoted to default by clicking the double up arrows in the top right corner of the card.
+
+New session types can be added using the buttons at the bottom of the tab. Session types can be deleted using the cross in the top right corner of the session type card.
+
+Each session type will typically have the following settings:
+
+* **Name** - A readable name for the session type.
+* **Shell** - The shell command to run when an instance of this session type is created. This can be the user's default shell or the path to a shell command can be entered.
+* **Arguments** - Arguments to the shell command.
+* **Initial Directory** - The directory in which the shell command should be started. If this is left blank then Extraterm will try to use the same directory as the current terminal when the new terminal command is executed.
+
+Extensions can add additional settings below the primary session settings.
+
+### Tab Title
+
+Settings for the session's default tab title appear at the bottom of each card. It defines the title to use on tabs for terminals using this session. The text box holds the pattern to use to build up the title. This can be just text or a number of special codes which are later substituted. The "Insert Field" and "Insert Icon" menus show the available codes. A preview of the tab title appears below the text box.
+
+"Fields" are charactistics of the terminal which can be shown in the title. For example, the size of the terminal in rows and columns, or the exit code of the last command.
+
+Icons are just icons which can be placed anywhere in the title. The format of the codes for icons are just `${icon:name}` where `name` is the Font Awesome HTML name for the icon. Only Free [Font Awesome](https://fontawesome.com/icons) icons are available.
+
+
+
+## Keybindings
+
+Keybindings, also known as keyboard shortcuts, connect key combinations to Extraterm commands.
+
+![settings_keybindings.png](settings_keybindings.png)
+
+The "Keybindings" dropdown at the top lets you select a base set of keybindings. The list of commands are shown below and grouped into "Global", "Application", "Window", "Text Editor", "Terminal", "Terminal: Cursor Mode", "Hyperlink", and "Viewer Tabs". Different contexts within Extraterm can have different keybindings active.
+
+Keybindings in the "Global" section are active even if the Extraterm window does not have the focus. They can be invoked from any other application.
+
+Moving the mouse pointer over each command shows the buttons to add a new keybinding, delete an existing keybinding, or revert a keybinding back to the default. To add a keybinding, click on the plus button next to the command and then press the key combination.
+
+Commands can have multiple keybindings assigned to them.
+
+At the top of keybindings settings is a text box for filtering and searching the list of commands. It is possible to search by key combination. Click on the "Record key" button and then press the key combination.
+
+
+## Frames
+
+![settings_frames.png](settings_frames.png)
+
+
+## Extensions
+
+![settings_extensions.png](settings_extensions.png)
+
+
+
+-----------
 
 
 # Tips
@@ -215,7 +353,7 @@ Some applications use the mouse input themselves and prevent normal mouse select
 
 ## Changing where the configuration settings are stored
 
-By default Extraterm stores the user configuration in a directory deep in the user's home directory/profile. The location of 
+By default Extraterm stores the user configuration in a directory deep in the user's home directory/profile. The location of
 this directory can be changed by placing a `application_paths.json` file in the same directory as the extraterm executable. It is in json format. A simple `application_paths.json` is:
 
 ```
