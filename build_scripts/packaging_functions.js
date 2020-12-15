@@ -84,6 +84,9 @@ function pruneNodeModules(versionedOutputDir, platform) {
   const prevDir = pwd();
 
   cd(path.join(versionedOutputDir, appDir(platform)));
+
+  pruneNodePty();
+
   exec("modclean -n default:safe -r --ignore windows-swca");
   pruneSpecificNodeModules();
 
@@ -110,13 +113,90 @@ function pruneSpecificNodeModules() {
     if (test('-d', fullPath)) {
       rm('-rf', fullPath);
     } else if (test('-f', fullPath)) {
-        rm(fullPath);
+      rm(fullPath);
     } else {
       echo("Warning: Unable to find path "+ fullPath);
     }
   });
-
 }
+
+function pruneNodePty() {
+  pruneDependencyWithWhitelist("node-pty", [
+    "node-pty.node",
+    "/lib/",
+    "/README.md",
+    "/LICENSE",
+    "/package.json",
+    "/build/Release/conpty.node",
+    "/build/Release/conpty.pdb",
+    "/build/Release/conpty_console_list.node",
+    "/build/Release/conpty_console_list.pdb",
+    "/build/Release/pty.node",
+    "/build/Release/pty.pdb",
+    "/build/Release/winpty-agent.exe",
+    "/build/Release/winpty-agent.pdb",
+    "/build/Release/winpty.dll",
+    "/build/Release/winpty.pd",
+  ]);
+}
+
+function pruneDependencyWithWhitelist(dependencyName, subpathList) {
+  const prevDir = pwd();
+
+  cd("node_modules");
+  cd(dependencyName);
+
+  for (const itemPath of find(".")) {
+    if ( ! test('-f', itemPath)) {
+      continue;
+    }
+
+    if (pathMatchWhitelist(subpathList, itemPath)) {
+      echo(`Keeping: ${itemPath}`);
+    } else {
+      echo(`Pruning ${itemPath}`);
+      rm(itemPath);
+    }
+  }
+
+  cd(prevDir);
+}
+
+/**
+ * Match a path to a whilelist.
+ *
+ * Patterns in the whitelist have the follow rules:
+ *
+ *   * If it starts with a / then it matches the whole path.
+ *   * If it ends with a / then everything under that directory is accepted.
+ *   * No slashes in the path, then it matches on the file only.
+ *
+ * @param whitelist List of allowed path patterns.
+ * @return True if the `testPath` is
+ */
+function pathMatchWhitelist(whitelist, testPath) {
+  for (const keepPath of whitelist) {
+    if (keepPath.startsWith("/")) {
+      if (keepPath.endsWith("/")) {
+        if (testPath.startsWith(keepPath.substring(1))) {
+          return true;
+        }
+      } else {
+        if (testPath === keepPath.substring(1)) {
+          return true;
+        }
+      }
+    } else {
+      if (keepPath === path.posix.basename(testPath)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+exports.pruneDependencyWithWhitelist = pruneDependencyWithWhitelist;
+
 
 function createOutputDirName({version, platform, arch}) {
   return "extraterm-" + version + "-" + platform + "-" + arch;
