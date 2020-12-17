@@ -31,7 +31,7 @@
 
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.11.0",
+    "@extraterm/extraterm-extension-api": "0.12.0",
     "shelljs": "0.8.3",
     "typescript": "3.9.6"
   }
