@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>SyntaxTheme | @extraterm/extraterm-extension-api</title>
+	<title>CreateSessionOptions | @extraterm/extraterm-extension-api</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -56,10 +56,10 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="syntaxtheme.html">SyntaxTheme</a>
+					<a href="createsessionoptions.html">CreateSessionOptions</a>
 				</li>
 			</ul>
-			<h1>Interface SyntaxTheme</h1>
+			<h1>Interface CreateSessionOptions</h1>
 		</div>
 	</div>
 </header>
@@ -69,16 +69,15 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>The contents of a syntax theme.</p>
+						<p>Extra options passed during session creation.</p>
 					</div>
-					<p>Note: All color strings must be of the form #RRGGBB.</p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">SyntaxTheme</span>
+						<span class="target">CreateSessionOptions</span>
 					</li>
 				</ul>
 			</section>
@@ -89,13 +88,10 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="syntaxtheme.html#background" class="tsd-kind-icon">background</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="syntaxtheme.html#cursor" class="tsd-kind-icon">cursor</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="syntaxtheme.html#foreground" class="tsd-kind-icon">foreground</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="syntaxtheme.html#invisibles" class="tsd-kind-icon">invisibles</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="syntaxtheme.html#linehighlight" class="tsd-kind-icon">line<wbr>Highlight</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="syntaxtheme.html#selection" class="tsd-kind-icon">selection</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="syntaxtheme.html#syntaxtokenrule" class="tsd-kind-icon">syntax<wbr>Token<wbr>Rule</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="createsessionoptions.html#cols" class="tsd-kind-icon">cols</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="createsessionoptions.html#extraenv" class="tsd-kind-icon">extra<wbr>Env</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="createsessionoptions.html#rows" class="tsd-kind-icon">rows</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="createsessionoptions.html#workingdirectory" class="tsd-kind-icon">working<wbr>Directory</a></li>
 							</ul>
 						</section>
 					</div>
@@ -104,107 +100,62 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="background" class="tsd-anchor"></a>
-					<h3>background</h3>
-					<div class="tsd-signature tsd-kind-icon">background<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="cols" class="tsd-anchor"></a>
+					<h3>cols</h3>
+					<div class="tsd-signature tsd-kind-icon">cols<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L803">main.ts:803</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L628">main.ts:628</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Default text background color.</p>
+							<p>The initial number of columns this terminal has.</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="cursor" class="tsd-anchor"></a>
-					<h3>cursor</h3>
-					<div class="tsd-signature tsd-kind-icon">cursor<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="extraenv" class="tsd-anchor"></a>
+					<h3>extra<wbr>Env</h3>
+					<div class="tsd-signature tsd-kind-icon">extra<wbr>Env<span class="tsd-signature-symbol">:</span> <a href="environmentmap.html" class="tsd-signature-type">EnvironmentMap</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L808">main.ts:808</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L623">main.ts:623</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Color of the cursor.</p>
+							<p>Extra environment variables to set in the new terminal session.</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="foreground" class="tsd-anchor"></a>
-					<h3>foreground</h3>
-					<div class="tsd-signature tsd-kind-icon">foreground<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="rows" class="tsd-anchor"></a>
+					<h3>rows</h3>
+					<div class="tsd-signature tsd-kind-icon">rows<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L798">main.ts:798</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L633">main.ts:633</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Default text foreground color.</p>
+							<p>The inital number of rows this terminal has.</p>
 						</div>
 					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="invisibles" class="tsd-anchor"></a>
-					<h3>invisibles</h3>
-					<div class="tsd-signature tsd-kind-icon">invisibles<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<a name="workingdirectory" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagOptional">Optional</span> working<wbr>Directory</h3>
+					<div class="tsd-signature tsd-kind-icon">working<wbr>Directory<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L813">main.ts:813</a></li>
+							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L638">main.ts:638</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
 						<div class="lead">
-							<p>Color to show whitespace characters (when enabled).</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="linehighlight" class="tsd-anchor"></a>
-					<h3>line<wbr>Highlight</h3>
-					<div class="tsd-signature tsd-kind-icon">line<wbr>Highlight<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L818">main.ts:818</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Color of the line highlight.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="selection" class="tsd-anchor"></a>
-					<h3>selection</h3>
-					<div class="tsd-signature tsd-kind-icon">selection<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L823">main.ts:823</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Selection color.</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="syntaxtokenrule" class="tsd-anchor"></a>
-					<h3>syntax<wbr>Token<wbr>Rule</h3>
-					<div class="tsd-signature tsd-kind-icon">syntax<wbr>Token<wbr>Rule<span class="tsd-signature-symbol">:</span> <a href="syntaxtokenrule.html" class="tsd-signature-type">SyntaxTokenRule</a><span class="tsd-signature-symbol">[]</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/sedwards2009/extraterm/blob/34c84fb0/packages/extraterm-extension-api/src/main.ts#L828">main.ts:828</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>List of token coloring rules.</p>
+							<p>A suggested directory in which this terminal session should start in.</p>
 						</div>
 					</div>
 				</section>
@@ -223,28 +174,19 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-interface">
-						<a href="syntaxtheme.html" class="tsd-kind-icon">Syntax<wbr>Theme</a>
+						<a href="createsessionoptions.html" class="tsd-kind-icon">Create<wbr>Session<wbr>Options</a>
 						<ul>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="syntaxtheme.html#background" class="tsd-kind-icon">background</a>
+								<a href="createsessionoptions.html#cols" class="tsd-kind-icon">cols</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="syntaxtheme.html#cursor" class="tsd-kind-icon">cursor</a>
+								<a href="createsessionoptions.html#extraenv" class="tsd-kind-icon">extra<wbr>Env</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="syntaxtheme.html#foreground" class="tsd-kind-icon">foreground</a>
+								<a href="createsessionoptions.html#rows" class="tsd-kind-icon">rows</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="syntaxtheme.html#invisibles" class="tsd-kind-icon">invisibles</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="syntaxtheme.html#linehighlight" class="tsd-kind-icon">line<wbr>Highlight</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="syntaxtheme.html#selection" class="tsd-kind-icon">selection</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="syntaxtheme.html#syntaxtokenrule" class="tsd-kind-icon">syntax<wbr>Token<wbr>Rule</a>
+								<a href="createsessionoptions.html#workingdirectory" class="tsd-kind-icon">working<wbr>Directory</a>
 							</li>
 						</ul>
 					</li>
