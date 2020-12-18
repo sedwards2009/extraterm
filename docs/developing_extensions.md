@@ -2,7 +2,9 @@
 title: Developing Extensions
 ---
 
-# Introduction
+# Developing Extensions
+
+## Introduction
 
 Extraterm's extension API allows many parts of the core application to be expanded with new capabilities. Many features which appear to be built in are in fact implemented using the extension API.
 
@@ -18,10 +20,10 @@ Extensions can for example:
 Extraterm is built on top of the [Electron](https://www.electronjs.org) platform. Extensions can be built using the extensions API and also many of the web technologies provided by the underlying platform. Extraterm itself is written in TypeScript and directly supports extension development using TypeScript. This is not mandatory though, plain JavaScript or any language which compiles to JavaScript can be used for creating extensions. The cross platform nature of Electron and these web technologies, makes it easy to create extensions which work on all of the operating systems that Extraterm does.
 
 
-# Documentation Overview
+## Documentation Overview
 
 
-## Guides
+### Guides
 
 These guides build on top of the previous guides and are intended to be read in order.
 
@@ -29,6 +31,6 @@ These guides build on top of the previous guides and are intended to be read in 
 * [Logging and Debugging Extensions](extensions_logging_and_debugging.md)
 * [Using TypeScript in Extensions](extensions_typescript.md)
 
-## Reference
+### Reference
 
 * [Extension API Reference](extension_api/)

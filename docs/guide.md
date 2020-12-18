@@ -184,7 +184,7 @@ Extraterm supports mouse based gestures for rearranging tabs in the tab bar, mov
 
 * Tabs can be moved between groups of tabs by dragging them from one group to the other.
 * Frames can be dragged by their title bars up into a group of tabs to move them out of their terminal and into their own tab.
-* The main content area of every tab can be split different ways depending on where a tab or frame is dropped. Drops towwards the top or bottom will split it horizontally, while drops to the far left or right will split it vertically. A drop in the center of the content will simply move the tab or frame up into the tab group.
+* The main content area of every tab can be split different ways depending on where a tab or frame is dropped. Drops towards the top or bottom will split it horizontally, while drops to the far left or right will split it vertically. A drop in the center of the content will simply move the tab or frame up into the tab group.
 * Frames can also be dragged right out of Extraterm and dropped on other applications which will accept text.
 
 
@@ -271,7 +271,7 @@ Settings related to the general appearance of the whole application.
 Extraterm's `show` command can display text in its own custom viewer. This viewer supports syntax highlighting and has its own themes.
 
 * **Theme** - The theme for the text viewer. The button "User themes" opens the directory in the system file manger where your own theme files can be placed. The reload button rescans this directory. The list of different theme file formats is shown below the buttons.
-* **Preview** - Preview text is also shown. Example text for different fiel types can be selected.
+* **Preview** - Preview text is also shown. Example text for different file types can be selected.
 
 
 ## Session Types
@@ -297,7 +297,7 @@ Extensions can add additional settings below the primary session settings.
 
 Settings for the session's default tab title appear at the bottom of each card. It defines the title to use on tabs for terminals using this session. The text box holds the pattern to use to build up the title. This can be just text or a number of special codes which are later substituted. The "Insert Field" and "Insert Icon" menus show the available codes. A preview of the tab title appears below the text box.
 
-"Fields" are charactistics of the terminal which can be shown in the title. For example, the size of the terminal in rows and columns, or the exit code of the last command.
+"Fields" are characteristics of the terminal which can be shown in the title. For example, the size of the terminal in rows and columns, or the exit code of the last command.
 
 Icons are just icons which can be placed anywhere in the title. The format of the codes for icons are just `${icon:name}` where `name` is the Font Awesome HTML name for the icon. Only Free [Font Awesome](https://fontawesome.com/icons) icons are available.
 
@@ -322,13 +322,38 @@ At the top of keybindings settings is a text box for filtering and searching the
 
 ## Frames
 
+Frames in Extraterm hold and group the output of commands. The [shell integration](#shell-integration) needs to be setup to enable this feature.
+
+Rules controlling when and how to apply frames to different commands can be changed here.
+
 ![settings_frames.png](settings_frames.png)
+
+
+The *Default action* dropdown set the base general rule for when to apply a frame to command output.
+
+* **Always frame command output** - Always frame a command's output.
+* **Never frame command output** - Never frame a command's output.
+* **Frame command out if longer than** - Only frame a command's output if it is longer than the set number of lines.
+
+Rules can be added to customize how frames are applied to different commands. Each rule card has the folowing settings:
+
+* **Match** - The name of the command or regular expression pattern to use. The dropdown to the right determines how to apply the match. This is either *Match command name* or *Match regular expression*.
+* **Action** - Sets the action to take if this rule matches. The same options are available as for the *default action* above.
+
+Rules can be added with the *New Rule* button and deleted using the cross button in the top right corner of the rule card.
 
 
 ## Extensions
 
+Many of the features in Extraterm are done using Extensions. Extensions or plugins, extend the functionality of the base application.
+
+This tab lists all of the extensions, gives information about them and how they integrate with Extraterm, and allows them to be enabled or disabled.
+
 ![settings_extensions.png](settings_extensions.png)
 
+The details button on each extension card gives more information about how the extension integrates with Extraterm and what facilities it adds.
+
+Extensions can be enabled or disabled by the button in the bottom right corner of the extension card.
 
 
 -----------
@@ -354,7 +379,7 @@ Some applications use the mouse input themselves and prevent normal mouse select
 ## Changing where the configuration settings are stored
 
 By default Extraterm stores the user configuration in a directory deep in the user's home directory/profile. The location of
-this directory can be changed by placing a `application_paths.json` file in the same directory as the extraterm executable. It is in json format. A simple `application_paths.json` is:
+this directory can be changed by placing a `application_paths.json` file in the same directory as the Extraterm executable. It is in json format. A simple `application_paths.json` is:
 
 ```
 {
@@ -362,6 +387,6 @@ this directory can be changed by placing a `application_paths.json` file in the 
 }
 ```
 
-It contains one setting which specifies which directory to use for user settings. If this is empty or not set, then the default location is used. If this path is relative then it is relative to the directory containing the extraterm executable.
+It contains one setting which specifies which directory to use for user settings. If this is empty or not set, then the default location is used. If this path is relative then it is relative to the directory containing the Extraterm executable.
 
-`../user_settings` can be used to place it along side the location where extraterm is installed. This can be usefull when running Extraterm as a "portable app" from removable media like a USB drive.
+`../user_settings` can be used to place it along side the location where Extraterm is installed. This can be usefull when running Extraterm as a "portable app" from removable media like a USB drive.
