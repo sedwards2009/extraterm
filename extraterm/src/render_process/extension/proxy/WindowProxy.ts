@@ -59,6 +59,10 @@ export class WindowProxy implements InternalWindow {
       if (proxy._onDidAppendViewerEventEmitter.hasListeners()) {
         proxy._onDidAppendViewerEventEmitter.fire(this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
       }
+
+      if (proxy._onDidAppendBlockEventEmitter.hasListeners()) {
+        proxy._onDidAppendBlockEventEmitter.fire(this._internalExtensionContext._proxyFactory.getBlock(viewer));
+      }
     }
   }
 
@@ -77,6 +81,10 @@ export class WindowProxy implements InternalWindow {
 
   get activeViewer(): ExtensionApi.Viewer {
     return this._internalExtensionContext._proxyFactory.getViewerProxy(this._commonExtensionState.activeViewerElement);
+  }
+
+  get activeBlock(): ExtensionApi.Block {
+    return this._internalExtensionContext._proxyFactory.getBlock(this._commonExtensionState.activeViewerElement);
   }
 
   get activeHyperlinkURL(): string {

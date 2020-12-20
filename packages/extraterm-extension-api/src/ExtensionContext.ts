@@ -14,6 +14,7 @@ import { SyntaxThemeProvider } from "./SyntaxTheme";
 import { Commands } from "./Commands";
 import { TerminalThemeProvider } from "./TerminalTheme";
 import { Logger } from "./Logger";
+import { Block } from "./Block";
 
 
 export interface Window {
@@ -24,7 +25,9 @@ export interface Window {
    */
   activeTerminal: Terminal;
 
-  activeViewer: Viewer;
+  activeViewer: Viewer; // FIXME remove
+
+  activeBlock: Block;
 
   activeHyperlinkURL: string;
 

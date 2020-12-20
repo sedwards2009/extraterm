@@ -18,4 +18,5 @@ export { SessionConfiguration, SessionEditorBase, SessionEditorFactory, Environm
   CreateSessionOptions, BufferSizeChange, Pty, SessionSettingsEditorBase, SessionSettingsEditorFactory
 } from "./Sessions";
 export { ViewerPosture, ViewerMetadata, ViewerMetadataChange, ExtensionViewerBase, ExtensionViewerBaseConstructor,
-  ViewerBase, FrameViewer, FindStartPosition, FindOptions, TerminalOutputViewer, TextViewer, Viewer } from "./Viewers";
+  ViewerBase, FrameViewer, TerminalOutputViewer, TextViewer, Viewer } from "./Viewers";
+export { Block, FindStartPosition, FindOptions, TerminalDetails, TerminalType, TextViewerDetails, TextViewerType } from "./Block";

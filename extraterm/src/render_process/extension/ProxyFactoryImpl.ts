@@ -18,6 +18,8 @@ import { TextViewer } from"../viewers/TextAceViewer";
 import { TextViewerProxy } from "./proxy/TextViewerProxy";
 import { ViewerElement } from "../viewers/ViewerElement";
 import { ViewerTabProxy } from "./proxy/ViewerTabProxy";
+import { TerminalOutputDetailsProxy } from "./proxy/TerminalOutputDetailsProxy";
+import { TextViewerDetailsProxy } from "./proxy/TextViewerDetailsProxy";
 
 /**
  * Each extension has its own instance of this. It holds and gathers all of
@@ -30,6 +32,7 @@ export class ProxyFactoryImpl implements ProxyFactory {
   private _viewerTabProxyMap = new Map<EtViewerTab, ExtensionApi.Tab>();
   private _terminalProxyMap = new Map<EtTerminal, ExtensionApi.Terminal>();
   private _viewerProxyMap = new Map<ViewerElement, ExtensionApi.Viewer>();
+  private _blockMap = new Map<ViewerElement, ExtensionApi.Block>();
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {
   }
@@ -108,5 +111,45 @@ export class ProxyFactoryImpl implements ProxyFactory {
       return new FrameViewerProxy(this._internalExtensionContext, viewer);
     }
     return null;
+  }
+
+
+  getBlock(viewer: ViewerElement): ExtensionApi.Block {
+    if (viewer == null) {
+      return null;
+    }
+    if ( ! this._blockMap.has(viewer)) {
+      const block = this._createBlock(viewer);
+      if (block === null) {
+        return null;
+      }
+      viewer.onDispose(() => {
+        this._blockMap.delete(viewer);
+      });
+      this._blockMap.set(viewer, block);
+    }
+    return this._blockMap.get(viewer);
+  }
+
+  private _createBlock(viewer: ViewerElement): ExtensionApi.Block {
+    let details: any = null;
+    let type: string = null;
+
+    if (viewer instanceof EmbeddedViewer) {
+      return this._createBlock(viewer.getViewerElement());
+    }
+
+    if (viewer instanceof TerminalViewer) {
+      details = new TerminalOutputDetailsProxy(this._internalExtensionContext, viewer);
+      type = ExtensionApi.TerminalType;
+    } else if (viewer instanceof TextViewer) {
+      details = new TextViewerDetailsProxy(this._internalExtensionContext, viewer);
+      type = ExtensionApi.TextViewerType;
+    }
+
+    return {
+      type,
+      details
+    };
   }
 }

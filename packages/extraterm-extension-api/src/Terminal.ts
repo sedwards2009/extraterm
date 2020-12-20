@@ -8,6 +8,7 @@ import { Tab } from "./Tab";
 import { TerminalEnvironment } from "./TerminalEnvironment";
 import { SessionConfiguration } from "./Sessions";
 import { Viewer } from "./Viewers";
+import { Block } from "./Block";
 
 
 /**
@@ -25,7 +26,10 @@ export interface Terminal {
   /**
    * Get a list of viewers inside this terminal.
    */
-  getViewers(): Viewer[];
+  getViewers(): Viewer[]; // FIXME remove
+
+  getBlocks(): Block[];
+  onDidAppendBlock: Event<Block>;
 
   /**
    * Get the tab which holds this terminal.

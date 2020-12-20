@@ -13,7 +13,6 @@ import { EtTerminal, EXTRATERM_COOKIE_ENV } from "../../Terminal";
 import { InternalExtensionContext, InternalTerminalBorderWidget, InternalTabTitleWidget } from "../InternalTypes";
 import { ExtensionContainerElement } from "../ExtensionContainerElement";
 import { ExtensionTerminalBorderContribution } from "../../../ExtensionMetadata";
-import { Viewer,SessionConfiguration } from "@extraterm/extraterm-extension-api";
 
 
 export class TerminalProxy implements ExtensionApi.Terminal {
@@ -21,18 +20,23 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   viewerType: "terminal-output";
   private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
   private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
-  _onDidAppendViewerEventEmitter = new EventEmitter<Viewer>();
-  onDidAppendViewer: ExtensionApi.Event<Viewer>;
+
+  _onDidAppendViewerEventEmitter = new EventEmitter<ExtensionApi.Viewer>();  // FIXME remove
+  onDidAppendViewer: ExtensionApi.Event<ExtensionApi.Viewer>;  // FIXME remove
 
   environment: TerminalEnvironmentProxy;
-  private _sessionConfiguration: SessionConfiguration = null;
+  private _sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   private _sessionConfigurationExtensions: Object = null;
+
+  _onDidAppendBlockEventEmitter = new EventEmitter<ExtensionApi.Block>();
+  onDidAppendBlock: ExtensionApi.Event<ExtensionApi.Block>;
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
     this._log = getLogger("TerminalProxy", this);
     this._terminal.onDispose(this._handleTerminalDispose.bind(this));
     this.onDidAppendViewer = this._onDidAppendViewerEventEmitter.event;
     this.environment = new TerminalEnvironmentProxy(this._terminal);
+    this.onDidAppendBlock = this._onDidAppendBlockEventEmitter.event;
 
     this._sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
     this._sessionConfigurationExtensions = this._sessionConfiguration.extensions ?? {};
@@ -66,7 +70,14 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 
   getViewers(): ExtensionApi.Viewer[] {
     this._checkIsAlive();
-    return this._terminal.getViewerElements().map(viewer => this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
+    return this._terminal.getViewerElements().map(
+      viewer => this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
+  }
+
+  getBlocks(): ExtensionApi.Block[] {
+    this._checkIsAlive();
+    return this._terminal.getViewerElements().map(
+      viewer => this._internalExtensionContext._proxyFactory.getBlock(viewer));
   }
 
   getExtratermCookieValue(): string {
@@ -79,7 +90,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     return EXTRATERM_COOKIE_ENV;
   }
 
-  get sessionConfiguration(): SessionConfiguration {
+  get sessionConfiguration(): ExtensionApi.SessionConfiguration {
     return this._sessionConfiguration;
   }
 

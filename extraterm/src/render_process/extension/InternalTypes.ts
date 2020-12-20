@@ -100,6 +100,7 @@ export interface ProxyFactory {
   hasTerminalProxy(terminal: EtTerminal): boolean;
 
   getViewerProxy(viewer: ViewerElement): ExtensionApi.Viewer;
+  getBlock(viewer: ViewerElement): ExtensionApi.Block;
 }
 
 export interface ExtensionUiUtils {
