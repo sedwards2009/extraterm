@@ -3,7 +3,18 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputViewer, FindStartPosition, TextViewer, Viewer } from '@extraterm/extraterm-extension-api';
+import {
+  Block,
+  ExtensionContext,
+  FindStartPosition, 
+  Logger,
+  Terminal,
+  TerminalBorderWidget,
+  TerminalDetails,
+  TerminalType,
+  TextViewerDetails,
+  TextViewerType,
+} from '@extraterm/extraterm-extension-api';
 import Component from 'vue-class-component';
 import Vue from 'vue';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -53,8 +64,8 @@ class FindWidget {
 
     const component = this._ui.$mount();
     this._widget.getContainerElement().appendChild(component.$el);
-    this._terminal.onDidAppendViewer((viewer: Viewer) => {
-      this._handleViewerAppended(viewer);
+    this._terminal.onDidAppendBlock((block: Block) => {
+      this._handleBlockAppended(block);
     });
 
     this._widget.onDidClose(() => {
@@ -85,58 +96,53 @@ class FindWidget {
   private _find(): void {
     this._applyHighlight();
 
-    const termViewers = this._getViewers();
+    const termBlocks = this._getBlockDetails();
     const needleRegExp = this._needleRegExp();
 
-    for (let i=termViewers.length-1; i>=0; i--) {
-      if (termViewers[i].find(needleRegExp, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
+    for (let i=termBlocks.length-1; i>=0; i--) {
+      if (termBlocks[i].find(needleRegExp, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
         break;
       }
     }
   }
 
   private _applyHighlight(): void {
-    const termViewers = this._getViewers();
+    const termViewers = this._getBlockDetails();
     for (const viewer of termViewers) {
       viewer.highlight(this._needleRegExp("g"));
     }
   }
 
   private _removeHighlight(): void {
-    const termViewers = this._getViewers();
+    const termViewers = this._getBlockDetails();
     for (const viewer of termViewers) {
       viewer.highlight(null);
     }
   }
 
-  private _getViewers(): (TerminalOutputViewer | TextViewer)[] {
-    const termViewers: (TerminalOutputViewer | TextViewer)[] = [];
-    for (const viewer of this._terminal.getViewers()) {
-      const v = this._unpackViewer(viewer);
-      if (v != null) {
-        termViewers.push(v);
+  private _getBlockDetails(): (TerminalDetails | TextViewerDetails)[] {
+    const termBlockDetails: (TerminalDetails | TextViewerDetails)[] = [];
+    for (const block of this._terminal.getBlocks()) {
+      const details = this._unpackBlock(block);
+      if (details != null) {
+        termBlockDetails.push(details);
       }
     }
-    return termViewers;
+    return termBlockDetails;
   }
 
-  private _unpackViewer(viewer: Viewer): TerminalOutputViewer | TextViewer {
-    if (viewer.viewerType === "terminal-output") {
-      return viewer;
-    } else if (viewer.viewerType === "frame") {
-      const contents = viewer.getContents();
-      if (contents != null && (contents.viewerType === "terminal-output" || contents.viewerType === "text")) {
-        return contents;
-      }
+  private _unpackBlock(block: Block): TerminalDetails | TextViewerDetails {
+    if (block.type === TerminalType || block.type === TextViewerType) {
+      return block.details;
     }
     return null;
   }
 
-  private _handleViewerAppended(viewer: Viewer): void {
+  private _handleBlockAppended(block: Block): void {
     if (this._widget.isOpen()) {
-      const v = this._unpackViewer(viewer);
-      if (v != null) {
-        v.highlight(this._needleRegExp("g"));
+      const details = this._unpackBlock(block);
+      if (details != null) {
+        details.highlight(this._needleRegExp("g"));
       }
     }
   }
@@ -144,21 +150,21 @@ class FindWidget {
   private _findForwards(): void {
     this._applyHighlight();
 
-    const termViewers = this._getViewers();
-    let i = termViewers.findIndex(v => v.hasSelection());
+    const termBlocks = this._getBlockDetails();
+    let i = termBlocks.findIndex(v => v.hasSelection());
     if (i === -1) {
       this._find();
       return;
     }
 
     const needleRegExp = this._needleRegExp();
-    if (termViewers[i].findNext(needleRegExp)) {
+    if (termBlocks[i].findNext(needleRegExp)) {
       return;
     }
     i++;
 
-    for ( ; i<termViewers.length; i++) {
-      if (termViewers[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_START })) {
+    for ( ; i<termBlocks.length; i++) {
+      if (termBlocks[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_START })) {
         return;
       }
     }
@@ -167,21 +173,21 @@ class FindWidget {
   private _findBackwards(): void {
     this._applyHighlight();
 
-    const termViewers = this._getViewers();
-    let i = termViewers.findIndex(v => v.hasSelection());
+    const termDetails = this._getBlockDetails();
+    let i = termDetails.findIndex(d => d.hasSelection());
     if (i === -1) {
       this._find();
       return;
     }
 
     const needleRegExp = this._needleRegExp();
-    if (termViewers[i].findPrevious(needleRegExp)) {
+    if (termDetails[i].findPrevious(needleRegExp)) {
       return;
     }
     i--;
 
     for ( ; i >= 0; i--) {
-      if (termViewers[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_END, backwards: true })) {
+      if (termDetails[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_END, backwards: true })) {
         return;
       }
     }
