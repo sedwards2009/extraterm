@@ -21,9 +21,6 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
   private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
 
-  _onDidAppendViewerEventEmitter = new EventEmitter<ExtensionApi.Viewer>();  // FIXME remove
-  onDidAppendViewer: ExtensionApi.Event<ExtensionApi.Viewer>;  // FIXME remove
-
   environment: TerminalEnvironmentProxy;
   private _sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   private _sessionConfigurationExtensions: Object = null;
@@ -34,7 +31,6 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
     this._log = getLogger("TerminalProxy", this);
     this._terminal.onDispose(this._handleTerminalDispose.bind(this));
-    this.onDidAppendViewer = this._onDidAppendViewerEventEmitter.event;
     this.environment = new TerminalEnvironmentProxy(this._terminal);
     this.onDidAppendBlock = this._onDidAppendBlockEventEmitter.event;
 
@@ -66,12 +62,6 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   type(text: string): void {
     this._checkIsAlive();
     this._terminal.sendToPty(text);
-  }
-
-  getViewers(): ExtensionApi.Viewer[] {
-    this._checkIsAlive();
-    return this._terminal.getViewerElements().map(
-      viewer => this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
   }
 
   getBlocks(): ExtensionApi.Block[] {

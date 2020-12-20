@@ -56,10 +56,6 @@ export class WindowProxy implements InternalWindow {
   terminalAppendedViewer(terminal: EtTerminal, viewer: ViewerElement): void {
     if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
       const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
-      if (proxy._onDidAppendViewerEventEmitter.hasListeners()) {
-        proxy._onDidAppendViewerEventEmitter.fire(this._internalExtensionContext._proxyFactory.getViewerProxy(viewer));
-      }
-
       if (proxy._onDidAppendBlockEventEmitter.hasListeners()) {
         proxy._onDidAppendBlockEventEmitter.fire(this._internalExtensionContext._proxyFactory.getBlock(viewer));
       }

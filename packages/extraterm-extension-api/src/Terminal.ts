@@ -24,10 +24,8 @@ export interface Terminal {
   type(text: string): void;
 
   /**
-   * Get a list of viewers inside this terminal.
+   * Get the list of blocks shown inside this terminal.
    */
-  getViewers(): Viewer[]; // FIXME remove
-
   getBlocks(): Block[];
   onDidAppendBlock: Event<Block>;
 
@@ -48,8 +46,6 @@ export interface Terminal {
   getExtratermCookieName(): string;
 
   openTerminalBorderWidget(name: string): any;
-
-  onDidAppendViewer: Event<Viewer>;
 
   environment: TerminalEnvironment;
 
