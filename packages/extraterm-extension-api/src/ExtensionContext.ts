@@ -25,8 +25,6 @@ export interface Window {
    */
   activeTerminal: Terminal;
 
-  activeViewer: Viewer; // FIXME remove
-
   activeBlock: Block;
 
   activeHyperlinkURL: string;
