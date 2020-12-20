@@ -3,12 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event } from "./Utilities";
+import { Tab } from "./Tab";
 
 
 export interface Block {
   readonly type: string;
   readonly details: any;
+  readonly tab: Tab;
 }
 
 export const TerminalType = "extraterm:terminal-output";
@@ -19,8 +20,8 @@ export enum FindStartPosition {
 }
 
 export interface FindOptions {
-    backwards?: boolean;
-    startPosition?: FindStartPosition;
+  backwards?: boolean;
+  startPosition?: FindStartPosition;
 }
 
 export interface TerminalDetails {

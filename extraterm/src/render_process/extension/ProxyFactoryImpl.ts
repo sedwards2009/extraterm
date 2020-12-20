@@ -18,8 +18,7 @@ import { TextViewer } from"../viewers/TextAceViewer";
 import { TextViewerProxy } from "./proxy/TextViewerProxy";
 import { ViewerElement } from "../viewers/ViewerElement";
 import { ViewerTabProxy } from "./proxy/ViewerTabProxy";
-import { TerminalOutputDetailsProxy } from "./proxy/TerminalOutputDetailsProxy";
-import { TextViewerDetailsProxy } from "./proxy/TextViewerDetailsProxy";
+import { BlockImpl } from "./BlockImpl";
 
 /**
  * Each extension has its own instance of this. It holds and gathers all of
@@ -119,7 +118,7 @@ export class ProxyFactoryImpl implements ProxyFactory {
       return null;
     }
     if ( ! this._blockMap.has(viewer)) {
-      const block = this._createBlock(viewer);
+      const block = new BlockImpl(this._internalExtensionContext, viewer);
       if (block === null) {
         return null;
       }
@@ -129,27 +128,5 @@ export class ProxyFactoryImpl implements ProxyFactory {
       this._blockMap.set(viewer, block);
     }
     return this._blockMap.get(viewer);
-  }
-
-  private _createBlock(viewer: ViewerElement): ExtensionApi.Block {
-    let details: any = null;
-    let type: string = null;
-
-    if (viewer instanceof EmbeddedViewer) {
-      return this._createBlock(viewer.getViewerElement());
-    }
-
-    if (viewer instanceof TerminalViewer) {
-      details = new TerminalOutputDetailsProxy(this._internalExtensionContext, viewer);
-      type = ExtensionApi.TerminalType;
-    } else if (viewer instanceof TextViewer) {
-      details = new TextViewerDetailsProxy(this._internalExtensionContext, viewer);
-      type = ExtensionApi.TextViewerType;
-    }
-
-    return {
-      type,
-      details
-    };
   }
 }

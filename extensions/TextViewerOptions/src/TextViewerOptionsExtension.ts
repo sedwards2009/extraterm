@@ -1,25 +1,25 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {ExtensionContext, TextViewer, CustomizedCommand, Viewer} from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, TextViewerType, CustomizedCommand, TextViewerDetails, Block } from '@extraterm/extraterm-extension-api';
 
 let extensionContext: ExtensionContext = null;
 
 export function activate(context: ExtensionContext): any {
   extensionContext = context;
 
-  const ifTextViewer = function<R>(func: (textViewer: TextViewer) => R): () => R {
+  const ifTextViewer = function<R>(func: (textViewer: TextViewerDetails, block: Block) => R): () => R {
     return (): R | null => {
-      const viewer = context.window.activeViewer;
-      if (viewer == null) {
+      const block = context.window.activeBlock;
+      if (block == null) {
         return null;
       }
-      if (viewer.viewerType !== "text") {
+      if (block.type !== TextViewerType) {
         return null;
       }
-      return func(viewer);
+      return func(block.details, block);
     };
   };
 
@@ -39,19 +39,19 @@ export function activate(context: ExtensionContext): any {
 
 //-------------------------------------------------------------------------
 
-function getSetSyntaxHighlightingTitle(textViewer: TextViewer): CustomizedCommand {
+function getSetSyntaxHighlightingTitle(textViewerDetails: TextViewerDetails, block: Block): CustomizedCommand {
   return {
-    title: "Syntax: " + getMimeTypeName(textViewer)
+    title: "Syntax: " + getMimeTypeName(textViewerDetails)
   };
 }
 
-function getMimeTypeName(textViewer: TextViewer): string {
-  const mimeType = textViewer.getMimeType();
+function getMimeTypeName(textViewerDetails: TextViewerDetails): string {
+  const mimeType = textViewerDetails.getMimeType();
   const matchingMode = extensionContext.aceModule.ModeList.getModeByMimeType(mimeType);
   return matchingMode != null ? matchingMode.friendlyName : mimeType;
 }
 
-async function syntaxHighlightingCommandExecutor(textViewer: TextViewer): Promise<any> {
+async function syntaxHighlightingCommandExecutor(textViewerDetails: TextViewerDetails, block: Block): Promise<any> {
   const modesByNameObject = extensionContext.aceModule.ModeList.modesByName;
   const mimeList: {name: string, nameLower: string, mime: string}[] =  [];
   for (const key in modesByNameObject) {
@@ -63,15 +63,15 @@ async function syntaxHighlightingCommandExecutor(textViewer: TextViewer): Promis
 
   const items = mimeList.map(item => item.name + ' ' + item.mime);
   const mimeTypeNames = mimeList.map(item => item.name);
-  const selectedItemIndex = mimeTypeNames.indexOf(getMimeTypeName(textViewer));
+  const selectedItemIndex = mimeTypeNames.indexOf(getMimeTypeName(textViewerDetails));
 
-  const newSelectedItemIndex = await textViewer.getTab().showListPicker({
+  const newSelectedItemIndex = await block.tab.showListPicker({
     title: "Syntax Highlighting",
     items: items,
     selectedItemIndex
   });
   if (newSelectedItemIndex !== undefined) {
-    textViewer.setMimeType(mimeList[newSelectedItemIndex].mime);
+    textViewerDetails.setMimeType(mimeList[newSelectedItemIndex].mime);
   }
 }
 
@@ -88,31 +88,31 @@ function sortArrayBy(items: any[], keyFunc: (item: any) => string): void {
 
 //-------------------------------------------------------------------------
 
-function getTabCommandTitle(textViewer: TextViewer): CustomizedCommand {
+function getTabCommandTitle(textViewerDetails: TextViewerDetails, block: Block): CustomizedCommand {
   return {
-    title: "Tab Size: " + textViewer.getTabSize(),
+    title: "Tab Size: " + textViewerDetails.getTabSize(),
   };
 }
 
-async function tabCommand(textViewer: TextViewer): Promise<any> {
-  const selectedTabSize = await textViewer.getTab().showNumberInput({
+async function tabCommand(textViewerDetails: TextViewerDetails, block: Block): Promise<any> {
+  const selectedTabSize = await block.tab.showNumberInput({
     title: "Tab Size",
-    value: textViewer.getTabSize(),
+    value: textViewerDetails.getTabSize(),
     minimum: 0,
     maximum: 32
   });
   if (selectedTabSize !== undefined) {
-    textViewer.setTabSize(selectedTabSize);
+    textViewerDetails.setTabSize(selectedTabSize);
   }
 }
 
 //-------------------------------------------------------------------------
-function getToggleLineNumbersTitle(textViewer: TextViewer): CustomizedCommand {
+function getToggleLineNumbersTitle(textViewerDetails: TextViewerDetails, block: Block): CustomizedCommand {
   return {
-    checked: textViewer.getShowLineNumbers()
+    checked: textViewerDetails.getShowLineNumbers()
   };
 }
 
-async function toggleLineNumbers(textViewer: TextViewer): Promise<any> {
-  textViewer.setShowLineNumbers( ! textViewer.getShowLineNumbers());
+async function toggleLineNumbers(textViewerDetails: TextViewerDetails, block: Block): Promise<any> {
+  textViewerDetails.setShowLineNumbers( ! textViewerDetails.getShowLineNumbers());
 }
