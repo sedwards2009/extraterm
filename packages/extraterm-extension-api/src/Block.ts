@@ -5,14 +5,37 @@
  */
 import { Tab } from "./Tab";
 
-
+/**
+ * A block of content stacking inside a terminal.
+ * 
+ * This includes terminal out, image viewers, frames, and other things.
+ */
 export interface Block {
+  /**
+   * Identifies this type of block.
+   * 
+   * For terminal output and current block receiving terminal output, this
+   * string will be equal to `TerminalType`, and the `details` field will
+   * contain a `TerminalDetails` object. 
+   */
   readonly type: string;
+
+  /**
+   * Type specific details and methods for this block.
+   */
   readonly details: any;
+
+  /**
+   * The Tab this block is on.
+   */
   readonly tab: Tab;
 }
 
+/**
+ * Identifies a `Block` of type terminal output in the `Block.type` field.
+ */
 export const TerminalType = "extraterm:terminal-output";
+
 export enum FindStartPosition {
   CURSOR,
   DOCUMENT_START,
@@ -24,6 +47,12 @@ export interface FindOptions {
   startPosition?: FindStartPosition;
 }
 
+/**
+ * Terminal output specific details and methods.
+ * 
+ * This object is present in `Block.details` when a block's `type` is
+ * equal to `TerminalType`.
+ */
 export interface TerminalDetails {
   /**
    * Returns true if this output viewer is connected to a live PTY and emulator.
@@ -38,7 +67,17 @@ export interface TerminalDetails {
   highlight(needle: string |  RegExp): void;
 }
 
+/**
+ * Identifies a `Block` of type text viewer in the `Block.type` field.
+ */
 export const TextViewerType = "extraterm:text-viewer";
+
+/**
+ * Text viewer specific details and methods.
+ * 
+ * This object is present in `Block.details` when a block's `type` is
+ * equal to `TextViewerType`.
+ */
 export interface TextViewerDetails {
   /**
    * Get the configured tab size.

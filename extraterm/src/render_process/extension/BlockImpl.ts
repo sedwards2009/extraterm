@@ -42,7 +42,7 @@ export class BlockImpl implements ExtensionApi.Block {
       this._details = new TextViewerDetailsProxy(this._internalExtensionContext, insideViewer);
       this._type = ExtensionApi.TextViewerType;
     } else {
-      // FIXME TODO
+      this._type = "unknown";
     }
   }
 

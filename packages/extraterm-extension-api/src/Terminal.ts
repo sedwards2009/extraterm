@@ -7,7 +7,6 @@ import { Event } from "./Utilities";
 import { Tab } from "./Tab";
 import { TerminalEnvironment } from "./TerminalEnvironment";
 import { SessionConfiguration } from "./Sessions";
-import { Viewer } from "./Viewers";
 import { Block } from "./Block";
 
 
@@ -27,6 +26,12 @@ export interface Terminal {
    * Get the list of blocks shown inside this terminal.
    */
   getBlocks(): Block[];
+
+  /**
+   * This event is fired after a block is appended to the terminal.
+   * 
+   * The contents of the event is the new block itself.
+   */
   onDidAppendBlock: Event<Block>;
 
   /**
