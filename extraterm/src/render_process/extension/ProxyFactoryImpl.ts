@@ -24,7 +24,6 @@ export class ProxyFactoryImpl implements ProxyFactory {
   private _terminalTabProxyMap = new Map<EtTerminal, ExtensionApi.Tab>();
   private _viewerTabProxyMap = new Map<EtViewerTab, ExtensionApi.Tab>();
   private _terminalProxyMap = new Map<EtTerminal, ExtensionApi.Terminal>();
-  private _viewerProxyMap = new Map<ViewerElement, ExtensionApi.Viewer>();
   private _blockMap = new Map<ViewerElement, ExtensionApi.Block>();
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {

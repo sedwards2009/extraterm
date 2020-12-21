@@ -16,7 +16,7 @@ export class TextViewerDetailsProxy implements ExtensionApi.TextViewerDetails {
 
   private _checkIsAlive(): void {
     if ( ! this.isAlive()) {
-      throw new Error("Terminal is not alive and can no longer be used.");
+      throw new Error("TextViewerDetails is not alive and can no longer be used.");
     }
   }
 

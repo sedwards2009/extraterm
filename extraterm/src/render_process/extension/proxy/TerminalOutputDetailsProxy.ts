@@ -19,7 +19,7 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalDetails 
 
   private _checkIsAlive(): void {
     if ( ! this.isAlive()) {
-      throw new Error("TerminalOutputViewer is not alive and can no longer be used.");
+      throw new Error("TerminalOutputDetails is not alive and can no longer be used.");
     }
   }
 

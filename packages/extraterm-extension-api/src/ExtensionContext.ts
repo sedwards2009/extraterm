@@ -6,7 +6,7 @@
 import * as Ace from "@extraterm/ace-ts";
 
 import { Terminal, TerminalBorderWidgetFactory } from "./Terminal";
-import { Viewer, ExtensionViewerBaseConstructor } from "./Viewers";
+import { ExtensionViewerBaseConstructor } from "./Viewers";
 import { SessionEditorFactory, SessionSettingsEditorFactory, SessionBackend } from "./Sessions";
 import { Event } from "./Utilities";
 import { TabTitleWidgetFactory } from "./Tab";
