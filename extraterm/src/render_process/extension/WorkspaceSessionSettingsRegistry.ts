@@ -93,7 +93,7 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
     this._factory.call(null, this);
   }
 
-  getContainerElement(): HTMLElement {
+  get containerElement(): HTMLElement {
     return this._extensionContainerElement.getContainerElement();
   }
 
@@ -101,7 +101,7 @@ class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
     return this._extensionContainerElement;
   }
 
-  getSettings(): Object {
+  get settings(): Object {
     return this._settings;
   }
 

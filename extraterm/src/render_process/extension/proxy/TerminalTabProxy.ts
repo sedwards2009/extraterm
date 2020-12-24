@@ -15,7 +15,7 @@ export class TerminalTabProxy implements ExtensionApi.Tab {
   }
 
   private _checkIsAlive(): void {
-    if ( ! this.isAlive()) {
+    if ( ! this.isAlive) {
       throw new Error("TerminalTab is not alive and can no longer be used.");
     }
   }
@@ -24,11 +24,11 @@ export class TerminalTabProxy implements ExtensionApi.Tab {
     this._terminal = null;
   }
 
-  isAlive(): boolean {
+  get isAlive(): boolean {
     return this._terminal != null;
   }
 
-  getTerminal(): ExtensionApi.Terminal {
+  get terminal(): ExtensionApi.Terminal {
     this._checkIsAlive();
     return this._internalExtensionContext._proxyFactory.getTerminalProxy(this._terminal);
   }

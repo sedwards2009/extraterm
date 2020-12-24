@@ -18,26 +18,26 @@ export class BlobBulkFileHandle implements BulkFileHandle {
   constructor(private _mimeType: string, private _metadata: BulkFileMetadata, private _blobBuffer: Buffer) {
   }
 
-  getState(): BulkFileState {
+  get state(): BulkFileState {
     return BulkFileState.COMPLETED;
   }
-  
-  getUrl(): string {
+
+  get url(): string {
     if (this._url == null) {
-      return `data:${this._mimeType};base64,${this._blobBuffer.toString("base64")}`;     
+      return `data:${this._mimeType};base64,${this._blobBuffer.toString("base64")}`;
     }
     return this._url;
   }
 
-  getAvailableSize(): number {
-    return this.getTotalSize();
+  get availableSize(): number {
+    return this.totalSize;
   }
 
-  getTotalSize(): number {
-    return this._blobBuffer.length;    
+  get totalSize(): number {
+    return this._blobBuffer.length;
   }
 
-  getMetadata(): BulkFileMetadata {
+  get metadata(): BulkFileMetadata {
     return this._metadata;
   }
 

@@ -132,7 +132,7 @@ export class CommandsRegistry implements ExtensionApi.Commands {
     return this._internalExtensionContext._extensionManager.executeCommand(name, args);
   }
 
-  getCommands(): string[] {
+  get commands(): string[] {
     return [...this._commandToMenuEntryMap.keys()];
   }
 }

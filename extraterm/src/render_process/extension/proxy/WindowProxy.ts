@@ -83,7 +83,7 @@ export class WindowProxy implements InternalWindow {
     return this._commonExtensionState.activeHyperlinkURL;
   }
 
-  getTerminals(): ExtensionApi.Terminal[] {
+  get terminals(): ExtensionApi.Terminal[] {
     return []; // FIXME
     // return this._internalExtensionContext.extensionBridge.workspaceGetTerminals()
     //   .map(terminal => this._internalExtensionContext.getTerminalProxy(terminal));

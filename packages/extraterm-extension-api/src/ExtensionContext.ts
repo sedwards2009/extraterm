@@ -29,7 +29,7 @@ export interface Window {
 
   activeHyperlinkURL: string;
 
-  getTerminals(): Terminal[];
+  readonly terminals: Terminal[];
 
   onDidCreateTerminal: Event<Terminal>;
   // onWillDestroyTerminal: Event<Terminal>;

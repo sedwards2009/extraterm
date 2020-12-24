@@ -21,7 +21,7 @@ export class TerminalTitleEditorWidget {
     this._ui = new EditTabTitlePanelUI();
 
     const component = this._ui.$mount();
-    this._widget.getContainerElement().appendChild(component.$el);
+    this._widget.containerElement.appendChild(component.$el);
     this._widget.onDidOpen(() => {
       this._ui.originalTemplate = this._templateString.getTemplateString();
     });

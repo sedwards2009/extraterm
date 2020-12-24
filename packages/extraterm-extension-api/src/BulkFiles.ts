@@ -24,12 +24,12 @@ export enum BulkFileState {
  */
 export interface BulkFileHandle {
 
-  getState(): BulkFileState;
+  readonly state: BulkFileState;
 
   /**
-   * Get a URL to the file contents.
+   * URL to the file contents.
    */
-  getUrl(): string;
+  readonly url: string;
 
   /**
    * The number of bytes of the file which are available.
@@ -37,7 +37,8 @@ export interface BulkFileHandle {
    * This value can change when a file is being downloaded. See the event
    * `onAvailableSizeChange`.
    */
-  getAvailableSize(): number;
+  readonly availableSize: number;
+
   onAvailableSizeChange: Event<number>;
 
   /**
@@ -45,14 +46,14 @@ export interface BulkFileHandle {
    *
    * This may be -1 if the total size is unknown.
    */
-  getTotalSize(): number;
+  readonly totalSize: number;
 
   /**
    * Get the metadata associated with the file.
    *
    * The keys are simply strings and are specific to the file type.
    */
-  getMetadata(): BulkFileMetadata;
+  readonly metadata: BulkFileMetadata;
 
   /**
    * Get the first 1KB of the file contents.

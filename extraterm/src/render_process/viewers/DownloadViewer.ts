@@ -45,10 +45,10 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
     metadata.title = "Download";
     metadata.icon = "fa fa-download";
     if (this._bulkFileHandle != null) {
-      const fileMetadata = this._bulkFileHandle.getMetadata();
+      const fileMetadata = this._bulkFileHandle.metadata;
       const filename = fileMetadata["filename"] != null ? fileMetadata["filename"] : "(unknown)";
 
-      switch (this._bulkFileHandle.getState()) {
+      switch (this._bulkFileHandle.state) {
         case BulkFileState.DOWNLOADING:
           metadata.title = `Downloading ${filename}`;
           metadata.posture = ViewerPosture.NEUTRAL;
@@ -101,7 +101,7 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
     return new Promise( (resolve, reject) => {
       this._onAvailableSizeChangeDisposable = this._bulkFileHandle.onAvailableSizeChange(
         () => {
-          this._fileTransferProgress.transferred = this._bulkFileHandle.getAvailableSize();
+          this._fileTransferProgress.transferred = this._bulkFileHandle.availableSize;
         });
 
       this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
@@ -110,10 +110,10 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
         resolve();
       });
 
-      this._fileTransferProgress.transferred = handle.getAvailableSize();
-      this._fileTransferProgress.total = handle.getTotalSize();
+      this._fileTransferProgress.transferred = handle.availableSize;
+      this._fileTransferProgress.total = handle.totalSize;
 
-      const metadata = handle.getMetadata();
+      const metadata = handle.metadata;
       if (metadata["filename"] !== undefined) {
         this._fileTransferProgress.filename = <string> metadata["filename"];
       }

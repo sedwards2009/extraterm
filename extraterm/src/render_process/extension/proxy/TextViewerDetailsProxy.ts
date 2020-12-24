@@ -15,7 +15,7 @@ export class TextViewerDetailsProxy implements ExtensionApi.TextViewerDetails {
   }
 
   private _checkIsAlive(): void {
-    if ( ! this.isAlive()) {
+    if ( ! this.isAlive) {
       throw new Error("TextViewerDetails is not alive and can no longer be used.");
     }
   }
@@ -24,11 +24,11 @@ export class TextViewerDetailsProxy implements ExtensionApi.TextViewerDetails {
     this._textViewer = null;
   }
 
-  isAlive(): boolean {
+  get isAlive(): boolean {
     return this._textViewer != null;
   }
 
-  getTabSize(): number {
+  get tabSize(): number {
     this._checkIsAlive();
     return this._textViewer.getTabSize();
   }
@@ -38,7 +38,7 @@ export class TextViewerDetailsProxy implements ExtensionApi.TextViewerDetails {
     this._textViewer.setTabSize(size);
   }
 
-  getMimeType():string {
+  get mimeType(): string {
     this._checkIsAlive();
     return this._textViewer.getMimeType();
   }
@@ -48,7 +48,7 @@ export class TextViewerDetailsProxy implements ExtensionApi.TextViewerDetails {
     this._textViewer.setMimeType(mimeType);
   }
 
-  getShowLineNumbers(): boolean {
+  get showLineNumbers(): boolean {
     this._checkIsAlive();
     return this._textViewer.getShowLineNumbers();
   }
@@ -58,7 +58,7 @@ export class TextViewerDetailsProxy implements ExtensionApi.TextViewerDetails {
     this._textViewer.setShowLineNumbers(show);
   }
 
-  getWrapLines(): boolean {
+  get wrapLines(): boolean {
     this._checkIsAlive();
     return this._textViewer.getWrapLines();
   }

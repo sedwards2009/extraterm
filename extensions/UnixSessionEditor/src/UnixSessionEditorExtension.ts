@@ -39,10 +39,10 @@ function SessionEditorFactory(sessionEditorBase: SessionEditorBase): void {
   const component = ui.$mount();
   ui.$watch("$data", debouncedDataChanged, { deep: true, immediate: false } );
 
-  const config = <UnixSessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <UnixSessionConfiguration> sessionEditorBase.sessionConfiguration;
   loadConfig(ui, config);
 
-  sessionEditorBase.getContainerElement().appendChild(component.$el);
+  sessionEditorBase.containerElement.appendChild(component.$el);
 }
 
 function loadConfig(ui: UnixSessionEditorUi, config: UnixSessionConfiguration): void {
@@ -67,7 +67,7 @@ function loadConfig(ui: UnixSessionEditorUi, config: UnixSessionConfiguration): 
 }
 
 function _dataChanged(sessionEditorBase: SessionEditorBase, ui: UnixSessionEditorUi): void {
-  const config = <UnixSessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <UnixSessionConfiguration> sessionEditorBase.sessionConfiguration;
 
   config.name = ui.name;
   config.useDefaultShell = ui.useDefaultShell === 1;

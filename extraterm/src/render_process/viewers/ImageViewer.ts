@@ -74,8 +74,8 @@ export class ImageViewer extends ViewerElement {
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
 
-    if (this._bulkFileHandle !== null && this._bulkFileHandle.getMetadata()["filename"] != null) {
-      metadata.title = <string> this._bulkFileHandle.getMetadata()["filename"];
+    if (this._bulkFileHandle !== null && this._bulkFileHandle.metadata["filename"] != null) {
+      metadata.title = <string> this._bulkFileHandle.metadata["filename"];
     } else {
       metadata.title = "Image";
     }
@@ -109,7 +109,7 @@ export class ImageViewer extends ViewerElement {
       this._applyVisualState(this._visualState);
 
       if (this._bulkFileHandle !== null) {
-        this._setImageUrl(this._bulkFileHandle.getUrl());
+        this._setImageUrl(this._bulkFileHandle.url);
       }
 
       this._adjustHeight(this._height);
@@ -190,7 +190,7 @@ export class ImageViewer extends ViewerElement {
     this._metadataEventDoLater.trigger();
 
     if (DomUtils.getShadowRoot(this) !== null) {
-      this._setImageUrl(handle.getUrl());
+      this._setImageUrl(handle.url);
     }
     return newImmediateResolvePromise();
   }

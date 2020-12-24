@@ -7,7 +7,7 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { InternalExtensionContext } from "../InternalTypes";
 import { TerminalViewer } from "../../viewers/TerminalAceViewer";
 
-export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalDetails {
+export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDetails {
 
   constructor(internalExtensionContext: InternalExtensionContext, private _terminalViewer: TerminalViewer) {
     this._terminalViewer.onDispose(this._handleTerminalViewerDispose.bind(this));
@@ -18,16 +18,16 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalDetails 
   }
 
   private _checkIsAlive(): void {
-    if ( ! this.isAlive()) {
+    if ( ! this.isAlive) {
       throw new Error("TerminalOutputDetails is not alive and can no longer be used.");
     }
   }
 
-  isAlive(): boolean {
+  get isAlive(): boolean {
     return this._terminalViewer != null;
   }
 
-  isLive(): boolean {
+  get hasPty(): boolean {
     this._checkIsAlive();
     return this._terminalViewer.getEmulator() != null;
   }

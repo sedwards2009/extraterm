@@ -19,5 +19,5 @@ export { SessionConfiguration, SessionEditorBase, SessionEditorFactory, Environm
 } from "./Sessions";
 export { ViewerPosture, ViewerMetadata, ViewerMetadataChange, ExtensionViewerBase, ExtensionViewerBaseConstructor,
   ViewerBase } from "./Viewers";
-export { Block, FindStartPosition, FindOptions, TerminalDetails, TerminalType, TextViewerDetails,
+export { Block, FindStartPosition, FindOptions, TerminalOutputDetails, TerminalType, TextViewerDetails,
   TextViewerType } from "./Block";

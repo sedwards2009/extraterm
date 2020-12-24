@@ -16,9 +16,9 @@ export interface TabTitleWidgetFactory {
 
 export interface Tab {
   /**
-   * Get any terminal contained inside this tab.
+   * Any terminal contained inside this tab.
    */
-  getTerminal(): Terminal;
+  readonly terminal: Terminal;
 
   /**
    * Show an input box requesting a number.
@@ -56,7 +56,7 @@ export interface Tab {
    *
    * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
    */
-  isAlive(): boolean;
+  readonly isAlive: boolean;
 }
 
 export interface NumberInputOptions {

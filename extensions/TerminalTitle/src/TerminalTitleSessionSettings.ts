@@ -33,7 +33,7 @@ export function setupTerminalTitleSessionSettings(sessionSettingsEditorBase: Ses
 
   const ui = new TemplateEditorComponent();
   const component = ui.$mount();
-  const settings = <Settings> sessionSettingsEditorBase.getSettings();
+  const settings = <Settings> sessionSettingsEditorBase.settings;
 
   if (settings.template == null) {
     settings.template = "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
@@ -42,7 +42,7 @@ export function setupTerminalTitleSessionSettings(sessionSettingsEditorBase: Ses
 
   templateString.setTemplateString(settings.template);
 
-  sessionSettingsEditorBase.getContainerElement().appendChild(component.$el);
+  sessionSettingsEditorBase.containerElement.appendChild(component.$el);
 
   ui.template = templateString.getTemplateString();
   ui.segments = templateString.getSegments();

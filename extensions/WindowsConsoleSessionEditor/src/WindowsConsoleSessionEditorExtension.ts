@@ -30,10 +30,10 @@ function SessionEditorFactory(sessionEditorBase: SessionEditorBase): void {
   const component = ui.$mount();
   ui.$watch('$data', debouncedDataChanged, { deep: true, immediate: false } );
 
-  const config = <WindowsConsoleSessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <WindowsConsoleSessionConfiguration> sessionEditorBase.sessionConfiguration;
   loadConfig(ui, config);
 
-  sessionEditorBase.getContainerElement().appendChild(component.$el);
+  sessionEditorBase.containerElement.appendChild(component.$el);
 
   initializeAvailableExes(ui);
 }
@@ -57,7 +57,7 @@ function loadConfig(ui: WindowsConsoleSessionEditorUi, config: WindowsConsoleSes
 }
 
 function dataChanged(sessionEditorBase: SessionEditorBase, ui: WindowsConsoleSessionEditorUi): void {
-  const config = <WindowsConsoleSessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <WindowsConsoleSessionConfiguration> sessionEditorBase.sessionConfiguration;
   config.name = ui.name;
   config.exe = ui.exe;
   config.args = ui.args;

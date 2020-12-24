@@ -36,10 +36,10 @@ export function cygwinProxySessionEditorFactory(log: Logger, sessionEditorBase: 
   const component = ui.$mount();
   ui.$watch('$data', debouncedDataChanged, { deep: true, immediate: false } );
 
-  const config = <CygwinProxySessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <CygwinProxySessionConfiguration> sessionEditorBase.sessionConfiguration;
   loadConfig(ui, config);
 
-  sessionEditorBase.getContainerElement().appendChild(component.$el);
+  sessionEditorBase.containerElement.appendChild(component.$el);
 }
 
 function loadConfig(ui: CygwinProxySessionEditorUi, config: CygwinProxySessionConfiguration): void {
@@ -65,7 +65,7 @@ function loadConfig(ui: CygwinProxySessionEditorUi, config: CygwinProxySessionCo
 }
 
 function dataChanged(sessionEditorBase: SessionEditorBase, ui: CygwinProxySessionEditorUi): void {
-  const config = <CygwinProxySessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <CygwinProxySessionConfiguration> sessionEditorBase.sessionConfiguration;
 
   config.name = ui.name;
   config.useDefaultShell = ui.useDefaultShell === 1;

@@ -10,7 +10,7 @@ import {
   Logger,
   Terminal,
   TerminalBorderWidget,
-  TerminalDetails,
+  TerminalOutputDetails,
   TerminalType,
   TextViewerDetails,
   TextViewerType,
@@ -63,7 +63,7 @@ class FindWidget {
     });
 
     const component = this._ui.$mount();
-    this._widget.getContainerElement().appendChild(component.$el);
+    this._widget.containerElement.appendChild(component.$el);
     this._terminal.onDidAppendBlock((block: Block) => {
       this._handleBlockAppended(block);
     });
@@ -120,8 +120,8 @@ class FindWidget {
     }
   }
 
-  private _getBlockDetails(): (TerminalDetails | TextViewerDetails)[] {
-    const termBlockDetails: (TerminalDetails | TextViewerDetails)[] = [];
+  private _getBlockDetails(): (TerminalOutputDetails | TextViewerDetails)[] {
+    const termBlockDetails: (TerminalOutputDetails | TextViewerDetails)[] = [];
     for (const block of this._terminal.blocks) {
       const details = this._unpackBlock(block);
       if (details != null) {
@@ -131,7 +131,7 @@ class FindWidget {
     return termBlockDetails;
   }
 
-  private _unpackBlock(block: Block): TerminalDetails | TextViewerDetails {
+  private _unpackBlock(block: Block): TerminalOutputDetails | TextViewerDetails {
     if (block.type === TerminalType || block.type === TextViewerType) {
       return block.details;
     }
@@ -139,7 +139,7 @@ class FindWidget {
   }
 
   private _handleBlockAppended(block: Block): void {
-    if (this._widget.isOpen()) {
+    if (this._widget.isOpen) {
       const details = this._unpackBlock(block);
       if (details != null) {
         details.highlight(this._needleRegExp("g"));

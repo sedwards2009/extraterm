@@ -56,7 +56,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this.onAvailableSizeChange = this._onAvailableSizeChangeEventEmitter.event;
     this.onStateChange = this._onStateChangeEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this._onWriteBufferSizeChangeEventEmitter.event;
-    
+
     const {identifier, url} = WebIpc.createBulkFileSync(_metadata, _totalSize);
     if (identifier == null) {
       this._log.warn("Failed to create a writeable bulk file!");
@@ -66,7 +66,7 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     this._url = url;
   }
 
-  getState(): BulkFileState {
+  get state(): BulkFileState {
     return this._state;
   }
 
@@ -74,19 +74,19 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
     return this._fileIdentifier;
   }
 
-  getUrl(): string {
+  get url(): string {
     return this._url;
   }
 
-  getAvailableSize(): number {
+  get availableSize(): number {
     return this._availableSize;
   }
 
-  getTotalSize(): number {
+  get totalSize(): number {
     return this._totalSize;
   }
 
-  getMetadata(): BulkFileMetadata {
+  get metadata(): BulkFileMetadata {
     return this._metadata;
   }
 
@@ -133,10 +133,10 @@ export class WriteableBulkFileHandle implements BulkFileHandle {
 
     if (this._writeBuffer.length > packetThreshold && this._getAvailableRemoteBufferSize() > packetThreshold) {
       const plainWriteBuffer = this._writeBuffer.toBuffer();
-      
+
       let xferBuffer: Buffer;
       let remainingBuffer: SmartBuffer;
-      
+
       if (plainWriteBuffer.length <= this._getAvailableRemoteBufferSize()) {
         // Send the whole buffer in one go.
         xferBuffer = plainWriteBuffer;
@@ -225,7 +225,7 @@ export class BulkFileBroker {
     WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_BUFFER_SIZE,
       this._handleBufferSizeMessage.bind(this));
     WebIpc.registerDefaultHandler(Messages.MessageType.BULK_FILE_STATE,
-      this._handleBufferStateMessage.bind(this));        
+      this._handleBufferStateMessage.bind(this));
   }
 
   createWriteableBulkFileHandle(metadata: BulkFileMetadata, size: number): WriteableBulkFileHandle {

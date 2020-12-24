@@ -22,7 +22,7 @@ export function activate(context: ExtensionContext): any {
       this._ui = new AudioViewerUi();
       const component = this._ui.$mount();
       this.getContainerElement().appendChild(component.$el);
-  
+
       this._updateMetadata();
     }
 
@@ -36,7 +36,7 @@ export function activate(context: ExtensionContext): any {
     private _getTitle(): string {
       let title = "Audio Viewer";
       if (this._bulkFileHandle != null) {
-        const filename = this._bulkFileHandle.getMetadata()["filename"];
+        const filename = this._bulkFileHandle.metadata["filename"];
         if (filename !== undefined) {
           title = <string> filename;
         }
@@ -47,7 +47,7 @@ export function activate(context: ExtensionContext): any {
     getBulkFileHandle(): BulkFileHandle {
       return this._bulkFileHandle;
     }
-  
+
     setBulkFileHandle(handle: BulkFileHandle): Promise<void> {
       return new Promise( (resolve, reject) => {
         if (this._bulkFileHandle != null) {
@@ -60,9 +60,9 @@ export function activate(context: ExtensionContext): any {
         handle.ref();
 
         this._updateMetadata();
-        this._ui.url = this._bulkFileHandle.getUrl();
+        this._ui.url = this._bulkFileHandle.url;
         this._ui.title = this._getTitle();
-        this._ui.totalSizeBytes = handle.getTotalSize();
+        this._ui.totalSizeBytes = handle.totalSize;
         handle.onAvailableSizeChange(size => {
           this._ui.availableSizeBytes = size;
         });

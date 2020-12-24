@@ -384,8 +384,8 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
       this._bulkFileHandle = null;
     }
 
-    if (handle.getMetadata()["filename"] != null) {
-      this._title = <string> handle.getMetadata()["filename"];
+    if (handle.metadata["filename"] != null) {
+      this._title = <string> handle.metadata["filename"];
     } else {
       this._title = "";
     }

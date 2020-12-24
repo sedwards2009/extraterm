@@ -143,7 +143,7 @@ class DownloadSession {
       return;
     }
 
-    if (force || this._fileHandle.getAvailableSize() >= ONE_KILOBYTE) {
+    if (force || this._fileHandle.availableSize >= ONE_KILOBYTE) {
       this._onCreatedBulkFileEventEmitter.fire(this._fileHandle);
       this._createdEventFired = true;
     }

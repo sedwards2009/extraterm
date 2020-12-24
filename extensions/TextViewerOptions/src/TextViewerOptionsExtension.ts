@@ -46,7 +46,7 @@ function getSetSyntaxHighlightingTitle(textViewerDetails: TextViewerDetails, blo
 }
 
 function getMimeTypeName(textViewerDetails: TextViewerDetails): string {
-  const mimeType = textViewerDetails.getMimeType();
+  const mimeType = textViewerDetails.mimeType;
   const matchingMode = extensionContext.aceModule.ModeList.getModeByMimeType(mimeType);
   return matchingMode != null ? matchingMode.friendlyName : mimeType;
 }
@@ -90,14 +90,14 @@ function sortArrayBy(items: any[], keyFunc: (item: any) => string): void {
 
 function getTabCommandTitle(textViewerDetails: TextViewerDetails, block: Block): CustomizedCommand {
   return {
-    title: "Tab Size: " + textViewerDetails.getTabSize(),
+    title: "Tab Size: " + textViewerDetails.tabSize,
   };
 }
 
 async function tabCommand(textViewerDetails: TextViewerDetails, block: Block): Promise<any> {
   const selectedTabSize = await block.tab.showNumberInput({
     title: "Tab Size",
-    value: textViewerDetails.getTabSize(),
+    value: textViewerDetails.tabSize,
     minimum: 0,
     maximum: 32
   });
@@ -109,10 +109,10 @@ async function tabCommand(textViewerDetails: TextViewerDetails, block: Block): P
 //-------------------------------------------------------------------------
 function getToggleLineNumbersTitle(textViewerDetails: TextViewerDetails, block: Block): CustomizedCommand {
   return {
-    checked: textViewerDetails.getShowLineNumbers()
+    checked: textViewerDetails.showLineNumbers
   };
 }
 
 async function toggleLineNumbers(textViewerDetails: TextViewerDetails, block: Block): Promise<any> {
-  textViewerDetails.setShowLineNumbers( ! textViewerDetails.getShowLineNumbers());
+  textViewerDetails.setShowLineNumbers( ! textViewerDetails.showLineNumbers);
 }

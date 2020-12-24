@@ -1368,11 +1368,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
     const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
 
-    if ("filename" in bulkFileHandle.getMetadata()) {
-      uploadProgressBar.filename = <string> bulkFileHandle.getMetadata()["filename"];
+    if ("filename" in bulkFileHandle.metadata) {
+      uploadProgressBar.filename = <string> bulkFileHandle.metadata["filename"];
     }
 
-    uploadProgressBar.total = bulkFileHandle.getTotalSize();
+    uploadProgressBar.total = bulkFileHandle.totalSize;
     uploader.onUploadedChange(uploaded => {
       uploadProgressBar.transferred = uploaded;
     });
@@ -1405,7 +1405,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   }
 
   private _handleShowFile(bulkFileHandle: BulkFileHandle): void {
-    const isDownload = bulkFileHandle.getMetadata()["download"] === "true";
+    const isDownload = bulkFileHandle.metadata["download"] === "true";
     const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFileHandle);
     this._appendMimeViewer(mimeType == null || isDownload ? "application/octet-stream" : mimeType,
       bulkFileHandle);

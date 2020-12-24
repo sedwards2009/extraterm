@@ -16,7 +16,7 @@ export class ViewerTabProxy implements ExtensionApi.Tab {
   }
 
   private _checkIsAlive(): void {
-    if ( ! this.isAlive()) {
+    if ( ! this.isAlive) {
       throw new Error("Terminal is not alive and can no longer be used.");
     }
   }
@@ -25,11 +25,11 @@ export class ViewerTabProxy implements ExtensionApi.Tab {
     this._viewerTab = null;
   }
 
-  isAlive(): boolean {
+  get isAlive(): boolean {
     return this._viewerTab != null;
   }
 
-  getTerminal(): ExtensionApi.Terminal {
+  get terminal(): ExtensionApi.Terminal {
     this._checkIsAlive();
     return null;
   }

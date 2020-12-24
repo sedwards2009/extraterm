@@ -10,7 +10,7 @@ import * as MimeTypeDetector from 'extraterm-mimetype-detector';
 
 export function guessMimetype(bulkFileHandle: BulkFileHandle): {mimeType: string, charset:string} {
   const buffer = bulkFileHandle.peek1KB();
-  const metadata = bulkFileHandle.getMetadata();
+  const metadata = bulkFileHandle.metadata;
   return MimeTypeDetector.detectWithMetadata(metadata, buffer);
 }
 
@@ -20,10 +20,10 @@ export function guessMimetype(bulkFileHandle: BulkFileHandle): {mimeType: string
 export function readDataAsArrayBuffer(bulkFileHandle: BulkFileHandle): Promise<ArrayBuffer> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("GET", bulkFileHandle.getUrl(), true);
+    xhr.open("GET", bulkFileHandle.url, true);
     xhr.responseType = "arraybuffer";
     xhr.onload = () => resolve(xhr.response);
     xhr.onerror = () => reject(xhr.statusText);
     xhr.send();
-  });  
+  });
 }

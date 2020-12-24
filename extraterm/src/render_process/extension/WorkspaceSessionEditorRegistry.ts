@@ -84,7 +84,7 @@ export class SessionEditorBaseImpl implements InternalSessionEditor {
     this._factory.call(null, this);
   }
 
-  getContainerElement(): HTMLElement {
+  get containerElement(): HTMLElement {
     return this._extensionContainerElement.getContainerElement();
   }
 
@@ -92,7 +92,7 @@ export class SessionEditorBaseImpl implements InternalSessionEditor {
     return this._extensionContainerElement;
   }
 
-  getSessionConfiguration(): ExtensionApi.SessionConfiguration {
+  get sessionConfiguration(): ExtensionApi.SessionConfiguration {
     return this._sessionConfiguration;
   }
 

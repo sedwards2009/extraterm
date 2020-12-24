@@ -23,19 +23,19 @@ const HASH_LENGTH = 20; // 20 hex chars hash length
 
 /**
  * Uploads files to a remote process over shell and remote's stdin.
- * 
+ *
  * Format is:
- * 
+ *
  * '#metadata\n'
  * '#' <base64 encoded metadata JSON string, $BYTES_PER_LINE bytes per line> '\n'
  * '#\n'
  * '#body\n'
  * '#' <base64 encoded binary file data, $BYTES_PER_LINE bytes per line> '\n'
  * '#\n'
- * 
+ *
  */
 export class BulkFileUploader implements Disposable {
-  
+
   private _log: Logger;
   private _onUploadedChangeEmitter = new EventEmitter<number>();
   private _onFinishedEmitter = new EventEmitter<void>();
@@ -82,7 +82,7 @@ export class BulkFileUploader implements Disposable {
   onFinished: Event<void>;
 
   upload(): void {
-    const url = this._bulkFileHandle.getUrl();
+    const url = this._bulkFileHandle.url;
     if (url.startsWith("data:")) {
       getUri(url, (err, stream) => {
         this._sourceStream = stream;
@@ -95,7 +95,7 @@ export class BulkFileUploader implements Disposable {
         [this._pipeEnd, this._uploadEncoder] = this._configurePipeline(res);
       });
       req.on('error', this._responseOnError.bind(this));
-      
+
       req.end();
     }
 
@@ -117,7 +117,7 @@ export class BulkFileUploader implements Disposable {
     });
 
     sourceStream.pipe(byteCountingTransform);
-    const encoder = new UploadEncoder(this._bulkFileHandle.getMetadata(), byteCountingTransform);
+    const encoder = new UploadEncoder(this._bulkFileHandle.metadata, byteCountingTransform);
 
     encoder.onData(this._responseOnData.bind(this));
     encoder.onEnd(this._responseOnEnd.bind(this));

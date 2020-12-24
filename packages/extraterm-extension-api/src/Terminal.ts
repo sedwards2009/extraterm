@@ -77,9 +77,11 @@ export interface Terminal {
 }
 
 export interface TerminalBorderWidget {
-  getContainerElement(): HTMLElement;
+  readonly containerElement: HTMLElement;
+
   close(): void;
-  isOpen(): boolean;
+
+  readonly isOpen: boolean;
 
   onDidOpen: Event<void>;
   onDidClose: Event<void>;

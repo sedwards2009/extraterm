@@ -29,7 +29,7 @@ export interface Commands {
   executeCommand<T>(name: string, args: any): Promise<T> | null;
 
   /**
-   * Get a list of all available commands.
+   * A list of all available commands.
    */
-  getCommands(): string[];
+  readonly commands: string[];
 }

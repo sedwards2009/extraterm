@@ -57,13 +57,13 @@ export interface SessionConfiguration {
  */
 export interface SessionEditorBase {
   /**
-   * Get the container element under which this editor's DOM contents can be placed.
+   * Container element under which this editor's DOM contents can be placed.
    */
-  getContainerElement(): HTMLElement;
+  readonly containerElement: HTMLElement;
 
   setSessionConfiguration(sessionConfiguration: SessionConfiguration): void;
 
-  getSessionConfiguration(): SessionConfiguration;
+  readonly sessionConfiguration: SessionConfiguration;
 }
 
 
@@ -171,13 +171,13 @@ export interface Pty {
  */
 export interface SessionSettingsEditorBase {
   /**
-   * Get the container element under which this session settings editor's contents can be placed.
+   * Container element under which this session settings editor's contents can be placed.
    */
-  getContainerElement(): HTMLElement;
+  readonly containerElement: HTMLElement;
 
   setSettings(settings: Object): void;
 
-  getSettings(): Object;
+  readonly settings: Object;
 }
 
 export interface SessionSettingsEditorFactory {

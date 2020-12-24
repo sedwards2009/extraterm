@@ -211,11 +211,11 @@ class TerminalBorderWidgetImpl implements InternalTerminalBorderWidget {
     this.onDidClose = this._onDidCloseEventEmitter.event;
   }
 
-  getContainerElement(): HTMLElement {
+  get containerElement(): HTMLElement {
     return this._extensionContainerElement.getContainerElement();
   }
 
-  isOpen(): boolean {
+  get isOpen(): boolean {
     return this._open;
   }
 

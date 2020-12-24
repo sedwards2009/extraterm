@@ -60,13 +60,13 @@ export interface FindOptions {
  * Multiple 16bit values can map to one Unicode codepoint. Also, characters
  * inside the terminal can be one cell wide or two cells wide.
  */
-export interface TerminalDetails {
+export interface TerminalOutputDetails {
   /**
-   * Returns true if this output viewer is connected to a live PTY and emulator.
+   * True if this output viewer is connected to a live PTY and emulator.
    *
    * @return true if this output viewer is connected to a live PTY and emulator.
    */
-  isLive(): boolean;
+  readonly hasPty: boolean;
 
   /**
    * The number of rows in the scrollback area.
@@ -108,6 +108,11 @@ export interface TerminalDetails {
   findPrevious(needle: string | RegExp): boolean;
   hasSelection(): boolean;
   highlight(needle: string |  RegExp): void;
+
+  /**
+   * True if this block of terminal output still exists.
+   */
+  readonly isAlive: boolean;
 }
 
 /**
@@ -123,9 +128,9 @@ export const TextViewerType = "extraterm:text-viewer";
  */
 export interface TextViewerDetails {
   /**
-   * Get the configured tab size.
+   * The configured tab size.
    */
-  getTabSize(): number;
+  readonly tabSize: number;
 
   /**
    * Set the tab size.
@@ -133,9 +138,9 @@ export interface TextViewerDetails {
   setTabSize(size: number): void;
 
   /**
-   * Get the mimetype of the contents of this text viewer.
+   * The mimetype of the contents of this text viewer.
    */
-  getMimeType(): string;
+  readonly mimeType: string;
 
   /**
    * Set the mimetype of the cotnent of this text viewer.
@@ -145,7 +150,7 @@ export interface TextViewerDetails {
   /**
    * Return true if line numbers are being shown in the gutter.
    */
-  getShowLineNumbers(): boolean;
+  readonly showLineNumbers: boolean;
 
   /**
    * Set whether to show line numebrs in the gutter.
@@ -153,18 +158,23 @@ export interface TextViewerDetails {
   setShowLineNumbers(show: boolean): void;
 
   /**
+   * True if long lines are set to be wrapped.
+   */
+  readonly wrapLines: boolean;
+
+  /**
    * Set whether long lines should be wrapped.
    */
   setWrapLines(wrap: boolean): void;
-
-  /**
-   * Return true if long lines are set to be wrapped.
-   */
-  getWrapLines(): boolean;
 
   find(needle: string | RegExp, options?: FindOptions): boolean;
   findNext(needle: string | RegExp): boolean;
   findPrevious(needle: string | RegExp): boolean;
   hasSelection(): boolean;
   highlight(needle: string |  RegExp): void;
+
+  /**
+   * True if this block still exists.
+   */
+  readonly isAlive: boolean;
 }

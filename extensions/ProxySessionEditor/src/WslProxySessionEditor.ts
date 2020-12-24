@@ -28,10 +28,10 @@ export function wslProxySessionEditorFactory(log: Logger, sessionEditorBase: Ses
   const component = ui.$mount();
   ui.$watch("$data", debouncedDataChanged, { deep: true, immediate: false } );
 
-  const config = <WslProxySessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <WslProxySessionConfiguration> sessionEditorBase.sessionConfiguration;
   loadConfig(ui, config);
 
-  sessionEditorBase.getContainerElement().appendChild(component.$el);
+  sessionEditorBase.containerElement.appendChild(component.$el);
 }
 
 function loadConfig(ui: WslProxySessionEditorUi, config: WslProxySessionConfiguration): void {
@@ -59,7 +59,7 @@ function loadConfig(ui: WslProxySessionEditorUi, config: WslProxySessionConfigur
 }
 
 function dataChanged(sessionEditorBase: SessionEditorBase, ui: WslProxySessionEditorUi): void {
-  const config = <WslProxySessionConfiguration> sessionEditorBase.getSessionConfiguration();
+  const config = <WslProxySessionConfiguration> sessionEditorBase.sessionConfiguration;
 
   config.name = ui.name;
   config.useDefaultShell = ui.useDefaultShell === 1;

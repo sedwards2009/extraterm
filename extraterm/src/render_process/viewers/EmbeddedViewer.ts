@@ -637,13 +637,13 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
     ev.dataTransfer.setData(FrameMimeType.MIMETYPE + mimeTypeParams, "" + this.getTag());
 
     const handle = this.getBulkFileHandle();
-    if (handle != null && handle.getState() === BulkFileState.COMPLETED) {
-      const metadata = handle.getMetadata();
+    if (handle != null && handle.state === BulkFileState.COMPLETED) {
+      const metadata = handle.metadata;
       let {mimeType, charset} = guessMimetype(handle);
 
-      if (mimeType.startsWith("text/") && handle.getTotalSize() < DND_TEXT_SIZE_THRESHOLD) {
+      if (mimeType.startsWith("text/") && handle.totalSize < DND_TEXT_SIZE_THRESHOLD) {
         // It is text and not too big. Send it the contents as part of the DnD event.
-        const stringByteData = this._fetchUrlImmediately(handle.getUrl());
+        const stringByteData = this._fetchUrlImmediately(handle.url);
         const byteData = Buffer.from(stringByteData, "latin1");
         if (charset == null || charset === "") {
           charset = "utf8";
@@ -660,9 +660,9 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
       }
       filename = path.basename(filename);
       if (process.platform === "win32" || process.platform === "darwin") {
-        ev.dataTransfer.setData("DownloadURL", mimeType + ":" + filename + ":" + handle.getUrl() + "/" + filename);
+        ev.dataTransfer.setData("DownloadURL", mimeType + ":" + filename + ":" + handle.url + "/" + filename);
       } else {
-        ev.dataTransfer.setData("text/uri-list", handle.getUrl() + "/" + filename);
+        ev.dataTransfer.setData("text/uri-list", handle.url + "/" + filename);
       }
     }
 
