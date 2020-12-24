@@ -494,15 +494,8 @@ export class Emulator implements EmulatorApi {
       return null;
     }
     const row = this.lines[y];
-
-    const codePoints: number[] = [];
-    for (let i =0; i<row.width; i++) {
-      codePoints.push(row.getCodePoint(i, 0));
-    }
-
-    return String.fromCodePoint(...codePoints);
+    return row.getString(0, 0);
   }
-
 
   /**
    * Rendering Engine

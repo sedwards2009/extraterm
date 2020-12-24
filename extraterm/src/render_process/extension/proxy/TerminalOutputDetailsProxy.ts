@@ -32,6 +32,33 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalDetails 
     return this._terminalViewer.getEmulator() != null;
   }
 
+  get scrollbackLength(): number {
+    this._checkIsAlive();
+    return this._terminalViewer.getScrollbackLength();
+  }
+
+  getScrollbackLineText(line: number): string {
+    this._checkIsAlive();
+    return this._terminalViewer.getScrollbackLine(line);
+  }
+
+  getScreenLineText(line: number): string {
+    this._checkIsAlive();
+    const emulator = this._terminalViewer.getEmulator();
+    const emulatorLine = emulator.getLineText(line);
+    return emulatorLine == null ? "" : emulatorLine;
+  }
+
+  get screenHeight(): number {
+    this._checkIsAlive();
+    return this._terminalViewer.getScreenHeight();
+  }
+
+  get screenWidth(): number {
+    this._checkIsAlive();
+    return this._terminalViewer.getScreenWidth();
+  }
+
   find(needle: string, options?: ExtensionApi.FindOptions): boolean {
     this._checkIsAlive();
     return this._terminalViewer.find(needle, options);

@@ -553,6 +553,22 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     }
   }
 
+  getScrollbackLength(): number {
+    return this._terminalFirstRow;
+  }
+
+  getScreenWidth(): number {
+    return this._columns;
+  }
+
+  getScreenHeight(): number {
+    return this._rows;
+  }
+
+  getScrollbackLine(line: number): string {
+    return this._aceEditSession.getLine(line);
+  }
+
   private _isTerminalThemeEqual(themeA: TerminalTheme, themeB: TerminalTheme): boolean {
     for (let i=0; i<256; i++) {
       if (themeA[i] !== themeB[i]) {

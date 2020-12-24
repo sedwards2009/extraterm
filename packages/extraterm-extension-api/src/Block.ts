@@ -7,16 +7,16 @@ import { Tab } from "./Tab";
 
 /**
  * A block of content stacking inside a terminal.
- * 
+ *
  * This includes terminal out, image viewers, frames, and other things.
  */
 export interface Block {
   /**
    * Identifies this type of block.
-   * 
+   *
    * For terminal output and current block receiving terminal output, this
    * string will be equal to `TerminalType`, and the `details` field will
-   * contain a `TerminalDetails` object. 
+   * contain a `TerminalDetails` object.
    */
   readonly type: string;
 
@@ -49,9 +49,16 @@ export interface FindOptions {
 
 /**
  * Terminal output specific details and methods.
- * 
+ *
  * This object is present in `Block.details` when a block's `type` is
  * equal to `TerminalType`.
+ *
+ * Some methods return row contents in the form of a normal JavaScript string.
+ * Note that there isn't a simple one to one correspondence between
+ * 'characters' / values in a string and cells in the terminal. JavaScript
+ * strings are an array of 16bit (UTF16) values but Unicode has a 32bit range.
+ * Multiple 16bit values can map to one Unicode codepoint. Also, characters
+ * inside the terminal can be one cell wide or two cells wide.
  */
 export interface TerminalDetails {
   /**
@@ -60,6 +67,42 @@ export interface TerminalDetails {
    * @return true if this output viewer is connected to a live PTY and emulator.
    */
   isLive(): boolean;
+
+  /**
+   * The number of rows in the scrollback area.
+   */
+  readonly scrollbackLength: number;
+
+  /**
+   * Get a row from the scrollback area as a string.
+   *
+   * @param line The line/row to fetch from the scrollback area. First/top
+   *    line on the scrollback is line 0, the last one is `scrollbackLength` - 1.
+   * @returns The line as a string.
+   */
+  getScrollbackLineText(line: number): string;
+
+  /**
+   * The height of the screen in rows.
+   *
+   * The screen is the active area/grid where which can be changed by the emulation.
+   */
+  readonly screenHeight: number;
+
+  /**
+   * The width of the screen in columns.
+   */
+  readonly screenWidth: number;
+
+  /**
+   * Get a row of text from the screen as a string.
+   *
+   * @param line The line/row to fetch. Top line on the screen is line 0. Last
+   *    one is `screenHeight` - 1.
+   * @returns The line as a string.
+   */
+  getScreenLineText(line: number): string;
+
   find(needle: string | RegExp, options?: FindOptions): boolean;
   findNext(needle: string | RegExp): boolean;
   findPrevious(needle: string | RegExp): boolean;
@@ -74,7 +117,7 @@ export const TextViewerType = "extraterm:text-viewer";
 
 /**
  * Text viewer specific details and methods.
- * 
+ *
  * This object is present in `Block.details` when a block's `type` is
  * equal to `TextViewerType`.
  */
