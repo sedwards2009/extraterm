@@ -45,16 +45,16 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   private _checkIsAlive(): void {
-    if ( ! this.isAlive()) {
+    if ( ! this.isAlive) {
       throw new Error("Terminal is no longer alive and cannot be used.");
     }
   }
 
-  isAlive(): boolean {
+  get isAlive(): boolean {
     return this._terminal != null;
   }
 
-  getTab(): ExtensionApi.Tab {
+  get tab(): ExtensionApi.Tab {
     this._checkIsAlive();
     return this._internalExtensionContext._proxyFactory.getTabProxy(this._terminal);
   }
@@ -64,18 +64,18 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     this._terminal.sendToPty(text);
   }
 
-  getBlocks(): ExtensionApi.Block[] {
+  get blocks(): ExtensionApi.Block[] {
     this._checkIsAlive();
     return this._terminal.getViewerElements().map(
       viewer => this._internalExtensionContext._proxyFactory.getBlock(viewer));
   }
 
-  getExtratermCookieValue(): string {
+  get extratermCookieValue(): string {
     this._checkIsAlive();
     return this._terminal.getExtratermCookieValue();
   }
 
-  getExtratermCookieName(): string {
+  get extratermCookieName(): string {
     this._checkIsAlive();
     return EXTRATERM_COOKIE_ENV;
   }

@@ -6,7 +6,7 @@
 import {
   Block,
   ExtensionContext,
-  FindStartPosition, 
+  FindStartPosition,
   Logger,
   Terminal,
   TerminalBorderWidget,
@@ -122,7 +122,7 @@ class FindWidget {
 
   private _getBlockDetails(): (TerminalDetails | TextViewerDetails)[] {
     const termBlockDetails: (TerminalDetails | TextViewerDetails)[] = [];
-    for (const block of this._terminal.getBlocks()) {
+    for (const block of this._terminal.blocks) {
       const details = this._unpackBlock(block);
       if (details != null) {
         termBlockDetails.push(details);

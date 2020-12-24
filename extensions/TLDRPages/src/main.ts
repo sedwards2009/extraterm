@@ -30,7 +30,7 @@ async function showCommandList(): Promise<void> {
     selectedItemIndex: 0,
   };
 
-  const selected = await context.window.activeTerminal.getTab().showListPicker(allCommandsOptions);
+  const selected = await context.window.activeTerminal.tab.showListPicker(allCommandsOptions);
   if (selected == null) {
     return;
   }
@@ -42,7 +42,7 @@ async function showCommandList(): Promise<void> {
     items: info.examples.map(ex => ex.description),
     selectedItemIndex: 0,
   };
-  const selectedExample = await context.window.activeTerminal.getTab().showListPicker(commandOptions);
+  const selectedExample = await context.window.activeTerminal.tab.showListPicker(commandOptions);
   if (selectedExample == null) {
     return;
   }

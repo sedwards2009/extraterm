@@ -23,13 +23,13 @@ export interface Terminal {
   type(text: string): void;
 
   /**
-   * Get the list of blocks shown inside this terminal.
+   * List of blocks shown inside this terminal.
    */
-  getBlocks(): Block[];
+  readonly blocks: Block[];
 
   /**
    * This event is fired after a block is appended to the terminal.
-   * 
+   *
    * The contents of the event is the new block itself.
    */
   onDidAppendBlock: Event<Block>;
@@ -37,18 +37,18 @@ export interface Terminal {
   /**
    * Get the tab which holds this terminal.
    */
-  getTab(): Tab;
+  readonly tab: Tab;
 
   /**
-   * Get the values of the Extraterm terminal integration cookie specific to
-   * this terminal.
+   * The value of the Extraterm terminal integration cookie specific to this
+   * terminal.
    */
-  getExtratermCookieValue(): string;
+  readonly extratermCookieValue: string;
 
   /**
-   * Get the name of the Extraterm terminal integration cookie.
+   * The name of the Extraterm terminal integration cookie.
    */
-  getExtratermCookieName(): string;
+  readonly extratermCookieName: string;
 
   openTerminalBorderWidget(name: string): any;
 
@@ -73,7 +73,7 @@ export interface Terminal {
    *
    * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
    */
-  isAlive(): boolean;
+  readonly isAlive: boolean;
 }
 
 export interface TerminalBorderWidget {

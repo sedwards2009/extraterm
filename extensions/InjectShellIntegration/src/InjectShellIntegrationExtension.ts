@@ -14,20 +14,20 @@ export function activate(context: ExtensionContext): any {
   const commands = context.commands;
   commands.registerCommand("inject-shell-integration:injectBashIntegration", () => {
     const terminal = context.window.activeTerminal;
-    const scriptCommands = new BashScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-    executeScriptCommands(terminal, scriptCommands);    
+    const scriptCommands = new BashScriptBuilder(terminal.extratermCookieName, terminal.extratermCookieValue).build();
+    executeScriptCommands(terminal, scriptCommands);
   });
 
   commands.registerCommand("inject-shell-integration:injectFishIntegration", () => {
     const terminal = context.window.activeTerminal;
-    const scriptCommands = new FishScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-    executeScriptCommands(terminal, scriptCommands);    
+    const scriptCommands = new FishScriptBuilder(terminal.extratermCookieName, terminal.extratermCookieValue).build();
+    executeScriptCommands(terminal, scriptCommands);
   });
 
   commands.registerCommand("inject-shell-integration:injectZshIntegration", () => {
     const terminal = context.window.activeTerminal;
-    const scriptCommands = new ZshScriptBuilder(terminal.getExtratermCookieName(), terminal.getExtratermCookieValue()).build();
-    executeScriptCommands(terminal, scriptCommands);    
+    const scriptCommands = new ZshScriptBuilder(terminal.extratermCookieName, terminal.extratermCookieValue).build();
+    executeScriptCommands(terminal, scriptCommands);
   });
 }
 
@@ -47,6 +47,6 @@ function normalizeCarriageReturns(text: string): string {
 
 function sleepMilliseconds(durationMilliseconds: number): Promise<void> {
   return new Promise((resolve) => {
-    setTimeout(resolve, durationMilliseconds);    
+    setTimeout(resolve, durationMilliseconds);
   });
 }

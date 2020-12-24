@@ -24,7 +24,7 @@ async function showEmojiList(): Promise<void> {
     selectedItemIndex: 0,
   };
 
-  const selected = await context.window.activeTerminal.getTab().showListPicker(allEmojiOptions);
+  const selected = await context.window.activeTerminal.tab.showListPicker(allEmojiOptions);
   if (selected == null) {
     return;
   }
