@@ -34,7 +34,7 @@ export interface Block {
 /**
  * Identifies a `Block` of type terminal output in the `Block.type` field.
  */
-export const TerminalType = "extraterm:terminal-output";
+export const TerminalOutputType = "extraterm:terminal-output";
 
 export enum FindStartPosition {
   CURSOR,

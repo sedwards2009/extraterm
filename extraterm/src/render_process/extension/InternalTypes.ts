@@ -5,7 +5,7 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 
-import { EtTerminal } from "../Terminal";
+import { EtTerminal, AppendScrollbackLinesDetail } from "../Terminal";
 import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "../../ExtensionMetadata";
 import { EtViewerTab } from "../ViewerTab";
@@ -69,7 +69,8 @@ export interface ExtensionManager {
   getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState;
   refocus(state: CommonExtensionWindowState): void;
 
-  newTerminalCreated(newTerminal: EtTerminal): void;
+  newTerminalCreated(newTerminal: EtTerminal, allTerminals: EtTerminal[]): void;
+  terminalDestroyed(deadTerminal: EtTerminal, allTerminals: EtTerminal[]): void;
 
   onCommandsChanged: ExtensionApi.Event<void>;
   commandRegistrationChanged(): void;
@@ -113,9 +114,12 @@ export interface InternalWindow extends ExtensionApi.Window {
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
-  newTerminalCreated(newTerminal: EtTerminal): void;
+  newTerminalCreated(newTerminal: EtTerminal, allTerminals: EtTerminal[]): void;
+  terminalDestroyed(deadTerminal: EtTerminal, allTerminals: EtTerminal[]): void;
+
   terminalAppendedViewer(newTerminal: EtTerminal, viewer: ViewerElement): void;
   terminalEnvironmentChanged(terminal: EtTerminal, changeList: string[]): void;
+  terminalDidAppendScrollbackLines(terminal: EtTerminal, ev: AppendScrollbackLinesDetail): void;
 }
 
 /**

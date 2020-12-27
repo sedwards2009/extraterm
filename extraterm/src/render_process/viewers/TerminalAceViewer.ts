@@ -2,32 +2,42 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-import { CustomElement } from 'extraterm-web-component-decorators';
-import { BulkFileHandle, Disposable, FindOptions, ViewerMetadata, ViewerPosture, FindStartPosition, TerminalTheme } from '@extraterm/extraterm-extension-api';
 import * as XRegExp from "xregexp";
 
-import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
-import {doLater, DebouncedDoLater} from 'extraterm-later';
-import * as DomUtils from '../DomUtils';
-import { ExtraEditCommands } from './ExtraAceEditCommands';
-import { Color } from 'extraterm-color-utilities';
-import {Logger, getLogger} from "extraterm-logging";
-import { log } from "extraterm-logging";
-import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
-import * as Term from '../emulator/Term';
-import * as TermApi from 'term-api';
-import { BookmarkRef } from './TerminalViewerTypes';
-import * as ThemeTypes from '../../theme/Theme';
-import {ThemeableElementBase} from '../ThemeableElementBase';
-import {ViewerElement} from './ViewerElement';
-import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
-import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
+import { CustomElement } from "extraterm-web-component-decorators";
+import {
+  BulkFileHandle,
+  Disposable,
+  Event,
+  FindOptions,
+  ViewerMetadata,
+  ViewerPosture,
+  FindStartPosition,
+  TerminalTheme
+} from "@extraterm/extraterm-extension-api";
+import { EventEmitter } from "extraterm-event-emitter";
+import { doLater, DebouncedDoLater } from "extraterm-later";
+import { Color } from "extraterm-color-utilities";
+import { log, Logger, getLogger} from "extraterm-logging";
+import * as TermApi from "term-api";
 import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer, CursorStyle } from "extraterm-ace-terminal-renderer";
 import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "@extraterm/ace-ts";
-import { TextEditor } from './TextEditorType';
 import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
-import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
+
+import { BlobBulkFileHandle } from '../bulk_file_handling/BlobBulkFileHandle';
+import * as DomUtils from '../DomUtils';
+import { ExtraEditCommands } from './ExtraAceEditCommands';
+import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
+import * as Term from '../emulator/Term';
+import { BookmarkRef } from './TerminalViewerTypes';
+import * as ThemeTypes from '../../theme/Theme';
+import { ThemeableElementBase } from '../ThemeableElementBase';
+import { ViewerElement } from './ViewerElement';
+import { VisualState, Mode, Edge, CursorEdgeDetail, RefreshLevel, CursorMoveDetail } from './ViewerElementTypes';
+import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
+import { TextEditor } from './TextEditorType';
+import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { ConfigCursorStyle } from '../../Config';
 import { dispatchContextMenuRequest, ContextMenuType, dispatchHyperlinkClick } from '../command/CommandUtils';
 import { ConfigDatabase, AcceptsConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
@@ -45,6 +55,11 @@ const CLASS_HAS_TERMINAL = "CLASS_HAS_TERMINAL";
 const NO_STYLE_HACK = "NO_STYLE_HACK";
 
 const DEBUG_RESIZE = false;
+
+export interface AppendScrollbackLinesDetail {
+  startLine: number;
+  endLine: number;
+}
 
 
 @CustomElement("et-terminal-ace-viewer")
@@ -109,9 +124,15 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
   private _rerenderLater: DebouncedDoLater = null;
   private _checkDisconnectLater: DebouncedDoLater = null;
 
+  onDidAppendScrollbackLines: Event<AppendScrollbackLinesDetail>;
+  #onDidAppendScrollbackLinesEventEmitter: EventEmitter<AppendScrollbackLinesDetail>;
+
   constructor() {
     super();
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
+    this.#onDidAppendScrollbackLinesEventEmitter = new EventEmitter<AppendScrollbackLinesDetail>();
+    this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
+  
     this._checkDisconnectLater = new DebouncedDoLater(() => this._handleDelayedDisconnect());
     this._rerenderLater = new DebouncedDoLater(() => this._handleDelayedRerender());
 
@@ -1357,13 +1378,16 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
   private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
     const sizeResized = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
     const refreshResized = this._refreshScreen(event.refreshStartRow, event.refreshEndRow);
-    const scrollbackResized = this._insertScrollbackLines(event.scrollbackLines);
-    if (sizeResized || refreshResized || scrollbackResized) {
+    const appendedScrollbackLineDetail = this._insertScrollbackLines(event.scrollbackLines);
+    if (sizeResized || refreshResized || appendedScrollbackLineDetail != null) {
       emitResizeEvent(this);
     }
 
     this._cursorRow = event.cursorRow;
     this._cursorColumn = event.cursorColumn;
+    if (appendedScrollbackLineDetail != null) {
+      this.#onDidAppendScrollbackLinesEventEmitter.fire(appendedScrollbackLineDetail);
+    }
   }
 
   private _onCompositionStart(): void {
@@ -1429,19 +1453,24 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
   }
 
   /**
-   * @returns true if a resize has occurred
    */
-  private _insertScrollbackLines(scrollbackLines: TermApi.Line[]): boolean {
+  private _insertScrollbackLines(scrollbackLines: TermApi.Line[]): AppendScrollbackLinesDetail {
     if (scrollbackLines == null || scrollbackLines.length === 0) {
-      return false;
+      return null;
     }
 
     this._saveBookmarks();
     this._aceEditSession.insertTerminalLines(this._terminalFirstRow, scrollbackLines);
     this._restoreBookmarks();
 
-    this._terminalFirstRow = this._terminalFirstRow  + scrollbackLines.length;
-    return true;
+    const startLine = this._terminalFirstRow;
+    const endLine = this._terminalFirstRow + scrollbackLines.length;
+
+    this._terminalFirstRow = endLine;
+    return {
+      startLine,
+      endLine
+    };
   }
 
   private _saveBookmarks(): void {

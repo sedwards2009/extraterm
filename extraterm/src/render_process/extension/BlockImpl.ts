@@ -37,7 +37,7 @@ export class BlockImpl implements ExtensionApi.Block {
 
     if (insideViewer instanceof TerminalViewer) {
       this._details = new TerminalOutputDetailsProxy(this._internalExtensionContext, insideViewer);
-      this._type = ExtensionApi.TerminalType;
+      this._type = ExtensionApi.TerminalOutputType;
     } else if (insideViewer instanceof TextViewer) {
       this._details = new TextViewerDetailsProxy(this._internalExtensionContext, insideViewer);
       this._type = ExtensionApi.TextViewerType;

@@ -25,7 +25,7 @@ import {ThemeableElementBase} from "./ThemeableElementBase";
 import * as ThemeTypes from "../theme/Theme";
 import {EmbeddedViewer} from "./viewers/EmbeddedViewer";
 import {CommandPlaceHolder} from "./CommandPlaceholder";
-import {TerminalViewer} from "./viewers/TerminalAceViewer";
+import {TerminalViewer, AppendScrollbackLinesDetail as ViewerAppendScrollbackLinesDetail } from "./viewers/TerminalAceViewer";
 import {BookmarkRef} from "./viewers/TerminalViewerTypes";
 import {TextViewer} from "./viewers/TextAceViewer";
 import {ImageViewer} from "./viewers/ImageViewer";
@@ -85,6 +85,11 @@ interface WriteBufferStatus {
 
 type InputStreamFilter = (input: string) => string;
 
+export interface AppendScrollbackLinesDetail {
+  viewer: TerminalViewer;
+  startLine: number;
+  endLine: number;
+}
 
 /**
  * An Extraterm terminal.
@@ -166,7 +171,12 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _windowId: string = null;
 
   onDispose: Event<void>;
-  _onDisposeEventEmitter = new EventEmitter<void>();
+  #onDisposeEventEmitter = new EventEmitter<void>();
+
+  onDidAppendScrollbackLines: Event<AppendScrollbackLinesDetail>;
+  #onDidAppendScrollbackLinesEventEmitter = new EventEmitter<AppendScrollbackLinesDetail>();
+
+  #viewerDidAppendScrollbackLinesDisposable: Disposable = null;
 
   static registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
@@ -196,7 +206,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._log = getLogger(EtTerminal.TAG_NAME, this);
     this._copyToClipboardLater = new DebouncedDoLater(this.copyToClipboard.bind(this), 100);
     this._fetchNextTag();
-    this.onDispose = this._onDisposeEventEmitter.event;
+    this.onDispose = this.#onDisposeEventEmitter.event;
+    this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
   }
 
   connectedCallback(): void {
@@ -272,8 +283,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
     this._emulator = null;
 
-    this._onDisposeEventEmitter.fire();
-    this._onDisposeEventEmitter.dispose();
+    this.#onDisposeEventEmitter.fire();
+    this.#onDisposeEventEmitter.dispose();
 
     this._copyToClipboardLater.dispose();
     this._copyToClipboardLater = null;
@@ -643,6 +654,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _appendNewTerminalViewer(): void {
     const terminalViewer = this._createTerminalViewer();
     terminalViewer.setEmulator(this._emulator);
+    this.#viewerDidAppendScrollbackLinesDisposable = terminalViewer.onDidAppendScrollbackLines(
+      (e: ViewerAppendScrollbackLinesDetail) => {
+        this.#onDidAppendScrollbackLinesEventEmitter.fire({ ...e, viewer: terminalViewer });
+      }
+    );
 
     this._terminalViewer = terminalViewer;  // Putting this in _terminalViewer now prevents the VirtualScrollArea
                                             // removing it from the DOM in the next method call.
@@ -679,6 +695,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._emulator.flushRenderQueue();
     if (this._terminalViewer !== null) {
       this._terminalViewer.setEmulator(null);
+      this.#viewerDidAppendScrollbackLinesDisposable.dispose();
+      this.#viewerDidAppendScrollbackLinesDisposable = null;
       this._terminalViewer.deleteScreen();
       this._terminalViewer.setUseVPad(false);
       this._terminalCanvas.updateSize(this._terminalViewer);
@@ -702,6 +720,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       } else {
         // This terminal viewer has stuff in it.
         currentTerminalViewer.setEmulator(null);
+        this.#viewerDidAppendScrollbackLinesDisposable.dispose();
+        this.#viewerDidAppendScrollbackLinesDisposable = null;
         currentTerminalViewer.setUseVPad(false);
         this._terminalCanvas.updateSize(currentTerminalViewer);
         this._terminalViewer = null;

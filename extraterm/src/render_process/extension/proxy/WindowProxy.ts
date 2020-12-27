@@ -8,7 +8,7 @@ import * as _ from "lodash";
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 
-import { EtTerminal } from "../../Terminal";
+import { EtTerminal, AppendScrollbackLinesDetail } from "../../Terminal";
 import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor, InternalSessionEditor } from "../InternalTypes";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry } from "../WorkspaceSessionEditorRegistry";
@@ -37,7 +37,11 @@ export class WindowProxy implements InternalWindow {
   private _onDidCreateTerminalEventEmitter = new EventEmitter<ExtensionApi.Terminal>();
   onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _commonExtensionState: CommonExtensionWindowState) {
+  #allTerminals: EtTerminal[] = [];
+
+  constructor(private _internalExtensionContext: InternalExtensionContext,
+      private _commonExtensionState: CommonExtensionWindowState) {
+
     this._log = getLogger("WorkspaceProxy", this);
     this.onDidCreateTerminal = this._onDidCreateTerminalEventEmitter.event;
     this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
@@ -46,11 +50,16 @@ export class WindowProxy implements InternalWindow {
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
 
-  newTerminalCreated(newTerminal: EtTerminal): void {
+  newTerminalCreated(newTerminal: EtTerminal, allTerminals: EtTerminal[]): void {
+    this.#allTerminals = allTerminals;
     if (this._onDidCreateTerminalEventEmitter.hasListeners()) {
       const terminal = this._internalExtensionContext._proxyFactory.getTerminalProxy(newTerminal);
       this._onDidCreateTerminalEventEmitter.fire(terminal);
     }
+  }
+
+  terminalDestroyed(deadTerminal: EtTerminal, allTerminals: EtTerminal[]): void {
+    this.#allTerminals = allTerminals;
   }
 
   terminalAppendedViewer(terminal: EtTerminal, viewer: ViewerElement): void {
@@ -71,6 +80,20 @@ export class WindowProxy implements InternalWindow {
     }
   }
 
+  terminalDidAppendScrollbackLines(terminal: EtTerminal, ev: AppendScrollbackLinesDetail): void {
+    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+      if (proxy._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
+        const block = this._internalExtensionContext._proxyFactory.getBlock(ev.viewer);
+        proxy._onDidAppendScrollbackLinesEventEmitter.fire({
+          block,
+          startLine: ev.startLine,
+          endLine: ev.endLine
+        });
+      }
+    }
+  }
+
   get activeTerminal(): ExtensionApi.Terminal {
     return this._internalExtensionContext._proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
   }
@@ -84,9 +107,7 @@ export class WindowProxy implements InternalWindow {
   }
 
   get terminals(): ExtensionApi.Terminal[] {
-    return []; // FIXME
-    // return this._internalExtensionContext.extensionBridge.workspaceGetTerminals()
-    //   .map(terminal => this._internalExtensionContext.getTerminalProxy(terminal));
+    return this.#allTerminals.map(t => this._internalExtensionContext._proxyFactory.getTerminalProxy(t));
   }
 
   // ---- Viewers ----

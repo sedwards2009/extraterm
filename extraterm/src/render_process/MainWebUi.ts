@@ -777,6 +777,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       if (pty !== null) {
         pty.destroy();
       }
+      const allTerminals = this._getAllTerminals().filter(t => t !== tabContentElement);
+      this._extensionManager.terminalDestroyed(tabContentElement, allTerminals);
     }
 
     if (DisposableUtils.isDisposable(tabContentElement)) {
@@ -1077,7 +1079,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionConfiguration, workingDirectory);
     this._switchToTab(newTerminal);
-    this._extensionManager.newTerminalCreated(newTerminal);
+    this._extensionManager.newTerminalCreated(newTerminal, this._getAllTerminals());
+  }
+
+  private _getAllTerminals(): EtTerminal[] {
+    return <EtTerminal[]> this._splitLayout.getAllTabContents().filter(el => el instanceof EtTerminal);
   }
 
   private _commandFocusTabLeft(): void {

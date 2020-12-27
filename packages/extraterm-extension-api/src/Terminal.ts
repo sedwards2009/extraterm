@@ -28,11 +28,11 @@ export interface Terminal {
   readonly blocks: Block[];
 
   /**
-   * This event is fired after a block is appended to the terminal.
+   * Event fired after a block is appended to the terminal.
    *
    * The contents of the event is the new block itself.
    */
-  onDidAppendBlock: Event<Block>;
+  readonly onDidAppendBlock: Event<Block>;
 
   /**
    * Get the tab which holds this terminal.
@@ -52,14 +52,14 @@ export interface Terminal {
 
   openTerminalBorderWidget(name: string): any;
 
-  environment: TerminalEnvironment;
+  readonly environment: TerminalEnvironment;
 
   /**
    * The session configuration associated with this terminal.
    *
    * Use `getSessionSettings()` to fetch extension settings.
    */
-  sessionConfiguration: SessionConfiguration;
+  readonly sessionConfiguration: SessionConfiguration;
 
   /**
    * Get the extension settings associated with this terminal.
@@ -74,6 +74,37 @@ export interface Terminal {
    * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
    */
   readonly isAlive: boolean;
+
+  /**
+   * Fired when a lines are added to the scrollback area of a block.
+   */
+  readonly onDidAppendScrollbackLines: Event<AppendScrollbackLinesDetail>;
+}
+
+/**
+ * Describes a range of lines in the scrollback of a block which were just appended.
+ */
+export interface AppendScrollbackLinesDetail {
+  /**
+   * The block which received the new scrollback lines.
+   * 
+   * Its type will be `TerminalOutputType`.
+   */
+  block: Block;
+
+  /**
+   * The index into the scrollback area of the first line added.
+   * 
+   * The complete range of affected lines is from `startLine` up to but not including `endLine`.
+   */
+  startLine: number;
+
+  /**
+   * The index after the last affected line.
+   * 
+   * The range of affected lines is from `startLine` up to but not including `endLine`.
+   */
+  endLine: number;
 }
 
 export interface TerminalBorderWidget {

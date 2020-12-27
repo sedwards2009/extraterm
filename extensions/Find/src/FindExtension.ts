@@ -11,7 +11,7 @@ import {
   Terminal,
   TerminalBorderWidget,
   TerminalOutputDetails,
-  TerminalType,
+  TerminalOutputType,
   TextViewerDetails,
   TextViewerType,
 } from '@extraterm/extraterm-extension-api';
@@ -132,7 +132,7 @@ class FindWidget {
   }
 
   private _unpackBlock(block: Block): TerminalOutputDetails | TextViewerDetails {
-    if (block.type === TerminalType || block.type === TextViewerType) {
+    if (block.type === TerminalOutputType || block.type === TextViewerType) {
       return block.details;
     }
     return null;

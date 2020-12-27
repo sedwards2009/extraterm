@@ -9,7 +9,7 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
 
 import { Logger, getLogger, log } from "extraterm-logging";
-import { EtTerminal } from "../Terminal";
+import { EtTerminal, AppendScrollbackLinesDetail } from "../Terminal";
 import { TextViewer } from"../viewers/TextAceViewer";
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
   isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor } from "./InternalTypes";
@@ -656,7 +656,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     }
   }
 
-  newTerminalCreated(newTerminal: EtTerminal): void {
+  newTerminalCreated(newTerminal: EtTerminal, allTerminals: EtTerminal[]): void {
     newTerminal.addEventListener(EtTerminal.EVENT_APPENDED_VIEWER, (ev: CustomEvent) => {
       for (const extension of this._getActiveRenderExtensions()) {
         extension.contextImpl._internalWindow.terminalAppendedViewer(newTerminal, ev.detail.viewer);
@@ -669,8 +669,20 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     });
 
+    newTerminal.onDidAppendScrollbackLines((ev: AppendScrollbackLinesDetail) => {
+      for (const extension of this._getActiveRenderExtensions()) {
+        extension.contextImpl._internalWindow.terminalDidAppendScrollbackLines(newTerminal, ev);
+      }
+    });
+
     for (const extension of this._getActiveRenderExtensions()) {
-      extension.contextImpl._internalWindow.newTerminalCreated(newTerminal);
+      extension.contextImpl._internalWindow.newTerminalCreated(newTerminal, allTerminals);
+    }
+  }
+
+  terminalDestroyed(deadTerminal: EtTerminal, allTerminals: EtTerminal[]): void {
+    for (const extension of this._getActiveRenderExtensions()) {
+      extension.contextImpl._internalWindow.terminalDestroyed(deadTerminal, allTerminals);
     }
   }
 

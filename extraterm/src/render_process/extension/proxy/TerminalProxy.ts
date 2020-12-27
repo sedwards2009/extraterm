@@ -28,11 +28,15 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   _onDidAppendBlockEventEmitter = new EventEmitter<ExtensionApi.Block>();
   onDidAppendBlock: ExtensionApi.Event<ExtensionApi.Block>;
 
+  onDidAppendScrollbackLines: ExtensionApi.Event<ExtensionApi.AppendScrollbackLinesDetail>;
+  _onDidAppendScrollbackLinesEventEmitter = new EventEmitter<ExtensionApi.AppendScrollbackLinesDetail>();
+
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
     this._log = getLogger("TerminalProxy", this);
     this._terminal.onDispose(this._handleTerminalDispose.bind(this));
     this.environment = new TerminalEnvironmentProxy(this._terminal);
     this.onDidAppendBlock = this._onDidAppendBlockEventEmitter.event;
+    this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
 
     this._sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
     this._sessionConfigurationExtensions = this._sessionConfiguration.extensions ?? {};
