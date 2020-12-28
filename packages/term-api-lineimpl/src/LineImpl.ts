@@ -10,7 +10,12 @@ export interface CellWithHyperlink extends Cell {
   hyperlinkURL: string;
 }
 
-
+/**
+ * An implementation of Term API's `Line`
+ * 
+ * This adds better support for hyperlinks and associating URLs with the link
+ * ID attributes on cells.
+ */
 export class LineImpl extends CharCellGrid implements Line {
 
   wrapped = false;

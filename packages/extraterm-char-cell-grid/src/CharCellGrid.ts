@@ -77,7 +77,7 @@ const OFFSET_FG = 12;
 const OFFSET_BG = 16;
 
 /**
- * The expanded contents of one cell in the grid.
+ * The expanded contents of one cell from the grid including all attributes.
  */
 export interface Cell {
   codePoint: number;
@@ -148,6 +148,19 @@ export class CharCellGrid {
   private _dataView: DataView;
   private _uint8View: Uint8Array;
 
+  /**
+   * Create a new cell grid.
+   *
+   * Cell support index based palette colors and also full RGB colors. `palette`
+   * maps indices to full RGBA colors.
+   *
+   * @param width The width of the grid in cells.
+   * @param height The height of the grid in cells.
+   * @param palette The palette to use. This is an array of 257 32bit RGBA
+   *    values. This array is not copied and once passed here should not be
+   *    modified externally.
+   * @param __bare__ This is internal.
+   */
   constructor(public readonly width: number, public readonly height: number, public palette: number[]=null,
       __bare__=false) {
     if (__bare__) {
@@ -183,6 +196,9 @@ export class CharCellGrid {
     }
   }
 
+  /**
+   * Create a complete copy of this grid.
+   */
   clone(): CharCellGrid {
     const grid = new CharCellGrid(this.width, this.height, this.palette);
     this.cloneInto(grid);
@@ -195,6 +211,12 @@ export class CharCellGrid {
     grid._uint8View = new Uint8Array(grid._rawBuffer);
   }
 
+  /**
+   * Reset every cell back to empty defaults.
+   *
+   * Each cell is set to a space char, no style, and default palette
+   * foreground and background.
+   */
   clear(): void {
     const spaceCodePoint = " ".codePointAt(0);
     const maxChar = this.width * this.height;
@@ -215,6 +237,9 @@ export class CharCellGrid {
     }
   }
 
+  /**
+   * Get the completecontents of a cell.
+   */
   getCell(x: number, y: number): Cell {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     const cell: Cell = {
@@ -230,6 +255,9 @@ export class CharCellGrid {
     return cell;
   }
 
+  /**
+   * Set the contents of a cell.
+   */
   setCell(x: number, y: number, cell: Cell): void {
     const offset = (y * this.width + x) * CELL_SIZE_BYTES;
     this._dataView.setUint32(offset, cell.codePoint);
@@ -327,6 +355,13 @@ export class CharCellGrid {
     }
   }
 
+  /**
+   * The code points for a range of cells from a string.
+   *
+   * @param x X position in the cells to modify.
+   * @param y The row to modify.
+   * @param str The string to read from.
+   */
   setString(x: number, y: number, str: string): void {
     const codePointArray = stringToCodePointArray(str);
     for (let i=0; i<codePointArray.length; i++) {
@@ -334,6 +369,14 @@ export class CharCellGrid {
     }
   }
 
+  /**
+   * Get the string representation from a range of cells.
+   *
+   * @param x X position in the row to start count from.
+   * @param y The row to scan.
+   * @param count The number of cells to include. If this is not given, then
+   *    the row is scanned up to the end.
+   */
   getString(x: number, y: number, count?: number): string {
     const codePoints: number[] = [];
 
@@ -344,6 +387,17 @@ export class CharCellGrid {
     return String.fromCodePoint(...codePoints);
   }
 
+  /**
+   * Get the length of the UTF16 string representation of a range of cells.
+   *
+   * Cells hold Unicode code points. A code point can map to 1 or more UTF16
+   * values.
+   *
+   * @param x X position in the row to start count from.
+   * @param y The row to scan.
+   * @param count The number of cells to scan. If this is not given, then the
+   *    row is scanned up to the end.
+   */
   getUTF16StringLength(x: number, y: number, count?: number): number {
     const lastX = x + (count == null ? this.width : Math.min(this.width, count));
     let size = 0;
@@ -354,6 +408,15 @@ export class CharCellGrid {
     return size;
   }
 
+  /**
+   * Get the Unicode code points from a row.
+   *
+   * @param y The row to read the code points from.
+   * @param destinationArray If provided, the output will be placed directly
+   *    into this array. This should be as long as the grid is wide.
+   * @returns The array with code points. If `destinationArray` was provided
+   *    then it is returned.
+   */
   getRowCodePoints(y: number, destinationArray?: Uint32Array): Uint32Array {
     const width = this.width;
     const destArray = destinationArray == null ? new Uint32Array(width) : destinationArray;
