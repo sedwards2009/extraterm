@@ -3,7 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event } from "./Utilities";
+import { Event } from "extraterm-event-emitter";
+
 import { Tab } from "./Tab";
 import { TerminalEnvironment } from "./TerminalEnvironment";
 import { SessionConfiguration } from "./Sessions";

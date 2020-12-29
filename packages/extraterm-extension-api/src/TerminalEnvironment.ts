@@ -3,7 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event } from "./Utilities";
+import { Event } from "extraterm-event-emitter";
+
 
 export const TerminalEnvironment = {
   TERM_TITLE: "term:title",

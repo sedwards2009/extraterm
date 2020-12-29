@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Event } from "extraterm-event-emitter";
 
-import { Event } from "./Utilities";
 
 /**
  * A user defined configuration for a terminal session.

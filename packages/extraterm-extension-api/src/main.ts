@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-export { Disposable, Event } from "./Utilities";
+export { Disposable, Event } from "extraterm-event-emitter";
 export { Logger } from "./Logger";
 export { TerminalEnvironment } from "./TerminalEnvironment";
 export { Terminal, AppendScrollbackLinesDetail, TerminalBorderWidget, TerminalBorderWidgetFactory } from "./Terminal";

@@ -22,7 +22,8 @@
   },
   "dependencies": {
     "@extraterm/ace-ts": "0.20.0",
-    "@types/node": "^12.6.2"
+    "@types/node": "^12.6.2",
+    "extraterm-event-emitter": "1.0.0"
   },
   "devDependencies": {
     "eslint": "6.8.0",

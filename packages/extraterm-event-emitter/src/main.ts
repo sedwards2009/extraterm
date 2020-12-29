@@ -3,8 +3,20 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import {Disposable, Event} from '@extraterm/extraterm-extension-api';
 
+/**
+ * A resource which can later be freed by calling `dispose()`.
+ */
+export interface Disposable {
+  dispose(): void;
+}
+
+/**
+ * Function which represents a specific event which you can subscribe to.
+ */
+export interface Event<T> {
+  (listener: (e: T) => any): Disposable;
+}
 
 /**
  * An event emitter which can be subscribe to to hear when this event is fired.

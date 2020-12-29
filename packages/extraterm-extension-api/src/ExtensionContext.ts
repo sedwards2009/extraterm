@@ -4,11 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as Ace from "@extraterm/ace-ts";
+import { Event } from "extraterm-event-emitter";
 
 import { Terminal, TerminalBorderWidgetFactory } from "./Terminal";
 import { ExtensionViewerBaseConstructor } from "./Viewers";
 import { SessionEditorFactory, SessionSettingsEditorFactory, SessionBackend } from "./Sessions";
-import { Event } from "./Utilities";
 import { TabTitleWidgetFactory } from "./Tab";
 import { SyntaxThemeProvider } from "./SyntaxTheme";
 import { Commands } from "./Commands";
