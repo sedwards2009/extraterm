@@ -401,12 +401,6 @@ export class CanvasTextLayer implements TextLayer {
       this.rerender();
     }
   }
-
-  getHyperlinkAtTextCoordinates(pos: Position): string {
-    const line = this._editSession.getTerminalLine(pos.row);
-    const linkID = line.getLinkID(pos.column, 0);
-    return linkID === 0? null : line.getLinkURLByID(linkID);
-  }
 }
 
 const twemojiCodePoints: (number | [number, number])[] = [

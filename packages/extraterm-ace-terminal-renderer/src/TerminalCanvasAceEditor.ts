@@ -31,7 +31,13 @@ export class TerminalCanvasAceEditor extends ExtratermAceEditor {
   }
 
   getHyperlinkAtTextCoordinates(pos: Position): string {
-    return this.#terminalCanvasRenderer.getHyperlinkAtTextCoordinates(pos);
+    const session = <TerminalCanvasEditSession> this.sessionOrThrow();
+    return session.getHyperlinkAtTextCoordinates(pos);
+  }
+
+  applyHyperlinkAtTextCoordinates(pos: Position, length: number, url: string): void {
+    const session = <TerminalCanvasEditSession> this.sessionOrThrow();
+    session.applyHyperlinkAtTextCoordinates(pos, length, url);
   }
 
   setTerminalLines(startRow: number, lines: Line[]): void {

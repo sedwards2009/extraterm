@@ -114,10 +114,6 @@ export class TerminalCanvasRenderer extends Renderer {
   mouseOver(pos: Position): void {
     this._canvasTextLayer.mouseOver(pos);
   }
-
-  getHyperlinkAtTextCoordinates(pos: Position): string {
-    return this._canvasTextLayer.getHyperlinkAtTextCoordinates(pos);
-  }
 }
 
 class InsetHScrollBar extends HScrollBar {

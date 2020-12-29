@@ -103,6 +103,8 @@ export interface TerminalOutputDetails {
    */
   getScreenLineText(line: number): string;
 
+  applyScrollbackHyperlink(line: number, x: number, length: number, url: string): void;
+
   find(needle: string | RegExp, options?: FindOptions): boolean;
   findNext(needle: string | RegExp): boolean;
   findPrevious(needle: string | RegExp): boolean;

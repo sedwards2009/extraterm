@@ -204,4 +204,18 @@ export class TerminalCanvasEditSession extends EditSession {
       column: this.getStringScreenWidth(line, screenColumn)[1]
     };
   }
+
+  getHyperlinkAtTextCoordinates(pos: Position): string {
+    const line = this.getTerminalLine(pos.row);
+    const linkID = line.getLinkID(pos.column, 0);
+    return linkID === 0? null : line.getLinkURLByID(linkID);
+  }
+
+  applyHyperlinkAtTextCoordinates(pos: Position, length: number, url: string): void {
+    const line = this.getTerminalLine(pos.row);
+    const linkID = line.getOrCreateLinkIDForURL(url);
+    for (let i = 0; i < length; i++) {
+      line.setLinkID(pos.column + i, 0, linkID);
+    }
+  }
 }

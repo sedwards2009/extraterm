@@ -3,6 +3,7 @@
  */
 
 import { Line } from 'term-api';
+import { isWide, utf16LengthOfCodePoint } from "extraterm-unicode-utilities";
 import { CharCellGrid, Cell } from 'extraterm-char-cell-grid';
 
 export interface CellWithHyperlink extends Cell {
@@ -12,7 +13,7 @@ export interface CellWithHyperlink extends Cell {
 
 /**
  * An implementation of Term API's `Line`
- * 
+ *
  * This adds better support for hyperlinks and associating URLs with the link
  * ID attributes on cells.
  */
@@ -171,5 +172,17 @@ export class LineImpl extends CharCellGrid implements Line {
         }
       }
     }
+  }
+
+  mapStringIndexToColumn(line: number, x: number): number {
+    let c = 0;
+    let i = 0;
+    const width = this.width;
+    while (i < x && i < width) {
+      const codePoint = this.getCodePoint(i ,line);
+      i += utf16LengthOfCodePoint(codePoint);
+      c += isWide(codePoint) ? 2 : 1;
+    }
+    return c;
   }
 }

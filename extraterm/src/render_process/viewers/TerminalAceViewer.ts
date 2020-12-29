@@ -132,7 +132,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     this._log = getLogger(TerminalViewer.TAG_NAME, this);
     this.#onDidAppendScrollbackLinesEventEmitter = new EventEmitter<AppendScrollbackLinesDetail>();
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
-  
+
     this._checkDisconnectLater = new DebouncedDoLater(() => this._handleDelayedDisconnect());
     this._rerenderLater = new DebouncedDoLater(() => this._handleDelayedRerender());
 
@@ -689,6 +689,15 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
       }
     }
     return null;
+  }
+
+  applyScrollbackHyperlink(lineNumber: number, x: number, length: number, url: string): void {
+    const line = this._aceEditor.getTerminalLine(lineNumber);
+    const startColumn = line.mapStringIndexToColumn(0, x);
+    const endColumn = line.mapStringIndexToColumn(0, x + length);
+
+    this._aceEditor.applyHyperlinkAtTextCoordinates({ row: lineNumber, column: startColumn }, endColumn - startColumn,
+      url);
   }
 
   find(needle: string, options?: FindOptions): boolean {

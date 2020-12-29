@@ -41,9 +41,12 @@ export interface Line extends CharCellGrid {
   clone(): Line;
   hasLinks(): boolean;
   getLinkURLByID(linkID: number): string;
+  getOrCreateLinkIDForURL(url: string): number;
   getLinkIDByURL(url: string): number;
   getAllLinkIDs(): number[];
   pasteGridWithLinks(sourceGrid: Line, x: number, y: number): void;
+
+  mapStringIndexToColumn(line: number, x: number): number;
 }
 
 export interface TerminalCoord {

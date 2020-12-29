@@ -59,6 +59,11 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
     return this._terminalViewer.getScreenWidth();
   }
 
+  applyScrollbackHyperlink(line: number, x: number, length: number, url: string): void {
+    this._checkIsAlive();
+    this._terminalViewer.applyScrollbackHyperlink(line, x, length, url);
+  }
+
   find(needle: string, options?: ExtensionApi.FindOptions): boolean {
     this._checkIsAlive();
     return this._terminalViewer.find(needle, options);
