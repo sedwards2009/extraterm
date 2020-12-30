@@ -7,7 +7,7 @@ import "jest";
 import * as SourceMapSupport from 'source-map-support';
 
 import {Emulator, Platform} from './Term';
-import {RenderEvent, Line, EmulatorApi, MinimalKeyboardEvent} from 'term-api';
+import {RenderEvent, Line, EmulatorApi, MinimalKeyboardEvent, DataEvent} from 'term-api';
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 const performanceNow = require('performance-now');
 
@@ -70,7 +70,7 @@ test("render device", done => {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: performanceNow});
     const device = new RenderDevice();
-    emulator.addRenderEventListener(device.renderEventListener.bind(device));
+    emulator.onRender(device.renderEventHandler.bind(device));
 
     emulator.write('1\r\n');
     emulator.write('2\r\n');
@@ -96,7 +96,7 @@ test("move cursor", done => {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: performanceNow});
     const device = new RenderDevice();
-    emulator.addRenderEventListener(device.renderEventListener.bind(device));
+    emulator.onRender(device.renderEventHandler.bind(device));
     emulator.write('1\r\n');
     emulator.write('2\r\n');
     emulator.write('3\r\n');
@@ -121,7 +121,7 @@ test("Move rows above cursor to scrollback", done => {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: performanceNow});
     const device = new RenderDevice();
-    emulator.addRenderEventListener(device.renderEventListener.bind(device));
+    emulator.onRender(device.renderEventHandler.bind(device));
     emulator.write('1\r\n');
     emulator.write('2\r\n');
     emulator.write('3\r\n');
@@ -159,8 +159,8 @@ describe.each([
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20 });
     let collectedData = "";
-    emulator.addDataEventListener( (instance: EmulatorApi, data: string): void => {
-      collectedData = collectedData + data;
+    emulator.onData( (event: DataEvent): void => {
+      collectedData = collectedData + event.data;
     });
 
     emulator.keyPress(ev);
@@ -205,8 +205,8 @@ describe.each([
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20 });
     let collectedData = "";
-    emulator.addDataEventListener( (instance: EmulatorApi, data: string): void => {
-      collectedData = collectedData + data;
+    emulator.onData( (event: DataEvent): void => {
+      collectedData = collectedData + event.data;
     });
 
     emulator.keyDown(ev);
@@ -242,10 +242,10 @@ class RenderDevice {
   scrollback: string[] = [];
   screen: string[] = [];
 
-  renderEventListener(instance: Emulator, event: RenderEvent): void {
+  renderEventHandler(event: RenderEvent): void {
     if (event.refreshStartRow !== -1) {
       for (let row=event.refreshStartRow; row < event.refreshEndRow; row++) {
-        const line = instance.lineAtRow(row);
+        const line = event.instance.lineAtRow(row);
         this.screen[row] = lineToString(line);
       }
     }

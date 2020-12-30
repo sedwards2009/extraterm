@@ -35,20 +35,20 @@
 import {
   ApplicationModeHandler,
   ApplicationModeResponseAction,
-  BellEventListener,
-  DataEventListener,
+  BellEvent,
+  DataEvent,
   EmulatorApi,
   Line,
   TerminalSize,
-  TitleChangeEventListener,
   MouseEventOptions,
   RenderEvent,
-  RenderEventHandler,
   WriteBufferStatus,
-  WriteBufferSizeEventListener,
-  MinimalKeyboardEvent
+  MinimalKeyboardEvent,
+  TitleChangeEvent,
+  WriteBufferSizeEvent
 } from 'term-api';
 
+import { Event, EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
 import { isWide } from "extraterm-unicode-utilities";
 
@@ -145,12 +145,6 @@ interface SavedState {
   scrollBottom: number;
   tabs: { [i: number]: boolean;  };
 }
-
-const RENDER_EVENT = "RENDER_EVENT";
-const BELL_EVENT = "BELL_EVENT";
-const DATA_EVENT = "DATA_EVENT";
-const TITLE_EVENT = "TITLE_EVENT";
-const WRITE_BUFFER_SIZE_EVENT = "WRITE_BUFFER_SIZE_EVENT";
 
 const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
@@ -267,6 +261,21 @@ export class Emulator implements EmulatorApi {
   private savedCols: number;
   private title: string = "";
 
+  onRender: Event<RenderEvent>;
+  #onRenderEventEmitter = new EventEmitter<RenderEvent>();
+
+  onBell: Event<BellEvent>;
+  #onBellEventEmitter = new EventEmitter<BellEvent>();
+
+  onData: Event<DataEvent>;
+  #onDataEventEmitter = new EventEmitter<DataEvent>();
+
+  onTitleChange: Event<TitleChangeEvent>;
+  #onTitleChangeEventEmitter = new EventEmitter<TitleChangeEvent>();
+
+  onWriteBufferSize: Event<WriteBufferSizeEvent>;
+  #onWriteBufferSizeEventEmitter = new EventEmitter<WriteBufferSizeEvent>();
+
   constructor(options: Options) {
     this._log = getLogger("Emulator", this);
     this.rows = options.rows === undefined ? 24 : options.rows;
@@ -280,6 +289,12 @@ export class Emulator implements EmulatorApi {
     }
 
     this._platform = options.platform;
+
+    this.onRender = this.#onRenderEventEmitter.event;
+    this.onBell = this.#onBellEventEmitter.event;
+    this.onData = this.#onDataEventEmitter.event;
+    this.onTitleChange = this.#onTitleChangeEventEmitter.event;
+    this.onWriteBufferSize = this.#onWriteBufferSizeEventEmitter.event;
 
     this.state = ParserState.NORMAL;
 
@@ -646,7 +661,10 @@ export class Emulator implements EmulatorApi {
   }
 
   private _emitWriteBufferSizeEvent(): void {
-    this._emit(WRITE_BUFFER_SIZE_EVENT, this, this._writeBufferStatus());
+    this.#onWriteBufferSizeEventEmitter.fire({
+      instance: this,
+      status: this._writeBufferStatus()
+    });
   }
 
   /**
@@ -2280,7 +2298,7 @@ export class Emulator implements EmulatorApi {
   }
 
   private bell(): void {
-    this._emit(BELL_EVENT, this);
+    this.#onBellEventEmitter.fire({instance: this});
   }
 
   newLine(): void {
@@ -2402,6 +2420,8 @@ export class Emulator implements EmulatorApi {
     }
 
     const event: RenderEvent = {
+      instance: this,
+
       rows: this.rows,
       columns: this.cols,
       realizedRows: this.lines.length,
@@ -2417,7 +2437,7 @@ export class Emulator implements EmulatorApi {
     this._refreshEnd = REFRESH_END_NULL;
     this._scrollbackLineQueue = [];
 
-    this._emit(RENDER_EVENT, this, event);
+    this.#onRenderEventEmitter.fire(event);
   }
 
   private markRowForRefresh(y: number): void {
@@ -2519,11 +2539,11 @@ export class Emulator implements EmulatorApi {
   }
 
   private handler(data: string): void {
-    this._emit(DATA_EVENT, this, data);
+    this.#onDataEventEmitter.fire({instance: this, data});
   }
 
   private handleTitle(title: string): void {
-    this._emit(TITLE_EVENT, this, title);
+    this.#onTitleChangeEventEmitter.fire({instance: this, title});
   }
 
   /**
@@ -3934,76 +3954,11 @@ export class Emulator implements EmulatorApi {
     "ISOLatin": null // /A
   };
 
-  /*************************************************************************/
-  /**
-   * EventEmitter
-   */
-  // Events
-  addRenderEventListener(eventHandler: RenderEventHandler): void {
-    this.addListener(RENDER_EVENT, eventHandler);
-  }
-
-  removeRenderEventListener(eventHandler: RenderEventHandler): void {
-    this.removeListener(RENDER_EVENT, eventHandler);
-  }
-
-  addBellEventListener(eventHandler: BellEventListener): void {
-    this.addListener(BELL_EVENT, eventHandler);
-  }
-
-  addDataEventListener(eventHandler: DataEventListener): void {
-    this.addListener(DATA_EVENT, eventHandler);
-  }
-
-  addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void {
-    this.addListener(TITLE_EVENT, eventHandler);
-  }
-
-  addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void {
-    this.addListener(WRITE_BUFFER_SIZE_EVENT, eventHandler);
-  }
-
-  private addListener(type: string, listener: any): void {
-    this._events[type] = this._events[type] || [];
-    this._events[type].push(listener);
-  }
-
-  private removeListener(type: string, listener): void {
-    if (!this._events[type]) {
-      return;
-    }
-
-    const obj = this._events[type];
-    let i = obj.length;
-
-    while (i--) {
-      if (obj[i] === listener /*  || obj[i].listener === listener */ )  {
-        obj.splice(i, 1);
-        return;
-      }
-    }
-  }
-
-  private _emit(type, ...args: any[]): void {
-    if (!this._events[type]) {
-      return;
-    }
-
-    const obj = this._events[type];
-    const l = obj.length;
-    let i = 0;
-
-    for (; i < l; i++) {
-      obj[i].apply(this, args);
-    }
-  }
-
   dumpLines(): void {
     for (let y=0; y<this.lines.length; y++) {
       this.log(""+y+": "+this.getLineText(y));
     }
   }
-  /*************************************************************************/
 }
 
 /**

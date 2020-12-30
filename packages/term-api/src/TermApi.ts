@@ -33,6 +33,8 @@
  * converted over to TypeScript.
  */
 import { CharCellGrid } from 'extraterm-char-cell-grid';
+import { Event } from "extraterm-event-emitter";
+
 
 export type CharAttr = number;
 
@@ -58,7 +60,10 @@ export interface TerminalSize {
   rows: number;
   columns: number;
 }
+
 export interface RenderEvent {
+  instance: EmulatorApi;
+
   rows: number;         // the current number of rows in the emulator screen.
   columns: number;      // the current number of columns comprising the emulator screen.
   realizedRows: number; // the current number of realised rows which have been touched.
@@ -72,25 +77,23 @@ export interface RenderEvent {
   cursorColumn: number;
 }
 
-export interface RenderEventHandler {
-  // Range of row to render from startRow to endRow exclusive.
-  (instance: EmulatorApi, event: RenderEvent): void;
+export interface BellEvent {
+  instance: EmulatorApi;
 }
 
-export interface BellEventListener {
-  (instance: EmulatorApi): void;
+export interface DataEvent {
+  instance: EmulatorApi;
+  data: string;
 }
 
-export interface DataEventListener {
-  (instance: EmulatorApi, data: string): void;
+export interface TitleChangeEvent {
+  instance: EmulatorApi;
+  title: string;
 }
 
-export interface TitleChangeEventListener {
-  (instance: EmulatorApi, title: string): void;
-}
-
-export interface WriteBufferSizeEventListener {
-  (instance: EmulatorApi, status: WriteBufferStatus): void;
+export interface WriteBufferSizeEvent {
+  instance: EmulatorApi;
+  status: WriteBufferStatus;
 }
 
 export interface MouseEventOptions {
@@ -266,12 +269,11 @@ export interface EmulatorApi {
    */
   isProcessingPaused(): boolean;
 
-  // Events
-  addRenderEventListener(eventHandler: RenderEventHandler): void;
-  addBellEventListener(eventHandler: BellEventListener): void;
-  addDataEventListener(eventHandler: DataEventListener): void;
-  addTitleChangeEventListener(eventHandler: TitleChangeEventListener): void;
-  addWriteBufferSizeEventListener(eventHandler: WriteBufferSizeEventListener): void;
+  onRender: Event<RenderEvent>;
+  onBell: Event<BellEvent>;
+  onData: Event<DataEvent>;
+  onTitleChange: Event<TitleChangeEvent>;
+  onWriteBufferSize: Event<WriteBufferSizeEvent>;
 
   registerApplicationModeHandler(handler: ApplicationModeHandler): void;
 }

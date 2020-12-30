@@ -50,6 +50,7 @@ import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from "./extension/InternalTypes";
 import { TerminalVisualConfig } from "./TerminalVisualConfig";
 import { ClipboardType } from "../WindowMessages";
+import { TitleChangeEvent, DataEvent, WriteBufferSizeEvent } from "term-api";
 
 const log = LogDecorator;
 
@@ -85,7 +86,7 @@ interface WriteBufferStatus {
 
 type InputStreamFilter = (input: string) => string;
 
-export interface AppendScrollbackLinesDetail {
+export interface LineRangeChange {
   viewer: TerminalViewer;
   startLine: number;
   endLine: number;
@@ -173,8 +174,11 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   onDispose: Event<void>;
   #onDisposeEventEmitter = new EventEmitter<void>();
 
-  onDidAppendScrollbackLines: Event<AppendScrollbackLinesDetail>;
-  #onDidAppendScrollbackLinesEventEmitter = new EventEmitter<AppendScrollbackLinesDetail>();
+  onDidAppendScrollbackLines: Event<LineRangeChange>;
+  #onDidAppendScrollbackLinesEventEmitter = new EventEmitter<LineRangeChange>();
+
+  onDidChangeScreenLines: Event<LineRangeChange>;
+  #onDidChangeScreenLinesEventEmitter = new EventEmitter<LineRangeChange>();
 
   #viewerDidAppendScrollbackLinesDisposable: Disposable = null;
 
@@ -627,9 +631,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     });
 
     emulator.debug = true;
-    emulator.addTitleChangeEventListener(this._handleTitle.bind(this));
-    emulator.addDataEventListener(this._handleTermData.bind(this));
-    emulator.addRenderEventListener(this._handleTermSize.bind(this));
+    emulator.onTitleChange(this._handleTitle.bind(this));
+    emulator.onData(this._handleTermData.bind(this));
+    emulator.onRender(this._handleTermSize.bind(this));
 
     // Application mode handlers
     const applicationModeHandler: TermApi.ApplicationModeHandler = {
@@ -638,7 +642,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       end: this._handleApplicationModeEnd.bind(this)
     };
     emulator.registerApplicationModeHandler(applicationModeHandler);
-    emulator.addWriteBufferSizeEventListener(this._handleWriteBufferSize.bind(this));
+    emulator.onWriteBufferSize(this._handleWriteBufferSize.bind(this));
     if (this._terminalVisualConfig != null) {
       emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
     }
@@ -685,8 +689,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
    *
    * @param title The new window title for this terminal.
    */
-  private _handleTitle(emulator: Term.Emulator, title: string): void {
-    this.setTerminalTitle(title);
+  private _handleTitle(event: TitleChangeEvent): void {
+    this.setTerminalTitle(event.title);
   }
 
   private _disconnectActiveTerminalViewer(): void {
@@ -792,9 +796,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     return `${buttonString}MouseButton${modifierString}Action`;
   }
 
-  private _handleWriteBufferSize(emulator: Term.Emulator, status: TermApi.WriteBufferStatus): void {
+  private _handleWriteBufferSize(event: WriteBufferSizeEvent): void {
     if (this._pty != null) {
-      this._pty.permittedDataSize(status.bufferSize);
+      this._pty.permittedDataSize(event.status.bufferSize);
     }
   }
 
@@ -804,9 +808,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
    * This just pushes the keys from the user through to the pty.
    * @param {string} data The data to process.
    */
-  private _handleTermData(emulator: Term.Emulator, data: string): void {
+  private _handleTermData(event: DataEvent): void {
     // Apply the input filters
-    let filteredData = data;
+    let filteredData = event.data;
     for (const filter of this._inputStreamFilters) {
       filteredData = filter(filteredData);
     }
@@ -816,7 +820,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
   }
 
-  private _handleTermSize(emulator: Term.Emulator, event: TermApi.RenderEvent): void {
+  private _handleTermSize(event: TermApi.RenderEvent): void {
     const newColumns = event.columns;
     const newRows = event.rows;
     if (this._columns === newColumns && this._rows === newRows) {

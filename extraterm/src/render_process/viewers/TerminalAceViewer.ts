@@ -20,8 +20,25 @@ import { doLater, DebouncedDoLater } from "extraterm-later";
 import { Color } from "extraterm-color-utilities";
 import { log, Logger, getLogger} from "extraterm-logging";
 import * as TermApi from "term-api";
-import { TerminalCanvasAceEditor, TerminalDocument, TerminalCanvasEditSession, TerminalCanvasRenderer, CursorStyle } from "extraterm-ace-terminal-renderer";
-import { Anchor, Command, DefaultCommands, Editor, MultiSelectCommands, Origin, Position, SelectionChangeEvent, UndoManager, TextMode } from "@extraterm/ace-ts";
+import {
+  CursorStyle,
+  TerminalCanvasAceEditor,
+  TerminalCanvasEditSession,
+  TerminalCanvasRenderer,
+  TerminalDocument,
+} from "extraterm-ace-terminal-renderer";
+import {
+  Anchor,
+  Command,
+  DefaultCommands,
+  Editor,
+  MultiSelectCommands,
+  Origin,
+  Position,
+  SelectionChangeEvent,
+  TextMode,
+  UndoManager,
+} from "@extraterm/ace-ts";
 import { SearchOptions } from '@extraterm/ace-ts/dist/SearchOptions';
 import { TerminalCanvasRendererConfig } from 'extraterm-ace-terminal-renderer';
 
@@ -116,7 +133,8 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
   private _fontUnitWidth = 10;  // slightly bogus defaults
   private _fontUnitHeight = 10;
 
-  private _renderEventListener: TermApi.RenderEventHandler = this._handleRenderEvent.bind(this);
+  private _renderEventHandler = this._handleRenderEvent.bind(this);
+  #onRenderDispose: Disposable = null;
 
   private _bookmarkCounter = 0;
   private _bookmarkIndex = new Map<BookmarkRef, Anchor>();
@@ -136,7 +154,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     this._checkDisconnectLater = new DebouncedDoLater(() => this._handleDelayedDisconnect());
     this._rerenderLater = new DebouncedDoLater(() => this._handleDelayedRerender());
 
-    this._renderEventListener = this._handleRenderEvent.bind(this);
+    this._renderEventHandler = this._handleRenderEvent.bind(this);
 
     this._metadataEventDoLater = new DebouncedDoLater(() => {
       const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
@@ -626,12 +644,13 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
   setEmulator(emulator: Term.Emulator): void {
     if (this._emulator !== null) {
       // Disconnect the last emulator.
-      this._emulator.removeRenderEventListener(this._renderEventListener);
+      this.#onRenderDispose.dispose();
+      this.#onRenderDispose = null;
       this._emulator = null;
     }
 
     if (emulator !== null) {
-      emulator.addRenderEventListener(this._renderEventListener);
+      this.#onRenderDispose = emulator.onRender(this._renderEventHandler);
     }
 
     this._emulator = emulator;
@@ -1384,7 +1403,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     }
   }
 
-  private _handleRenderEvent(instance: Term.Emulator, event: TermApi.RenderEvent): void {
+  private _handleRenderEvent(event: TermApi.RenderEvent): void {
     const sizeResized = this._handleSizeEvent(event.rows, event.columns, event.realizedRows);
     const refreshResized = this._refreshScreen(event.refreshStartRow, event.refreshEndRow);
     const appendedScrollbackLineDetail = this._insertScrollbackLines(event.scrollbackLines);
