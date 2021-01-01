@@ -185,7 +185,9 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       this._drawPlainCharacter(ctx, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx, widthInCells);
     }
 
-    this._drawDecoration(ctx, style, xPx, yPx, widthPx, fgRGBA);
+    for (let i=0; i<widthInCells; i++) {
+      this._drawDecoration(ctx, style, xPx + i * widthPx, yPx, widthPx, fgRGBA);
+    }
 
     const cachedGlyph = this._createCachedGlyphStruct({
       xPixels: xPx,
@@ -312,16 +314,18 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     }
 
     if (style & STYLE_MASK_HYPERLINK && ! (style & STYLE_MASK_HYPERLINK_HIGHLIGHT)) {
+      ctx.save();
       const halfAlphaFgRGBA = (fgRGBA & 0xffffff00) | ((fgRGBA >> 1) & 0x7f);
       const fgCSS = RGBAToCss(halfAlphaFgRGBA);
       ctx.fillStyle = fgCSS;
       ctx.strokeStyle = fgCSS;
-  
+
       // One litle dash at second underline height.
       const dashWidthPx = Math.max(1, Math.floor(widthPx / 3));
       const firstXPx = Math.floor(widthPx / 3);
       ctx.fillRect(xPx + firstXPx, yPx + this._metrics.secondUnderlineY, dashWidthPx,
         this._metrics.underlineHeight);
+      ctx.restore();
     }
   }
 
