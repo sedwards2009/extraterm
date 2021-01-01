@@ -22,21 +22,27 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
 
   environment: TerminalEnvironmentProxy;
+  screen: ExtensionApi.Screen;
   private _sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   private _sessionConfigurationExtensions: Object = null;
 
   _onDidAppendBlockEventEmitter = new EventEmitter<ExtensionApi.Block>();
   onDidAppendBlock: ExtensionApi.Event<ExtensionApi.Block>;
 
-  onDidAppendScrollbackLines: ExtensionApi.Event<ExtensionApi.AppendScrollbackLinesDetail>;
-  _onDidAppendScrollbackLinesEventEmitter = new EventEmitter<ExtensionApi.AppendScrollbackLinesDetail>();
+  onDidAppendScrollbackLines: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
+  _onDidAppendScrollbackLinesEventEmitter = new EventEmitter<ExtensionApi.LineRangeChange>();
+
+  onDidScreenChange: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
+  _onDidScreenChangeEventEmitter = new EventEmitter<ExtensionApi.LineRangeChange>();
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
     this._log = getLogger("TerminalProxy", this);
     this._terminal.onDispose(this._handleTerminalDispose.bind(this));
     this.environment = new TerminalEnvironmentProxy(this._terminal);
+    this.screen = new ScreenProxy(this._terminal);
     this.onDidAppendBlock = this._onDidAppendBlockEventEmitter.event;
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
+    this.onDidScreenChange = this._onDidScreenChangeEventEmitter.event;
 
     this._sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
     this._sessionConfigurationExtensions = this._sessionConfiguration.extensions ?? {};
@@ -152,6 +158,7 @@ interface TabTitleWidgetInfo {
   factoryResult: unknown;
 }
 
+
 class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
   onChange: ExtensionApi.Event<string[]>;
   _onChangeEventEmitter = new EventEmitter<string[]>();
@@ -201,6 +208,35 @@ class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
     return this._terminal.environment.entries();
   }
 }
+
+
+class ScreenProxy implements ExtensionApi.Screen {
+
+  constructor(private _terminal: EtTerminal) {
+  }
+
+  getLineText(line: number): string {
+    const str = this._terminal.getEmulator().getLineText(line);
+    return str == null ? "" : str;
+  }
+
+  applyHyperlink(line: number, x: number, length: number, url: string): void {
+    const emulator = this._terminal.getEmulator();
+    const termLine = emulator.lineAtRow(line);
+    const startColumn = termLine.mapStringIndexToColumn(0, x);
+    const endColumn = termLine.mapStringIndexToColumn(0, x + length);
+    emulator.applyHyperlink(line, startColumn, endColumn - startColumn, url);
+  }
+
+  get width(): number {
+    return this._terminal.getEmulator().size().columns;
+  }
+
+  get height(): number {
+    return this._terminal.getEmulator().size().rows;
+  }
+}
+
 
 class TerminalBorderWidgetImpl implements InternalTerminalBorderWidget {
 

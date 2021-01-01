@@ -9,6 +9,8 @@ import { TerminalViewer } from "../../viewers/TerminalAceViewer";
 
 export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDetails {
 
+  #scrollback: ExtensionApi.Screen = null;
+
   constructor(internalExtensionContext: InternalExtensionContext, private _terminalViewer: TerminalViewer) {
     this._terminalViewer.onDispose(this._handleTerminalViewerDispose.bind(this));
   }
@@ -32,36 +34,11 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
     return this._terminalViewer.getEmulator() != null;
   }
 
-  get scrollbackLength(): number {
-    this._checkIsAlive();
-    return this._terminalViewer.getScrollbackLength();
-  }
-
-  getScrollbackLineText(line: number): string {
-    this._checkIsAlive();
-    return this._terminalViewer.getScrollbackLine(line);
-  }
-
-  getScreenLineText(line: number): string {
-    this._checkIsAlive();
-    const emulator = this._terminalViewer.getEmulator();
-    const emulatorLine = emulator.getLineText(line);
-    return emulatorLine == null ? "" : emulatorLine;
-  }
-
-  get screenHeight(): number {
-    this._checkIsAlive();
-    return this._terminalViewer.getScreenHeight();
-  }
-
-  get screenWidth(): number {
-    this._checkIsAlive();
-    return this._terminalViewer.getScreenWidth();
-  }
-
-  applyScrollbackHyperlink(line: number, x: number, length: number, url: string): void {
-    this._checkIsAlive();
-    this._terminalViewer.applyScrollbackHyperlink(line, x, length, url);
+  get scrollback(): ExtensionApi.Screen {
+    if (this.#scrollback == null) {
+      this.#scrollback = new ScrollbackProxy(this._terminalViewer);
+    }
+    return this.#scrollback;
   }
 
   find(needle: string, options?: ExtensionApi.FindOptions): boolean {
@@ -87,5 +64,27 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
   highlight(re: RegExp): void {
     this._checkIsAlive();
     this._terminalViewer.highlight(re);
+  }
+}
+
+class ScrollbackProxy implements ExtensionApi.Screen {
+
+  constructor(private _terminalViewer) {
+  }
+
+  get width(): number {
+    return this._terminalViewer.getScreenWidth();
+  }
+
+  get height(): number {
+    return this._terminalViewer.getScrollbackLength();
+  }
+
+  getLineText(line: number): string {
+    return this._terminalViewer.getScrollbackLine(line);
+  }
+
+  applyHyperlink(line: number, x: number, length: number, url: string): void {
+    this._terminalViewer.applyScrollbackHyperlink(line, x, length, url);
   }
 }

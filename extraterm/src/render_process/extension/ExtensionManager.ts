@@ -9,7 +9,7 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
 
 import { Logger, getLogger, log } from "extraterm-logging";
-import { EtTerminal, AppendScrollbackLinesDetail } from "../Terminal";
+import { EtTerminal, LineRangeChange } from "../Terminal";
 import { TextViewer } from"../viewers/TextAceViewer";
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
   isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor } from "./InternalTypes";
@@ -669,9 +669,15 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     });
 
-    newTerminal.onDidAppendScrollbackLines((ev: AppendScrollbackLinesDetail) => {
+    newTerminal.onDidAppendScrollbackLines((ev: LineRangeChange) => {
       for (const extension of this._getActiveRenderExtensions()) {
         extension.contextImpl._internalWindow.terminalDidAppendScrollbackLines(newTerminal, ev);
+      }
+    });
+
+    newTerminal.onDidScreenChange((ev: LineRangeChange) => {
+      for (const extension of this._getActiveRenderExtensions()) {
+        extension.contextImpl._internalWindow.terminalDidScreenChange(newTerminal, ev);
       }
     });
 

@@ -7,7 +7,7 @@
 export { Disposable, Event } from "extraterm-event-emitter";
 export { Logger } from "./Logger";
 export { TerminalEnvironment } from "./TerminalEnvironment";
-export { Terminal, AppendScrollbackLinesDetail, TerminalBorderWidget, TerminalBorderWidgetFactory } from "./Terminal";
+export { Terminal, LineRangeChange, TerminalBorderWidget, TerminalBorderWidgetFactory } from "./Terminal";
 export { Tab, NumberInputOptions, ListPickerOptions, TabTitleWidget, TabTitleWidgetFactory } from "./Tab";
 export { CustomizedCommand, Commands } from "./Commands";
 export { BulkFileMetadata, BulkFileState, BulkFileHandle } from "./BulkFiles";
@@ -21,3 +21,4 @@ export { ViewerPosture, ViewerMetadata, ViewerMetadataChange, ExtensionViewerBas
   ViewerBase } from "./Viewers";
 export { Block, FindStartPosition, FindOptions, TerminalOutputDetails, TerminalOutputType, TextViewerDetails,
   TextViewerType } from "./Block";
+export { Screen, ScreenChange } from "./Screen";

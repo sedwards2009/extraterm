@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Screen } from "./Screen";
 import { Tab } from "./Tab";
 
 /**
@@ -68,42 +69,7 @@ export interface TerminalOutputDetails {
    */
   readonly hasPty: boolean;
 
-  /**
-   * The number of rows in the scrollback area.
-   */
-  readonly scrollbackLength: number;
-
-  /**
-   * Get a row from the scrollback area as a string.
-   *
-   * @param line The line/row to fetch from the scrollback area. First/top
-   *    line on the scrollback is line 0, the last one is `scrollbackLength` - 1.
-   * @returns The line as a string.
-   */
-  getScrollbackLineText(line: number): string;
-
-  /**
-   * The height of the screen in rows.
-   *
-   * The screen is the active area/grid where which can be changed by the emulation.
-   */
-  readonly screenHeight: number;
-
-  /**
-   * The width of the screen in columns.
-   */
-  readonly screenWidth: number;
-
-  /**
-   * Get a row of text from the screen as a string.
-   *
-   * @param line The line/row to fetch. Top line on the screen is line 0. Last
-   *    one is `screenHeight` - 1.
-   * @returns The line as a string.
-   */
-  getScreenLineText(line: number): string;
-
-  applyScrollbackHyperlink(line: number, x: number, length: number, url: string): void;
+  readonly scrollback: Screen;
 
   find(needle: string | RegExp, options?: FindOptions): boolean;
   findNext(needle: string | RegExp): boolean;

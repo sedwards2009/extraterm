@@ -3,9 +3,16 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
 import * as crypto from "crypto";
-import { BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture, TerminalEnvironment, SessionConfiguration } from "@extraterm/extraterm-extension-api";
+import {
+  BulkFileHandle,
+  Disposable,
+  Event,
+  SessionConfiguration,
+  TerminalEnvironment,
+  ViewerMetadata,
+  ViewerPosture,
+} from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 import { CustomElement } from "extraterm-web-component-decorators";
 import { log as LogDecorator, Logger, getLogger } from "extraterm-logging";
@@ -50,7 +57,7 @@ import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from "./extension/InternalTypes";
 import { TerminalVisualConfig } from "./TerminalVisualConfig";
 import { ClipboardType } from "../WindowMessages";
-import { TitleChangeEvent, DataEvent, WriteBufferSizeEvent } from "term-api";
+import { ScreenChangeEvent, TitleChangeEvent, DataEvent, WriteBufferSizeEvent } from "term-api";
 
 const log = LogDecorator;
 
@@ -177,8 +184,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   onDidAppendScrollbackLines: Event<LineRangeChange>;
   #onDidAppendScrollbackLinesEventEmitter = new EventEmitter<LineRangeChange>();
 
-  onDidChangeScreenLines: Event<LineRangeChange>;
-  #onDidChangeScreenLinesEventEmitter = new EventEmitter<LineRangeChange>();
+  onDidScreenChange: Event<LineRangeChange>;
+  #onDidScreenChangeEventEmitter = new EventEmitter<LineRangeChange>();
 
   #viewerDidAppendScrollbackLinesDisposable: Disposable = null;
 
@@ -212,6 +219,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._fetchNextTag();
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
+    this.onDidScreenChange = this.#onDidScreenChangeEventEmitter.event;
   }
 
   connectedCallback(): void {
@@ -315,6 +323,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   setWindowId(windowId: string): void {
     this._windowId = windowId;
+  }
+
+  getEmulator(): Term.Emulator {
+    return this._emulator;
   }
 
   /**
@@ -634,6 +646,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     emulator.onTitleChange(this._handleTitle.bind(this));
     emulator.onData(this._handleTermData.bind(this));
     emulator.onRender(this._handleTermSize.bind(this));
+    emulator.onScreenChange(this._handleScreenChange.bind(this));
 
     // Application mode handlers
     const applicationModeHandler: TermApi.ApplicationModeHandler = {
@@ -837,6 +850,14 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
         { key: TerminalEnvironment.TERM_COLUMNS, value: "" + newColumns},
       ]);
     }
+  }
+
+  private _handleScreenChange(event: ScreenChangeEvent): void {
+    this.#onDidScreenChangeEventEmitter.fire({
+      viewer: this._terminalViewer,
+      startLine: event.refreshStartRow,
+      endLine: event.refreshEndRow,
+    });
   }
 
   private _sendTitleEvent(title: string): void {

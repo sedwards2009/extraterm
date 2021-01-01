@@ -8,7 +8,7 @@ import * as _ from "lodash";
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 
-import { EtTerminal, AppendScrollbackLinesDetail } from "../../Terminal";
+import { EtTerminal, LineRangeChange } from "../../Terminal";
 import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor, InternalSessionEditor } from "../InternalTypes";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry } from "../WorkspaceSessionEditorRegistry";
@@ -80,7 +80,7 @@ export class WindowProxy implements InternalWindow {
     }
   }
 
-  terminalDidAppendScrollbackLines(terminal: EtTerminal, ev: AppendScrollbackLinesDetail): void {
+  terminalDidAppendScrollbackLines(terminal: EtTerminal, ev: LineRangeChange): void {
     if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
       const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
@@ -90,6 +90,22 @@ export class WindowProxy implements InternalWindow {
           startLine: ev.startLine,
           endLine: ev.endLine
         });
+      }
+    }
+  }
+
+  terminalDidScreenChange(terminal: EtTerminal, ev: LineRangeChange): void {
+    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+      if (proxy._onDidScreenChangeEventEmitter.hasListeners()) {
+        const block = this._internalExtensionContext._proxyFactory.getBlock(ev.viewer);
+        if (ev.startLine !== -1 && ev.endLine !== -1) {
+          proxy._onDidScreenChangeEventEmitter.fire({
+            block,
+            startLine: ev.startLine,
+            endLine: ev.endLine
+          });
+        }
       }
     }
   }

@@ -5,7 +5,7 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 
-import { EtTerminal, AppendScrollbackLinesDetail } from "../Terminal";
+import { EtTerminal, LineRangeChange } from "../Terminal";
 import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "../../ExtensionMetadata";
 import { EtViewerTab } from "../ViewerTab";
@@ -119,7 +119,8 @@ export interface InternalWindow extends ExtensionApi.Window {
 
   terminalAppendedViewer(newTerminal: EtTerminal, viewer: ViewerElement): void;
   terminalEnvironmentChanged(terminal: EtTerminal, changeList: string[]): void;
-  terminalDidAppendScrollbackLines(terminal: EtTerminal, ev: AppendScrollbackLinesDetail): void;
+  terminalDidAppendScrollbackLines(terminal: EtTerminal, ev: LineRangeChange): void;
+  terminalDidScreenChange(terminal: EtTerminal, ev: LineRangeChange): void;
 }
 
 /**

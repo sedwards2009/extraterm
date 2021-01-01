@@ -32,7 +32,7 @@
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
-import { CharCellGrid } from 'extraterm-char-cell-grid';
+import { CharCellGrid } from "extraterm-char-cell-grid";
 import { Event } from "extraterm-event-emitter";
 
 
@@ -61,7 +61,7 @@ export interface TerminalSize {
   columns: number;
 }
 
-export interface RenderEvent {
+export interface ScreenChangeEvent {
   instance: EmulatorApi;
 
   rows: number;         // the current number of rows in the emulator screen.
@@ -72,9 +72,12 @@ export interface RenderEvent {
                             // -1 indicates no refresh needed.
   refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
 
-  scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
   cursorRow: number;
   cursorColumn: number;
+}
+
+export interface RenderEvent extends ScreenChangeEvent {
+  scrollbackLines: Line[];  // List of lines which have reached the scrollback. Can be null.
 }
 
 export interface BellEvent {
@@ -270,6 +273,7 @@ export interface EmulatorApi {
   isProcessingPaused(): boolean;
 
   onRender: Event<RenderEvent>;
+  onScreenChange: Event<ScreenChangeEvent>;
   onBell: Event<BellEvent>;
   onData: Event<DataEvent>;
   onTitleChange: Event<TitleChangeEvent>;

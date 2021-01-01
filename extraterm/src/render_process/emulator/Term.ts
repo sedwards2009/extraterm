@@ -39,13 +39,14 @@ import {
   DataEvent,
   EmulatorApi,
   Line,
-  TerminalSize,
+  MinimalKeyboardEvent,
   MouseEventOptions,
   RenderEvent,
-  WriteBufferStatus,
-  MinimalKeyboardEvent,
+  ScreenChangeEvent,
+  TerminalSize,
   TitleChangeEvent,
-  WriteBufferSizeEvent
+  WriteBufferSizeEvent,
+  WriteBufferStatus,
 } from 'term-api';
 
 import { Event, EventEmitter } from "extraterm-event-emitter";
@@ -276,6 +277,9 @@ export class Emulator implements EmulatorApi {
   onWriteBufferSize: Event<WriteBufferSizeEvent>;
   #onWriteBufferSizeEventEmitter = new EventEmitter<WriteBufferSizeEvent>();
 
+  onScreenChange: Event<ScreenChangeEvent>;
+  #onScreenChangeEventEmitter = new EventEmitter<ScreenChangeEvent>();
+
   constructor(options: Options) {
     this._log = getLogger("Emulator", this);
     this.rows = options.rows === undefined ? 24 : options.rows;
@@ -291,6 +295,7 @@ export class Emulator implements EmulatorApi {
     this._platform = options.platform;
 
     this.onRender = this.#onRenderEventEmitter.event;
+    this.onScreenChange = this.#onScreenChangeEventEmitter.event;
     this.onBell = this.#onBellEventEmitter.event;
     this.onData = this.#onDataEventEmitter.event;
     this.onTitleChange = this.#onTitleChangeEventEmitter.event;
@@ -376,7 +381,7 @@ export class Emulator implements EmulatorApi {
     }
     this._hasFocus = true;
     this._showCursor();
-    this._dispatchEvents();
+    this._dispatchRenderEvent();
   }
 
   /**
@@ -402,7 +407,7 @@ export class Emulator implements EmulatorApi {
       this.send('\x1b[O');
     }
     this._hasFocus = false;
-    this._dispatchEvents();
+    this._dispatchRenderEvent();
   }
 
   mouseDown(ev: MouseEventOptions): boolean {
@@ -457,7 +462,7 @@ export class Emulator implements EmulatorApi {
 
   refreshScreen(): void {
     this.markRowRangeForRefresh(0, this.lines.length);
-    this._dispatchEvents();
+    this._dispatchRenderEvent();
   }
 
   /**
@@ -479,7 +484,7 @@ export class Emulator implements EmulatorApi {
   }
 
   flushRenderQueue(): void {
-    this._dispatchEvents();
+    this._dispatchRenderEvent();
   }
 
   private _getRow(row: number): LineImpl {
@@ -536,7 +541,7 @@ export class Emulator implements EmulatorApi {
    * Usually call via a timer.
    */
   private _refreshFrame(): void {
-    this._dispatchEvents();
+    this._dispatchRenderEvent();
     this._refreshStart = REFRESH_START_NULL;
     this._refreshEnd = REFRESH_END_NULL;
   }
@@ -570,6 +575,19 @@ export class Emulator implements EmulatorApi {
       return newLine;
     }
     return line;
+  }
+
+  applyHyperlink(row: number, column: number, length: number, url: string): void {
+    if (row < 0 || row >= this.rows) {
+      return;
+    }
+
+    const line = this._getRow(row);
+    const linkID = line.getOrCreateLinkIDForURL(url);
+    for (let i = 0; i < length; i++) {
+      line.setLinkID(column + i, 0, linkID);
+    }
+    this.markRowForRefresh(row);
   }
 
   private _cursorBlink(): void {
@@ -1892,7 +1910,7 @@ export class Emulator implements EmulatorApi {
       this._params.nextParameter();
       if (this._params[0].stringValue === this.applicationModeCookie) {
         this.state = ParserState.APPLICATION_END;
-        this._dispatchEvents();
+        this._dispatchRenderEvent();
         if (this._applicationModeHandler != null) {
           const response = this._applicationModeHandler.start(this._params.getStringList());
           if (response.action === ApplicationModeResponseAction.ABORT) {
@@ -1938,7 +1956,7 @@ export class Emulator implements EmulatorApi {
 
     } else if (nextzero === i) {
       // We are already at the end-mode character.
-      this._dispatchEvents();
+      this._dispatchRenderEvent();
       if (this._applicationModeHandler != null) {
         const response = this._applicationModeHandler.end();
         if (response.action === ApplicationModeResponseAction.ABORT) {
@@ -1952,7 +1970,7 @@ export class Emulator implements EmulatorApi {
 
     } else {
       // Incoming end-mode character. Send the last piece of data.
-      this._dispatchEvents();
+      this._dispatchRenderEvent();
       if (this._applicationModeHandler != null) {
         const response = this._applicationModeHandler.data(data.slice(i, nextzero));
         if (response.action === ApplicationModeResponseAction.ABORT) {
@@ -2406,20 +2424,41 @@ export class Emulator implements EmulatorApi {
 
     this.markRowRangeForRefresh(0, this.lines.length-1);
 
-    this._dispatchEvents();
+    this._dispatchRenderEvent();
   }
 
-  private _dispatchEvents(): void {
+  private _dispatchRenderEvent(): void {
     let checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
     let checkedRefreshStart = this._refreshStart;
-
     if (checkedRefreshEnd === REFRESH_END_NULL || checkedRefreshStart === checkedRefreshEnd) {
       // Don't signal to refresh anything. This can happen when there are no realized rows yet.
       checkedRefreshEnd = -1;
       checkedRefreshStart = -1;
     }
 
-    const event: RenderEvent = {
+    const screenChangeEvent: ScreenChangeEvent = {
+      instance: this,
+
+      rows: this.rows,
+      columns: this.cols,
+      realizedRows: this.lines.length,
+
+      refreshStartRow: checkedRefreshStart,
+      refreshEndRow: checkedRefreshEnd,
+      cursorRow: this.y,
+      cursorColumn: this.x
+    };
+    this.#onScreenChangeEventEmitter.fire(screenChangeEvent);
+
+    checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
+    checkedRefreshStart = this._refreshStart;
+    if (checkedRefreshEnd === REFRESH_END_NULL || checkedRefreshStart === checkedRefreshEnd) {
+      // Don't signal to refresh anything. This can happen when there are no realized rows yet.
+      checkedRefreshEnd = -1;
+      checkedRefreshStart = -1;
+    }
+
+    const renderEvent: RenderEvent = {
       instance: this,
 
       rows: this.rows,
@@ -2437,7 +2476,7 @@ export class Emulator implements EmulatorApi {
     this._refreshEnd = REFRESH_END_NULL;
     this._scrollbackLineQueue = [];
 
-    this.#onRenderEventEmitter.fire(event);
+    this.#onRenderEventEmitter.fire(renderEvent);
   }
 
   private markRowForRefresh(y: number): void {
@@ -2582,7 +2621,7 @@ export class Emulator implements EmulatorApi {
     this._fullReset();
     this.x = 0;
     this._setCursorY(0);
-    this._dispatchEvents();
+    this._dispatchRenderEvent();
   }
 
   // ESC c Full Reset (RIS).

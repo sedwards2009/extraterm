@@ -9,6 +9,7 @@ import { Tab } from "./Tab";
 import { TerminalEnvironment } from "./TerminalEnvironment";
 import { SessionConfiguration } from "./Sessions";
 import { Block } from "./Block";
+import { Screen } from "./Screen";
 
 
 /**
@@ -34,6 +35,8 @@ export interface Terminal {
    * The contents of the event is the new block itself.
    */
   readonly onDidAppendBlock: Event<Block>;
+
+  readonly screen: Screen;
 
   /**
    * Get the tab which holds this terminal.
@@ -79,30 +82,32 @@ export interface Terminal {
   /**
    * Fired when a lines are added to the scrollback area of a block.
    */
-  readonly onDidAppendScrollbackLines: Event<AppendScrollbackLinesDetail>;
+  readonly onDidAppendScrollbackLines: Event<LineRangeChange>;
+
+  readonly onDidScreenChange: Event<LineRangeChange>;
 }
 
 /**
- * Describes a range of lines in the scrollback of a block which were just appended.
+ * Describes a range of lines.
  */
-export interface AppendScrollbackLinesDetail {
+export interface LineRangeChange {
   /**
    * The block which received the new scrollback lines.
-   * 
+   *
    * Its type will be `TerminalOutputType`.
    */
   block: Block;
 
   /**
    * The index into the scrollback area of the first line added.
-   * 
+   *
    * The complete range of affected lines is from `startLine` up to but not including `endLine`.
    */
   startLine: number;
 
   /**
    * The index after the last affected line.
-   * 
+   *
    * The range of affected lines is from `startLine` up to but not including `endLine`.
    */
   endLine: number;
