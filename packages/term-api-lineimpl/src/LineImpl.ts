@@ -159,15 +159,12 @@ export class LineImpl extends CharCellGrid implements Line {
     x = Math.max(x, 0);
     let sv = y < 0 ? -y : 0;
     y = Math.max(y, 0);
-// console.log(`x: ${x}, y: ${y}, endY: ${endY}, endH: ${endH}, sx: ${sx}, sv: ${sv}`);
     for (let v=y; v<endY; v++, sv++) {
       for (let h=x; h<endH; h++) {
-// console.log(`getLinkID(${h+sx}, ${sv})`);
         const sourceLinkID = sourceGrid.getLinkID(h+sx, sv);
         if (sourceLinkID !== 0) {
           const url = sourceGrid.getLinkURLByID(sourceLinkID);
           const newLinkID = this.getOrCreateLinkIDForURL(url);
-// console.log(`setLinkID(${h+x}, ${v+y})`);
           this.setLinkID(h, v, newLinkID);
         }
       }
@@ -184,5 +181,44 @@ export class LineImpl extends CharCellGrid implements Line {
       c += isWide(codePoint) ? 2 : 1;
     }
     return c;
+  }
+
+  // See `CharCellGrid.getString()`. This version though properly handles
+  // full width characters.
+  getString(x: number, y: number, count?: number): string {
+    const codePoints: number[] = [];
+    const spaceCodePoint = " ".codePointAt(0);
+    const lastX = x + (count == null ? this.width : Math.min(this.width, count));
+
+    let isLastWide = false;
+    for (let i=x; i<lastX; i++) {
+      const codePoint = this.getCodePoint(i, y);
+      if (codePoint === spaceCodePoint && isLastWide) {
+        isLastWide = false;
+        continue;
+      }
+      codePoints.push(codePoint);
+      isLastWide = isWide(codePoint);
+    }
+    return String.fromCodePoint(...codePoints);
+  }
+
+  // See `CharCellGrid.getUTF16StringLength()`. This version though properly
+  // handles full width characters.
+  getUTF16StringLength(x: number, y: number, count?: number): number {
+    const spaceCodePoint = " ".codePointAt(0);
+    const lastX = x + (count == null ? this.width : Math.min(this.width, count));
+    let size = 0;
+    let isLastWide = false;
+    for (let i=x; i<lastX; i++) {
+      const codePoint = this.getCodePoint(i, y);
+      if (codePoint === spaceCodePoint && isLastWide) {
+        isLastWide = false;
+        continue;
+      }
+      isLastWide = isWide(codePoint);
+      size += utf16LengthOfCodePoint(codePoint);
+    }
+    return size;
   }
 }
