@@ -14,6 +14,25 @@ import { Screen } from "./Screen";
 
 /**
  * An active terminal with connected TTY.
+ *
+ * A Terminal is the contents of a typical terminal tab. From a terminal
+ * emulation point of view the terminal consists of a `screen` which is the
+ * area where terminal applications can render output to, and a scrollback
+ * area where rows of text which have "scrolled off" the top of the screen
+ * are kept.
+ *
+ * Extraterm's model for the contents of the terminal is slightly more complex
+ * than traditional terminal emulators. The contents of a terminal in Extraterm
+ * is a stack of "blocks" of content which can be a mix of framed terminal
+ * output and "viewers" holding different data like images and downloads. The
+ * `blocks` property exposes this stack. New terminal output from applications
+ * appears the last terminal output block. A terminal output block contains a
+ * bunch of rows in its `scrollback` property. When a terminal output block is
+ * the target of emulation, the contents of the `screen` visually appear as
+ * part of this block.
+ *
+ * In the common case where no shell integration is being used, there will be
+ * just one terminal output block, much like a traditional terminal emulator.
  */
 export interface Terminal {
   /**
@@ -36,7 +55,28 @@ export interface Terminal {
    */
   readonly onDidAppendBlock: Event<Block>;
 
+  /**
+   * The active part of the screen/grid which the terminal emulation controls
+   * and terminals applications can access and render into.
+   */
   readonly screen: Screen;
+
+  /**
+   * Event fired when lines in the screen are changed.
+   *
+   * This event is fired whenever rows on the screen are changed and rendered
+   * to the window. It is not fired for every change made to a row. The
+   * process of updating the contents of the screen internally and the process
+   * of showing that in the window to the user, are decoupled for performance
+   * reasons. Many updates to the screen internally may result in just one
+   * update to the window itself.
+   */
+  readonly onDidScreenChange: Event<LineRangeChange>;
+
+  /**
+   * Fired when a lines are added to the scrollback area of a block.
+   */
+  readonly onDidAppendScrollbackLines: Event<LineRangeChange>;
 
   /**
    * Get the tab which holds this terminal.
@@ -78,13 +118,6 @@ export interface Terminal {
    * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
    */
   readonly isAlive: boolean;
-
-  /**
-   * Fired when a lines are added to the scrollback area of a block.
-   */
-  readonly onDidAppendScrollbackLines: Event<LineRangeChange>;
-
-  readonly onDidScreenChange: Event<LineRangeChange>;
 }
 
 /**
