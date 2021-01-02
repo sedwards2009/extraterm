@@ -7,6 +7,7 @@ const { performance } = require('perf_hooks');
 
 import { ArrayKeyTrie } from "./ArrayKeyTrie";
 import { TripleKeyMap } from "./TripleKeyMap";
+import { PairKeyMap } from "./PairKeyMap";
 
 const NUMBER_OF_KEYS = 20480;
 const NUMBER_OF_LOOPS = 200;
@@ -41,9 +42,11 @@ test(`Speed test`, done => {
 
   const data = generateData();
   const tripleMap = new TripleKeyMap<number, number, number, number>();
+  const pairMap = new PairKeyMap<number, number, number>();
   for (const key of data) {
     trie.set(key, key[0]);
     tripleMap.set(key[0], key[1], key[2], key[0]);
+    pairMap.set(key[0], key[1], key[0]);
   }
 
   timeIt("ArrayKeyTrie", () => {
@@ -63,5 +66,15 @@ test(`Speed test`, done => {
     }
     // log(total);
   });
+
+  timeIt("PairNumberKeyMap", () => {
+    let total = 0;
+    for (const key of data) {
+      const value = pairMap.get(key[0], key[1]);
+      total += value;
+    }
+    // log(total);
+  });
+
   done();
 });

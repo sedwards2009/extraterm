@@ -5,3 +5,4 @@
  */
 export { ArrayKeyTrie } from "./ArrayKeyTrie";
 export { TripleKeyMap } from "./TripleKeyMap";
+export { PairKeyMap } from "./PairKeyMap";
