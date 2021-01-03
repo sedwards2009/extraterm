@@ -47,6 +47,18 @@ export class PairKeyMap<K1, K2, V> {
   }
 
   /**
+   * Test if this map has a key.
+   *
+   * @param key1 the first part of the key to look up with.
+   * @param key2 the second part of the key to look up with.
+   * @returns True if this map has the key, otherwise false.
+   */
+  has(key1: K1, key2: K2): boolean {
+    const value = this.get(key1, key2);
+    return value !== undefined;
+  }
+
+  /**
    * Delete the given key and its value
    *
    * @param key1 the first part of the key to look up with.
@@ -81,6 +93,37 @@ export class PairKeyMap<K1, K2, V> {
     }
   }
 
+  /**
+   * Create an iterator for the K2 keys given a K1 key.
+   */
+  *level1Keys(key1: K1): IterableIterator<K2> {
+    const level1 = this._rootMap.get(key1);
+    if (level1 === undefined) {
+      return;
+    }
+    for (const key of level1.keys()) {
+      yield key;
+    }
+  }
+
+  /**
+   * Create an iterator over the values for key K1.
+   */
+  *level1Values(key1: K1): IterableIterator<V> {
+    const level1 = this._rootMap.get(key1);
+    if (level1 === undefined) {
+      return;
+    }
+    for (const value of level1.values()) {
+      yield value;
+    }
+  }
+
+  /**
+   * Copy this `PairKeyMap`.
+   *
+   * Values are not copied, just referenced.
+   */
   copy(): PairKeyMap<K1, K2, V> {
     const newCopy = new PairKeyMap<K1, K2, V>();
     for (const [key1, level1Map] of this._rootMap) {

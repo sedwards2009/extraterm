@@ -42,10 +42,10 @@ export interface Line extends CharCellGrid {
   wrapped: boolean;
   clone(): Line;
   hasLinks(): boolean;
-  getLinkURLByID(linkID: number): string;
-  getOrCreateLinkIDForURL(url: string): number;
-  getLinkIDByURL(url: string): number;
-  getAllLinkIDs(): number[];
+  getLinkURLByID(linkID: number): { url: string, group: string };
+  getOrCreateLinkIDForURL(url: string, group: string): number;
+  getLinkIDByURL(url: string, group: string): number;
+  getAllLinkIDs(group: string): number[];
   pasteGridWithLinks(sourceGrid: Line, x: number, y: number): void;
 
   mapStringIndexToColumn(line: number, x: number): number;

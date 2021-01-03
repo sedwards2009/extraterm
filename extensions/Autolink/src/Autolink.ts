@@ -47,11 +47,10 @@ function scanAndLinkScreen(terminal: Terminal, ev: LineRangeChange): void {
 
 function scanAndLink(screen: Screen, ev: LineRangeChange): void {
   for (let y = ev.startLine; y < ev.endLine; y++) {
+    screen.removeHyperlinks(y);
     const line = screen.getLineText(y);
-    log.debug(`Saw line '${line}'`);
     for (const found of (<any>line).matchAll(httpRegex)) {
       const url = found[0];
-      log.debug(`Saw '${url}'`);
       screen.applyHyperlink(y, found.index, url.length, url);
     }
   }

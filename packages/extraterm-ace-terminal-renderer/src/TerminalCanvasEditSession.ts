@@ -208,14 +208,43 @@ export class TerminalCanvasEditSession extends EditSession {
   getHyperlinkAtTextCoordinates(pos: Position): string {
     const line = this.getTerminalLine(pos.row);
     const linkID = line.getLinkID(pos.column, 0);
-    return linkID === 0? null : line.getLinkURLByID(linkID);
+    return linkID === 0 ? null : line.getLinkURLByID(linkID).url;
   }
 
-  applyHyperlinkAtTextCoordinates(pos: Position, length: number, url: string): void {
+  applyHyperlinkAtTextCoordinates(pos: Position, length: number, url: string, group: string=""): void {
     const line = this.getTerminalLine(pos.row);
-    const linkID = line.getOrCreateLinkIDForURL(url);
+    const linkID = line.getOrCreateLinkIDForURL(url, group);
     for (let i = 0; i < length; i++) {
       line.setLinkID(pos.column + i, 0, linkID);
     }
+  }
+
+  removeHyperlinks(lineNumber: number, group: string=""): boolean {
+    const line = this.getTerminalLine(lineNumber);
+    const width = line.width;
+    let didRemove = false;
+    if (group === "") {
+      for (let i=0; i<width; i++) {
+        const linkID = line.getLinkID(i, 0);
+        if (linkID !== 0) {
+          line.setLinkID(i, 0, 0);
+          didRemove = true;
+        }
+      }
+
+    } else {
+      const targetLinkIDs = line.getAllLinkIDs(group);
+      if (targetLinkIDs.length !== 0) {
+        for (let i=0; i<width; i++) {
+          const linkID = line.getLinkID(i, 0);
+          if (targetLinkIDs.includes(linkID)) {
+            line.setLinkID(i, 0, 0);
+            didRemove = true;
+          }
+        }
+      }
+    }
+
+    return didRemove;
   }
 }

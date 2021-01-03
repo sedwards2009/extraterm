@@ -39,7 +39,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     this._log = getLogger("TerminalProxy", this);
     this._terminal.onDispose(this._handleTerminalDispose.bind(this));
     this.environment = new TerminalEnvironmentProxy(this._terminal);
-    this.screen = new ScreenProxy(this._terminal);
+    this.screen = new ScreenProxy(this._internalExtensionContext, this._terminal);
     this.onDidAppendBlock = this._onDidAppendBlockEventEmitter.event;
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this._onDidScreenChangeEventEmitter.event;
@@ -212,7 +212,7 @@ class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
 
 class ScreenProxy implements ExtensionApi.Screen {
 
-  constructor(private _terminal: EtTerminal) {
+  constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
   }
 
   getLineText(line: number): string {
@@ -225,7 +225,14 @@ class ScreenProxy implements ExtensionApi.Screen {
     const termLine = emulator.lineAtRow(line);
     const startColumn = termLine.mapStringIndexToColumn(0, x);
     const endColumn = termLine.mapStringIndexToColumn(0, x + length);
-    emulator.applyHyperlink(line, startColumn, endColumn - startColumn, url);
+    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    emulator.applyHyperlink(line, startColumn, endColumn - startColumn, url, extensionName);
+  }
+
+  removeHyperlinks(line: number): void {
+    const emulator = this._terminal.getEmulator();
+    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    emulator.removeHyperlinks(line, extensionName);
   }
 
   get width(): number {

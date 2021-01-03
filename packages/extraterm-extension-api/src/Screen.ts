@@ -72,4 +72,13 @@ export interface Screen {
    * @param length The number of characters to apply the link to.
    */
   applyHyperlink(line: number, x: number, length: number, url: string): void;
+
+  /**
+   * Remove all links from a line.
+   * 
+   * This only applies to links which were added using `applyHyperlink()`.
+   * 
+   * @param line The line number of the row to affect.
+   */
+  removeHyperlinks(line: number): void;
 }

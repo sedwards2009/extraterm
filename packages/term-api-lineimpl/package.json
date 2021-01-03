@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-data-structures": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0",
     "term-api": "1.0.0"
   },

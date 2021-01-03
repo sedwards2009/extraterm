@@ -11,7 +11,7 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
 
   #scrollback: ExtensionApi.Screen = null;
 
-  constructor(internalExtensionContext: InternalExtensionContext, private _terminalViewer: TerminalViewer) {
+  constructor(private _internalExtensionContext: InternalExtensionContext, private _terminalViewer: TerminalViewer) {
     this._terminalViewer.onDispose(this._handleTerminalViewerDispose.bind(this));
   }
 
@@ -36,7 +36,7 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
 
   get scrollback(): ExtensionApi.Screen {
     if (this.#scrollback == null) {
-      this.#scrollback = new ScrollbackProxy(this._terminalViewer);
+      this.#scrollback = new ScrollbackProxy(this._internalExtensionContext, this._terminalViewer);
     }
     return this.#scrollback;
   }
@@ -69,7 +69,7 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
 
 class ScrollbackProxy implements ExtensionApi.Screen {
 
-  constructor(private _terminalViewer) {
+  constructor(private _internalExtensionContext: InternalExtensionContext, private _terminalViewer: TerminalViewer) {
   }
 
   get width(): number {
@@ -85,6 +85,12 @@ class ScrollbackProxy implements ExtensionApi.Screen {
   }
 
   applyHyperlink(line: number, x: number, length: number, url: string): void {
-    this._terminalViewer.applyScrollbackHyperlink(line, x, length, url);
+    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    this._terminalViewer.applyScrollbackHyperlink(line, x, length, url, extensionName);
+  }
+
+  removeHyperlinks(line: number): void {
+    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    this._terminalViewer.removeHyperlinks(line, extensionName);
   }
 }

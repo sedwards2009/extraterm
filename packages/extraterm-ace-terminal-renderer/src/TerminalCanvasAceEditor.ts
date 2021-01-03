@@ -35,10 +35,17 @@ export class TerminalCanvasAceEditor extends ExtratermAceEditor {
     return session.getHyperlinkAtTextCoordinates(pos);
   }
 
-  applyHyperlinkAtTextCoordinates(pos: Position, length: number, url: string): void {
+  applyHyperlinkAtTextCoordinates(pos: Position, length: number, url: string, group: string=""): void {
     const session = <TerminalCanvasEditSession> this.sessionOrThrow();
-    session.applyHyperlinkAtTextCoordinates(pos, length, url);
+    session.applyHyperlinkAtTextCoordinates(pos, length, url, group);
     this.#terminalCanvasRenderer.updateLines(pos.row, pos.row, session.$useWrapMode);
+  }
+
+  removeHyperlinks(lineNumber: number, group?: string): void {
+    const session = <TerminalCanvasEditSession> this.sessionOrThrow();
+    if (session.removeHyperlinks(lineNumber, group)) {
+      this.#terminalCanvasRenderer.updateLines(lineNumber, lineNumber, session.$useWrapMode);
+    }
   }
 
   setTerminalLines(startRow: number, lines: Line[]): void {

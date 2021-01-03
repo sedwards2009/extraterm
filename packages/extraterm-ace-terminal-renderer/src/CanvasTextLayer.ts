@@ -55,6 +55,7 @@ export class CanvasTextLayer implements TextLayer {
   private _transparentBackground = false;
 
   #hoveredURL: string = null;
+  #hoveredGroup: string = null;
 
   constructor(options: CanvasTextLayerOptions) {
     const { palette, fontFamily, fontSizePx, cursorStyle, ligatureMarker, contentDiv, transparentBackground } = options;
@@ -310,7 +311,7 @@ export class CanvasTextLayer implements TextLayer {
       if (terminalLine != null) {
         grid.pasteGrid(terminalLine, 0, canvasRow);
         if (this.#hoveredURL != null) {
-          const linkID = terminalLine.getLinkIDByURL(this.#hoveredURL);
+          const linkID = terminalLine.getLinkIDByURL(this.#hoveredURL, this.#hoveredGroup);
           if (linkID !== 0) {
             this._highlightLinkID(grid, canvasRow, 0, terminalLine.width, linkID);
           }
@@ -382,6 +383,8 @@ export class CanvasTextLayer implements TextLayer {
 
   mouseOver(pos: Position): void {
     const previousURL = this.#hoveredURL;
+    const previousGroup = this.#hoveredGroup;
+
     if (pos == null) {
       this.#hoveredURL = null;
     } else {
@@ -393,11 +396,14 @@ export class CanvasTextLayer implements TextLayer {
 
       if (linkID === 0) {
         this.#hoveredURL = null;
+        this.#hoveredGroup = null;
       } else {
-        this.#hoveredURL = line.getLinkURLByID(linkID);
+        const { url, group } = line.getLinkURLByID(linkID);
+        this.#hoveredURL = url;
+        this.#hoveredGroup = group;
       }
     }
-    if (previousURL !== this.#hoveredURL) {
+    if (previousURL !== this.#hoveredURL || previousGroup !== this.#hoveredGroup) {
       this.rerender();
     }
   }

@@ -577,17 +577,52 @@ export class Emulator implements EmulatorApi {
     return line;
   }
 
-  applyHyperlink(row: number, column: number, length: number, url: string): void {
+  applyHyperlink(row: number, column: number, length: number, url: string, group: string=""): void {
     if (row < 0 || row >= this.rows) {
       return;
     }
 
     const line = this._getRow(row);
-    const linkID = line.getOrCreateLinkIDForURL(url);
+    const linkID = line.getOrCreateLinkIDForURL(url, group);
     for (let i = 0; i < length; i++) {
       line.setLinkID(column + i, 0, linkID);
     }
     this.markRowForRefresh(row);
+  }
+
+  removeHyperlinks(row: number, group: string=""): void {
+    if (row < 0 || row >= this.rows) {
+      return;
+    }
+
+    const line = this._getRow(row);
+    const width = line.width;
+    let didRemove = false;
+    if (group === "") {
+      for (let i=0; i<width; i++) {
+        const linkID = line.getLinkID(i, 0);
+        if (linkID !== 0) {
+          line.setLinkID(i, 0, 0);
+          didRemove = true;
+        }
+      }
+
+    } else {
+      const targetLinkIDs = line.getAllLinkIDs(group);
+      if (targetLinkIDs.length !== 0) {
+        for (let i=0; i<width; i++) {
+          const linkID = line.getLinkID(i, 0);
+          if (targetLinkIDs.includes(linkID)) {
+            line.setLinkID(i, 0, 0);
+            didRemove = true;
+          }
+        }
+      }
+    }
+
+    if (didRemove) {
+      this.markRowForRefresh(row);
+    }
   }
 
   private _cursorBlink(): void {

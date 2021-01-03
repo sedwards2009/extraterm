@@ -710,13 +710,17 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     return null;
   }
 
-  applyScrollbackHyperlink(lineNumber: number, x: number, length: number, url: string): void {
+  applyScrollbackHyperlink(lineNumber: number, x: number, length: number, url: string, group: string=""): void {
     const line = this._aceEditor.getTerminalLine(lineNumber);
     const startColumn = line.mapStringIndexToColumn(0, x);
     const endColumn = line.mapStringIndexToColumn(0, x + length);
 
     this._aceEditor.applyHyperlinkAtTextCoordinates({ row: lineNumber, column: startColumn }, endColumn - startColumn,
-      url);
+      url, group);
+  }
+
+  removeHyperlinks(lineNumber: number, group: string): void {
+    this._aceEditor.removeHyperlinks(lineNumber, group);
   }
 
   find(needle: string, options?: FindOptions): boolean {

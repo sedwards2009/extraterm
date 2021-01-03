@@ -2,13 +2,19 @@
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
 
-import { Line } from 'term-api';
+import { Line } from "term-api";
+import { PairKeyMap } from "extraterm-data-structures";
 import { isWide, utf16LengthOfCodePoint } from "extraterm-unicode-utilities";
-import { CharCellGrid, Cell } from 'extraterm-char-cell-grid';
+import { CharCellGrid, Cell } from "extraterm-char-cell-grid";
 
 export interface CellWithHyperlink extends Cell {
   hyperlinkID: string;
   hyperlinkURL: string;
+}
+
+interface URLGroupPair {
+  group: string;
+  url: string;
 }
 
 /**
@@ -22,8 +28,8 @@ export class LineImpl extends CharCellGrid implements Line {
   wrapped = false;
 
   private _hyperlinkIDCounter = 0;
-  private _hyperlinkIDToURLMapping: Map<number, string> = null;
-  private _hyperlinkURLToIDMapping: Map<string, number> = null;
+  private _hyperlinkIDToURLMapping: Map<number, URLGroupPair> = null;
+  private _hyperlinkURLToIDMapping: PairKeyMap<string, string, number> = null;
 
   constructor(width: number, height: number, palette: number[]=null, __bare__=false) {
     super(width, height, palette, __bare__);
@@ -33,30 +39,31 @@ export class LineImpl extends CharCellGrid implements Line {
     return this._hyperlinkIDToURLMapping != null;
   }
 
-  getLinkURLByID(linkID: number): string {
+  getLinkURLByID(linkID: number): { url: string, group: string} {
     if (this._hyperlinkIDToURLMapping == null) {
       return null;
     }
     return this._hyperlinkIDToURLMapping.get(linkID);
   }
 
-  getLinkIDByURL(url: string): number {
+  getLinkIDByURL(url: string, group: string=""): number {
     if (this._hyperlinkIDToURLMapping == null) {
       return 0;
     }
-    if (this._hyperlinkURLToIDMapping.has(url)) {
-      return this._hyperlinkURLToIDMapping.get(url);
+    const id = this._hyperlinkURLToIDMapping.get(group, url);
+    if (id === undefined) {
+      return 0;
     }
-    return 0;
+    return id;
   }
 
-  getOrCreateLinkIDForURL(url: string): number {
+  getOrCreateLinkIDForURL(url: string, group: string=""): number {
     if (this._hyperlinkIDToURLMapping == null) {
-      this._hyperlinkIDToURLMapping = new Map<number, string>();
-      this._hyperlinkURLToIDMapping = new Map<string, number>();
+      this._hyperlinkIDToURLMapping = new Map<number, URLGroupPair>();
+      this._hyperlinkURLToIDMapping = new PairKeyMap<string, string, number>();
     }
 
-    if ( ! this._hyperlinkURLToIDMapping.has(url)) {
+    if ( ! this._hyperlinkURLToIDMapping.has(group, url)) {
       if (this._hyperlinkIDCounter === 255) {
         this._compactLinkIDs();
       }
@@ -66,11 +73,11 @@ export class LineImpl extends CharCellGrid implements Line {
 
       this._hyperlinkIDCounter++;
       const linkID = this._hyperlinkIDCounter;
-      this._hyperlinkURLToIDMapping.set(url, linkID);
-      this._hyperlinkIDToURLMapping.set(linkID, url);
+      this._hyperlinkURLToIDMapping.set(group, url, linkID);
+      this._hyperlinkIDToURLMapping.set(linkID, {url, group});
       return linkID;
     } else {
-      return this._hyperlinkURLToIDMapping.get(url);
+      return this._hyperlinkURLToIDMapping.get(group, url);
     }
   }
 
@@ -81,26 +88,29 @@ export class LineImpl extends CharCellGrid implements Line {
     const oldLinkIDMapping = this._hyperlinkIDToURLMapping;
 
     this._hyperlinkIDCounter = 0;
-    this._hyperlinkIDToURLMapping = new Map<number, string>();
-    this._hyperlinkURLToIDMapping = new Map<string, number>();
+    this._hyperlinkIDToURLMapping = new Map<number, URLGroupPair>();
+    this._hyperlinkURLToIDMapping = new PairKeyMap<string, string, number>();
 
     for (let y=0; y<height; y++) {
       for (let x=0; x<width; x++) {
         const linkID = this.getLinkID(x, y);
         if (linkID !== 0) {
-          const url = oldLinkIDMapping.get(linkID);
-          const newLinkID = this.getOrCreateLinkIDForURL(url);
+          const urlGroup = oldLinkIDMapping.get(linkID);
+          const newLinkID = this.getOrCreateLinkIDForURL(urlGroup.url, urlGroup.group);
           this.setLinkID(x, y, newLinkID);
         }
       }
     }
   }
 
-  getAllLinkIDs(): number[] {
+  getAllLinkIDs(group: string=""): number[] {
     if (this._hyperlinkIDToURLMapping == null) {
       return [];
     }
-    return Array.from(this._hyperlinkIDToURLMapping.keys());
+    if (group === "") {
+      return Array.from(this._hyperlinkIDToURLMapping.keys());
+    }
+    return Array.from(this._hyperlinkURLToIDMapping.level1Values(group));
   }
 
   setCellAndLink(x: number, y: number, cellAttr: CellWithHyperlink): void {
@@ -115,14 +125,14 @@ export class LineImpl extends CharCellGrid implements Line {
 
   getCellAndLink(x: number, y: number): CellWithHyperlink {
     const cellAttrs = this.getCell(x, y);
-    let hyperlinkURL: string = null;
+    let hyperlinkURLGroupPair: URLGroupPair = null;
     const hyperlinkID: string = null; // FIXME needed??
 
     if (cellAttrs.linkID !== 0) {
-      hyperlinkURL = this._hyperlinkIDToURLMapping.get(cellAttrs.linkID);
+      hyperlinkURLGroupPair = this._hyperlinkIDToURLMapping.get(cellAttrs.linkID);
     }
 
-    return {hyperlinkURL, hyperlinkID, ...cellAttrs};
+    return {hyperlinkURL: hyperlinkURLGroupPair.url, hyperlinkID, ...cellAttrs};
   }
 
   clone(): Line {
@@ -132,7 +142,7 @@ export class LineImpl extends CharCellGrid implements Line {
     if (this._hyperlinkIDToURLMapping != null) {
       grid._hyperlinkIDCounter = this._hyperlinkIDCounter;
       grid._hyperlinkIDToURLMapping = new Map(this._hyperlinkIDToURLMapping);
-      grid._hyperlinkURLToIDMapping = new Map(this._hyperlinkURLToIDMapping);
+      grid._hyperlinkURLToIDMapping = this._hyperlinkURLToIDMapping.copy();
     }
 
     return grid;
@@ -163,8 +173,8 @@ export class LineImpl extends CharCellGrid implements Line {
       for (let h=x; h<endH; h++) {
         const sourceLinkID = sourceGrid.getLinkID(h+sx, sv);
         if (sourceLinkID !== 0) {
-          const url = sourceGrid.getLinkURLByID(sourceLinkID);
-          const newLinkID = this.getOrCreateLinkIDForURL(url);
+          const urlGroup = sourceGrid.getLinkURLByID(sourceLinkID);
+          const newLinkID = this.getOrCreateLinkIDForURL(urlGroup.url, urlGroup.group);
           this.setLinkID(h, v, newLinkID);
         }
       }
