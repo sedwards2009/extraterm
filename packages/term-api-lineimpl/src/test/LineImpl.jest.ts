@@ -31,7 +31,7 @@ test("pasteGridWithLinks()", () => {
 
   for (let i=0; i<"extraterm.org".length; i++) {
     const linkID = destGrid.getLinkID(i, 1);
-    expect(destGrid.getLinkURLByID(linkID)).toBe(EXTRATERM_URL);
+    expect(destGrid.getLinkURLByID(linkID)).toEqual({ url: EXTRATERM_URL, group: "" });
   }
 });
 
@@ -53,7 +53,7 @@ test("pasteGridWithLinks() over existing links", () => {
     }
   };
 
-  expect(destGrid.getLinkURLByID(destGrid.getLinkID(5, 0))).toBe("https://reddit.com/");
+  expect(destGrid.getLinkURLByID(destGrid.getLinkID(5, 0))).toEqual({ url: "https://reddit.com/", group: "" });
 
   checkRow(2);
   checkRow(3);
@@ -61,7 +61,7 @@ test("pasteGridWithLinks() over existing links", () => {
 
   for (let i=0; i<"extraterm.org".length; i++) {
     const linkID = destGrid.getLinkID(i, 1);
-    expect(destGrid.getLinkURLByID(linkID)).toBe(EXTRATERM_URL);
+    expect(destGrid.getLinkURLByID(linkID)).toEqual({ url: EXTRATERM_URL, group: "" });
   }
 });
 
@@ -83,8 +83,8 @@ test("pasteGridWithLinks() over existing links, offset", () => {
     }
   };
 
-  expect(destGrid.getLinkURLByID(destGrid.getLinkID(5, 0))).toBe("https://reddit.com/");
-  expect(destGrid.getLinkURLByID(destGrid.getLinkID(4, 1))).toBe(EXTRATERM_URL);
+  expect(destGrid.getLinkURLByID(destGrid.getLinkID(5, 0))).toEqual({ url: "https://reddit.com/", group: "" });
+  expect(destGrid.getLinkURLByID(destGrid.getLinkID(4, 1))).toEqual({ url: EXTRATERM_URL, group: "" });
   expect(destGrid.getLinkID(5, 1)).toBe(0);
 
   checkRow(2);
@@ -94,7 +94,7 @@ test("pasteGridWithLinks() over existing links, offset", () => {
   for (let i=0; i<"extraterm.org".length; i++) {
     if (i >= 8) {
       const linkID = destGrid.getLinkID(i-8, 1);
-      expect(destGrid.getLinkURLByID(linkID)).toBe(EXTRATERM_URL);
+      expect(destGrid.getLinkURLByID(linkID)).toEqual({ url: EXTRATERM_URL, group: "" });
     }
   }
 });
@@ -110,7 +110,7 @@ test("LinkID overflow", () => {
 
   setCellsLink(grid, 0, 0, "extraterm.org".length, `https://extraterm.org/`);
 
-  expect(grid.getLinkURLByID(grid.getLinkID(0, 0))).toBe("https://extraterm.org/");
+  expect(grid.getLinkURLByID(grid.getLinkID(0, 0))).toEqual( { url: "https://extraterm.org/", group: "" });
 });
 
 function setCellsLink(grid: LineImpl, x: number, y: number, len: number, url: string): void {
