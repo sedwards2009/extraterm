@@ -9,6 +9,6 @@ if ( ! test('-d', 'data')) {
   echo("Downloading TLDR Pages data files...");
   exec('download --extract --out data http://tldr-pages.github.io/assets/tldr.zip');
   rm('-r', 'data/pages.*');
-  rm('data/index.json');
+  mv('data/index.json', 'data/pages/index.json');
   echo("Done downloading TLDR Pages data.");
 }
