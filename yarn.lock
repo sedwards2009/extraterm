@@ -923,10 +923,10 @@
     global-agent "^2.0.2"
     global-tunnel-ng "^2.7.1"
 
-"@extraterm/ace-ts@0.20.0":
-  version "0.20.0"
-  resolved "https://registry.yarnpkg.com/@extraterm/ace-ts/-/ace-ts-0.20.0.tgz#0ddc9a2c28dcdec51fd74dc69fd86c6ee74e230b"
-  integrity sha512-kEU6HKjVYUWqI1epbK6qx4GxRlz+szjo4+TEEkkhGAiWJ5kzH6jl426zPlaYkkxJ0diKzJZo0Lewn5mQ1JmSxw==
+"@extraterm/ace-ts@0.21.0":
+  version "0.21.0"
+  resolved "https://registry.yarnpkg.com/@extraterm/ace-ts/-/ace-ts-0.21.0.tgz#7074686983859229a8c3e8f1df318a72e38b581c"
+  integrity sha512-rla8cU2RmCYy9Hm1OULpnfcCyGV+SQHkgy89gMFxuaisPMJTlCnGDHLyCokNPFP2vn18AQATmIL4281LIDISTg==
 
 "@iarna/toml@^2.2.0":
   version "2.2.5"

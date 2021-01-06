@@ -17,7 +17,7 @@
     "serve-test": "node src/test/httpserver.js"
   },
   "dependencies": {
-    "@extraterm/ace-ts": "0.20.0",
+    "@extraterm/ace-ts": "0.21.0",
     "@types/dompurify": "^2.0.1",
     "@types/marked": "^0.7.3",
     "commander": "^2.9.0",
