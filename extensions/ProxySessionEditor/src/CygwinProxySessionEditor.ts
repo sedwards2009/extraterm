@@ -110,7 +110,7 @@ async function checkCygwinPath(dirPath: string): Promise<string> {
 
     const binDir = path.join(dirPath, 'bin');
     if (await fse.pathExists(binDir)) {
-      const pythonRegexp = /^python3.*m\.exe$/;
+      const pythonRegexp = /^python3.*\.exe$/;
       const binContents = await fse.readdir(binDir);
       const pythons = binContents.filter( name => pythonRegexp.test(name) );
       if (pythons.length === 0) {
