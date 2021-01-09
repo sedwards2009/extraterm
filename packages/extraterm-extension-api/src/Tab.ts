@@ -5,6 +5,7 @@
  */
 
 import { Terminal } from "./Terminal";
+import { ListPickerOptions } from "./ListPickerOptions";
 
 export interface TabTitleWidget {
   getContainerElement(): HTMLElement;
@@ -79,22 +80,4 @@ export interface NumberInputOptions {
    * The maximum acceptable value.
    */
   maximum?: number;
-}
-
-
-export interface ListPickerOptions {
-  /**
-   * The title to display in the list picker.
-   */
-  title: string;
-
-  /**
-   * The list of text items to display.
-   */
-  items: string[];
-
-  /**
-   * The index of the item to select by default.
-   */
-  selectedItemIndex: number;
 }

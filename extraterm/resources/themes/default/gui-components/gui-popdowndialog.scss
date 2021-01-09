@@ -28,7 +28,7 @@
   $width: pxToRem(500px);
   width: $width;
   left: calc(50% - #{$width} / 2);
-  
+
   font-family: $font-family;
   font-size: $input-font-size;
   font-weight: normal;
@@ -45,7 +45,7 @@
   box-shadow: 0 0 pxToRem(10px) $base-border-color;
   background-clip: padding-box;
 
-  z-index: 101;  
+  z-index: 101;
 }
 
 #ID_TITLE_CONTAINER {
@@ -74,11 +74,11 @@
   right: 0;
   top: 0;
   bottom: 0;
-  
+
   &.CLASS_CONTEXT_COVER_OPEN {
-  
+
   }
-  
+
   &.CLASS_CONTEXT_COVER_CLOSED {
     display: none;
   }

@@ -1,0 +1,59 @@
+/**
+ * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ */
+
+/* Command Palette */
+@import "general-gui/variables";
+
+:host {
+}
+
+:host(:focus) {
+  outline: none;
+}
+
+#ID_RESULTS_CONTAINER {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+#ID_FILTER {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+#ID_RESULTS {
+  overflow: auto;
+  cursor: default;
+  flex-grow: 1;
+  flex-shrink: 1;
+
+  max-height: var(--results-height, 100%);
+}
+
+.CLASS_RESULT_ENTRY {
+  display: flex;
+
+  width: 100%;
+  box-sizing: border-box;
+
+  padding-left: $padding-xs-horizontal;
+  padding-right: $padding-xs-horizontal;
+  
+  &:hover {
+    cursor: pointer;
+    outline: 1px solid $background-selected-color;
+    outline-offset: -1px;
+  }
+
+  &.CLASS_RESULT_SELECTED {
+    outline: none;
+    color: $text-selected-color;
+    background-color: $background-selected-color;
+  }
+}
