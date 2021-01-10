@@ -131,7 +131,7 @@ export class CygwinProxySessionBackend implements SessionBackend {
     const binDir = path.join(cygwinDir, 'bin');
     this._log.info("Cygwin bin directory is ", binDir);
     if (fs.existsSync(binDir)) {
-      const pythonRegexp = /^python3.*m\.exe$/;
+      const pythonRegexp = /^python3.*\.exe$/;
       const binContents = fs.readdirSync(binDir);
       const pythons = binContents.filter( name => pythonRegexp.test(name) );
       return pythons.length !== 0 ? path.join(binDir,pythons[0]) : null;
