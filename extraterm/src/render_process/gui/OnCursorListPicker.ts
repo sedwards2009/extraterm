@@ -110,11 +110,14 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
     render(template, this.shadowRoot);
     this.installThemeCss();
 
-    const searchableListDiv = DomUtils.getShadowId(this, "ID_SEARCHABLE_LIST");
+    const searchableList = <SearchableList<T>> DomUtils.getShadowId(this, "ID_SEARCHABLE_LIST");
     const dialog = <PopDownDialog> DomUtils.getShadowId(this, "ID_DIALOG");
-    const rect = dialog.getBoundingClientRect();
-    const maxResultsHeight = Math.floor(rect.height * MAXIMUM_RESULT_HEIGHT_PERCENT);
-    searchableListDiv.style.setProperty("--results-height", `${maxResultsHeight}px`);
+    const dialogRect = dialog.getBoundingClientRect();
+    const maxResultsHeight = Math.floor(dialogRect.height * MAXIMUM_RESULT_HEIGHT_PERCENT);
+    searchableList.style.setProperty("--results-height", `${maxResultsHeight}px`);
+
+    const reverseOrientation = this.cursorTop > (dialogRect.height / 2);
+    searchableList.reverse = reverseOrientation;
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {

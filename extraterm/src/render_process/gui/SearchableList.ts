@@ -157,7 +157,7 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
     }
 
     const template = html`${this._styleTag()}
-        <div id="ID_RESULTS_CONTAINER">
+        <div id="ID_RESULTS_CONTAINER" class="${this.reverse ? "CLASS_REVERSE" : ""}">
           <div class="gui-packed-row">
             <input
               class="expand"
@@ -177,11 +177,6 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
 
     render(template, this.shadowRoot);
     this.installThemeCss();
-
-    // const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
-    // const dialog = <PopDownDialog> DomUtils.getShadowId(this, "ID_DIALOG");
-    // const rect = dialog.getBoundingClientRect();
-    // resultsDiv.style.maxHeight = `${Math.floor(rect.height * 0.75)}px`;
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
@@ -245,6 +240,13 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
     this.updateThemeCss();
   }
 
+  @Attribute reverse = false;
+
+  @Observe("reverse")
+  private _observeReverse(): void {
+    this._scheduleUpdate({ updateContents: true });
+  }
+
   private _scrollToSelected(): void {
     const resultsDiv = DomUtils.getShadowId(this, ID_RESULTS);
     const selectedElement = <HTMLElement> resultsDiv.querySelector("." + SearchableList.CLASS_RESULT_SELECTED);
@@ -281,6 +283,7 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
     const hasMeta = ev.altKey || ev.shiftKey || ev.ctrlKey;
 
     const isUp = ev.key === "PageUp" || ev.key === "ArrowUp" || (ev.key === "Home" && ! hasMeta);
+    const isToEnd = ev.key === "Home" || ev.key === "End";
 
     if (isPageKey || isUp || ev.key === "ArrowDown" || (ev.key === "End" && ! hasMeta) || ev.key === "Enter") {
       ev.preventDefault();
@@ -311,14 +314,14 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
           stepSize = Math.floor(resultsDiv.clientHeight / selectedElementDimensions.height);
         }
 
-        if (isUp) {
-          if (ev.key === "Home") {
+        if (isUp !== this.reverse) {
+          if (isToEnd) {
             this._setSelected(filteredEntries[0].id);
           } else {
             this._setSelected(filteredEntries[Math.max(0, selectedIndex-stepSize)].id);
           }
         } else {
-          if (ev.key === "End") {
+          if (isToEnd) {
             this._setSelected(filteredEntries[filteredEntries.length-1].id);
           } else {
             this._setSelected(filteredEntries[Math.min(filteredEntries.length-1, selectedIndex+stepSize)].id);
