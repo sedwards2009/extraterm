@@ -3,23 +3,21 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as DomUtils from '../DomUtils';
-import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-
-import { html, TemplateResult } from 'extraterm-lit-html';
-import { DirectiveFn } from 'extraterm-lit-html/lib/directive';
-import { classMap } from 'extraterm-lit-html/directives/class-map';
-import { repeat } from 'extraterm-lit-html/directives/repeat';
-
-
-import {EtTerminal} from '../Terminal';
-import {ExtensionUiUtils} from './InternalTypes';
-import {Logger, getLogger} from "extraterm-logging";
-import {PopDownListPicker} from '../gui/PopDownListPicker';
-import {PopDownNumberDialog} from '../gui/PopDownNumberDialog';
-import {ViewerElement} from '../viewers/ViewerElement';
-import { SupportsDialogStack } from '../SupportsDialogStack';
-import { doLater } from 'extraterm-later';
+import * as DomUtils from "../DomUtils";
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { html, TemplateResult } from "extraterm-lit-html";
+import { DirectiveFn } from "extraterm-lit-html/lib/directive";
+import { classMap } from "extraterm-lit-html/directives/class-map";
+import { repeat } from "extraterm-lit-html/directives/repeat";
+import { doLater } from "extraterm-later";
+import { Logger, getLogger} from "extraterm-logging";
+import { EtTerminal } from "../Terminal";
+import { ExtensionUiUtils } from "./InternalTypes";
+import { PopDownListPicker } from "../gui/PopDownListPicker";
+import { PopDownNumberDialog } from "../gui/PopDownNumberDialog";
+import { ViewerElement } from "../viewers/ViewerElement";
+import { SupportsDialogStack } from "../SupportsDialogStack";
+import { OnCursorListPicker } from "../gui/OnCursorListPicker";
 
 
 interface IdLabelPair {
@@ -54,6 +52,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
   private _log: Logger = null;
   private _numberInputDialog: PopDownNumberDialog = null;
   private _listPicker: PopDownListPicker<IdLabelPair> = null;
+  private _onCursorListPicker: OnCursorListPicker<IdLabelPair> = null;
 
   constructor() {
     this._log = getLogger("ExtensionUiUtilsImpl", this);
@@ -77,16 +76,22 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     this._numberInputDialog.open = true;
     focusLater(this._numberInputDialog);
 
+    return this._createInputPromise(this._numberInputDialog, dialogDisposable, lastFocus);
+  }
+
+  private _createInputPromise(inputElement: HTMLElement, dialogDisposable: ExtensionApi.Disposable,
+      lastFocus: HTMLElement): Promise<number | undefined> {
+
     return new Promise((resolve, reject) => {
       const selectedHandler = (ev: CustomEvent): void => {
         dialogDisposable.dispose();
-        this._numberInputDialog.removeEventListener('selected', selectedHandler);
+        inputElement.removeEventListener('selected', selectedHandler);
 
-        focusLater(this._numberInputDialog);
+        focusLater(lastFocus);
         resolve(ev.detail.value == null ? undefined : ev.detail.value);
       };
 
-      this._numberInputDialog.addEventListener('selected', selectedHandler);
+      inputElement.addEventListener('selected', selectedHandler);
     });
   }
 
@@ -98,18 +103,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
 
     if (this._listPicker == null) {
       this._listPicker = <PopDownListPicker<IdLabelPair>> window.document.createElement(PopDownListPicker.TAG_NAME);
-      this._listPicker.setFormatEntriesFunc(
-        (filteredEntries: IdLabelPair[], selectedId: string, filterInputValue: string): DirectiveFn | TemplateResult => {
-          return repeat(
-            filteredEntries,
-            (entry) => entry.id,
-            (entry, index) => {
-              const classes = {CLASS_RESULT_ENTRY: true, CLASS_RESULT_SELECTED: entry.id === selectedId};
-              return html`<div class=${classMap(classes)} data-id=${entry.id}>${entry.label}</div>`;
-            }
-          );
-        });
-
+      this._listPicker.setFormatEntriesFunc(this._formatEntries);
       this._listPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
     }
 
@@ -123,19 +117,21 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     this._listPicker.open();
     focusLater(this._listPicker);
 
-    return new Promise((resolve, reject) => {
-      const selectedHandler = (ev: CustomEvent): void => {
-        dialogDisposable.dispose();
-        this._listPicker.removeEventListener('selected', selectedHandler);
-        focusLater(lastFocus);
-        resolve(ev.detail.selected == null ? undefined : parseInt(ev.detail.selected, 10));
-      };
-
-      this._listPicker.addEventListener('selected', selectedHandler);
-    });
+    return this._createInputPromise(this._listPicker, dialogDisposable, lastFocus);
   }
 
-  _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
+  private _formatEntries(filteredEntries: IdLabelPair[], selectedId: string, filterInputValue: string): DirectiveFn | TemplateResult {
+    return repeat(
+      filteredEntries,
+      (entry) => entry.id,
+      (entry, index) => {
+        const classes = {CLASS_RESULT_ENTRY: true, CLASS_RESULT_SELECTED: entry.id === selectedId};
+        return html`<div class=${classMap(classes)} data-id=${entry.id}>${entry.label}</div>`;
+      }
+    );
+  }
+
+  private _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
     const lowerFilterText = filterText.toLowerCase().trim();
 
     if (lowerFilterText === "") { // Special case for when no filter is entered.
@@ -163,6 +159,35 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     filtered.sort( (a: IdLabelPair,b: IdLabelPair): number => rankFunc(b, lowerFilterText) - rankFunc(a, lowerFilterText));
 
     return filtered;
+  }
+
+  showOnCursorListPicker(terminal: EtTerminal, options: ExtensionApi.OnCursorListPickerOptions): Promise<number | undefined> {
+    let lastFocus: HTMLElement = currentDeepFocusedViewerElement();
+    if (lastFocus == null) {
+      lastFocus = terminal;
+    }
+
+    if (this._onCursorListPicker == null) {
+      this._onCursorListPicker = <OnCursorListPicker<IdLabelPair>> window.document.createElement(OnCursorListPicker.TAG_NAME);
+      this._onCursorListPicker.setFormatEntriesFunc(this._formatEntries);
+      this._onCursorListPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
+    }
+
+    const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item}));
+    this._onCursorListPicker.setEntries(convertedItems);
+    this._onCursorListPicker.selected = "" + options.selectedItemIndex;
+
+    const dialogDisposable = terminal.showDialog(this._onCursorListPicker);
+
+    const cursorPosition = terminal.getEmulatorCursorRect();
+    this._onCursorListPicker.cursorTop = cursorPosition.top;
+    this._onCursorListPicker.cursorBottom = cursorPosition.bottom;
+    this._onCursorListPicker.cursorLeft = cursorPosition.left;
+
+    this._onCursorListPicker.open();
+    focusLater(this._onCursorListPicker);
+
+    return this._createInputPromise(this._onCursorListPicker, dialogDisposable, lastFocus);
   }
 }
 

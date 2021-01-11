@@ -49,6 +49,12 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     this._sessionConfiguration.extensions = null;
   }
 
+  showOnCursorListPicker(options: ExtensionApi.ListPickerOptions): Promise<number> {
+    this._checkIsAlive();
+    return this._internalExtensionContext._extensionManager.extensionUiUtils
+      .showOnCursorListPicker(this._terminal, options);
+  }
+
   private _handleTerminalDispose(): void {
     this._terminal = null;
     this.environment.dispose();

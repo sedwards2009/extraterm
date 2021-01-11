@@ -23,3 +23,5 @@ import "./file_transfer/CompactFileTransferProgress";
 import "./file_transfer/FileTransferProgress";
 import "./SidebarLayout";
 import "./SearchableList";
+import "./OnCursorDialog";
+import "./OnCursorListPicker";

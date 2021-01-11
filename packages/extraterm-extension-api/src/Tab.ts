@@ -37,7 +37,7 @@ export interface Tab {
   showNumberInput(options: NumberInputOptions): Promise<number | undefined>;
 
   /**
-   * Show a list picker requesting an item from the list.
+   * Show a list picker and allow an item to be selected.
    *
    * This shows the given list of strings and lets the user select one or
    * them or cancel the picker. The index of the item in the list is return

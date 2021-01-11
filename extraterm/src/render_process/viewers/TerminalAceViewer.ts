@@ -948,6 +948,28 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     return detail;
   }
 
+  /**
+   * Get a DOMRect for the emulator cursor position.
+   *
+   * Coordinates are relative to this viewer (HTMLElement).
+   */
+  getEmulatorCursorRect(): DOMRect {
+    if (this._emulator == null) {
+      return null;
+    }
+
+    const dim = this._emulator.getDimensions();
+    const pos = this._aceEditSession.documentPositionToScreenPosition(dim.cursorY + this._terminalFirstRow, dim.cursorX);
+
+    const charHeight = this._aceEditor.renderer.charHeightPx;
+    const charWidth = this._aceEditor.renderer.charWidthPx;
+
+    const left = pos.column * charWidth;
+    const top = pos.row * charHeight;
+
+    return new DOMRect(left, top, charWidth, charHeight);
+  }
+
   clearSelection(): void {
     this._aceEditor.clearSelection();
   }

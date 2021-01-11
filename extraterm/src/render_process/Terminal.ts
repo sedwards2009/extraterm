@@ -27,7 +27,7 @@ import {DownloadApplicationModeHandler} from "./DownloadApplicationModeHandler";
 import {DownloadViewer} from "./viewers/DownloadViewer";
 import {Pty} from "../pty/Pty";
 import {ViewerElement} from "./viewers/ViewerElement";
-import { SupportsMimeTypes, Mode, VisualState } from "./viewers/ViewerElementTypes";
+import { SupportsMimeTypes, Mode, VisualState, CursorMoveDetail } from "./viewers/ViewerElementTypes";
 import {ThemeableElementBase} from "./ThemeableElementBase";
 import * as ThemeTypes from "../theme/Theme";
 import {EmbeddedViewer} from "./viewers/EmbeddedViewer";
@@ -555,6 +555,17 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   protected updateThemeCss() {
     super.updateThemeCss();
     this.resizeToContainer();
+  }
+
+  getEmulatorCursorRect(): DOMRect {
+    const cursorRect = this._terminalViewer.getEmulatorCursorRect();
+    const viewerRect = this._terminalViewer.getBoundingClientRect();
+    const thisRect = this.getBoundingClientRect();
+    const leftOffset = viewerRect.left - thisRect.left;
+    const topOffset = viewerRect.top - thisRect.top;
+    const result = new DOMRect(cursorRect.left + leftOffset, cursorRect.top + topOffset, cursorRect.width,
+      cursorRect.height);
+    return result;
   }
 
   showDialog(dialogElement: HTMLElement): Disposable {

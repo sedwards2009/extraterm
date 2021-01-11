@@ -106,6 +106,7 @@ export interface ProxyFactory {
 export interface ExtensionUiUtils {
   showNumberInput(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.NumberInputOptions): Promise<number | undefined>;
   showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
+  showOnCursorListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 }
 
 export interface InternalWindow extends ExtensionApi.Window {

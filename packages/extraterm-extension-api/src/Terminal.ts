@@ -12,6 +12,18 @@ import { Block } from "./Block";
 import { Screen } from "./Screen";
 
 
+export interface OnCursorListPickerOptions {
+  /**
+   * The list of text items to display.
+   */
+  items: string[];
+
+  /**
+   * The index of the item to select by default.
+   */
+  selectedItemIndex: number;
+}
+
 /**
  * An active terminal with connected TTY.
  *
@@ -118,6 +130,22 @@ export interface Terminal {
    * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
    */
   readonly isAlive: boolean;
+
+  /**
+   * Show a list picker at the cursor and allow an item to be selected.
+   *
+   * This shows the given list of strings and lets the user select one or
+   * them or cancel the picker. The index of the item in the list is return
+   * if an item is selected. `undefined` is returned if the user canceled the
+   * picker by pressing escape, for example. The picker appears with in this
+   * tab.
+   *
+   * See `OnCursorListPickerOptions` for more details about how to configure this.
+   *
+   * @return a promise which resolves to the selected item index or
+   *          undefined if it was canceled.
+   */
+  showOnCursorListPicker(options: OnCursorListPickerOptions): Promise<number | undefined>;
 }
 
 /**

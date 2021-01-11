@@ -7,10 +7,11 @@
 export { Disposable, Event } from "extraterm-event-emitter";
 export { Logger } from "./Logger";
 export { TerminalEnvironment } from "./TerminalEnvironment";
-export { Terminal, LineRangeChange, TerminalBorderWidget, TerminalBorderWidgetFactory } from "./Terminal";
-export { Tab, NumberInputOptions, ListPickerOptions, TabTitleWidget, TabTitleWidgetFactory } from "./Tab";
+export { Terminal, LineRangeChange, TerminalBorderWidget, TerminalBorderWidgetFactory, OnCursorListPickerOptions } from "./Terminal";
+export { Tab, NumberInputOptions, TabTitleWidget, TabTitleWidgetFactory } from "./Tab";
 export { CustomizedCommand, Commands } from "./Commands";
 export { BulkFileMetadata, BulkFileState, BulkFileHandle } from "./BulkFiles";
+export { ListPickerOptions } from "./ListPickerOptions";
 export { TerminalThemeInfo, TerminalThemeProvider, TerminalTheme } from "./TerminalTheme";
 export { SyntaxThemeProvider, SyntaxThemeInfo, SyntaxTheme, SyntaxTokenRule, TextStyle } from "./SyntaxTheme";
 export { Backend, Clipboard, Application, ExtensionContext, ExtensionModule, Window } from "./ExtensionContext";

@@ -13,7 +13,6 @@ import {doLater} from "extraterm-later";
 import {log, Logger, getLogger} from "extraterm-logging";
 
 import * as ThemeTypes from "../../theme/Theme";
-import {PopDownDialog} from "./PopDownDialog";
 import { ThemeableElementBase } from "../ThemeableElementBase";
 import * as DomUtils from "../DomUtils";
 
