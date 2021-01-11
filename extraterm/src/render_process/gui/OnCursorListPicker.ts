@@ -22,6 +22,8 @@ interface RenderWork {
   focusInput: boolean;
 }
 
+const MAXIMUM_RESULT_HEIGHT_PERCENT = 0.4;
+
 /**
  * On Cursor List Picker.
  */
@@ -111,7 +113,8 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
     const searchableListDiv = DomUtils.getShadowId(this, "ID_SEARCHABLE_LIST");
     const dialog = <PopDownDialog> DomUtils.getShadowId(this, "ID_DIALOG");
     const rect = dialog.getBoundingClientRect();
-    searchableListDiv.style.setProperty("--results-height", `${Math.floor(rect.height * 0.75)}px`);
+    const maxResultsHeight = Math.floor(rect.height * MAXIMUM_RESULT_HEIGHT_PERCENT);
+    searchableListDiv.style.setProperty("--results-height", `${maxResultsHeight}px`);
   }
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
