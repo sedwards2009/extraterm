@@ -123,7 +123,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
       this._laterHandle = doLater( () => {
         this.open = false;
         this._laterHandle = null;
-        const event = new CustomEvent("selected", { detail: {value: value } });
+        const event = new CustomEvent("selected", { detail: {selected: value } });
         this.dispatchEvent(event);
       });
     }

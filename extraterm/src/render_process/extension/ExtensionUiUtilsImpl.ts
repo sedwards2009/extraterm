@@ -86,9 +86,8 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       const selectedHandler = (ev: CustomEvent): void => {
         dialogDisposable.dispose();
         inputElement.removeEventListener('selected', selectedHandler);
-
         focusLater(lastFocus);
-        resolve(ev.detail.value == null ? undefined : ev.detail.value);
+        resolve(ev.detail.selected == null ? undefined : ev.detail.selected);
       };
 
       inputElement.addEventListener('selected', selectedHandler);

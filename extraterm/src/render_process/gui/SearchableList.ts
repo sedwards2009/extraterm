@@ -336,7 +336,6 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
   private _okId(selectedId: string): void {
     if (this._laterHandle === null) {
       this._laterHandle = doLater( () => {
-        // this.close();
         this._laterHandle = null;
         const event = new CustomEvent("selected", { detail: {selected: selectedId } });
         this.dispatchEvent(event);
