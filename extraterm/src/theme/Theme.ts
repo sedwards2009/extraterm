@@ -73,6 +73,7 @@ export const CssFile = {
   GUI_SIDEBAR_LAYOUT: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-sidebar-layout.scss",
   GUI_ON_CURSOR_DIALOG: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-dialog.scss",
   GUI_ON_CURSOR_LIST_PICKER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-list-picker.scss",
+  GUI_ON_CURSOR_SEARCHABLE_LIST: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-searchable-list.scss",
 };
 
 export function cssFileToFilename(cssFile: CssFile): string {
@@ -128,6 +129,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_SIDEBAR_LAYOUT,
   CssFile.GUI_ON_CURSOR_DIALOG,
   CssFile.GUI_ON_CURSOR_LIST_PICKER,
+  CssFile.GUI_ON_CURSOR_SEARCHABLE_LIST,
 ];
 
 export class CssFileMap extends Map<CssFile, string> {

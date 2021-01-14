@@ -7,10 +7,10 @@ import { html, render, TemplateResult } from "extraterm-lit-html";
 import { DirectiveFn } from "extraterm-lit-html/lib/directive";
 import { live } from "extraterm-lit-html/directives/live";
 import { repeat } from "extraterm-lit-html/directives/repeat";
-import {Disposable} from "@extraterm/extraterm-extension-api";
+import { Disposable } from "@extraterm/extraterm-extension-api";
 import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
-import {doLater} from "extraterm-later";
-import {log, Logger, getLogger} from "extraterm-logging";
+import { doLater } from "extraterm-later";
+import { log, Logger, getLogger } from "extraterm-logging";
 
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";

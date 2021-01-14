@@ -25,3 +25,4 @@ import "./SidebarLayout";
 import "./SearchableList";
 import "./OnCursorDialog";
 import "./OnCursorListPicker";
+import "./OnCursorSearchableList";

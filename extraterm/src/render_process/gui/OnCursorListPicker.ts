@@ -12,7 +12,7 @@ import { log, Logger, getLogger } from "extraterm-logging";
 
 import * as ThemeTypes from "../../theme/Theme";
 import { PopDownDialog} from "./PopDownDialog";
-import { SearchableList } from "./SearchableList";
+import { OnCursorSearchableList } from "./OnCursorSearchableList";
 import { ThemeableElementBase } from "../ThemeableElementBase";
 import * as DomUtils from "../DomUtils";
 
@@ -100,7 +100,7 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
           cursor-top=${this.cursorTop}
           cursor-bottom=${this.cursorBottom}
           @close-request=${this._handleDialogClose}>
-        <et-searchable-list
+        <et-on-cursor-searchable-list
           id="ID_SEARCHABLE_LIST"
           @selected=${this._handleSelected}
         ></et-searchable-list>
@@ -110,7 +110,7 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
     render(template, this.shadowRoot);
     this.installThemeCss();
 
-    const searchableList = <SearchableList<T>> DomUtils.getShadowId(this, "ID_SEARCHABLE_LIST");
+    const searchableList = <OnCursorSearchableList<T>> DomUtils.getShadowId(this, "ID_SEARCHABLE_LIST");
     const dialog = <PopDownDialog> DomUtils.getShadowId(this, "ID_DIALOG");
     const dialogRect = dialog.getBoundingClientRect();
     const maxResultsHeight = Math.floor(dialogRect.height * MAXIMUM_RESULT_HEIGHT_PERCENT);
@@ -133,8 +133,8 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
     this._getSearchableList().selected = this.selected;
   }
 
-  private _getSearchableList(): SearchableList<T> {
-    const result = <SearchableList<T>> this.shadowRoot.getElementById("ID_SEARCHABLE_LIST");
+  private _getSearchableList(): OnCursorSearchableList<T> {
+    const result = <OnCursorSearchableList<T>> this.shadowRoot.getElementById("ID_SEARCHABLE_LIST");
     customElements.upgrade(result);
     return result;
   }
@@ -177,7 +177,7 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
    * @param extraCssFiles extra Css files which should be loaded along side the default set.
    */
   addExtraCss(extraCssFiles: ThemeTypes.CssFile[]): void {
-    this._getSearchableList().addExtraCss(extraCssFiles);
+    ;
   }
 
   open(): void {

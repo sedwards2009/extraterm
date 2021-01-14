@@ -45,11 +45,7 @@
   color: $text-color;
   background-color: $overlay-background-color;
 
-  padding: $component-padding-vertical $component-padding-horizontal;
-  border: 1px solid $overlay-border-color;
   border-radius: $border-radius;
-  border-top-left-radius: 0px;
-  border-top-right-radius: 0px;
 
   box-shadow: 0 0 pxToRem(10px) $base-border-color;
   background-clip: padding-box;
