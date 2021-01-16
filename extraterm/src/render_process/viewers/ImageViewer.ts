@@ -133,6 +133,7 @@ export class ImageViewer extends ViewerElement {
       this._bulkFileHandle.deref();
       this._bulkFileHandle = null;
     }
+    super.dispose();
   }
 
   getSelectionText(): string {

@@ -162,9 +162,6 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     });
   }
 
-  dispose(): void {
-  }
-
   setConfigDatabase(configDatabase: ConfigDatabase): void {
     this._configDatabase = configDatabase;
   }
