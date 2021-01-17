@@ -231,6 +231,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
       this._aceEditor.setReadOnly(true);
       this._aceEditor.setBehavioursEnabled(false);
       this._aceEditor.setHighlightBrackets(false);
+      this._aceEditor.setHighlightTags(false);
       this._aceEditor.setAutoscroll(false);
       this._aceEditor.setHighlightActiveLine(false);
 
@@ -1125,6 +1126,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
 
     this._aceEditor.clearSelection();
     this._aceEditor.setHighlightBrackets(true);
+    this._aceEditor.setHighlightTags(true);
     if (this._emulator !== null) {
       const dimensions = this._emulator.getDimensions();
       this._aceEditor.selection.moveCursorToPosition(
@@ -1152,6 +1154,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
 
     this._aceEditor.setReadOnly(true);
     this._aceEditor.setHighlightBrackets(false);
+    this._aceEditor.setHighlightTags(false);
     this._aceEditor.setRelayInput(this._emulator != null);
 
     const containerDiv = <HTMLDivElement> DomUtils.getShadowId(this, ID_CONTAINER);

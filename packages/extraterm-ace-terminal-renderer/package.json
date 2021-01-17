@@ -30,7 +30,7 @@
     "test": "yarn run build && jest"
   },
   "dependencies": {
-    "@extraterm/ace-ts": "0.21.0",
+    "@extraterm/ace-ts": "0.22.0",
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-char-render-canvas": "1.0.0",
     "extraterm-event-emitter": "1.0.0",
