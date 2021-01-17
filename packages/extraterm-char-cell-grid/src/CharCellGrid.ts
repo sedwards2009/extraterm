@@ -147,6 +147,7 @@ export class CharCellGrid {
   private _rawBuffer: ArrayBuffer;
   private _dataView: DataView;
   private _uint8View: Uint8Array;
+  #dirtyFlag = true;
 
   /**
    * Create a new cell grid.
@@ -175,10 +176,19 @@ export class CharCellGrid {
   setPalette(palette: number[]) : void {
     this.palette = palette;
     this._reapplyPalette();
+    this.#dirtyFlag = true;
   }
 
   getPalette(): number[] {
     return this.palette;
+  }
+
+  isDirtyFlag(): boolean {
+    return this.#dirtyFlag;
+  }
+
+  clearDirtyFlag(): void {
+    this.#dirtyFlag = false;
   }
 
   private _reapplyPalette(): void {
@@ -235,6 +245,7 @@ export class CharCellGrid {
       this._dataView.setUint32(offset + OFFSET_FG, fgRGBA);
       this._dataView.setUint32(offset + OFFSET_BG, bgRGBA);
     }
+    this.#dirtyFlag = true;
   }
 
   /**
@@ -276,10 +287,12 @@ export class CharCellGrid {
     this._dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, cell.bgClutIndex);
     this._dataView.setUint32(offset + OFFSET_FG, cell.fgRGBA);
     this._dataView.setUint32(offset + OFFSET_BG, cell.bgRGBA);
+    this.#dirtyFlag = true;
   }
 
   clearCell(x: number, y: number): void {
     this.setCell(x, y, SpaceCell);
+    this.#dirtyFlag = true;
   }
 
   formatCellDebug(x: number, y: number): string {
@@ -307,6 +320,7 @@ export class CharCellGrid {
     this._dataView.setUint8(offset + OFFSET_FLAGS, newFlags);
 
     this._dataView.setUint32(offset + OFFSET_CODEPOINT, codePoint);
+    this.#dirtyFlag = true;
   }
 
   getCodePoint(x: number, y: number): number {
@@ -353,6 +367,7 @@ export class CharCellGrid {
         offset += CELL_SIZE_BYTES;
       }
     }
+    this.#dirtyFlag = true;
   }
 
   /**
@@ -367,6 +382,7 @@ export class CharCellGrid {
     for (let i=0; i<codePointArray.length; i++) {
       this.setCodePoint(x+i, y, codePointArray[i]);
     }
+    this.#dirtyFlag = true;
   }
 
   /**
@@ -432,6 +448,7 @@ export class CharCellGrid {
 
     const newAttr = this._dataView.getUint8(offset + OFFSET_FLAGS) & ~FLAG_MASK_BG_CLUT;
     this._dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
+    this.#dirtyFlag = true;
   }
 
   getBgRGBA(x: number, y: number): number {
@@ -445,6 +462,7 @@ export class CharCellGrid {
 
     const newAttr = this._dataView.getUint8(offset + OFFSET_FLAGS) & ~FLAG_MASK_FG_CLUT;
     this._dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
+    this.#dirtyFlag = true;
   }
 
   getFgRGBA(x: number, y: number): number {
@@ -461,6 +479,8 @@ export class CharCellGrid {
     this._dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, index);
 
     this._updateInternalRGB(index, offset);
+
+    this.#dirtyFlag = true;
   }
 
   private _updateInternalRGB(index: number, offset: number): void {
@@ -498,6 +518,7 @@ export class CharCellGrid {
       const rgba = this.palette[index];
       this._dataView.setUint32(offset + OFFSET_BG, rgba);
     }
+    this.#dirtyFlag = true;
   }
 
   getBgClutIndex(x: number, y: number): number {
@@ -520,6 +541,7 @@ export class CharCellGrid {
       const index = this._dataView.getUint16(offset + OFFSET_FG_CLUT_INDEX);
       this._updateInternalRGB(index, offset);
     }
+    this.#dirtyFlag = true;
   }
 
   getStyle(x: number, y: number): StyleCode {
@@ -542,6 +564,7 @@ export class CharCellGrid {
       flags = flags & ~FLAG_MASK_EXTRA_FONT;
     }
     this._dataView.setUint8(offset + OFFSET_FLAGS, flags);
+    this.#dirtyFlag = true;
   }
 
   setLigature(x: number, y: number, ligatureLength: number): void {
@@ -557,6 +580,7 @@ export class CharCellGrid {
       const newFlags = (flags & ~FLAG_MASK_WIDTH) | FLAG_MASK_LIGATURE | widthBits;
       this._dataView.setUint8(offset + OFFSET_FLAGS, newFlags);
     }
+    this.#dirtyFlag = true;
   }
 
   getLigature(x: number, y: number): number {
@@ -580,6 +604,7 @@ export class CharCellGrid {
       style = style | STYLE_MASK_HYPERLINK;
     }
     this.setStyle(x, y, style);
+    this.#dirtyFlag = true;
   }
 
   getLinkID(x: number, y: number): number {
@@ -597,6 +622,7 @@ export class CharCellGrid {
     this._uint8View.copyWithin((offsetCell + x + shiftCount) * CELL_SIZE_BYTES,  // target pos
                                 (offsetCell + x) * CELL_SIZE_BYTES,         // source pos
                                 (offsetCell + this.width - shiftCount) * CELL_SIZE_BYTES); // end pos
+    this.#dirtyFlag = true;
   }
 
   /**
@@ -623,6 +649,7 @@ export class CharCellGrid {
     for (let i=Math.max(x, this.width-shiftCount); i < this.width; i++) {
       this.setCell(i, y, SpaceCell);
     }
+    this.#dirtyFlag = true;
   }
 
   pasteGrid(sourceGrid: CharCellGrid, x: number, y: number): void {
@@ -678,6 +705,7 @@ export class CharCellGrid {
         }
       }
     }
+    this.#dirtyFlag = true;
   }
 
   /**
@@ -696,6 +724,7 @@ export class CharCellGrid {
     } else {
       this._scrollDown(verticalOffset);
     }
+    this.#dirtyFlag = true;
   }
 
   private _scrollUp(verticalOffset: number): void {

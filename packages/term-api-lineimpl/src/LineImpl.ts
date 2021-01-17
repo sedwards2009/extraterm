@@ -30,6 +30,7 @@ export class LineImpl extends CharCellGrid implements Line {
   private _hyperlinkIDCounter = 0;
   private _hyperlinkIDToURLMapping: Map<number, URLGroupPair> = null;
   private _hyperlinkURLToIDMapping: PairKeyMap<string, string, number> = null;
+  #cachedString: string = null;
 
   constructor(width: number, height: number, palette: number[]=null, __bare__=false) {
     super(width, height, palette, __bare__);
@@ -196,6 +197,22 @@ export class LineImpl extends CharCellGrid implements Line {
   // See `CharCellGrid.getString()`. This version though properly handles
   // full width characters.
   getString(x: number, y: number, count?: number): string {
+    if (x ===0 && y === 0 && count === undefined) {
+      return this._cachingGetLineString();
+    } else {
+      return this._generalGetString(x, y, count);
+    }
+  }
+
+  private _cachingGetLineString(): string {
+    if (this.isDirtyFlag()) {
+      this.#cachedString = this._generalGetString(0, 0);
+      this.clearDirtyFlag();
+    }
+    return this.#cachedString;
+  }
+
+  private _generalGetString(x: number, y: number, count?: number): string {
     const codePoints: number[] = [];
     const spaceCodePoint = " ".codePointAt(0);
     const lastX = x + (count == null ? this.width : Math.min(this.width, count));
