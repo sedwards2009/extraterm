@@ -7,7 +7,7 @@ import { CharCellGrid, STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-c
 import { log, Logger, getLogger } from "extraterm-logging";
 import { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas";
 import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
-import { normalizedCellIterator } from "./NormalizedCellIterator";
+import { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;
@@ -351,11 +351,20 @@ export class WebGLRenderer {
     const renderCursor = this._renderBlockCursor;
 
     let arrayIndex = 0;
+
+    const normalizedCell: NormalizedCell = {
+      x: 0,
+      segment: 0,
+      codePoint: 0,
+      extraFontFlag: false,
+      isLigature: false,
+      ligatureCodePoints: null
+    };
+
     for (let j=0; j<cellGrid.height; j++) {
-      for (const normalizedCell of normalizedCellIterator(cellGrid, j)) {
+      for (const x of normalizedCellIterator(cellGrid, j, normalizedCell)) {
         const codePoint = normalizedCell.codePoint;
         const fontIndex = normalizedCell.extraFontFlag ? 1 : 0;
-        const x = normalizedCell.x;
 
         let fgRGBA = cellGrid.getFgRGBA(x, j);
         let bgRGBA = cellGrid.getBgRGBA(x, j);

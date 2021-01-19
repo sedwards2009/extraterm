@@ -23,8 +23,10 @@ export interface NormalizedCell {
  * Looping through a `CharCellGrid` and keeping track or where you are w.r.t.
  * ligatures and wide chars is a PITA, but this simpliies the bookkeeping
  * considerably.
+ *
+ * The `result` is constantly recycled to avoid memory allocations.
  */
-export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number): IterableIterator<NormalizedCell> {
+export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number, result: NormalizedCell): IterableIterator<number> {
   const rowLength = cellGrid.width;
   let x = 0;
   while (x < rowLength) {
@@ -43,16 +45,14 @@ export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number): It
       }
 
       for (let i=0; i<widthChars; i++) {
-        const normalizedCell: NormalizedCell = {
-          x,
-          segment: i,
-          codePoint: null,
-          extraFontFlag,
-          isLigature: true,
-          ligatureCodePoints
-        };
+        result.x = x;
+        result.segment = i;
+        result.codePoint = null;
+        result.extraFontFlag = extraFontFlag;
+        result.isLigature = true;
+        result.ligatureCodePoints = ligatureCodePoints;
 
-        yield normalizedCell;
+        yield x;
         x++;
       }
     } else {
@@ -60,15 +60,14 @@ export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number): It
       const codePoint = cellGrid.getCodePoint(x, row);
       const extraFontFlag = (cellGrid.getFlags(x, row) & FLAG_MASK_EXTRA_FONT) !== 0;
       for (let k=0; k<widthChars; k++) {
-        const normalizedCell: NormalizedCell = {
-          x,
-          segment: k,
-          codePoint,
-          extraFontFlag,
-          isLigature: false,
-          ligatureCodePoints: null,
-        };
-        yield normalizedCell;
+        result.x = x;
+        result.segment = k;
+        result.codePoint = codePoint;
+        result.extraFontFlag = extraFontFlag;
+        result.isLigature = false;
+        result.ligatureCodePoints = null;
+
+        yield x;
         x++;
       }
     }
