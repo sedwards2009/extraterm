@@ -380,6 +380,7 @@ export class WebGLRenderer {
             bgRGBA = tmp;
           }
         }
+        fgRGBA |= 0x000000ff;
 
         let coord: TextureCachedGlyph = null;
         if (normalizedCell.isLigature) {
