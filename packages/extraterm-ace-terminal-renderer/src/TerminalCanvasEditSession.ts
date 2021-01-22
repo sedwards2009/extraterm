@@ -207,6 +207,9 @@ export class TerminalCanvasEditSession extends EditSession {
 
   getHyperlinkAtTextCoordinates(pos: Position): string {
     const line = this.getTerminalLine(pos.row);
+    if (pos.column >= line.width) {
+      return null;
+    }
     const linkID = line.getLinkID(pos.column, 0);
     return linkID === 0 ? null : line.getLinkURLByID(linkID).url;
   }
