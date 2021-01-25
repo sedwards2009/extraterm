@@ -1,0 +1,11 @@
+{
+  "extends": "pc-style",
+  "bindings": [
+    {
+      "command": "autocomplete:autocomplete",
+      "keys": [
+        "Ctrl-Shift-I"
+      ]
+    }
+  ]
+}

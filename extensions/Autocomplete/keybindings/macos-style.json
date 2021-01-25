@@ -1,0 +1,11 @@
+{
+  "extends": "macos-style",
+  "bindings": [
+    {
+      "command": "autocomplete:autocomplete",
+      "keys": [
+        "Cmd-I"
+      ]
+    }
+  ]
+}

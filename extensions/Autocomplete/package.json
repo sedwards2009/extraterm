@@ -1,0 +1,33 @@
+{
+  "name": "autocomplete",
+  "displayName": "Autocomplete",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/Autocomplete.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
+  },
+  "author": "",
+  "license": "MIT",
+  "contributes": {
+    "commands": [
+      {
+        "command": "autocomplete:autocomplete",
+        "title": "Autocomplete",
+        "category": "terminal",
+        "when": "terminalFocus"
+      }
+    ],
+    "keybindings": [
+      {
+        "path": "keybindings"
+      }
+    ]
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.13.0",
+    "shelljs": "0.8.3",
+    "typescript": "3.9.6"
+  }
+}
