@@ -75,10 +75,25 @@ export interface Screen {
 
   /**
    * Remove all links from a line.
-   * 
+   *
    * This only applies to links which were added using `applyHyperlink()`.
-   * 
+   *
    * @param line The line number of the row to affect.
    */
   removeHyperlinks(line: number): void;
+}
+
+
+export interface ScreenWithCursor extends Screen {
+  /**
+   * The line/row the emulator cursor is on.
+   */
+  readonly cursorLine: number;
+
+  /**
+   * Horizontal position of the cursor in terms of UTF16 code units.
+   *
+   * See `ScreenWithCursor.cursorLine` and `Screen.getLineText()`.
+   */
+  readonly cursorX: number;
 }

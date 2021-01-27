@@ -9,7 +9,7 @@ import { Tab } from "./Tab";
 import { TerminalEnvironment } from "./TerminalEnvironment";
 import { SessionConfiguration } from "./Sessions";
 import { Block } from "./Block";
-import { Screen } from "./Screen";
+import { ScreenWithCursor } from "./Screen";
 
 
 export interface OnCursorListPickerOptions {
@@ -78,7 +78,7 @@ export interface Terminal {
    * The active part of the screen/grid which the terminal emulation controls
    * and terminals applications can access and render into.
    */
-  readonly screen: Screen;
+  readonly screen: ScreenWithCursor;
 
   /**
    * Event fired when lines in the screen are changed.

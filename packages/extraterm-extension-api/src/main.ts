@@ -22,4 +22,4 @@ export { ViewerPosture, ViewerMetadata, ViewerMetadataChange, ExtensionViewerBas
   ViewerBase } from "./Viewers";
 export { Block, FindStartPosition, FindOptions, TerminalOutputDetails, TerminalOutputType, TextViewerDetails,
   TextViewerType } from "./Block";
-export { Screen, ScreenChange } from "./Screen";
+export { Screen, ScreenChange, ScreenWithCursor } from "./Screen";

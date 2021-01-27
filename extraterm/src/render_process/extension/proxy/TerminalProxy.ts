@@ -22,7 +22,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
 
   environment: TerminalEnvironmentProxy;
-  screen: ExtensionApi.Screen;
+  screen: ExtensionApi.ScreenWithCursor;
   private _sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   private _sessionConfigurationExtensions: Object = null;
 
@@ -216,7 +216,7 @@ class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
 }
 
 
-class ScreenProxy implements ExtensionApi.Screen {
+class ScreenProxy implements ExtensionApi.ScreenWithCursor {
 
   constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: EtTerminal) {
   }
@@ -247,6 +247,15 @@ class ScreenProxy implements ExtensionApi.Screen {
 
   get height(): number {
     return this._terminal.getEmulator().size().rows;
+  }
+
+  get cursorLine(): number {
+    return this._terminal.getEmulator().getCursorRow();
+  }
+
+  get cursorX(): number {
+    const cursorX = this._terminal.getEmulator().getDimensions().cursorX;
+    return cursorX;
   }
 }
 
