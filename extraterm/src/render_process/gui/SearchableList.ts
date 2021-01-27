@@ -206,7 +206,6 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
   setEntries(entries: T[]): void {
     this._entries = entries;
     this.selected = null;
-    this.filter = "";
 
     this._scheduleUpdate({ updateContents: true });
   }

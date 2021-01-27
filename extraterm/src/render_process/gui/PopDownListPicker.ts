@@ -174,7 +174,6 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
 
   open(): void {
     this._open = true;
-    this.filter = "";
     this._scheduleUpdate( {focusInput: true, updateContents: true} );
   }
 

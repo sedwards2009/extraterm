@@ -19,4 +19,11 @@ export interface ListPickerOptions {
    * The index of the item to select by default.
    */
   selectedItemIndex: number;
+
+  /**
+   * Set the initial text in filter text input.
+   *
+   * Defaults to the empty string if nothing is provided.
+   */
+  filter?: string;
 }

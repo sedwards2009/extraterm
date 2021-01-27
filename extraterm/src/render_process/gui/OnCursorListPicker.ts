@@ -182,7 +182,6 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
 
   open(): void {
     this._open = true;
-    this.filter = "";
     this._scheduleUpdate( {focusInput: true, updateContents: true} );
   }
 

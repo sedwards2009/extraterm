@@ -111,6 +111,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item}));
     this._listPicker.setEntries(convertedItems);
     this._listPicker.selected = "" + options.selectedItemIndex;
+    this._listPicker.filter = options.filter == null ? "" : options.filter;
 
     const dialogDisposable = host.showDialog(this._listPicker);
     this._listPicker.open();
@@ -175,6 +176,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
     const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item}));
     this._onCursorListPicker.setEntries(convertedItems);
     this._onCursorListPicker.selected = "" + options.selectedItemIndex;
+    this._onCursorListPicker.filter = options.filter == null ? "" : options.filter;
 
     const dialogDisposable = terminal.showDialog(this._onCursorListPicker);
 

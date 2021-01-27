@@ -74,6 +74,7 @@ export class CommandPalette {
       this._commandPaletteEntries = entriesAndShortcuts;
       this._commandPalette.setEntries(entriesAndShortcuts);
       this._commandPaletteDisposable = contextElement.showDialog(this._commandPalette);
+      this._commandPalette.filter = "";
       this._commandPalette.open();
       this._commandPalette.focus();
     });
