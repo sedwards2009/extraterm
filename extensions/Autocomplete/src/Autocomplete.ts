@@ -24,6 +24,25 @@ export function activate(_context: ExtensionContext): any {
 }
 
 async function autocompleteCommand(): Promise<void> {
+  const words = collectWords();
+  const defaultFilter = getDefaultFilter();
+
+  const options: OnCursorListPickerOptions = {
+    items: words,
+    selectedItemIndex: 0,
+    filter: defaultFilter
+  };
+
+  const selected = await context.window.activeTerminal.showOnCursorListPicker(options);
+  if (selected == null) {
+    return;
+  }
+
+  const deleteKeyStrokes = "\x7f".repeat(defaultFilter.length);
+  context.window.activeTerminal.type(deleteKeyStrokes + words[selected]);
+}
+
+function collectWords(): string[] {
   const blocks = context.window.activeTerminal.blocks;
   let blockIndex = blocks.length -1;
   const screenLines: string[] = [];
@@ -44,18 +63,7 @@ async function autocompleteCommand(): Promise<void> {
     .filter(s => s.length > 3));
   const words = Array.from(wordsSet);
   words.sort();
-
-  const options: OnCursorListPickerOptions = {
-    items: words,
-    selectedItemIndex: 0,
-  };
-
-  const selected = await context.window.activeTerminal.showOnCursorListPicker(options);
-  if (selected == null) {
-    return;
-  }
-
-  context.window.activeTerminal.type(words[selected]);
+  return words;
 }
 
 function scanScreen(screen: Screen, screenLines: string[]): void {
@@ -65,4 +73,16 @@ function scanScreen(screen: Screen, screenLines: string[]): void {
       screenLines.push(line);
     }
   }
+}
+
+function getDefaultFilter(): string {
+  const screen = context.window.activeTerminal.screen;
+  const lineText = screen.getLineText(screen.cursorLine);
+  let xStart = screen.cursorX;
+
+  while (xStart !== 0 && lineText.charAt(xStart-1) !== " ") {
+    xStart--;
+  }
+
+  return lineText.substr(xStart, screen.cursorX - xStart);
 }
