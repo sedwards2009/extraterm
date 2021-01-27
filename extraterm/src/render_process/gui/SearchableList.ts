@@ -132,6 +132,9 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
     if (renderWork.focusInput) {
       const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
       filterInput.focus();
+      if (filterInput.selectionStart !== filterInput.selectionEnd) {
+        filterInput.selectionStart = filterInput.selectionEnd;
+      }
     }
   }
 
