@@ -256,8 +256,6 @@ export class Emulator implements EmulatorApi {
   private tabs: { [key: number]: boolean };
   private sendFocus = false;
 
-
-  private _events: { [type: string]: EventListener[]; } = {};
   private _blinker: Function = null;
   private savedCols: number;
   private title: string = "";
@@ -324,7 +322,6 @@ export class Emulator implements EmulatorApi {
       clearTimeout(this._refreshTimer);
     }
 
-    this._events = {};
     this.handler = function() {};
     this.write = () => ( { bufferSize: 0 } );
     this._applicationModeHandler = null;
