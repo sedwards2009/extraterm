@@ -11,28 +11,33 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
-    "@types/nodeunit": "0.0.30",
+    "@types/chai": "^4.2.14",
+    "@types/mocha": "^8.2.0",
+    "chai": "^4.2.0",
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
     "http-server": "0.12.3",
-    "nodeunit": "0.11.0",
+    "mocha": "^8.2.1",
+    "parcel-bundler": "^1.12.4",
     "shx": "^0.3.2",
-    "typescript": "3.9.6",
-    "webpack": "3.8.1"
+    "typescript": "3.9.6"
   },
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
-    "build-fast": "tsc && webpack dist/test/TestCode.js dist/test/bundle.js && shx cp src/test/RunTests.html dist/test/",
+    "build-fast": "tsc && parcel build --no-minify dist/test/DecoratorsTest.js --out-dir dist/test --out-file bundle.js",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "run": "false",
-    "server": "http-server ."
+    "serve": "http-server ."
   },
   "dependencies": {
     "reflect-metadata": "0.1.10"
   },
   "workspaces": {
-    "nohoist": ["**/nodeunit", "**/reflect-metadata"]
+    "nohoist": [
+      "**/mocha",
+      "**/reflect-metadata"
+    ]
   }
 }

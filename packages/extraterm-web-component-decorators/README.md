@@ -53,3 +53,18 @@ See the source code for details documentation about each decorator.
 Compiling
 ---------
 TypeScript code which uses these decorators must be compiled with experimental decorators support on in the compiler. Use the option `experimentalDecorators` in `tsconfig.json`. Also it is recommended to turn on the `emitDecoratorMetadata` option too for improved error checking and warnings at runtime.
+
+
+Unit Tests
+----------
+The unit tests for this run inside the browser.
+
+Run:
+
+`yarn run build`
+
+and then this to start a local webserver:
+
+`yarn run serve`
+
+Open http://127.0.0.1:8080/src/test/ to load the test page and run the tests.

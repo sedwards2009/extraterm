@@ -1,10 +1,9 @@
 /*
- * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
-import * as nodeunit from 'nodeunit';
+import { assert } from "chai";
 import { Attribute, Filter, Observe, CustomElement } from '../Decorators';
 
 
@@ -19,7 +18,6 @@ class StringComponent extends HTMLElement {
   }
 
   lastSomeString: string;
-
 }
 
 function someStringTest(guts: (sc: StringComponent) => void): void {
@@ -32,32 +30,30 @@ function someStringTest(guts: (sc: StringComponent) => void): void {
   }
 }
 
-export function testStringAttributeViaJS(test: nodeunit.Test): void {
+it("String attribute via JS", function(): void {
   someStringTest((sc: StringComponent): void => {
     sc.someString = "my string";
-    test.equals(sc.someString, "my string");
-    test.equals(sc.getAttribute("some-string"), "my string");
+    assert.equal(sc.someString, "my string");
+    assert.equal(sc.getAttribute("some-string"), "my string");
   });
-  test.done();
-}
+});
 
-export function testAttributeObserver(test: nodeunit.Test): void {
+
+it("Attribute Observer", function(): void {
   someStringTest((sc: StringComponent): void => {
     sc.someString = "first string";
     sc.someString = "my string";
-    test.equals(sc.lastSomeString, "my string");
+    assert.equal(sc.lastSomeString, "my string");
   });
-  test.done();
-}
+});
 
-export function testStringAttributeViaHTML(test: nodeunit.Test): void {
+it("String Attribute via HTML", function(): void {
   someStringTest((sc: StringComponent): void => {
     sc.setAttribute("some-string", "my string");
-    test.equals(sc.getAttribute("some-string"), "my string");
-    test.equals(sc.lastSomeString, "my string");
+    assert.equal(sc.getAttribute("some-string"), "my string");
+    assert.equal(sc.lastSomeString, "my string");
   });
-  test.done();
-}
+});
 
 @CustomElement("multi-string-component")
 class MultiStringComponent extends HTMLElement {
@@ -102,47 +98,47 @@ function multiSomeStringTest(guts: (sc: MultiStringComponent) => void): void {
   }
 }
 
-export function testMultiStringAttributeViaJS(test: nodeunit.Test): void {
+it("MultiStringAttributeViaJS", function(): void {
   multiSomeStringTest((sc: MultiStringComponent): void => {
     sc.someString = "my string";
-    test.equals(sc.someString, "my string");
-    test.equals(sc.lastSomeString, "my string");
-    test.equals(sc.lastSomeString2, "my string");
-    test.done();
-  });
-}
+    assert.equal(sc.someString, "my string");
+    assert.equal(sc.lastSomeString, "my string");
+    assert.equal(sc.lastSomeString2, "my string");
 
-export function testMultiStringAttributeViaHTML(test: nodeunit.Test): void {
+  });
+});
+
+it("Multi-string attribute via HTML", function(): void {
   multiSomeStringTest((sc: MultiStringComponent): void => {
     sc.setAttribute("some-string", "my string");
-    test.equals(sc.getAttribute("some-string"), "my string");
-    test.equals(sc.lastSomeString, "my string");
-    test.equals(sc.lastSomeString2, "my string");
-    test.done();
-  });
-}
+    assert.equal(sc.getAttribute("some-string"), "my string");
+    assert.equal(sc.lastSomeString, "my string");
+    assert.equal(sc.lastSomeString2, "my string");
 
-export function testMultiStringAttributeViaHTMLWithMultiobserver(test: nodeunit.Test): void {
+  });
+});
+
+it("Multi-string attribute via HTML with multi-observer", function(): void {
   multiSomeStringTest((sc: MultiStringComponent): void => {
     sc.setAttribute("some-string", "my string");
     sc.setAttribute("other-string", "my other string");
 
-    test.equals(sc.lastSomeStringMulti, "my string");
-    test.equals(sc.lastOtherStringMulti, "my other string");
-    test.done();
-  });
-}
+    assert.equal(sc.lastSomeStringMulti, "my string");
+    assert.equal(sc.lastOtherStringMulti, "my other string");
 
-export function testMultiStringAttributeViaJSWithMultiobserver(test: nodeunit.Test): void {
+  });
+});
+
+it("Multi-string attribute via JS with multi-observer", function(): void {
   multiSomeStringTest((sc: MultiStringComponent): void => {
     sc.someString = "my string";
     sc.otherString = "my other string";
 
-    test.equals(sc.lastSomeStringMulti, "my string");
-    test.equals(sc.lastOtherStringMulti, "my other string");
-    test.done();
+    assert.equal(sc.lastSomeStringMulti, "my string");
+    assert.equal(sc.lastOtherStringMulti, "my other string");
+
   });
-}
+});
 
 @CustomElement("filter-string-component")
 class FilterStringComponent extends HTMLElement {
@@ -184,48 +180,48 @@ function filterStringTest(guts: (sc: FilterStringComponent) => void): void {
   }
 }
 
-export function testFilterStringAttributeViaJS(test: nodeunit.Test): void {
+it("Filter string attribute via JS", function(): void {
   filterStringTest((sc: FilterStringComponent): void => {
     sc.someString = "my string";
-    test.equals(sc.someString, "MY STRING");
-    test.done();
-  });
-}
+    assert.equal(sc.someString, "MY STRING");
 
-export function testFilterStringAttributeViaHTML(test: nodeunit.Test): void {
+  });
+});
+
+it("Filter string attribute via HTML", function(): void {
   filterStringTest((sc: FilterStringComponent): void => {
     sc.setAttribute("some-string", "my string");
-    test.equals(sc.someString, "MY STRING");
-    test.done();
-  });
-}
+    assert.equal(sc.someString, "MY STRING");
 
-export function testFilterStringAttributeViaJSWithReject(test: nodeunit.Test): void {
+  });
+});
+
+it("Filter string attribute via JS with Reject", function(): void {
   filterStringTest((sc: FilterStringComponent): void => {
     sc.noSimonsString = "Paul's string";
-    test.equals(sc.noSimonsString, "Paul's string");
+    assert.equal(sc.noSimonsString, "Paul's string");
 
     sc.noSimonsString = "Simon's string";
-    test.equals(sc.noSimonsString, "Paul's string");
-    test.done();
-  });
-}
+    assert.equal(sc.noSimonsString, "Paul's string");
 
-export function testFilter2StringAttributeViaJS(test: nodeunit.Test): void {
+  });
+});
+
+it("Filter 2 String attribute via JS", function(): void {
   filterStringTest((sc: FilterStringComponent): void => {
     sc.shortString = "     MY String    ";
-    test.equals(sc.shortString, "my string");
-    test.done();
-  });
-}
+    assert.equal(sc.shortString, "my string");
 
-export function testFilter2StringAttributeViaHTML(test: nodeunit.Test): void {
+  });
+});
+
+it("Filter 2 String attribute via HTML", function(): void {
   filterStringTest((sc: FilterStringComponent): void => {
     sc.setAttribute("short-string", "     MY String    ");
-    test.equals(sc.shortString, "my string");
-    test.done();
+    assert.equal(sc.shortString, "my string");
+
   });
-}
+});
 
 @CustomElement("number-component")
 class NumberComponent extends HTMLElement {
@@ -251,27 +247,24 @@ function someNumberTest(guts: (sc: NumberComponent) => void): void {
   }
 }
 
-export function testNumberAttributeViaJS(test: nodeunit.Test): void {
+it("Number attribute via JS", function(): void {
   someNumberTest((sc: NumberComponent): void => {
     sc.someNumber = 123;
-    test.equals(sc.getAttribute("some-number"), "123");
-    test.equals(sc.someNumber, 123);
-    test.equals(sc.lastSomeNumber, 123);
-    test.equals(typeof sc.lastSomeNumber, "number");
-
-    test.done();
+    assert.equal(sc.getAttribute("some-number"), "123");
+    assert.equal(sc.someNumber, 123);
+    assert.equal(sc.lastSomeNumber, 123);
+    assert.equal(typeof sc.lastSomeNumber, "number");
   });
-}
+});
 
-export function testNumberAttributeViaHTML(test: nodeunit.Test): void {
+it("Number attribute via HTML", function(): void {
   someNumberTest((sc: NumberComponent): void => {
     sc.setAttribute("some-number", "321");
-    test.equals(sc.getAttribute("some-number"), "321");
-    test.equals(sc.lastSomeNumber, 321);
-    test.equals(typeof sc.lastSomeNumber, "number");
+    assert.equal(sc.getAttribute("some-number"), "321");
+    assert.equal(sc.lastSomeNumber, 321);
+    assert.equal(typeof sc.lastSomeNumber, "number");
   });
-  test.done();
-}
+});
 
 @CustomElement("boolean-component")
 class BooleanComponent extends HTMLElement {
@@ -296,59 +289,53 @@ function someBooleanTest(guts: (sc: BooleanComponent) => void): void {
   }
 }
 
-export function testTrueBooleanAttributeViaJS(test: nodeunit.Test): void {
+it("True boolean attribute via JS", function(): void {
   someBooleanTest((sc: BooleanComponent): void => {
     sc.someBoolean = true;
-    test.equals(sc.hasAttribute("some-boolean"), true);
-    test.notEqual(sc.getAttribute("some-boolean"), null);
-    test.equals(sc.someBoolean, true);
-
-    test.done();
+    assert.equal(sc.hasAttribute("some-boolean"), true);
+    assert.notEqual(sc.getAttribute("some-boolean"), null);
+    assert.equal(sc.someBoolean, true);
   });
-}
+});
 
 
-export function testFalseBooleanAttributeViaJS(test: nodeunit.Test): void {
+it("False boolean attribute via JS", function(): void {
   someBooleanTest((sc: BooleanComponent): void => {
     sc.someBoolean = false;
-    test.equals(sc.hasAttribute("some-boolean"), false);
-    test.equals(sc.getAttribute("some-boolean"), null);
-    test.equals(sc.someBoolean, false);
-    test.equals(sc.lastSomeBoolean, false);
-    test.equals(typeof sc.lastSomeBoolean, "boolean");
-
-    test.done();
+    assert.equal(sc.hasAttribute("some-boolean"), false);
+    assert.equal(sc.getAttribute("some-boolean"), null);
+    assert.equal(sc.someBoolean, false);
+    assert.equal(sc.lastSomeBoolean, false);
+    assert.equal(typeof sc.lastSomeBoolean, "boolean");
   });
-}
+});
 
-export function testBooleanAttributeViaHTML(test: nodeunit.Test): void {
+it("Boolean attribute via HTML", function(): void {
   someBooleanTest((sc: BooleanComponent): void => {
     sc.removeAttribute("some-boolean");
-    test.equals(sc.hasAttribute("some-boolean"), false);
-    test.equals(sc.someBoolean, false);
-    test.equals(sc.getAttribute("some-boolean"), null);
-    test.equals(sc.lastSomeBoolean, false);
-    test.equals(typeof sc.lastSomeBoolean, "boolean");
+    assert.equal(sc.hasAttribute("some-boolean"), false);
+    assert.equal(sc.someBoolean, false);
+    assert.equal(sc.getAttribute("some-boolean"), null);
+    assert.equal(sc.lastSomeBoolean, false);
+    assert.equal(typeof sc.lastSomeBoolean, "boolean");
   });
-  test.done();
-}
+});
 
-export function testBooleanAttributeToggle(test: nodeunit.Test): void {
+it("Boolean attribute toggle", function(): void {
   someBooleanTest((sc: BooleanComponent): void => {
 
     sc.removeAttribute("some-boolean");
 
-    test.equals(sc.hasAttribute("some-boolean"), false);
-    test.equals(sc.someBoolean, false);
-    test.equals(sc.getAttribute("some-boolean"), null);
+    assert.equal(sc.hasAttribute("some-boolean"), false);
+    assert.equal(sc.someBoolean, false);
+    assert.equal(sc.getAttribute("some-boolean"), null);
 
     sc.setAttribute("some-boolean", "some-boolean");
-    test.equals(sc.hasAttribute("some-boolean"), true);
-    test.equals(sc.someBoolean, true);
-    test.notEqual(sc.getAttribute("some-boolean"), null);
+    assert.equal(sc.hasAttribute("some-boolean"), true);
+    assert.equal(sc.someBoolean, true);
+    assert.notEqual(sc.getAttribute("some-boolean"), null);
   });
-  test.done();
-}
+});
 
 /*
 
@@ -364,14 +351,13 @@ class SubStringComponent extends StringComponent {
   public subLastSomeString: string;
 }
 
-export function testSubclassObserve(test: nodeunit.Test): void {
+it("SubclassObserve", function(): void {
   const sc = <SubStringComponent> document.createElement("substring-component");
   document.body.appendChild(sc);
   sc.someString = "blah";
-  test.equals(sc.lastSomeString, "blah");
-  test.equals(sc.subLastSomeString, "blah");
+  assert.equal(sc.lastSomeString, "blah");
+  assert.equal(sc.subLastSomeString, "blah");
 
-  test.done();
 }
 */
 
@@ -383,18 +369,16 @@ class DefaultsComponent extends HTMLElement {
   @Attribute someBoolean = false;
 }
 
-export function testDefaults(test: nodeunit.Test): void {
+it("Defaults", function(): void {
   const ic = <DefaultsComponent> document.createElement("defaults-component");
   document.body.appendChild(ic);
 
-  test.equals(typeof ic.someString, "string");
-  test.equals(ic.someString, "foo");
+  assert.equal(typeof ic.someString, "string");
+  assert.equal(ic.someString, "foo");
 
-  test.equals(typeof ic.someNumber, "number");
-  test.equals(ic.someNumber, 123);
+  assert.equal(typeof ic.someNumber, "number");
+  assert.equal(ic.someNumber, 123);
 
-  test.equals(typeof ic.someBoolean, "boolean");
-  test.equals(ic.someBoolean, false);
-
-  test.done();
-}
+  assert.equal(typeof ic.someBoolean, "boolean");
+  assert.equal(ic.someBoolean, false);
+});
