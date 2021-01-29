@@ -73,7 +73,7 @@
     "@types/utf8": "2.1.5",
     "@types/xregexp": "3.0.29",
     "cajon": "0.2.10",
-    "electron": "10.1.5",
+    "electron": "10.2.0",
     "eslint": "6.8.0",
     "eslint-config-extraterm": "1.0.0",
     "finalhandler": "0.4.0",

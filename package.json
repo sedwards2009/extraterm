@@ -62,7 +62,7 @@
   },
   "devDependencies": {
     "@yarnpkg/lockfile": "^1.1.0",
-    "electron": "10.1.5",
+    "electron": "10.2.0",
     "electron-packager": "14.1.1",
     "electron-rebuild": "2.3.2",
     "git-repo-info": "^1.4.1",
