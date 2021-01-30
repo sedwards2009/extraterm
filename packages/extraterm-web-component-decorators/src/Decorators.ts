@@ -24,6 +24,8 @@ interface AttributeData {
   attributeName: string;
   attributeExists: boolean;
   dataType: PropertyType;
+  hasGetter: boolean;
+  hasSetter: boolean;
   instanceValueMap: WeakMap<any, any>;
 
   filters: FilterMethodName[];
@@ -94,6 +96,13 @@ export function CustomElement(tag: string): (target: any) => any {
   };
 }
 
+/**
+ * Mark a field as an attribute.
+ *
+ * Calls to `setAttribute()` and `getAttribute()` will be set/get on this
+ * field. Also `@Observe` and `@Filter` can be used to modify the setting
+ * process.
+ */
 export function Attribute(prototype: any, key: string) {
   const decoratorData = getDecoratorData(prototype);
   decoratorData.installAttribute(prototype, key);
@@ -109,9 +118,7 @@ function getDecoratorData(prototype: any): DecoratorData {
 
 
 class DecoratorData {
-
   private _instanceConstructedMap = new WeakMap<any, boolean>();
-
   private _jsNameAttrDataMap = new Map<string, AttributeData>();
   //                              ^ Key is the js attribute name
 
@@ -140,66 +147,75 @@ class DecoratorData {
     if (propertyTypeMetadata != null) {
       propertyType = jsTypeToPropertyType(propertyTypeMetadata.name);
     }
+
+    const descriptor = Object.getOwnPropertyDescriptor(prototype, jsName);
+    const hasGetter = descriptor != null && descriptor.get !== undefined;
+    const hasSetter = descriptor != null && descriptor.set !== undefined;
+
+    attrData.hasGetter = hasGetter;
+    attrData.hasSetter = hasSetter;
     attrData.dataType = propertyType;
     attrData.attributeExists = true;
 
-    const getter = function(this: any): any {
-      return attrData.instanceValueMap.get(this);
-    };
+    if ( ! (hasGetter || hasSetter)) {
+      const getter = function(this: any): any {
+        return attrData.instanceValueMap.get(this);
+      };
 
-    const setter = function(this: any, newRawValue: any): void {
-      if ( ! decoratorData._isInstanceConstructed(this) && attrData.dataType === "unknown") {
-        // Guess what the true data type for this attribute is. This is needed when TypeScript
-        // infers the type of a property via its initializing value.
-        if ((typeof newRawValue) === "number") {
-          attrData.dataType = "Number";
-        } else if ((typeof newRawValue) === "boolean") {
-          attrData.dataType = "Boolean";
-        } else if ((typeof newRawValue) === "string") {
-          attrData.dataType = "String";
-        }
-      }
-
-      let newValue: any = newRawValue;
-      if (attrData.dataType === "Number" && (typeof newValue !== "number")) {
-        newValue = parseFloat(newRawValue);
-      } else if (attrData.dataType === "Boolean" && (typeof newValue !== "boolean")) {
-        newValue = newRawValue === attrData.attributeName || newRawValue === "" || newRawValue === "true";
-      }
-
-      if (decoratorData._isInstanceConstructed(this)) {
-        // Filter
-        for (const methodName of attrData.filters) {
-          const updatedValue = this[methodName].call(this, newValue, jsName);
-          if (updatedValue === undefined) {
-            return;
+      const setter = function(this: any, newRawValue: any): void {
+        if ( ! decoratorData._isInstanceConstructed(this) && attrData.dataType === "unknown") {
+          // Guess what the true data type for this attribute is. This is needed when TypeScript
+          // infers the type of a property via its initializing value.
+          if ((typeof newRawValue) === "number") {
+            attrData.dataType = "Number";
+          } else if ((typeof newRawValue) === "boolean") {
+            attrData.dataType = "Boolean";
+          } else if ((typeof newRawValue) === "string") {
+            attrData.dataType = "String";
           }
-          newValue = updatedValue;
         }
-      }
-      const oldValue = attrData.instanceValueMap.get(this);
-      if (oldValue === newValue) {
-        return;
-      }
 
-      attrData.instanceValueMap.set(this, newValue);
-      if (decoratorData._isInstanceConstructed(this)) {
-        this[decoratorData.superSetAttributeSymbol].call(this, attrData.attributeName, newValue);
-
-        // Notify observers
-        for (const methodName of attrData.observers) {
-          this[methodName].call(this, jsName);
+        let newValue: any = newRawValue;
+        if (attrData.dataType === "Number" && (typeof newValue !== "number")) {
+          newValue = parseFloat(newRawValue);
+        } else if (attrData.dataType === "Boolean" && (typeof newValue !== "boolean")) {
+          newValue = newRawValue === attrData.attributeName || newRawValue === "" || newRawValue === "true";
         }
-      }
-    };
 
-    if (delete this._elementProto[jsName]) {
-      Object.defineProperty(this._elementProto, jsName, {
-        get: getter,
-        set: setter,
-        enumerable: true,
-        configurable: true
-      });
+        if (decoratorData._isInstanceConstructed(this)) {
+          // Filter
+          for (const methodName of attrData.filters) {
+            const updatedValue = this[methodName].call(this, newValue, jsName);
+            if (updatedValue === undefined) {
+              return;
+            }
+            newValue = updatedValue;
+          }
+        }
+        const oldValue = attrData.instanceValueMap.get(this);
+        if (oldValue === newValue) {
+          return;
+        }
+
+        attrData.instanceValueMap.set(this, newValue);
+        if (decoratorData._isInstanceConstructed(this)) {
+          this[decoratorData.superSetAttributeSymbol].call(this, attrData.attributeName, newValue);
+
+          // Notify observers
+          for (const methodName of attrData.observers) {
+            this[methodName].call(this, jsName);
+          }
+        }
+      };
+
+      if (delete this._elementProto[jsName]) {
+        Object.defineProperty(this._elementProto, jsName, {
+          get: getter,
+          set: setter,
+          enumerable: true,
+          configurable: true
+        });
+      }
     }
   }
 
@@ -215,6 +231,8 @@ class DecoratorData {
       attributeName,
       attributeExists: false,
       dataType: null,
+      hasGetter: false,
+      hasSetter: false,
       instanceValueMap: new WeakMap<any, any>(),
       filters: [],
       observers: [],
@@ -231,7 +249,7 @@ class DecoratorData {
       return undefined;
     }
 
-    const value = attrData.instanceValueMap.get(instance);
+    const value = attrData.hasGetter ? instance[attrData.jsName] : attrData.instanceValueMap.get(instance);
     if (attrData.dataType === "Boolean") {
       return value ? "" : null;
     }
@@ -242,6 +260,10 @@ class DecoratorData {
   setAttribute(instance: any, attrName: string, value: any): boolean {
     const attrData = this._attrNameAttrDataMap.get(attrName);
     if (attrData === undefined) {
+      return false;
+    }
+
+    if (attrData.hasGetter && ! attrData.hasSetter) {
       return false;
     }
 

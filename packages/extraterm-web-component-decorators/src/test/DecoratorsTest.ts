@@ -382,3 +382,56 @@ it("Defaults", function(): void {
   assert.equal(typeof ic.someBoolean, "boolean");
   assert.equal(ic.someBoolean, false);
 });
+
+//-------------------------------------------------------------------------
+
+@CustomElement("string-component-with-getter-setter")
+class StringComponentWithGetterSetter extends HTMLElement {
+  private _hiddenString = "";
+
+  @Attribute get someString(): string {
+    return this._hiddenString;
+  }
+
+  set someString(value: string) {
+    this._hiddenString = value;
+  }
+}
+
+function someStringComponentWithGetterSetterTest(guts: (sc: StringComponentWithGetterSetter) => void): void {
+  const sc = <StringComponentWithGetterSetter> document.createElement("string-component-with-getter-setter");
+  document.body.appendChild(sc);
+  try {
+    guts(sc);
+  } finally {
+    sc.parentElement.removeChild(sc);
+  }
+}
+
+it("String with getter/setter", function(): void {
+  someStringComponentWithGetterSetterTest((sc: StringComponentWithGetterSetter) => {
+    sc.someString = "foo";
+    assert.equal(sc.someString, "foo");
+  });
+});
+
+it("String with getter/setter attribute", function(): void {
+  someStringComponentWithGetterSetterTest((sc: StringComponentWithGetterSetter) => {
+    sc.setAttribute("some-string", "foo");
+    assert.equal(sc.someString, "foo");
+  });
+});
+
+it("String with getter/setter attribute vs property", function(): void {
+  someStringComponentWithGetterSetterTest((sc: StringComponentWithGetterSetter) => {
+    sc.setAttribute("some-string", "foo");
+    assert.equal(sc.someString, "foo");
+  });
+});
+
+it("String with getter/setter attribute vs property 2", function(): void {
+  someStringComponentWithGetterSetterTest((sc: StringComponentWithGetterSetter) => {
+    sc.someString = "foo";
+    assert.equal(sc.getAttribute("some-string"), "foo");
+  });
+});
