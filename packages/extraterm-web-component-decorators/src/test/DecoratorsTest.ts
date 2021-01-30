@@ -7,6 +7,7 @@ import { assert } from "chai";
 import { Attribute, Filter, Observe, CustomElement } from '../Decorators';
 
 
+//-------------------------------------------------------------------------
 @CustomElement("string-component")
 class StringComponent extends HTMLElement {
 
@@ -55,6 +56,7 @@ it("String Attribute via HTML", function(): void {
   });
 });
 
+//-------------------------------------------------------------------------
 @CustomElement("multi-string-component")
 class MultiStringComponent extends HTMLElement {
 
@@ -140,6 +142,7 @@ it("Multi-string attribute via JS with multi-observer", function(): void {
   });
 });
 
+//-------------------------------------------------------------------------
 @CustomElement("filter-string-component")
 class FilterStringComponent extends HTMLElement {
 
@@ -223,6 +226,8 @@ it("Filter 2 String attribute via HTML", function(): void {
   });
 });
 
+//-------------------------------------------------------------------------
+
 @CustomElement("number-component")
 class NumberComponent extends HTMLElement {
 
@@ -266,6 +271,7 @@ it("Number attribute via HTML", function(): void {
   });
 });
 
+//-------------------------------------------------------------------------
 @CustomElement("boolean-component")
 class BooleanComponent extends HTMLElement {
 
@@ -339,6 +345,7 @@ it("Boolean attribute toggle", function(): void {
 
 /*
 
+//-------------------------------------------------------------------------
 // TODO should we support @Observe on attributes in the superclass?
 @CustomElement("substring-component")
 class SubStringComponent extends StringComponent {
@@ -360,6 +367,8 @@ it("SubclassObserve", function(): void {
 
 }
 */
+
+//-------------------------------------------------------------------------
 
 @CustomElement("defaults-component")
 class DefaultsComponent extends HTMLElement {
