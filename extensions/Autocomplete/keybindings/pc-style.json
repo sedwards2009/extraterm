@@ -4,7 +4,7 @@
     {
       "command": "autocomplete:autocomplete",
       "keys": [
-        "Ctrl-Shift-I"
+        "Ctrl-;"
       ]
     }
   ]
