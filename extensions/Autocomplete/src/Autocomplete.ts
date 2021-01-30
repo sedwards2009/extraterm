@@ -27,8 +27,10 @@ async function autocompleteCommand(): Promise<void> {
   const words = collectWords();
   const defaultFilter = getDefaultFilter();
 
+  const candidateWords = words.filter(w => w !== defaultFilter);
+
   const options: OnCursorListPickerOptions = {
-    items: words,
+    items: candidateWords,
     selectedItemIndex: 0,
     filter: defaultFilter
   };
