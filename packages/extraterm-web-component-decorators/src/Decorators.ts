@@ -376,7 +376,7 @@ export function Observe(...jsPropertyNames: string[]) {
  * The method can have one or two parameters. The first is the value which
  * needs to be filtered. The second optional parameter is the name of the
  * attribute the value is for. The method must return the new filtered value,
- * or `undefined` to indicate that the
+ * or `undefined` to indicate that the new value should be rejected.
  *
  * Note that the filter doesn't affect the value of the HTML attribute set,
  * but it does affect the internal value directly accessible via the JS field.

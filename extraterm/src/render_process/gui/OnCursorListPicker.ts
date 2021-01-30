@@ -126,11 +126,13 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
       ThemeTypes.CssFile.GUI_ON_CURSOR_LIST_PICKER, ...extraCssFiles];
   }
 
-  @Attribute selected: string = null;
+  @Attribute
+  get selected(): string {
+    return this._getSearchableList().selected;
+  }
 
-  @Observe("selected")
-  private _updateSelected(target: string): void {
-    this._getSearchableList().selected = this.selected;
+  set selected(value: string) {
+    this._getSearchableList().selected = value;
   }
 
   private _getSearchableList(): OnCursorSearchableList<T> {
@@ -156,11 +158,13 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
     this._scheduleUpdate({ updateContents: true });
   }
 
-  @Attribute filter = "";
+  @Attribute
+  get filter(): string {
+    return this._getSearchableList().filter;
+  }
 
-  @Observe("filter")
-  private _observeFilter(target: string): void {
-    this._getSearchableList().filter = this.filter;
+  set filter(value: string) {
+    this._getSearchableList().filter = value;
   }
 
   setFilterAndRankEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {

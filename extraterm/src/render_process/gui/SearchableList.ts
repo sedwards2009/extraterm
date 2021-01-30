@@ -5,7 +5,6 @@
  */
 import { html, render, TemplateResult } from "extraterm-lit-html";
 import { DirectiveFn } from "extraterm-lit-html/lib/directive";
-import { live } from "extraterm-lit-html/directives/live";
 import { repeat } from "extraterm-lit-html/directives/repeat";
 import { Disposable } from "@extraterm/extraterm-extension-api";
 import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
@@ -23,6 +22,7 @@ const ID_RESULTS = "ID_RESULTS";
 interface RenderWork {
   updateContents: boolean;
   scrollToSelected: boolean;
+  setFilter: boolean;
   focusInput: boolean;
 }
 
@@ -92,7 +92,8 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
       this._renderWork = {
         updateContents: false,
         focusInput: false,
-        scrollToSelected: false
+        scrollToSelected: false,
+        setFilter: false
       };
 
       if (nextFrame) {
@@ -108,6 +109,7 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
 
     this._renderWork.focusInput = this._renderWork.focusInput || renderWork.focusInput;
     this._renderWork.scrollToSelected = this._renderWork.scrollToSelected || renderWork.scrollToSelected;
+    this._renderWork.setFilter = this._renderWork.setFilter || renderWork.setFilter;
     this._renderWork.updateContents = this._renderWork.updateContents || renderWork.updateContents;
   }
 
@@ -128,6 +130,10 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
     }
     if (renderWork.scrollToSelected) {
       this._scrollToSelected();
+    }
+    if (renderWork.setFilter) {
+      const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
+      filterInput.value = this.filter;
     }
     if (renderWork.focusInput) {
       const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
@@ -169,7 +175,6 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
               spellcheck="false"
               @input=${this._handleFilterInput}
               @keydown=${filterKeyDown}
-              .value=${live(this.filter)}
             />
           </div>
           <div
@@ -221,7 +226,7 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
 
   @Observe("filter")
   private _observeFilter(target: string): void {
-    this._scheduleUpdate({ updateContents: true, scrollToSelected: true });
+    this._scheduleUpdate({ setFilter: true, updateContents: true, scrollToSelected: true });
   }
 
   setFilterAndRankEntriesFunc(func: (entries: T[], filterText: string) => T[]): void {
