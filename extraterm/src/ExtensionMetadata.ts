@@ -1,48 +1,44 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
 export interface ExtensionMetadata {
-  name: string;
-  path: string;
-  main?: string;
-  version?: string;
-  description?: string;
-  homepage?: string;
-  keywords?: string[];
-  displayName?: string;
-  contributes: ExtensionContributes;
-  includePlatform?: ExtensionPlatform[];
-  excludePlatform?: ExtensionPlatform[];
-  isInternal?: boolean;
-  readmePath?: string;
-}
-
-export interface ExtensionDesiredState {
-  [extensionName: string]: boolean;
+  readonly name: string;
+  readonly path: string;
+  readonly main?: string;
+  readonly version?: string;
+  readonly description?: string;
+  readonly homepage?: string;
+  readonly keywords?: string[];
+  readonly displayName?: string;
+  readonly contributes: ExtensionContributes;
+  readonly includePlatform?: ExtensionPlatform[];
+  readonly excludePlatform?: ExtensionPlatform[];
+  readonly isInternal?: boolean;
+  readonly readmePath?: string;
 }
 
 export interface ExtensionPlatform {
-  os?: string;
-  arch?: string;
+  readonly os?: string;
+  readonly arch?: string;
 }
 
 export interface ExtensionContributes {
-  commands: ExtensionCommandContribution[];
-  keybindings: ExtensionKeybindingsContribution[];
-  menus: ExtensionMenusContribution;
-  sessionBackends: ExtensionSessionBackendContribution[];
-  sessionEditors: ExtensionSessionEditorContribution[];
-  sessionSettings: ExtensionSessionSettingsContribution[];
-  syntaxThemes: ExtensionSyntaxThemeContribution[];
-  syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
-  tabTitleWidgets: ExtensionTabTitlesWidgetContribution[];
-  terminalBorderWidgets: ExtensionTerminalBorderContribution[];
-  terminalThemes: ExtensionTerminalThemeContribution[];
-  terminalThemeProviders: ExtensionTerminalThemeProviderContribution[];
-  viewers: ExtensionViewerContribution[];
+  readonly commands: ExtensionCommandContribution[];
+  readonly keybindings: ExtensionKeybindingsContribution[];
+  readonly menus: ExtensionMenusContribution;
+  readonly sessionBackends: ExtensionSessionBackendContribution[];
+  readonly sessionEditors: ExtensionSessionEditorContribution[];
+  readonly sessionSettings: ExtensionSessionSettingsContribution[];
+  readonly syntaxThemes: ExtensionSyntaxThemeContribution[];
+  readonly syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
+  readonly tabTitleWidgets: ExtensionTabTitlesWidgetContribution[];
+  readonly terminalBorderWidgets: ExtensionTerminalBorderContribution[];
+  readonly terminalThemes: ExtensionTerminalThemeContribution[];
+  readonly terminalThemeProviders: ExtensionTerminalThemeProviderContribution[];
+  readonly viewers: ExtensionViewerContribution[];
 }
 
 export type Category = "global" |
@@ -72,119 +68,94 @@ export interface WhenVariables {
 }
 
 export interface ExtensionCommandContribution {
-  command: string;
-  title: string;
-  when?: string;
-  category?: Category;
-  order?: number;
-  icon?: string;
-  checked?: boolean;
+  readonly command: string;
+  readonly title: string;
+  readonly when?: string;
+  readonly category?: Category;
+  readonly order?: number;
+  readonly icon?: string;
+  readonly checked?: boolean;
 }
 
 export interface ExtensionViewerContribution {
-  name: string;
-  mimeTypes: string[];
-  css: ExtensionCss;
+  readonly name: string;
+  readonly mimeTypes: string[];
+  readonly css: ExtensionCss;
 }
 
 export interface ExtensionCss {
-  directory: string;
-  cssFile: string[];
-  fontAwesome: boolean;
+  readonly directory: string;
+  readonly cssFile: string[];
+  readonly fontAwesome: boolean;
 }
 
 export interface ExtensionSessionEditorContribution {
-  /**
-   * Human readable name for this session editor.
-   */
-  name: string;
-
-  /**
-   * Internal symbol used internally for identifying this type of session.
-   */
-  type: string;
-  css: ExtensionCss;
+  readonly name: string;
+  readonly type: string;
+  readonly css: ExtensionCss;
 }
 
 export interface ExtensionSessionBackendContribution {
-  /**
-   * Human readable name for this session editor.
-   */
-  name: string;
-
-  /**
-   * Symbol used internally for identifying this type of session.
-   */
-  type: string;
+  readonly name: string;
+  readonly type: string;
 }
 
 export interface ExtensionSessionSettingsContribution {
-  /**
-   * Internal symbol used internally for identifying these groups of settings.
-   */
-  id: string;
-
-  /**
-   * The name of these settings to show in the UI.
-   */
-  name: string;
-
-  css: ExtensionCss;
+  readonly id: string;
+  readonly name: string;
+  readonly css: ExtensionCss;
 }
 
 export interface ExtensionSyntaxThemeProviderContribution {
-  /**
-   * Internal name for this provider.
-   */
-  name: string;
-
-  humanFormatNames: string[];
+  readonly name: string;
+  readonly humanFormatNames: string[];
 }
 
 export interface ExtensionSyntaxThemeContribution {
-  path: string;
+  readonly path: string;
 }
 
 export type BorderDirection = "north" | "south" | "east" | "west";
 
 export interface ExtensionTabTitlesWidgetContribution {
-  name: string;
-  css: ExtensionCss;
+  readonly name: string;
+  readonly css: ExtensionCss;
 }
 
 export interface ExtensionTerminalBorderContribution {
-  name: string;
-  border: BorderDirection;
-  css: ExtensionCss;
+  readonly name: string;
+  readonly border: BorderDirection;
+  readonly css: ExtensionCss;
 }
 
 export interface ExtensionTerminalThemeProviderContribution {
-  /**
-   * Internal name for this provider.
-   */
-  name: string;
-
-  humanFormatNames: string[];
+  readonly name: string;
+  readonly humanFormatNames: string[];
 }
 
 export interface ExtensionTerminalThemeContribution {
-  path: string;
+  readonly path: string;
 }
 
 export interface ExtensionKeybindingsContribution {
-  path: string;
+  readonly path: string;
 }
 
 export interface ExtensionMenusContribution {
-  contextMenu: ExtensionMenu[];
-  commandPalette: ExtensionMenu[];
-  emptyPane: ExtensionMenu[];
-  newTerminal: ExtensionMenu[];
-  terminalTab: ExtensionMenu[];
-  windowMenu: ExtensionMenu[];
+  readonly contextMenu: ExtensionMenu[];
+  readonly commandPalette: ExtensionMenu[];
+  readonly emptyPane: ExtensionMenu[];
+  readonly newTerminal: ExtensionMenu[];
+  readonly terminalTab: ExtensionMenu[];
+  readonly windowMenu: ExtensionMenu[];
 }
 
 export interface ExtensionMenu {
-  command: string;
-  show: boolean;
+  readonly command: string;
+  readonly show: boolean;
 }
+
+export interface ExtensionDesiredState {
+  [extensionName: string]: boolean;
+}
+

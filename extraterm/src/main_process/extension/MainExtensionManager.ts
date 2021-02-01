@@ -107,9 +107,9 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
       const result = parsePackageJsonString(packageJsonString, extensionPath);
 
       const jsonTree = JSON.parse(packageJsonString);
-      result.readmePath = this._getExtensionReadmePath(jsonTree, extensionPath);
+      const readmePath = this._getExtensionReadmePath(jsonTree, extensionPath);
 
-      return result;
+      return {...result, readmePath };
     } catch(ex) {
       this._log.warn(`An error occurred while processing '${packageJsonPath}': ` + ex);
       return null;
