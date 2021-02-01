@@ -1,14 +1,17 @@
 /*
- * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as fuzzyjs from "fuzzyjs";
+import * as he from "he";
 import * as DomUtils from "../DomUtils";
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { html, TemplateResult } from "extraterm-lit-html";
 import { DirectiveFn } from "extraterm-lit-html/lib/directive";
 import { classMap } from "extraterm-lit-html/directives/class-map";
 import { repeat } from "extraterm-lit-html/directives/repeat";
+import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
 import { doLater } from "extraterm-later";
 import { Logger, getLogger} from "extraterm-logging";
 import { EtTerminal } from "../Terminal";
@@ -23,6 +26,21 @@ import { OnCursorListPicker } from "../gui/OnCursorListPicker";
 interface IdLabelPair {
   id: string;
   label: string;
+
+  markedupLabel: string;
+  score: number;
+}
+
+const SELECTION_START_MARKER = "\x01";
+const SELECTION_END_MARKER = "\x02";
+const SELECTION_START_MARKER_REGEX = /&#x1;/g;
+const SELECTION_END_MARKER_REGEX = /&#x2;/g;
+
+function cmpScore(a: IdLabelPair, b: IdLabelPair): number {
+  if (a.score === b.score) {
+    return 0;
+  }
+  return a.score < b.score ? -1 : 1;
 }
 
 interface Focusable {
@@ -102,13 +120,13 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
 
     if (this._listPicker == null) {
       this._listPicker = <PopDownListPicker<IdLabelPair>> window.document.createElement(PopDownListPicker.TAG_NAME);
-      this._listPicker.setFormatEntriesFunc(this._formatEntries);
+      this._listPicker.setFormatEntriesFunc(this._formatEntries.bind(this));
       this._listPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
     }
 
     this._listPicker.titlePrimary = options.title;
 
-    const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item}));
+    const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item, markedupLabel: item, score: 0}));
     this._listPicker.setEntries(convertedItems);
     this._listPicker.selected = "" + options.selectedItemIndex;
     this._listPicker.filter = options.filter == null ? "" : options.filter;
@@ -126,39 +144,52 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       (entry) => entry.id,
       (entry, index) => {
         const classes = {CLASS_RESULT_ENTRY: true, CLASS_RESULT_SELECTED: entry.id === selectedId};
-        return html`<div class=${classMap(classes)} data-id=${entry.id}>${entry.label}</div>`;
+        const label = this._markupLabel(entry.markedupLabel);
+        return html`<div class=${classMap(classes)} data-id=${entry.id}>${unsafeHTML(label)}</div>`;
       }
     );
   }
 
+  private _markupLabel(rawLabel: string): string {
+    return he.encode(rawLabel).replace(SELECTION_START_MARKER_REGEX, "<b>")
+      .replace(SELECTION_END_MARKER_REGEX, "</b>");
+  }
+
   private _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
-    const lowerFilterText = filterText.toLowerCase().trim();
-
-    if (lowerFilterText === "") { // Special case for when no filter is entered.
+    if (filterText.trim() === "") {
+      let i = 0;
+      for (const entry of entries) {
+        entry.score = i;
+        entry.markedupLabel = entry.label;
+        i++;
+      }
       return [...entries];
+
+    } else {
+      for (const entry of entries) {
+        const result = fuzzyjs.match(filterText, entry.label, { withRanges: true });
+        if (result.match) {
+          entry.score = result.score;
+          const ranges = result.ranges;
+          entry.markedupLabel = fuzzyjs.surround(entry.label,
+            {
+              result: {
+                ranges
+              },
+              prefix: SELECTION_START_MARKER,
+              suffix: SELECTION_END_MARKER
+            }
+          );
+        } else {
+          entry.score = -1;
+          entry.markedupLabel = entry.label;
+        }
+      }
+
+      const resultEntries = entries.filter(e => e.score !== -1);
+      resultEntries.sort(cmpScore);
+      return resultEntries;
     }
-
-    const filtered = entries.filter( (entry: IdLabelPair): boolean => {
-      return entry.label.toLowerCase().indexOf(lowerFilterText) !== -1;
-    });
-
-    const rankFunc = (entry: IdLabelPair, lowerFilterText: string): number => {
-      const lowerName = entry.label.toLowerCase();
-      if (lowerName === lowerFilterText) {
-        return 1000;
-      }
-
-      const pos = lowerName.indexOf(lowerFilterText);
-      if (pos !== -1) {
-        return 500 - pos; // Bias it for matches at the front of  the text.
-      }
-
-      return 0;
-    };
-
-    filtered.sort( (a: IdLabelPair,b: IdLabelPair): number => rankFunc(b, lowerFilterText) - rankFunc(a, lowerFilterText));
-
-    return filtered;
   }
 
   showOnCursorListPicker(terminal: EtTerminal, options: ExtensionApi.OnCursorListPickerOptions): Promise<number | undefined> {
@@ -169,11 +200,11 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
 
     if (this._onCursorListPicker == null) {
       this._onCursorListPicker = <OnCursorListPicker<IdLabelPair>> window.document.createElement(OnCursorListPicker.TAG_NAME);
-      this._onCursorListPicker.setFormatEntriesFunc(this._formatEntries);
+      this._onCursorListPicker.setFormatEntriesFunc(this._formatEntries.bind(this));
       this._onCursorListPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
     }
 
-    const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item}));
+    const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item, markedupLabel: item, score: 0}));
     this._onCursorListPicker.setEntries(convertedItems);
     this._onCursorListPicker.selected = "" + options.selectedItemIndex;
     this._onCursorListPicker.filter = options.filter == null ? "" : options.filter;
