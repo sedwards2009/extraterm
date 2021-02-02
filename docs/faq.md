@@ -51,3 +51,21 @@ Window maximize/moving/resizing doesn't work
 --------------------------------------------
 
 This can be a problem in situations where Extraterm is running through a X window server such as mobaxterm. This can generally be solved by telling Extraterm to use a "Native" window title bar. Set this in the "Settings", "Appearance" tab, "Interface" section, option "Window Title Bar".
+
+
+Linux Mint: Pressing Ctrl + ; displays pop up with clipboard stuff
+------------------------------------------------------------------
+
+The pop is a list of recent clipboard contents and it lets you choose one of them to paste. This is part of the Linux Mint itself, namely the Clipboard addon to the Fcitx input method.
+
+To free this global shortcut, do this:
+
+* Find the "Keyboard" icon in the system tray.
+* Right click on it and select "Configure". The "Input Method Configuration" window will appear.
+* Click on the "Addon" tab.
+* Click on "Clipboard" in the list.
+* Click on the "Configure" button at the bottom on the window.
+* Click on the button next to the label "Trigger Key for Clipboard History List". The button will have the label "Ctrl+;".
+* A small window will pop up asking you to enter a key. Press the Escape key on your keyboard.
+* Click on "OK" in the "Clipboard" window.
+* "Ctrl+;" is now free for use by Extraterm.
