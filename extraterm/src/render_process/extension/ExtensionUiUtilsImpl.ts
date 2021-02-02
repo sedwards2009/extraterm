@@ -126,7 +126,8 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
 
     this._listPicker.titlePrimary = options.title;
 
-    const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item, markedupLabel: item, score: 0}));
+    const convertedItems = options.items.map(
+      (item, index) => ({id: "" + index, label: item, markedupLabel: item, score: 0}));
     this._listPicker.setEntries(convertedItems);
     this._listPicker.selected = "" + options.selectedItemIndex;
     this._listPicker.filter = options.filter == null ? "" : options.filter;

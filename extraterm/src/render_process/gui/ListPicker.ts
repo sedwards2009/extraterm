@@ -96,6 +96,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
             class="expand"
             type="text"
             id="ID_FILTER"
+            spellcheck="false"
             @input=${this._handleFilterInput}
             @keydown=${filterKeyDown}
           />

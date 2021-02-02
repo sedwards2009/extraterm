@@ -147,7 +147,7 @@ export class ApplicationContextMenu {
     this._menuEntries = entries.map((entry): CommandAndShortcut => {
       const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
       const shortcut = (showShortcuts && shortcuts.length !== 0) ? shortcuts[0].formatHumanReadable() : "";
-      return { id: entry.command + "_" + entry.category, shortcut, ...entry };
+      return { id: entry.command + "_" + entry.category, shortcut, markedupLabel: entry.title, score: 0, ...entry };
     });
 
     if (this._menuEntries.length === 0) {

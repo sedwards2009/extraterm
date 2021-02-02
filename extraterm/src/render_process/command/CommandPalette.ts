@@ -3,10 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { html, TemplateResult } from "extraterm-lit-html";
+import { html, TemplateResult, Part } from "extraterm-lit-html";
 import { DirectiveFn } from "extraterm-lit-html/lib/directive";
 import { repeat } from "extraterm-lit-html/directives/repeat";
 import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
+import * as fuzzyjs from "fuzzyjs";
+import * as he from "he";
 
 import { Disposable, Logger } from "@extraterm/extraterm-extension-api";
 import { doLater } from "extraterm-later";
@@ -27,7 +29,23 @@ export interface CommandAndShortcut extends ExtensionCommandContribution {
   id: string;
   shortcut?: string;
   checked?: boolean;
+
+  markedupLabel: string;
+  score: number;
 }
+
+const SELECTION_START_MARKER = "\x01";
+const SELECTION_END_MARKER = "\x02";
+const SELECTION_START_MARKER_REGEX = /&#x1;/g;
+const SELECTION_END_MARKER_REGEX = /&#x2;/g;
+
+function cmpScore(a: CommandAndShortcut, b: CommandAndShortcut): number {
+  if (a.score === b.score) {
+    return 0;
+  }
+  return a.score < b.score ? -1 : 1;
+}
+
 
 export class CommandPalette {
   private _log: Logger;
@@ -68,7 +86,7 @@ export class CommandPalette {
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
         const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
         const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
-        return { id: entry.command, shortcut, ...entry };
+        return { id: entry.command, shortcut, markedupLabel: entry.title, score: 0, ...entry };
       });
 
       this._commandPaletteEntries = entriesAndShortcuts;
@@ -106,9 +124,41 @@ export class CommandPalette {
   }
 }
 
-export function commandPaletteFilterEntries(entries: CommandAndShortcut[], filter: string): CommandAndShortcut[] {
-  const lowerFilter = filter.toLowerCase();
-  return entries.filter( (entry) => entry.title.toLowerCase().includes(lowerFilter) );
+export function commandPaletteFilterEntries(entries: CommandAndShortcut[], filterText: string): CommandAndShortcut[] {
+  if (filterText.trim() === "") {
+    let i = 0;
+    for (const entry of entries) {
+      entry.score = i;
+      entry.markedupLabel = entry.title;
+      i++;
+    }
+    return [...entries];
+
+  } else {
+    for (const entry of entries) {
+      const result = fuzzyjs.match(filterText, entry.title, { withRanges: true });
+      if (result.match) {
+        entry.score = result.score;
+        const ranges = result.ranges;
+        entry.markedupLabel = fuzzyjs.surround(entry.title,
+          {
+            result: {
+              ranges
+            },
+            prefix: SELECTION_START_MARKER,
+            suffix: SELECTION_END_MARKER
+          }
+        );
+      } else {
+        entry.score = -1;
+        entry.markedupLabel = entry.title;
+      }
+    }
+
+    const resultEntries = entries.filter(e => e.score !== -1);
+    resultEntries.sort(cmpScore);
+    return resultEntries;
+  }
 }
 
 export function commandPaletteFormatEntries(entries: CommandAndShortcut[], selectedId: string, filter: string): DirectiveFn | TemplateResult {
@@ -119,8 +169,20 @@ export function commandPaletteFormatEntries(entries: CommandAndShortcut[], selec
   }
 }
 
-function commandPaletteFormatEntriesAsList(entries: CommandAndShortcut[], selectedId: string): DirectiveFn | TemplateResult {
-  return repeat(entries, (entry) => entry.id, (entry, index) => commandPaletteFormatEntry(entry, entry.id === selectedId));
+function commandPaletteFormatEntriesAsList(filteredEntries: CommandAndShortcut[], selectedId: string): DirectiveFn | TemplateResult {
+  return repeat(
+    filteredEntries,
+    (entry) => entry.id,
+    (entry, index) => {
+      const label = markupLabel(entry.markedupLabel);
+      return commandPaletteFormatEntry(entry, entry.id === selectedId, unsafeHTML(label));
+    }
+  );
+}
+
+function markupLabel(rawLabel: string): string {
+  return he.encode(rawLabel).replace(SELECTION_START_MARKER_REGEX, "<b>")
+    .replace(SELECTION_END_MARKER_REGEX, "</b>");
 }
 
 function commandPaletteFormatEntriesWithGroups(entries: CommandAndShortcut[], selectedId: string): DirectiveFn | TemplateResult {
@@ -132,18 +194,22 @@ function commandPaletteFormatEntriesWithGroups(entries: CommandAndShortcut[], se
     }
     currentGroup = entry.category;
 
-    return commandPaletteFormatEntry(entry, entry.id === selectedId, extraClass);
+    return commandPaletteFormatEntry(entry, entry.id === selectedId, entry.title, extraClass);
   });
 }
 
-function commandPaletteFormatEntry(entry: CommandAndShortcut, selected: boolean, extraClassString = ""): TemplateResult {
+type LabelPart = string | ((part: Part) => void);
+
+function commandPaletteFormatEntry(entry: CommandAndShortcut, selected: boolean, label: LabelPart,
+    extraClassString = ""): TemplateResult {
+
   const classes = PopDownListPicker.CLASS_RESULT_ENTRY + " " +
       (selected ? PopDownListPicker.CLASS_RESULT_SELECTED : "") + " " + extraClassString;
 
   return html`<div class=${classes} data-id=${entry.id}>
     <div class="CLASS_RESULT_ICON_LEFT">${commandPaletteFormatCheckboxIcon(entry.checked)}</div>
     <div class="CLASS_RESULT_ICON_RIGHT">${commandPaletteFormatIcon(entry.icon)}</div>
-    <div class="CLASS_RESULT_LABEL">${entry.title}</div>
+    <div class="CLASS_RESULT_LABEL">${label}</div>
     <div class="CLASS_RESULT_SHORTCUT">${entry.shortcut || ""}</div>
   </div>`;
 }

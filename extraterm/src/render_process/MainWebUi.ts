@@ -383,7 +383,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
         const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
         const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
-        return { id: entry.command + "_" + entry.category, shortcut, ...entry };
+        return { id: entry.command + "_" + entry.category, shortcut, markedupLabel: entry.title, score: 0, ...entry };
       });
 
       emptyPaneMenu.setEntries(entriesAndShortcuts);
