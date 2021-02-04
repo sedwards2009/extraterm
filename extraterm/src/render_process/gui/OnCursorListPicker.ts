@@ -181,7 +181,7 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
    * @param extraCssFiles extra Css files which should be loaded along side the default set.
    */
   addExtraCss(extraCssFiles: ThemeTypes.CssFile[]): void {
-    ;
+    this._getSearchableList().addExtraCss(extraCssFiles);
   }
 
   open(): void {

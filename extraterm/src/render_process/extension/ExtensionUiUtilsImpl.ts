@@ -21,6 +21,7 @@ import { PopDownNumberDialog } from "../gui/PopDownNumberDialog";
 import { ViewerElement } from "../viewers/ViewerElement";
 import { SupportsDialogStack } from "../SupportsDialogStack";
 import { OnCursorListPicker } from "../gui/OnCursorListPicker";
+import { CssFile } from "../../theme/Theme";
 
 
 interface IdLabelPair {
@@ -122,6 +123,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       this._listPicker = <PopDownListPicker<IdLabelPair>> window.document.createElement(PopDownListPicker.TAG_NAME);
       this._listPicker.setFormatEntriesFunc(this._formatEntries.bind(this));
       this._listPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
+      this._listPicker.addExtraCss([CssFile.EXTENSION_LIST_PICKER]);
     }
 
     this._listPicker.titlePrimary = options.title;
@@ -152,8 +154,8 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
   }
 
   private _markupLabel(rawLabel: string): string {
-    return he.encode(rawLabel).replace(SELECTION_START_MARKER_REGEX, "<b>")
-      .replace(SELECTION_END_MARKER_REGEX, "</b>");
+    return he.encode(rawLabel).replace(SELECTION_START_MARKER_REGEX, "<span class='CLASS_MATCHING_TEXT'>")
+      .replace(SELECTION_END_MARKER_REGEX, "</span>");
   }
 
   private _listPickerFilterAndRankEntries(entries: IdLabelPair[], filterText: string): IdLabelPair[] {
@@ -203,6 +205,7 @@ export class ExtensionUiUtilsImpl implements ExtensionUiUtils {
       this._onCursorListPicker = <OnCursorListPicker<IdLabelPair>> window.document.createElement(OnCursorListPicker.TAG_NAME);
       this._onCursorListPicker.setFormatEntriesFunc(this._formatEntries.bind(this));
       this._onCursorListPicker.setFilterAndRankEntriesFunc(this._listPickerFilterAndRankEntries.bind(this));
+      this._onCursorListPicker.addExtraCss([CssFile.EXTENSION_LIST_PICKER]);
     }
 
     const convertedItems = options.items.map((item, index) => ({id: "" + index, label: item, markedupLabel: item, score: 0}));

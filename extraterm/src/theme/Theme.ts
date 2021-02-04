@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -74,6 +74,7 @@ export const CssFile = {
   GUI_ON_CURSOR_DIALOG: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-dialog.scss",
   GUI_ON_CURSOR_LIST_PICKER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-list-picker.scss",
   GUI_ON_CURSOR_SEARCHABLE_LIST: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-searchable-list.scss",
+  EXTENSION_LIST_PICKER: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/extension-list-picker.scss",
 };
 
 export function cssFileToFilename(cssFile: CssFile): string {
@@ -130,6 +131,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_ON_CURSOR_DIALOG,
   CssFile.GUI_ON_CURSOR_LIST_PICKER,
   CssFile.GUI_ON_CURSOR_SEARCHABLE_LIST,
+  CssFile.EXTENSION_LIST_PICKER,
 ];
 
 export class CssFileMap extends Map<CssFile, string> {
