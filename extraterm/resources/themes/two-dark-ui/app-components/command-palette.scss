@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
 
 /* Command Palette */
@@ -32,4 +32,9 @@
 
 .CLASS_MATCHING_TEXT {
   font-weight: bold;
+  color: $accent-only-text-color;
+}
+
+.CLASS_RESULT_SELECTED .CLASS_MATCHING_TEXT {
+  color: mix($text-selected-color, $accent-only-text-color, 60%);
 }

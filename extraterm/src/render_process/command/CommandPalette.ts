@@ -181,8 +181,8 @@ function commandPaletteFormatEntriesAsList(filteredEntries: CommandAndShortcut[]
 }
 
 function markupLabel(rawLabel: string): string {
-  return he.encode(rawLabel).replace(SELECTION_START_MARKER_REGEX, "<b>")
-    .replace(SELECTION_END_MARKER_REGEX, "</b>");
+  return he.encode(rawLabel).replace(SELECTION_START_MARKER_REGEX, "<span class='CLASS_MATCHING_TEXT'>")
+    .replace(SELECTION_END_MARKER_REGEX, "</span>");
 }
 
 function commandPaletteFormatEntriesWithGroups(entries: CommandAndShortcut[], selectedId: string): DirectiveFn | TemplateResult {

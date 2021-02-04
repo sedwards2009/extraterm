@@ -120,6 +120,8 @@ $accent-bg-color: mix( hsv( $ui-hue, 66%, 66%), hsl( $ui-hue, 66%, 60%),
 
 $accent-bg-text-color:    contrast($accent-bg-color, hsl($ui-hue,100%,10%), #fff, 30% );
 
+$accent-only-text-color: mix( hsv( $ui-hue, 100%, 66%), hsl( $ui-hue, 100%, 77%), $accent-luma);
+
 $level-1-color: lighten($ui-bg, 6%);
 $level-2-color: $ui-bg;
 $level-3-color: darken($ui-bg, 3%);
