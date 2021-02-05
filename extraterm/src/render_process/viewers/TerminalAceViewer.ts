@@ -592,7 +592,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
   }
 
   getScrollbackLength(): number {
-    return this._terminalFirstRow;
+    return this._emulator != null ? this._terminalFirstRow : this._aceEditSession.getLength();
   }
 
   getScreenWidth(): number {
