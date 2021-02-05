@@ -142,7 +142,7 @@ export class KeybindingsIOManager {
     const flatKeybindings = new Map<string, KeybindingsBinding>();
     for (const fileInfo of this._getKeybindingsFileList()) {
       if (fileInfo.name === name) {
-        const keybindingsFile = this._readKeybindingsFile(fileInfo);
+        const keybindingsFile = this._readKeybindingsFile(name, fileInfo);
         for (const binding of keybindingsFile.bindings) {
           flatKeybindings.set(binding.command, binding);
         }
@@ -158,7 +158,7 @@ export class KeybindingsIOManager {
     return result;
   }
 
-  private _readKeybindingsFile(fileInfo: KeybindingsFileInfo): KeybindingsSet {
+  private _readKeybindingsFile(name: LogicalKeybindingsName, fileInfo: KeybindingsFileInfo): KeybindingsSet {
     const fullPath = path.join(fileInfo.path, fileInfo.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
     let keyBindingsJSON: KeybindingsSet = JSON.parse(keyBindingJsonString);

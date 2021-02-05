@@ -38,7 +38,7 @@ export class WindowsConsolePty implements Pty {
   private _onDataEventEmitter = new EventEmitter<string>();
   private _onExitEventEmitter = new EventEmitter<void>();
   private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
-  private _emitBufferSizeLater: (() => void) & _.Cancelable = null;
+  private _emitBufferSizeLater: _.DebouncedFunc<any> = null;
 
   // Amount of data which went directly to the OS but still needs to "announced" via an event.
   private _directWrittenDataCount = 0;

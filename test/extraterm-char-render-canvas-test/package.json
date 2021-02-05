@@ -7,7 +7,7 @@
     "parcel-bundler": "^1.12.4",
     "serve": "^11.3.2",
     "shx": "^0.3.2",
-    "typescript": "3.9.6"
+    "typescript": "4.1.3"
   },
   "dependencies": {
     "easta": "5.0.0",
