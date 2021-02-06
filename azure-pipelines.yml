@@ -41,7 +41,7 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: variables.nodeVersion
+          versionSpec: $(nodeVersion)
       - script: yarn --version
         displayName: "yarn --version"
       - script: yarn install --frozen-lockfile
@@ -80,7 +80,7 @@ jobs:
         displayName: "install zip"
       - task: NodeTool@0
         inputs:
-          versionSpec: variables.nodeVersion
+          versionSpec: $(nodeVersion)
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
@@ -122,7 +122,7 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: variables.nodeVersion
+          versionSpec: $(nodeVersion)
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
