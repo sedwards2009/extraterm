@@ -77,12 +77,10 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn install
+      - script: yarn install --inline-builds --verbose
         displayName: "yarn install"
         continueOnError: true
-      - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp
-      - script: dir /s C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache
-      - script: dir /s C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache\14.15.4
+      - script: dir /s C:\Users\VssAdministrator\AppData\Local\node-gyp
 
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
