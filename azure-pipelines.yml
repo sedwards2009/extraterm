@@ -81,6 +81,7 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
+      - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
