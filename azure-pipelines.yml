@@ -46,10 +46,6 @@ jobs:
         displayName: "yarn --version"
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
-      - script: cat node_modules/@typescript-eslint/parser/package.json
-        displayName: cat node_modules/@typescript-eslint/parser/package.json
-      - script: find . -name @typescript-eslint
-        displayName: find . -name @typescript-eslint
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild
@@ -81,7 +77,6 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
