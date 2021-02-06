@@ -1,7 +1,7 @@
 name: $(Date:yyyyMMdd)$(Rev:.r)_$(SourceBranchName)
 
 variables:
-  nodeVersion: '13.14.0'
+  nodeVersion: '14.15.4'
 
 trigger:
   branches:
@@ -81,8 +81,8 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn install --frozen-lockfile
-        displayName: "yarn install"
+      - script: yarn install --skip-builds
+        displayName: "yarn install --skip-builds"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild-win32
