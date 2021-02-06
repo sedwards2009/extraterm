@@ -82,6 +82,7 @@ jobs:
         continueOnError: true
       - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp
       - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache
+      - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache\14.15.4
 
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
