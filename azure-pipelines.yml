@@ -39,6 +39,10 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: '12.8.1'
+      - script: yarn --version
+        displayName: "yarn --version"
+      - script: cat node_modules/@typescript-eslint/parser/package.json
+        displayName: cat node_modules/@typescript-eslint/parser/package.json
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
