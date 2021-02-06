@@ -77,9 +77,9 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn install || echo "install fail"
+      - script: yarn install
         displayName: "yarn install"
-        
+        continueOnError: true
       - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp
       - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache
 
