@@ -4,12 +4,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import * as SourceMapSupport from 'source-map-support';
 
 import {Emulator, Platform} from './Term';
 import {RenderEvent, Line, EmulatorApi, MinimalKeyboardEvent, DataEvent} from 'term-api';
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 const performanceNow = require('performance-now');
+
 
 test("basic", done => {
   async function testBasic(): Promise<void> {
