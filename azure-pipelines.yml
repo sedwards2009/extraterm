@@ -74,15 +74,15 @@ jobs:
         displayName: "install nsis"
       - script: choco install zip -y
         displayName: "install zip"
-      - task: UsePythonVersion@0
-        inputs:
-          versionSpec: '2.7'
-          addToPath: true
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn install --skip-builds
-        displayName: "yarn install --skip-builds"
+      - script: yarn install || echo "install fail"
+        displayName: "yarn install"
+        
+      - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp
+      - script: dir C:\Users\VssAdministrator\AppData\Local\node-gyp\Cache
+
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild-win32
