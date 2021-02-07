@@ -1,5 +1,8 @@
 name: $(Date:yyyyMMdd)$(Rev:.r)_$(SourceBranchName)
 
+variables:
+  nodeVersion: '14.15.4'
+
 trigger:
   branches:
     include:
@@ -38,7 +41,9 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '12.8.1'
+          versionSpec: $(nodeVersion)
+      - script: yarn --version
+        displayName: "yarn --version"
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
@@ -71,7 +76,13 @@ jobs:
         displayName: "install zip"
       - task: NodeTool@0
         inputs:
-          versionSpec: '12.8.1'
+          versionSpec: $(nodeVersion)
+      # We've been hitting https://github.com/yarnpkg/yarn/issues/2429 and
+      # https://github.com/nodejs/node-gyp/issues/1054 for years. Basically,
+      # concurrent node-gyp runs from yarn will corrupt each other.
+      # So we set the yarn concurrency to 1.
+      - script: yarn config set child-concurrency 1
+        displayName: yarn child-concurrency=1
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
@@ -113,7 +124,7 @@ jobs:
     steps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '12.8.1'
+          versionSpec: $(nodeVersion)
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)

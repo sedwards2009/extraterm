@@ -5,12 +5,10 @@
  */
 import "jest";
 
-import * as SourceMapSupport from 'source-map-support';
 import * as KeybindingsManager from './KeyBindingsManager';
 import { eventKeyNameToConfigKeyName } from '../../keybindings/KeybindingsMapping';
 import { KeybindingsSet } from "../../keybindings/KeybindingsTypes";
 
-SourceMapSupport.install();
 
 const keyBindingsMap: KeybindingsSet = {
   extends: "pc-style",

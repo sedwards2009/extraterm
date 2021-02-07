@@ -4,13 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import * as SourceMapSupport from 'source-map-support';
 import * as nodeunit from 'nodeunit';
 import * as VirtualScrollArea from './VirtualScrollArea';
+
 type SetterState = VirtualScrollArea.SetterState;
-
-SourceMapSupport.install();
-
 type Scrollbar = VirtualScrollArea.ScrollBar;
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
 

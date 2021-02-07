@@ -4,10 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import * as SourceMapSupport from 'source-map-support';
 
 import { MouseEncoder } from './MouseEncoder';
 import { TerminalCoord, MouseEventOptions } from 'term-api';
+
 
 function emptyEvent(): MouseEventOptions {
   return {
