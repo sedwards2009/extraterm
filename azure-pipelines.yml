@@ -82,11 +82,9 @@ jobs:
       # concurrent node-gyp runs from yarn will corrupt each other.
       # So we set the yarn concurrency to 1.
       - script: yarn config set child-concurrency 1
+        displayName: yarn child-concurrency=1
       - script: yarn install --frozen-lockfile
         displayName: "yarn install"
-        continueOnError: true
-      - script: dir /s C:\Users\VssAdministrator\AppData\Local\node-gyp
-
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild-win32
