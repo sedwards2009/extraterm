@@ -11,6 +11,7 @@ import {
   Terminal,
   TerminalOutputDetails
 } from '@extraterm/extraterm-extension-api';
+import { findAllURLs } from './UrlRegex';
 
 let log: Logger = null;
 let context: ExtensionContext = null;
@@ -34,8 +35,6 @@ export function activate(_context: ExtensionContext): any {
   });
 }
 
-const httpRegex = new RegExp("https?://\\S+", "g");
-
 function scanAndLinkScrollback(ev: LineRangeChange): void {
   const details = <TerminalOutputDetails> ev.block.details;
   scanAndLink(details.scrollback, ev);
@@ -49,7 +48,7 @@ function scanAndLink(screen: Screen, ev: LineRangeChange): void {
   for (let y = ev.startLine; y < ev.endLine; y++) {
     screen.removeHyperlinks(y);
     const line = screen.getLineText(y);
-    for (const found of (<any>line).matchAll(httpRegex)) {
+    for (const found of findAllURLs(line)) {
       const url = found[0];
       screen.applyHyperlink(y, found.index, url.length, url);
     }
