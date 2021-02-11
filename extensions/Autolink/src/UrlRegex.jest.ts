@@ -15,6 +15,11 @@ const TEST_ITEMS = [
   ["The website is here \"http://extraterm.org\" and \"click\" it.", "http://extraterm.org", 21],
   ["Go visit the website <http://extraterm.org>.", "http://extraterm.org", 22],
   ["Go visit this link [http://extraterm.org].", "http://extraterm.org", 20],
+  ["The website is here \"http://extraterm.org and \"click\" it.", "http://extraterm.org", 21],
+  ["The website is here \"http://extraterm.org", "http://extraterm.org", 21],
+  ["The website is here [http://extraterm.org and \"click\" it.", "http://extraterm.org", 21],
+  ["The website is here [http://extraterm.org", "http://extraterm.org", 21],
+  ["The website is here (http://extraterm.org and github).", "http://extraterm.org", 21],
 ];
 
 describe.each(TEST_ITEMS)("Extract cases", (line: string, url: string, index: number) => {
@@ -27,4 +32,12 @@ describe.each(TEST_ITEMS)("Extract cases", (line: string, url: string, index: nu
 
     done();
   });
+});
+
+test("Multiple URLs in one line", done => {
+  const allFound = findAllURLs("Here are two great sites: http://extraterm.org and http://github.com . Enjoy");
+  expect(allFound.length).toBe(2);
+  expect(allFound[0][0]).toBe("http://extraterm.org");
+  expect(allFound[1][0]).toBe("http://github.com");
+  done();
 });

@@ -5,11 +5,11 @@
  */
 
 const urlRegex = RegExp(
-  "((?<![\"'<\\(\\[])(?<url>https?://\\S+))" + "|" +
-  "\"(?<urlquoted>https?://[^\"]+?)\"" + "|" +
-  "\\((?<urlbracketed>https?://[^\\)]+?)\\)" + "|" +
-  "\\[(?<urlsquared>https?://[^\\]]+?)\\]" + "|" +
-  "<(?<urlangled>https?://[^>]+?)>",
+  "((?<![\"'<\\(\\[])(?<url>https?://.+?)(?=\\s|$))" + "|" +
+  "\"(?<urlquoted>https?://.+?)(?=\\s|\"|$)" + "|" +
+  "\\((?<urlbracketed>https?://.+?)(?=\\s|\\)|$)" + "|" +
+  "\\[(?<urlsquared>https?://.+?)(?=\\s|]|$)" + "|" +
+  "<(?<urlangled>https?://.+?)(?=\\s|>|$)>",
   "gi");
 
 export interface URLMatch {
