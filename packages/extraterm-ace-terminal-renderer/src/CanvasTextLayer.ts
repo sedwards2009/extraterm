@@ -240,6 +240,8 @@ export class CanvasTextLayer implements TextLayer {
     this._canvasHeightCssPx = rawHeightPx;
 
     const isWindows = process.platform === "win32";
+    const screenWidthHintPx = Math.ceil(window.screen.width * window.devicePixelRatio);
+    const screenHeightHintPx = Math.ceil(window.screen.height * window.devicePixelRatio);
 
     this._charRenderCanvas = new WebGLCharRenderCanvas({
       fontFamily: this._fontFamily,
@@ -257,7 +259,9 @@ export class CanvasTextLayer implements TextLayer {
       }],
       cursorStyle: this._cursorStyle,
       transparentBackground: this._transparentBackground,
-      webGLRendererRepository
+      webGLRendererRepository,
+      screenWidthHintPx,
+      screenHeightHintPx
     });
 
     const canvasElement = this._charRenderCanvas.getCanvasElement();

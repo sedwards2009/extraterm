@@ -143,6 +143,20 @@ export interface WebGLCharRenderCanvasOptions {
   transparentBackground: boolean;
 
   /**
+   * The maximum width of the screen this canvas will be used on.
+   *
+   * This is used to help determine the size the font atlas.
+   */
+  screenWidthHintPx: number;
+
+  /**
+   * The maximum height of the screen this canvas will be used on.
+   *
+   * This is used to help determine the size the font atlas.
+   */
+  screenHeightHintPx: number;
+
+  /**
    * List of additional fonts for specific unicode ranges
    */
   extraFonts?: FontSlice[];
@@ -201,6 +215,8 @@ export class WebGLCharRenderCanvas implements Disposable {
       webGLRendererRepository,
       widthChars,
       widthPx,
+      screenHeightHintPx,
+      screenWidthHintPx,
     } = options;
 
     this._palette = palette;
@@ -212,7 +228,7 @@ export class WebGLCharRenderCanvas implements Disposable {
     this._transparentBackground = transparentBackground;
 
     const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontSizePx, extraFonts,
-      transparentBackground);
+      transparentBackground, screenWidthHintPx, screenHeightHintPx, );
     this._disposables.push(webglRenderer);
     this._webglRenderer = webglRenderer;
 

@@ -60,8 +60,11 @@ function testWebGL(): void {
 
   const metrics = computeFontMetrics("ligadejavusansmono", 16);
   const customMetrics = computeEmojiMetrics(metrics);
-  const fontAtlas = new TextureFontAtlas(metrics, [customMetrics], false);
 
+  const physicalScreenWidthPx = Math.ceil(window.screen.width * window.devicePixelRatio);
+  const physicalScreenHeightPx = Math.ceil(window.screen.height * window.devicePixelRatio);
+  const fontAtlas = new TextureFontAtlas(metrics, [customMetrics], false, physicalScreenWidthPx,
+    physicalScreenHeightPx);
   containerDiv.appendChild(fontAtlas.getCanvas());
 
   const renderer = new WebGLRenderer(fontAtlas, false);
@@ -132,6 +135,9 @@ function createWebGLRenderCanvas(): void {
   const palette = xtermPalette();
   palette[256] = 0x00000000;
 
+  const screenWidthHintPx = window.screen.width;
+  const screenHeightHintPx = window.screen.height;
+
   const containerDiv = document.getElementById("container");
   webglRenderCanvas = new WebGLCharRenderCanvas({
     widthChars: WIDTH_CHARS,
@@ -149,7 +155,9 @@ function createWebGLRenderCanvas(): void {
       }
     ],
     webGLRendererRepository,
-    transparentBackground: false
+    transparentBackground: false,
+    screenWidthHintPx,
+    screenHeightHintPx
   });
 
   containerDiv.appendChild(webglRenderCanvas.getCanvasElement());

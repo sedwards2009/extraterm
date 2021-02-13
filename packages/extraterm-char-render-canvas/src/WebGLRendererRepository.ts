@@ -17,8 +17,8 @@ export class WebGLRendererRepository {
   private _map = new Map<string, WebGLRenderer & Disposable>();
   private _refCount = new Map<string, number>();
 
-  getWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[],
-      transparentBackground: boolean): WebGLRenderer & Disposable {
+  getWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[], transparentBackground: boolean,
+      screenWidthHintPx: number, screenHeightHintPx: number): WebGLRenderer & Disposable {
 
     const key = this._key(fontFamily, fontSizePx, transparentBackground, extraFonts);
     const existingRenderer = this._map.get(key);
@@ -29,7 +29,8 @@ export class WebGLRendererRepository {
       return existingRenderer;
     }
 
-    const renderer = this._newWebGLRenderer(fontFamily, fontSizePx, extraFonts, transparentBackground);
+    const renderer = this._newWebGLRenderer(fontFamily, fontSizePx, extraFonts, transparentBackground,
+      screenWidthHintPx, screenHeightHintPx);
     const disposableRenderer = <WebGLRenderer & Disposable> <unknown> {
       __proto__: renderer,
       dispose: () => {
@@ -48,13 +49,14 @@ export class WebGLRendererRepository {
   }
 
   private _newWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[],
-      transparentBackground: boolean): WebGLRenderer {
+      transparentBackground: boolean, screenWidthHintPx: number, screenHeightHintPx: number): WebGLRenderer {
 
     const metrics = computeFontMetrics(fontFamily, fontSizePx);
     const extraFontMetrics = extraFonts.map(
       (extraFont) => this._computeEmojiMetrics(metrics, extraFont.fontFamily, extraFont.fontSizePx));
 
-    const fontAtlas = new TextureFontAtlas(metrics, extraFontMetrics, transparentBackground);
+    const fontAtlas = new TextureFontAtlas(metrics, extraFontMetrics, transparentBackground, screenWidthHintPx,
+      screenHeightHintPx);
     const renderer = new WebGLRenderer(fontAtlas, transparentBackground);
     renderer.init();
     return renderer;

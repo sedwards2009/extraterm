@@ -55,7 +55,9 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
 
   constructor(protected readonly _metrics: MonospaceFontMetrics,
       protected readonly _extraFonts: MonospaceFontMetrics[],
-      protected readonly _transparentBackground: boolean) {
+      protected readonly _transparentBackground: boolean,
+      protected readonly _screenWidthHintPx: number,
+      protected readonly _screenHeightHintPx: number) {
 
     this._log = getLogger("FontAtlasPage", this);
 
@@ -64,8 +66,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   }
 
   private _initialize(): void {
-    this._atlasWidthInCells = 128;
-    this._atlasHeightInCells = 32;
+    this._atlasWidthInCells = Math.ceil(this._screenWidthHintPx / this._metrics.widthPx);
+    this._atlasHeightInCells = Math.ceil(this._screenHeightHintPx / this._metrics.heightPx);
     this._atlasFlushCellCount = Math.floor(this._atlasWidthInCells * this._atlasHeightInCells *
                                   FRACTION_CELLS_TO_CLEAR_ON_FLUSH);
 
