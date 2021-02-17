@@ -805,7 +805,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     // FIXME This is a work-around for the problem where new tabs can't get the focus immediately.
     if ( ! DomUtils.activeNestedElements().includes(tabContentElement)) {
-      this._log.warn(`Failed to focus content element: `, tabContentElement.tagName);
       doLater(() => {
         this._splitLayout.showTabByTabContent(tabContentElement);
         this._focusTabContent(tabContentElement);
@@ -928,7 +927,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       const element = this._splitLayout.getEmptyContentByTabWidget(newTabWidget);
       if (element != null) {
         if (element instanceof EmptyPaneMenu) {
-          element.focus();
+          // I can't figure out why a focusElement() doesn't work immediately.
+          // It does work later though.
+          doLater(() => {
+            focusElement(element, this._log);
+          });
         }
       } else {
         const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
