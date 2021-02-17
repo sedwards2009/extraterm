@@ -66,7 +66,7 @@ class UnixBackend implements SessionBackend {
     let cwd: string = null;
 
     if (sessionConfig.initialDirectory != null && sessionConfig.initialDirectory !== "") {
-      const dirError = this._validateDirectoryPath(cwd);
+      const dirError = this._validateDirectoryPath(sessionConfig.initialDirectory);
       if (dirError != null) {
         preMessage += `\x0a\x0d\x0a\x0d*** Initial directory '${cwd}' couldn't be found. ***\x0a\x0d\x0a\x0d\x0a\x0d`;
       } else {
