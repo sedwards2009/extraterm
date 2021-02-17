@@ -19,6 +19,7 @@ import { VisualState, Mode, CursorMoveDetail } from './ViewerElementTypes';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
 import { newImmediateResolvePromise } from '../../utils/ImmediateResolvePromise';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
+import { focusElement } from '../DomUtils';
 
 const ID = "EtImageViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -145,7 +146,7 @@ export class ImageViewer extends ViewerElement {
       return;
     }
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    DomUtils.focusWithoutScroll(containerDiv);
+    focusElement(containerDiv, this._log, true);
   }
 
   hasFocus(): boolean {
@@ -266,13 +267,13 @@ export class ImageViewer extends ViewerElement {
 
   setCursorPositionTop(ch: number): boolean {
     this._cursorTop = 0;
-    this.focus();
+    focusElement(this, this._log);
     return true;
   }
 
   setCursorPositionBottom(ch: number): boolean {
     this._cursorTop = this._imageHeight - this._height;
-    this.focus();
+    focusElement(this, this._log);
     return true;
   }
 

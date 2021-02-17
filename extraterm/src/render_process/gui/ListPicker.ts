@@ -15,6 +15,7 @@ import {doLater} from "extraterm-later";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { ThemeableElementBase } from "../ThemeableElementBase";
+import { focusElement } from "../DomUtils";
 
 const ID_FILTER = "ID_FILTER";
 const ID_RESULTS = "ID_RESULTS";
@@ -111,9 +112,10 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
   }
 
   focus(): void {
+    super.focus();
     const filter = DomUtils.getShadowId(this, ID_FILTER);
     if (filter != null) {
-      filter.focus();
+      focusElement(filter, this._log);
     }
   }
 
@@ -273,7 +275,7 @@ export class ListPicker<T extends { id: string; }> extends ThemeableElementBase 
     this._render();
 
     const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
-    filterInput.focus();
+    focusElement(filterInput, this._log);
 
     this._scrollToSelected();
   }

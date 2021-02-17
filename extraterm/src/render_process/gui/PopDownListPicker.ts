@@ -15,6 +15,7 @@ import { PopDownDialog} from "./PopDownDialog";
 import { SearchableList } from "./SearchableList";
 import { ThemeableElementBase } from "../ThemeableElementBase";
 import * as DomUtils from "../DomUtils";
+import { focusElement } from "../DomUtils";
 
 
 interface RenderWork {
@@ -85,7 +86,7 @@ export class PopDownListPicker<T extends { id: string; }> extends ThemeableEleme
       this._render();
     }
     if (renderWork.focusInput) {
-      this._getSearchableList().focus();
+      focusElement(this._getSearchableList(), this._log);
     }
   }
 

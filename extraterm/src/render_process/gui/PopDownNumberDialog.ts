@@ -12,6 +12,7 @@ import {doLater} from "extraterm-later";
 import {PopDownDialog} from "./PopDownDialog";
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
+import { focusElement } from "../DomUtils";
 
 const ID_INPUT = "ID_INPUT";
 
@@ -114,7 +115,7 @@ export class PopDownNumberDialog extends ThemeableElementBase {
     this._render();
     if (this.open) {
       const textInput = <HTMLInputElement> this._elementById(ID_INPUT);
-      textInput.focus();
+      focusElement(textInput, this._log);
     }
   }
 

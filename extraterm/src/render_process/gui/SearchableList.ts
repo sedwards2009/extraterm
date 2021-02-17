@@ -14,6 +14,7 @@ import { log, Logger, getLogger } from "extraterm-logging";
 import * as ThemeTypes from "../../theme/Theme";
 import { ThemeableElementBase } from "../ThemeableElementBase";
 import * as DomUtils from "../DomUtils";
+import { focusElement } from "../DomUtils";
 
 
 const ID_FILTER = "ID_FILTER";
@@ -137,7 +138,7 @@ export class SearchableList<T extends { id: string; }> extends ThemeableElementB
     }
     if (renderWork.focusInput) {
       const filterInput = <HTMLInputElement> DomUtils.getShadowId(this, ID_FILTER);
-      filterInput.focus();
+      focusElement(filterInput, this._log);
       if (filterInput.selectionStart !== filterInput.selectionEnd) {
         filterInput.selectionStart = filterInput.selectionEnd;
       }

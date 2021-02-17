@@ -40,6 +40,7 @@ import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThe
   getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupAppData,
   sanitizeAndIinitializeConfigs, readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
 import { bestOverlap } from "./RectangleMatch";
+import { focusElement } from "../render_process/DomUtils";
 
 const LOG_FINE = false;
 

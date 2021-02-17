@@ -91,6 +91,10 @@ export class TabWidget extends ThemeableElementBase {
     this._setupDragAndDrop();
   }
 
+  update(): void {
+    this._syncDom();
+  }
+
   private _syncDom(): void {
     const domChildren = this.children;
     if (this._isEqualElementLists(domChildren, this._childNodes)) {

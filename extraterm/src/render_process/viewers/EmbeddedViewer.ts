@@ -30,6 +30,7 @@ import { SetterState } from '../VirtualScrollArea';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { injectTerminalVisualConfig, TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
+import { focusElement } from '../DomUtils';
 
 
 const ID = "EtEmbeddedViewerTemplate";
@@ -454,7 +455,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
   focus(): void {
     const viewerElement = this.getViewerElement();
     if (viewerElement !== null) {
-      return viewerElement.focus();
+      focusElement(viewerElement, this._log);
     } else {
       super.focus();
     }

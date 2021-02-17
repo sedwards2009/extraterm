@@ -15,6 +15,7 @@ import { PopDownDialog} from "./PopDownDialog";
 import { OnCursorSearchableList } from "./OnCursorSearchableList";
 import { ThemeableElementBase } from "../ThemeableElementBase";
 import * as DomUtils from "../DomUtils";
+import { focusElement } from "../DomUtils";
 
 
 interface RenderWork {
@@ -87,7 +88,7 @@ export class OnCursorListPicker<T extends { id: string; }> extends ThemeableElem
       this._render();
     }
     if (renderWork.focusInput) {
-      this._getSearchableList().focus();
+      focusElement(this._getSearchableList(), this._log);
     }
   }
 

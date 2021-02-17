@@ -59,6 +59,7 @@ import { ConfigCursorStyle } from '../../Config';
 import { dispatchContextMenuRequest, ContextMenuType, dispatchHyperlinkClick } from '../command/CommandUtils';
 import { ConfigDatabase, AcceptsConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
+import { focusElement } from "../DomUtils";
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -1285,7 +1286,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
 
     if (this._emulator != null) {
       if ( ! this.hasFocus()) {
-        this.focus();
+        focusElement(this, this._log);
       }
       if (this._handleEmulatorMouseEvent(ev, this._emulator.mouseDown.bind(this._emulator))) {
         return;

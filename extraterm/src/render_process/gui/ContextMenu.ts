@@ -12,6 +12,7 @@ import { MenuItem } from "./MenuItem";
 import { CheckboxMenuItem } from "./CheckboxMenuItem";
 import { Logger, getLogger } from "extraterm-logging";
 import { ThemeableElementBase } from "../ThemeableElementBase";
+import { focusElement } from "../DomUtils";
 
 
 const ID_COVER = "ID_COVER";
@@ -221,7 +222,7 @@ export class ContextMenu extends ThemeableElementBase {
     this._selectMenuItem(this.childNodes, null);
 
     const container = <HTMLDivElement> this._elementById(ID_CONTAINER);
-    container.focus();
+    focusElement(container, this._log);
   }
 
   private _moveContainerTo(x: number, y: number): void {
@@ -290,7 +291,7 @@ export class ContextMenu extends ThemeableElementBase {
     container.style.top = "" + containerY + "px";
 
     this._selectMenuItem(this.childNodes, null);
-    container.focus();
+    focusElement(container, this._log);
   }
 
   private _dismiss(): void {

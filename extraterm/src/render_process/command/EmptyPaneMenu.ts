@@ -14,6 +14,7 @@ import * as DomUtils from "../DomUtils";
 import {commandPaletteFilterEntries, commandPaletteFormatEntries, CommandAndShortcut } from "./CommandPalette";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
+import { focusElement } from "../DomUtils";
 
 const ID_LIST_PICKER = "ID_LIST_PICKER";
 
@@ -89,9 +90,10 @@ export class EmptyPaneMenu extends ThemeableElementBase {
   }
 
   focus(): void {
+    super.focus();
     const listPicker = DomUtils.getShadowId(this, ID_LIST_PICKER);
     if (listPicker != null) {
-      listPicker.focus();
+      focusElement(listPicker, this._log);
     }
   }
 

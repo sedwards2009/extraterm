@@ -25,6 +25,7 @@ import * as WebIpc from "./WebIpc";
 import { AcceptsConfigDatabase, ConfigDatabase } from "../Config";
 import { ExtensionManager } from "./extension/InternalTypes";
 import { ResizeNotifier } from "extraterm-resize-notifier";
+import { focusElement } from "./DomUtils";
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -208,14 +209,14 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
 
   focus(): void {
     if (this._dialogStack.length !== 0) {
-      this._dialogStack[this._dialogStack.length-1].focus();
+      focusElement(this._dialogStack[this._dialogStack.length-1], this._log);
       return;
     }
 
     const element = this.getViewerElement();
     if (element !== null) {
       super.focus();
-      element.focus();
+      focusElement(element, this._log);
     }
   }
 

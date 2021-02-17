@@ -1,8 +1,9 @@
 /*
- * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { objectName, getLogger, Logger } from "extraterm-logging";
 
 /**
  * Convert an array-like object to a real array.
@@ -83,13 +84,133 @@ const inflightResentEvents = new Map<EventTarget, CustomEvent>();
 
 //-------------------------------------------------------------------------
 
+const _log = getLogger("DomUtils.focusElement()");
+const LOG_FOCUS_ELEMENT = false;
+const DEBUG_FOCUS_ELEMENT = false;
+
 /**
- * Set the input focus on an element and prevent any scrolling for occuring.
+ * Focus an element
  *
- * @param el the element to focus
+ * This calls `focus()` on an element but also includes extra internal
+ * facilities for logging calls and for checking that the `focus()` call was
+ * successful.
+ *
+ * @param target the element to focus.
+ * @param callerLogger Logger object from the caller.
+ * @param preventScroll This corresponds to the `preventScroll` parameter to
+ *   `HTMLElement.focus()`.
  */
-export function focusWithoutScroll(el: HTMLElement): void {
-  el.focus({preventScroll: true});
+export function focusElement(target: HTMLElement, callerLogger: Logger=null, preventScroll=false): void {
+  let targetName = "";
+  if (LOG_FOCUS_ELEMENT) {
+    targetName = objectName(target);
+    if (targetName == null) {
+      targetName = target.tagName;
+    }
+    if (callerLogger != null) {
+      _log.debug(`Calling focus() on ${targetName} from ${callerLogger.getName()}`);
+    } else {
+      _log.debug(`Calling focus() on ${targetName}`);
+    }
+  }
+
+  target.focus({ preventScroll });
+
+  if (DEBUG_FOCUS_ELEMENT) {
+    const pairs = findParentChildFocusPairs(target);
+    if ( ! checkParentChildFocusPairs(pairs)) {
+      debugParentChildFocusPairs(pairs);
+    }
+  }
+
+  if (LOG_FOCUS_ELEMENT) {
+    _log.debug(`Done focus() on ${targetName}`);
+  }
+}
+
+interface TreeChildPair {
+  child: HTMLElement;
+  root: Document | ShadowRoot;
+}
+
+function findParentChildFocusPairs(target: HTMLElement): TreeChildPair[] {
+  const parentNodes = nodePathToRoot(target);
+
+  const pairs: TreeChildPair[] = [];
+  let currentPair: TreeChildPair = {
+    child: target,
+    root: null
+  };
+
+  for (let i=0; i<parentNodes.length; i++) {
+    const node = parentNodes[i];
+    if (currentPair) {
+      if (node instanceof ShadowRoot || node instanceof Document) {
+        currentPair.root = node;
+        pairs.push(currentPair);
+        currentPair = null;
+      }
+    } else {
+      currentPair = {
+        child: <HTMLElement> node,
+        root: null
+      };
+    }
+  }
+  return pairs;
+}
+
+function checkParentChildFocusPairs(pairs: TreeChildPair[]): boolean {
+  for (const pair of pairs) {
+    if (pair.root.activeElement !== pair.child) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function debugParentChildFocusPairs(pairs: TreeChildPair[]): void {
+  const parts: string[] = [];
+
+  parts.push("Deepest first");
+
+  for (const pair of pairs) {
+    if (pair.root.activeElement !== pair.child) {
+      parts.push(`! ${formatNodeName(pair.root)} active element != ${formatNodeName(pair.child)}`);
+    } else {
+      parts.push(`  ${formatNodeName(pair.root)} active element == ${formatNodeName(pair.child)}`);
+    }
+  }
+  _log.warn(parts.join("\n"));
+}
+
+/**
+ * Get a human readable name for a node.
+ *
+ * @param node
+ * @return human readable name
+ */
+function formatNodeName(node: Node): string {
+  const name = objectName(node);
+  if (name != null) {
+    return name;
+  }
+  if (node instanceof HTMLElement) {
+    return node.tagName;
+  }
+  if (node instanceof ShadowRoot) {
+    return `ShadowRoot of ${formatNodeName(node.host)}`;
+  }
+  return "" + node;
+}
+
+function focusParents(pairs: TreeChildPair[]): void {
+  for (let i=pairs.length-1; i>=0; i--) {
+    const pair = pairs[i];
+    if (pair.root.activeElement !== pair.child) {
+      pair.child.focus();
+    }
+  }
 }
 
 /**

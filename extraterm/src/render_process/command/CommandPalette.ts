@@ -10,7 +10,8 @@ import { unsafeHTML } from "extraterm-lit-html/directives/unsafe-html";
 import * as fuzzyjs from "fuzzyjs";
 import * as he from "he";
 
-import { Disposable, Logger } from "@extraterm/extraterm-extension-api";
+import { Disposable } from "@extraterm/extraterm-extension-api";
+import { Logger } from "extraterm-logging";
 import { doLater } from "extraterm-later";
 import { PopDownListPicker } from "../gui/PopDownListPicker";
 import { CssFile } from "../../theme/Theme";
@@ -20,6 +21,7 @@ import { KeybindingsManager } from "../keybindings/KeyBindingsManager";
 import { getLogger } from "extraterm-logging";
 import { ExtensionCommandContribution } from "../../ExtensionMetadata";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
+import { focusElement } from "../DomUtils";
 
 
 const ID_COMMAND_PALETTE = "ID_COMMAND_PALETTE";
@@ -94,7 +96,7 @@ export class CommandPalette {
       this._commandPaletteDisposable = contextElement.showDialog(this._commandPalette);
       this._commandPalette.filter = "";
       this._commandPalette.open();
-      this._commandPalette.focus();
+      focusElement(this._commandPalette, this._log);
     });
   }
 
@@ -103,7 +105,7 @@ export class CommandPalette {
     this._commandPaletteDisposable.dispose();
     this._commandPaletteDisposable = null;
     if (this._returnFocusElement != null) {
-      this._returnFocusElement.focus();
+      focusElement(this._returnFocusElement, this._log);
       this._returnFocusElement = null;
     }
 

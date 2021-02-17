@@ -22,6 +22,7 @@ import { ViewerElement } from "../viewers/ViewerElement";
 import { SupportsDialogStack } from "../SupportsDialogStack";
 import { OnCursorListPicker } from "../gui/OnCursorListPicker";
 import { CssFile } from "../../theme/Theme";
+import { focusElement } from "../DomUtils";
 
 
 interface IdLabelPair {
@@ -61,7 +62,7 @@ function focusLater(el: Focusable): void {
     if (elementToFocus == null) {
       return;
     }
-    elementToFocus.focus();
+    focusElement(<HTMLElement> elementToFocus);
     elementToFocus = null;
   });
 }

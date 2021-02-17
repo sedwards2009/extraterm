@@ -13,6 +13,7 @@ import { EtTerminal, EXTRATERM_COOKIE_ENV } from "../../Terminal";
 import { InternalExtensionContext, InternalTerminalBorderWidget, InternalTabTitleWidget } from "../InternalTypes";
 import { ExtensionContainerElement } from "../ExtensionContainerElement";
 import { ExtensionTerminalBorderContribution } from "../../../ExtensionMetadata";
+import { focusElement } from "../../DomUtils";
 
 
 export class TerminalProxy implements ExtensionApi.Terminal {
@@ -132,7 +133,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     const terminalBorderWidget = new TerminalBorderWidgetImpl(extensionContainerElement, () => {
       this._terminal.removeElementFromBorder(extensionContainerElement);
       terminalBorderWidget._handleClose();
-      this._terminal.focus();
+      focusElement(this._terminal, this._log);
     });
     const factoryResult = factory(this, terminalBorderWidget);
     this._terminalBorderWidgets.set(name, { extensionContainerElement: extensionContainerElement, terminalBorderWidget,

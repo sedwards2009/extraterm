@@ -213,7 +213,7 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
       return;
     }
     const containerDiv = DomUtils.getShadowId(this, ID_CONTAINER);
-    DomUtils.focusWithoutScroll(containerDiv);
+    DomUtils.focusElement(containerDiv, this._log, true);
   }
 
   hasFocus(): boolean {

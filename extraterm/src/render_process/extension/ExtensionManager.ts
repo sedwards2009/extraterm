@@ -31,6 +31,7 @@ import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages"
 import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 import { SplitLayout } from "../SplitLayout";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
+import { focusElement } from "../DomUtils";
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
@@ -646,12 +647,12 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   refocus(state: CommonExtensionWindowState): void {
     if (state.activeViewerElement != null) {
-      state.activeViewerElement.focus();
+      focusElement(state.activeViewerElement, this._log);
       return;
     }
 
     if (state.activeTerminal != null) {
-      state.activeTerminal.focus();
+      focusElement(state.activeTerminal, this._log);
       return;
     }
   }

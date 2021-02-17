@@ -53,6 +53,7 @@ import { isSupportsDialogStack } from './SupportsDialogStack';
 import { TerminalVisualConfig } from './TerminalVisualConfig';
 import { FontLoader, DpiWatcher } from './gui/Util';
 import { CachingLigatureMarker } from './CachingLigatureMarker';
+import { focusElement } from './DomUtils';
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -128,7 +129,7 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
     Electron.remote.dialog.showErrorBox("No session types available",
       "Extraterm doesn't have any session types configured.");
   }
-  mainWebUi.focus();
+  focusElement(mainWebUi, _log);
   window.focus();
 }
 
@@ -366,7 +367,7 @@ function setUpWindowControls(): void {
   maximizeButton.addEventListener('click', () => {
     WebIpc.windowMaximizeRequest();
     doLater(() => {
-      mainWebUi.focus();
+      focusElement(mainWebUi, _log);
     });
   });
 
@@ -387,7 +388,7 @@ function startUpWindowEvents(): void {
   // Make sure something sensible is focussed if only the window gets the focus.
   window.addEventListener('focus', (ev: FocusEvent) => {
     if (ev.target === window) {
-      mainWebUi.focus();
+      focusElement(mainWebUi, _log);
     }
   });
 

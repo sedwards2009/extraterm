@@ -58,6 +58,7 @@ import { ExtensionManager } from "./extension/InternalTypes";
 import { TerminalVisualConfig } from "./TerminalVisualConfig";
 import { ClipboardType } from "../WindowMessages";
 import { ScreenChangeEvent, TitleChangeEvent, DataEvent, WriteBufferSizeEvent } from "term-api";
+import { focusElement } from "./DomUtils";
 
 const log = LogDecorator;
 
@@ -472,10 +473,10 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   focus(): void {
     if (this._dialogStack.length !== 0) {
-      this._dialogStack[this._dialogStack.length-1].focus();
+      focusElement(this._dialogStack[this._dialogStack.length-1], this._log);
       return;
     }
-    this._terminalCanvas.focus();
+    focusElement(this._terminalCanvas, this._log);
   }
 
   hasFocus(): boolean {
@@ -638,7 +639,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   private _refocus(): void {
     if (this.hasFocus() && this._mode === Mode.DEFAULT &&
         this._terminalViewer != null && ! this._terminalViewer.hasFocus()) {
-      DomUtils.focusWithoutScroll(this._terminalViewer);
+      DomUtils.focusElement(this._terminalViewer, this._log, true);
     }
   }
 
@@ -763,7 +764,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this._terminalCanvas.appendViewerElement(currentTerminalViewer);
       this._terminalCanvas.setTerminalViewer(currentTerminalViewer);
       if (currentTerminalViewerHadFocus) {
-        this._terminalCanvas.focus();
+        focusElement(this._terminalCanvas, this._log);
       }
       this._emitDidAppendViewer(currentTerminalViewer);
 
@@ -1199,7 +1200,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     const metadata = viewer.getMetadata();
     if (metadata.deleteable !== false) {
       this.deleteEmbeddedViewer(viewer);
-      this.focus();
+      focusElement(this, this._log);
     }
   }
 
@@ -1211,7 +1212,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     injectConfigDatabase(el, this._configDatabase);
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
-      this.focus();
+      focusElement(this, this._log);
     });
 
     el.addEventListener(GeneralEvents.EVENT_SET_MODE, (ev: CustomEvent) => {
@@ -1304,7 +1305,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this._appendNewTerminalViewer();
 
     if (restoreFocus) {
-      this._terminalCanvas.focus();
+      focusElement(this._terminalCanvas, this._log);
     }
   }
 

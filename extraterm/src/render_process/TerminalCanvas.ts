@@ -27,6 +27,7 @@ import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { CssFile } from '../theme/Theme';
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
 import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
+import { focusElement } from "./DomUtils";
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;
@@ -141,7 +142,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
     this._scrollArea.addEventListener('mousedown', (ev: MouseEvent): void => {
       if (ev.target === this._scrollArea) {
-        this._terminalViewer.focus();
+        focusElement(this._terminalViewer, this._log);
         ev.preventDefault();
         ev.stopPropagation();
       }
@@ -164,7 +165,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
 
     this._scrollContainer.addEventListener("mousedown", (ev: MouseEvent): void => {
       if (ev.target === this._scrollContainer) {
-        this.focus();
+        focusElement(this, this._log);
       }
     });
 
@@ -277,7 +278,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
         if (this._terminalViewer !== null) {
           if ( ! this._terminalViewer.hasFocus()) {
             this._terminalViewerFocusInProgress = true;
-            DomUtils.focusWithoutScroll(this._terminalViewer);
+            DomUtils.focusElement(this._terminalViewer, this._log, true);
             this._terminalViewerFocusInProgress = false;
           }
         }
@@ -423,11 +424,11 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     super.focus({preventScroll: true});
     if (this._mode === Mode.DEFAULT) {
       if (this._terminalViewer !== null) {
-        DomUtils.focusWithoutScroll(this._terminalViewer);
+        DomUtils.focusElement(this._terminalViewer, this._log, true);
       }
     } else {
       if (this._lastChildWithFocus != null) {
-        this._lastChildWithFocus.focus();
+        focusElement(this._lastChildWithFocus, this._log);
       }
     }
   }
@@ -792,7 +793,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
         const node = this._childElementList[i].element;
         this._makeVisible(node);
         if (node.setCursorPositionBottom(detail.ch)) {
-          DomUtils.focusWithoutScroll(node);
+          DomUtils.focusElement(node, this._log, true);
           this._scrollViewerCursorIntoView(node);
           break;
         }
@@ -804,7 +805,7 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
         const node = this._childElementList[i].element;
         this._makeVisible(node);
         if (node.setCursorPositionTop(detail.ch)) {
-          DomUtils.focusWithoutScroll(node);
+          DomUtils.focusElement(node, this._log, true);
           this._scrollViewerCursorIntoView(node);
           break;
         }

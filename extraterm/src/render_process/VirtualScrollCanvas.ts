@@ -18,6 +18,7 @@ import {ThemeableElementBase} from './ThemeableElementBase';
 import {ViewerElement} from "./viewers/ViewerElement";
 import { VirtualScrollable, VirtualScrollArea, EVENT_RESIZE } from './VirtualScrollArea';
 import { RefreshLevel } from './viewers/ViewerElementTypes';
+import { focusElement } from './DomUtils';
 
 type ScrollableElement = VirtualScrollable & HTMLElement;
 
@@ -134,13 +135,13 @@ export class VirtualScrollCanvas extends ThemeableElementBase {
 
   focus(): void {
     if (this._dialogStack.length !== 0) {
-      this._dialogStack[this._dialogStack.length-1].focus();
+      focusElement(this._dialogStack[this._dialogStack.length-1], this._log);
       return;
     }
 
     const element = this.getViewerElement();
     if (element !== null) {
-      element.focus();
+      focusElement(element, this._log);
     }
   }
 

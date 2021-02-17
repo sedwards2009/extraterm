@@ -41,6 +41,7 @@ import { CommandAndShortcut } from './command/CommandPalette';
 import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
 import { TerminalVisualConfig, injectTerminalVisualConfig } from './TerminalVisualConfig';
 import { doLater } from 'extraterm-later';
+import { focusElement } from './DomUtils';
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -393,17 +394,17 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   private _setUpWindowControls(): void {
     DomUtils.getShadowId(this, ID_MINIMIZE_BUTTON).addEventListener('click', () => {
-      this.focus();
+      focusElement(this, this._log);
       this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
     });
 
     DomUtils.getShadowId(this, ID_MAXIMIZE_BUTTON).addEventListener('click', () => {
-      this.focus();
+      focusElement(this, this._log);
       this._sendWindowRequestEvent(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST);
     });
 
     DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', () => {
-      this.focus();
+      focusElement(this, this._log);
       this._commandCloseWindow();
     });
   }
@@ -852,10 +853,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
     const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
     if (targetTabWidget != null) {
-      targetTabWidget.focus();
+      focusElement(targetTabWidget, this._log);
       const content = this._splitLayout.getTabContentByTab(targetTabWidget.getSelectedTab());
       if (elementSupportsFocus(content)) {
-        content.focus();
+        focusElement(content, this._log);
         return { tabWidget: targetTabWidget, tabContent: content };
       }
       return { tabWidget: targetTabWidget, tabContent: null };
@@ -885,9 +886,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (targetTabWidget != null) {
       this._splitLayout.moveTabToTabWidget(this._splitLayout.getTabByTabContent(tabElement), targetTabWidget, 0);
       this._splitLayout.update();
-      targetTabWidget.focus();
+      focusElement(targetTabWidget, this._log);
       if (elementSupportsFocus(tabElement)) {
-        tabElement.focus();
+        focusElement(tabElement, this._log);
       }
     }
   }
@@ -906,9 +907,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _focusTabContent(el: Element): void {
     if (el instanceof EtTerminal) {
       el.resizeToContainer();
-      el.focus();
+      focusElement(el, this._log);
     } else if (elementSupportsFocus(el)) {
-      el.focus();
+      focusElement(el, this._log);
     }
   }
 
@@ -926,15 +927,14 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (newTabWidget != null) {
       const element = this._splitLayout.getEmptyContentByTabWidget(newTabWidget);
       if (element != null) {
-        newTabWidget.focus();
         if (element instanceof EmptyPaneMenu) {
           element.focus();
         }
       } else {
         const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
-        tabWidget.focus();
+        focusElement(tabWidget, this._log);
         if (elementSupportsFocus(tabContentElement)) {
-          tabContentElement.focus();
+          focusElement(tabContentElement, this._log);
         }
       }
     }
@@ -964,10 +964,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
 
     if (focusInfo.tabWidget != null) {
-      focusInfo.tabWidget.focus();
+      focusElement(focusInfo.tabWidget, this._log);
       if (focusInfo.tabContent != null) {
         if (elementSupportsFocus(focusInfo.tabContent)) {
-          focusInfo.tabContent.focus();
+          focusElement(focusInfo.tabContent, this._log);
         }
       }
     }
@@ -1152,11 +1152,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 }
 
 interface Focusable {
-  focus(): void;
+  focus(options?: { preventScroll: boolean }): void;
   hasFocus(): boolean;
 }
 
-function elementSupportsFocus(content: Element | Focusable): content is Focusable {
+function elementSupportsFocus(content: Element | Focusable): content is Focusable & HTMLElement {
   return content instanceof EtTerminal ||
           content instanceof EmptyPaneMenu ||
           content instanceof EtViewerTab ||
