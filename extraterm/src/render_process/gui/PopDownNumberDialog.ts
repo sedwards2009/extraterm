@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {Disposable} from "@extraterm/extraterm-extension-api";
+import { getLogger, Logger } from "extraterm-logging";
 import { Attribute, Observe, CustomElement } from "extraterm-web-component-decorators";
 import { html, render } from "extraterm-lit-html";
 
@@ -23,12 +24,13 @@ const ID_INPUT = "ID_INPUT";
 export class PopDownNumberDialog extends ThemeableElementBase {
 
   static TAG_NAME = "ET-POP-DOWN-NUMBER-DIALOG";
-
+  private _log: Logger = null;
   private _laterHandle: Disposable = null;
   private _extraCssFiles: ThemeTypes.CssFile[] = [];
 
   constructor() {
     super();
+    this._log = getLogger("PopDownNumberDialog", this);
     this._handleDialogCloseRequest = this._handleDialogCloseRequest.bind(this);
     this._handleTextInputKeyDown = this._handleTextInputKeyDown.bind(this);
     this._handleInputChange = this._handleInputChange.bind(this);
