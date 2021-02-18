@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
 import { Document,
          EditSession,
@@ -10,14 +10,14 @@ import { Document,
          TextMode,
          RangeBasic,
          OrientedRange } from "@extraterm/ace-ts";
-
+import { log, Logger, getLogger } from "extraterm-logging";
+import { isWide, stringToCodePointArray } from "extraterm-unicode-utilities";
 import * as TermApi from "term-api";
+import { LineImpl } from "term-api-lineimpl";
+
 import { LineData } from "./canvas_line_data/LineData";
 import { LineDataEditor } from "./canvas_line_data/LineDataEditor";
-import { log, Logger, getLogger } from "extraterm-logging";
 import { TermLineHeavyString } from "./TermLineHeavyString";
-import { stringToCodePointArray } from "extraterm-unicode-utilities";
-import { LineImpl } from "term-api-lineimpl";
 
 
 export class TerminalCanvasEditSession extends EditSession {
@@ -150,9 +150,7 @@ export class TerminalCanvasEditSession extends EditSession {
       if (codePoint === 9) {
         screenColumn += this.getScreenTabSize(screenColumn);
       } else {
-        // Yes, we treat full width chars as being 1 cell because
-        // Term.ts pads then with an extra space char.
-        screenColumn += 1;
+        screenColumn += isWide(codePoint) ? 2 : 1;
       }
 
       if (screenColumn > maxScreenColumn) {
