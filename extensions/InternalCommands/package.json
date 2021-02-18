@@ -243,29 +243,29 @@
         "when": "isWindowSplit"
       },
       {
-        "command": "extraterm:window.moveTabLeft",
-        "title": "Move Tab Left",
+        "command": "extraterm:window.moveTabToPaneLeft",
+        "title": "Move Tab to Pane Left",
         "category": "window",
         "order": 1500,
         "when": ""
       },
       {
-        "command": "extraterm:window.moveTabRight",
-        "title": "Move Tab Right",
+        "command": "extraterm:window.moveTabToPaneRight",
+        "title": "Move Tab to Pane Right",
         "category": "window",
         "order": 1501,
         "when": ""
       },
       {
-        "command": "extraterm:window.moveTabUp",
-        "title": "Move Tab Up",
+        "command": "extraterm:window.moveTabToPaneUp",
+        "title": "Move Tab to Pane Up",
         "category": "window",
         "order": 1502,
         "when": ""
       },
       {
-        "command": "extraterm:window.moveTabDown",
-        "title": "Move Tab Down",
+        "command": "extraterm:window.moveTabToPaneDown",
+        "title": "Move Tab to Pane Down",
         "category": "window",
         "order": 1503,
         "when": ""

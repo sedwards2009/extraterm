@@ -863,23 +863,25 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return { tabWidget: null, tabContent: null };
   }
 
-  private _moveTabElementLeft(tabElement: Element): void {
-    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
+  private _moveTabElementToPaneLeft(tabElement: Element): void {
+    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
   }
 
-  private _moveTabElementRight(tabElement: Element): void {
-    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+  private _moveTabElementToPaneRight(tabElement: Element): void {
+    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
   }
 
-  private _moveTabElementUp(tabElement: Element): void {
-    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+  private _moveTabElementToPaneUp(tabElement: Element): void {
+    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
   }
 
-  private _moveTabElementDown(tabElement: Element): void {
-    this._moveTabElementInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
+  private _moveTabElementToPaneDown(tabElement: Element): void {
+    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
   }
 
-  private _moveTabElementInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget): void {
+  private _moveTabElementToPaneInDirection(tabElement: Element,
+      directionFunc: (tabWidget: TabWidget) => TabWidget): void {
+
     const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
     const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
     if (targetTabWidget != null) {
@@ -1048,10 +1050,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     commands.registerCommand("extraterm:window.focusTabLeft", (args: any) => this._commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", (args: any) => this._commandFocusTabRight());
     commands.registerCommand("extraterm:window.horizontalSplit", (args: any) => this._commandHorizontalSplit());
-    commands.registerCommand("extraterm:window.moveTabDown", (args: any) => this._commandMoveTabDown());
-    commands.registerCommand("extraterm:window.moveTabLeft", (args: any) => this._commandMoveTabLeft());
-    commands.registerCommand("extraterm:window.moveTabRight", (args: any) => this._commandMoveTabRight());
-    commands.registerCommand("extraterm:window.moveTabUp", (args: any) => this._commandMoveTabUp());
+    commands.registerCommand("extraterm:window.moveTabToPaneDown", (args: any) => this._commandMoveTabToPaneDown());
+    commands.registerCommand("extraterm:window.moveTabToPaneLeft", (args: any) => this._commandMoveTabToPaneLeft());
+    commands.registerCommand("extraterm:window.moveTabToPaneRight", (args: any) => this._commandMoveTabToPaneRight());
+    commands.registerCommand("extraterm:window.moveTabToPaneUp", (args: any) => this._commandMoveTabToPaneUp());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openAbout", (args: any) => this.commandOpenAboutTab());
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
@@ -1129,20 +1131,20 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._closeSplit(this._getActiveTabElement());
   }
 
-  private _commandMoveTabLeft(): void {
-    this._moveTabElementLeft(this._getActiveTabElement());
+  private _commandMoveTabToPaneLeft(): void {
+    this._moveTabElementToPaneLeft(this._getActiveTabElement());
   }
 
-  private _commandMoveTabRight(): void {
-    this._moveTabElementRight(this._getActiveTabElement());
+  private _commandMoveTabToPaneRight(): void {
+    this._moveTabElementToPaneRight(this._getActiveTabElement());
   }
 
-  private _commandMoveTabUp(): void {
-    this._moveTabElementUp(this._getActiveTabElement());
+  private _commandMoveTabToPaneUp(): void {
+    this._moveTabElementToPaneUp(this._getActiveTabElement());
   }
 
-  private _commandMoveTabDown(): void {
-    this._moveTabElementDown(this._getActiveTabElement());
+  private _commandMoveTabToPaneDown(): void {
+    this._moveTabElementToPaneDown(this._getActiveTabElement());
   }
 
   private _commandCloseWindow(): void {

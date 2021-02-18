@@ -50,25 +50,25 @@
       ]
     },
     {
-      "command": "extraterm:window.moveTabLeft",
+      "command": "extraterm:window.moveTabToPaneLeft",
       "keys": [
         "Ctrl-Alt-,"
       ]
     },
     {
-      "command": "extraterm:window.moveTabRight",
+      "command": "extraterm:window.moveTabToPaneRight",
       "keys": [
         "Ctrl-Alt-."
       ]
     },
     {
-      "command": "extraterm:window.moveTabUp",
+      "command": "extraterm:window.moveTabToPaneUp",
       "keys": [
         "Ctrl-Alt-;"
       ]
     },
     {
-      "command": "extraterm:window.moveTabDown",
+      "command": "extraterm:window.moveTabToPaneDown",
       "keys": [
         "Ctrl-Alt-/"
       ]
