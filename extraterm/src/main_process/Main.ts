@@ -57,6 +57,7 @@ const isDarwin = process.platform === "darwin";
 let appWindowIds: number[] = [];
 
 const LOG_FILENAME = "extraterm.log";
+const IPC_FILENAME = "ipc.run";
 const THEMES_DIRECTORY = "themes";
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
@@ -154,12 +155,7 @@ function main(): void {
   setupDefaultSessions();
 
   // Quit when all windows are closed.
-  app.on('window-all-closed', function() {
-    if (bulkFileStorage !== null) {
-      bulkFileStorage.dispose();
-    }
-    app.quit();
-  });
+  app.on('window-all-closed', shutdown);
 
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
@@ -225,7 +221,8 @@ async function electronReady(parsedArgs: Command): Promise<void> {
 }
 
 async function setupLocalHttpServer(): Promise<void> {
-  localHttpServer = new LocalHttpServer();
+  const ipcFilePath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, IPC_FILENAME);
+  localHttpServer = new LocalHttpServer(ipcFilePath);
   await localHttpServer.start();
   bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
   const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
@@ -236,6 +233,16 @@ function setupBulkFileStorage(): void {
   bulkFileStorage = new BulkFileStorage(os.tmpdir());
   bulkFileStorage.onWriteBufferSize(sendBulkFileWriteBufferSizeEvent);
   bulkFileStorage.onClose(sendBulkFileStateChangeEvent);
+}
+
+function shutdown(): void {
+  if (localHttpServer != null) {
+    localHttpServer.dispose();
+  }
+  if (bulkFileStorage !== null) {
+    bulkFileStorage.dispose();
+  }
+  app.quit();
 }
 
 //-------------------------------------------------------------------------
