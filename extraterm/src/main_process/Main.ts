@@ -41,6 +41,8 @@ import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThe
   sanitizeAndIinitializeConfigs, readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
 import { bestOverlap } from "./RectangleMatch";
 import { focusElement } from "../render_process/DomUtils";
+import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
+import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
 
 const LOG_FINE = false;
 
@@ -66,6 +68,7 @@ let ptyManager: PtyManager;
 let configDatabase: ConfigDatabaseImpl;
 let tagCounter = 1;
 let titleBarStyle: TitleBarStyle = "compact";
+let localHttpServer: LocalHttpServer = null;
 let bulkFileStorage: BulkFileStorage = null;
 let extensionManager: MainExtensionManager = null;
 let keybindingsIOManager: KeybindingsIOManager = null;
@@ -211,13 +214,22 @@ function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: Mai
   return themeManager;
 }
 
-function electronReady(parsedArgs: Command): void {
+async function electronReady(parsedArgs: Command): Promise<void> {
   setupBulkFileStorage();
+  await setupLocalHttpServer();
   setupIpc();
   setupTrayIcon();
   setupGlobalKeybindingsManager();
   setUpMenu();
   openWindow({openDevTools: parsedArgs.devTools});
+}
+
+async function setupLocalHttpServer(): Promise<void> {
+  localHttpServer = new LocalHttpServer();
+  await localHttpServer.start();
+  bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
+  const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
+  localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
 }
 
 function setupBulkFileStorage(): void {
@@ -1223,7 +1235,7 @@ function handleNewTagRequest(msg: Messages.NewTagRequestMessage): Messages.NewTa
 //-------------------------------------------------------------------------
 
 function handleCreateBulkFile(msg: Messages.BulkFileCreateMessage): Messages.BulkFileCreatedResponseMessage {
-  const {identifier, url}  = bulkFileStorage.createBulkFile(msg.metadata, msg.size);
+  const {identifier, url} = bulkFileStorage.createBulkFile(msg.metadata, msg.size);
   const reply: Messages.BulkFileCreatedResponseMessage = {type: Messages.MessageType.BULK_FILE_CREATED, identifier, url};
   return reply;
 }
