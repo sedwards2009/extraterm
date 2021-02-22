@@ -17,14 +17,14 @@ import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from "../../render_process/extension/InternalTypes";
 import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from "../../Config";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
-import { LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution,
+import { MainInternalExtensionContext, LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution,
   LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
 
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
   publicApi: any;
-  contextImpl: ExtensionContextImpl;
+  contextImpl: MainInternalExtensionContext;
   module: any;
 }
 
@@ -264,12 +264,12 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
 
   getSessionBackendContributions(): LoadedSessionBackendContribution[] {
     return _.flatten(this._getActiveBackendExtensions().map(
-      ae => ae.contextImpl.backend.__BackendImpl__sessionBackends));
+      ae => ae.contextImpl._internalBackend._sessionBackends));
   }
 
   getSessionBackend(type: string): ExtensionApi.SessionBackend {
     for (const extension of this._getActiveBackendExtensions()) {
-      for (const backend of extension.contextImpl.backend.__BackendImpl__sessionBackends) {
+      for (const backend of extension.contextImpl._internalBackend._sessionBackends) {
         if (backend.sessionBackendMetadata.type === type) {
           return backend.sessionBackend;
         }
@@ -280,11 +280,11 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
 
   getSyntaxThemeProviderContributions(): LoadedSyntaxThemeProviderContribution[] {
     return _.flatten(this._getActiveBackendExtensions().map(
-      ae => ae.contextImpl.backend.__BackendImpl__syntaxThemeProviders));
+      ae => ae.contextImpl._internalBackend._syntaxThemeProviders));
   }
 
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
     return _.flatten(this._getActiveBackendExtensions().map(
-      ae => ae.contextImpl.backend.__BackendImpl__terminalThemeProviders));
+      ae => ae.contextImpl._internalBackend._terminalThemeProviders));
   }
 }

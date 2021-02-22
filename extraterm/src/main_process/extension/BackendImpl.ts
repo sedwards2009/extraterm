@@ -15,9 +15,9 @@ import { LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution
 
 export class BackendImpl implements Backend {
   private _log: Logger = null;
-  __BackendImpl__sessionBackends: LoadedSessionBackendContribution[] = [];
-  __BackendImpl__syntaxThemeProviders: LoadedSyntaxThemeProviderContribution[] = [];
-  __BackendImpl__terminalThemeProviders: LoadedTerminalThemeProviderContribution[] = [];
+  _sessionBackends: LoadedSessionBackendContribution[] = [];
+  _syntaxThemeProviders: LoadedSyntaxThemeProviderContribution[] = [];
+  _terminalThemeProviders: LoadedTerminalThemeProviderContribution[] = [];
 
   constructor(public __extensionMetadata: ExtensionMetadata) {
     this._log = getLogger("Backend (" + this.__extensionMetadata.name + ")", this);
@@ -26,7 +26,7 @@ export class BackendImpl implements Backend {
   registerSessionBackend(name: string, backend: SessionBackend): void {
     for (const backendMeta of this.__extensionMetadata.contributes.sessionBackends) {
       if (backendMeta.name === name) {
-        this.__BackendImpl__sessionBackends.push({
+        this._sessionBackends.push({
           metadata: this.__extensionMetadata,
           sessionBackendMetadata: backendMeta,
           sessionBackend: backend
@@ -44,7 +44,7 @@ export class BackendImpl implements Backend {
   registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void {
     for (const backendMeta of this.__extensionMetadata.contributes.syntaxThemeProviders) {
       if (backendMeta.name === name) {
-        this.__BackendImpl__syntaxThemeProviders.push({
+        this._syntaxThemeProviders.push({
           metadata: this.__extensionMetadata,
           syntaxThemeProvider: provider
         } );
@@ -61,7 +61,7 @@ export class BackendImpl implements Backend {
   registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void {
     for (const backendMeta of this.__extensionMetadata.contributes.terminalThemeProviders) {
       if (backendMeta.name === name) {
-        this.__BackendImpl__terminalThemeProviders.push({
+        this._terminalThemeProviders.push({
           metadata: this.__extensionMetadata,
           terminalThemeProvider: provider
         } );

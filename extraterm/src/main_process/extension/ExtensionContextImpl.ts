@@ -12,9 +12,10 @@ import { ExtensionContext } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
 import { ApplicationImpl } from "./ApplicationImpl";
 import { BackendImpl } from "./BackendImpl";
+import { InternalBackend, MainInternalExtensionContext } from './ExtensionManagerTypes';
 
 
-export class ExtensionContextImpl implements ExtensionContext {
+export class ExtensionContextImpl implements MainInternalExtensionContext {
 
   application: ApplicationImpl = null;
 
@@ -22,16 +23,19 @@ export class ExtensionContextImpl implements ExtensionContext {
     this.logger.warn("'ExtensionContext.commands' is only available from a window process, not the main process.");
     throw Error("'ExtensionContext.commands' is only available from a window process, not the main process.");
   }
+
   logger: ExtensionApi.Logger = null;
   isBackendProcess = true;
-  backend: BackendImpl = null;
+  backend: ExtensionApi.Backend = null;
+  _internalBackend: InternalBackend;
   extensionPath: string = null;
 
   constructor(public __extensionMetadata: ExtensionMetadata) {
     this.logger = getLogger("[Main]" + this.__extensionMetadata.name);
     this.extensionPath = this.__extensionMetadata.path;
     this.application = new ApplicationImpl();
-    this.backend = new BackendImpl(this.__extensionMetadata);
+    this._internalBackend = new BackendImpl(this.__extensionMetadata);
+    this.backend = this._internalBackend;
   }
 
   get window(): never {
