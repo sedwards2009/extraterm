@@ -38,10 +38,11 @@ import { getAvailableFontsSync } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { ConfigDatabaseImpl, isThemeType, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory,
   getUserTerminalThemeDirectory, getUserKeybindingsDirectory, setupAppData,
-  sanitizeAndIinitializeConfigs, readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
+  sanitizeAndIinitializeConfigs as sanitizeAndInitializeConfigs, readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
 import { bestOverlap } from "./RectangleMatch";
 import { focusElement } from "../render_process/DomUtils";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
+import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
 
 const LOG_FINE = false;
@@ -127,7 +128,7 @@ function main(): void {
   keybindingsIOManager = setupKeybindingsIOManager(extensionManager);
   themeManager = setupThemeManager(configDatabase, extensionManager);
 
-  sanitizeAndIinitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
+  sanitizeAndInitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
     availableFonts);
   titleBarStyle = userStoredConfig.titleBarStyle;
   const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
@@ -178,7 +179,15 @@ function setupExtensionManager(configDatabase: ConfigDatabase,
   extensionManager.onDesiredStateChanged(() => {
     sendMessageToAllWindows(handleExtensionDesiredStateRequest());
   });
+
+  const commands = extensionManager.getExtensionContextByName("internal-main-commands").commands;
+  commands.registerCommand("extraterm:window.listAll", (args: any) => commandWindowListAll());
+
   return extensionManager;
+}
+
+function commandWindowListAll(): void {
+  _log.debug("commandWindowListAll()");
 }
 
 function setupKeybindingsIOManager(extensionManager: MainExtensionManager): KeybindingsIOManager {
@@ -224,9 +233,13 @@ async function setupLocalHttpServer(): Promise<void> {
   const ipcFilePath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, IPC_FILENAME);
   localHttpServer = new LocalHttpServer(ipcFilePath);
   await localHttpServer.start();
+
   bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
   const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
   localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
+
+  const commandRequestHandler = new CommandRequestHandler(extensionManager);
+  localHttpServer.registerRequestHandler("command", commandRequestHandler);
 }
 
 function setupBulkFileStorage(): void {

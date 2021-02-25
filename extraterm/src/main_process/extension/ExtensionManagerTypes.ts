@@ -7,10 +7,12 @@ import * as _ from "lodash";
 
 import { ExtensionMetadata, ExtensionSessionBackendContribution } from "../../ExtensionMetadata";
 import { Backend, ExtensionContext, SessionBackend, SyntaxThemeProvider, TerminalThemeProvider } from "@extraterm/extraterm-extension-api";
+import { MainCommandsRegistry } from "./MainCommandsRegistry";
 
 
 export interface MainInternalExtensionContext extends ExtensionContext {
   readonly _internalBackend: InternalBackend;
+  readonly commands: MainCommandsRegistry;
 }
 
 export interface InternalBackend extends Backend {

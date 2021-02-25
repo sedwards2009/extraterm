@@ -1,0 +1,17 @@
+{
+  "name": "internal-main-commands",
+  "description": "Command definitions for all internal commands in the main process",
+  "version": "1.0.0",
+  "isInternal": true,
+  "process": "main",
+  "contributes": {
+    "commands": [
+      {
+        "command": "extraterm:window.listAll",
+        "title": "List all windows",
+        "category": "window",
+        "when": ""
+      }
+    ]
+  }
+}

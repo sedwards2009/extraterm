@@ -39,6 +39,7 @@
     "file-type": "^7.6.0",
     "fontinfo": "0.3.0",
     "fuzzyjs": "^4.0.4",
+    "get-stream": "^6.0.0",
     "get-uri": "2.0.1",
     "he": "1.2.0",
     "json-to-ast": "2.1.0",

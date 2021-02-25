@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -199,6 +199,15 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
     return this._activeExtensions.map(ae => ae.metadata);
   }
 
+  getExtensionContextByName(name: string): MainInternalExtensionContext {
+    for (const activeExtension of this._activeExtensions) {
+      if (activeExtension.metadata.name === name) {
+        return activeExtension.contextImpl;
+      }
+    }
+    return null;
+  }
+
   enableExtension(name: string): void {
     const metadata = this._getExtensionMetadataByName(name);
     if (metadata == null) {
@@ -286,5 +295,41 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
     return _.flatten(this._getActiveBackendExtensions().map(
       ae => ae.contextImpl._internalBackend._terminalThemeProviders));
+  }
+
+  executeCommand(command: string, args?: any): any {
+    const parts = command.split(":");
+    if (parts.length !== 2) {
+      this._log.warn(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
+      return null;
+    }
+
+    let extensionName = parts[0];
+    if (extensionName === "extraterm") {
+      extensionName = "internal-main-commands";
+    }
+
+    for (const ext of this._activeExtensions) {
+      if (ext.metadata.name === extensionName) {
+        const commandFunc = ext.contextImpl.commands.getCommandFunction(command);
+        if (commandFunc == null) {
+          this._log.warn(`Unable to find command '${command}' in extension '${extensionName}'.`);
+          return null;
+        }
+        return this._runCommandFunc(command, commandFunc, args);
+      }
+    }
+
+    this._log.warn(`Unable to find extension with name '${extensionName}' for command '${command}'.`);
+    return null;
+  }
+
+  private _runCommandFunc(name: string, commandFunc: (args: any) => any, args: any): any {
+    try {
+      return commandFunc(args);
+    } catch(ex) {
+      this._log.warn(`Command '${name}' threw an exception.`, ex);
+    }
+    return null;
   }
 }

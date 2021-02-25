@@ -183,6 +183,12 @@ export interface InternalSessionEditor extends ExtensionApi.SessionEditorBase {
 
 
 export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
+  if (metadata.process === "main") {
+    return true;
+  }
+  if (metadata.process === "render") {
+    return false;
+  }
   return metadata.contributes.sessionBackends.length !== 0 ||
     metadata.contributes.syntaxThemeProviders.length !== 0 ||
     metadata.contributes.syntaxThemes.length !== 0 ||

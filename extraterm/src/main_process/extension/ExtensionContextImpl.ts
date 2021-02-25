@@ -8,22 +8,16 @@ import * as _ from 'lodash';
 
 import { getLogger } from "extraterm-logging";
 import { ExtensionMetadata } from "../../ExtensionMetadata";
-import { ExtensionContext } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
 import { ApplicationImpl } from "./ApplicationImpl";
 import { BackendImpl } from "./BackendImpl";
 import { InternalBackend, MainInternalExtensionContext } from './ExtensionManagerTypes';
+import { MainCommandsRegistry } from './MainCommandsRegistry';
 
 
 export class ExtensionContextImpl implements MainInternalExtensionContext {
-
   application: ApplicationImpl = null;
-
-  get commands(): never {
-    this.logger.warn("'ExtensionContext.commands' is only available from a window process, not the main process.");
-    throw Error("'ExtensionContext.commands' is only available from a window process, not the main process.");
-  }
-
+  commands: MainCommandsRegistry = null;
   logger: ExtensionApi.Logger = null;
   isBackendProcess = true;
   backend: ExtensionApi.Backend = null;
@@ -32,6 +26,8 @@ export class ExtensionContextImpl implements MainInternalExtensionContext {
 
   constructor(public __extensionMetadata: ExtensionMetadata) {
     this.logger = getLogger("[Main]" + this.__extensionMetadata.name);
+    this.commands = new MainCommandsRegistry(this.__extensionMetadata.name,
+      this.__extensionMetadata.contributes.commands);
     this.extensionPath = this.__extensionMetadata.path;
     this.application = new ApplicationImpl();
     this._internalBackend = new BackendImpl(this.__extensionMetadata);

@@ -42,7 +42,7 @@ export class LocalHttpServer implements Disposable {
       this.#server.listen(0, "127.0.0.1", async () => {
         const address = this.#server.address();
         this.#port = (<net.AddressInfo> address).port;
-        this._log.info(`Bulk file server running on ${this.getLocalUrlBase()}`);
+        this._log.info(`Local HTTP IPC server running on ${this.getLocalUrlBase()}`);
 
         fs.writeFileSync(this.#ipcFilePath, this.getLocalUrlBase(), {encoding: "UTF8"});
 
@@ -92,7 +92,7 @@ export class LocalHttpServer implements Disposable {
 
   private _send404(res: http.ServerResponse): void {
     res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('');
+    res.setHeader("Content-Type", "text/plain");
+    res.end("");
   }
 }

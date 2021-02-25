@@ -18,6 +18,7 @@ export interface ExtensionMetadata {
   readonly excludePlatform?: ExtensionPlatform[];
   readonly isInternal?: boolean;
   readonly readmePath?: string;
+  readonly process?: string;
 }
 
 export interface ExtensionPlatform {

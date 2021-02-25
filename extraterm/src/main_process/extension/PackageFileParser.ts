@@ -32,7 +32,9 @@ import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluat
 import { JsonNode, JsonObject } from "json-to-ast";
 import jsonParse = require("json-to-ast");
 
-import { JsonError, assertIsJsonObject, getJsonProperty, throwJsonError, parseObjectListJson, getJsonStringField, getJsonNumberField, getJsonStringArrayField, getJsonBooleanField, assertKnownJsonObjectKeys } from "./JsonToAstUtils";
+import { JsonError, assertIsJsonObject, getJsonProperty, throwJsonError, parseObjectListJson, getJsonStringField,
+  getJsonNumberField, getJsonStringArrayField, getJsonBooleanField, assertKnownJsonObjectKeys
+} from "./JsonToAstUtils";
 
 const FONT_AWESOME_DEFAULT = false;
 
@@ -94,6 +96,7 @@ class PackageParser {
         description: getJsonStringField(packageJson, "description"),
         contributes: this.parseContributesJson(packageJson),
         isInternal: getJsonBooleanField(packageJson, "isInternal", false),
+        process: getJsonStringField(packageJson, "process", null),
       };
       return result;
     } catch(ex) {
