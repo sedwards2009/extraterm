@@ -16,7 +16,6 @@ import { EventEmitter } from '../utils/EventEmitter';
 import { Event } from '@extraterm/extraterm-extension-api';
 import { globalShortcut } from 'electron';
 import { doLater } from 'extraterm-later';
-import { TermKeybindingsMapping } from '../render_process/keybindings/KeyBindingsManager';
 
 
 export class GlobalKeybindingsManager {

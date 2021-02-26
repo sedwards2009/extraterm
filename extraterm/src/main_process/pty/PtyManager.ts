@@ -33,7 +33,7 @@ export interface PtyAvailableWriteBufferSizeChangeEvent {
   bufferSizeChange: BufferSizeChange;
 }
 
-export class PtyManager implements AcceptsConfigDatabase {
+export class PtyManager {
   private _log: Logger;
   private _configDistributor: ConfigDatabase = null;
   private _ptyCounter = 0;
@@ -42,8 +42,10 @@ export class PtyManager implements AcceptsConfigDatabase {
   private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
   private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
 
-  constructor(private _extensionManager: MainExtensionManager) {
+  constructor(private _extensionManager: MainExtensionManager, configDistributor: ConfigDatabase) {
     this._log = getLogger("PtyManager", this);
+    this._configDistributor = configDistributor;
+
     this.onPtyExit = this._onPtyExitEventEmitter.event;
     this.onPtyData = this._onPtyDataEventEmitter.event;
     this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
@@ -61,10 +63,6 @@ export class PtyManager implements AcceptsConfigDatabase {
     }
 
     return results;
-  }
-
-  setConfigDatabase(configDistributor: ConfigDatabase): void  {
-    this._configDistributor = configDistributor;
   }
 
   onPtyExit: Event<number>;
