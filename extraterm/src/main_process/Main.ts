@@ -80,14 +80,14 @@ async function main(): Promise<void> {
 
   // commander assumes that the first two values in argv are 'node' and 'blah.js' and then followed by the args.
   // This is not the case when running from a packaged Electron app. Here you have first value 'appname' and then args.
-  const normalizedArgv = process.argv[0].includes('extraterm') ? ["node", "extraterm", ...process.argv.slice(1)]
+  const normalizedArgv = process.argv[0].includes("extraterm") ? ["node", "extraterm", ...process.argv.slice(1)]
                             : process.argv;
   const parsedArgs = new Command("extraterm");
 
   // The extra fields which appear on the command object are declared in extra_commander.d.ts.
-  parsedArgs.option('-c, --cygwinDir [cygwinDir]', 'Location of the cygwin directory []')
-    .option('-d, --dev-tools [devTools]', 'Open the dev tools on start up')
-    .option('--force-device-scale-factor []', '(This option is used by Electron)')
+  parsedArgs.option("-c, --cygwinDir [cygwinDir]", "Location of the cygwin directory []")
+    .option("-d, --dev-tools [devTools]", "Open the dev tools on start up")
+    .option("--force-device-scale-factor []", "(This option is used by Electron)")
     .parse(normalizedArgv);
 
   const availableFonts = getFonts();
@@ -129,15 +129,7 @@ async function main(): Promise<void> {
 
   setupDefaultSessions(configDatabase, ptyManager);
 
-  // This method will be called when Electron has done everything
-  // initialization and ready for creating browser windows.
-  app.on('ready', () => electronReady(parsedArgs, configDatabase, extensionManager, keybindingsIOManager, themeManager,
-    ptyManager));
-}
-
-async function electronReady(parsedArgs: Command, configDatabase: ConfigDatabaseImpl,
-    extensionManager: MainExtensionManager, keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager,
-    ptyManager: PtyManager): Promise<void> {
+  await electronReady();
 
   const bulkFileStorage = setupBulkFileStorage();
   const localHttpServer = await setupLocalHttpServer(bulkFileStorage, extensionManager);
@@ -149,12 +141,19 @@ async function electronReady(parsedArgs: Command, configDatabase: ConfigDatabase
     keybindingsIOManager, themeManager, ptyManager);
 
   // Quit when all windows are closed.
-  app.on('window-all-closed', () => shutdown(bulkFileStorage, localHttpServer));
+  app.on("window-all-closed", () => shutdown(bulkFileStorage, localHttpServer));
 
   mainDesktop.start();
   mainDesktop.openWindow({openDevTools: parsedArgs.devTools});
 }
 
+function electronReady(): Promise<void> {
+  return new Promise<void>( (resolve, reject) => {
+    app.on("ready", () => {
+      resolve();
+    });
+  });
+}
 
 function setupExtensionManager(configDatabase: ConfigDatabase,
     initialActiveExtensions: {[name: string]: boolean;}): MainExtensionManager {
@@ -201,7 +200,7 @@ function updateSystemConfigKeybindings(configDatabase: ConfigDatabaseImpl,
 
 function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: MainExtensionManager): ThemeManager {
   // Themes
-  const themesDir = path.join(__dirname, '../../resources', THEMES_DIRECTORY);
+  const themesDir = path.join(__dirname, "../../resources", THEMES_DIRECTORY);
   const themeManager = new ThemeManager({
     css: [themesDir],
     syntax: [getUserSyntaxThemeDirectory()],
@@ -255,7 +254,7 @@ function setupGlobalKeybindingsManager(configDatabase: ConfigDatabaseImpl, keybi
 }
 
 function setupLogging(): void {
-  const logFilePath = path.join(app.getPath('appData'), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
+  const logFilePath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, LOG_FILENAME);
   if (fs.existsSync(logFilePath)) {
     fs.unlinkSync(logFilePath);
   }
@@ -280,7 +279,7 @@ function setupLogging(): void {
 function systemConfiguration(config: GeneralConfig, keybindingsIOManager: KeybindingsIOManager,
     availableFonts: FontInfo[], packageJson: any, titleBarStyle: TitleBarStyle): SystemConfig {
 
-  const homeDir = app.getPath('home');
+  const homeDir = app.getPath("home");
 
   const flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsSet(config.keybindingsName);
   return {
