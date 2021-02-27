@@ -14,9 +14,7 @@ import * as SourceMapSupport from "source-map-support";
 import * as child_process from "child_process";
 import { Command } from "commander";
 import { app, BrowserWindow, dialog } from "electron";
-import fontInfo = require("fontinfo");
 import * as fs from "fs";
-import * as _ from "lodash";
 import * as path from "path";
 import * as os from "os";
 import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
@@ -29,7 +27,7 @@ import { ThemeManager } from "../theme/ThemeManager";
 import * as Messages from "../WindowMessages";
 import { MainExtensionManager } from "./extension/MainExtensionManager";
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
-import { getAvailableFontsSync } from "./FontList";
+import { getFonts } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { ConfigDatabaseImpl, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory,
   getUserKeybindingsDirectory, setupAppData, sanitizeAndIinitializeConfigs as sanitizeAndInitializeConfigs,
@@ -43,7 +41,6 @@ import { MainDesktop } from "./MainDesktop";
 
 SourceMapSupport.install();
 
-const isWindows = process.platform === "win32";
 const isDarwin = process.platform === "darwin";
 
 // crashReporter.start(); // Report crashes
@@ -51,7 +48,6 @@ const isDarwin = process.platform === "darwin";
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
 const THEMES_DIRECTORY = "themes";
-const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 const PACKAGE_JSON_PATH = "../../../package.json";
 
 const _log = getLogger("main");
@@ -297,67 +293,6 @@ function systemConfiguration(config: GeneralConfig, keybindingsIOManager: Keybin
 function setupOSX(): void {
   child_process.execFileSync("defaults", ["write",
     "com.electron.extraterm", "ApplePressAndHoldEnabled", "-bool", "false"]);
-}
-
-function getFonts(): FontInfo[] {
-  const allAvailableFonts = getAvailableFontsSync();
-  const usableFonts = allAvailableFonts.filter(fontInfo => {
-    const path = fontInfo.path.toLowerCase();
-    if ( ! path.endsWith(".ttf") && ! path.endsWith(".otf") && ! path.endsWith(".dfont")) {
-      return false;
-    }
-    if (fontInfo.italic || fontInfo.style.indexOf("Oblique") !== -1) {
-      return false;
-    }
-    if (fontInfo.weight > 600) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const systemFonts = usableFonts.map(result => {
-    const name = result.family + (result.style==="Regular" ? "" : " " + result.style) +
-      (result.italic && result.style.indexOf("Italic") === -1 ? " Italic" : "");
-    const fontInfo: FontInfo = {
-      name: name,
-      path: pathToUrl(result.path),
-      postscriptName: result.postscriptName
-    };
-    return fontInfo;
-  } );
-
-  const allFonts = [...getBundledFonts(), ...systemFonts];
-  const fonts = _.uniqBy(allFonts, x => x.postscriptName);
-  return fonts;
-}
-
-function getBundledFonts(): FontInfo[] {
-  const fontsDir = path.join(__dirname, TERMINAL_FONTS_DIRECTORY);
-  const result: FontInfo[] = [];
-  if (fs.existsSync(fontsDir)) {
-    const contents = fs.readdirSync(fontsDir);
-    contents.forEach( (item) => {
-      if (item.endsWith(".ttf")) {
-        const ttfPath = path.join(fontsDir, item);
-        const fi = fontInfo(ttfPath);
-        result.push( {
-          path: pathToUrl(ttfPath),
-          name: fi.name.fontName,
-          postscriptName: fi.name.postscriptName
-        });
-      }
-    });
-  }
-
-  return result;
-}
-
-function pathToUrl(path: string): string {
-  if (isWindows) {
-    return path.replace(/\\/g, "/");
-  }
-  return path;
 }
 
 function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileStorage,
