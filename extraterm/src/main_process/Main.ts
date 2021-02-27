@@ -56,21 +56,10 @@ const PACKAGE_JSON_PATH = "../../../package.json";
 
 const _log = getLogger("main");
 
-let themeManager: ThemeManager;
-let ptyManager: PtyManager;
-let configDatabase: ConfigDatabaseImpl;
-let titleBarStyle: TitleBarStyle = "compact";
-let localHttpServer: LocalHttpServer = null;
-let bulkFileStorage: BulkFileStorage = null;
-let extensionManager: MainExtensionManager = null;
-let keybindingsIOManager: KeybindingsIOManager = null;
-let globalKeybindingsManager: GlobalKeybindingsManager = null;
-let mainIpc: MainIpc = null;
 
-
-function main(): void {
+async function main(): Promise<void> {
   let failed = false;
-  configDatabase = new ConfigDatabaseImpl();
+  const configDatabase = new ConfigDatabaseImpl();
 
   setupAppData();
   setupLogging();
@@ -107,23 +96,25 @@ function main(): void {
 
   // We have to start up the extension manager before we can scan themes (with the help of extensions)
   // and properly sanitize the config.
-  extensionManager = setupExtensionManager(configDatabase, userStoredConfig.activeExtensions);
+  const extensionManager = setupExtensionManager(configDatabase, userStoredConfig.activeExtensions);
 
-  keybindingsIOManager = setupKeybindingsIOManager(extensionManager);
-  themeManager = setupThemeManager(configDatabase, extensionManager);
+  const keybindingsIOManager = setupKeybindingsIOManager(configDatabase, extensionManager);
+  const themeManager = setupThemeManager(configDatabase, extensionManager);
 
   sanitizeAndInitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
     availableFonts);
-  titleBarStyle = userStoredConfig.titleBarStyle;
+  const titleBarStyle = userStoredConfig.titleBarStyle;
   const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
-  const systemConfig = systemConfiguration(userStoredConfig, keybindingsIOManager, availableFonts, packageJson);
+  const systemConfig = systemConfiguration(userStoredConfig, keybindingsIOManager, availableFonts, packageJson,
+    titleBarStyle);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 
   if ( ! userStoredConfig.isHardwareAccelerated) {
     app.disableHardwareAcceleration();
   }
 
-  if ( ! setupPtyManager()) {
+  const ptyManager = setupPtyManager(configDatabase, extensionManager);
+  if (ptyManager == null) {
     failed = true;
   }
 
@@ -132,20 +123,38 @@ function main(): void {
       "Something went wrong while starting up Extraterm.\n" +
       "Message log is:\n" + _log.getFormattedLogMessages());
     process.exit(1);
-    return;
   }
 
   _log.stopRecording();
 
-  setupDefaultSessions();
-
-  // Quit when all windows are closed.
-  app.on('window-all-closed', shutdown);
+  setupDefaultSessions(configDatabase, ptyManager);
 
   // This method will be called when Electron has done everything
   // initialization and ready for creating browser windows.
-  app.on('ready', () => electronReady(parsedArgs));
+  app.on('ready', () => electronReady(parsedArgs, configDatabase, extensionManager, keybindingsIOManager, themeManager,
+    ptyManager));
 }
+
+async function electronReady(parsedArgs: Command, configDatabase: ConfigDatabaseImpl,
+    extensionManager: MainExtensionManager, keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager,
+    ptyManager: PtyManager): Promise<void> {
+
+  const bulkFileStorage = setupBulkFileStorage();
+  const localHttpServer = await setupLocalHttpServer(bulkFileStorage, extensionManager);
+
+  const mainDesktop = new MainDesktop(configDatabase, themeManager);
+  const globalKeybindingsManager = setupGlobalKeybindingsManager(configDatabase, keybindingsIOManager, mainDesktop);
+
+  setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
+    keybindingsIOManager, themeManager, ptyManager);
+
+  // Quit when all windows are closed.
+  app.on('window-all-closed', () => shutdown(bulkFileStorage, localHttpServer));
+
+  mainDesktop.start();
+  mainDesktop.openWindow({openDevTools: parsedArgs.devTools});
+}
+
 
 function setupExtensionManager(configDatabase: ConfigDatabase,
     initialActiveExtensions: {[name: string]: boolean;}): MainExtensionManager {
@@ -157,12 +166,8 @@ function setupExtensionManager(configDatabase: ConfigDatabase,
     extensionPaths.push(userExtensionDirectory);
   }
 
-  const extensionManager = new MainExtensionManager(extensionPaths);
-  injectConfigDatabase(extensionManager, configDatabase);
+  const extensionManager = new MainExtensionManager(configDatabase, extensionPaths);
   extensionManager.startUpExtensions(initialActiveExtensions);
-  extensionManager.onDesiredStateChanged(() => {
-    mainIpc.sendExtensionDesiredStateMessage();
-  });
 
   const commands = extensionManager.getExtensionContextByName("internal-main-commands").commands;
   commands.registerCommand("extraterm:window.listAll", (args: any) => commandWindowListAll());
@@ -174,17 +179,19 @@ function commandWindowListAll(): void {
   _log.debug("commandWindowListAll()");
 }
 
-function setupKeybindingsIOManager(extensionManager: MainExtensionManager): KeybindingsIOManager {
+function setupKeybindingsIOManager(configDatabase: ConfigDatabaseImpl,
+    extensionManager: MainExtensionManager): KeybindingsIOManager {
+
   const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
-
   keybindingsIOManager.onUpdate(() => {
-    updateSystemConfigKeybindings();
+    updateSystemConfigKeybindings(configDatabase, keybindingsIOManager);
   });
-
   return keybindingsIOManager;
 }
 
-function updateSystemConfigKeybindings(): void {
+function updateSystemConfigKeybindings(configDatabase: ConfigDatabaseImpl,
+    keybindingsIOManager: KeybindingsIOManager): void {
+
   // Broadcast the updated bindings.
   const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
@@ -203,42 +210,12 @@ function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: Mai
   return themeManager;
 }
 
-async function electronReady(parsedArgs: Command): Promise<void> {
-  setupBulkFileStorage();
-  await setupLocalHttpServer();
 
-  const mainDesktop = new MainDesktop(configDatabase, themeManager);
-  setupGlobalKeybindingsManager(mainDesktop);
+async function setupLocalHttpServer(bulkFileStorage: BulkFileStorage,
+    extensionManager: MainExtensionManager): Promise<LocalHttpServer> {
 
-  mainIpc = setupIpc(mainDesktop);
-
-  mainDesktop.onAboutSelected(() => {
-    mainIpc.sendCommandToWindow("extraterm:window.openAbout");
-  });
-  mainDesktop.onPreferencesSelected(() => {
-    mainIpc.sendCommandToWindow("extraterm:window.openSettings");
-  });
-  mainDesktop.onQuitSelected(() => {
-    mainIpc.sendQuitApplicationRequest();
-  });
-  mainDesktop.onDevToolsClosed((devToolsWindow: BrowserWindow)=> {
-    sendDevToolStatus(devToolsWindow, false);
-  });
-  mainDesktop.onDevToolsOpened((devToolsWindow: BrowserWindow)=> {
-    sendDevToolStatus(devToolsWindow, true);
-  });
-
-  mainDesktop.onWindowClosed((webContentsId: number) => {
-    mainIpc.cleanUpPtyWindow(webContentsId);
-  });
-
-  mainDesktop.start();
-  mainDesktop.openWindow({openDevTools: parsedArgs.devTools});
-}
-
-async function setupLocalHttpServer(): Promise<void> {
   const ipcFilePath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, IPC_FILENAME);
-  localHttpServer = new LocalHttpServer(ipcFilePath);
+  const localHttpServer = new LocalHttpServer(ipcFilePath);
   await localHttpServer.start();
 
   bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
@@ -247,23 +224,16 @@ async function setupLocalHttpServer(): Promise<void> {
 
   const commandRequestHandler = new CommandRequestHandler(extensionManager);
   localHttpServer.registerRequestHandler("command", commandRequestHandler);
+
+  return localHttpServer;
 }
 
-function setupBulkFileStorage(): void {
-  bulkFileStorage = new BulkFileStorage(os.tmpdir());
-  bulkFileStorage.onWriteBufferSize(
-    (event: BufferSizeEvent) => {
-      mainIpc.sendBulkFileWriteBufferSizeEvent(event);
-    }
-  );
-  bulkFileStorage.onClose(
-    (event: CloseEvent) => {
-      mainIpc.sendBulkFileStateChangeEvent(event);
-    }
-  );
+function setupBulkFileStorage(): BulkFileStorage {
+  const bulkFileStorage = new BulkFileStorage(os.tmpdir());
+  return bulkFileStorage;
 }
 
-function shutdown(): void {
+function shutdown(bulkFileStorage: BulkFileStorage, localHttpServer: LocalHttpServer): void {
   if (localHttpServer != null) {
     localHttpServer.dispose();
   }
@@ -273,12 +243,15 @@ function shutdown(): void {
   app.quit();
 }
 
-function setupGlobalKeybindingsManager(mainDesktop: MainDesktop): void {
-  globalKeybindingsManager = new GlobalKeybindingsManager(keybindingsIOManager, configDatabase);
+function setupGlobalKeybindingsManager(configDatabase: ConfigDatabaseImpl, keybindingsIOManager: KeybindingsIOManager,
+    mainDesktop: MainDesktop): GlobalKeybindingsManager {
+
+  const globalKeybindingsManager = new GlobalKeybindingsManager(keybindingsIOManager, configDatabase);
   globalKeybindingsManager.onMaximizeWindow(mainDesktop.maximizeAllWindows.bind(mainDesktop));
   globalKeybindingsManager.onToggleShowHideWindow(mainDesktop.toggleAllWindows.bind(mainDesktop));
   globalKeybindingsManager.onShowWindow(mainDesktop.restoreAllWindows.bind(mainDesktop));
   globalKeybindingsManager.onHideWindow(mainDesktop.minimizeAllWindows.bind(mainDesktop));
+  return globalKeybindingsManager;
 }
 
 function setupLogging(): void {
@@ -305,7 +278,7 @@ function setupLogging(): void {
  * Extra information about the system configuration and platform.
  */
 function systemConfiguration(config: GeneralConfig, keybindingsIOManager: KeybindingsIOManager,
-    availableFonts: FontInfo[], packageJson: any): SystemConfig {
+    availableFonts: FontInfo[], packageJson: any, titleBarStyle: TitleBarStyle): SystemConfig {
 
   const homeDir = app.getPath('home');
 
@@ -388,25 +361,64 @@ function pathToUrl(path: string): string {
   return path;
 }
 
-function setupIpc(mainDesktop: MainDesktop): MainIpc {
+function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileStorage,
+  extensionManager: MainExtensionManager, globalKeybindingsManager: GlobalKeybindingsManager, mainDesktop: MainDesktop,
+  keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, ptyManager: PtyManager): MainIpc {
+
   const mainIpc = new MainIpc(configDatabase, bulkFileStorage,
     extensionManager, ptyManager,keybindingsIOManager,
     mainDesktop, themeManager, globalKeybindingsManager);
+
+  extensionManager.onDesiredStateChanged(() => {
+    mainIpc.sendExtensionDesiredStateMessage();
+  });
+
+  bulkFileStorage.onWriteBufferSize((event: BufferSizeEvent) => {
+    mainIpc.sendBulkFileWriteBufferSizeEvent(event);
+  });
+
+  bulkFileStorage.onClose((event: CloseEvent) => {
+    mainIpc.sendBulkFileStateChangeEvent(event);
+  });
+
+  mainDesktop.onAboutSelected(() => {
+    mainIpc.sendCommandToWindow("extraterm:window.openAbout");
+  });
+
+  mainDesktop.onPreferencesSelected(() => {
+    mainIpc.sendCommandToWindow("extraterm:window.openSettings");
+  });
+
+  mainDesktop.onQuitSelected(() => {
+    mainIpc.sendQuitApplicationRequest();
+  });
+
+  mainDesktop.onDevToolsClosed((devToolsWindow: BrowserWindow)=> {
+    sendDevToolStatus(devToolsWindow, false);
+  });
+
+  mainDesktop.onDevToolsOpened((devToolsWindow: BrowserWindow)=> {
+    sendDevToolStatus(devToolsWindow, true);
+  });
+
+  mainDesktop.onWindowClosed((webContentsId: number) => {
+    mainIpc.cleanUpPtyWindow(webContentsId);
+  });
+
   mainIpc.start();
   return mainIpc;
 }
 
-function setupPtyManager(): boolean {
+function setupPtyManager(configDatabase: ConfigDatabaseImpl, extensionManager: MainExtensionManager): PtyManager {
   try {
-    ptyManager = new PtyManager(extensionManager, configDatabase);
-    return true;
+    return new PtyManager(extensionManager, configDatabase);
   } catch(err) {
     _log.severe("Error occured while creating the PTY connector factory: " + err.message);
-    return false;
+    return null;
   }
 }
 
-function setupDefaultSessions(): void {
+function setupDefaultSessions(configDatabase: ConfigDatabaseImpl, ptyManager: PtyManager): void {
   const sessions = configDatabase.getConfigCopy(SESSION_CONFIG);
   if (sessions == null || sessions.length === 0) {
     const newSessions = ptyManager.getDefaultSessions();

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
- 
+
 /*
  * This little utility can be run from the command line using node. It lets you view the metadata of all of the
  * themes in the src/themes directory, and it can compile a theme into CSS and report any errors.
@@ -42,7 +42,7 @@ class ThemeManagerUtility {
       syntax: [],
       terminal: []
     };
-    this._tm = new ThemeManager(paths, new MainExtensionManager([]));
+    this._tm = new ThemeManager(paths, new MainExtensionManager(null, []));
 
     if (options.list) {
       this._listThemes();
@@ -86,7 +86,7 @@ class ThemeManagerUtility {
       print(`Unable to find theme with ID '${themeId}'.`);
       process.exit(1);
     }
-    
+
     for (const themeInfo of themes) {
       if (outputDir != null) {
         this._makeDirIfMissing(outputDir);
@@ -123,7 +123,7 @@ class ThemeManagerUtility {
         const output = path.join(outputDir, cssFilename);
         print(`Writing ${output}`);
         fs.writeFileSync(output, item.contents);
-        
+
       } else {
         print("/* SCSS " + cssFileToFilename(item.cssFileName) + " */");
         print(item.contents);

@@ -15,7 +15,7 @@ import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from "../../render_process/extension/InternalTypes";
-import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG } from "../../Config";
+import { ConfigDatabase, GENERAL_CONFIG } from "../../Config";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { MainInternalExtensionContext, LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution,
   LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
@@ -28,7 +28,7 @@ interface ActiveExtension {
   module: any;
 }
 
-export class MainExtensionManager implements AcceptsConfigDatabase {
+export class MainExtensionManager {
 
   private _log: Logger = null;
   private _configDatabase: ConfigDatabase = null;
@@ -38,14 +38,11 @@ export class MainExtensionManager implements AcceptsConfigDatabase {
   private _desiredStateChangeEventEmitter = new EventEmitter<void>();
   onDesiredStateChanged: Event<void>;
 
-  constructor(private extensionPaths: string[]) {
+  constructor(configDatabase: ConfigDatabase, private extensionPaths: string[]) {
     this._log = getLogger("MainExtensionManager", this);
+    this._configDatabase = configDatabase;
     this.onDesiredStateChanged = this._desiredStateChangeEventEmitter.event;
     this._extensionMetadata = this._scan(this.extensionPaths);
-  }
-
-  setConfigDatabase(newConfigDatabase: ConfigDatabase): void {
-    this._configDatabase = newConfigDatabase;
   }
 
   startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): void {
