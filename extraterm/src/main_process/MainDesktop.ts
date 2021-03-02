@@ -270,7 +270,7 @@ export class MainDesktop {
     }
   }
 
-  openWindow(options: OpenWindowOptions=null): void {
+  openWindow(options: OpenWindowOptions=null): number {
     const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
     const themeInfo = this.#themeManager.getTheme(generalConfig.themeGUI);
 
@@ -355,6 +355,11 @@ export class MainDesktop {
     });
 
     this.#appWindowIds.push(newWindow.id);
+    return newWindow.id;
+  }
+
+  getAllWindowIds(): number[] {
+    return Array.from(this.#appWindowIds.keys());
   }
 
   private _checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWindowConfiguration): void {

@@ -4,12 +4,25 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as http from "http";
-import * as net from 'net';
 import { getLogger, Logger } from "extraterm-logging";
 import * as getStream from "get-stream";
 
 import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType";
 import { MainExtensionManager } from "../extension/MainExtensionManager";
+
+const BAD_REQUEST_400 = 400;
+const METHOD_NOT_ALLOWED_405 = 405;
+const OK_200 = 200;
+const NO_CONTENT_204 = 204;
+const INTERNAL_SERVER_ERROR_500 = 500;
+
+const SUCCESS_STATUS_CODES = [OK_200, NO_CONTENT_204];
+
+
+interface HttpResponse {
+  statusCode: number,
+  body?: any
+}
 
 
 export class CommandRequestHandler implements RequestHandler {
@@ -22,47 +35,85 @@ export class CommandRequestHandler implements RequestHandler {
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse, path: string, context: RequestContext): Promise<void> {
+    const response = await this._handleRequest(req, path, context);
+
+    if ( ! SUCCESS_STATUS_CODES.includes(response.statusCode)) {
+      this._log.warn(`${response.statusCode}: ${response.body}`);
+    }
+
+    res.statusCode = response.statusCode;
+    res.setHeader("Content-Type", "application/json");
+    if (response.body == null) {
+      res.end();
+    } else {
+      res.end(JSON.stringify(response.body));
+    }
+  }
+
+  private async _handleRequest(req: http.IncomingMessage, path: string, context: RequestContext): Promise<HttpResponse> {
     if (req.method !== "POST" || path !== "") {
-      this._sendErrorResponse(res, 404);
-      return;
+      return {
+        statusCode: METHOD_NOT_ALLOWED_405,
+        body: {
+          message: "Method not allowed"
+        }
+      };
     }
 
     try {
       const body = await getStream(req);
-this._log.debug(body);
 
       let jsonBody: object = null;
       try {
         jsonBody = JSON.parse(body);
       } catch (e) {
-        this._sendErrorResponse(res, 400);  // Bad Request
-        return;
+        return {
+          statusCode: BAD_REQUEST_400,
+          body: {
+            message: "Bad request. JSON body failed to parse."
+          }
+        };
       }
 
-      this._processBody(jsonBody);
-
-      res.statusCode = 200;
-      res.setHeader("Content-Type", "text/plain");
-      res.end("Thanks y'all!");
-
+      return this._processBody(jsonBody);
     } catch(error) {
       this._log.warn(error);
+      return {
+        statusCode: INTERNAL_SERVER_ERROR_500,
+        body: {
+          message: "Internal server error. Consult the Extraterm logs for details."
+        }
+      };
     }
   }
 
-  private _sendErrorResponse(res: http.ServerResponse, statusCode: number): void {
-    res.statusCode = statusCode;
-    res.setHeader("Content-Type", "text/plain");
-    res.end("");
-  }
-
-  private _processBody(jsonBody: any): void {
+  private async _processBody(jsonBody: any): Promise<HttpResponse> {
     const commandName = jsonBody.command;
     if (commandName == null) {
       this._log.warn(`'command' was missing from the POST body.`);
-      return;
+      return {
+        statusCode: BAD_REQUEST_400,
+        body: {
+          message: "`'command' was missing from the POST body.`"
+        }
+      };
     }
 
-    this.#mainExtensionManager.executeCommand(commandName);
+    const result = this.#mainExtensionManager.executeCommand(commandName);
+    if (result == null) {
+      return {
+        statusCode: NO_CONTENT_204
+      };
+    }
+
+    let finalResult: any = result;
+    if (result instanceof Promise) {
+      finalResult = await result;
+    }
+
+    return {
+      statusCode: OK_200,
+      body: finalResult
+    };
   }
 }

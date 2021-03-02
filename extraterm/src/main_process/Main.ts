@@ -37,6 +37,7 @@ import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
 import { MainIpc } from "./MainIpc";
 import { MainDesktop } from "./MainDesktop";
+import { registerInternalCommands } from "./InternalMainCommands";
 
 
 SourceMapSupport.install();
@@ -133,6 +134,8 @@ async function main(): Promise<void> {
   const mainDesktop = new MainDesktop(configDatabase, themeManager);
   const globalKeybindingsManager = setupGlobalKeybindingsManager(configDatabase, keybindingsIOManager, mainDesktop);
 
+  registerInternalCommands(extensionManager, mainDesktop);
+
   setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
     keybindingsIOManager, themeManager, ptyManager);
 
@@ -164,14 +167,7 @@ function setupExtensionManager(configDatabase: ConfigDatabase,
   const extensionManager = new MainExtensionManager(configDatabase, extensionPaths);
   extensionManager.startUpExtensions(initialActiveExtensions);
 
-  const commands = extensionManager.getExtensionContextByName("internal-main-commands").commands;
-  commands.registerCommand("extraterm:window.listAll", (args: any) => commandWindowListAll());
-
   return extensionManager;
-}
-
-function commandWindowListAll(): void {
-  _log.debug("commandWindowListAll()");
 }
 
 function setupKeybindingsIOManager(configDatabase: ConfigDatabaseImpl,
