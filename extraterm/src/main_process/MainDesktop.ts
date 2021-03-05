@@ -359,7 +359,7 @@ export class MainDesktop {
   }
 
   getAllWindowIds(): number[] {
-    return Array.from(this.#appWindowIds.keys());
+    return [...this.#appWindowIds];
   }
 
   private _checkWindowBoundsLater(window: BrowserWindow, desiredConfig: SingleWindowConfiguration): void {

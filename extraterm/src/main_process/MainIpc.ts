@@ -7,6 +7,7 @@ import { BrowserWindow, ipcMain as ipc, clipboard, webContents } from "electron"
 import * as _ from "lodash";
 import { BulkFileState } from '@extraterm/extraterm-extension-api';
 import { getLogger, Logger, log } from "extraterm-logging";
+import { createUuid } from 'extraterm-uuid';
 
 import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
 import { GENERAL_CONFIG, GeneralConfig, ConfigDatabase } from "../Config";
@@ -22,6 +23,11 @@ import { MainDesktop } from "./MainDesktop";
 
 
 const LOG_FINE = false;
+
+interface PromisePairFunctions {
+  resolve: (result: any) => void;
+  reject: (result: any) => void;
+}
 
 /**
  * Main IPC
@@ -43,6 +49,7 @@ export class MainIpc {
   #themeManager: ThemeManager = null;
 
   #ptyToSenderMap = new Map<number, number>();
+  #waitingExecuteCommands = new Map<string, PromisePairFunctions>();
 
   constructor(configDatabase: ConfigDatabase, bulkFileStorage: BulkFileStorage, extensionManager: MainExtensionManager,
       ptyManager: PtyManager, keybindingsIOManager: KeybindingsIOManager, mainDesktop: MainDesktop,
@@ -158,16 +165,31 @@ export class MainIpc {
     window.webContents.send(Messages.CHANNEL_NAME, msg);
   }
 
-  sendCommandToWindow(commandName: string): void {
+  sendCommandToAllWindows(commandName: string, args: any): void {
+    const messageUuid = createUuid();
     const msg: Messages.ExecuteCommandMessage = {
-      type: Messages.MessageType.EXECUTE_COMMAND,
-      commandName
+      type: Messages.MessageType.EXECUTE_COMMAND_REQUEST,
+      uuid: messageUuid,
+      commandName,
+      args
     };
-    // FIXME is spamming every window the right thing?
-    for (const windowId of this.#mainDesktop.getBrowserWindowIds()) {
+    this._sendMessageToAllWindows(msg);
+  }
+
+  sendCommandToWindow(commandName: string, windowId: number, args: any): Promise<any> {
+    const messageUuid = createUuid();
+    const msg: Messages.ExecuteCommandMessage = {
+      type: Messages.MessageType.EXECUTE_COMMAND_REQUEST,
+      uuid: messageUuid,
+      commandName,
+      args
+    };
+
+    return new Promise((resolve, reject) => {
       const window = BrowserWindow.fromId(windowId);
       window.webContents.send(Messages.CHANNEL_NAME, msg);
-    }
+      this.#waitingExecuteCommands.set(messageUuid, { resolve, reject });
+    });
   }
 
   private _sendMessageToAllWindows(msg: Messages.Message): void {
@@ -177,6 +199,18 @@ export class MainIpc {
       }
       window.webContents.send(Messages.CHANNEL_NAME, msg);
     }
+  }
+
+  private _handleCommandResponse(msg: Messages.ExecuteCommandResponseMessage): void {
+    const promisePairFunctions = this.#waitingExecuteCommands.get(msg.uuid);
+
+    if (msg.exception == null) {
+      promisePairFunctions.resolve(msg.result);
+    } else {
+      promisePairFunctions.reject(msg.exception);
+    }
+
+    this.#waitingExecuteCommands.delete(msg.uuid);
   }
 
   private _handleIpc(event: Electron.IpcMainEvent, arg: any): void {
@@ -227,6 +261,10 @@ export class MainIpc {
 
       case Messages.MessageType.DEV_TOOLS_REQUEST:
         this._handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
+        break;
+
+      case Messages.MessageType.EXECUTE_COMMAND_RESPONSE:
+        this._handleCommandResponse(<Messages.ExecuteCommandResponseMessage> msg);
         break;
 
       case Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST:

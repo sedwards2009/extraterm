@@ -161,12 +161,25 @@ function startUpWebIpc(): void {
   WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
 
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
-  WebIpc.registerDefaultHandler(Messages.MessageType.EXECUTE_COMMAND, handleExecuteCommand);
+  WebIpc.registerDefaultHandler(Messages.MessageType.EXECUTE_COMMAND_REQUEST, handleExecuteCommand);
 }
 
-function handleExecuteCommand(msg: Messages.Message): void {
-  const executeCommandMessage = <Messages.ExecuteCommandMessage> msg;
-  extensionManager.executeCommand(executeCommandMessage.commandName);
+function handleExecuteCommand(msg: Messages.ExecuteCommandMessage): void {
+  doLater(async () => {
+    const executeCommandMessage = <Messages.ExecuteCommandMessage> msg;
+    let exception: any = null;
+    let result: any = null;
+    try {
+      result = extensionManager.executeCommand(executeCommandMessage.commandName, executeCommandMessage.args);
+      if (result instanceof Promise) {
+        result = await result;
+      }
+    } catch(ex) {
+      exception = ex;
+    }
+
+    WebIpc.commandResponse(msg.uuid, result, exception);
+  });
 }
 
 function startUpWebIpcConfigHandling(): void {

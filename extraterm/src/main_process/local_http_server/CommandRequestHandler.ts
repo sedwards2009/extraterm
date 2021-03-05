@@ -9,6 +9,8 @@ import * as getStream from "get-stream";
 
 import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType";
 import { MainExtensionManager } from "../extension/MainExtensionManager";
+import { MainIpc } from "../MainIpc";
+import { MainDesktop } from "../MainDesktop";
 
 const BAD_REQUEST_400 = 400;
 const METHOD_NOT_ALLOWED_405 = 405;
@@ -18,7 +20,6 @@ const INTERNAL_SERVER_ERROR_500 = 500;
 
 const SUCCESS_STATUS_CODES = [OK_200, NO_CONTENT_204];
 
-
 interface HttpResponse {
   statusCode: number,
   body?: any
@@ -27,11 +28,15 @@ interface HttpResponse {
 
 export class CommandRequestHandler implements RequestHandler {
   private _log: Logger = null;
+  #mainDesktop: MainDesktop = null;
   #mainExtensionManager: MainExtensionManager = null;
+  #mainIpc: MainIpc = null;
 
-  constructor(mainExtensionManager: MainExtensionManager) {
+  constructor(mainDesktop: MainDesktop, mainExtensionManager: MainExtensionManager, mainIpc: MainIpc) {
     this._log = getLogger("CommandRequestHandler", this);
+    this.#mainDesktop = mainDesktop;
     this.#mainExtensionManager = mainExtensionManager;
+    this.#mainIpc = mainIpc;
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse, path: string, context: RequestContext): Promise<void> {
@@ -99,21 +104,60 @@ export class CommandRequestHandler implements RequestHandler {
       };
     }
 
-    const result = this.#mainExtensionManager.executeCommand(commandName);
-    if (result == null) {
-      return {
-        statusCode: NO_CONTENT_204
-      };
+    let result: any = null;
+    if (this.#mainExtensionManager.hasCommand(commandName)) {
+      result = this.#mainExtensionManager.executeCommand(commandName, this._collectArgs(jsonBody));
+      // FIXME what do we do if we get an Error object.
+      if (result == null) {
+        return {
+          statusCode: NO_CONTENT_204
+        };
+      }
+    } else {
+
+      const windowIdStr = jsonBody.window;
+      let windowId: number = null;
+      if (windowIdStr != null) {
+        windowId = Number.parseInt(windowIdStr, 10);
+        if (Number.isNaN(windowId)) {
+          return {
+            statusCode: BAD_REQUEST_400,
+            body: {
+              message: "`Parameter 'window' could not be parsed.`"
+            }
+          };
+        }
+
+        if (this.#mainDesktop.getAllWindowIds().indexOf(windowId) === -1) {
+          return {
+            statusCode: BAD_REQUEST_400,
+            body: {
+              message: "`Invalid value for parameter 'window' was given.`"
+            }
+          };
+        }
+      } else {
+        windowId = this.#mainDesktop.getAllWindowIds()[0];
+      }
+
+      result = await this.#mainIpc.sendCommandToWindow(commandName, windowId, this._collectArgs(jsonBody.args));
     }
 
-    let finalResult: any = result;
     if (result instanceof Promise) {
-      finalResult = await result;
+      result = await result;
     }
 
     return {
       statusCode: OK_200,
-      body: finalResult
+      body: result
     };
+  }
+
+  private _collectArgs(jsonBody: any): object {
+    const result = {};
+    if (jsonBody == null) {
+      return result;
+    }
+    return result;
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -281,5 +281,15 @@ export function requestQuitApplication(): void {
 
 export function newWindow(): void {
   const msg: Messages.NewWindowMessage = { type: Messages.MessageType.NEW_WINDOW };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function commandResponse(uuid: string, result: any, exception: any): void {
+  const msg: Messages.ExecuteCommandResponseMessage = {
+    type: Messages.MessageType.EXECUTE_COMMAND_RESPONSE,
+    uuid,
+    result,
+    exception
+  };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }

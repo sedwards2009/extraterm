@@ -42,7 +42,8 @@ export enum MessageType {
   CONFIG_BROADCAST,
   DEV_TOOLS_REQUEST,
   DEV_TOOLS_STATUS,
-  EXECUTE_COMMAND,
+  EXECUTE_COMMAND_REQUEST,
+  EXECUTE_COMMAND_RESPONSE,
   EXTENSION_DESIRED_STATE_REQUEST,
   EXTENSION_DESIRED_STATE,
   EXTENSION_DISABLE,
@@ -542,7 +543,20 @@ export interface QuitApplicationMessage extends Message {}
  * Sent to a window to execute a command.
  */
 export interface ExecuteCommandMessage extends Message {
+  uuid: string;
   commandName: string;
+  args: any;
+}
+
+/**
+ * Sent from a window in response to a command.
+ *
+ * Contains the result of the command.
+ */
+export interface ExecuteCommandResponseMessage extends Message {
+  uuid: string;
+  result?: any;
+  exception?: any;
 }
 
 /**

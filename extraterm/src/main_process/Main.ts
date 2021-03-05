@@ -129,15 +129,16 @@ async function main(): Promise<void> {
   await electronReady();
 
   const bulkFileStorage = setupBulkFileStorage();
-  const localHttpServer = await setupLocalHttpServer(bulkFileStorage, extensionManager);
 
   const mainDesktop = new MainDesktop(configDatabase, themeManager);
   const globalKeybindingsManager = setupGlobalKeybindingsManager(configDatabase, keybindingsIOManager, mainDesktop);
 
   registerInternalCommands(extensionManager, mainDesktop);
 
-  setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
+  const mainIpc = setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
     keybindingsIOManager, themeManager, ptyManager);
+
+  const localHttpServer = await setupLocalHttpServer(bulkFileStorage, mainDesktop, extensionManager, mainIpc);
 
   // Quit when all windows are closed.
   app.on("window-all-closed", () => shutdown(bulkFileStorage, localHttpServer));
@@ -202,8 +203,8 @@ function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: Mai
 }
 
 
-async function setupLocalHttpServer(bulkFileStorage: BulkFileStorage,
-    extensionManager: MainExtensionManager): Promise<LocalHttpServer> {
+async function setupLocalHttpServer(bulkFileStorage: BulkFileStorage, mainDesktop: MainDesktop,
+    extensionManager: MainExtensionManager, mainIpc: MainIpc): Promise<LocalHttpServer> {
 
   const ipcFilePath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, IPC_FILENAME);
   const localHttpServer = new LocalHttpServer(ipcFilePath);
@@ -213,7 +214,7 @@ async function setupLocalHttpServer(bulkFileStorage: BulkFileStorage,
   const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
   localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
 
-  const commandRequestHandler = new CommandRequestHandler(extensionManager);
+  const commandRequestHandler = new CommandRequestHandler(mainDesktop, extensionManager, mainIpc);
   localHttpServer.registerRequestHandler("command", commandRequestHandler);
 
   return localHttpServer;
@@ -312,11 +313,11 @@ function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileS
   });
 
   mainDesktop.onAboutSelected(() => {
-    mainIpc.sendCommandToWindow("extraterm:window.openAbout");
+    mainIpc.sendCommandToAllWindows("extraterm:window.openAbout", null);
   });
 
   mainDesktop.onPreferencesSelected(() => {
-    mainIpc.sendCommandToWindow("extraterm:window.openSettings");
+    mainIpc.sendCommandToAllWindows("extraterm:window.openSettings", null);
   });
 
   mainDesktop.onQuitSelected(() => {
