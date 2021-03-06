@@ -602,6 +602,16 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return null;
   }
 
+  private _getSessionByName(sessionName: string): SessionConfiguration {
+    const sessions = this._configManager.getConfigCopy(SESSION_CONFIG);
+    for (const session of sessions) {
+      if (session.name === sessionName) {
+        return session;
+      }
+    }
+    return null;
+  }
+
   private _createPtyForTerminal(newTerminal: EtTerminal, sessionUuid: string, workingDirectory: string): void {
     const extraEnv = {
       [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
@@ -1068,18 +1078,30 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return this._extensionManager.getActiveTabWidget();
   }
 
-  async commandNewTerminal(args: {sessionUuid: string}): Promise<void> {
-    let sessionUuid = args.sessionUuid;
-    if (sessionUuid == null) {
-      sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
+  async commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}):
+      Promise<void> {
+
+    let sessionConfiguration: SessionConfiguration = this._configManager.getConfig(SESSION_CONFIG)[0];
+    if (args.sessionUuid != null) {
+      sessionConfiguration = this._getSessionByUuid(args.sessionUuid);
+      if (sessionConfiguration == null) {
+        throw new Error(`Unable to find session with UUID ${args.sessionUuid}`);
+      }
+    } else if (args.sessionName != null) {
+      sessionConfiguration = this._getSessionByName(args.sessionName);
+      if (sessionConfiguration == null) {
+        throw new Error(`Unable to find session with name ${args.sessionName}`);
+      }
     }
 
-    const sessionConfiguration = this._getSessionByUuid(sessionUuid);
-
-    let workingDirectory = null;
-    const activeTerminal = this._extensionManager.getActiveTerminal();
-    if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
-      workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
+    let workingDirectory: string = null;
+    if (args.workingDirectory != null) {
+      workingDirectory = args.workingDirectory;
+    } else {
+      const activeTerminal = this._extensionManager.getActiveTerminal();
+      if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
+        workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
+      }
     }
 
     const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionConfiguration, workingDirectory);
