@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as path from "path";
-import { Event } from '@extraterm/extraterm-extension-api';
+import { Event } from "@extraterm/extraterm-extension-api";
 import { doLater } from "extraterm-later";
 import { BrowserWindow, Menu, Tray, screen, MenuItemConstructorOptions } from "electron";
 
@@ -12,7 +12,7 @@ import { ConfigChangeEvent, ConfigDatabase, GeneralConfig, GENERAL_CONFIG, Singl
 import * as ResourceLoader from "../ResourceLoader";
 import { ThemeManager } from "../theme/ThemeManager";
 import { bestOverlap } from "./RectangleMatch";
-import { EventEmitter } from '../utils/EventEmitter';
+import { EventEmitter } from "../utils/EventEmitter";
 
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
@@ -139,41 +139,41 @@ export class MainDesktop {
       label: "Extraterm",
       submenu: [
         {
-          label: 'About Extraterm',
+          label: "About Extraterm",
           click: () => {
             this.#onAboutSelectedEventEmitter.fire();
           },
         },
         {
-          type: 'separator'
+          type: "separator"
         },
         {
-          label: 'Preferences...',
+          label: "Preferences...",
           click: () => {
             this.#onPreferencesSelectedEventEmitter.fire();
           },
         },
         {
-          type: 'separator'
+          type: "separator"
         },
         {
-          label: 'Quit',
+          label: "Quit",
           click: () =>  {
             this.#onQuitSelectedEventEmitter.fire();
           },
-          accelerator: 'Command+Q'
+          accelerator: "Command+Q"
         }
       ]
     },
     {
-      label: 'Edit',
+      label: "Edit",
       submenu: [
-        { role: 'undo' },
-        { role: 'redo' },
-        { type: 'separator' },
-        { role: 'cut' },
-        { role: 'copy' },
-        { role: 'paste' },
+        { role: "undo" },
+        { role: "redo" },
+        { type: "separator" },
+        { role: "cut" },
+        { role: "copy" },
+        { role: "paste" },
       ]
     }
     ];
@@ -347,10 +347,10 @@ export class MainDesktop {
     // and load the index.html of the app.
     newWindow.loadURL(ResourceLoader.toUrl("render_process/main.html") + params);
 
-    newWindow.webContents.on('devtools-closed', () => {
+    newWindow.webContents.on("devtools-closed", () => {
       this.#onDevToolsClosedEventEmitter.fire(newWindow);
     });
-    newWindow.webContents.on('devtools-opened', () => {
+    newWindow.webContents.on("devtools-opened", () => {
       this.#onDevToolsOpenedEventEmitter.fire(newWindow);
     });
 
