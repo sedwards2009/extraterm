@@ -140,7 +140,7 @@ export class CommandRequestHandler implements RequestHandler {
         windowId = this.#mainDesktop.getAllWindowIds()[0];
       }
 
-      result = await this.#mainIpc.sendCommandToWindow(commandName, windowId, this._collectArgs(jsonBody.args));
+      result = await this.#mainIpc.sendCommandToWindow(commandName, windowId, this._collectArgs(jsonBody));
     }
 
     if (result instanceof Promise) {
@@ -154,10 +154,9 @@ export class CommandRequestHandler implements RequestHandler {
   }
 
   private _collectArgs(jsonBody: any): object {
-    const result = {};
-    if (jsonBody == null) {
-      return result;
+    if (jsonBody == null || jsonBody.args == null) {
+      return {};
     }
-    return result;
+    return jsonBody.args;
   }
 }
