@@ -10,6 +10,8 @@ const packager = require('electron-packager');
 const dependencyPruner = require('./dependency_pruner');
 const log = console.log.bind(console);
 
+const CONST_EXTRATERM_ELECTRON_EXE = "extraterm_main";
+
 const ignoreRegExp = [
   /^\/build_scripts\b/,
   /^\/extraterm-web-component-decorators\b/,
@@ -236,7 +238,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
     platform: platform,
     version: electronVersion,
     ignore: ignoreFunc,
-    name: platform === "darwin" ? "Extraterm" : "extraterm",
+    name: CONST_EXTRATERM_ELECTRON_EXE,
     overwrite: true,
     out: outputDir,
     prune: false
@@ -246,7 +248,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
     packagerOptions.win32metadata = {
       FileDescription: "Extraterm",
       ProductName: "Extraterm",
-      LegalCopyright: "(C) 2020 Simon Edwards"
+      LegalCopyright: "(C) 2021 Simon Edwards"
     };
   } else if (platform === "darwin") {
     packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.icns";
