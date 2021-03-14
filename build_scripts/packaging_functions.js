@@ -238,7 +238,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
     platform: platform,
     version: electronVersion,
     ignore: ignoreFunc,
-    name: CONST_EXTRATERM_ELECTRON_EXE,
+    name: platform === "darwin" ? "Extraterm" : CONST_EXTRATERM_ELECTRON_EXE,
     overwrite: true,
     out: outputDir,
     prune: false
