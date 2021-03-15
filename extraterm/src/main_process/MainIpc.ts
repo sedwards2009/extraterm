@@ -370,6 +370,10 @@ export class MainIpc {
         this.#mainDesktop.minimizeAllWindows();
         break;
 
+      case Messages.MessageType.WINDOW_SHOW_REQUEST:
+        this._handleWindowShowRequest(event.sender);
+        break;
+
       case Messages.MessageType.TERMINAL_THEME_REQUEST:
         this._handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
         break;
@@ -482,6 +486,17 @@ export class MainIpc {
     };
 
     webContents.send(Messages.CHANNEL_NAME, reply);
+  }
+
+  private async _handleWindowShowRequest(sender: Electron.WebContents): Promise<void> {
+    const callerWindow = BrowserWindow.fromWebContents(sender);
+    await this.#mainDesktop.restoreWindow(callerWindow.id);
+
+    const reply: Messages.WindowShowResponseMessage = {
+      type: Messages.MessageType.WINDOW_SHOW_RESPONSE,
+    };
+
+    sender.send(Messages.CHANNEL_NAME, reply);
   }
 
   private _handlePtyCreate(sender: Electron.WebContents,

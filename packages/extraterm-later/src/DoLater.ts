@@ -143,3 +143,16 @@ export class DebouncedDoLater implements Disposable {
     this._callback = null;
   }
 }
+
+/**
+ * Async compatible version of `doLater()`
+ *
+ * @param msec Optional time delay in ms. Default is 0.
+ */
+export function later(msec=0): Promise<void> {
+  return new Promise((resolve, reject) => {
+    doLater(() => {
+      resolve();
+    }, msec);
+  });
+}

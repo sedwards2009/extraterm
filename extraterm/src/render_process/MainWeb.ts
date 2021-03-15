@@ -437,6 +437,7 @@ function registerCommands(extensionManager: ExtensionManager): void {
   commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
   commands.registerCommand("extraterm:application.openCommandPalette", commandOpenCommandPalette);
   commands.registerCommand("extraterm:application.newWindow", commandNewWindow);
+  commands.registerCommand("extraterm:window.show", commandShow);
 
   EtTerminal.registerCommands(extensionManager);
   TextCommandsRegisterCommands(extensionManager);
@@ -495,6 +496,10 @@ function customizeToggleDeveloperTools(): CustomizedCommand {
   return {
     checked: developerToolMenuChecked
   };
+}
+
+async function commandShow(): Promise<void> {
+  await WebIpc.windowShowRequst();
 }
 
 function commandReloadThemeContents(): void {

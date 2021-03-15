@@ -5,7 +5,7 @@
  */
 import * as path from "path";
 import { Event } from "@extraterm/extraterm-extension-api";
-import { doLater } from "extraterm-later";
+import { later } from "extraterm-later";
 import { BrowserWindow, Menu, Tray, screen, MenuItemConstructorOptions } from "electron";
 
 import { ConfigChangeEvent, ConfigDatabase, GeneralConfig, GENERAL_CONFIG, SingleWindowConfiguration } from "../Config";
@@ -182,9 +182,9 @@ export class MainDesktop {
     Menu.setApplicationMenu(topMenu);
   }
 
-  toggleAllWindows(): void {
+  async toggleAllWindows(): Promise<void> {
     if (this._anyWindowsMinimized()) {
-      this.restoreAllWindows();
+      await this.restoreAllWindows();
     } else {
       this.minimizeAllWindows();
     }
@@ -199,7 +199,7 @@ export class MainDesktop {
     return false;
   }
 
-  maximizeAllWindows(): void {
+  async maximizeAllWindows(): Promise<void> {
     for (const window of BrowserWindow.getAllWindows()) {
       window.show();
       window.maximize();
@@ -209,7 +209,7 @@ export class MainDesktop {
     }
   }
 
-  minimizeAllWindows(): void {
+  async minimizeAllWindows(): Promise<void> {
     this._saveAllWindowDimensions();
 
     for (const window of BrowserWindow.getAllWindows()) {
@@ -222,52 +222,70 @@ export class MainDesktop {
     }
   }
 
-  restoreAllWindows(): void {
+  async restoreAllWindows(): Promise<void> {
+    const promises: Promise<void>[] = [];
+    for (const windowId of this.#appWindowIds) {
+      promises.push(this.restoreWindow(windowId));
+    }
+    await Promise.all(promises);
+  }
+
+  async restoreWindow(windowId: number): Promise<void> {
     let i = 0;
+
+    const promises: Promise<void>[] = [];
     for (const window of BrowserWindow.getAllWindows()) {
-      const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+      if (window.id === windowId) {
+        const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
 
-      const bounds = generalConfig.windowConfiguration[i];
-      if (isLinux) {
-        // On Linux, if a window is the width or height of the screen then
-        // Electron (2.0.13) resizes them (!) to be smaller for some annoying
-        // reason. This is a hack to make sure that windows are restored with
-        // the correct dimensions.
-        if (bounds != null) {
-          window.setBounds(bounds);
-          window.setMinimumSize(bounds.width, bounds.height);
-        }
-
-        if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
-          window.show();
-        }
-        window.restore();
-
-        doLater(() => {
-          window.setMinimumSize(10, 10);
-        }, 100);
-      } else {
-
-        // Windows and macOS
-        if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
+        const bounds = generalConfig.windowConfiguration[i];
+        if (isLinux) {
+          // On Linux, if a window is the width or height of the screen then
+          // Electron (2.0.13) resizes them (!) to be smaller for some annoying
+          // reason. This is a hack to make sure that windows are restored with
+          // the correct dimensions.
           if (bounds != null) {
-            if (bounds.isMaximized === true) {
-              window.maximize();
-            }
-            this._checkWindowBoundsLater(window, bounds);
+            window.setBounds(bounds);
+            window.setMinimumSize(bounds.width, bounds.height);
           }
 
-          window.show();
-        }
-        window.restore();
+          if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
+            window.show();
+          }
+          window.restore();
 
-        doLater(() => {
-          window.moveTop();
-          window.focus();
-        });
+          promises.push(
+            later(100).then(() => {
+              window.setMinimumSize(10, 10);
+            })
+          );
+
+        } else {
+
+          // Windows and macOS
+          if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
+            if (bounds != null) {
+              if (bounds.isMaximized === true) {
+                window.maximize();
+              }
+              this._checkWindowBoundsLater(window, bounds);
+            }
+
+            window.show();
+          }
+          window.restore();
+
+          promises.push(
+            later().then(() => {
+              window.moveTop();
+              window.focus();
+            })
+          );
+        }
       }
       i++;
     }
+    await Promise.all(promises);
   }
 
   openWindow(options: OpenWindowOptions=null): number {

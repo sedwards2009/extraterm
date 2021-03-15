@@ -194,6 +194,11 @@ export function windowMaximizeRequest(): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
+export function windowShowRequst(): Promise<Messages.WindowShowResponseMessage> {
+  const msg: Messages.WindowShowRequestMessage = { type: Messages.MessageType.WINDOW_SHOW_REQUEST };
+  return <Promise<Messages.WindowShowResponseMessage>> request(msg, Messages.MessageType.WINDOW_SHOW_RESPONSE);
+}
+
 export function createBulkFileSync(metadata: BulkFileMetadata, size: number): {identifier: BulkFileIdentifier, url: string} {
   const msg: Messages.BulkFileCreateMessage = {type: Messages.MessageType.BULK_FILE_CREATE, metadata, size};
   const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);

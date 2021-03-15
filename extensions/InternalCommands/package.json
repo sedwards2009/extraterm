@@ -287,6 +287,13 @@
         "when": ""
       },
       {
+        "command": "extraterm:window.show",
+        "title": "Show window",
+        "category": "application",
+        "order": 3000,
+        "when": ""
+      },
+      {
         "command": "extraterm:window.toggleDeveloperTools",
         "title": "Developer Tools",
         "category": "application",
@@ -722,6 +729,10 @@
       "commandPalette": [
         {
           "command": "extraterm:application.openCommandPalette",
+          "show": false
+        },
+        {
+          "command": "extraterm:window.show",
           "show": false
         }
       ],

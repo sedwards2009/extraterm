@@ -82,6 +82,8 @@ export enum MessageType {
   WINDOW_CLOSE_REQUEST,
   WINDOW_MAXIMIZE_REQUEST,
   WINDOW_MINIMIZE_REQUEST,
+  WINDOW_SHOW_REQUEST,
+  WINDOW_SHOW_RESPONSE,
 }
 
 /**
@@ -413,6 +415,12 @@ export interface WindowMinimizeRequestMessage extends Message {
  * This is sent from a render process (and window) to the main process.
  */
 export interface WindowMaximizeRequestMessage extends Message {
+}
+
+export interface WindowShowRequestMessage extends Message {
+}
+
+export interface WindowShowResponseMessage extends Message {
 }
 
 /**
