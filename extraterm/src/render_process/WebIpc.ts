@@ -289,12 +289,12 @@ export function newWindow(): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function commandResponse(uuid: string, result: any, exception: any): void {
+export function commandResponse(uuid: string, result: any, exception: Error): void {
   const msg: Messages.ExecuteCommandResponseMessage = {
     type: Messages.MessageType.EXECUTE_COMMAND_RESPONSE,
     uuid,
     result,
-    exception
+    exception: exception?.message
   };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }

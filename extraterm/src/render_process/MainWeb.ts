@@ -9,7 +9,7 @@ import * as SourceMapSupport from 'source-map-support';
 
 import { Event, CustomizedCommand, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
-import { doLater } from 'extraterm-later';
+import { doLater, later } from 'extraterm-later';
 import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 import { createUuid } from 'extraterm-uuid';
 
@@ -164,22 +164,22 @@ function startUpWebIpc(): void {
   WebIpc.registerDefaultHandler(Messages.MessageType.EXECUTE_COMMAND_REQUEST, handleExecuteCommand);
 }
 
-function handleExecuteCommand(msg: Messages.ExecuteCommandMessage): void {
-  doLater(async () => {
-    const executeCommandMessage = <Messages.ExecuteCommandMessage> msg;
-    let exception: any = null;
-    let result: any = null;
-    try {
-      result = extensionManager.executeCommand(executeCommandMessage.commandName, executeCommandMessage.args);
-      if (result instanceof Promise) {
-        result = await result;
-      }
-    } catch(ex) {
-      exception = ex;
-    }
+async function handleExecuteCommand(msg: Messages.ExecuteCommandMessage): Promise<void> {
+  await later();
 
-    WebIpc.commandResponse(msg.uuid, result, exception);
-  });
+  const executeCommandMessage = <Messages.ExecuteCommandMessage> msg;
+  let exception: any = null;
+  let result: any = null;
+  try {
+    result = extensionManager.executeCommand(executeCommandMessage.commandName, executeCommandMessage.args);
+    if (result instanceof Promise) {
+      result = await result;
+    }
+  } catch(ex) {
+    exception = <Error> ex;
+  }
+
+  WebIpc.commandResponse(msg.uuid, result, exception);
 }
 
 function startUpWebIpcConfigHandling(): void {

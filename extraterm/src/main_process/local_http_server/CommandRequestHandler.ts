@@ -105,46 +105,65 @@ export class CommandRequestHandler implements RequestHandler {
     }
 
     let result: any = null;
-    if (this.#mainExtensionManager.hasCommand(commandName)) {
-      result = this.#mainExtensionManager.executeCommand(commandName, this._collectArgs(jsonBody));
-      // FIXME what do we do if we get an Error object.
-      if (result == null) {
-        return {
-          statusCode: NO_CONTENT_204
-        };
-      }
-    } else {
+    try {
+      if (this.#mainExtensionManager.hasCommand(commandName)) {
+        result = this.#mainExtensionManager.executeCommand(commandName, this._collectArgs(jsonBody));
 
-      const windowIdStr = jsonBody.window;
-      let windowId: number = null;
-      if (windowIdStr != null) {
-        windowId = Number.parseInt(windowIdStr, 10);
-        if (Number.isNaN(windowId)) {
-          return {
-            statusCode: BAD_REQUEST_400,
-            body: {
-              message: "`Parameter 'window' could not be parsed.`"
-            }
-          };
-        }
-
-        if (this.#mainDesktop.getAllWindowIds().indexOf(windowId) === -1) {
-          return {
-            statusCode: BAD_REQUEST_400,
-            body: {
-              message: "`Invalid value for parameter 'window' was given.`"
-            }
-          };
-        }
       } else {
-        windowId = this.#mainDesktop.getAllWindowIds()[0];
-      }
+        const windowIdStr = jsonBody.window;
+        let windowId: number = null;
+        if (windowIdStr != null) {
+          windowId = Number.parseInt(windowIdStr, 10);
+          if (Number.isNaN(windowId)) {
+            return {
+              statusCode: BAD_REQUEST_400,
+              body: {
+                message: "`Parameter 'window' could not be parsed.`"
+              }
+            };
+          }
 
-      result = await this.#mainIpc.sendCommandToWindow(commandName, windowId, this._collectArgs(jsonBody));
+          if (this.#mainDesktop.getAllWindowIds().indexOf(windowId) === -1) {
+            return {
+              statusCode: BAD_REQUEST_400,
+              body: {
+                message: "`Invalid value for parameter 'window' was given.`"
+              }
+            };
+          }
+        } else {
+          windowId = this.#mainDesktop.getAllWindowIds()[0];
+        }
+        result = await this.#mainIpc.sendCommandToWindow(commandName, windowId, this._collectArgs(jsonBody));
+      }
+    } catch(ex) {
+      return {
+        statusCode: INTERNAL_SERVER_ERROR_500,
+        body: "" + ex
+      };
+    }
+
+    if (result == null) {
+      return {
+        statusCode: NO_CONTENT_204
+      };
     }
 
     if (result instanceof Promise) {
-      result = await result;
+      try {
+        result = await result;
+      } catch(ex) {
+        return {
+          statusCode: INTERNAL_SERVER_ERROR_500,
+          body: "" + ex
+        };
+      }
+    }
+
+    if (result == null) {
+      return {
+        statusCode: NO_CONTENT_204
+      };
     }
 
     return {

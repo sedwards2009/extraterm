@@ -529,8 +529,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
     const parts = commandName.split(":");
     if (parts.length !== 2) {
-      this._log.warn(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
-      return null;
+      throw new Error(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
     }
 
     let extensionName = parts[0];
@@ -550,15 +549,13 @@ export class ExtensionManagerImpl implements ExtensionManager {
       if (ext.metadata.name === extensionName) {
         const commandFunc = ext.contextImpl.commands.getCommandFunction(commandName);
         if (commandFunc == null) {
-          this._log.warn(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
-          return null;
+          throw new Error(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
         }
         return this._runCommandFunc(commandName, commandFunc, args);
       }
     }
 
-    this._log.warn(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
-    return null;
+    throw new Error(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
   }
 
   private _runCommandFunc(name: string, commandFunc: (args: any) => any, args: any): any {
