@@ -85,6 +85,7 @@ async function main(): Promise<void> {
   parsedArgs.option("-c, --cygwinDir [cygwinDir]", "Location of the cygwin directory []")
     .option("-d, --dev-tools [devTools]", "Open the dev tools on start up")
     .option("--force-device-scale-factor []", "(This option is used by Electron)")
+    .option("--bare [bare]", "Open the window but don't open a terminal session.")
     .parse(normalizedArgv);
 
   const availableFonts = getFonts();
@@ -144,7 +145,7 @@ async function main(): Promise<void> {
   app.on("window-all-closed", () => shutdown(bulkFileStorage, localHttpServer));
 
   mainDesktop.start();
-  mainDesktop.openWindow({openDevTools: parsedArgs.devTools});
+  mainDesktop.openWindow({openDevTools: parsedArgs.devTools, bareWindow: parsedArgs.bare != null});
 }
 
 function electronReady(): Promise<void> {

@@ -36,13 +36,12 @@
     <style id="LOADING_LOGO_COLOR"></style>
     <style id="CSS_VARS"></style>
     <style id="THEME_STYLE"></style>
-    
+
     <script>
     function splashScreen() {
-      const groups = window.location.search.match(/[?]loadingBackgroundColor=([0-9a-fA-F]+)&loadingForegroundColor=([0-9a-fA-F]+)/);
-
-      const backgroundColor = groups[1];
-      const foregroundColor = groups[2];
+      const params = new URLSearchParams(document.location.search.substring(1));
+      const backgroundColor = params.get("loadingBackgroundColor")
+      const foregroundColor = params.get("loadingForegroundColor");
 
       const div = document.getElementById("preparing_div");
       div.style.backgroundColor = "#" + backgroundColor;
@@ -89,13 +88,13 @@
       const vue = require('vue');
       vue.default = vue;
     }
-    
+
     function startUp() {
       splashScreen();
 
       wedgeRequire();
       var mainweb = require('./MainWeb');
-      mainweb.asyncStartUp(closeSplashScreen);
+      mainweb.asyncStartUp(closeSplashScreen, "" + window.location);
     }
 
     </script>

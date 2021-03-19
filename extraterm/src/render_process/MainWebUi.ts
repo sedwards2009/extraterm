@@ -140,6 +140,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
+  render(): void {
+    this._splitLayout.update();
+  }
+
   setConfigDatabase(configManager: ConfigDatabase): void {
     this._configManager = configManager;
   }

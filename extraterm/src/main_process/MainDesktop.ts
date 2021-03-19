@@ -23,6 +23,7 @@ const isDarwin = process.platform === "darwin";
 
 export interface OpenWindowOptions {
   openDevTools?: boolean;
+  bareWindow?: boolean;
 }
 
 let SetWindowCompositionAttribute: any = null;
@@ -359,8 +360,11 @@ export class MainDesktop {
     this._setupTransparentBackground(newWindow);
     this._checkWindowBoundsLater(newWindow, dimensions);
 
-    const params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
+    let params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
       "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
+    if (options.bareWindow) {
+      params += "&bareWindow=true";
+    }
 
     // and load the index.html of the app.
     newWindow.loadURL(ResourceLoader.toUrl("render_process/main.html") + params);

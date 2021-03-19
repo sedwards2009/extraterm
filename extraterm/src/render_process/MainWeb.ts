@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -84,7 +84,10 @@ let dpiWatcher: DpiWatcher = null;
 const windowId = createUuid();
 
 
-export async function asyncStartUp(closeSplash: () => void): Promise<void> {
+export async function asyncStartUp(closeSplash: () => void, windowUrl: string): Promise<void> {
+  const parsedWindowUrl = new URL(windowUrl);
+  const bareWindow = parsedWindowUrl.searchParams.get("bareWindow") !== null;
+
   fontLoader = new FontLoader();
   dpiWatcher = new DpiWatcher();
   startUpTheming();
@@ -123,7 +126,11 @@ export async function asyncStartUp(closeSplash: () => void): Promise<void> {
   dpiWatcher.onChange(newDpi => handleDpiChange(newDpi));
 
   if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
-    mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
+    if (bareWindow) {
+      mainWebUi.render();
+    } else {
+      mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
+    }
   } else {
     mainWebUi.commandOpenSettingsTab("session");
     Electron.remote.dialog.showErrorBox("No session types available",
