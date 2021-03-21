@@ -123,7 +123,7 @@ export class CommandRequestHandler implements RequestHandler {
             };
           }
 
-          if (this.#mainDesktop.getAllWindowIds().indexOf(windowId) === -1) {
+          if (this.#mainDesktop.getWindowById(windowId) == null) {
             return {
               statusCode: BAD_REQUEST_400,
               body: {
@@ -132,7 +132,7 @@ export class CommandRequestHandler implements RequestHandler {
             };
           }
         } else {
-          windowId = this.#mainDesktop.getAllWindowIds()[0];
+          windowId = this.#mainDesktop.getWindows()[0].id;
         }
         result = await this.#mainIpc.sendCommandToWindow(commandName, windowId, this._collectArgs(jsonBody));
       }

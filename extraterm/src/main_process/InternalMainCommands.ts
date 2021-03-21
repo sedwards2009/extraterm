@@ -29,9 +29,9 @@ class InternalMainCommands {
 
   commandWindowListAll(): WindowDescription[] {
     const result: WindowDescription[] = [];
-    for (const id of this.#mainDesktop.getAllWindowIds()) {
+    for (const ew of this.#mainDesktop.getWindows()) {
       result.push({
-        id: "" + id
+        id: "" + ew.id
       });
     }
     return result;

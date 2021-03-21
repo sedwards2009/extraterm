@@ -353,16 +353,20 @@ export class MainIpc {
         break;
 
       case Messages.MessageType.WINDOW_CLOSE_REQUEST:
-        const window = BrowserWindow.fromWebContents(event.sender);
-        window.close();
+        {
+          const window = BrowserWindow.fromWebContents(event.sender);
+          window.close();
+        }
         break;
 
       case Messages.MessageType.WINDOW_MAXIMIZE_REQUEST:
-        const mainWindow = BrowserWindow.fromWebContents(event.sender);
-        if (mainWindow.isMaximized()) {
-          mainWindow.unmaximize();
-        } else {
-          mainWindow.maximize();
+        {
+          const window = BrowserWindow.fromWebContents(event.sender);
+          if (window.isMaximized()) {
+            window.unmaximize();
+          } else {
+            window.maximize();
+          }
         }
         break;
 
@@ -490,7 +494,7 @@ export class MainIpc {
 
   private async _handleWindowShowRequest(sender: Electron.WebContents): Promise<void> {
     const callerWindow = BrowserWindow.fromWebContents(sender);
-    await this.#mainDesktop.restoreWindow(callerWindow.id);
+    await this.#mainDesktop.getExtratermWindowByBrowserWindow(callerWindow).restore();
 
     const reply: Messages.WindowShowResponseMessage = {
       type: Messages.MessageType.WINDOW_SHOW_RESPONSE,
