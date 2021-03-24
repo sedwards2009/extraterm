@@ -7,6 +7,7 @@
 export interface MainWindow {
   id: number;
   restore(): Promise<void>;
+  ready(): Promise<void>;
 }
 
 export interface OpenWindowOptions {

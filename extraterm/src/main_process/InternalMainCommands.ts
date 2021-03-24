@@ -13,7 +13,6 @@ export function registerInternalCommands(extensionManager: MainExtensionManager,
 
   const commands = extensionManager.getExtensionContextByName("internal-main-commands").commands;
   commands.registerCommand("extraterm:window.listAll", internalMainCommands.commandWindowListAll);
-
 }
 
 class InternalMainCommands {

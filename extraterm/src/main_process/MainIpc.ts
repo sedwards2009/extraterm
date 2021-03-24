@@ -382,6 +382,10 @@ export class MainIpc {
         this._handleTerminalThemeRequest(event.sender, <Messages.TerminalThemeRequestMessage>msg);
         break;
 
+      case Messages.MessageType.WINDOW_READY:
+        this._handleWindowReady(event.sender);
+        break;
+
       default:
         break;
     }
@@ -621,4 +625,9 @@ export class MainIpc {
   private _handleGlobalKeybindingsEnable(msg: Messages.GlobalKeybindingsEnableMessage): void {
     this.#globalKeybindingsManager.setEnabled(msg.enabled);
   }
+
+  private _handleWindowReady(sender: Electron.WebContents): void {
+    this.#mainDesktop.handleWindowReady(sender.id);
+  }
+
 }

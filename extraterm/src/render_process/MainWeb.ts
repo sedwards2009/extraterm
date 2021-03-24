@@ -129,7 +129,7 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
     if (bareWindow) {
       mainWebUi.render();
     } else {
-      mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
+      await mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
     }
   } else {
     mainWebUi.commandOpenSettingsTab("session");
@@ -138,6 +138,8 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   }
   focusElement(mainWebUi, _log);
   window.focus();
+
+  WebIpc.windowReady();
 }
 
 function startUpTheming(): void {

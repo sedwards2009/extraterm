@@ -84,6 +84,7 @@ export enum MessageType {
   WINDOW_MINIMIZE_REQUEST,
   WINDOW_SHOW_REQUEST,
   WINDOW_SHOW_RESPONSE,
+  WINDOW_READY,
 }
 
 /**
@@ -421,6 +422,9 @@ export interface WindowShowRequestMessage extends Message {
 }
 
 export interface WindowShowResponseMessage extends Message {
+}
+
+export interface WindowReadyMessage extends Message {
 }
 
 /**

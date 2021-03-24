@@ -267,4 +267,12 @@ export class MainDesktop {
       this.#configDatabase.setConfig(GENERAL_CONFIG, newGeneralConfig);
     }
   }
+
+  handleWindowReady(windowId: number): void {
+    const ew = this.getWindowById(windowId);
+    if (ew == null) {
+      return;
+    }
+    (<MainWindowImpl> ew).handleWindowReady();
+  }
 }

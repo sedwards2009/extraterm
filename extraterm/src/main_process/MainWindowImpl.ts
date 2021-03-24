@@ -6,6 +6,7 @@
 import * as path from "path";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { later } from "extraterm-later";
+import { Logger, getLogger, log } from "extraterm-logging";
 import { BrowserWindow, screen } from "electron";
 
 import { ConfigDatabase, GeneralConfig, GENERAL_CONFIG, SingleWindowConfiguration } from "../Config";
@@ -35,6 +36,8 @@ if (isWindows) {
  * Main process side representation of an Extraterm window.
  */
 export class MainWindowImpl implements MainWindow {
+  private _log: Logger = null;
+
   #id = -1;
   #configDatabase: ConfigDatabase = null;
   #themeManager: ThemeManager = null;
@@ -52,7 +55,13 @@ export class MainWindowImpl implements MainWindow {
   #onDevToolsClosedEventEmitter = new EventEmitter<BrowserWindow>();
   onDevToolsClosed: Event<BrowserWindow>;
 
+  #isReady = false;
+  #readyPromise: Promise<void> = null;
+  #readyResolve: () => void = null;
+
   constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager, configIndex: number) {
+    this._log = getLogger("MainWindowImpl", this);
+
     this.#configDatabase = configDatabase;
     this.#themeManager = themeManager;
     this.#configIndex = configIndex;
@@ -61,6 +70,10 @@ export class MainWindowImpl implements MainWindow {
     this.onDevToolsOpened = this.#onDevToolsOpenedEventEmitter.event;
     this.onDevToolsClosed = this.#onDevToolsClosedEventEmitter.event;
     this.onWindowDimensionChanged = this.#onWindowDimensionChangedEventEmitter.event;
+
+    this.#readyPromise = new Promise((resolve, reject) => {
+      this.#readyResolve = resolve;
+    });
   }
 
   get id(): number {
@@ -166,6 +179,25 @@ export class MainWindowImpl implements MainWindow {
     });
 
     this.#id = newWindow.id;
+  }
+
+  async handleWindowReady(): Promise<void> {
+    await later();
+
+    this.#isReady = true;
+    this._log.debug(`#readyResolve`);
+    this.#readyResolve();
+    this.#readyResolve = null;
+  }
+
+  /**
+   * Async wait until the window is fully open and finished initialization.
+   */
+  async ready(): Promise<void> {
+    if (this.#isReady) {
+      return;
+    }
+    await this.#readyPromise;
   }
 
   private _getBrowserWindow(): BrowserWindow {

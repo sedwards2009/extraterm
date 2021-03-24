@@ -199,6 +199,11 @@ export function windowShowRequst(): Promise<Messages.WindowShowResponseMessage> 
   return <Promise<Messages.WindowShowResponseMessage>> request(msg, Messages.MessageType.WINDOW_SHOW_RESPONSE);
 }
 
+export function windowReady(): void {
+  const msg: Messages.WindowReadyMessage = { type: Messages.MessageType.WINDOW_READY };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
 export function createBulkFileSync(metadata: BulkFileMetadata, size: number): {identifier: BulkFileIdentifier, url: string} {
   const msg: Messages.BulkFileCreateMessage = {type: Messages.MessageType.BULK_FILE_CREATE, metadata, size};
   const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);

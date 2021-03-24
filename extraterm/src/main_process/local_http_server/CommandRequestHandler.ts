@@ -11,6 +11,7 @@ import { RequestContext, RequestHandler } from "../local_http_server/RequestHand
 import { MainExtensionManager } from "../extension/MainExtensionManager";
 import { MainIpc } from "../MainIpc";
 import { MainDesktop } from "../MainDesktop";
+import { MainWindow } from "../MainWindow";
 
 const BAD_REQUEST_400 = 400;
 const METHOD_NOT_ALLOWED_405 = 405;
@@ -112,6 +113,7 @@ export class CommandRequestHandler implements RequestHandler {
       } else {
         const windowIdStr = jsonBody.window;
         let windowId: number = null;
+        let mainWindow: MainWindow = null;
         if (windowIdStr != null) {
           windowId = Number.parseInt(windowIdStr, 10);
           if (Number.isNaN(windowId)) {
@@ -123,7 +125,8 @@ export class CommandRequestHandler implements RequestHandler {
             };
           }
 
-          if (this.#mainDesktop.getWindowById(windowId) == null) {
+          mainWindow = this.#mainDesktop.getWindowById(windowId);
+          if (mainWindow == null) {
             return {
               statusCode: BAD_REQUEST_400,
               body: {
@@ -132,11 +135,16 @@ export class CommandRequestHandler implements RequestHandler {
             };
           }
         } else {
-          windowId = this.#mainDesktop.getWindows()[0].id;
+          mainWindow = this.#mainDesktop.getWindows()[0];
+          windowId = mainWindow.id;
         }
+
+        await mainWindow.ready();
+
         result = await this.#mainIpc.sendCommandToWindow(commandName, windowId, this._collectArgs(jsonBody));
       }
     } catch(ex) {
+      this._log.warn(`Exception occurred while processing command ${commandName}.`, ex);
       return {
         statusCode: INTERNAL_SERVER_ERROR_500,
         body: "" + ex
@@ -153,6 +161,7 @@ export class CommandRequestHandler implements RequestHandler {
       try {
         result = await result;
       } catch(ex) {
+        this._log.warn(`Exception occurred while processing command ${commandName}.`, ex);
         return {
           statusCode: INTERNAL_SERVER_ERROR_500,
           body: "" + ex
