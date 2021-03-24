@@ -231,14 +231,23 @@ class LoggerImpl implements Logger {
     return this._messageLog.reduce( (accu, logMessage) => accu + "\n" + logMessage.msg, "");
   }
 
-  private _logMessage(level: Level, msg: string, opts: any[]): void {
-    const formatted = this._format(level, msg);
+  private _logMessage(level: Level, msg: string | Error, opts: any[]): void {
+    let msgString: string = null;
+    let options: any[] = opts;
+    if (msg instanceof Error) {
+      msgString = "";
+      options = [msg, ...opts];
+    } else {
+      msgString = msg;
+    }
+
+    const formatted = this._format(level, msgString);
     if (this._recording) {
-      this._messageLog.push( { level, msg: formatted + opts.reduce( (x, accu) => accu + x + ", ", "") } );
+      this._messageLog.push( { level, msg: formatted + options.reduce( (x, accu) => accu + x + ", ", "") } );
     }
 
     for (let i = 0; i < logWriters.length; i++) {
-      logWriters[i].write(level, formatted, ...opts);
+      logWriters[i].write(level, formatted, ...options);
     }
   }
 
