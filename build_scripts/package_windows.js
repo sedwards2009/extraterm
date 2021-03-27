@@ -141,6 +141,13 @@ WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${
 IntFmt $0 "0x%08X" $0
 WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "EstimatedSize" "\$0"
 
+# Set up Windows Explorer menu items
+WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm" "" 'Open in Extraterm'
+WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm\\command" "" '"$INSTDIR\\extraterm.exe" "%V"'
+
+WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm" "" 'Open in Extraterm'
+WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm\\command" "" '"$INSTDIR\\extraterm.exe" "%V"'
+
 SectionEnd
 
 
@@ -156,6 +163,10 @@ DeleteRegKey HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${A
 DeleteRegKey HKLM "Software\\Extraterm"
 SectionEnd
 `;
+echo("----------------------------------------------------------")
+echo(installerScript);
+echo("----------------------------------------------------------")
+
   fs.writeFileSync(path.join(BUILD_TMP_DIR, "installer.nsi"), installerScript, {encoding: "utf-8"});
   if (useDocker) {
     exec(`docker run --rm -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
