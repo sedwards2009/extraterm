@@ -161,6 +161,10 @@ RMDir /r "$INSTDIR"
 
 DeleteRegKey HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}"
 DeleteRegKey HKLM "Software\\Extraterm"
+
+DeleteRegKey HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm"
+DeleteRegKey HKCU "Software\\Classes\\directory\\shell\\extraterm"
+
 SectionEnd
 `;
 echo("----------------------------------------------------------")
