@@ -144,9 +144,11 @@ WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${
 # Set up Windows Explorer menu items
 WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm" "" 'Open in Extraterm'
 WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm\\command" "" '"$INSTDIR\\extraterm.exe" "%V"'
+WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm" "icon" '$INSTDIR\\extraterm.exe'
 
 WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm" "" 'Open in Extraterm'
 WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm\\command" "" '"$INSTDIR\\extraterm.exe" "%V"'
+WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm" "icon" '$INSTDIR\\extraterm.exe'
 
 SectionEnd
 
