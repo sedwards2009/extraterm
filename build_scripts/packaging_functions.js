@@ -44,6 +44,19 @@ function pruneTwemoji(versionedOutputDir, platform) {
   }
 }
 
+function pruneListFontsJsonExe(versionedOutputDir, platform) {
+  echo("pruneListFontsJsonExe()");
+
+  for (const p of ["darwin", "linux", "win32"]) {
+    if (p !== platform) {
+      const listFontsJsonPath = path.join(versionedOutputDir, appDir(platform),
+        `extraterm/resources/list-fonts-json-binary/${p}-x64/`);
+      echo(`Pruning ${listFontsJsonPath}`);
+      rm('-rf', listFontsJsonPath);
+    }
+  }
+}
+
 function hoistSubprojectsModules(versionedOutputDir, platform) {
   const modulesDir = path.join(versionedOutputDir, appDir(platform), "node_modules");
   echo("");
@@ -276,6 +289,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, targetAppRootPath));
   pruneNodeModules(versionedOutputDir, platform);
   pruneTwemoji(versionedOutputDir, platform);
+  pruneListFontsJsonExe(versionedOutputDir, platform);
 
   // Zip it up.
   log("Zipping up the package");
