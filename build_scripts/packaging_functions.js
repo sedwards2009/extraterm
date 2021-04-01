@@ -37,6 +37,43 @@ function appDir(platform) {
   return platform === "darwin" ? "Extraterm.app/Contents/Resources/app" : "resources/app";
 }
 
+function addLauncher(versionedOutputDir, platform) {
+  echo(`Inserting launcher exe`);
+
+  const launcherDirPath = path.join(versionedOutputDir, appDir(platform),
+    "extraterm/resources/launcher-binary");
+
+  if (platform === "linux") {
+    const launcherPath = path.join(launcherDirPath, "linux-x64/extraterm-launcher");
+    mv(launcherPath, path.join(versionedOutputDir, "extraterm"));
+  }
+
+  if (platform === "win32") {
+    const launcherPath = path.join(launcherDirPath, "win32-x64/extraterm-launcher.exe");
+    mv(launcherPath, path.join(versionedOutputDir, "extraterm.exe"));
+  }
+
+  if (platform === "darwin") {
+    mv(path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm"), path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/extraterm-main"));
+
+    const launcherPath = path.join(launcherDirPath, "darwin-x64/extraterm-launcher");
+    mv(launcherPath, path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm"));
+  }
+
+  const launcherSourceExe ={
+    "darwin": "darwin-x64/extraterm-launcher",
+    "linux": "linux-x64/extraterm-launcher",
+    "win32": "win32-x64/extraterm-launcher.exe"
+  };
+
+  for (const p of ["darwin", "linux", "win32"]) {
+    const launcherPath = path.join(launcherDirPath, launcherSourceExe[p]);
+    if (p !== platform) {
+      rm(launcherPath);
+    }
+  }
+}
+
 function pruneTwemoji(versionedOutputDir, platform) {
   if (platform !== "linux") {
     const twemojiPath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/fonts/Twemoji.ttf");
@@ -45,13 +82,11 @@ function pruneTwemoji(versionedOutputDir, platform) {
 }
 
 function pruneListFontsJsonExe(versionedOutputDir, platform) {
-  echo("pruneListFontsJsonExe()");
-
   for (const p of ["darwin", "linux", "win32"]) {
     if (p !== platform) {
       const listFontsJsonPath = path.join(versionedOutputDir, appDir(platform),
         `extraterm/resources/list-fonts-json-binary/${p}-x64/`);
-      echo(`Pruning ${listFontsJsonPath}`);
+      echo(`Deleting ${listFontsJsonPath}`);
       rm('-rf', listFontsJsonPath);
     }
   }
@@ -290,6 +325,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   pruneNodeModules(versionedOutputDir, platform);
   pruneTwemoji(versionedOutputDir, platform);
   pruneListFontsJsonExe(versionedOutputDir, platform);
+  addLauncher(versionedOutputDir, platform);
 
   // Zip it up.
   log("Zipping up the package");
