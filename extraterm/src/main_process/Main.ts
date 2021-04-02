@@ -314,11 +314,15 @@ function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileS
   });
 
   mainDesktop.onAboutSelected(() => {
-    mainIpc.sendCommandToAllWindows("extraterm:window.openAbout", null);
+    for (const win of mainDesktop.getWindows()) {
+      mainIpc.sendCommandToWindow("extraterm:window.openAbout", win.id, null);
+    }
   });
 
   mainDesktop.onPreferencesSelected(() => {
-    mainIpc.sendCommandToAllWindows("extraterm:window.openSettings", null);
+    for (const win of mainDesktop.getWindows()) {
+      mainIpc.sendCommandToWindow("extraterm:window.openSettings", win.id, null);
+    }
   });
 
   mainDesktop.onQuitSelected(() => {

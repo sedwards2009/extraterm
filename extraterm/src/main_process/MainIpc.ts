@@ -165,17 +165,6 @@ export class MainIpc {
     window.webContents.send(Messages.CHANNEL_NAME, msg);
   }
 
-  sendCommandToAllWindows(commandName: string, args: any): void {
-    const messageUuid = createUuid();
-    const msg: Messages.ExecuteCommandMessage = {
-      type: Messages.MessageType.EXECUTE_COMMAND_REQUEST,
-      uuid: messageUuid,
-      commandName,
-      args
-    };
-    this._sendMessageToAllWindows(msg);
-  }
-
   sendCommandToWindow(commandName: string, windowId: number, args: any): Promise<any> {
     const messageUuid = createUuid();
     const msg: Messages.ExecuteCommandMessage = {
