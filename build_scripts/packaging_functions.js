@@ -44,20 +44,29 @@ function addLauncher(versionedOutputDir, platform) {
     "extraterm/resources/launcher-binary");
 
   if (platform === "linux") {
+    mv(path.join(versionedOutputDir, "extraterm"), path.join(versionedOutputDir, "extraterm_main"));
+
     const launcherPath = path.join(launcherDirPath, "linux-x64/extraterm-launcher");
-    mv(launcherPath, path.join(versionedOutputDir, "extraterm"));
+    const launcherDestPath = path.join(versionedOutputDir, "extraterm");
+    mv(launcherPath, launcherDestPath);
+    chmod('a+x', launcherDestPath);
   }
 
   if (platform === "win32") {
+    mv(path.join(versionedOutputDir, "extraterm.exe"), path.join(versionedOutputDir, "extraterm_main.exe"));
+
     const launcherPath = path.join(launcherDirPath, "win32-x64/extraterm-launcher.exe");
     mv(launcherPath, path.join(versionedOutputDir, "extraterm.exe"));
   }
 
   if (platform === "darwin") {
-    mv(path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm"), path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/extraterm-main"));
+    mv(path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm"),
+      path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/extraterm_main"));
 
     const launcherPath = path.join(launcherDirPath, "darwin-x64/extraterm-launcher");
-    mv(launcherPath, path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm"));
+    const launcherDestPath = path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm");
+    mv(launcherPath, launcherDestPath);
+    chmod('a+x', launcherDestPath);
   }
 
   const launcherSourceExe ={
@@ -286,7 +295,7 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
     platform: platform,
     version: electronVersion,
     ignore: ignoreFunc,
-    name: platform === "darwin" ? "Extraterm" : CONST_EXTRATERM_ELECTRON_EXE,
+    name: platform === "darwin" ? "Extraterm" : "extraterm",
     overwrite: true,
     out: outputDir,
     prune: false
