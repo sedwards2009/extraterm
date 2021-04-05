@@ -32,7 +32,7 @@ abstract class ScriptBuilder {
   protected _buildCommands(): string {
     return this._buildScriptForCommand('from', 'exfrom') + this._buildScriptForCommand('show', 'exshow');
   }
-    
+
   protected _buildScriptForCommand(commandName: string, commandPyFile: string): string {
     const flattener = new PythonFileFlattener(path.join(__dirname, '../../../extraterm/src/commands/'));
     const script = flattener.readAndInlineCommand(commandPyFile);
@@ -100,7 +100,7 @@ end
 
 
 export class BashScriptBuilder extends ScriptBuilder {
-  
+
   build(): ScriptCommand[] {
     return [
       {type: 'text', text: CTRL_C},   // Delete text left in the command line buffer.
@@ -212,12 +212,12 @@ preexec () {
     return source.replace(/'/g,"'\\''");
   }
 }
-  
+
 export class PythonFileFlattener {
   constructor(private _baseDir: string) {}
 
   readAndInlineCommand(commandName: string): string {
-    const commandSourceCode = fs.readFileSync(path.join(this._baseDir, commandName + ".py"), 'UTF-8');
+    const commandSourceCode = fs.readFileSync(path.join(this._baseDir, commandName + ".py"), "utf8");
 
     const lines = commandSourceCode.split('\n');
     const filteredLines:string[] = [];
@@ -240,7 +240,7 @@ export class PythonFileFlattener {
   private _expandImport(line: string): string[] {
     const importTarget = this._extractTargetFromImportLine(line);
 
-    const librarySourceCode = fs.readFileSync(path.join(this._baseDir, importTarget + ".py"), 'UTF-8');
+    const librarySourceCode = fs.readFileSync(path.join(this._baseDir, importTarget + ".py"), "utf8");
     const librarySourceLines = librarySourceCode.split('\n');
 
     return librarySourceLines;

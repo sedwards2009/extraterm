@@ -400,7 +400,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     this.setMimeType(mimeType);
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle);
-    const decodedText = Buffer.from(data).toString(charset == null ? "utf8" : charset);
+    const decodedText = Buffer.from(data).toString(<BufferEncoding> (charset == null ? "utf8" : charset));
     this._setText(decodedText);
     this._bulkFileHandle = handle;
 

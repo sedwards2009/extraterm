@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@extraterm/ace-ts": "0.22.0",
-    "@types/node": "^12.6.2",
+    "@types/node": "^14.14.37",
     "extraterm-event-emitter": "1.0.0"
   },
   "devDependencies": {

@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^5.0.2",
-    "@types/node": "^12.6.2",
+    "@types/node": "^14.14.37",
     "eslint": "7.19.0",
     "eslint-config-extraterm": "1.0.0",
     "@extraterm/extraterm-extension-api": "0.13.0",

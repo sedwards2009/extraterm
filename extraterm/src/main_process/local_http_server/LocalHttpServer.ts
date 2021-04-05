@@ -44,7 +44,7 @@ export class LocalHttpServer implements Disposable {
         this.#port = (<net.AddressInfo> address).port;
         this._log.info(`Local HTTP IPC server running on ${this.getLocalUrlBase()}`);
 
-        fs.writeFileSync(this.#ipcFilePath, `${process.pid}\n${this.getLocalUrlBase()}`, {encoding: "UTF8"});
+        fs.writeFileSync(this.#ipcFilePath, `${process.pid}\n${this.getLocalUrlBase()}`, {encoding: "utf8"});
 
         resolve();
       });

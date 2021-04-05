@@ -154,7 +154,7 @@ describe.each(
 )("Parse extensions package.json files", (input) => {
 
   test(`parse "${input}"`, () => {
-    const packageJsonString = fs.readFileSync(path.join(extensionsPath, input, "package.json"), "UTF8");
+    const packageJsonString = fs.readFileSync(path.join(extensionsPath, input, "package.json"), "utf8");
     parsePackageJsonString(packageJsonString, input);
   });
 });

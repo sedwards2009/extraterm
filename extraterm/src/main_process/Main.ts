@@ -87,6 +87,7 @@ async function main(): Promise<void> {
     .option("--force-device-scale-factor []", "(This option is used by Electron)")
     .option("--bare [bare]", "Open the window but don't open a terminal session.")
     .parse(normalizedArgv);
+  const options = parsedArgs.opts();
 
   const availableFonts = getFonts();
 
@@ -102,7 +103,7 @@ async function main(): Promise<void> {
   sanitizeAndInitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
     availableFonts);
   const titleBarStyle = userStoredConfig.titleBarStyle;
-  const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "UTF-8"));
+  const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
   const systemConfig = systemConfiguration(userStoredConfig, keybindingsIOManager, availableFonts, packageJson,
     titleBarStyle);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
@@ -145,7 +146,7 @@ async function main(): Promise<void> {
   app.on("window-all-closed", () => shutdown(bulkFileStorage, localHttpServer));
 
   mainDesktop.start();
-  mainDesktop.openWindow({openDevTools: parsedArgs.devTools, bareWindow: parsedArgs.bare != null});
+  mainDesktop.openWindow({openDevTools: options.devTools, bareWindow: options.bare != null});
 }
 
 function electronReady(): Promise<void> {

@@ -33,7 +33,7 @@
   },
   "devDependencies": {
     "@types/lru-cache": "^4.1.0",
-    "@types/node": "^8.10.10",
+    "@types/node": "^14.14.37",
     "@types/opentype.js": "^0.7.0",
     "@types/sinon": "^4.3.1",
     "ava": "^0.25.0",

@@ -99,7 +99,7 @@ export class MainExtensionManager {
 
   private _loadPackageJson(extensionPath: string): ExtensionMetadata {
     const packageJsonPath = path.join(extensionPath, "package.json");
-    const packageJsonString = fs.readFileSync(packageJsonPath, "UTF8");
+    const packageJsonString = fs.readFileSync(packageJsonPath, "utf8");
     try {
       const result = parsePackageJsonString(packageJsonString, extensionPath);
 

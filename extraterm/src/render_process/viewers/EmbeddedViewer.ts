@@ -649,7 +649,7 @@ export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPa
         if (charset == null || charset === "") {
           charset = "utf8";
         }
-        const decodedString = byteData.toString(charset);
+        const decodedString = byteData.toString(<BufferEncoding> charset);
 
         ev.dataTransfer.setData("text/plain", decodedString);
       }

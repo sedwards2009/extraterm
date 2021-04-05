@@ -98,7 +98,8 @@ export class MainWindowImpl implements MainWindow {
       height: 600,
       webPreferences: {
         experimentalFeatures: true,
-        nodeIntegration: true
+        contextIsolation: false,
+        nodeIntegration: true,
       },
       title: "Extraterm",
       backgroundColor: "#00000000",

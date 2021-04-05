@@ -160,7 +160,7 @@ export class KeybindingsIOManager {
 
   private _readKeybindingsFile(name: LogicalKeybindingsName, fileInfo: KeybindingsFileInfo): KeybindingsSet {
     const fullPath = path.join(fileInfo.path, fileInfo.filename);
-    const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "UTF8" } );
+    const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "utf8" } );
     let keyBindingsJSON: KeybindingsSet = JSON.parse(keyBindingJsonString);
 
     if (keyBindingsJSON == null) {
@@ -207,7 +207,7 @@ export class KeybindingsIOManager {
     }
 
     try {
-      const contents = fs.readFileSync(filePath, { encoding: "UTF8" } );
+      const contents = fs.readFileSync(filePath, { encoding: "utf8" } );
       return JSON.parse(contents);
     } catch(err) {
       this._log.warn(`Unable to read '${filePath}'. Error: ${err.message}`);
