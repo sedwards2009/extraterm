@@ -53,7 +53,7 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "node-abi": "2.19.1"
+    "node-abi": "2.21.0"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
