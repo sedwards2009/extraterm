@@ -28,6 +28,7 @@ interface PromisePairFunctions {
   resolve: (result: any) => void;
   reject: (result: any) => void;
 }
+const isLinux = process.platform === "linux";
 
 /**
  * Main IPC
@@ -489,7 +490,11 @@ export class MainIpc {
     const callerWindow = BrowserWindow.fromWebContents(sender);
     const extratermWindow = this.#mainDesktop.getExtratermWindowByBrowserWindow(callerWindow);
 
-    if (! extratermWindow.isVisible()) {
+    if ( ! isLinux && extratermWindow.isMinimized()) { // isMinimized() seems to be broken on Linux.
+      await extratermWindow.restore();
+    }
+
+    if (isLinux && ! extratermWindow.isVisible()) {
       await extratermWindow.restore();
     }
 
