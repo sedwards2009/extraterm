@@ -487,7 +487,13 @@ export class MainIpc {
 
   private async _handleWindowShowRequest(sender: Electron.WebContents): Promise<void> {
     const callerWindow = BrowserWindow.fromWebContents(sender);
-    await this.#mainDesktop.getExtratermWindowByBrowserWindow(callerWindow).restore();
+    const extratermWindow = this.#mainDesktop.getExtratermWindowByBrowserWindow(callerWindow);
+
+    if (! extratermWindow.isVisible()) {
+      await extratermWindow.restore();
+    }
+
+    extratermWindow.moveTop();
 
     const reply: Messages.WindowShowResponseMessage = {
       type: Messages.MessageType.WINDOW_SHOW_RESPONSE,

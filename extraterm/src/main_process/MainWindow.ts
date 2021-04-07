@@ -6,6 +6,9 @@
 
 export interface MainWindow {
   id: number;
+  isMinimized(): boolean;
+  isVisible(): boolean;
+  moveTop(): void;
   restore(): Promise<void>;
   ready(): Promise<void>;
 }
