@@ -67,9 +67,9 @@ async function main(version) {
 // log(exe);
 }
 
-if (process.argv.length !== 2) {
+if (process.argv.length <= 2) {
   log("The version number should be passed as the first parameter to this script. i.e. v3");
   process.exit(1);
 }
 
-main(process.argv[1]);
+main(process.argv[process.argv.length-1]);
