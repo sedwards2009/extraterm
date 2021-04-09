@@ -50,6 +50,8 @@ jobs:
         displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild
         displayName: "yarn run electron-rebuild"
+      - script: "yarn run download-launcher-executable"
+        displayName: "Download the launcher executable"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
@@ -89,6 +91,8 @@ jobs:
         displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild-win32
         displayName: "yarn run electron-rebuild-win32"
+      - script: "yarn run download-launcher-executable"
+        displayName: "Download the launcher executable"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
@@ -131,6 +135,8 @@ jobs:
         displayName: Check for tag and package.json version
       - script: yarn run electron-rebuild
         displayName: "yarn run electron-rebuild"
+      - script: "yarn run download-launcher-executable"
+        displayName: "Download the launcher executable"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build

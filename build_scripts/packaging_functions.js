@@ -40,8 +40,7 @@ function appDir(platform) {
 function addLauncher(versionedOutputDir, platform) {
   echo(`Inserting launcher exe`);
 
-  const launcherDirPath = path.join(versionedOutputDir, appDir(platform),
-    "extraterm/resources/launcher-binary");
+  const launcherDirPath = path.join(versionedOutputDir, appDir(platform), "downloads");
 
   if (platform === "linux") {
     mv(path.join(versionedOutputDir, "extraterm"), path.join(versionedOutputDir, "extraterm_main"));
@@ -67,19 +66,6 @@ function addLauncher(versionedOutputDir, platform) {
     const launcherDestPath = path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm");
     mv(launcherPath, launcherDestPath);
     chmod('a+x', launcherDestPath);
-  }
-
-  const launcherSourceExe ={
-    "darwin": "darwin-x64/extraterm-launcher",
-    "linux": "linux-x64/extraterm-launcher",
-    "win32": "win32-x64/extraterm-launcher.exe"
-  };
-
-  for (const p of ["darwin", "linux", "win32"]) {
-    const launcherPath = path.join(launcherDirPath, launcherSourceExe[p]);
-    if (p !== platform) {
-      rm(launcherPath);
-    }
   }
 }
 
