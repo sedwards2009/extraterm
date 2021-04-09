@@ -8,8 +8,6 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const LAUNCHER_VERSION = "v1";
-
 
 const log = console.log.bind(console);
 
@@ -69,4 +67,9 @@ async function main(version) {
 // log(exe);
 }
 
-main(LAUNCHER_VERSION);
+if (process.argv.length !== 2) {
+  log("The version number should be passed as the first parameter to this script. i.e. v3");
+  process.exit(1);
+}
+
+main(process.argv[1]);
