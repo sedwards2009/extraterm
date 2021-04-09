@@ -19,6 +19,8 @@ async function main() {
   parsedArgs.option('--version [app version]', 'Application version to use', null)
     .parse(process.argv);
 
+  const options = parsedArgs.opts();
+
   if ( ! test('-f', './package.json')) {
     echo("This script was called from the wrong directory.");
     return;
@@ -35,7 +37,7 @@ async function main() {
 
   const electronVersion = packageData.devDependencies['electron'];
 
-  let version = parsedArgs.version == null ? packageData.version : parsedArgs.version;
+  let version = options.version == null ? packageData.version : options.version;
   if (version[0] === "v") {
     version = version.slice(1);
   }
