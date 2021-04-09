@@ -63,7 +63,7 @@ async function main(version) {
     const exe = await fetchUrl(`${baseUrl}/extraterm-launcher-windows.exe`);
     const windowPath = path.join(DOWNLOADS_DIR, 'win32-x64');
     mkdir('-p', windowPath);
-    fs.writeFileSync(path.join(windowPath, 'extraterm-launcher-windows.exe'), exe);
+    fs.writeFileSync(path.join(windowPath, 'extraterm-launcher.exe'), exe);
   }
 
 // log(exe);
