@@ -10,6 +10,10 @@ export interface MainWindow {
   isVisible(): boolean;
   moveTop(): void;
   restore(): Promise<void>;
+
+  /**
+   * Wait until the window is fully initialised and ready.
+   */
   ready(): Promise<void>;
 }
 

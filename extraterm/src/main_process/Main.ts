@@ -18,6 +18,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
+import { later } from "extraterm-later";
 
 import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
 import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG,
@@ -140,13 +141,28 @@ async function main(): Promise<void> {
   const mainIpc = setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
     keybindingsIOManager, themeManager, ptyManager);
 
-  const localHttpServer = await setupLocalHttpServer(bulkFileStorage, mainDesktop, extensionManager, mainIpc);
+  const localHttpServer = await setupLocalHttpServer(bulkFileStorage);
+  const commandRequestHandler = setupHttpCommandRequestHandler(mainDesktop, extensionManager, mainIpc, localHttpServer);
 
   // Quit when all windows are closed.
   app.on("window-all-closed", () => shutdown(bulkFileStorage, localHttpServer));
 
   mainDesktop.start();
-  mainDesktop.openWindow({openDevTools: options.devTools, bareWindow: options.bare != null});
+  const newWindow = mainDesktop.openWindow({openDevTools: options.devTools, bareWindow: options.bare != null});
+
+  await newWindow.ready();
+  if (options.bare != null) {
+    // After waiting a bit we just remove the splash image regardless of what happens.
+    // If a remote command comes in (think: new tab from the launcher exe), then we can
+    // remove the splash and avoid some flickering of the window contents.
+    const disconnectHandler = commandRequestHandler.onCommandComplete(() => {
+      disconnectHandler.dispose();
+      mainIpc.sendCloseSplashToWindow(newWindow.id);
+    });
+
+    await later(10000);
+  }
+  mainIpc.sendCloseSplashToWindow(newWindow.id);
 }
 
 function electronReady(): Promise<void> {
@@ -205,9 +221,7 @@ function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: Mai
 }
 
 
-async function setupLocalHttpServer(bulkFileStorage: BulkFileStorage, mainDesktop: MainDesktop,
-    extensionManager: MainExtensionManager, mainIpc: MainIpc): Promise<LocalHttpServer> {
-
+async function setupLocalHttpServer(bulkFileStorage: BulkFileStorage): Promise<LocalHttpServer> {
   const ipcFilePath = path.join(app.getPath("appData"), EXTRATERM_CONFIG_DIR, IPC_FILENAME);
   const localHttpServer = new LocalHttpServer(ipcFilePath);
   await localHttpServer.start();
@@ -216,10 +230,14 @@ async function setupLocalHttpServer(bulkFileStorage: BulkFileStorage, mainDeskto
   const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
   localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
 
+  return localHttpServer;
+}
+
+function setupHttpCommandRequestHandler(mainDesktop: MainDesktop, extensionManager: MainExtensionManager,
+    mainIpc: MainIpc, localHttpServer: LocalHttpServer): CommandRequestHandler {
   const commandRequestHandler = new CommandRequestHandler(mainDesktop, extensionManager, mainIpc);
   localHttpServer.registerRequestHandler("command", commandRequestHandler);
-
-  return localHttpServer;
+  return commandRequestHandler;
 }
 
 function setupBulkFileStorage(): BulkFileStorage {

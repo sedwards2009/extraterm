@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as http from "http";
+import { Event, EventEmitter } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
 import * as getStream from "get-stream";
 
@@ -21,7 +22,8 @@ const INTERNAL_SERVER_ERROR_500 = 500;
 
 const SUCCESS_STATUS_CODES = [OK_200, NO_CONTENT_204];
 
-interface HttpResponse {
+export interface CommandHttpResponse {
+  commandName?: string;
   statusCode: number,
   body?: any
 }
@@ -33,11 +35,18 @@ export class CommandRequestHandler implements RequestHandler {
   #mainExtensionManager: MainExtensionManager = null;
   #mainIpc: MainIpc = null;
 
+  /**
+   * Fired after a command has been responded to.
+   */
+  onCommandComplete: Event<CommandHttpResponse> = null;
+  #onCommandCompleteEventEmitter = new EventEmitter<CommandHttpResponse>();
+
   constructor(mainDesktop: MainDesktop, mainExtensionManager: MainExtensionManager, mainIpc: MainIpc) {
     this._log = getLogger("CommandRequestHandler", this);
     this.#mainDesktop = mainDesktop;
     this.#mainExtensionManager = mainExtensionManager;
     this.#mainIpc = mainIpc;
+    this.onCommandComplete = this.#onCommandCompleteEventEmitter.event;
   }
 
   async handle(req: http.IncomingMessage, res: http.ServerResponse, path: string, context: RequestContext): Promise<void> {
@@ -54,9 +63,10 @@ export class CommandRequestHandler implements RequestHandler {
     } else {
       res.end(JSON.stringify(response.body));
     }
+    this.#onCommandCompleteEventEmitter.fire(response);
   }
 
-  private async _handleRequest(req: http.IncomingMessage, path: string, context: RequestContext): Promise<HttpResponse> {
+  private async _handleRequest(req: http.IncomingMessage, path: string, context: RequestContext): Promise<CommandHttpResponse> {
     if (req.method !== "POST" || path !== "") {
       return {
         statusCode: METHOD_NOT_ALLOWED_405,
@@ -93,7 +103,7 @@ export class CommandRequestHandler implements RequestHandler {
     }
   }
 
-  private async _processBody(jsonBody: any): Promise<HttpResponse> {
+  private async _processBody(jsonBody: any): Promise<CommandHttpResponse> {
     const commandName = jsonBody.command;
     if (commandName == null) {
       this._log.warn(`'command' was missing from the POST body.`);
@@ -118,6 +128,7 @@ export class CommandRequestHandler implements RequestHandler {
           windowId = Number.parseInt(windowIdStr, 10);
           if (Number.isNaN(windowId)) {
             return {
+              commandName,
               statusCode: BAD_REQUEST_400,
               body: {
                 message: "`Parameter 'window' could not be parsed.`"
@@ -128,6 +139,7 @@ export class CommandRequestHandler implements RequestHandler {
           mainWindow = this.#mainDesktop.getWindowById(windowId);
           if (mainWindow == null) {
             return {
+              commandName,
               statusCode: BAD_REQUEST_400,
               body: {
                 message: "`Invalid value for parameter 'window' was given.`"
@@ -146,6 +158,7 @@ export class CommandRequestHandler implements RequestHandler {
     } catch(ex) {
       this._log.warn(`Exception occurred while processing command ${commandName}.`, ex);
       return {
+        commandName,
         statusCode: INTERNAL_SERVER_ERROR_500,
         body: "" + ex
       };
@@ -153,6 +166,7 @@ export class CommandRequestHandler implements RequestHandler {
 
     if (result == null) {
       return {
+        commandName,
         statusCode: NO_CONTENT_204
       };
     }
@@ -163,6 +177,7 @@ export class CommandRequestHandler implements RequestHandler {
       } catch(ex) {
         this._log.warn(`Exception occurred while processing command ${commandName}.`, ex);
         return {
+          commandName,
           statusCode: INTERNAL_SERVER_ERROR_500,
           body: "" + ex
         };
@@ -171,11 +186,13 @@ export class CommandRequestHandler implements RequestHandler {
 
     if (result == null) {
       return {
+        commandName,
         statusCode: NO_CONTENT_204
       };
     }
 
     return {
+      commandName,
       statusCode: OK_200,
       body: result
     };

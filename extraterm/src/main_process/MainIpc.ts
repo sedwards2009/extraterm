@@ -161,6 +161,12 @@ export class MainIpc {
     this._sendMessageToAllWindows(this._makeExtensionDesiredStateMessage());
   }
 
+  sendCloseSplashToWindow(windowId: number): void {
+    const window = BrowserWindow.fromId(windowId);
+    const msg: Messages.CloseSplashMessage = { type: Messages.MessageType.CLOSE_SPLASH };
+    window.webContents.send(Messages.CHANNEL_NAME, msg);
+  }
+
   sendDevToolStatus(window: Electron.BrowserWindow, open: boolean): void {
     const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
     window.webContents.send(Messages.CHANNEL_NAME, msg);

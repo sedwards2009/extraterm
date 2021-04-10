@@ -85,6 +85,7 @@ export enum MessageType {
   WINDOW_SHOW_REQUEST,
   WINDOW_SHOW_RESPONSE,
   WINDOW_READY,
+  CLOSE_SPLASH,
 }
 
 /**
@@ -575,5 +576,10 @@ export interface ExecuteCommandResponseMessage extends Message {
  * Tell the main process to open a new window.
  */
 export interface NewWindowMessage extends Message {
+}
 
+/**
+ * Tell a render process to close its splash window.
+ */
+export interface CloseSplashMessage extends Message {
 }

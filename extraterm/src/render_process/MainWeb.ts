@@ -84,7 +84,11 @@ let dpiWatcher: DpiWatcher = null;
 const windowId = createUuid();
 
 
+let closeSplashFunc: () => void = null;
+
 export async function asyncStartUp(closeSplash: () => void, windowUrl: string): Promise<void> {
+  closeSplashFunc = closeSplash;
+
   const parsedWindowUrl = new URL(windowUrl);
   const bareWindow = parsedWindowUrl.searchParams.get("bareWindow") !== null;
 
@@ -115,8 +119,6 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   extensionManager.setSplitLayout(mainWebUi.getSplitLayout());
   registerCommands(extensionManager);
   startUpSessions(configDatabase, extensionManager);
-
-  closeSplash();
 
   startUpMainMenu();
   startUpCommandPalette();
@@ -161,6 +163,7 @@ function startUpTheming(): void {
 function startUpWebIpc(): void {
   WebIpc.start();
 
+  WebIpc.registerDefaultHandler(Messages.MessageType.CLOSE_SPLASH, closeSplash);
   WebIpc.registerDefaultHandler(Messages.MessageType.QUIT_APPLICATION, handleCloseWindow);
 
   // Default handling for theme messages.
@@ -171,6 +174,14 @@ function startUpWebIpc(): void {
 
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
   WebIpc.registerDefaultHandler(Messages.MessageType.EXECUTE_COMMAND_REQUEST, handleExecuteCommand);
+}
+
+function closeSplash(): void {
+  if (closeSplashFunc == null) {
+    return;
+  }
+  closeSplashFunc();
+  closeSplashFunc = null;
 }
 
 async function handleExecuteCommand(msg: Messages.ExecuteCommandMessage): Promise<void> {
