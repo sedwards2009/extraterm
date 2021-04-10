@@ -14,7 +14,7 @@
     "run-release": "electron extraterm/dist/main_process/Main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
-    "download-launcher-executable": "node build_scripts/download_launcher_executables.js v1",
+    "download-launcher-executable": "node build_scripts/download_launcher_executables.js v2",
     "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 12.0.2",
     "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 12.0.2",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
