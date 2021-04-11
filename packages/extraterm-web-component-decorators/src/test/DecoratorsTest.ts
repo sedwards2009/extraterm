@@ -275,71 +275,126 @@ it("Number attribute via HTML", function(): void {
 @CustomElement("boolean-component")
 class BooleanComponent extends HTMLElement {
 
-  @Attribute someBoolean: boolean;
+  constructor() {
+    super();
+    console.log(`BooleanComponent exit`);
+  }
+
+  @Attribute someBoolean = false;
 
   @Observe("someBoolean")
   private _someBooleanObserver(target: string): void {
     this.lastSomeBoolean = this.someBoolean;
   }
 
-  lastSomeBoolean: boolean;
+  lastSomeBoolean: boolean = true;
+
+  @Attribute positiveBoolean = true;
 }
 
-function someBooleanTest(guts: (sc: BooleanComponent) => void): void {
-  const sc = <BooleanComponent> document.createElement("boolean-component");
-  document.body.appendChild(sc);
+@CustomElement("boolean-sub-component")
+class BooleanSubComponent extends BooleanComponent {
+
+  constructor() {
+    super();
+    console.log(`BooleanSubComponent exit`);
+  }
+
+  @Attribute someSubBoolean = false;
+}
+
+
+function someBooleanTest(guts: (bc: BooleanComponent, bsc: BooleanSubComponent) => void): void {
+  const bc = <BooleanComponent> document.createElement("boolean-component");
+  document.body.appendChild(bc);
+
+  console.log(`Create Sub Component`);
+  const bsc = <BooleanSubComponent> document.createElement("boolean-sub-component");
+  console.log(`Create Sub Component done`);
+  document.body.appendChild(bsc);
   try {
-    guts(sc);
+    guts(bc, bsc);
   } finally {
-    sc.parentElement.removeChild(sc);
+    bsc.parentElement.removeChild(bsc);
+    bc.parentElement.removeChild(bc);
   }
 }
 
-it("True boolean attribute via JS", function(): void {
-  someBooleanTest((sc: BooleanComponent): void => {
-    sc.someBoolean = true;
-    assert.equal(sc.hasAttribute("some-boolean"), true);
-    assert.notEqual(sc.getAttribute("some-boolean"), null);
-    assert.equal(sc.someBoolean, true);
+it("Default false boolean attribute", function(): void {
+  someBooleanTest((bc: BooleanComponent): void => {
+    assert.equal(bc.hasAttribute("some-boolean"), false);
+    assert.equal(bc.getAttribute("some-boolean"), null);
+    assert.equal(bc.someBoolean, false);
   });
 });
 
+it("(Subclass) Default false boolean attribute", function(): void {
+  someBooleanTest((_: BooleanComponent, bsc: BooleanSubComponent): void => {
+    assert.equal(bsc.hasAttribute("some-sub-boolean"), false);
+    assert.equal(bsc.getAttribute("some-sub-boolean"), null);
+    assert.equal(bsc.someSubBoolean, false);
+  });
+});
+
+it("Default true boolean attribute", function(): void {
+  someBooleanTest((bc: BooleanComponent): void => {
+    assert.equal(bc.hasAttribute("positive-boolean"), true);
+    assert.notEqual(bc.getAttribute("positive-boolean"), null);
+    assert.equal(bc.positiveBoolean, true);
+  });
+});
+
+it("True boolean attribute via JS", function(): void {
+  someBooleanTest((bc: BooleanComponent): void => {
+    bc.someBoolean = true;
+    assert.equal(bc.hasAttribute("some-boolean"), true);
+    assert.notEqual(bc.getAttribute("some-boolean"), null);
+    assert.equal(bc.someBoolean, true);
+  });
+});
 
 it("False boolean attribute via JS", function(): void {
-  someBooleanTest((sc: BooleanComponent): void => {
-    sc.someBoolean = false;
-    assert.equal(sc.hasAttribute("some-boolean"), false);
-    assert.equal(sc.getAttribute("some-boolean"), null);
-    assert.equal(sc.someBoolean, false);
-    assert.equal(sc.lastSomeBoolean, false);
-    assert.equal(typeof sc.lastSomeBoolean, "boolean");
+  someBooleanTest((bc: BooleanComponent): void => {
+    bc.someBoolean = false;
+    assert.equal(bc.hasAttribute("some-boolean"), false);
+    assert.equal(bc.getAttribute("some-boolean"), null);
+    assert.equal(bc.someBoolean, false);
   });
 });
 
 it("Boolean attribute via HTML", function(): void {
-  someBooleanTest((sc: BooleanComponent): void => {
-    sc.removeAttribute("some-boolean");
-    assert.equal(sc.hasAttribute("some-boolean"), false);
-    assert.equal(sc.someBoolean, false);
-    assert.equal(sc.getAttribute("some-boolean"), null);
-    assert.equal(sc.lastSomeBoolean, false);
-    assert.equal(typeof sc.lastSomeBoolean, "boolean");
+  someBooleanTest((bc: BooleanComponent): void => {
+    bc.removeAttribute("some-boolean");
+    assert.equal(bc.hasAttribute("some-boolean"), false);
+    assert.equal(bc.someBoolean, false);
+    assert.equal(bc.getAttribute("some-boolean"), null);
+  });
+});
+
+it("Set boolean attribute via HTML", function(): void {
+  someBooleanTest((bc: BooleanComponent): void => {
+    bc.setAttribute("some-boolean", "");
+    assert.equal(bc.hasAttribute("some-boolean"), true);
+    assert.equal(bc.someBoolean, true);
+    assert.notEqual(bc.getAttribute("some-boolean"), null);
   });
 });
 
 it("Boolean attribute toggle", function(): void {
-  someBooleanTest((sc: BooleanComponent): void => {
+  someBooleanTest((bc: BooleanComponent): void => {
+    bc.removeAttribute("some-boolean");
 
-    sc.removeAttribute("some-boolean");
+    assert.equal(bc.hasAttribute("some-boolean"), false);
+    assert.equal(bc.someBoolean, false);
+    assert.equal(bc.getAttribute("some-boolean"), null);
 
-    assert.equal(sc.hasAttribute("some-boolean"), false);
-    assert.equal(sc.someBoolean, false);
-    assert.equal(sc.getAttribute("some-boolean"), null);
+    bc.setAttribute("some-boolean", "");
+    assert.equal(bc.hasAttribute("some-boolean"), true);
+    assert.equal(bc.someBoolean, true);
+    assert.notEqual(bc.getAttribute("some-boolean"), null);
 
-    sc.setAttribute("some-boolean", "some-boolean");
-    assert.equal(sc.hasAttribute("some-boolean"), true);
-    assert.equal(sc.someBoolean, true);
-    assert.notEqual(sc.getAttribute("some-boolean"), null);
+    assert.equal(typeof bc.lastSomeBoolean, "boolean");
+    assert.equal(bc.lastSomeBoolean, true);
   });
 });
 

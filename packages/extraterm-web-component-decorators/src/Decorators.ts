@@ -55,7 +55,9 @@ export function CustomElement(tag: string): (target: any) => any {
     const interceptedConstructor = class extends constructor {
       constructor() {
         super();
-        decoratorData.markInstanceConstructed(this);
+        if (Object.getPrototypeOf(this).constructor === interceptedConstructor) {
+          decoratorData.markInstanceConstructed(this);
+        }
       }
 
       getAttribute(attrName: string): any {
@@ -176,9 +178,9 @@ class DecoratorData {
         }
 
         let newValue: any = newRawValue;
-        if (attrData.dataType === "Number" && (typeof newValue !== "number")) {
+        if (attrData.dataType === "Number" && ((typeof newValue) !== "number")) {
           newValue = parseFloat(newRawValue);
-        } else if (attrData.dataType === "Boolean" && (typeof newValue !== "boolean")) {
+        } else if (attrData.dataType === "Boolean" && ((typeof newValue) !== "boolean")) {
           newValue = newRawValue === attrData.attributeName || newRawValue === "" || newRawValue === "true";
         }
 
