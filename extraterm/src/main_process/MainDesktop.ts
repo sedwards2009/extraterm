@@ -38,11 +38,11 @@ export class MainDesktop {
   #onWindowClosedEventEmitter = new EventEmitter<number>();
   onWindowClosed: Event<number>;
 
-  #onDevToolsOpenedEventEmitter = new EventEmitter<BrowserWindow>();
-  onDevToolsOpened: Event<BrowserWindow>;
+  #onDevToolsOpenedEventEmitter = new EventEmitter<MainWindow>();
+  onDevToolsOpened: Event<MainWindow>;
 
-  #onDevToolsClosedEventEmitter = new EventEmitter<BrowserWindow>();
-  onDevToolsClosed: Event<BrowserWindow>;
+  #onDevToolsClosedEventEmitter = new EventEmitter<MainWindow>();
+  onDevToolsClosed: Event<MainWindow>;
 
   #extratermWindows: MainWindowImpl[] = [];
 
@@ -223,10 +223,11 @@ export class MainDesktop {
     });
 
     extratermWindow.onDevToolsClosed(() => {
-      // this.#onDevToolsClosedEventEmitter.fire(newWindow);
+      this.#onDevToolsClosedEventEmitter.fire(extratermWindow);
     });
+
     extratermWindow.onDevToolsOpened(() => {
-    //   this.#onDevToolsOpenedEventEmitter.fire(newWindow);
+      this.#onDevToolsOpenedEventEmitter.fire(extratermWindow);
     });
 
     extratermWindow.open(options);

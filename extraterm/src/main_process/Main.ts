@@ -39,6 +39,7 @@ import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHand
 import { MainIpc } from "./MainIpc";
 import { MainDesktop } from "./MainDesktop";
 import { registerInternalCommands } from "./InternalMainCommands";
+import { MainWindow } from "./MainWindow";
 
 
 SourceMapSupport.install();
@@ -348,12 +349,12 @@ function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileS
     mainIpc.sendQuitApplicationRequest();
   });
 
-  mainDesktop.onDevToolsClosed((devToolsWindow: BrowserWindow)=> {
-    sendDevToolStatus(devToolsWindow, false);
+  mainDesktop.onDevToolsClosed((devToolsWindow: MainWindow)=> {
+    sendDevToolStatus(devToolsWindow.id, false);
   });
 
-  mainDesktop.onDevToolsOpened((devToolsWindow: BrowserWindow)=> {
-    sendDevToolStatus(devToolsWindow, true);
+  mainDesktop.onDevToolsOpened((devToolsWindow: MainWindow)=> {
+    sendDevToolStatus(devToolsWindow.id, true);
   });
 
   mainDesktop.onWindowClosed((webContentsId: number) => {
@@ -381,7 +382,8 @@ function setupDefaultSessions(configDatabase: ConfigDatabaseImpl, ptyManager: Pt
   }
 }
 
-function sendDevToolStatus(window: Electron.BrowserWindow, open: boolean): void {
+function sendDevToolStatus(windowId: number, open: boolean): void {
+  const window = BrowserWindow.fromId(windowId);
   const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
   window.webContents.send(Messages.CHANNEL_NAME, msg);
 }
