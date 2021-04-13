@@ -17,6 +17,12 @@
         "title": "Copy Directory Path to Clipboard",
         "category": "terminal",
         "when": "terminalFocus"
+      },
+      {
+        "command": "directory-commands:copyDirectoryInFileManager",
+        "title": "Open Directory in File Manager",
+        "category": "terminal",
+        "when": "terminalFocus"
       }
     ]
   },

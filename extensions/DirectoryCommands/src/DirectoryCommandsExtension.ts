@@ -18,6 +18,7 @@ export function activate(_context: ExtensionContext): any {
   log = context.logger;
 
   context.commands.registerCommand("directory-commands:copyDirectoryToClipboard", copyDirectoryCommand);
+  context.commands.registerCommand("directory-commands:copyDirectoryInFileManager", copyDirectoryInFileManagerCommand);
 }
 
 async function copyDirectoryCommand(): Promise<void> {
@@ -27,4 +28,13 @@ async function copyDirectoryCommand(): Promise<void> {
   }
 
   context.application.clipboard.writeText(cwd);
+}
+
+async function copyDirectoryInFileManagerCommand(): Promise<void> {
+  const cwd = await context.window.activeTerminal.getWorkingDirectory();
+  if (cwd == null) {
+    return;
+  }
+
+  context.application.showItemInFileManager(cwd);
 }
