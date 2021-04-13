@@ -151,6 +151,14 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     }
     return null;
   }
+
+  async getWorkingDirectory(): Promise<string | null> {
+    const pty = this._terminal.getPty();
+    if (pty == null) {
+      return null;
+    }
+    return pty.getWorkingDirectory();
+  }
 }
 
 interface TerminalBorderWidgetInfo {

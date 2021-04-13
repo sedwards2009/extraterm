@@ -169,10 +169,10 @@ class PtyImpl implements Pty {
     this._onAvailableWriteBufferSizeChangeEventEmitter.dispose();
     this._onDataEventEmitter.dispose();
     this._onExitEventEmitter.dispose();
-    this._onWillDestroyEventEmitter.dispose();  
+    this._onWillDestroyEventEmitter.dispose();
   }
 
-  async getWorkingDirectory(): Promise<string> {
-    return await WebIpc.ptyGetWorkingDirectory(this._ptyId);
+  getWorkingDirectory(): Promise<string> {
+    return WebIpc.ptyGetWorkingDirectory(this._ptyId);
   }
 }

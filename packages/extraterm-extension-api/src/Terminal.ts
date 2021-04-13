@@ -153,6 +153,16 @@ export interface Terminal {
    *          undefined if it was canceled.
    */
   showOnCursorListPicker(options: OnCursorListPickerOptions): Promise<number | undefined>;
+
+  /**
+   * Get the current working directory of locally running shell process
+   * connected to this terminal.
+   * 
+   * Note: This can be unreliable for certain session types and should be considered a best effort.
+   * 
+   * @return a promise which resolves to the path of the working directory or null.
+   */
+  getWorkingDirectory(): Promise<string | null>;
 }
 
 /**
