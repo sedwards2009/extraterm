@@ -78,6 +78,13 @@ export interface Application {
    * @param url the url to open.
    */
   openExternal(url: string): void;
+
+  /**
+   * Show the given path in the system's file manager application.
+   *
+   * @param path the path of the file or directory to show.
+   */
+  showItemInFileManager(path: string): void;
 }
 
 /**

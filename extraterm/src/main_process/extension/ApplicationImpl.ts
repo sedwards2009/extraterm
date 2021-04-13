@@ -14,4 +14,8 @@ export class ApplicationImpl implements ExtensionApi.Application {
   openExternal(url: string): void {
     shell.openExternal(url);
   }
+
+  showItemInFileManager(path: string): void {
+    shell.showItemInFolder(path);
+  }
 }
