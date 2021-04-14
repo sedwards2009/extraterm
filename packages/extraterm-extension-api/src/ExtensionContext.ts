@@ -73,6 +73,21 @@ export interface Application {
   clipboard: Clipboard;
 
   /**
+   * True if Extraterm is running Linux
+   */
+  readonly isLinux: boolean;
+
+  /**
+   * True if Extraterm is running on MacOS
+   */
+  readonly isMacOS: boolean;
+
+  /**
+   * True if Extraterm is running on Windows.
+   */
+  readonly isWindows: boolean;
+
+  /**
    * Open the given URL using the desktop's default application.
    *
    * @param url the url to open.

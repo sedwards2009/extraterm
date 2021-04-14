@@ -18,4 +18,16 @@ export class ApplicationImpl implements ExtensionApi.Application {
   showItemInFileManager(path: string): void {
     shell.showItemInFolder(path);
   }
+
+  get isLinux(): boolean {
+    return process.platform === "linux";
+  }
+
+  get isMacOS(): boolean {
+    return process.platform === "darwin";
+  }
+
+  get isWindows(): boolean {
+    return process.platform === "win32";
+  }
 }
