@@ -12,6 +12,7 @@ Also, if Extraterm is run again, then a new terminal tab is opened and the windo
 **Features**
 
 * "Open in Extraterm" option added to Windows Explorer's context menus during install. [#330](https://github.com/sedwards2009/extraterm/issues/330)
-
+* Added command to open the current directory in the desktop file manager.
+* Added command to copy the current directory path to the clipboard.
 
 Download it from [Github](https://github.com/sedwards2009/extraterm/releases/tag/v0.59.0)
