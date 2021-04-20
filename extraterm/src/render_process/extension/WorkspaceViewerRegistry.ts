@@ -117,11 +117,6 @@ class ExtensionViewerProxy extends SimpleViewerElement {
     return this._extensionViewer.getMetadata();
   }
 
-  _metadataUpdated(): void {
-    const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
-    this.dispatchEvent(event);
-  }
-
   getBulkFileHandle(): ExtensionApi.BulkFileHandle {
     return this._extensionViewer.getBulkFileHandle();
   }
@@ -168,7 +163,7 @@ export class ExtensionViewerBaseImpl implements ExtensionApi.ExtensionViewerBase
     }
 
     if (changed) {
-      this._viewerProxy._metadataUpdated();
+      this._viewerProxy.metadataChanged();
     }
   }
 

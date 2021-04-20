@@ -86,12 +86,12 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   }
 
   onDispose: Event<void>;
-  _onDisposeEventEmitter = new EventEmitter<void>();
+  #onDisposeEventEmitter = new EventEmitter<void>();
 
   constructor() {
     super();
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
-    this.onDispose = this._onDisposeEventEmitter.event;
+    this.onDispose = this.#onDisposeEventEmitter.event;
     this._copyToClipboardLater = new DebouncedDoLater(this.copyToClipboard.bind(this), 100);
   }
 
@@ -182,7 +182,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
   }
 
   dispose(): void {
-    this._onDisposeEventEmitter.fire();
+    this.#onDisposeEventEmitter.fire();
     this._copyToClipboardLater.cancel();
     const element = this.getViewerElement();
     if (element !== null) {

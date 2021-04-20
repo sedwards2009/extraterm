@@ -5,12 +5,10 @@
 import {BulkFileHandle, BulkFileState, Disposable, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
 import { CustomElement } from 'extraterm-web-component-decorators';
 
-import {DebouncedDoLater} from 'extraterm-later';
 import {FileTransferProgress} from '../gui/file_transfer/FileTransferProgress';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import {SimpleViewerElement} from '../viewers/SimpleViewerElement';
-import {ViewerElement} from './ViewerElement';
 import * as ThemeTypes from '../../theme/Theme';
 
 
@@ -24,13 +22,10 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
   private _fileTransferProgress: FileTransferProgress = null;
   private _onAvailableSizeChangeDisposable: Disposable = null;
   private _onStateChangeDisposable: Disposable = null;
-  private _updateLater: DebouncedDoLater = null;
 
   constructor() {
     super();
     this._log = getLogger("et-download-viewer", this);
-
-    this._updateLater = new DebouncedDoLater(this._updateLaterCallback.bind(this), 250);
 
     this._fileTransferProgress =  <FileTransferProgress> document.createElement(FileTransferProgress.TAG_NAME);
 
@@ -74,11 +69,6 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
     return metadata;
   }
 
-  private _updateLaterCallback(): void {
-    const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
-    this.dispatchEvent(event);
-  }
-
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.GENERAL_GUI, ThemeTypes.CssFile.DOWNLOAD_VIEWER];
   }
@@ -106,7 +96,7 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
 
       this._onStateChangeDisposable = this._bulkFileHandle.onStateChange(() => {
         this._fileTransferProgress.finished = true;
-        this._updateLater.trigger();
+        this.metadataChanged();
         resolve();
       });
 
@@ -131,7 +121,6 @@ export class DownloadViewer extends SimpleViewerElement implements Disposable {
 
   dispose(): void {
     this._releaseBulkFileHandle();
-    this._updateLater.cancel();
     super.dispose();
   }
 }

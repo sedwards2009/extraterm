@@ -694,6 +694,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       this._lastFocus = viewerElement;
     });
 
+    viewerElement.addEventListener(ViewerElement.EVENT_METADATA_CHANGE, () => {
+      this._updateTabTitle(viewerElement);
+    });
+
     this._updateTabTitle(viewerElement);
     this._sendTabOpenedEvent();
   }

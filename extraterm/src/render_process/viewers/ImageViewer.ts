@@ -50,7 +50,6 @@ export class ImageViewer extends ViewerElement {
 
   private _log: Logger;
   private _bulkFileHandle: BulkFileHandle = null;
-  private _metadataEventDoLater: DebouncedDoLater = null;
   private _mimeType: string = null;
   private _imageWidth = -1;
   private _imageHeight = -1;
@@ -65,11 +64,6 @@ export class ImageViewer extends ViewerElement {
   constructor() {
     super();
     this._log = getLogger(ImageViewer.TAG_NAME, this);
-
-    this._metadataEventDoLater = new DebouncedDoLater(() => {
-      const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
-      this.dispatchEvent(event);
-    });
   }
 
   getMetadata(): ViewerMetadata {
@@ -189,7 +183,7 @@ export class ImageViewer extends ViewerElement {
 
     this._bulkFileHandle = handle;
     handle.ref();
-    this._metadataEventDoLater.trigger();
+    this.metadataChanged();
 
     if (DomUtils.getShadowRoot(this) !== null) {
       this._setImageUrl(handle.url);

@@ -17,7 +17,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry } from "../WorkspaceSessionEditorRegistry";
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from "../WorkspaceViewerRegistry";
 import { CommonExtensionWindowState } from "../CommonExtensionState";
-import { SessionSettingsEditorFactory, SessionConfiguration } from "@extraterm/extraterm-extension-api";
+import { SessionSettingsEditorFactory, SessionConfiguration, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
 import { ViewerElement } from "../../viewers/ViewerElement";
 import { WorkspaceSessionSettingsRegistry } from "../WorkspaceSessionSettingsRegistry";
 import { TerminalProxy } from "../proxy/TerminalProxy";
@@ -240,16 +240,40 @@ class ExtensionTabImpl implements ExtensionApi.ExtensionTab {
     throw new Error("Method not implemented.");
   }
 
-  icon: string;
+  get icon(): string {
+    return this.#extensionContainerViewer.getIcon();
+  }
 
-  title: string;
+  set icon(icon: string) {
+    this.#extensionContainerViewer.setIcon(icon);
+  }
 
+  get title(): string {
+    return this.#extensionContainerViewer.getTitle();
+  }
+
+  set title(title: string) {
+    this.#extensionContainerViewer.setTitle(title);
+  }
 }
 
 @CustomElement("et-extension-container-viewer")
 class ExtensionContainerViewer extends ViewerElement  {
+
+  #viewerMetadata: ViewerMetadata = null;
+
   constructor() {
     super();
+
+    this.#viewerMetadata = {
+      title: "",
+      icon: null,
+      posture: ViewerPosture.NEUTRAL,
+      moveable: true,
+      deleteable: true,
+      toolTip: null
+    };
+
     const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
     const themeStyle = document.createElement("style");
     themeStyle.id = ThemeableElementBase.ID_THEME;
@@ -259,5 +283,27 @@ class ExtensionContainerViewer extends ViewerElement  {
 
   protected _themeCssFiles(): ThemeTypes.CssFile[] {
     return [ThemeTypes.CssFile.EXTENSION_TAB];
+  }
+
+  getMetadata(): ViewerMetadata {
+    return this.#viewerMetadata;
+  }
+
+  getIcon(): string {
+    return this.#viewerMetadata.icon;
+  }
+
+  setIcon(icon: string): void {
+    this.#viewerMetadata.icon = icon;
+    this.metadataChanged();
+  }
+
+  getTitle(): string {
+    return this.#viewerMetadata.title;
+  }
+
+  setTitle(title: string): void {
+    this.#viewerMetadata.title = title;
+    this.metadataChanged();
   }
 }
