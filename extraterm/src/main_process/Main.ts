@@ -134,7 +134,7 @@ async function main(): Promise<void> {
 
   const bulkFileStorage = setupBulkFileStorage();
 
-  const mainDesktop = new MainDesktop(configDatabase, themeManager);
+  const mainDesktop = new MainDesktop(app, configDatabase, themeManager);
   const globalKeybindingsManager = setupGlobalKeybindingsManager(configDatabase, keybindingsIOManager, mainDesktop);
 
   registerInternalCommands(extensionManager, mainDesktop);

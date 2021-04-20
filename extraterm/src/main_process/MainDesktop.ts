@@ -5,7 +5,8 @@
  */
 import * as path from "path";
 import { Event } from "@extraterm/extraterm-extension-api";
-import { BrowserWindow, Menu, Tray, MenuItemConstructorOptions } from "electron";
+import { BrowserWindow, Menu, Tray, MenuItemConstructorOptions, App } from "electron";
+import { Logger, getLogger } from "extraterm-logging";
 
 import { ConfigChangeEvent, ConfigDatabase, GeneralConfig, GENERAL_CONFIG } from "../Config";
 import { MainWindow, OpenWindowOptions } from "./MainWindow";
@@ -18,10 +19,14 @@ const isLinux = process.platform === "linux";
 const isDarwin = process.platform === "darwin";
 
 
+
 /**
  * UI, desktop, and window related UI code which runs in the main process.
  */
 export class MainDesktop {
+  private _log: Logger = null;
+
+  #app: App = null;
   #configDatabase: ConfigDatabase = null;
   #themeManager: ThemeManager = null;
   #tray: Tray = null;
@@ -46,7 +51,10 @@ export class MainDesktop {
 
   #extratermWindows: MainWindowImpl[] = [];
 
-  constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager) {
+  constructor(app: App, configDatabase: ConfigDatabase, themeManager: ThemeManager) {
+    this._log = getLogger("MainDesktop", this);
+
+    this.#app = app;
     this.#configDatabase = configDatabase;
     this.#themeManager = themeManager;
 
@@ -61,12 +69,27 @@ export class MainDesktop {
   }
 
   start(): void {
+    this._preventAllWindowNavigation();
     this._createTrayIcon();
     this._setUpMenu();
     this.#configDatabase.onChange((e: ConfigChangeEvent) => {
       if (e.key === "general") {
         this._createTrayIcon();
       }
+    });
+  }
+
+  private _preventAllWindowNavigation(): void {
+    this.#app.on("web-contents-created", (event, contents) => {
+      contents.on("will-navigate", (event, navigationUrl) => {
+        event.preventDefault();
+        this._log.warn(`Prevented window navigation to url '${navigationUrl}'`);
+      });
+
+      contents.setWindowOpenHandler(({ url }) => {
+        this._log.warn(`Prevented new window to url '${url}'`);
+        return { action: 'deny' };
+      });
     });
   }
 
