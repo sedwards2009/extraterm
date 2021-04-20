@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,6 +7,9 @@ import * as _ from "lodash";
 
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
+import { CustomElement } from "extraterm-web-component-decorators";
+
+import * as ThemeTypes from "../../../theme/Theme";
 
 import { EtTerminal, LineRangeChange } from "../../Terminal";
 import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor, InternalSessionEditor } from "../InternalTypes";
@@ -18,6 +21,9 @@ import { SessionSettingsEditorFactory, SessionConfiguration } from "@extraterm/e
 import { ViewerElement } from "../../viewers/ViewerElement";
 import { WorkspaceSessionSettingsRegistry } from "../WorkspaceSessionSettingsRegistry";
 import { TerminalProxy } from "../proxy/TerminalProxy";
+import { ExtensionContainerElement } from "../ExtensionContainerElement";
+import { ExtensionTabContribution } from "extraterm/src/ExtensionMetadata";
+import { ThemeableElementBase } from "../../ThemeableElementBase";
 
 /**
  * The implementation behind the `Window` object on the `ExtensionContext`
@@ -29,32 +35,36 @@ export class WindowProxy implements InternalWindow {
 
   private _log: Logger = null;
 
-  private _windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
-  private _windowSessionSettingsRegistry: WorkspaceSessionSettingsRegistry = null;
-  private _windowViewerRegistry: WorkspaceViewerRegistry = null;
-  private _terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
+  #internalExtensionContext: InternalExtensionContext = null;
+  #commonExtensionState: CommonExtensionWindowState = null;
 
-  private _onDidCreateTerminalEventEmitter = new EventEmitter<ExtensionApi.Terminal>();
+  #windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
+  #windowSessionSettingsRegistry: WorkspaceSessionSettingsRegistry = null;
+  #windowViewerRegistry: WorkspaceViewerRegistry = null;
+  #terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
+
+  #onDidCreateTerminalEventEmitter = new EventEmitter<ExtensionApi.Terminal>();
   onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
 
   #allTerminals: EtTerminal[] = [];
 
-  constructor(private _internalExtensionContext: InternalExtensionContext,
-      private _commonExtensionState: CommonExtensionWindowState) {
-
+  constructor(internalExtensionContext: InternalExtensionContext, commonExtensionState: CommonExtensionWindowState) {
     this._log = getLogger("WorkspaceProxy", this);
-    this.onDidCreateTerminal = this._onDidCreateTerminalEventEmitter.event;
-    this._windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this._internalExtensionContext);
-    this._windowSessionSettingsRegistry = new WorkspaceSessionSettingsRegistry(this._internalExtensionContext);
-    this._windowViewerRegistry = new WorkspaceViewerRegistry(this._internalExtensionContext);
+    this.#internalExtensionContext = internalExtensionContext;
+    this. #commonExtensionState = commonExtensionState;
+
+    this.onDidCreateTerminal = this.#onDidCreateTerminalEventEmitter.event;
+    this.#windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this.#internalExtensionContext);
+    this.#windowSessionSettingsRegistry = new WorkspaceSessionSettingsRegistry(this.#internalExtensionContext);
+    this.#windowViewerRegistry = new WorkspaceViewerRegistry(this.#internalExtensionContext);
     this.extensionViewerBaseConstructor = ExtensionViewerBaseImpl;
   }
 
   newTerminalCreated(newTerminal: EtTerminal, allTerminals: EtTerminal[]): void {
     this.#allTerminals = allTerminals;
-    if (this._onDidCreateTerminalEventEmitter.hasListeners()) {
-      const terminal = this._internalExtensionContext._proxyFactory.getTerminalProxy(newTerminal);
-      this._onDidCreateTerminalEventEmitter.fire(terminal);
+    if (this.#onDidCreateTerminalEventEmitter.hasListeners()) {
+      const terminal = this.#internalExtensionContext._proxyFactory.getTerminalProxy(newTerminal);
+      this.#onDidCreateTerminalEventEmitter.fire(terminal);
     }
   }
 
@@ -63,17 +73,17 @@ export class WindowProxy implements InternalWindow {
   }
 
   terminalAppendedViewer(terminal: EtTerminal, viewer: ViewerElement): void {
-    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
-      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+    if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy._onDidAppendBlockEventEmitter.hasListeners()) {
-        proxy._onDidAppendBlockEventEmitter.fire(this._internalExtensionContext._proxyFactory.getBlock(viewer));
+        proxy._onDidAppendBlockEventEmitter.fire(this.#internalExtensionContext._proxyFactory.getBlock(viewer));
       }
     }
   }
 
   terminalEnvironmentChanged(terminal: EtTerminal, changeList: string[]): void {
-    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
-      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+    if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy.environment._onChangeEventEmitter.hasListeners()) {
         proxy.environment._onChangeEventEmitter.fire(changeList);
       }
@@ -81,10 +91,10 @@ export class WindowProxy implements InternalWindow {
   }
 
   terminalDidAppendScrollbackLines(terminal: EtTerminal, ev: LineRangeChange): void {
-    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
-      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+    if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
-        const block = this._internalExtensionContext._proxyFactory.getBlock(ev.viewer);
+        const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.viewer);
         proxy._onDidAppendScrollbackLinesEventEmitter.fire({
           block,
           startLine: ev.startLine,
@@ -95,10 +105,10 @@ export class WindowProxy implements InternalWindow {
   }
 
   terminalDidScreenChange(terminal: EtTerminal, ev: LineRangeChange): void {
-    if (this._internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
-      const proxy = <TerminalProxy> this._internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+    if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy._onDidScreenChangeEventEmitter.hasListeners()) {
-        const block = this._internalExtensionContext._proxyFactory.getBlock(ev.viewer);
+        const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.viewer);
         if (ev.startLine !== -1 && ev.endLine !== -1) {
           proxy._onDidScreenChangeEventEmitter.fire({
             block,
@@ -111,72 +121,143 @@ export class WindowProxy implements InternalWindow {
   }
 
   get activeTerminal(): ExtensionApi.Terminal {
-    return this._internalExtensionContext._proxyFactory.getTerminalProxy(this._commonExtensionState.activeTerminal);
+    return this.#internalExtensionContext._proxyFactory.getTerminalProxy(this.#commonExtensionState.activeTerminal);
   }
 
   get activeBlock(): ExtensionApi.Block {
-    return this._internalExtensionContext._proxyFactory.getBlock(this._commonExtensionState.activeViewerElement);
+    return this.#internalExtensionContext._proxyFactory.getBlock(this.#commonExtensionState.activeViewerElement);
   }
 
   get activeHyperlinkURL(): string {
-    return this._commonExtensionState.activeHyperlinkURL;
+    return this.#commonExtensionState.activeHyperlinkURL;
   }
 
   get terminals(): ExtensionApi.Terminal[] {
-    return this.#allTerminals.map(t => this._internalExtensionContext._proxyFactory.getTerminalProxy(t));
+    return this.#allTerminals.map(t => this.#internalExtensionContext._proxyFactory.getTerminalProxy(t));
   }
 
   // ---- Viewers ----
   extensionViewerBaseConstructor: ExtensionApi.ExtensionViewerBaseConstructor;
 
   registerViewer(name: string, viewerClass: ExtensionApi.ExtensionViewerBaseConstructor): void {
-    this._windowViewerRegistry.registerViewer(name, viewerClass);
+    this.#windowViewerRegistry.registerViewer(name, viewerClass);
   }
 
   findViewerElementTagByMimeType(mimeType: string): string {
-    return this._windowViewerRegistry.findViewerElementTagByMimeType(mimeType);
+    return this.#windowViewerRegistry.findViewerElementTagByMimeType(mimeType);
   }
 
   // ---- Session Editors ----
   registerSessionEditor(type: string, factory: ExtensionApi.SessionEditorFactory): void {
-    this._windowSessionEditorRegistry.registerSessionEditor(type, factory);
+    this.#windowSessionEditorRegistry.registerSessionEditor(type, factory);
   }
 
   createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor {
-    return this._windowSessionEditorRegistry.createSessionEditor(sessionType, sessionConfiguration);
+    return this.#windowSessionEditorRegistry.createSessionEditor(sessionType, sessionConfiguration);
   }
 
   // ---- Tab Title Widgets ----
   registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
-    this._internalExtensionContext._registerTabTitleWidget(name, factory);
+    this.#internalExtensionContext._registerTabTitleWidget(name, factory);
   }
 
   // ---- Terminal Border Widgets ----
   registerTerminalBorderWidget(name: string, factory: ExtensionApi.TerminalBorderWidgetFactory): void {
-    const borderWidgetMeta = this._internalExtensionContext._extensionMetadata.contributes.terminalBorderWidgets;
+    const borderWidgetMeta = this.#internalExtensionContext._extensionMetadata.contributes.terminalBorderWidgets;
     for (const data of borderWidgetMeta) {
       if (data.name === name) {
-        this._terminalBorderWidgetFactoryMap.set(name, factory);
+        this.#terminalBorderWidgetFactoryMap.set(name, factory);
         return;
       }
     }
 
-    this._internalExtensionContext.logger.warn(
+    this.#internalExtensionContext.logger.warn(
       `Unknown terminal border widget '${name}' given to registerTerminalBorderWidget().`);
   }
 
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory {
-    return this._terminalBorderWidgetFactoryMap.get(name);
+    return this.#terminalBorderWidgetFactoryMap.get(name);
   }
 
   // ---- Session Settings editors ----
   registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void {
-    this._windowSessionSettingsRegistry.registerSessionSettingsEditor(id, factory);
+    this.#windowSessionSettingsRegistry.registerSessionSettingsEditor(id, factory);
   }
 
   createSessionSettingsEditors(sessionType: string,
       sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
 
-    return this._windowSessionSettingsRegistry.createSessionSettingsEditors(sessionType, sessionConfiguration);
+    return this.#windowSessionSettingsRegistry.createSessionSettingsEditors(sessionType, sessionConfiguration);
+  }
+
+  openExtensionTab(name: string): ExtensionApi.ExtensionTab {
+    const etc = this._findExtensionTabContribution(name);
+    if (etc == null) {
+      this.#internalExtensionContext.logger.warn(
+        `Unknown extension tab '${name}' given to openExtensionTab().`);
+      return null;
+    }
+
+    const extensionContainerElement = <ExtensionContainerElement> document.createElement(ExtensionContainerElement.TAG_NAME);
+    extensionContainerElement._setExtensionContext(this.#internalExtensionContext);
+    extensionContainerElement._setExtensionCss(etc.css);
+
+    const extensionTabViewer = <ExtensionContainerViewer> document.createElement("et-extension-container-viewer");
+    extensionTabViewer.shadowRoot.appendChild(extensionContainerElement);
+
+    this.#internalExtensionContext._extensionManager.openViewerElementInTab(extensionTabViewer);
+
+    return new ExtensionTabImpl(extensionContainerElement, extensionTabViewer);
+  }
+
+  private _findExtensionTabContribution(name: string): ExtensionTabContribution {
+    const extensionTabs = this.#internalExtensionContext._extensionMetadata.contributes.tabs;
+    for (const t of extensionTabs) {
+      if (t.name === name) {
+        return t;
+      }
+    }
+    return null;
+  }
+}
+
+
+class ExtensionTabImpl implements ExtensionApi.ExtensionTab {
+  #extensionContainerElement: ExtensionContainerElement = null;
+  #extensionContainerViewer: ExtensionContainerViewer = null;
+
+  constructor(extensionContainerElement: ExtensionContainerElement,
+      extensionContainerViewer: ExtensionContainerViewer) {
+    this.#extensionContainerElement = extensionContainerElement;
+    this.#extensionContainerViewer = extensionContainerViewer;
+  }
+
+  get containerElement(): HTMLElement {
+    return this.#extensionContainerElement.getContainerElement();
+  }
+
+  close(): void {
+    throw new Error("Method not implemented.");
+  }
+
+  icon: string;
+
+  title: string;
+
+}
+
+@CustomElement("et-extension-container-viewer")
+class ExtensionContainerViewer extends ViewerElement  {
+  constructor() {
+    super();
+    const shadow = this.attachShadow({ mode: "open", delegatesFocus: false });
+    const themeStyle = document.createElement("style");
+    themeStyle.id = ThemeableElementBase.ID_THEME;
+    shadow.appendChild(themeStyle);
+    this.updateThemeCss();
+  }
+
+  protected _themeCssFiles(): ThemeTypes.CssFile[] {
+    return [ThemeTypes.CssFile.EXTENSION_TAB];
   }
 }

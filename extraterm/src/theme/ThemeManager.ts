@@ -894,6 +894,9 @@ export class ThemeManager implements AcceptsConfigDatabase {
       for (const metadata of extensionMetadata.contributes.tabTitleWidgets) {
         extensionCssList.push(metadata.css);
       }
+      for (const metadata of extensionMetadata.contributes.tabs) {
+        extensionCssList.push(metadata.css);
+      }
 
       for (const extensionCss of extensionCssList) {
         if (extensionCss.cssFile.length === 0) {

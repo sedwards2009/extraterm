@@ -78,6 +78,9 @@ export interface ExtensionManager {
   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
   createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor;
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
+
+  setOpenViewerTabFunc(openViewerTabFunc: (viewerElement: ViewerElement, tabWidget: TabWidget) => void): void;
+  openViewerElementInTab(viewerElement: ViewerElement): void;
 }
 
 export interface AcceptsExtensionManager {

@@ -67,6 +67,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   extensionUiUtils: ExtensionUiUtils = null;
 
   private _splitLayout: SplitLayout = null;
+  #openViewerTabFunc: (viewerElement: ViewerElement, tabWidget: TabWidget) => void = null;
 
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
@@ -92,6 +93,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   setSplitLayout(splitLayout: SplitLayout): void {
     this._splitLayout = splitLayout;
+  }
+
+  setOpenViewerTabFunc(openViewerTabFunc: (viewerElement: ViewerElement, tabWidget: TabWidget) => void): void {
+    this.#openViewerTabFunc = openViewerTabFunc;
   }
 
   startUp(): void {
@@ -700,5 +705,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   commandRegistrationChanged(): void {
     this._commandsChangedLater.trigger();
+  }
+
+  openViewerElementInTab(viewerElement: ViewerElement): void {
+    this.#openViewerTabFunc(viewerElement, null);
   }
 }

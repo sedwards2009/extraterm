@@ -40,10 +40,22 @@ export interface Window {
 
   registerSessionEditor(type: string, factory: SessionEditorFactory): void;
   registerTabTitleWidget(name: string, factory: TabTitleWidgetFactory): void;
-  registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void;
+
+  registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void; // FIXME: this should go away
+
   registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void;
+
+  openExtensionTab(name: string): ExtensionTab;
 }
 
+export interface ExtensionTab {
+  readonly containerElement: HTMLElement;
+
+  close(): void;
+
+  icon: string;
+  title: string;
+}
 
 /**
  * Extension API for extensions which need to operate in the back end process.

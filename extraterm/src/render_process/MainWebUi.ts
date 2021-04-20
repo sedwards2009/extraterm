@@ -658,13 +658,13 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _popOutEmbeddedViewer(embeddedViewer: EmbeddedViewer, terminal: EtTerminal): EtViewerTab {
-    const viewerTab = this.openViewerTab(embeddedViewer, terminal.getFontAdjust());
+    const viewerTab = this.openEmbeddedViewerInTab(embeddedViewer, terminal.getFontAdjust());
     this._switchToTab(viewerTab);
     terminal.deleteEmbeddedViewer(embeddedViewer);
     return viewerTab;
   }
 
-  openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
+  openEmbeddedViewerInTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
@@ -675,14 +675,18 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
-    this._openViewerTab(this._firstTabWidget(), viewerTab);
+    this.openViewerTab(viewerTab);
     viewerTab.setViewerElement(viewerElement);
 
     this._updateTabTitle(viewerTab);
     return viewerTab;
   }
 
-  private _openViewerTab(tabWidget: TabWidget, viewerElement: ViewerElement): void {
+  openViewerTab(viewerElement: ViewerElement, tabWidget: TabWidget = null): void {
+    if (tabWidget == null) {
+      tabWidget = this._firstTabWidget();
+    }
+
     viewerElement.setFocusable(true);
     this._addTab(tabWidget, viewerElement);
 
@@ -758,7 +762,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       if (tabName != null) {
         settingsTabElement.setSelectedTab(tabName);
       }
-      this._openViewerTab(this._firstTabWidget(), settingsTabElement);
+      this.openViewerTab(settingsTabElement);
       this._switchToTab(settingsTabElement);
     }
   }
@@ -775,7 +779,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       config.injectConfigDatabase(viewerElement, this._configManager);
       injectKeybindingsManager(viewerElement, this._keybindingsManager);
-      this._openViewerTab(this._firstTabWidget(), viewerElement);
+      this.openViewerTab(viewerElement);
       this._switchToTab(viewerElement);
     }
   }
