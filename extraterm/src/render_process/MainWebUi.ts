@@ -5,6 +5,7 @@
  */
 import * as he from 'he';
 import { BulkFileHandle, SessionConfiguration, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
+import { html, render, TemplateResult } from "extraterm-lit-html";
 import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -192,9 +193,24 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _setUpShadowDom(): void {
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this._createClone();
-    shadow.appendChild(clone);
+    this.attachShadow({ mode: "open", delegatesFocus: false });
+    render(html`${this._styleTag()}
+      <div id=${ID_TOP_LAYOUT}>
+        <div id=${ID_TITLE_BAR}>
+          <div id=${ID_TITLE_BAR_SPACE}>
+            <div id=${ID_TOP_RESIZE_BAR}></div>
+            <div id=${ID_DRAG_BAR}></div>
+          </div>
+          ${this._showWindowControls()
+            ? html`
+              <button id=${ID_MINIMIZE_BUTTON} tabindex="-1"></button>
+              <button id=${ID_MAXIMIZE_BUTTON} tabindex="-1"></button>
+              <button id=${ID_CLOSE_BUTTON} tabindex="-1"></button>`
+            : null}
+        </div>
+        <div id=${ID_MAIN_CONTENTS}>
+        </div>
+      </div>`, this.shadowRoot);
     this.updateThemeCss();
   }
 
@@ -423,48 +439,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return tempDiv.children.item(0);
   }
 
-  private _createClone(): Node {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = this._html();
-      window.document.body.appendChild(template);
-    }
-    return window.document.importNode(template.content, true);
-  }
-
   private _showWindowControls(): boolean {
     const systemConfig = <config.SystemConfig> this.#configManager.getConfig(config.SYSTEM_CONFIG);
     return systemConfig.titleBarStyle === "theme" && process.platform !== "darwin";
-  }
-
-  private _html(): string {
-    let windowControls = "";
-    if (this._showWindowControls()) {
-      windowControls = this._windowControlsHtml();
-    }
-
-    return trimBetweenTags(`
-      <style id="${ThemeableElementBase.ID_THEME}"></style>
-      <div id="${ID_TOP_LAYOUT}">
-        <div id="${ID_TITLE_BAR}">
-          <div id="${ID_TITLE_BAR_SPACE}">
-            <div id="${ID_TOP_RESIZE_BAR}"></div>
-            <div id="${ID_DRAG_BAR}"></div>
-          </div>
-          ${windowControls}
-        </div>
-        <div id="${ID_MAIN_CONTENTS}">
-        </div>
-      </div>`);
-  }
-
-  private _windowControlsHtml(): string {
-    return trimBetweenTags(
-      `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>
-      <button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>
-      <button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>`);
   }
 
   private _newTabRestAreaHtml(extraContents = ""): string {
