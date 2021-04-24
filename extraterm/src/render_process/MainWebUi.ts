@@ -19,7 +19,7 @@ import { EmbeddedViewer } from './viewers/EmbeddedViewer';
 import { EmptyPaneMenu } from './command/EmptyPaneMenu';
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
 import { ElementMimeType, FrameMimeType } from './InternalMimeTypes';
-import { KeybindingsManager, AcceptsKeybindingsManager, injectKeybindingsManager } from './keybindings/KeyBindingsManager';
+import { KeybindingsManager, injectKeybindingsManager } from './keybindings/KeyBindingsManager';
 import { SettingsTab } from './settings/SettingsTab';
 import { SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation } from './gui/SnapDropContainer';
 import { SplitLayout } from './SplitLayout';
@@ -45,8 +45,6 @@ import { doLater } from 'extraterm-later';
 import { focusElement } from './DomUtils';
 
 const VisualState = ViewerElementTypes.VisualState;
-
-const ID = "ExtratermMainWebUITemplate";
 
 const ID_TOP_LAYOUT = "ID_TOP_LAYOUT";
 const ID_MAIN_CONTENTS = "ID_MAIN_CONTENTS";
@@ -78,8 +76,7 @@ const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
  * Top level UI component for a normal terminal window
  */
 @CustomElement("extraterm-mainwebui")
-export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
-    config.AcceptsConfigDatabase {
+export class MainWebUi extends ThemeableElementBase {
 
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
   static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
@@ -109,6 +106,15 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._log = getLogger("ExtratermMainWebUI", this);
   }
 
+  setDependencies(configManager: ConfigDatabase, keyBindingManager: KeybindingsManager,
+      extensionManager: ExtensionManager): void {
+
+    this.#configManager = configManager;
+    this.#keybindingsManager = keyBindingManager;
+    this.#extensionManager = extensionManager;
+    this._registerCommands(extensionManager);
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     this._setUpShadowDom();
@@ -131,7 +137,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (this.#lastFocus != null) {
       this._focusTabContent(this.#lastFocus);
     } else {
-
       const allContentElements = this.#splitLayout.getAllTabContents();
       if (allContentElements.length !== 0) {
         this._focusTabContent(allContentElements[0]);
@@ -141,19 +146,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   render(): void {
     this.#splitLayout.update();
-  }
-
-  setConfigDatabase(configManager: ConfigDatabase): void {
-    this.#configManager = configManager;
-  }
-
-  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
-    this.#keybindingsManager = keyBindingManager;
-  }
-
-  setExtensionManager(extensionManager: ExtensionManager): void {
-    this.#extensionManager = extensionManager;
-    this._registerCommands(extensionManager);
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {

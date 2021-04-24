@@ -244,9 +244,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   mainWebUi.windowId = windowId;
-  injectConfigDatabase(mainWebUi, configDatabase);
-  injectKeybindingsManager(mainWebUi, keybindingsManager);
-  mainWebUi.setExtensionManager(extensionManager);
+  mainWebUi.setDependencies(configDatabase, keybindingsManager, extensionManager);
   mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
