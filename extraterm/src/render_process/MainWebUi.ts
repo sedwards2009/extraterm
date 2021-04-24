@@ -118,11 +118,7 @@ export class MainWebUi extends ThemeableElementBase {
   connectedCallback(): void {
     super.connectedCallback();
     this._setUpShadowDom();
-    this._setUpMainContainer();
     this._setUpSplitLayout();
-    if (this._showWindowControls()) {
-      this._setUpWindowControls();
-    }
     this._setupPtyIpc();
   }
 
@@ -195,30 +191,43 @@ export class MainWebUi extends ThemeableElementBase {
           </div>
           ${this._showWindowControls()
             ? html`
-              <button id=${ID_MINIMIZE_BUTTON} tabindex="-1"></button>
-              <button id=${ID_MAXIMIZE_BUTTON} tabindex="-1"></button>
-              <button id=${ID_CLOSE_BUTTON} tabindex="-1"></button>`
+              <button id=${ID_MINIMIZE_BUTTON} tabindex="-1" @click=${this._handleMinimizeClick.bind(this)}></button>
+              <button id=${ID_MAXIMIZE_BUTTON} tabindex="-1" @click=${this._handleMaximizeClick.bind(this)}></button>
+              <button id=${ID_CLOSE_BUTTON} tabindex="-1" @click=${this._handleCloseWindowClick.bind(this)}></button>`
             : null}
         </div>
-        <div id=${ID_MAIN_CONTENTS}>
+        <div
+          id=${ID_MAIN_CONTENTS}
+          class=${CLASS_MAIN_NOT_DRAGGING}
+          @click=${this._handleMainContainerClickEvent.bind(this)}
+          @et-tab-widget_switch=${this._handleTabSwitchEvent.bind(this)}
+          @et-tab-widget_dropped=${this._handleTabWidgetDroppedEvent.bind(this)}
+          @et-snap-drop-container_dropped=${this._handleTabWidgetSnapDroppedEvent.bind(this)}
+          @extraterm_drag-started=${this._handleDragStartedEvent.bind(this)}
+          @extraterm_drag-ended=${this._handleDragEndedEvent.bind(this)}>
         </div>
       </div>`, this.shadowRoot);
     this.updateThemeCss();
-  }
 
-  private _setUpMainContainer(): void {
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
-    mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
-
-    mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, this._handleTabSwitchEvent.bind(this));
-    mainContainer.addEventListener(TabWidget.EVENT_DROPPED, this._handleTabWidgetDroppedEvent.bind(this));
-    mainContainer.addEventListener(SnapDropContainer.EVENT_DROPPED, this._handleTabWidgetSnapDroppedEvent.bind(this));
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_STARTED, this);
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_ENDED, this);
-    mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
-    mainContainer.addEventListener(EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
-    mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
   }
+
+  private _handleMinimizeClick(): void {
+    focusElement(this, this._log);
+    this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
+  };
+
+  private _handleMaximizeClick(): void {
+    focusElement(this, this._log);
+    this._sendWindowRequestEvent(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST);
+  };
+
+  private _handleCloseWindowClick(): void {
+    focusElement(this, this._log);
+    this._commandCloseWindow();
+  };
 
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
     const detail = <DroppedEventDetail> ev.detail;
@@ -399,23 +408,6 @@ export class MainWebUi extends ThemeableElementBase {
 
       emptyPaneMenu.setEntries(entriesAndShortcuts);
       return emptyPaneMenu;
-    });
-  }
-
-  private _setUpWindowControls(): void {
-    DomUtils.getShadowId(this, ID_MINIMIZE_BUTTON).addEventListener('click', () => {
-      focusElement(this, this._log);
-      this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
-    });
-
-    DomUtils.getShadowId(this, ID_MAXIMIZE_BUTTON).addEventListener('click', () => {
-      focusElement(this, this._log);
-      this._sendWindowRequestEvent(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST);
-    });
-
-    DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', () => {
-      focusElement(this, this._log);
-      this._commandCloseWindow();
     });
   }
 

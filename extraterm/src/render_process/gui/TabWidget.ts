@@ -52,8 +52,8 @@ export interface DroppedEventDetail {
 export class TabWidget extends ThemeableElementBase {
 
   static TAG_NAME = "ET-TAB-WIDGET";
-  static EVENT_TAB_SWITCH = "tab-switch";
-  static EVENT_DROPPED = "tabwidget-dropped";
+  static EVENT_SWITCH = "et-tab-widget_switch";
+  static EVENT_DROPPED = "et-tab-widget_dropped";
 
   private _log: Logger;
   private _mutationObserver: MutationObserver = null;
@@ -361,7 +361,7 @@ export class TabWidget extends ThemeableElementBase {
   }
 
   private _sendSwitchEvent(): void {
-    const event = new CustomEvent(TabWidget.EVENT_TAB_SWITCH, { detail: null, bubbles: true });
+    const event = new CustomEvent(TabWidget.EVENT_SWITCH, { detail: null, bubbles: true });
     this.dispatchEvent(event);
   }
 

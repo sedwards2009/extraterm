@@ -16,6 +16,6 @@ export interface SetModeEventDetail {
   mode: ViewerElementTypes.Mode;
 }
 
-export const EVENT_DRAG_STARTED = "extraterm-drag-started";
+export const EVENT_DRAG_STARTED = "extraterm_drag-started";
 
-export const EVENT_DRAG_ENDED = "extraterm-drag-ended";
+export const EVENT_DRAG_ENDED = "extraterm_drag-ended";

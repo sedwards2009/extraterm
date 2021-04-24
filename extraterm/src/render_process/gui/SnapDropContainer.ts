@@ -52,7 +52,7 @@ const SUPPORTED_MIMETYPES = [ElementMimeType.MIMETYPE, FrameMimeType.MIMETYPE];
 export class SnapDropContainer extends ThemeableElementBase {
 
   static TAG_NAME = "ET-SNAP-DROP-CONTAINER";
-  static EVENT_DROPPED = "snapdropcontainer-dropped";
+  static EVENT_DROPPED = "et-snap-drop-container_dropped";
   private _log: Logger;
   private _supportedMimeTypes: string[] = [];
   private _dropLocation: DropLocation = DropLocation.NONE;
