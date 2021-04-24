@@ -112,9 +112,9 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
   SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-TERMINAL";
-  static EVENT_TITLE = "title";
-  static EVENT_EMBEDDED_VIEWER_POP_OUT = "viewer-pop-out";
-  static EVENT_APPENDED_VIEWER = "terminal-appended-viewer";
+  static EVENT_TITLE = "et-terminal_title";
+  static EVENT_EMBEDDED_VIEWER_POP_OUT = "et-terminal_viewer-pop-out";
+  static EVENT_APPENDED_VIEWER = "et-terminal_appended-viewer";
 
   environment = new TerminalEnvironmentImpl([
     { key: TerminalEnvironment.TERM_ROWS, value: "" },

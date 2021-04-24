@@ -22,7 +22,7 @@ const CLASS_COVER_OPEN = "CLASS_COVER_OPEN";
 export class PopDownDialog extends ThemeableElementBase {
 
   static TAG_NAME = "ET-POP-DOWN-DIALOG";
-  static EVENT_CLOSE_REQUEST = "ET-POP-DOWN-DIALOG-CLOSE_REQUEST";
+  static EVENT_CLOSE_REQUEST = "et-pop-down-dialog_close_request";
 
   constructor() {
     super();

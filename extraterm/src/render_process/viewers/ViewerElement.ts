@@ -14,10 +14,10 @@ import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
 
-  static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
-  static EVENT_CURSOR_MOVE = "cursor-move";
-  static EVENT_CURSOR_EDGE = "cursor-edge";
-  static EVENT_METADATA_CHANGE = "metadata-change";
+  static EVENT_BEFORE_SELECTION_CHANGE = "et-viewer-element_before-selection-change"
+  static EVENT_CURSOR_MOVE = "et-viewer-element_cursor-move";
+  static EVENT_CURSOR_EDGE = "et-viewer-element_cursor-edge";
+  static EVENT_METADATA_CHANGE = "et-viewer-element_metadata-change";
 
   onDispose: Event<void>;
   #onDisposeEventEmitter = new EventEmitter<void>();

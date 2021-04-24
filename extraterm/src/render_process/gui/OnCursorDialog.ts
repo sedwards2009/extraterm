@@ -27,7 +27,7 @@ const CLASS_BELOW_CURSOR = "CLASS_BELOW_CURSOR";
 export class OnCursorDialog extends ThemeableElementBase {
 
   static TAG_NAME = "ET-ON-CURSOR-DIALOG";
-  static EVENT_CLOSE_REQUEST = "close-request";
+  static EVENT_CLOSE_REQUEST = "et-on-cursor-dialog_close-request";
 
   private _log: Logger = null;
 

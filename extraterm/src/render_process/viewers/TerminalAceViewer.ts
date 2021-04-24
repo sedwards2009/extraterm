@@ -85,7 +85,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, AcceptsTerminalVisualConfig, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
-  static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
+  static EVENT_KEYBOARD_ACTIVITY = "et-terminal-ace-viewer_keyboard-activity";
 
   /**
    * Type guard for detecting a EtTerminalViewer instance.

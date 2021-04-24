@@ -112,11 +112,11 @@ class TitleBarUI extends Vue {
 export class EmbeddedViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
     AcceptsTerminalVisualConfig {
 
-  static TAG_NAME = 'ET-EMBEDDED-VIEWER';
+  static TAG_NAME = "ET-EMBEDDED-VIEWER";
 
-  static EVENT_CLOSE_REQUEST = 'close-request';
-  static EVENT_FRAME_POP_OUT = 'frame-pop-out';
-  static EVENT_SCROLL_MOVE = 'scroll-move';
+  static EVENT_CLOSE_REQUEST = "et-embedded-viewer_close-request";
+  static EVENT_FRAME_POP_OUT = "et-embedded-viewer_frame-pop-out";
+  static EVENT_SCROLL_MOVE = "et-embedded-viewer_scroll-move";
 
   private static _resizeNotifier = new ResizeNotifier();
 
