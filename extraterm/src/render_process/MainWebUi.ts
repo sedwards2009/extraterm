@@ -3,9 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as he from 'he';
 import { BulkFileHandle, SessionConfiguration, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
-import { html, render, TemplateResult } from "extraterm-lit-html";
+import { html, render } from "extraterm-lit-html";
 import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -90,7 +89,6 @@ export class MainWebUi extends ThemeableElementBase {
   private _log: Logger;
 
   #ptyIpcBridge: PtyIpcBridge = null;
-  #tabIdCounter = 0;
   #configManager: ConfigDatabase = null;
   #keybindingsManager: KeybindingsManager = null;
   #extensionManager: ExtensionManager = null;
@@ -445,45 +443,64 @@ export class MainWebUi extends ThemeableElementBase {
       ThemeTypes.CssFile.MAIN_UI];
   }
 
-  private _addTab(tabWidget: TabWidget, tabContentElement: Element): Tab {
+  private _addTab(tabContentElement: HTMLElement, tabWidget: TabWidget=null): Tab {
     const isTerminal = tabContentElement instanceof EtTerminal;
 
-    const newId = this.#tabIdCounter;
-    this.#tabIdCounter++;
+    if (tabWidget == null) {
+      tabWidget = this.#splitLayout.firstTabWidget();
+    }
+
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
-    newTab.setAttribute('id', "tab_id_" + newId);
     newTab.tabIndex = -1;
+    newTab.addEventListener("contextmenu", this._handleTabHeaderContextMenu.bind(this, tabContentElement), true);
 
-    const contentsHtml = isTerminal ?
-      `<div id="tab_title_extensions_${newId}" class="tab_title_extensions"></div>`
-      :
-      `<div class="${CLASS_TAB_HEADER_ICON}"></div>
-      <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
-      <div class="${CLASS_TAB_HEADER_TAG}"></div>`;
-
-    newTab.innerHTML = trimBetweenTags(`
-      <div class="${CLASS_TAB_HEADER_CONTAINER}" id="tab_id_${newId}">
-        ${contentsHtml}
-        <div class="${CLASS_TAB_HEADER_CLOSE}">
-          <button id="close_tab_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>
-        </div>
-      </div>`);
+    this._renderTabHtml(newTab, tabContentElement);
 
     this.#splitLayout.appendTab(tabWidget, newTab, tabContentElement);
     this.#splitLayout.update();
 
-    const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tab_id_" + newId);
-    closeTabButton.addEventListener('click', this.closeTab.bind(this, tabContentElement));
-
-    const tabHeader = DomUtils.getShadowRoot(this).getElementById("tab_id_" + newId);
-    tabHeader.addEventListener('contextmenu', this._handleTabHeaderContextMenu.bind(this, tabContentElement), true);
-
     if (isTerminal) {
-      const extensionsDiv = <HTMLDivElement> DomUtils.getShadowRoot(this).getElementById("tab_title_extensions_" + newId);
+      const extensionsDiv = <HTMLDivElement> newTab.querySelector(".tab_title_extensions");
       this._addTabTitleWidgets(extensionsDiv, <EtTerminal> tabContentElement);
     }
 
     return newTab;
+  }
+
+  private _renderTabHtml(tab: Tab, tabContentElement: Element): void {
+    const isTerminal = tabContentElement instanceof EtTerminal;
+
+    let title = "";
+    let icon = null;
+    let tag: string  = null;
+    if (tabContentElement instanceof EtViewerTab) {
+      title = tabContentElement.getMetadata().title;
+      icon = tabContentElement.getMetadata().icon;
+      if (tabContentElement.getTag() !== null) {
+        tag = tabContentElement.getTag();
+      }
+    } else if (tabContentElement instanceof ViewerElement) {
+      title = tabContentElement.getMetadata().title;
+      icon = tabContentElement.getMetadata().icon;
+    } else if ( ! isTerminal) {
+      this._log.warn(`Unrecognized element type in _updateTabTitle(). ${tabContentElement}`);
+    }
+
+    const template = html`
+      <div class=${CLASS_TAB_HEADER_CONTAINER}>
+        ${isTerminal
+          ? html`<div class="tab_title_extensions"></div>`
+          : html`
+            <div class=${CLASS_TAB_HEADER_ICON}>${icon != null ? html`<i class=${icon}></i>` : null}</div>
+            <div class=${CLASS_TAB_HEADER_MIDDLE} title=${title}>${title}</div>
+            <div class=${CLASS_TAB_HEADER_TAG}>${tag != null ? html`<i class="fa fa-tag"></i> ${tag}` : null}</div>`}
+        <div class=${CLASS_TAB_HEADER_CLOSE}>
+          <button @click=${this.closeTab.bind(this, tabContentElement)} class="microtool danger">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </div>`;
+    render(template, tab);
   }
 
   private _handleTabHeaderContextMenu(tabContentElement: Element, ev: MouseEvent): void {
@@ -509,10 +526,6 @@ export class MainWebUi extends ThemeableElementBase {
     return this.#splitLayout.getTabWidgetByTabContent(el);
   }
 
-  private _firstTabWidget(): TabWidget {
-    return this.#splitLayout.firstTabWidget();
-  }
-
   private _handleTabSwitchEvent(ev: CustomEvent): void {
     if (ev.target instanceof TabWidget) {
       const el = this.#splitLayout.getTabContentByTab(ev.target.getSelectedTab());
@@ -528,10 +541,8 @@ export class MainWebUi extends ThemeableElementBase {
     }
   }
 
-  private newTerminalTab(tabWidget: TabWidget, sessionConfiguration: SessionConfiguration, workingDirectory: string): EtTerminal {
-    if (tabWidget == null) {
-      tabWidget = this.#splitLayout.firstTabWidget();
-    }
+  private newTerminalTab(sessionConfiguration: SessionConfiguration, workingDirectory: string,
+      tabWidget: TabWidget=null): EtTerminal {
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setWindowId(this.windowId);
@@ -546,7 +557,7 @@ export class MainWebUi extends ThemeableElementBase {
     // Set the default name of the terminal tab to the session name.
     newTerminal.setTerminalTitle(sessionConfiguration.name);
 
-    this._addTab(tabWidget, newTerminal);
+    this._addTab(newTerminal, tabWidget);
     this._setUpNewTerminalEventHandlers(newTerminal);
     this._createPtyForTerminal(newTerminal, sessionConfiguration.uuid, workingDirectory);
     this._updateTabTitle(newTerminal);
@@ -641,13 +652,9 @@ export class MainWebUi extends ThemeableElementBase {
     return viewerTab;
   }
 
-  openViewerTab(viewerElement: ViewerElement, tabWidget: TabWidget = null): void {
-    if (tabWidget == null) {
-      tabWidget = this._firstTabWidget();
-    }
-
+  openViewerTab(viewerElement: ViewerElement, tabWidget: TabWidget=null): void {
     viewerElement.setFocusable(true);
-    this._addTab(tabWidget, viewerElement);
+    this._addTab(viewerElement, tabWidget);
 
     viewerElement.addEventListener('focus', (ev: FocusEvent) => {
       this.#lastFocus = viewerElement;
@@ -665,40 +672,8 @@ export class MainWebUi extends ThemeableElementBase {
     if (el instanceof EtTerminal) {
       return;
     }
-
     const tab = this.#splitLayout.getTabByTabContent(el);
-
-    let title = "";
-    let htmlTitle = "";
-    let icon = null;
-    let tag = "";
-
-    if (el instanceof EtViewerTab) {
-      title = el.getMetadata().title;
-      htmlTitle = he.escape(title);
-      icon = el.getMetadata().icon;
-      if (el.getTag() !== null) {
-        tag = "<i class='fa fa-tag'></i> " + el.getTag();
-      }
-
-    } else if (el instanceof ViewerElement) {
-      title = el.getMetadata().title;
-      htmlTitle = he.escape(title);
-      icon = el.getMetadata().icon;
-
-    } else {
-      this._log.warn(`Unrecognized element type in _updateTabTitle(). ${el}`);
-    }
-
-    const iconDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
-    iconDiv.innerHTML = icon !== null ? '<i class="' + icon + '"></i>' : "";
-
-    const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
-    middleDiv.title = title;
-    middleDiv.innerHTML = htmlTitle;
-
-    const tabDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_TAG}`);
-    tabDiv.innerHTML = tag;
+    this._renderTabHtml(tab, el);
   }
 
   private _getSettingsTab(): SettingsTab {
@@ -1079,7 +1054,7 @@ export class MainWebUi extends ThemeableElementBase {
       }
     }
 
-    const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionConfiguration, workingDirectory);
+    const newTerminal = this.newTerminalTab(sessionConfiguration, workingDirectory, this._getActiveTabWidget());
     this._switchToTab(newTerminal);
     this.#extensionManager.newTerminalCreated(newTerminal, this._getAllTerminals());
   }
