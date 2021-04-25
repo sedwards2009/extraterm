@@ -3,45 +3,45 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { BulkFileHandle, SessionConfiguration, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
+import { BulkFileHandle, SessionConfiguration, CreateSessionOptions } from "@extraterm/extraterm-extension-api";
 import { html, render } from "extraterm-lit-html";
-import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
+import { CustomElement, Attribute, Observe } from "extraterm-web-component-decorators";
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 
-import { AboutTab } from './AboutTab';
-import { BulkFileBroker } from './bulk_file_handling/BulkFileBroker';
-import * as config from '../Config';
-import * as DisposableUtils from '../utils/DisposableUtils';
-import * as DomUtils from './DomUtils';
-import { EmbeddedViewer } from './viewers/EmbeddedViewer';
-import { EmptyPaneMenu } from './command/EmptyPaneMenu';
-import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
-import { ElementMimeType, FrameMimeType } from './InternalMimeTypes';
-import { KeybindingsManager, injectKeybindingsManager } from './keybindings/KeyBindingsManager';
-import { SettingsTab } from './settings/SettingsTab';
-import { SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation } from './gui/SnapDropContainer';
-import { SplitLayout } from './SplitLayout';
-import { Splitter, SplitOrientation } from './gui/Splitter';
+import { AboutTab } from "./AboutTab";
+import { BulkFileBroker } from "./bulk_file_handling/BulkFileBroker";
+import * as config from "../Config";
+import * as DisposableUtils from "../utils/DisposableUtils";
+import * as DomUtils from "./DomUtils";
+import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
+import { EmptyPaneMenu } from "./command/EmptyPaneMenu";
+import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from "./GeneralEvents";
+import { ElementMimeType, FrameMimeType } from "./InternalMimeTypes";
+import { KeybindingsManager, injectKeybindingsManager } from "./keybindings/KeyBindingsManager";
+import { SettingsTab } from "./settings/SettingsTab";
+import { DroppedEventDetail as SnapDroppedEventDetail, DropLocation } from "./gui/SnapDropContainer";
+import { SplitLayout } from "./SplitLayout";
+import { SplitOrientation } from "./gui/Splitter";
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
-import { Tab } from './gui/Tab';
-import { TabWidget, DroppedEventDetail } from './gui/TabWidget';
-import { EtTerminal, EXTRATERM_COOKIE_ENV } from './Terminal';
-import * as ThemeTypes from '../theme/Theme';
-import { ThemeableElementBase } from './ThemeableElementBase';
-import { ViewerElement } from './viewers/ViewerElement';
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
-import { EtViewerTab } from './ViewerTab';
-import { PtyIpcBridge } from './PtyIpcBridge';
-import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
-import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from '../Config';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { NewTerminalContextArea } from './NewTerminalContextArea';
-import { CommandAndShortcut } from './command/CommandPalette';
-import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
-import { TerminalVisualConfig, injectTerminalVisualConfig } from './TerminalVisualConfig';
-import { doLater } from 'extraterm-later';
-import { focusElement } from './DomUtils';
+import { Tab } from "./gui/Tab";
+import { TabWidget, DroppedEventDetail } from "./gui/TabWidget";
+import { EtTerminal, EXTRATERM_COOKIE_ENV } from "./Terminal";
+import * as ThemeTypes from "../theme/Theme";
+import { ThemeableElementBase } from "./ThemeableElementBase";
+import { ViewerElement } from "./viewers/ViewerElement";
+import * as ViewerElementTypes from "./viewers/ViewerElementTypes";
+import { EtViewerTab } from "./ViewerTab";
+import { PtyIpcBridge } from "./PtyIpcBridge";
+import { ExtensionManager, injectExtensionManager } from "./extension/InternalTypes";
+import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from "../Config";
+import { trimBetweenTags } from "extraterm-trim-between-tags";
+import { NewTerminalContextArea } from "./NewTerminalContextArea";
+import { CommandAndShortcut } from "./command/CommandPalette";
+import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from "./command/CommandUtils";
+import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
+import { doLater } from "extraterm-later";
+import { focusElement } from "./DomUtils";
 
 const VisualState = ViewerElementTypes.VisualState;
 
@@ -78,9 +78,9 @@ const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
 export class MainWebUi extends ThemeableElementBase {
 
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
-  static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
-  static EVENT_TAB_CLOSED = 'mainwebui-tab-closed';
-  static EVENT_TITLE = 'mainwebui-title';
+  static EVENT_TAB_OPENED = "mainwebui-tab-opened";
+  static EVENT_TAB_CLOSED = "mainwebui-tab-closed";
+  static EVENT_TITLE = "mainwebui-title";
   static EVENT_MINIMIZE_WINDOW_REQUEST = "mainwebui-minimize-window-request";
   static EVENT_MAXIMIZE_WINDOW_REQUEST = "mainwebui-maximize-window-request";
   static EVENT_CLOSE_WINDOW_REQUEST = "mainwebui-close-window-request";
@@ -610,7 +610,7 @@ export class MainWebUi extends ThemeableElementBase {
   }
 
   private _setUpNewTerminalEventHandlers(newTerminal: EtTerminal): void {
-    newTerminal.addEventListener('focus', (ev: FocusEvent) => {
+    newTerminal.addEventListener("focus", (ev: FocusEvent) => {
       this.#lastFocus = newTerminal;
     });
 
@@ -656,7 +656,7 @@ export class MainWebUi extends ThemeableElementBase {
     viewerElement.setFocusable(true);
     this._addTab(viewerElement, tabWidget);
 
-    viewerElement.addEventListener('focus', (ev: FocusEvent) => {
+    viewerElement.addEventListener("focus", (ev: FocusEvent) => {
       this.#lastFocus = viewerElement;
     });
 
