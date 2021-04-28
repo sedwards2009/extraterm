@@ -102,6 +102,7 @@ export class MainWebUi extends ThemeableElementBase {
     super();
     this.#splitLayout = new SplitLayout();
     this._log = getLogger("ExtratermMainWebUI", this);
+    this._handleViewerElementFocus = this._handleViewerElementFocus.bind(this);
   }
 
   setDependencies(configManager: ConfigDatabase, keyBindingManager: KeybindingsManager,
@@ -174,12 +175,18 @@ export class MainWebUi extends ThemeableElementBase {
   closeAllTabs(): void {
     const elements = this.#splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu));
     for (const element of elements) {
-      this.closeTab(element);
+      this._disposeTab(element);
     }
   }
 
   private _setUpShadowDom(): void {
     this.attachShadow({ mode: "open", delegatesFocus: false });
+
+    const handleMainContainerFocus = {
+      handleEvent: this._handleMainContainerFocusCapture.bind(this),
+      capture: true
+    };
+
     render(html`${this._styleTag()}
       <div id=${ID_TOP_LAYOUT}>
         <div id=${ID_TITLE_BAR}>
@@ -197,7 +204,9 @@ export class MainWebUi extends ThemeableElementBase {
         <div
           id=${ID_MAIN_CONTENTS}
           class=${CLASS_MAIN_NOT_DRAGGING}
+          @focus=${handleMainContainerFocus}
           @click=${this._handleMainContainerClickEvent.bind(this)}
+          @et-viewer-element_metadata-change=${this._handleViewerMetadataChanged.bind(this)}}
           @et-tab-widget_switch=${this._handleTabSwitchEvent.bind(this)}
           @et-tab-widget_dropped=${this._handleTabWidgetDroppedEvent.bind(this)}
           @et-snap-drop-container_dropped=${this._handleTabWidgetSnapDroppedEvent.bind(this)}
@@ -210,6 +219,10 @@ export class MainWebUi extends ThemeableElementBase {
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_STARTED, this);
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_ENDED, this);
+  }
+
+  private _handleMainContainerFocusCapture(ev: FocusEvent): void {
+    this.#extensionManager.updateExtensionWindowStateFromEvent(ev);
   }
 
   private _handleMinimizeClick(): void {
@@ -226,6 +239,13 @@ export class MainWebUi extends ThemeableElementBase {
     focusElement(this, this._log);
     this._commandCloseWindow();
   };
+
+  private _handleViewerMetadataChanged(ev: CustomEvent): void {
+    const target = ev.target;
+    if (target instanceof ViewerElement) {
+      this._updateTabTitle(target);
+    }
+  }
 
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
     const detail = <DroppedEventDetail> ev.detail;
@@ -338,29 +358,22 @@ export class MainWebUi extends ThemeableElementBase {
   private _handleMainContainerClickEvent(ev): void {
     // This handler is intended to be triggered by the plus (new tab) button in the tab bar.
     for (const part of ev.path) {
-      if (part instanceof HTMLButtonElement) {
-        if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
-          let el: HTMLElement = part;
-          while (el != null && ! (el instanceof TabWidget)) {
-            el = el.parentElement;
-          }
-          if (this.#configManager.getConfig(SESSION_CONFIG).length !== 0) {
-            const sessionUuid = this.#configManager.getConfig(SESSION_CONFIG)[0].uuid;
-            this.commandNewTerminal({sessionUuid});
-          }
+      if (part instanceof HTMLButtonElement && part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
+        let el: HTMLElement = part;
+        while (el != null && ! (el instanceof TabWidget)) {
+          el = el.parentElement;
+        }
+        if (this.#configManager.getConfig(SESSION_CONFIG).length !== 0) {
+          const sessionUuid = this.#configManager.getConfig(SESSION_CONFIG)[0].uuid;
+          this.commandNewTerminal({sessionUuid});
         }
       }
     }
   }
 
   private _setUpSplitLayout(): void {
-    const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+    this.#splitLayout.setRootContainer(DomUtils.getShadowId(this, ID_MAIN_CONTENTS));
 
-    mainContainer.addEventListener("focus", (ev: FocusEvent) => {
-      this.#extensionManager.updateExtensionWindowStateFromEvent(ev);
-    }, true);
-
-    this.#splitLayout.setRootContainer(mainContainer);
     this.#splitLayout.setTabContainerFactory( (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element => {
       const divContainer = document.createElement("DIV");
       divContainer.classList.add(CLASS_TAB_CONTENT);
@@ -495,7 +508,7 @@ export class MainWebUi extends ThemeableElementBase {
             <div class=${CLASS_TAB_HEADER_MIDDLE} title=${title}>${title}</div>
             <div class=${CLASS_TAB_HEADER_TAG}>${tag != null ? html`<i class="fa fa-tag"></i> ${tag}` : null}</div>`}
         <div class=${CLASS_TAB_HEADER_CLOSE}>
-          <button @click=${this.closeTab.bind(this, tabContentElement)} class="microtool danger">
+          <button @click=${this._disposeTab.bind(this, tabContentElement)} class="microtool danger">
             <i class="fa fa-times"></i>
           </button>
         </div>
@@ -560,7 +573,6 @@ export class MainWebUi extends ThemeableElementBase {
     this._addTab(newTerminal, tabWidget);
     this._setUpNewTerminalEventHandlers(newTerminal);
     this._createPtyForTerminal(newTerminal, sessionConfiguration.uuid, workingDirectory);
-    this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
     return newTerminal;
@@ -604,7 +616,7 @@ export class MainWebUi extends ThemeableElementBase {
 
     const pty = this.#ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionOptions);
     pty.onExit(() => {
-      this.closeTab(newTerminal);
+      this._disposeTab(newTerminal);
     });
     newTerminal.setPty(pty);
   }
@@ -628,13 +640,13 @@ export class MainWebUi extends ThemeableElementBase {
   }
 
   private _popOutEmbeddedViewer(embeddedViewer: EmbeddedViewer, terminal: EtTerminal): EtViewerTab {
-    const viewerTab = this.openEmbeddedViewerInTab(embeddedViewer, terminal.getFontAdjust());
+    const viewerTab = this._openEmbeddedViewerInTab(embeddedViewer, terminal.getFontAdjust());
     this._switchToTab(viewerTab);
     terminal.deleteEmbeddedViewer(embeddedViewer);
     return viewerTab;
   }
 
-  openEmbeddedViewerInTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
+  private _openEmbeddedViewerInTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
@@ -648,7 +660,6 @@ export class MainWebUi extends ThemeableElementBase {
     this.openViewerTab(viewerTab);
     viewerTab.setViewerElement(viewerElement);
 
-    this._updateTabTitle(viewerTab);
     return viewerTab;
   }
 
@@ -656,16 +667,12 @@ export class MainWebUi extends ThemeableElementBase {
     viewerElement.setFocusable(true);
     this._addTab(viewerElement, tabWidget);
 
-    viewerElement.addEventListener("focus", (ev: FocusEvent) => {
-      this.#lastFocus = viewerElement;
-    });
-
-    viewerElement.addEventListener(ViewerElement.EVENT_METADATA_CHANGE, () => {
-      this._updateTabTitle(viewerElement);
-    });
-
-    this._updateTabTitle(viewerElement);
+    viewerElement.addEventListener("focus", this._handleViewerElementFocus);
     this._sendTabOpenedEvent();
+  }
+
+  private _handleViewerElementFocus(ev: FocusEvent): void {
+    this.#lastFocus = <Element> ev.target;
   }
 
   private _updateTabTitle(el: HTMLElement): void {
@@ -729,8 +736,6 @@ export class MainWebUi extends ThemeableElementBase {
     this.#splitLayout.removeTabContent(tabContentElement);
     this.#splitLayout.update();
 
-    this._disposeTab(tabContentElement);
-
     const oldIndex = tabWidgetContents.indexOf(tabContentElement);
     if (tabWidgetContents.length >= 2) {
       this._switchToTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);
@@ -741,10 +746,12 @@ export class MainWebUi extends ThemeableElementBase {
       }
     }
 
-    this._sendTabClosedEvent();
+    this._sendTabClosedEvent(tabContentElement);
   }
 
   private _disposeTab(tabContentElement: Element): void {
+    this.closeTab(tabContentElement);
+
     if (tabContentElement instanceof EtTerminal) {
       const pty = tabContentElement.getPty();
       if (pty !== null) {
@@ -967,8 +974,8 @@ export class MainWebUi extends ThemeableElementBase {
     this.dispatchEvent(event);
   }
 
-  private _sendTabClosedEvent(): void {
-    const event = new CustomEvent(MainWebUi.EVENT_TAB_CLOSED, { detail: null });
+  private _sendTabClosedEvent(tabContentElement: Element): void {
+    const event = new CustomEvent(MainWebUi.EVENT_TAB_CLOSED, { detail: { tabContentElement } });
     this.dispatchEvent(event);
   }
 
@@ -1088,7 +1095,7 @@ export class MainWebUi extends ThemeableElementBase {
   }
 
   private _commandCloseTab(): void {
-    this.closeTab(this._getActiveTabElement());
+    this._disposeTab(this._getActiveTabElement());
   }
 
   private _commandHorizontalSplit(): void {

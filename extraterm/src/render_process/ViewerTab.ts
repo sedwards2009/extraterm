@@ -371,7 +371,7 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
 
   private _getViewerElement(): ViewerElement {
     const scrollerArea = DomUtils.getShadowId(this, ID_SCROLL_AREA);
-    if (scrollerArea.firstElementChild !== null && scrollerArea.firstElementChild instanceof ViewerElement) {
+    if (scrollerArea?.firstElementChild instanceof ViewerElement) {
       return <ViewerElement> scrollerArea.firstElementChild;
     } else {
       return null;
