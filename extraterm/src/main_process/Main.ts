@@ -40,6 +40,7 @@ import { MainIpc } from "./MainIpc";
 import { MainDesktop } from "./MainDesktop";
 import { registerInternalCommands } from "./InternalMainCommands";
 import { MainWindow } from "./MainWindow";
+import { PingRequestHandler } from "./local_http_server/PingRequestHandler";
 
 
 SourceMapSupport.install();
@@ -143,6 +144,7 @@ async function main(): Promise<void> {
     keybindingsIOManager, themeManager, ptyManager);
 
   const localHttpServer = await setupLocalHttpServer(bulkFileStorage);
+  setupPingRequestHandler(localHttpServer);
   const commandRequestHandler = setupHttpCommandRequestHandler(mainDesktop, extensionManager, mainIpc, localHttpServer);
 
   // Quit when all windows are closed.
@@ -239,6 +241,11 @@ function setupHttpCommandRequestHandler(mainDesktop: MainDesktop, extensionManag
   const commandRequestHandler = new CommandRequestHandler(mainDesktop, extensionManager, mainIpc);
   localHttpServer.registerRequestHandler("command", commandRequestHandler);
   return commandRequestHandler;
+}
+
+function setupPingRequestHandler(localHttpServer: LocalHttpServer): void {
+  const pingRequestHandler = new PingRequestHandler();
+  localHttpServer.registerRequestHandler("ping", pingRequestHandler);
 }
 
 function setupBulkFileStorage(): BulkFileStorage {
