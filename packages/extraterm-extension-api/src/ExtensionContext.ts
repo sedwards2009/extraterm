@@ -128,9 +128,10 @@ export interface Clipboard {
  * Holds application wide values and utility funcions.
  */
 export interface Application {
-  // version: string;
-
-  clipboard: Clipboard;
+  /**
+   * Access to the Clipboard
+   */
+  readonly clipboard: Clipboard;
 
   /**
    * True if Extraterm is running Linux
@@ -160,6 +161,11 @@ export interface Application {
    * @param path the path of the file or directory to show.
    */
   showItemInFileManager(path: string): void;
+
+  /**
+   * Extraterm's version number
+   */
+   readonly version: string;
 }
 
 /**

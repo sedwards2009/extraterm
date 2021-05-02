@@ -24,12 +24,12 @@ export class ExtensionContextImpl implements MainInternalExtensionContext {
   _internalBackend: InternalBackend;
   extensionPath: string = null;
 
-  constructor(public __extensionMetadata: ExtensionMetadata) {
+  constructor(public __extensionMetadata: ExtensionMetadata, applicationVersion: string) {
     this.logger = getLogger("[Main]" + this.__extensionMetadata.name);
     this.commands = new MainCommandsRegistry(this.__extensionMetadata.name,
       this.__extensionMetadata.contributes.commands);
     this.extensionPath = this.__extensionMetadata.path;
-    this.application = new ApplicationImpl();
+    this.application = new ApplicationImpl(applicationVersion);
     this._internalBackend = new BackendImpl(this.__extensionMetadata);
     this.backend = this._internalBackend;
   }

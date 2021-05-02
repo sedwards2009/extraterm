@@ -38,11 +38,11 @@ export class ExtensionContextImpl implements InternalExtensionContext {
   private _tabTitleWidgetFactoryMap = new Map<string, ExtensionApi.TabTitleWidgetFactory>();
 
   constructor(public _extensionManager: ExtensionManager, public _extensionMetadata: ExtensionMetadata,
-              commonExtensionState: CommonExtensionWindowState) {
+              commonExtensionState: CommonExtensionWindowState, applicationVersion: string) {
 
     this._log = getLogger("InternalExtensionContextImpl", this);
     this._proxyFactory = new ProxyFactoryImpl(this);
-    this.application = new ApplicationImpl();
+    this.application = new ApplicationImpl(applicationVersion);
     this.commands = new CommandsRegistry(this, _extensionMetadata.name,
                                           _extensionMetadata.contributes.commands, _extensionMetadata.contributes.menus);
     this._internalWindow = new WindowProxy(this, commonExtensionState);

@@ -42,7 +42,7 @@ class ThemeManagerUtility {
       syntax: [],
       terminal: []
     };
-    this._tm = new ThemeManager(paths, new MainExtensionManager(null, []));
+    this._tm = new ThemeManager(paths, new MainExtensionManager(null, [], "0.1.0"));
 
     if (options.list) {
       this._listThemes();

@@ -11,7 +11,7 @@ import * as path from 'path';
 
 
 test("Scan & Flatten", () => {
-  const extensionManager = new MainExtensionManager(null, ["../extensions"]);
+  const extensionManager = new MainExtensionManager(null, ["../extensions"], "0.1.0");
   extensionManager.startUpExtensions({"default-keybindings": true}, false);
 
   const kbm = new KeybindingsIOManager(path.join(__dirname, "..", "..", "src", "main_process", "test_files"), extensionManager);

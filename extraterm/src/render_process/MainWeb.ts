@@ -444,7 +444,7 @@ function startUpWindowEvents(): void {
 }
 
 function startUpExtensions() {
-  extensionManager = new ExtensionManagerImpl();
+  extensionManager = new ExtensionManagerImpl(configDatabase);
   extensionManager.startUp();
 }
 
