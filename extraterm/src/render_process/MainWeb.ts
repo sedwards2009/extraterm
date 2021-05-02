@@ -117,7 +117,7 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   startUpExtensions();
   startUpMainWebUi();
   extensionManager.setSplitLayout(mainWebUi.getSplitLayout());
-  extensionManager.setOpenViewerTabFunc(mainWebUi.openViewerTab.bind(mainWebUi));
+  extensionManager.setViewerTabDisplay(mainWebUi);
   registerCommands(extensionManager);
   startUpSessions(configDatabase, extensionManager);
 

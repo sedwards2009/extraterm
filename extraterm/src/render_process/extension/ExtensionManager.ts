@@ -12,7 +12,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { EtTerminal, LineRangeChange } from "../Terminal";
 import { TextViewer } from"../viewers/TextAceViewer";
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
-  isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor } from "./InternalTypes";
+  isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor, ViewerTabDisplay } from "./InternalTypes";
 import { ExtensionUiUtilsImpl } from "./ExtensionUiUtilsImpl";
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionDesiredState
 } from "../../ExtensionMetadata";
@@ -67,7 +67,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   extensionUiUtils: ExtensionUiUtils = null;
 
   private _splitLayout: SplitLayout = null;
-  #openViewerTabFunc: (viewerElement: ViewerElement, tabWidget: TabWidget) => void = null;
+  #viewerTabDisplay: ViewerTabDisplay = null;
 
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
@@ -95,8 +95,12 @@ export class ExtensionManagerImpl implements ExtensionManager {
     this._splitLayout = splitLayout;
   }
 
-  setOpenViewerTabFunc(openViewerTabFunc: (viewerElement: ViewerElement, tabWidget: TabWidget) => void): void {
-    this.#openViewerTabFunc = openViewerTabFunc;
+  setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void {
+    this.#viewerTabDisplay = viewerTabDisplay;
+  }
+
+  getViewerTabDisplay(): ViewerTabDisplay {
+    return this.#viewerTabDisplay;
   }
 
   startUp(): void {
@@ -705,9 +709,5 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   commandRegistrationChanged(): void {
     this._commandsChangedLater.trigger();
-  }
-
-  openViewerElementInTab(viewerElement: ViewerElement): void {
-    this.#openViewerTabFunc(viewerElement, null);
   }
 }

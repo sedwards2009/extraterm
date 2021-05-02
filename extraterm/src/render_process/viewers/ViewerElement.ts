@@ -180,4 +180,8 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   getPartialCommonExtensionWindowState(): Partial<CommonExtensionWindowState> {
     return null;
   }
+
+  didClose(): void {
+
+  }
 }

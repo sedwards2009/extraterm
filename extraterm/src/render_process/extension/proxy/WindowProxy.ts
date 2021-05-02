@@ -12,7 +12,7 @@ import { CustomElement } from "extraterm-web-component-decorators";
 import * as ThemeTypes from "../../../theme/Theme";
 
 import { EtTerminal, LineRangeChange } from "../../Terminal";
-import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor, InternalSessionEditor } from "../InternalTypes";
+import { InternalExtensionContext, InternalWindow, InternalSessionSettingsEditor, InternalSessionEditor, ViewerTabDisplay } from "../InternalTypes";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { WorkspaceSessionEditorRegistry } from "../WorkspaceSessionEditorRegistry";
 import { WorkspaceViewerRegistry, ExtensionViewerBaseImpl } from "../WorkspaceViewerRegistry";
@@ -190,7 +190,7 @@ export class WindowProxy implements InternalWindow {
     return this.#windowSessionSettingsRegistry.createSessionSettingsEditors(sessionType, sessionConfiguration);
   }
 
-  openExtensionTab(name: string): ExtensionApi.ExtensionTab {
+  createExtensionTab(name: string): ExtensionApi.ExtensionTab {
     const etc = this._findExtensionTabContribution(name);
     if (etc == null) {
       this.#internalExtensionContext.logger.warn(
@@ -205,9 +205,8 @@ export class WindowProxy implements InternalWindow {
     const extensionTabViewer = <ExtensionContainerViewer> document.createElement("et-extension-container-viewer");
     extensionTabViewer.shadowRoot.appendChild(extensionContainerElement);
 
-    this.#internalExtensionContext._extensionManager.openViewerElementInTab(extensionTabViewer);
-
-    return new ExtensionTabImpl(extensionContainerElement, extensionTabViewer);
+    return new ExtensionTabImpl(extensionContainerElement, extensionTabViewer,
+      this.#internalExtensionContext._extensionManager.getViewerTabDisplay());
   }
 
   private _findExtensionTabContribution(name: string): ExtensionTabContribution {
@@ -225,19 +224,42 @@ export class WindowProxy implements InternalWindow {
 class ExtensionTabImpl implements ExtensionApi.ExtensionTab {
   #extensionContainerElement: ExtensionContainerElement = null;
   #extensionContainerViewer: ExtensionContainerViewer = null;
+  #viewerTabDisplay: ViewerTabDisplay = null;
+  #isOpen = false;
+
+  onClose: ExtensionApi.Event<void>;
+  #onCloseEventEmitter = new EventEmitter<void>();
 
   constructor(extensionContainerElement: ExtensionContainerElement,
-      extensionContainerViewer: ExtensionContainerViewer) {
+      extensionContainerViewer: ExtensionContainerViewer, viewerTabDisplay: ViewerTabDisplay) {
+
     this.#extensionContainerElement = extensionContainerElement;
     this.#extensionContainerViewer = extensionContainerViewer;
+    this.#viewerTabDisplay = viewerTabDisplay;
+
+    this.onClose = this.#onCloseEventEmitter.event;
+
+    extensionContainerViewer.onClose(() => {
+      this.#isOpen = false;
+      this.#onCloseEventEmitter.fire();
+    });
   }
 
   get containerElement(): HTMLElement {
     return this.#extensionContainerElement.getContainerElement();
   }
 
+  open(): void {
+    if ( ! this.#isOpen) {
+      this.#viewerTabDisplay.openViewerTab(this.#extensionContainerViewer);
+      this.#isOpen = true;
+    }
+    this.#viewerTabDisplay.switchToTab(this.#extensionContainerViewer);
+  }
+
   close(): void {
-    throw new Error("Method not implemented.");
+    this.#viewerTabDisplay.closeViewerTab(this.#extensionContainerViewer);
+    this.#isOpen = false;
   }
 
   get icon(): string {
@@ -261,9 +283,12 @@ class ExtensionTabImpl implements ExtensionApi.ExtensionTab {
 class ExtensionContainerViewer extends ViewerElement  {
 
   #viewerMetadata: ViewerMetadata = null;
+  onClose: ExtensionApi.Event<void>;
+  #onCloseEventEmitter = new EventEmitter<void>();
 
   constructor() {
     super();
+    this.onClose = this.#onCloseEventEmitter.event;
 
     this.#viewerMetadata = {
       title: "",
@@ -305,5 +330,10 @@ class ExtensionContainerViewer extends ViewerElement  {
   setTitle(title: string): void {
     this.#viewerMetadata.title = title;
     this.metadataChanged();
+  }
+
+  didClose(): void {
+    super.didClose();
+    this.#onCloseEventEmitter.fire();
   }
 }

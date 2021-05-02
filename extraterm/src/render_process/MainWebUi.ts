@@ -33,7 +33,7 @@ import { ViewerElement } from "./viewers/ViewerElement";
 import * as ViewerElementTypes from "./viewers/ViewerElementTypes";
 import { EtViewerTab } from "./ViewerTab";
 import { PtyIpcBridge } from "./PtyIpcBridge";
-import { ExtensionManager, injectExtensionManager } from "./extension/InternalTypes";
+import { ExtensionManager, injectExtensionManager, ViewerTabDisplay } from "./extension/InternalTypes";
 import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from "../Config";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { NewTerminalContextArea } from "./NewTerminalContextArea";
@@ -75,7 +75,7 @@ const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
  * Top level UI component for a normal terminal window
  */
 @CustomElement("extraterm-mainwebui")
-export class MainWebUi extends ThemeableElementBase {
+export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay {
 
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
   static EVENT_TAB_OPENED = "mainwebui-tab-opened";
@@ -279,7 +279,7 @@ export class MainWebUi extends ThemeableElementBase {
           const tab = this.#splitLayout.getTabByTabContent(viewerTab);
           this.#splitLayout.moveTabToTabWidget(tab, targetTabWidget, tabIndex);
           this.#splitLayout.update();
-          this._switchToTab(viewerTab);
+          this.focusTab(viewerTab);
           return;
         }
       }
@@ -641,7 +641,7 @@ export class MainWebUi extends ThemeableElementBase {
 
   private _popOutEmbeddedViewer(embeddedViewer: EmbeddedViewer, terminal: EtTerminal): EtViewerTab {
     const viewerTab = this._openEmbeddedViewerInTab(embeddedViewer, terminal.getFontAdjust());
-    this._switchToTab(viewerTab);
+    this.focusTab(viewerTab);
     terminal.deleteEmbeddedViewer(embeddedViewer);
     return viewerTab;
   }
@@ -675,6 +675,14 @@ export class MainWebUi extends ThemeableElementBase {
     this.#lastFocus = <Element> ev.target;
   }
 
+  closeViewerTab(viewerElement: ViewerElement): void {
+    this.closeTab(viewerElement);
+  }
+
+  switchToTab(viewerElement: ViewerElement): void {
+    this.focusTab(viewerElement);
+  }
+
   private _updateTabTitle(el: HTMLElement): void {
     if (el instanceof EtTerminal) {
       return;
@@ -695,7 +703,7 @@ export class MainWebUi extends ThemeableElementBase {
   commandOpenSettingsTab(tabName: string=null): void {
     const settingsTab = this._getSettingsTab();
     if (settingsTab != null) {
-      this._switchToTab(settingsTab);
+      this.focusTab(settingsTab);
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
       config.injectConfigDatabase(settingsTabElement, this.#configManager);
@@ -708,7 +716,7 @@ export class MainWebUi extends ThemeableElementBase {
         settingsTabElement.setSelectedTab(tabName);
       }
       this.openViewerTab(settingsTabElement);
-      this._switchToTab(settingsTabElement);
+      this.focusTab(settingsTabElement);
     }
   }
 
@@ -719,13 +727,13 @@ export class MainWebUi extends ThemeableElementBase {
   commandOpenAboutTab(): void {
     const aboutTabs = this.#splitLayout.getAllTabContents().filter( (el) => el instanceof AboutTab );
     if (aboutTabs.length !== 0) {
-      this._switchToTab(aboutTabs[0]);
+      this.focusTab(aboutTabs[0]);
     } else {
       const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
       config.injectConfigDatabase(viewerElement, this.#configManager);
       injectKeybindingsManager(viewerElement, this.#keybindingsManager);
       this.openViewerTab(viewerElement);
-      this._switchToTab(viewerElement);
+      this.focusTab(viewerElement);
     }
   }
 
@@ -738,12 +746,16 @@ export class MainWebUi extends ThemeableElementBase {
 
     const oldIndex = tabWidgetContents.indexOf(tabContentElement);
     if (tabWidgetContents.length >= 2) {
-      this._switchToTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);
+      this.focusTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);
     } else {
       const tabContents = this.#splitLayout.getTabContentsByTabWidget(tabWidget);
       if (tabContents.length !== 0) {
-        this._switchToTab(tabContents[0]);
+        this.focusTab(tabContents[0]);
       }
+    }
+
+    if (tabContentElement instanceof ViewerElement) {
+      tabContentElement.didClose();
     }
 
     this._sendTabClosedEvent(tabContentElement);
@@ -766,7 +778,7 @@ export class MainWebUi extends ThemeableElementBase {
     }
   }
 
-  private _switchToTab(tabContentElement: Element): void {
+  focusTab(tabContentElement: Element): void {
     this.#splitLayout.showTabByTabContent(tabContentElement);
     this._focusTabContent(tabContentElement);
 
@@ -1062,7 +1074,7 @@ export class MainWebUi extends ThemeableElementBase {
     }
 
     const newTerminal = this.newTerminalTab(sessionConfiguration, workingDirectory, this._getActiveTabWidget());
-    this._switchToTab(newTerminal);
+    this.focusTab(newTerminal);
     this.#extensionManager.newTerminalCreated(newTerminal, this._getAllTerminals());
   }
 
