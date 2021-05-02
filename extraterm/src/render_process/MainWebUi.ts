@@ -9,7 +9,6 @@ import { CustomElement, Attribute, Observe } from "extraterm-web-component-decor
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 
-import { AboutTab } from "./AboutTab";
 import { BulkFileBroker } from "./bulk_file_handling/BulkFileBroker";
 import * as config from "../Config";
 import * as DisposableUtils from "../utils/DisposableUtils";
@@ -724,19 +723,6 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
     this._sendWindowRequestEvent(MainWebUi.EVENT_QUIT_APPLICATION_REQUEST);
   }
 
-  commandOpenAboutTab(): void {
-    const aboutTabs = this.#splitLayout.getAllTabContents().filter( (el) => el instanceof AboutTab );
-    if (aboutTabs.length !== 0) {
-      this.focusTab(aboutTabs[0]);
-    } else {
-      const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
-      config.injectConfigDatabase(viewerElement, this.#configManager);
-      injectKeybindingsManager(viewerElement, this.#keybindingsManager);
-      this.openViewerTab(viewerElement);
-      this.focusTab(viewerElement);
-    }
-  }
-
   closeTab(tabContentElement: Element): void {
     const tabWidget = this.#splitLayout.getTabWidgetByTabContent(tabContentElement);
     const tabWidgetContents = this.#splitLayout.getTabContentsByTabWidget(tabWidget);
@@ -1034,7 +1020,6 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
     commands.registerCommand("extraterm:window.moveTabToPaneRight", (args: any) => this._commandMoveTabToPaneRight());
     commands.registerCommand("extraterm:window.moveTabToPaneUp", (args: any) => this._commandMoveTabToPaneUp());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
-    commands.registerCommand("extraterm:window.openAbout", (args: any) => this.commandOpenAboutTab());
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
     commands.registerCommand("extraterm:window.verticalSplit", (args: any) => this._commandVerticalSplit());
   }

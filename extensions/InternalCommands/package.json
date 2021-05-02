@@ -302,14 +302,6 @@
         "when": ""
       },
       {
-        "command": "extraterm:window.openAbout",
-        "title": "About",
-        "category": "application",
-        "order": 4000,
-        "icon": "far fa-lightbulb",
-        "when": ""
-      },
-      {
         "command": "extraterm:window.closeWindow",
         "title": "Close Window",
         "category": "window",
@@ -777,10 +769,6 @@
         },
         {
           "command": "extraterm:window.toggleDeveloperTools",
-          "show": true
-        },
-        {
-          "command": "extraterm:window.openAbout",
           "show": true
         }
       ]

@@ -13,7 +13,6 @@ import { doLater, later } from 'extraterm-later';
 import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 import { createUuid } from 'extraterm-uuid';
 
-import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
