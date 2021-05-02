@@ -1,0 +1,53 @@
+{
+  "name": "about",
+  "displayName": "About",
+  "description": "About Extraterm",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "version": "1.0.0",
+  "main": "dist/AboutExtension.js",
+  "scripts": {
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
+    "clean": "shx rm -rf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.37",
+    "eslint": "7.19.0",
+    "eslint-config-extraterm": "1.0.0",
+    "@extraterm/extraterm-extension-api": "0.13.0",
+    "typescript": "4.1.3"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "about:about",
+        "title": "About",
+        "category": "application",
+        "icon": "far fa-lightbulb",
+        "when": ""
+      }
+    ],
+    "menus": {
+      "windowMenu": [
+        {
+          "command": "about:about",
+          "show": true
+        }
+      ]
+    },
+    "tabs": [
+      {
+        "name": "about",
+        "css": {
+          "directory": "resources/sass",
+          "cssFile": [
+            "about.scss"
+          ]
+        }
+      }
+    ]
+  }
+}
