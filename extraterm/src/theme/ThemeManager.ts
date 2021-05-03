@@ -932,11 +932,10 @@ export class ThemeManager implements AcceptsConfigDatabase {
     const cssFileList = extensionCssDecl.cssFile.map(cssFile => ({
                               id: extensionMetadata.name + ":" + path.join(extensionCssDecl.directory,
                               cssFile), cssFile}) );
-
     const variables = new Map<string, number|boolean|string|Color>(globalVariables);
-    variables.set('--source-dir-' + extensionMetadata.name, extensionCssDecl.directory.replace(/\\/g, "/"));
+    variables.set("--source-dir", cssDirectory.replace(/\\/g, "/"));
 
-    return this._renderCssFiles(extDirStack, cssFileList, globalVariables);
+    return this._renderCssFiles(extDirStack, cssFileList, variables);
   }
 
   private _formatSyntaxTheme(syntaxThemeInfo: ThemeInfo): string {

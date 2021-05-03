@@ -13,7 +13,7 @@
   display: block;
   float: left;
   content: " ";
-  background-image: url($--source-dir-default + '/extraterm_main_logo_tight.svg');
+  background-image: url($--source-dir + '/extraterm_main_logo_tight.svg');
   background-size: contain;
   background-repeat: no-repeat;
   width: pxToRem(256px);
