@@ -13,7 +13,6 @@ import { doLater, later } from 'extraterm-later';
 import { LigatureMarker } from 'extraterm-ace-terminal-renderer';
 import { createUuid } from 'extraterm-uuid';
 
-import {AboutTab} from './AboutTab';
 import './gui/All'; // Need to load all of the GUI web components into the browser engine
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
@@ -117,6 +116,7 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   startUpExtensions();
   startUpMainWebUi();
   extensionManager.setSplitLayout(mainWebUi.getSplitLayout());
+  extensionManager.setViewerTabDisplay(mainWebUi);
   registerCommands(extensionManager);
   startUpSessions(configDatabase, extensionManager);
 
@@ -243,9 +243,7 @@ async function asyncLoadTerminalTheme(): Promise<void> {
 function startUpMainWebUi(): void {
   mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   mainWebUi.windowId = windowId;
-  injectConfigDatabase(mainWebUi, configDatabase);
-  injectKeybindingsManager(mainWebUi, keybindingsManager);
-  mainWebUi.setExtensionManager(extensionManager);
+  mainWebUi.setDependencies(configDatabase, keybindingsManager, extensionManager);
   mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
@@ -446,7 +444,7 @@ function startUpWindowEvents(): void {
 }
 
 function startUpExtensions() {
-  extensionManager = new ExtensionManagerImpl();
+  extensionManager = new ExtensionManagerImpl(configDatabase);
   extensionManager.startUp();
 }
 

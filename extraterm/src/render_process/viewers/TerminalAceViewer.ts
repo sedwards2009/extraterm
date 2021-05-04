@@ -85,7 +85,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, AcceptsTerminalVisualConfig, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
-  static EVENT_KEYBOARD_ACTIVITY = "keyboard-activity";
+  static EVENT_KEYBOARD_ACTIVITY = "et-terminal-ace-viewer_keyboard-activity";
 
   /**
    * Type guard for detecting a EtTerminalViewer instance.
@@ -103,7 +103,6 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
 
   // The line number of the top row of the emulator screen (i.e. after the scrollback  part).
   private _terminalFirstRow = 0;
-  private _metadataEventDoLater: DebouncedDoLater = null;
   private _commandLine: string = null;
   private _returnCode: string = null;
 
@@ -156,11 +155,6 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     this._rerenderLater = new DebouncedDoLater(() => this._handleDelayedRerender());
 
     this._renderEventHandler = this._handleRenderEvent.bind(this);
-
-    this._metadataEventDoLater = new DebouncedDoLater(() => {
-      const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
-      this.dispatchEvent(event);
-    });
   }
 
   setConfigDatabase(configDatabase: ConfigDatabase): void {
@@ -442,12 +436,12 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
 
   setCommandLine(commandLine: string): void {
     this._commandLine = commandLine;
-    this._metadataEventDoLater.trigger();
+    this.metadataChanged();
   }
 
   setReturnCode(returnCode: string): void {
     this._returnCode = returnCode;
-    this._metadataEventDoLater.trigger();
+    this.metadataChanged();
   }
 
   getSelectionText(): string {

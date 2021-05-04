@@ -40,7 +40,6 @@ export const CssFile = {
   TEXT_VIEWER: CSS_MODULE_INTERNAL_SYNTAX + ":" + "text-viewer.scss",
 
   EMBEDDED_FRAME: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/embedded-frame.scss",
-  ABOUT_TAB: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/about-tab.scss",
   SETTINGS_TAB: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/settings-tab.scss",
   GUI_MENUITEM: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-menuitem.scss",
   GUI_CONTEXTMENU: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-contextmenu.scss",
@@ -75,6 +74,7 @@ export const CssFile = {
   GUI_ON_CURSOR_LIST_PICKER: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-list-picker.scss",
   GUI_ON_CURSOR_SEARCHABLE_LIST: CSS_MODULE_INTERNAL_GUI + ":" + "gui-components/gui-on-cursor-searchable-list.scss",
   EXTENSION_LIST_PICKER: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/extension-list-picker.scss",
+  EXTENSION_TAB: CSS_MODULE_INTERNAL_GUI + ":" + "app-components/extension-tab.scss",
 };
 
 export function cssFileToFilename(cssFile: CssFile): string {
@@ -96,7 +96,6 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.TERMINAL_VIEWER,
   CssFile.TEXT_VIEWER,
   CssFile.EMBEDDED_FRAME,
-  CssFile.ABOUT_TAB,
   CssFile.SETTINGS_TAB,
   CssFile.GUI_MENUITEM,
   CssFile.GUI_CONTEXTMENU,
@@ -132,6 +131,7 @@ export const cssFileEnumItems: CssFile[] = [
   CssFile.GUI_ON_CURSOR_LIST_PICKER,
   CssFile.GUI_ON_CURSOR_SEARCHABLE_LIST,
   CssFile.EXTENSION_LIST_PICKER,
+  CssFile.EXTENSION_TAB,
 ];
 
 export class CssFileMap extends Map<CssFile, string> {

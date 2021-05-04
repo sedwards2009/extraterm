@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -20,6 +20,7 @@ import {
   ExtensionSessionSettingsContribution,
   ExtensionSyntaxThemeContribution,
   ExtensionSyntaxThemeProviderContribution,
+  ExtensionTabContribution,
   ExtensionTabTitlesWidgetContribution,
   ExtensionTerminalBorderContribution,
   ExtensionTerminalThemeContribution,
@@ -173,6 +174,7 @@ class PackageParser {
         sessionSettings: [],
         syntaxThemes: [],
         syntaxThemeProviders: [],
+        tabs: [],
         tabTitleWidgets: [],
         terminalBorderWidgets: [],
         terminalThemes: [],
@@ -195,6 +197,7 @@ class PackageParser {
       "sessionSettings",
       "syntaxThemes",
       "syntaxThemeProviders",
+      "tabs",
       "tabTitleWidgets",
       "terminalBorderWidgets",
       "terminalThemes",
@@ -211,6 +214,7 @@ class PackageParser {
       sessionSettings: parseObjectListJson(contributes, "sessionSettings", node => this.parseSessionSettingsConstributionJson(node)),
       syntaxThemes: parseObjectListJson(contributes, "syntaxThemes", node => this.parseSyntaxThemeContributionsJson(node)),
       syntaxThemeProviders: parseObjectListJson(contributes, "syntaxThemeProviders", node => this.parseSyntaxThemeProviderContributionsJson(node)),
+      tabs: parseObjectListJson(contributes, "tabs", node => this.parseTabContributionJson(node)),
       tabTitleWidgets: parseObjectListJson(contributes, "tabTitleWidgets", node => this.parseTabTitleItemContributionsJson(node)),
       terminalBorderWidgets: parseObjectListJson(contributes, "terminalBorderWidgets", node => this.parseTerminalBorderWidgetContributionsJson(node)),
       terminalThemes: parseObjectListJson(contributes, "terminalThemes", node => this.parseTerminalThemeContributionsJson(node)),
@@ -492,4 +496,17 @@ class PackageParser {
       path: getJsonStringField(packageJson, "path")
     };
   }
+
+  private parseTabContributionJson(packageJson: JsonNode): ExtensionTabContribution {
+    const knownKeys: (keyof ExtensionTerminalBorderContribution)[] = [
+      "name",
+      "css",
+    ];
+    assertKnownJsonObjectKeys(packageJson, knownKeys);
+    return {
+      name: getJsonStringField(packageJson, "name"),
+      css: this.parseCss(packageJson)
+    };
+  }
+
 }

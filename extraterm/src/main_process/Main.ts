@@ -92,12 +92,13 @@ async function main(): Promise<void> {
   const options = parsedArgs.opts();
 
   const availableFonts = getFonts();
-
   const userStoredConfig = readUserStoredConfigFile();
+  const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
 
   // We have to start up the extension manager before we can scan themes (with the help of extensions)
   // and properly sanitize the config.
-  const extensionManager = setupExtensionManager(configDatabase, userStoredConfig.activeExtensions);
+  const extensionManager = setupExtensionManager(configDatabase, userStoredConfig.activeExtensions,
+    packageJson.version);
 
   const keybindingsIOManager = setupKeybindingsIOManager(configDatabase, extensionManager);
   const themeManager = setupThemeManager(configDatabase, extensionManager);
@@ -105,7 +106,6 @@ async function main(): Promise<void> {
   sanitizeAndInitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
     availableFonts);
   const titleBarStyle = userStoredConfig.titleBarStyle;
-  const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
   const systemConfig = systemConfiguration(userStoredConfig, keybindingsIOManager, availableFonts, packageJson,
     titleBarStyle);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
@@ -175,7 +175,8 @@ function electronReady(): Promise<void> {
 }
 
 function setupExtensionManager(configDatabase: ConfigDatabase,
-    initialActiveExtensions: {[name: string]: boolean;}): MainExtensionManager {
+    initialActiveExtensions: {[name: string]: boolean;},
+    applicationVersion: string): MainExtensionManager {
 
   const extensionPaths = [path.join(__dirname, "../../../extensions" )];
   const userExtensionDirectory = getUserExtensionDirectory();
@@ -184,7 +185,7 @@ function setupExtensionManager(configDatabase: ConfigDatabase,
     extensionPaths.push(userExtensionDirectory);
   }
 
-  const extensionManager = new MainExtensionManager(configDatabase, extensionPaths);
+  const extensionManager = new MainExtensionManager(configDatabase, extensionPaths, applicationVersion);
   extensionManager.startUpExtensions(initialActiveExtensions);
 
   return extensionManager;

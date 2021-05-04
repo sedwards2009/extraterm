@@ -1,14 +1,7 @@
 /**
- * Copyright 2016 Simon Edwards <simon@simonzone.com>
+ * Copyright 2016-2021 Simon Edwards <simon@simonzone.com>
  */
-
-/* about-tab styles */
-
 @import "general-gui/variables";
-
-:host(:focus) {
-  outline: 0 solid transparent;
-}
 
 #ID_ABOUT {
   height: 100%;
@@ -20,7 +13,7 @@
   display: block;
   float: left;
   content: " ";
-  background-image: url($--source-dir-default + '/extraterm_main_logo_tight.svg');
+  background-image: url($--source-dir + '/extraterm_main_logo_tight.svg');
   background-size: contain;
   background-repeat: no-repeat;
   width: pxToRem(256px);

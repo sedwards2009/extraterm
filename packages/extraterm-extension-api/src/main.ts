@@ -14,7 +14,7 @@ export { BulkFileMetadata, BulkFileState, BulkFileHandle } from "./BulkFiles";
 export { ListPickerOptions } from "./ListPickerOptions";
 export { TerminalThemeInfo, TerminalThemeProvider, TerminalTheme } from "./TerminalTheme";
 export { SyntaxThemeProvider, SyntaxThemeInfo, SyntaxTheme, SyntaxTokenRule, TextStyle } from "./SyntaxTheme";
-export { Backend, Clipboard, Application, ExtensionContext, ExtensionModule, Window } from "./ExtensionContext";
+export { Backend, Clipboard, Application, ExtensionContext, ExtensionModule, ExtensionTab, Window } from "./ExtensionContext";
 export { SessionConfiguration, SessionEditorBase, SessionEditorFactory, EnvironmentMap, SessionBackend,
   CreateSessionOptions, BufferSizeChange, Pty, SessionSettingsEditorBase, SessionSettingsEditorFactory
 } from "./Sessions";

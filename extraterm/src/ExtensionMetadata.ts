@@ -35,6 +35,7 @@ export interface ExtensionContributes {
   readonly sessionSettings: ExtensionSessionSettingsContribution[];
   readonly syntaxThemes: ExtensionSyntaxThemeContribution[];
   readonly syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
+  readonly tabs: ExtensionTabContribution[];
   readonly tabTitleWidgets: ExtensionTabTitlesWidgetContribution[];
   readonly terminalBorderWidgets: ExtensionTerminalBorderContribution[];
   readonly terminalThemes: ExtensionTerminalThemeContribution[];
@@ -160,3 +161,7 @@ export interface ExtensionDesiredState {
   [extensionName: string]: boolean;
 }
 
+export interface ExtensionTabContribution {
+  readonly name: string;
+  readonly css: ExtensionCss;
+}

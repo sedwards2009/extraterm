@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -12,7 +12,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { EtTerminal, LineRangeChange } from "../Terminal";
 import { TextViewer } from"../viewers/TextAceViewer";
 import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
-  isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor } from "./InternalTypes";
+  isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor, ViewerTabDisplay } from "./InternalTypes";
 import { ExtensionUiUtilsImpl } from "./ExtensionUiUtilsImpl";
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionDesiredState
 } from "../../ExtensionMetadata";
@@ -32,6 +32,7 @@ import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 import { SplitLayout } from "../SplitLayout";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { focusElement } from "../DomUtils";
+import { ConfigDatabase, SYSTEM_CONFIG } from "../../Config";
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
@@ -67,6 +68,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
   extensionUiUtils: ExtensionUiUtils = null;
 
   private _splitLayout: SplitLayout = null;
+  #viewerTabDisplay: ViewerTabDisplay = null;
+  #configDatabase: ConfigDatabase = null;
 
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
@@ -82,8 +85,10 @@ export class ExtensionManagerImpl implements ExtensionManager {
   onCommandsChanged: ExtensionApi.Event<void>;
   private _commandsChangedLater: DebouncedDoLater = null;
 
-  constructor() {
+  constructor(configDatabase: ConfigDatabase) {
     this._log = getLogger("ExtensionManager", this);
+    this.#configDatabase = configDatabase;
+
     this.onStateChanged = this._onStateChangedEventEmitter.event;
     this.onCommandsChanged = this._onCommandsChangedEventEmitter.event;
     this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire(undefined));
@@ -92,6 +97,14 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   setSplitLayout(splitLayout: SplitLayout): void {
     this._splitLayout = splitLayout;
+  }
+
+  setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void {
+    this.#viewerTabDisplay = viewerTabDisplay;
+  }
+
+  getViewerTabDisplay(): ViewerTabDisplay {
+    return this.#viewerTabDisplay;
   }
 
   startUp(): void {
@@ -138,7 +151,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
     let contextImpl: ExtensionContextImpl = null;
 
     if ( ! isMainProcessExtension(metadata)) {
-      contextImpl = new ExtensionContextImpl(this, metadata, this._commonExtensionWindowState);
+
+      const applicationVersion = this.#configDatabase.getConfig(SYSTEM_CONFIG).applicationVersion;
+      contextImpl = new ExtensionContextImpl(this, metadata, this._commonExtensionWindowState, applicationVersion);
       if (metadata.main != null) {
         module = this._loadExtensionModule(metadata);
         if (module == null) {

@@ -13,7 +13,7 @@ import { log } from "extraterm-logging";
 import {BlobBulkFileHandle} from '../bulk_file_handling/BlobBulkFileHandle';
 import * as BulkFileUtils from '../bulk_file_handling/BulkFileUtils';
 import { ExtraEditCommands } from './ExtraAceEditCommands';
-import { doLater, doLaterFrame, DebouncedDoLater } from 'extraterm-later';
+import { doLater, doLaterFrame } from 'extraterm-later';
 import * as DomUtils from '../DomUtils';
 import * as SupportsClipboardPaste from '../SupportsClipboardPaste';
 import * as ThemeTypes from '../../theme/Theme';
@@ -71,7 +71,6 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
   private _title = "";
   private _bulkFileHandle: BulkFileHandle = null;
   private _mimeType: string = null;
-  private _metadataEventDoLater: DebouncedDoLater = null;
 
   private _aceEditor: ExtratermAceEditor = null;
   private _aceEditSession: EditSession = null;
@@ -93,11 +92,6 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
     super();
 
     this._log = getLogger(TextViewer.TAG_NAME, this);
-
-    this._metadataEventDoLater = new DebouncedDoLater(() => {
-      const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
-      this.dispatchEvent(event);
-    });
 
     const shadow = this.attachShadow( { mode: 'open', delegatesFocus: true } );
     const clone = this.createClone();
@@ -396,7 +390,7 @@ export class TextViewer extends ViewerElement implements SupportsClipboardPaste.
 
   private async _loadBulkFile(handle: BulkFileHandle): Promise<void> {
     handle.ref();
-    this._metadataEventDoLater.trigger();
+    this.metadataChanged();
     const {mimeType, charset} = BulkFileUtils.guessMimetype(handle);
     this.setMimeType(mimeType);
     const data = await BulkFileUtils.readDataAsArrayBuffer(handle);

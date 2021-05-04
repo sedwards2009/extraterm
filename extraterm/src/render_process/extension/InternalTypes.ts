@@ -78,6 +78,9 @@ export interface ExtensionManager {
   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
   createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor;
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
+
+  setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void;
+  getViewerTabDisplay(): ViewerTabDisplay;
 }
 
 export interface AcceptsExtensionManager {
@@ -93,6 +96,16 @@ export function injectExtensionManager(instance: any, extensionManager: Extensio
 export function isAcceptsExtensionManager(instance: any): instance is AcceptsExtensionManager {
   return (<AcceptsExtensionManager> instance).setExtensionManager !== undefined;
 }
+
+/**
+ * Interface for something which can display ViewerElements in tabs.
+ */
+export interface ViewerTabDisplay {
+  openViewerTab(viewerElement: ViewerElement): void;
+  closeViewerTab(viewerElement: ViewerElement): void;
+  switchToTab(viewerElement: ViewerElement): void;
+}
+
 
 export interface ProxyFactory {
   getTabProxy(tabLike: EtTerminal | EtViewerTab): ExtensionApi.Tab;

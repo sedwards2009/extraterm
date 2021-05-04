@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
+import { DebouncedDoLater } from "extraterm-later";
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail, RefreshLevel} from './ViewerElementTypes';
@@ -13,13 +14,15 @@ import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
 
-  static EVENT_BEFORE_SELECTION_CHANGE = "before-selection-change"
-  static EVENT_CURSOR_MOVE = "cursor-move";
-  static EVENT_CURSOR_EDGE = "cursor-edge";
-  static EVENT_METADATA_CHANGE = "metadata-change";
+  static EVENT_BEFORE_SELECTION_CHANGE = "et-viewer-element_before-selection-change"
+  static EVENT_CURSOR_MOVE = "et-viewer-element_cursor-move";
+  static EVENT_CURSOR_EDGE = "et-viewer-element_cursor-edge";
+  static EVENT_METADATA_CHANGE = "et-viewer-element_metadata-change";
 
   onDispose: Event<void>;
-  _onDisposeEventEmitter = new EventEmitter<void>();
+  #onDisposeEventEmitter = new EventEmitter<void>();
+
+  #metadataEventDoLater: DebouncedDoLater = null;
 
   /**
    * Type guard for detecting a ViewerElement instance.
@@ -33,7 +36,11 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
 
   constructor() {
     super();
-    this.onDispose = this._onDisposeEventEmitter.event;
+    this.#metadataEventDoLater = new DebouncedDoLater(() => {
+      const event = new CustomEvent(ViewerElement.EVENT_METADATA_CHANGE, { bubbles: true });
+      this.dispatchEvent(event);
+    });
+    this.onDispose = this.#onDisposeEventEmitter.event;
   }
 
   getMetadata(): ViewerMetadata {
@@ -45,6 +52,10 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
       deleteable: true,
       toolTip: null
     };
+  }
+
+  metadataChanged(): void {
+    this.#metadataEventDoLater.trigger();
   }
 
   hasFocus(): boolean {
@@ -156,7 +167,7 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
   }
 
   dispose(): void {
-    this._onDisposeEventEmitter.fire();
+    this.#onDisposeEventEmitter.fire();
   }
 
   refresh(level: RefreshLevel): void {
@@ -168,5 +179,9 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
    */
   getPartialCommonExtensionWindowState(): Partial<CommonExtensionWindowState> {
     return null;
+  }
+
+  didClose(): void {
+
   }
 }

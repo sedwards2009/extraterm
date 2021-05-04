@@ -3,49 +3,46 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as he from 'he';
-import { BulkFileHandle, SessionConfiguration, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
-import { CustomElement, Attribute, Observe } from 'extraterm-web-component-decorators';
+import { BulkFileHandle, SessionConfiguration, CreateSessionOptions } from "@extraterm/extraterm-extension-api";
+import { html, render } from "extraterm-lit-html";
+import { CustomElement, Attribute, Observe } from "extraterm-web-component-decorators";
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 
-import { AboutTab } from './AboutTab';
-import { BulkFileBroker } from './bulk_file_handling/BulkFileBroker';
-import * as config from '../Config';
-import * as DisposableUtils from '../utils/DisposableUtils';
-import * as DomUtils from './DomUtils';
-import { EmbeddedViewer } from './viewers/EmbeddedViewer';
-import { EmptyPaneMenu } from './command/EmptyPaneMenu';
-import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
-import { ElementMimeType, FrameMimeType } from './InternalMimeTypes';
-import { KeybindingsManager, AcceptsKeybindingsManager, injectKeybindingsManager } from './keybindings/KeyBindingsManager';
-import { SettingsTab } from './settings/SettingsTab';
-import { SnapDropContainer, DroppedEventDetail as SnapDroppedEventDetail, DropLocation } from './gui/SnapDropContainer';
-import { SplitLayout } from './SplitLayout';
-import { Splitter, SplitOrientation } from './gui/Splitter';
+import { BulkFileBroker } from "./bulk_file_handling/BulkFileBroker";
+import * as config from "../Config";
+import * as DisposableUtils from "../utils/DisposableUtils";
+import * as DomUtils from "./DomUtils";
+import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
+import { EmptyPaneMenu } from "./command/EmptyPaneMenu";
+import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from "./GeneralEvents";
+import { ElementMimeType, FrameMimeType } from "./InternalMimeTypes";
+import { KeybindingsManager, injectKeybindingsManager } from "./keybindings/KeyBindingsManager";
+import { SettingsTab } from "./settings/SettingsTab";
+import { DroppedEventDetail as SnapDroppedEventDetail, DropLocation } from "./gui/SnapDropContainer";
+import { SplitLayout } from "./SplitLayout";
+import { SplitOrientation } from "./gui/Splitter";
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
-import { Tab } from './gui/Tab';
-import { TabWidget, DroppedEventDetail } from './gui/TabWidget';
-import { EtTerminal, EXTRATERM_COOKIE_ENV } from './Terminal';
-import * as ThemeTypes from '../theme/Theme';
-import { ThemeableElementBase } from './ThemeableElementBase';
-import { ViewerElement } from './viewers/ViewerElement';
-import * as ViewerElementTypes from './viewers/ViewerElementTypes';
-import { EtViewerTab } from './ViewerTab';
-import { PtyIpcBridge } from './PtyIpcBridge';
-import { ExtensionManager, injectExtensionManager } from './extension/InternalTypes';
-import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from '../Config';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
-import { NewTerminalContextArea } from './NewTerminalContextArea';
-import { CommandAndShortcut } from './command/CommandPalette';
-import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from './command/CommandUtils';
-import { TerminalVisualConfig, injectTerminalVisualConfig } from './TerminalVisualConfig';
-import { doLater } from 'extraterm-later';
-import { focusElement } from './DomUtils';
+import { Tab } from "./gui/Tab";
+import { TabWidget, DroppedEventDetail } from "./gui/TabWidget";
+import { EtTerminal, EXTRATERM_COOKIE_ENV } from "./Terminal";
+import * as ThemeTypes from "../theme/Theme";
+import { ThemeableElementBase } from "./ThemeableElementBase";
+import { ViewerElement } from "./viewers/ViewerElement";
+import * as ViewerElementTypes from "./viewers/ViewerElementTypes";
+import { EtViewerTab } from "./ViewerTab";
+import { PtyIpcBridge } from "./PtyIpcBridge";
+import { ExtensionManager, injectExtensionManager, ViewerTabDisplay } from "./extension/InternalTypes";
+import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from "../Config";
+import { trimBetweenTags } from "extraterm-trim-between-tags";
+import { NewTerminalContextArea } from "./NewTerminalContextArea";
+import { CommandAndShortcut } from "./command/CommandPalette";
+import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride } from "./command/CommandUtils";
+import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
+import { doLater } from "extraterm-later";
+import { focusElement } from "./DomUtils";
 
 const VisualState = ViewerElementTypes.VisualState;
-
-const ID = "ExtratermMainWebUITemplate";
 
 const ID_TOP_LAYOUT = "ID_TOP_LAYOUT";
 const ID_MAIN_CONTENTS = "ID_MAIN_CONTENTS";
@@ -77,47 +74,49 @@ const CLASS_MAIN_NOT_DRAGGING = "CLASS_MAIN_NOT_DRAGGING";
  * Top level UI component for a normal terminal window
  */
 @CustomElement("extraterm-mainwebui")
-export class MainWebUi extends ThemeableElementBase implements AcceptsKeybindingsManager,
-    config.AcceptsConfigDatabase {
+export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay {
 
   static TAG_NAME = "EXTRATERM-MAINWEBUI";
-  static EVENT_TAB_OPENED = 'mainwebui-tab-opened';
-  static EVENT_TAB_CLOSED = 'mainwebui-tab-closed';
-  static EVENT_TITLE = 'mainwebui-title';
+  static EVENT_TAB_OPENED = "mainwebui-tab-opened";
+  static EVENT_TAB_CLOSED = "mainwebui-tab-closed";
+  static EVENT_TITLE = "mainwebui-title";
   static EVENT_MINIMIZE_WINDOW_REQUEST = "mainwebui-minimize-window-request";
   static EVENT_MAXIMIZE_WINDOW_REQUEST = "mainwebui-maximize-window-request";
   static EVENT_CLOSE_WINDOW_REQUEST = "mainwebui-close-window-request";
   static EVENT_QUIT_APPLICATION_REQUEST = "mainwebui-quit-application-request";
 
-  //-----------------------------------------------------------------------
-  // WARNING: Fields like this will not be initialised automatically. See _initProperties().
   private _log: Logger;
 
-  private _ptyIpcBridge: PtyIpcBridge = null;
-  private _tabIdCounter = 0;
-  private _configManager: ConfigDatabase = null;
-  private _keybindingsManager: KeybindingsManager = null;
-  private _extensionManager: ExtensionManager = null;
-  private _themes: ThemeTypes.ThemeInfo[] = [];
-  private _terminalVisualConfig: TerminalVisualConfig = null;
-  private _lastFocus: Element = null;
-  private _splitLayout: SplitLayout = null;
-  private _fileBroker = new BulkFileBroker();
+  #ptyIpcBridge: PtyIpcBridge = null;
+  #configManager: ConfigDatabase = null;
+  #keybindingsManager: KeybindingsManager = null;
+  #extensionManager: ExtensionManager = null;
+  #themes: ThemeTypes.ThemeInfo[] = [];
+  #terminalVisualConfig: TerminalVisualConfig = null;
+  #lastFocus: Element = null;
+  #splitLayout: SplitLayout = null;
+  #fileBroker = new BulkFileBroker();
 
   constructor() {
     super();
-    this._splitLayout = new SplitLayout();
+    this.#splitLayout = new SplitLayout();
     this._log = getLogger("ExtratermMainWebUI", this);
+    this._handleViewerElementFocus = this._handleViewerElementFocus.bind(this);
+  }
+
+  setDependencies(configManager: ConfigDatabase, keyBindingManager: KeybindingsManager,
+      extensionManager: ExtensionManager): void {
+
+    this.#configManager = configManager;
+    this.#keybindingsManager = keyBindingManager;
+    this.#extensionManager = extensionManager;
+    this._registerCommands(extensionManager);
   }
 
   connectedCallback(): void {
     super.connectedCallback();
     this._setUpShadowDom();
-    this._setUpMainContainer();
     this._setUpSplitLayout();
-    if (this._showWindowControls()) {
-      this._setUpWindowControls();
-    }
     this._setupPtyIpc();
   }
 
@@ -125,15 +124,14 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
   @Observe("windowId")
   private _observeWindowId(target: string): void {
-    this._splitLayout.setWindowId(this.windowId);
+    this.#splitLayout.setWindowId(this.windowId);
   }
 
   focus(): void {
-    if (this._lastFocus != null) {
-      this._focusTabContent(this._lastFocus);
+    if (this.#lastFocus != null) {
+      this._focusTabContent(this.#lastFocus);
     } else {
-
-      const allContentElements = this._splitLayout.getAllTabContents();
+      const allContentElements = this.#splitLayout.getAllTabContents();
       if (allContentElements.length !== 0) {
         this._focusTabContent(allContentElements[0]);
       }
@@ -141,77 +139,111 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   render(): void {
-    this._splitLayout.update();
-  }
-
-  setConfigDatabase(configManager: ConfigDatabase): void {
-    this._configManager = configManager;
-  }
-
-  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
-    this._keybindingsManager = keyBindingManager;
-  }
-
-  setExtensionManager(extensionManager: ExtensionManager): void {
-    this._extensionManager = extensionManager;
-    this._registerCommands(extensionManager);
+    this.#splitLayout.update();
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
-    this._terminalVisualConfig = terminalVisualConfig;
+    this.#terminalVisualConfig = terminalVisualConfig;
 
     const settingsTab = this._getSettingsTab();
     if (settingsTab != null) {
       settingsTab.setTerminalVisualConfig(terminalVisualConfig);
     }
 
-    for (const el of this._splitLayout.getAllTabContents()) {
+    for (const el of this.#splitLayout.getAllTabContents()) {
       injectTerminalVisualConfig(el, terminalVisualConfig);
     }
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {
-    this._themes = themes;
+    this.#themes = themes;
     const settingsTab = this._getSettingsTab();
     if (settingsTab != null) {
-      settingsTab.setThemes(this._themes);
+      settingsTab.setThemes(this.#themes);
     }
   }
 
   getTabCount(): number {
-    return this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu)).length;
+    return this.#splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu)).length;
   }
 
   getSplitLayout(): SplitLayout {
-    return this._splitLayout;
+    return this.#splitLayout;
   }
 
   closeAllTabs(): void {
-    const elements = this._splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu));
+    const elements = this.#splitLayout.getAllTabContents().filter( (el) => !(el instanceof EmptyPaneMenu));
     for (const element of elements) {
-      this.closeTab(element);
+      this._disposeTab(element);
     }
   }
 
   private _setUpShadowDom(): void {
-    const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
-    const clone = this._createClone();
-    shadow.appendChild(clone);
+    this.attachShadow({ mode: "open", delegatesFocus: false });
+
+    const handleMainContainerFocus = {
+      handleEvent: this._handleMainContainerFocusCapture.bind(this),
+      capture: true
+    };
+
+    render(html`${this._styleTag()}
+      <div id=${ID_TOP_LAYOUT}>
+        <div id=${ID_TITLE_BAR}>
+          <div id=${ID_TITLE_BAR_SPACE}>
+            <div id=${ID_TOP_RESIZE_BAR}></div>
+            <div id=${ID_DRAG_BAR}></div>
+          </div>
+          ${this._showWindowControls()
+            ? html`
+              <button id=${ID_MINIMIZE_BUTTON} tabindex="-1" @click=${this._handleMinimizeClick.bind(this)}></button>
+              <button id=${ID_MAXIMIZE_BUTTON} tabindex="-1" @click=${this._handleMaximizeClick.bind(this)}></button>
+              <button id=${ID_CLOSE_BUTTON} tabindex="-1" @click=${this._handleCloseWindowClick.bind(this)}></button>`
+            : null}
+        </div>
+        <div
+          id=${ID_MAIN_CONTENTS}
+          class=${CLASS_MAIN_NOT_DRAGGING}
+          @focus=${handleMainContainerFocus}
+          @click=${this._handleMainContainerClickEvent.bind(this)}
+          @et-viewer-element_metadata-change=${this._handleViewerMetadataChanged.bind(this)}}
+          @et-tab-widget_switch=${this._handleTabSwitchEvent.bind(this)}
+          @et-tab-widget_dropped=${this._handleTabWidgetDroppedEvent.bind(this)}
+          @et-snap-drop-container_dropped=${this._handleTabWidgetSnapDroppedEvent.bind(this)}
+          @extraterm_drag-started=${this._handleDragStartedEvent.bind(this)}
+          @extraterm_drag-ended=${this._handleDragEndedEvent.bind(this)}>
+        </div>
+      </div>`, this.shadowRoot);
     this.updateThemeCss();
-  }
 
-  private _setUpMainContainer(): void {
     const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
-    mainContainer.classList.add(CLASS_MAIN_NOT_DRAGGING);
-
-    mainContainer.addEventListener(TabWidget.EVENT_TAB_SWITCH, this._handleTabSwitchEvent.bind(this));
-    mainContainer.addEventListener(TabWidget.EVENT_DROPPED, this._handleTabWidgetDroppedEvent.bind(this));
-    mainContainer.addEventListener(SnapDropContainer.EVENT_DROPPED, this._handleTabWidgetSnapDroppedEvent.bind(this));
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_STARTED, this);
     DomUtils.addCustomEventResender(mainContainer, EVENT_DRAG_ENDED, this);
-    mainContainer.addEventListener(EVENT_DRAG_STARTED, this._handleDragStartedEvent.bind(this));
-    mainContainer.addEventListener(EVENT_DRAG_ENDED, this._handleDragEndedEvent.bind(this));
-    mainContainer.addEventListener('click', this._handleMainContainerClickEvent.bind(this));
+  }
+
+  private _handleMainContainerFocusCapture(ev: FocusEvent): void {
+    this.#extensionManager.updateExtensionWindowStateFromEvent(ev);
+  }
+
+  private _handleMinimizeClick(): void {
+    focusElement(this, this._log);
+    this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
+  };
+
+  private _handleMaximizeClick(): void {
+    focusElement(this, this._log);
+    this._sendWindowRequestEvent(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST);
+  };
+
+  private _handleCloseWindowClick(): void {
+    focusElement(this, this._log);
+    this._commandCloseWindow();
+  };
+
+  private _handleViewerMetadataChanged(ev: CustomEvent): void {
+    const target = ev.target;
+    if (target instanceof ViewerElement) {
+      this._updateTabTitle(target);
+    }
   }
 
   private _handleTabWidgetDroppedEvent(ev: CustomEvent): void {
@@ -228,25 +260,25 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (ElementMimeType.tagNameFromData(dropData) === Tab.TAG_NAME) {
       const tabElement = <Tab> DomUtils.getShadowId(this, ElementMimeType.elementIdFromData(dropData));
 
-      this._splitLayout.moveTabToTabWidget(tabElement, targetTabWidget, tabIndex);
-      this._splitLayout.update();
+      this.#splitLayout.moveTabToTabWidget(tabElement, targetTabWidget, tabIndex);
+      this.#splitLayout.update();
 
-      const tabContent = this._splitLayout.getTabContentByTab(tabElement);
+      const tabContent = this.#splitLayout.getTabContentByTab(tabElement);
       targetTabWidget.selectedIndex = tabIndex;
       this._focusTabContent(tabContent);
     }
   }
 
   private _handleFrameDroppedEvent(targetTabWidget: TabWidget, tabIndex: number, dropData: string): void {
-    for (const el of this._splitLayout.getAllTabContents()) {
+    for (const el of this.#splitLayout.getAllTabContents()) {
       if (el instanceof EtTerminal) {
         const embeddedViewer = el.getEmbeddedViewerByFrameId(dropData);
         if (embeddedViewer != null) {
           const viewerTab = this._popOutEmbeddedViewer(embeddedViewer, el);
-          const tab = this._splitLayout.getTabByTabContent(viewerTab);
-          this._splitLayout.moveTabToTabWidget(tab, targetTabWidget, tabIndex);
-          this._splitLayout.update();
-          this._switchToTab(viewerTab);
+          const tab = this.#splitLayout.getTabByTabContent(viewerTab);
+          this.#splitLayout.moveTabToTabWidget(tab, targetTabWidget, tabIndex);
+          this.#splitLayout.update();
+          this.focusTab(viewerTab);
           return;
         }
       }
@@ -299,8 +331,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     const target = ev.target;
     if (target instanceof TabWidget) {
 
-      const newTabWidget = splitBefore ? this._splitLayout.splitBeforeTabWidget(target, orientation) : this._splitLayout.splitAfterTabWidget(target, orientation);
-      this._splitLayout.update();
+      const newTabWidget = splitBefore ? this.#splitLayout.splitBeforeTabWidget(target, orientation) : this.#splitLayout.splitAfterTabWidget(target, orientation);
+      this.#splitLayout.update();
 
       if (ElementMimeType.equals(detail.mimeType, this.windowId)) {
         this._handleElementDroppedEvent(newTabWidget, 0, detail.dropData);
@@ -325,66 +357,59 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   private _handleMainContainerClickEvent(ev): void {
     // This handler is intended to be triggered by the plus (new tab) button in the tab bar.
     for (const part of ev.path) {
-      if (part instanceof HTMLButtonElement) {
-        if (part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
-          let el: HTMLElement = part;
-          while (el != null && ! (el instanceof TabWidget)) {
-            el = el.parentElement;
-          }
-          if (this._configManager.getConfig(SESSION_CONFIG).length !== 0) {
-            const sessionUuid = this._configManager.getConfig(SESSION_CONFIG)[0].uuid;
-            this.commandNewTerminal({sessionUuid});
-          }
+      if (part instanceof HTMLButtonElement && part.classList.contains(CLASS_NEW_TAB_BUTTON)) {
+        let el: HTMLElement = part;
+        while (el != null && ! (el instanceof TabWidget)) {
+          el = el.parentElement;
+        }
+        if (this.#configManager.getConfig(SESSION_CONFIG).length !== 0) {
+          const sessionUuid = this.#configManager.getConfig(SESSION_CONFIG)[0].uuid;
+          this.commandNewTerminal({sessionUuid});
         }
       }
     }
   }
 
   private _setUpSplitLayout(): void {
-    const mainContainer = DomUtils.getShadowId(this, ID_MAIN_CONTENTS);
+    this.#splitLayout.setRootContainer(DomUtils.getShadowId(this, ID_MAIN_CONTENTS));
 
-    mainContainer.addEventListener("focus", (ev: FocusEvent) => {
-      this._extensionManager.updateExtensionWindowStateFromEvent(ev);
-    }, true);
-
-    this._splitLayout.setRootContainer(mainContainer);
-    this._splitLayout.setTabContainerFactory( (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element => {
+    this.#splitLayout.setTabContainerFactory( (tabWidget: TabWidget, tab: Tab, tabContent: Element): Element => {
       const divContainer = document.createElement("DIV");
       divContainer.classList.add(CLASS_TAB_CONTENT);
       return divContainer;
     });
 
-    this._splitLayout.setRightSpaceDefaultElementFactory( (): Element => {
+    this.#splitLayout.setRightSpaceDefaultElementFactory( (): Element => {
       const tempDiv = document.createElement("DIV");
       tempDiv.innerHTML = this._newTabRestAreaHtml();
       return tempDiv.children.item(0);
     });
-    this._splitLayout.setTopLeftElement(this._leftControls());
-    this._splitLayout.setTopRightElement(this._menuControls());
+    this.#splitLayout.setTopLeftElement(this._leftControls());
+    this.#splitLayout.setTopRightElement(this._menuControls());
 
-    this._splitLayout.setEmptySplitElementFactory( (previousElement: Element): Element => {
+    this.#splitLayout.setEmptySplitElementFactory( (previousElement: Element): Element => {
       let emptyPaneMenu: EmptyPaneMenu = <EmptyPaneMenu> previousElement;
       if (emptyPaneMenu == null) {
         emptyPaneMenu = <EmptyPaneMenu> document.createElement(EmptyPaneMenu.TAG_NAME);
         emptyPaneMenu.addEventListener("selected", (ev: CustomEvent): void => {
 
-          const windowState = this._extensionManager.getExtensionWindowStateFromEvent(ev);
+          const windowState = this.#extensionManager.getExtensionWindowStateFromEvent(ev);
           emptyPaneMenu.setFilter("");
           for (const entry of entriesAndShortcuts) {
             if (entry.id === ev.detail.selected) {
-              this._extensionManager.executeCommandWithExtensionWindowState(windowState, entry.command);
+              this.#extensionManager.executeCommandWithExtensionWindowState(windowState, entry.command);
             }
           }
         });
       }
 
-      const entries = this._extensionManager.queryCommands({
+      const entries = this.#extensionManager.queryCommands({
         emptyPaneMenu: true,
         categories: ["application", "window", "textEditing", "terminal", "terminalCursorMode", "viewer"],
         when: true
       });
 
-      const termKeybindingsMapping = this._keybindingsManager.getKeybindingsMapping();
+      const termKeybindingsMapping = this.#keybindingsManager.getKeybindingsMapping();
       const entriesAndShortcuts = entries.map((entry): CommandAndShortcut => {
         const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
         const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
@@ -393,23 +418,6 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
 
       emptyPaneMenu.setEntries(entriesAndShortcuts);
       return emptyPaneMenu;
-    });
-  }
-
-  private _setUpWindowControls(): void {
-    DomUtils.getShadowId(this, ID_MINIMIZE_BUTTON).addEventListener('click', () => {
-      focusElement(this, this._log);
-      this._sendWindowRequestEvent(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST);
-    });
-
-    DomUtils.getShadowId(this, ID_MAXIMIZE_BUTTON).addEventListener('click', () => {
-      focusElement(this, this._log);
-      this._sendWindowRequestEvent(MainWebUi.EVENT_MAXIMIZE_WINDOW_REQUEST);
-    });
-
-    DomUtils.getShadowId(this, ID_CLOSE_BUTTON).addEventListener('click', () => {
-      focusElement(this, this._log);
-      this._commandCloseWindow();
     });
   }
 
@@ -425,48 +433,9 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     return tempDiv.children.item(0);
   }
 
-  private _createClone(): Node {
-    let template = <HTMLTemplateElement>window.document.getElementById(ID);
-    if (template === null) {
-      template = <HTMLTemplateElement>window.document.createElement('template');
-      template.id = ID;
-      template.innerHTML = this._html();
-      window.document.body.appendChild(template);
-    }
-    return window.document.importNode(template.content, true);
-  }
-
   private _showWindowControls(): boolean {
-    const systemConfig = <config.SystemConfig> this._configManager.getConfig(config.SYSTEM_CONFIG);
+    const systemConfig = <config.SystemConfig> this.#configManager.getConfig(config.SYSTEM_CONFIG);
     return systemConfig.titleBarStyle === "theme" && process.platform !== "darwin";
-  }
-
-  private _html(): string {
-    let windowControls = "";
-    if (this._showWindowControls()) {
-      windowControls = this._windowControlsHtml();
-    }
-
-    return trimBetweenTags(`
-      <style id="${ThemeableElementBase.ID_THEME}"></style>
-      <div id="${ID_TOP_LAYOUT}">
-        <div id="${ID_TITLE_BAR}">
-          <div id="${ID_TITLE_BAR_SPACE}">
-            <div id="${ID_TOP_RESIZE_BAR}"></div>
-            <div id="${ID_DRAG_BAR}"></div>
-          </div>
-          ${windowControls}
-        </div>
-        <div id="${ID_MAIN_CONTENTS}">
-        </div>
-      </div>`);
-  }
-
-  private _windowControlsHtml(): string {
-    return trimBetweenTags(
-      `<button id="${ID_MINIMIZE_BUTTON}" tabindex="-1"></button>
-      <button id="${ID_MAXIMIZE_BUTTON}" tabindex="-1"></button>
-      <button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>`);
   }
 
   private _newTabRestAreaHtml(extraContents = ""): string {
@@ -486,45 +455,64 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       ThemeTypes.CssFile.MAIN_UI];
   }
 
-  private _addTab(tabWidget: TabWidget, tabContentElement: Element): Tab {
+  private _addTab(tabContentElement: HTMLElement, tabWidget: TabWidget=null): Tab {
     const isTerminal = tabContentElement instanceof EtTerminal;
 
-    const newId = this._tabIdCounter;
-    this._tabIdCounter++;
+    if (tabWidget == null) {
+      tabWidget = this.#splitLayout.firstTabWidget();
+    }
+
     const newTab = <Tab> document.createElement(Tab.TAG_NAME);
-    newTab.setAttribute('id', "tab_id_" + newId);
     newTab.tabIndex = -1;
+    newTab.addEventListener("contextmenu", this._handleTabHeaderContextMenu.bind(this, tabContentElement), true);
 
-    const contentsHtml = isTerminal ?
-      `<div id="tab_title_extensions_${newId}" class="tab_title_extensions"></div>`
-      :
-      `<div class="${CLASS_TAB_HEADER_ICON}"></div>
-      <div class="${CLASS_TAB_HEADER_MIDDLE}">${newId}</div>
-      <div class="${CLASS_TAB_HEADER_TAG}"></div>`;
+    this._renderTabHtml(newTab, tabContentElement);
 
-    newTab.innerHTML = trimBetweenTags(`
-      <div class="${CLASS_TAB_HEADER_CONTAINER}" id="tab_id_${newId}">
-        ${contentsHtml}
-        <div class="${CLASS_TAB_HEADER_CLOSE}">
-          <button id="close_tab_id_${newId}" class="microtool danger"><i class="fa fa-times"></i></button>
-        </div>
-      </div>`);
-
-    this._splitLayout.appendTab(tabWidget, newTab, tabContentElement);
-    this._splitLayout.update();
-
-    const closeTabButton = DomUtils.getShadowRoot(this).getElementById("close_tab_id_" + newId);
-    closeTabButton.addEventListener('click', this.closeTab.bind(this, tabContentElement));
-
-    const tabHeader = DomUtils.getShadowRoot(this).getElementById("tab_id_" + newId);
-    tabHeader.addEventListener('contextmenu', this._handleTabHeaderContextMenu.bind(this, tabContentElement), true);
+    this.#splitLayout.appendTab(tabWidget, newTab, tabContentElement);
+    this.#splitLayout.update();
 
     if (isTerminal) {
-      const extensionsDiv = <HTMLDivElement> DomUtils.getShadowRoot(this).getElementById("tab_title_extensions_" + newId);
+      const extensionsDiv = <HTMLDivElement> newTab.querySelector(".tab_title_extensions");
       this._addTabTitleWidgets(extensionsDiv, <EtTerminal> tabContentElement);
     }
 
     return newTab;
+  }
+
+  private _renderTabHtml(tab: Tab, tabContentElement: Element): void {
+    const isTerminal = tabContentElement instanceof EtTerminal;
+
+    let title = "";
+    let icon = null;
+    let tag: string  = null;
+    if (tabContentElement instanceof EtViewerTab) {
+      title = tabContentElement.getMetadata().title;
+      icon = tabContentElement.getMetadata().icon;
+      if (tabContentElement.getTag() !== null) {
+        tag = tabContentElement.getTag();
+      }
+    } else if (tabContentElement instanceof ViewerElement) {
+      title = tabContentElement.getMetadata().title;
+      icon = tabContentElement.getMetadata().icon;
+    } else if ( ! isTerminal) {
+      this._log.warn(`Unrecognized element type in _updateTabTitle(). ${tabContentElement}`);
+    }
+
+    const template = html`
+      <div class=${CLASS_TAB_HEADER_CONTAINER}>
+        ${isTerminal
+          ? html`<div class="tab_title_extensions"></div>`
+          : html`
+            <div class=${CLASS_TAB_HEADER_ICON}>${icon != null ? html`<i class=${icon}></i>` : null}</div>
+            <div class=${CLASS_TAB_HEADER_MIDDLE} title=${title}>${title}</div>
+            <div class=${CLASS_TAB_HEADER_TAG}>${tag != null ? html`<i class="fa fa-tag"></i> ${tag}` : null}</div>`}
+        <div class=${CLASS_TAB_HEADER_CLOSE}>
+          <button @click=${this._disposeTab.bind(this, tabContentElement)} class="microtool danger">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+      </div>`;
+    render(template, tab);
   }
 
   private _handleTabHeaderContextMenu(tabContentElement: Element, ev: MouseEvent): void {
@@ -540,23 +528,19 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _addTabTitleWidgets(extensionsDiv: HTMLDivElement, terminal: EtTerminal): void {
-    const widgets = this._extensionManager.createNewTerminalTabTitleWidgets(terminal);
+    const widgets = this.#extensionManager.createNewTerminalTabTitleWidgets(terminal);
     for (const widget of widgets) {
       extensionsDiv.appendChild(widget);
     }
   }
 
   private _tabWidgetFromElement(el: Element): TabWidget {
-    return this._splitLayout.getTabWidgetByTabContent(el);
-  }
-
-  private _firstTabWidget(): TabWidget {
-    return this._splitLayout.firstTabWidget();
+    return this.#splitLayout.getTabWidgetByTabContent(el);
   }
 
   private _handleTabSwitchEvent(ev: CustomEvent): void {
     if (ev.target instanceof TabWidget) {
-      const el = this._splitLayout.getTabContentByTab(ev.target.getSelectedTab());
+      const el = this.#splitLayout.getTabContentByTab(ev.target.getSelectedTab());
       let title = "";
       if (el instanceof EtTerminal) {
         title = el.getTerminalTitle();
@@ -569,35 +553,32 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     }
   }
 
-  private newTerminalTab(tabWidget: TabWidget, sessionConfiguration: SessionConfiguration, workingDirectory: string): EtTerminal {
-    if (tabWidget == null) {
-      tabWidget = this._splitLayout.firstTabWidget();
-    }
+  private newTerminalTab(sessionConfiguration: SessionConfiguration, workingDirectory: string,
+      tabWidget: TabWidget=null): EtTerminal {
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
     newTerminal.setWindowId(this.windowId);
-    newTerminal.setBulkFileBroker(this._fileBroker);
-    config.injectConfigDatabase(newTerminal, this._configManager);
-    injectKeybindingsManager(newTerminal, this._keybindingsManager);
-    newTerminal.setExtensionManager(this._extensionManager);
+    newTerminal.setBulkFileBroker(this.#fileBroker);
+    config.injectConfigDatabase(newTerminal, this.#configManager);
+    injectKeybindingsManager(newTerminal, this.#keybindingsManager);
+    newTerminal.setExtensionManager(this.#extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
-    newTerminal.setTerminalVisualConfig(this._terminalVisualConfig);
+    newTerminal.setTerminalVisualConfig(this.#terminalVisualConfig);
     newTerminal.setSessionConfiguration(sessionConfiguration);
 
     // Set the default name of the terminal tab to the session name.
     newTerminal.setTerminalTitle(sessionConfiguration.name);
 
-    this._addTab(tabWidget, newTerminal);
+    this._addTab(newTerminal, tabWidget);
     this._setUpNewTerminalEventHandlers(newTerminal);
     this._createPtyForTerminal(newTerminal, sessionConfiguration.uuid, workingDirectory);
-    this._updateTabTitle(newTerminal);
     this._sendTabOpenedEvent();
 
     return newTerminal;
   }
 
   private _getSessionByUuid(sessionUuid: string): SessionConfiguration {
-    const sessions = this._configManager.getConfigCopy(SESSION_CONFIG);
+    const sessions = this.#configManager.getConfigCopy(SESSION_CONFIG);
     for (const session of sessions) {
       if (session.uuid === sessionUuid) {
         return session;
@@ -607,7 +588,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _getSessionByName(sessionName: string): SessionConfiguration {
-    const sessions = this._configManager.getConfigCopy(SESSION_CONFIG);
+    const sessions = this.#configManager.getConfigCopy(SESSION_CONFIG);
     for (const session of sessions) {
       if (session.name === sessionName) {
         return session;
@@ -632,16 +613,16 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       sessionOptions.workingDirectory = workingDirectory;
     }
 
-    const pty = this._ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionOptions);
+    const pty = this.#ptyIpcBridge.createPtyForTerminal(sessionUuid, sessionOptions);
     pty.onExit(() => {
-      this.closeTab(newTerminal);
+      this._disposeTab(newTerminal);
     });
     newTerminal.setPty(pty);
   }
 
   private _setUpNewTerminalEventHandlers(newTerminal: EtTerminal): void {
-    newTerminal.addEventListener('focus', (ev: FocusEvent) => {
-      this._lastFocus = newTerminal;
+    newTerminal.addEventListener("focus", (ev: FocusEvent) => {
+      this.#lastFocus = newTerminal;
     });
 
     newTerminal.addEventListener(EtTerminal.EVENT_TITLE, (ev: CustomEvent): void => {
@@ -658,84 +639,59 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _popOutEmbeddedViewer(embeddedViewer: EmbeddedViewer, terminal: EtTerminal): EtViewerTab {
-    const viewerTab = this.openViewerTab(embeddedViewer, terminal.getFontAdjust());
-    this._switchToTab(viewerTab);
+    const viewerTab = this._openEmbeddedViewerInTab(embeddedViewer, terminal.getFontAdjust());
+    this.focusTab(viewerTab);
     terminal.deleteEmbeddedViewer(embeddedViewer);
     return viewerTab;
   }
 
-  openViewerTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
+  private _openEmbeddedViewerInTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
     viewerTab.setFontAdjust(fontAdjust);
-    injectKeybindingsManager(viewerTab, this._keybindingsManager);
-    injectConfigDatabase(viewerTab, this._configManager);
+    injectKeybindingsManager(viewerTab, this.#keybindingsManager);
+    injectConfigDatabase(viewerTab, this.#configManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
 
     viewerElement.setMode(ViewerElementTypes.Mode.CURSOR);
     viewerElement.setVisualState(VisualState.AUTO);
-    this._openViewerTab(this._firstTabWidget(), viewerTab);
+    this.openViewerTab(viewerTab);
     viewerTab.setViewerElement(viewerElement);
 
-    this._updateTabTitle(viewerTab);
     return viewerTab;
   }
 
-  private _openViewerTab(tabWidget: TabWidget, viewerElement: ViewerElement): void {
+  openViewerTab(viewerElement: ViewerElement, tabWidget: TabWidget=null): void {
     viewerElement.setFocusable(true);
-    this._addTab(tabWidget, viewerElement);
+    this._addTab(viewerElement, tabWidget);
 
-    viewerElement.addEventListener('focus', (ev: FocusEvent) => {
-      this._lastFocus = viewerElement;
-    });
-
-    this._updateTabTitle(viewerElement);
+    viewerElement.addEventListener("focus", this._handleViewerElementFocus);
     this._sendTabOpenedEvent();
+  }
+
+  private _handleViewerElementFocus(ev: FocusEvent): void {
+    this.#lastFocus = <Element> ev.target;
+  }
+
+  closeViewerTab(viewerElement: ViewerElement): void {
+    this.closeTab(viewerElement);
+  }
+
+  switchToTab(viewerElement: ViewerElement): void {
+    this.focusTab(viewerElement);
   }
 
   private _updateTabTitle(el: HTMLElement): void {
     if (el instanceof EtTerminal) {
       return;
     }
-
-    const tab = this._splitLayout.getTabByTabContent(el);
-
-    let title = "";
-    let htmlTitle = "";
-    let icon = null;
-    let tag = "";
-
-    if (el instanceof EtViewerTab) {
-      title = el.getMetadata().title;
-      htmlTitle = he.escape(title);
-      icon = el.getMetadata().icon;
-      if (el.getTag() !== null) {
-        tag = "<i class='fa fa-tag'></i> " + el.getTag();
-      }
-
-    } else if (el instanceof ViewerElement) {
-      title = el.getMetadata().title;
-      htmlTitle = he.escape(title);
-      icon = el.getMetadata().icon;
-
-    } else {
-      this._log.warn(`Unrecognized element type in _updateTabTitle(). ${el}`);
-    }
-
-    const iconDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_ICON}`);
-    iconDiv.innerHTML = icon !== null ? '<i class="' + icon + '"></i>' : "";
-
-    const middleDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_MIDDLE}`);
-    middleDiv.title = title;
-    middleDiv.innerHTML = htmlTitle;
-
-    const tabDiv = <HTMLDivElement> tab.querySelector(`DIV.${CLASS_TAB_HEADER_TAG}`);
-    tabDiv.innerHTML = tag;
+    const tab = this.#splitLayout.getTabByTabContent(el);
+    this._renderTabHtml(tab, el);
   }
 
   private _getSettingsTab(): SettingsTab {
-    const settingsTabs = this._splitLayout.getAllTabContents().filter(el => el instanceof SettingsTab);
+    const settingsTabs = this.#splitLayout.getAllTabContents().filter(el => el instanceof SettingsTab);
     if (settingsTabs.length !== 0) {
       return <SettingsTab> settingsTabs[0];
     } else {
@@ -746,20 +702,20 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   commandOpenSettingsTab(tabName: string=null): void {
     const settingsTab = this._getSettingsTab();
     if (settingsTab != null) {
-      this._switchToTab(settingsTab);
+      this.focusTab(settingsTab);
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
-      config.injectConfigDatabase(settingsTabElement, this._configManager);
-      injectKeybindingsManager(settingsTabElement, this._keybindingsManager);
-      injectExtensionManager(settingsTabElement, this._extensionManager);
-      settingsTabElement.setTerminalVisualConfig(this._terminalVisualConfig);
+      config.injectConfigDatabase(settingsTabElement, this.#configManager);
+      injectKeybindingsManager(settingsTabElement, this.#keybindingsManager);
+      injectExtensionManager(settingsTabElement, this.#extensionManager);
+      settingsTabElement.setTerminalVisualConfig(this.#terminalVisualConfig);
 
-      settingsTabElement.setThemes(this._themes);
+      settingsTabElement.setThemes(this.#themes);
       if (tabName != null) {
         settingsTabElement.setSelectedTab(tabName);
       }
-      this._openViewerTab(this._firstTabWidget(), settingsTabElement);
-      this._switchToTab(settingsTabElement);
+      this.openViewerTab(settingsTabElement);
+      this.focusTab(settingsTabElement);
     }
   }
 
@@ -767,25 +723,32 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this._sendWindowRequestEvent(MainWebUi.EVENT_QUIT_APPLICATION_REQUEST);
   }
 
-  commandOpenAboutTab(): void {
-    const aboutTabs = this._splitLayout.getAllTabContents().filter( (el) => el instanceof AboutTab );
-    if (aboutTabs.length !== 0) {
-      this._switchToTab(aboutTabs[0]);
+  closeTab(tabContentElement: Element): void {
+    const tabWidget = this.#splitLayout.getTabWidgetByTabContent(tabContentElement);
+    const tabWidgetContents = this.#splitLayout.getTabContentsByTabWidget(tabWidget);
+
+    this.#splitLayout.removeTabContent(tabContentElement);
+    this.#splitLayout.update();
+
+    const oldIndex = tabWidgetContents.indexOf(tabContentElement);
+    if (tabWidgetContents.length >= 2) {
+      this.focusTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);
     } else {
-      const viewerElement = <AboutTab> document.createElement(AboutTab.TAG_NAME);
-      config.injectConfigDatabase(viewerElement, this._configManager);
-      injectKeybindingsManager(viewerElement, this._keybindingsManager);
-      this._openViewerTab(this._firstTabWidget(), viewerElement);
-      this._switchToTab(viewerElement);
+      const tabContents = this.#splitLayout.getTabContentsByTabWidget(tabWidget);
+      if (tabContents.length !== 0) {
+        this.focusTab(tabContents[0]);
+      }
     }
+
+    if (tabContentElement instanceof ViewerElement) {
+      tabContentElement.didClose();
+    }
+
+    this._sendTabClosedEvent(tabContentElement);
   }
 
-  closeTab(tabContentElement: Element): void {
-    const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
-    const tabWidgetContents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
-
-    this._splitLayout.removeTabContent(tabContentElement);
-    this._splitLayout.update();
+  private _disposeTab(tabContentElement: Element): void {
+    this.closeTab(tabContentElement);
 
     if (tabContentElement instanceof EtTerminal) {
       const pty = tabContentElement.getPty();
@@ -793,41 +756,29 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
         pty.destroy();
       }
       const allTerminals = this._getAllTerminals().filter(t => t !== tabContentElement);
-      this._extensionManager.terminalDestroyed(tabContentElement, allTerminals);
+      this.#extensionManager.terminalDestroyed(tabContentElement, allTerminals);
     }
 
     if (DisposableUtils.isDisposable(tabContentElement)) {
       tabContentElement.dispose();
     }
-
-    const oldIndex = tabWidgetContents.indexOf(tabContentElement);
-    if (tabWidgetContents.length >= 2) {
-      this._switchToTab(tabWidgetContents[oldIndex === 0 ? 1 : oldIndex-1]);
-    } else {
-      const tabContents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
-      if (tabContents.length !== 0) {
-        this._switchToTab(tabContents[0]);
-      }
-    }
-
-    this._sendTabClosedEvent();
   }
 
-  private _switchToTab(tabContentElement: Element): void {
-    this._splitLayout.showTabByTabContent(tabContentElement);
+  focusTab(tabContentElement: Element): void {
+    this.#splitLayout.showTabByTabContent(tabContentElement);
     this._focusTabContent(tabContentElement);
 
     // FIXME This is a work-around for the problem where new tabs can't get the focus immediately.
     if ( ! DomUtils.activeNestedElements().includes(tabContentElement)) {
       doLater(() => {
-        this._splitLayout.showTabByTabContent(tabContentElement);
+        this.#splitLayout.showTabByTabContent(tabContentElement);
         this._focusTabContent(tabContentElement);
       });
     }
   }
 
   private _selectAdjacentTab(tabWidget: TabWidget, direction: number): void {
-    const contents = this._splitLayout.getTabContentsByTabWidget(tabWidget);
+    const contents = this.#splitLayout.getTabContentsByTabWidget(tabWidget);
     const len = contents.length;
     if (len === 0) {
       return;
@@ -845,29 +796,29 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _focusPaneLeft(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
+    return this._focusPaneInDirection(tabElement, this.#splitLayout.getTabWidgetToLeft);
   }
 
   private _focusPaneRight(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+    return this._focusPaneInDirection(tabElement, this.#splitLayout.getTabWidgetToRight);
   }
 
   private _focusPaneAbove(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+    return this._focusPaneInDirection(tabElement, this.#splitLayout.getTabWidgetAbove);
   }
 
   private _focusPaneBelow(tabElement: Element): { tabWidget: TabWidget, tabContent: Element} {
-    return this._focusPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
+    return this._focusPaneInDirection(tabElement, this.#splitLayout.getTabWidgetBelow);
   }
 
   private _focusPaneInDirection(tabElement: Element, directionFunc: (tabWidget: TabWidget) => TabWidget):
       { tabWidget: TabWidget, tabContent: Element} {
 
-    const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
-    const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
+    const currentTabWidget = this.#splitLayout.getTabWidgetByTabContent(tabElement);
+    const targetTabWidget = directionFunc.call(this.#splitLayout, currentTabWidget);
     if (targetTabWidget != null) {
       focusElement(targetTabWidget, this._log);
-      const content = this._splitLayout.getTabContentByTab(targetTabWidget.getSelectedTab());
+      const content = this.#splitLayout.getTabContentByTab(targetTabWidget.getSelectedTab());
       if (elementSupportsFocus(content)) {
         focusElement(content, this._log);
         return { tabWidget: targetTabWidget, tabContent: content };
@@ -878,29 +829,29 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _moveTabElementToPaneLeft(tabElement: Element): void {
-    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetToLeft);
+    this._moveTabElementToPaneInDirection(tabElement, this.#splitLayout.getTabWidgetToLeft);
   }
 
   private _moveTabElementToPaneRight(tabElement: Element): void {
-    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetToRight);
+    this._moveTabElementToPaneInDirection(tabElement, this.#splitLayout.getTabWidgetToRight);
   }
 
   private _moveTabElementToPaneUp(tabElement: Element): void {
-    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetAbove);
+    this._moveTabElementToPaneInDirection(tabElement, this.#splitLayout.getTabWidgetAbove);
   }
 
   private _moveTabElementToPaneDown(tabElement: Element): void {
-    this._moveTabElementToPaneInDirection(tabElement, this._splitLayout.getTabWidgetBelow);
+    this._moveTabElementToPaneInDirection(tabElement, this.#splitLayout.getTabWidgetBelow);
   }
 
   private _moveTabElementToPaneInDirection(tabElement: Element,
       directionFunc: (tabWidget: TabWidget) => TabWidget): void {
 
-    const currentTabWidget = this._splitLayout.getTabWidgetByTabContent(tabElement);
-    const targetTabWidget = directionFunc.call(this._splitLayout, currentTabWidget);
+    const currentTabWidget = this.#splitLayout.getTabWidgetByTabContent(tabElement);
+    const targetTabWidget = directionFunc.call(this.#splitLayout, currentTabWidget);
     if (targetTabWidget != null) {
-      this._splitLayout.moveTabToTabWidget(this._splitLayout.getTabByTabContent(tabElement), targetTabWidget, 0);
-      this._splitLayout.update();
+      this.#splitLayout.moveTabToTabWidget(this.#splitLayout.getTabByTabContent(tabElement), targetTabWidget, 0);
+      this.#splitLayout.update();
       focusElement(targetTabWidget, this._log);
       if (elementSupportsFocus(tabElement)) {
         focusElement(tabElement, this._log);
@@ -909,7 +860,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _getTabElementWithFocus(): Element {
-    for (const el of this._splitLayout.getAllTabContents()) {
+    for (const el of this.#splitLayout.getAllTabContents()) {
       if (elementSupportsFocus(el)) {
         if (el.hasFocus()) {
           return el;
@@ -937,10 +888,10 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _split(tabContentElement: Element, orientation: SplitOrientation): void {
-    const newTabWidget = this._splitLayout.splitAfterTabContent(tabContentElement, orientation);
-    this._splitLayout.update();
+    const newTabWidget = this.#splitLayout.splitAfterTabContent(tabContentElement, orientation);
+    this.#splitLayout.update();
     if (newTabWidget != null) {
-      const element = this._splitLayout.getEmptyContentByTabWidget(newTabWidget);
+      const element = this.#splitLayout.getEmptyContentByTabWidget(newTabWidget);
       if (element != null) {
         if (element instanceof EmptyPaneMenu) {
           // I can't figure out why a focusElement() doesn't work immediately.
@@ -950,7 +901,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
           });
         }
       } else {
-        const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
+        const tabWidget = this.#splitLayout.getTabWidgetByTabContent(tabContentElement);
         focusElement(tabWidget, this._log);
         if (elementSupportsFocus(tabContentElement)) {
           focusElement(tabContentElement, this._log);
@@ -974,11 +925,11 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
       }
     }
 
-    this._splitLayout.closeSplitAtTabContent(tabContentElement);
-    this._splitLayout.update();
+    this.#splitLayout.closeSplitAtTabContent(tabContentElement);
+    this.#splitLayout.update();
 
     if (focusInfo == null) {
-      const tabWidget = this._splitLayout.getTabWidgetByTabContent(tabContentElement);
+      const tabWidget = this.#splitLayout.getTabWidgetByTabContent(tabContentElement);
       focusInfo = {tabWidget, tabContent: tabContentElement};
     }
 
@@ -1021,8 +972,8 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     this.dispatchEvent(event);
   }
 
-  private _sendTabClosedEvent(): void {
-    const event = new CustomEvent(MainWebUi.EVENT_TAB_CLOSED, { detail: null });
+  private _sendTabClosedEvent(tabContentElement: Element): void {
+    const event = new CustomEvent(MainWebUi.EVENT_TAB_CLOSED, { detail: { tabContentElement } });
     this.dispatchEvent(event);
   }
 
@@ -1037,7 +988,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _frameFinder(frameId: string): BulkFileHandle {
-    for (const el of this._splitLayout.getAllTabContents()) {
+    for (const el of this.#splitLayout.getAllTabContents()) {
       let bulkFileHandle: BulkFileHandle = null;
       if (el instanceof EtViewerTab && el.getTag() === frameId) {
         bulkFileHandle = el.getFrameContents(frameId);
@@ -1069,23 +1020,22 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     commands.registerCommand("extraterm:window.moveTabToPaneRight", (args: any) => this._commandMoveTabToPaneRight());
     commands.registerCommand("extraterm:window.moveTabToPaneUp", (args: any) => this._commandMoveTabToPaneUp());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
-    commands.registerCommand("extraterm:window.openAbout", (args: any) => this.commandOpenAboutTab());
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettingsTab());
     commands.registerCommand("extraterm:window.verticalSplit", (args: any) => this._commandVerticalSplit());
   }
 
   private _getActiveTabElement(): HTMLElement {
-    return this._extensionManager.getActiveTab();
+    return this.#extensionManager.getActiveTab();
   }
 
   private _getActiveTabWidget(): TabWidget {
-    return this._extensionManager.getActiveTabWidget();
+    return this.#extensionManager.getActiveTabWidget();
   }
 
   async commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}):
       Promise<void> {
 
-    let sessionConfiguration: SessionConfiguration = this._configManager.getConfig(SESSION_CONFIG)[0];
+    let sessionConfiguration: SessionConfiguration = this.#configManager.getConfig(SESSION_CONFIG)[0];
     if (args.sessionUuid != null) {
       sessionConfiguration = this._getSessionByUuid(args.sessionUuid);
       if (sessionConfiguration == null) {
@@ -1102,19 +1052,19 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
     if (args.workingDirectory != null) {
       workingDirectory = args.workingDirectory;
     } else {
-      const activeTerminal = this._extensionManager.getActiveTerminal();
+      const activeTerminal = this.#extensionManager.getActiveTerminal();
       if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
         workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
       }
     }
 
-    const newTerminal = this.newTerminalTab(this._getActiveTabWidget(), sessionConfiguration, workingDirectory);
-    this._switchToTab(newTerminal);
-    this._extensionManager.newTerminalCreated(newTerminal, this._getAllTerminals());
+    const newTerminal = this.newTerminalTab(sessionConfiguration, workingDirectory, this._getActiveTabWidget());
+    this.focusTab(newTerminal);
+    this.#extensionManager.newTerminalCreated(newTerminal, this._getAllTerminals());
   }
 
   private _getAllTerminals(): EtTerminal[] {
-    return <EtTerminal[]> this._splitLayout.getAllTabContents().filter(el => el instanceof EtTerminal);
+    return <EtTerminal[]> this.#splitLayout.getAllTabContents().filter(el => el instanceof EtTerminal);
   }
 
   private _commandFocusTabLeft(): void {
@@ -1142,7 +1092,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _commandCloseTab(): void {
-    this.closeTab(this._getActiveTabElement());
+    this._disposeTab(this._getActiveTabElement());
   }
 
   private _commandHorizontalSplit(): void {
@@ -1178,7 +1128,7 @@ export class MainWebUi extends ThemeableElementBase implements AcceptsKeybinding
   }
 
   private _setupPtyIpc(): void {
-    this._ptyIpcBridge = new PtyIpcBridge();
+    this.#ptyIpcBridge = new PtyIpcBridge();
   }
 }
 

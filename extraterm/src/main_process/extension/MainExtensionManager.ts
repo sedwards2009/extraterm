@@ -15,7 +15,7 @@ import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from "../../render_process/extension/InternalTypes";
-import { ConfigDatabase, GENERAL_CONFIG } from "../../Config";
+import { ConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG } from "../../Config";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { MainInternalExtensionContext, LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution,
   LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
@@ -36,13 +36,18 @@ export class MainExtensionManager {
   private _activeExtensions: ActiveExtension[] = [];
   private _extensionDesiredState: ExtensionDesiredState = {};
   private _desiredStateChangeEventEmitter = new EventEmitter<void>();
+  #applicationVersion = "";
   onDesiredStateChanged: Event<void>;
 
-  constructor(configDatabase: ConfigDatabase, private extensionPaths: string[]) {
+  constructor(configDatabase: ConfigDatabase, private extensionPaths: string[], applicationVersion: string) {
     this._log = getLogger("MainExtensionManager", this);
     this._configDatabase = configDatabase;
     this.onDesiredStateChanged = this._desiredStateChangeEventEmitter.event;
     this._extensionMetadata = this._scan(this.extensionPaths);
+
+    // Note: We are passing `applicationVersion` in instead of getting it from `ConfigDatabase` because
+    // ConfigDatabase doesn't have a system config ready in time for us to read.
+    this.#applicationVersion = applicationVersion;
   }
 
   startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): void {
@@ -143,7 +148,7 @@ export class MainExtensionManager {
     if (isMainProcessExtension(metadata)) {
       this._log.info(`Starting extension '${metadata.name}' in the main process.`);
 
-      contextImpl = new ExtensionContextImpl(metadata);
+      contextImpl = new ExtensionContextImpl(metadata, this.#applicationVersion);
       if (metadata.main != null) {
         module = this._loadExtensionModule(metadata);
         if (module == null) {
