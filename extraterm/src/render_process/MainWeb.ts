@@ -69,17 +69,7 @@ const _log = getLogger("mainweb");
  * starting up the main component and handling the window directly.
  */
 
-let keybindingsManager: KeybindingsManager = null;
-let themes: ThemeInfo[];
-let mainWebUi: MainWebUi = null;
-let configDatabase: ConfigDatabaseImpl = null;
-let extensionManager: ExtensionManager = null;
-let commandPalette: CommandPalette = null;
-let applicationContextMenu: ApplicationContextMenu = null;
-let windowMenu: ApplicationContextMenu = null;
 let terminalVisualConfig: TerminalVisualConfig = null;
-let fontLoader: FontLoader = null;
-let dpiWatcher: DpiWatcher = null;
 const windowId = createUuid();
 
 
@@ -91,41 +81,45 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   const parsedWindowUrl = new URL(windowUrl);
   const bareWindow = parsedWindowUrl.searchParams.get("bareWindow") !== null;
 
-  fontLoader = new FontLoader();
-  dpiWatcher = new DpiWatcher();
+  const fontLoader = new FontLoader();
+  const dpiWatcher = new DpiWatcher();
   startUpTheming();
   startUpWebIpc();
 
   // Get the Config working.
-  configDatabase = new ConfigDatabaseImpl();
-  keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
+  const configDatabase = new ConfigDatabaseImpl();
+  const keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
 
   const configMsg = await WebIpc.requestConfig("*");
-  await asyncHandleConfigMessage(configMsg);
+  await asyncHandleConfigMessage(configDatabase, keybindingsManager, fontLoader, null, configMsg);
 
   const themeListMsg = await WebIpc.requestThemeList();
-  handleThemeListMessage(themeListMsg);
+  const themesMessage = <Messages.ThemeListMessage> themeListMsg;
+  const themes = themesMessage.themeInfo;
 
-  startUpWebIpcConfigHandling();
-
-  await asyncLoadTerminalTheme();
+  await asyncLoadTerminalTheme(configDatabase, fontLoader);
 
   const doc = window.document;
   doc.body.classList.add(CLASS_ENABLE_WINDOW_MOVE);
 
-  startUpExtensions();
-  startUpMainWebUi();
+  const extensionManager = startUpExtensions(configDatabase);
+
+  const mainWebUi = startUpMainWebUi(configDatabase, extensionManager, keybindingsManager, themes);
   extensionManager.setSplitLayout(mainWebUi.getSplitLayout());
   extensionManager.setViewerTabDisplay(mainWebUi);
-  registerCommands(extensionManager);
+
+  const applicationContextMenu = startUpApplicationContextMenu(extensionManager, keybindingsManager, mainWebUi);
+  registerIpcHandlers(extensionManager, mainWebUi, applicationContextMenu);
+  startUpWebIpcConfigHandling(configDatabase, keybindingsManager, fontLoader, mainWebUi);
+
+  const commandPalette = startUpCommandPalette(extensionManager, keybindingsManager);
+  registerCommands(extensionManager, commandPalette);
   startUpSessions(configDatabase, extensionManager);
 
-  startUpMainMenu();
-  startUpCommandPalette();
-  startUpApplicationContextMenu();
-  startUpWindowEvents();
+  startUpMainMenu(extensionManager, keybindingsManager);
+  startUpWindowEvents(mainWebUi);
 
-  dpiWatcher.onChange(newDpi => handleDpiChange(newDpi));
+  dpiWatcher.onChange(newDpi => handleDpiChange(mainWebUi, newDpi));
 
   if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
     if (bareWindow) {
@@ -164,16 +158,28 @@ function startUpWebIpc(): void {
   WebIpc.start();
 
   WebIpc.registerDefaultHandler(Messages.MessageType.CLOSE_SPLASH, closeSplash);
-  WebIpc.registerDefaultHandler(Messages.MessageType.QUIT_APPLICATION, handleCloseWindow);
 
   // Default handling for theme messages.
-  WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST, handleThemeListMessage);
   WebIpc.registerDefaultHandler(Messages.MessageType.THEME_CONTENTS, handleThemeContentsMessage);
+}
 
-  WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS, handleDevToolsStatus);
+function registerIpcHandlers(extensionManager: ExtensionManager, mainWebUi: MainWebUi,
+    applicationContextMenu: ApplicationContextMenu): void {
 
-  WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ, handleClipboardRead);
-  WebIpc.registerDefaultHandler(Messages.MessageType.EXECUTE_COMMAND_REQUEST, handleExecuteCommand);
+  WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS,
+    (msg: Messages.Message) => handleDevToolsStatus(applicationContextMenu, msg));
+
+  WebIpc.registerDefaultHandler(Messages.MessageType.EXECUTE_COMMAND_REQUEST,
+    (msg: Messages.ExecuteCommandMessage) => handleExecuteCommand(extensionManager, msg));
+
+  WebIpc.registerDefaultHandler(Messages.MessageType.QUIT_APPLICATION,
+    (msg: Messages.Message) => handleCloseWindow(mainWebUi, msg));
+
+  WebIpc.registerDefaultHandler(Messages.MessageType.THEME_LIST,
+    (msg: Messages.Message) => handleThemeListMessage(mainWebUi, msg));
+
+  WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ,
+    (msg: Messages.Message) => handleClipboardRead(mainWebUi, msg));
 }
 
 function closeSplash(): void {
@@ -184,7 +190,7 @@ function closeSplash(): void {
   closeSplashFunc = null;
 }
 
-async function handleExecuteCommand(msg: Messages.ExecuteCommandMessage): Promise<void> {
+async function handleExecuteCommand(extensionManager: ExtensionManager, msg: Messages.ExecuteCommandMessage): Promise<void> {
   await later();
 
   const executeCommandMessage = <Messages.ExecuteCommandMessage> msg;
@@ -202,16 +208,21 @@ async function handleExecuteCommand(msg: Messages.ExecuteCommandMessage): Promis
   WebIpc.commandResponse(msg.uuid, result, exception);
 }
 
-function startUpWebIpcConfigHandling(): void {
+function startUpWebIpcConfigHandling(configDatabaseImpl: ConfigDatabaseImpl, keybindingsManager: KeybindingsManager,
+    fontLoader: FontLoader, mainWebUi: MainWebUi): void {
+
   // Default handling for config messages.
-  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG_BROADCAST, asyncHandleConfigMessage);
+  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG_BROADCAST,
+    (msg: Messages.Message) => {
+      asyncHandleConfigMessage(configDatabaseImpl, keybindingsManager, fontLoader, mainWebUi, msg);
+    });
 
   // Fetch a fresh version of the config in case
   // we missed an pushed update from main process.
   WebIpc.requestConfig("*");
 }
 
-async function asyncLoadTerminalTheme(): Promise<void> {
+async function asyncLoadTerminalTheme(configDatabase: ConfigDatabase, fontLoader: FontLoader): Promise<void> {
   const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
   const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
@@ -240,8 +251,10 @@ async function asyncLoadTerminalTheme(): Promise<void> {
   };
 }
 
-function startUpMainWebUi(): void {
-  mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
+function startUpMainWebUi(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
+    keybindingsManager: KeybindingsManager, themes: ThemeInfo[]): MainWebUi {
+
+  const mainWebUi = <MainWebUi>window.document.createElement(MainWebUi.TAG_NAME);
   mainWebUi.windowId = windowId;
   mainWebUi.setDependencies(configDatabase, keybindingsManager, extensionManager);
   mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
@@ -276,7 +289,7 @@ function startUpMainWebUi(): void {
   });
 
   if (showWindowControls) {
-    setUpWindowControls();
+    setUpWindowControls(mainWebUi);
   }
 
   mainWebUi.addEventListener(MainWebUi.EVENT_MINIMIZE_WINDOW_REQUEST, () => {
@@ -295,30 +308,34 @@ function startUpMainWebUi(): void {
     WebIpc.requestQuitApplication();
   });
 
-  mainWebUi.addEventListener(EVENT_DRAG_STARTED, disableWindowMoveArea);
-  mainWebUi.addEventListener(EVENT_DRAG_ENDED, enableWindowMoveArea);
+  mainWebUi.addEventListener(EVENT_DRAG_STARTED, () => disableWindowMoveArea(mainWebUi));
+  mainWebUi.addEventListener(EVENT_DRAG_ENDED, () => enableWindowMoveArea(mainWebUi));
 
-  mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
-    extensionManager.updateExtensionWindowStateFromEvent(ev);
-    disableWindowMoveArea();
-    applicationContextMenu.open(ev);
-  });
+  mainWebUi.addEventListener(EVENT_HYPERLINK_CLICK,
+    (ev: CustomEvent) => handleHyperlinkClick(extensionManager, ev));
 
-  mainWebUi.addEventListener(EVENT_HYPERLINK_CLICK, handleHyperlinkClick);
+  window.addEventListener("keydown",
+    (ev: KeyboardEvent) => handleKeyDownCapture(extensionManager, keybindingsManager, ev), true);
 
-  window.addEventListener("keydown", handleKeyDownCapture, true);
-  window.addEventListener("keypress", handleKeyPressCapture, true);
+  window.addEventListener("keypress",
+  (ev: KeyboardEvent) => handleKeyPressCapture(extensionManager, keybindingsManager, ev), true);
+
+  return mainWebUi;
 }
 
-function handleKeyDownCapture(ev: KeyboardEvent): void {
-  handleKeyCapture(ev);
+function handleKeyDownCapture(extensionManager: ExtensionManager, keybindingsManager: KeybindingsManager,
+    ev: KeyboardEvent): void {
+  handleKeyCapture(extensionManager, keybindingsManager, ev);
 }
 
-function handleKeyPressCapture(ev: KeyboardEvent): void {
-  handleKeyCapture(ev);
+function handleKeyPressCapture(extensionManager: ExtensionManager, keybindingsManager: KeybindingsManager,
+    ev: KeyboardEvent): void {
+  handleKeyCapture(extensionManager, keybindingsManager, ev);
 }
 
-function handleKeyCapture(ev: KeyboardEvent): void {
+function handleKeyCapture(extensionManager: ExtensionManager, keybindingsManager: KeybindingsManager,
+    ev: KeyboardEvent): void {
+
   const commands = keybindingsManager.getKeybindingsMapping().mapEventToCommands(ev);
   extensionManager.updateExtensionWindowStateFromEvent(ev);
 
@@ -341,7 +358,7 @@ function handleKeyCapture(ev: KeyboardEvent): void {
   }
 }
 
-function handleHyperlinkClick(ev: CustomEvent): void {
+function handleHyperlinkClick(extensionManager: ExtensionManager, ev: CustomEvent): void {
   const details = <HyperlinkEventDetail> ev.detail;
   extensionManager.updateExtensionWindowStateFromEvent(ev);
 
@@ -360,7 +377,7 @@ function handleHyperlinkClick(ev: CustomEvent): void {
   extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
 }
 
-function disableWindowMoveArea(): void {
+function disableWindowMoveArea(mainWebUi: MainWebUi): void {
   window.document.body.classList.add(CLASS_DISABLE_WINDOW_MOVE);
   window.document.body.classList.remove(CLASS_ENABLE_WINDOW_MOVE);
 
@@ -368,7 +385,7 @@ function disableWindowMoveArea(): void {
   mainWebUi.classList.remove(CLASS_ENABLE_WINDOW_MOVE);
 }
 
-function enableWindowMoveArea(): void {
+function enableWindowMoveArea(mainWebUi: MainWebUi): void {
   window.document.body.classList.remove(CLASS_DISABLE_WINDOW_MOVE);
   window.document.body.classList.add(CLASS_ENABLE_WINDOW_MOVE);
 
@@ -389,7 +406,7 @@ function windowControlsHtml(): string {
     <button id="${ID_CLOSE_BUTTON}" tabindex="-1"></button>`);
 }
 
-function setUpWindowControls(): void {
+function setUpWindowControls(mainWebUi: MainWebUi): void {
   document.getElementById(ID_MINIMIZE_BUTTON).addEventListener('click', () => {
     WebIpc.windowMinimizeRequest();
   });
@@ -407,15 +424,15 @@ function setUpWindowControls(): void {
   });
 }
 
-function startUpMainMenu(): void {
-  windowMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
+function startUpMainMenu(extensionManager: ExtensionManager, keybindingsManager: KeybindingsManager): void {
+  const windowMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
   const menuButton = document.getElementById(ID_MENU_BUTTON);
   menuButton.addEventListener('click', () => {
     windowMenu.openAround(menuButton, ContextMenuType.WINDOW_MENU);
   });
 }
 
-function startUpWindowEvents(): void {
+function startUpWindowEvents(mainWebUi: MainWebUi): void {
   // Make sure something sensible is focussed if only the window gets the focus.
   window.addEventListener('focus', (ev: FocusEvent) => {
     if (ev.target === window) {
@@ -443,17 +460,19 @@ function startUpWindowEvents(): void {
   });
 }
 
-function startUpExtensions() {
-  extensionManager = new ExtensionManagerImpl(configDatabase);
+function startUpExtensions(configDatabase: ConfigDatabase): ExtensionManager {
+  const extensionManager = new ExtensionManagerImpl(configDatabase);
   extensionManager.startUp();
+  return extensionManager;
 }
 
-function registerCommands(extensionManager: ExtensionManager): void {
+function registerCommands(extensionManager: ExtensionManager, commandPalette: CommandPalette): void {
   const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
   commands.registerCommand("extraterm:window.toggleDeveloperTools", commandToggleDeveloperTools,
                             customizeToggleDeveloperTools);
   commands.registerCommand("extraterm:window.reloadCss", commandReloadThemeContents);
-  commands.registerCommand("extraterm:application.openCommandPalette", commandOpenCommandPalette);
+  commands.registerCommand("extraterm:application.openCommandPalette",
+    () => commandOpenCommandPalette(extensionManager, commandPalette));
   commands.registerCommand("extraterm:application.newWindow", commandNewWindow);
   commands.registerCommand("extraterm:window.show", commandShow);
 
@@ -524,7 +543,7 @@ function commandReloadThemeContents(): void {
   asyncReloadThemeContents();
 }
 
-function commandOpenCommandPalette(): void {
+function commandOpenCommandPalette(extensionManager: ExtensionManager, commandPalette: CommandPalette): void {
   const tab = extensionManager.getActiveTabContent();
   if (isSupportsDialogStack(tab)) {
     commandPalette.open(tab, tab);
@@ -535,7 +554,7 @@ function commandNewWindow(): void {
   WebIpc.newWindow();
 }
 
-function handleDpiChange(dpi: number): void {
+function handleDpiChange(mainWebUi: MainWebUi, dpi: number): void {
   const newTerminalVisualConfig = {
     ...terminalVisualConfig, devicePixelRatio: window.devicePixelRatio
   };
@@ -543,26 +562,25 @@ function handleDpiChange(dpi: number): void {
   mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 }
 
-async function asyncHandleConfigMessage(msg: Messages.Message): Promise<void> {
+async function asyncHandleConfigMessage(configDatabaseImpl: ConfigDatabaseImpl, keybindingsManager: KeybindingsManager,
+    fontLoader: FontLoader, mainWebUi: MainWebUi, msg: Messages.Message): Promise<void> {
+
   const configMessage = <Messages.ConfigMessage> msg;
   const key = configMessage.key;
-  configDatabase.setConfigFromMainProcess(key, configMessage.config);
+  configDatabaseImpl.setConfigFromMainProcess(key, configMessage.config);
   if ([GENERAL_CONFIG, SYSTEM_CONFIG, "*"].indexOf(key) !== -1) {
-    await asyncSetupConfiguration();
+    await applyConfiguration(configDatabaseImpl, keybindingsManager, fontLoader, mainWebUi);
   }
 }
 
-function handleCloseWindow(msg: Messages.Message): void {
+function handleCloseWindow(mainWebUi: MainWebUi, msg: Messages.Message): void {
   mainWebUi.closeAllTabs();
   WebIpc.windowCloseRequest();
 }
 
-function handleThemeListMessage(msg: Messages.Message): void {
+function handleThemeListMessage(mainWebUi: MainWebUi, msg: Messages.Message): void {
   const themesMessage = <Messages.ThemeListMessage> msg;
-  themes = themesMessage.themeInfo;
-  if (mainWebUi != null) {
-    mainWebUi.setThemes(themes);
-  }
+  mainWebUi.setThemes(themesMessage.themeInfo);
 }
 
 function handleThemeContentsMessage(msg: Messages.Message): void {
@@ -581,15 +599,13 @@ function handleThemeContentsMessage(msg: Messages.Message): void {
   ThemeConsumer.updateCss(cssFileMap);
 }
 
-function handleDevToolsStatus(msg: Messages.Message): void {
+function handleDevToolsStatus(applicationContextMenu: ApplicationContextMenu, msg: Messages.Message): void {
   const devToolsStatusMessage = <Messages.DevToolsStatusMessage> msg;
   developerToolMenuChecked = devToolsStatusMessage.open;
-  if (applicationContextMenu != null) {
-    applicationContextMenu.render();
-  }
+  applicationContextMenu.render();
 }
 
-function handleClipboardRead(msg: Messages.Message): void {
+function handleClipboardRead(mainWebUi: MainWebUi, msg: Messages.Message): void {
   const clipboardReadMessage = <Messages.ClipboardReadMessage> msg;
   mainWebUi.pasteText(clipboardReadMessage.text);
 }
@@ -598,7 +614,9 @@ function handleClipboardRead(msg: Messages.Message): void {
 let oldSystemConfig: SystemConfig = null;
 let oldGeneralConfig: GeneralConfig = null;
 
-async function asyncSetupConfiguration(): Promise<void> {
+async function applyConfiguration(configDatabase: ConfigDatabase, keybindingsManager: KeybindingsManager,
+    fontLoader: FontLoader, mainWebUi: MainWebUi): Promise<void> {
+
   const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
   const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
 
@@ -656,7 +674,7 @@ async function asyncSetupConfiguration(): Promise<void> {
 
     let terminalVisualConfigChanged = false;
     if (oldGeneralConfig.themeTerminal !== newGeneralConfig.themeTerminal) {
-      await asyncLoadTerminalTheme();
+      await asyncLoadTerminalTheme(configDatabase, fontLoader);
       terminalVisualConfigChanged = true;
     }
     if (oldGeneralConfig.terminalFont !== newGeneralConfig.terminalFont ||
@@ -763,13 +781,24 @@ function setRootFontScaleFactor(uiScalePercent: number): void {
   window.document.documentElement.style.fontSize = rootFontSize;
 }
 
-function startUpCommandPalette(): void {
-  commandPalette = new CommandPalette(extensionManager, keybindingsManager);
+function startUpCommandPalette(extensionManager: ExtensionManager,
+    keybindingsManager: KeybindingsManager): CommandPalette {
+  return new CommandPalette(extensionManager, keybindingsManager);
 }
 
-function startUpApplicationContextMenu(): void {
-  applicationContextMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
-  applicationContextMenu.onClose(enableWindowMoveArea);
+function startUpApplicationContextMenu(extensionManager: ExtensionManager,
+    keybindingsManager: KeybindingsManager, mainWebUi: MainWebUi): ApplicationContextMenu {
+
+  const applicationContextMenu = new ApplicationContextMenu(extensionManager, keybindingsManager);
+  applicationContextMenu.onClose(() => enableWindowMoveArea(mainWebUi));
+
+  mainWebUi.addEventListener(EVENT_CONTEXT_MENU_REQUEST, (ev: CustomEvent) => {
+    extensionManager.updateExtensionWindowStateFromEvent(ev);
+    disableWindowMoveArea(mainWebUi);
+    applicationContextMenu.open(ev);
+  });
+
+  return applicationContextMenu;
 }
 
 class ConfigDatabaseImpl implements ConfigDatabase {
