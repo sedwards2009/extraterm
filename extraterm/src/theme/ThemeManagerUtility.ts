@@ -42,7 +42,7 @@ class ThemeManagerUtility {
       syntax: [],
       terminal: []
     };
-    this._tm = new ThemeManager(paths, new MainExtensionManager(null, [], "0.1.0"));
+    this._tm = new ThemeManager(paths, new MainExtensionManager(null, [], "0.1.0"), null);  // FIXME null isn't likely to be good enough.
 
     if (options.list) {
       this._listThemes();

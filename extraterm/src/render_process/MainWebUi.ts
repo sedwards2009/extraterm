@@ -17,7 +17,7 @@ import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
 import { EmptyPaneMenu } from "./command/EmptyPaneMenu";
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from "./GeneralEvents";
 import { ElementMimeType, FrameMimeType } from "./InternalMimeTypes";
-import { KeybindingsManager, injectKeybindingsManager } from "./keybindings/KeyBindingsManager";
+import { KeybindingsManager } from "./keybindings/KeyBindingsManager";
 import { SettingsTab } from "./settings/SettingsTab";
 import { DroppedEventDetail as SnapDroppedEventDetail, DropLocation } from "./gui/SnapDropContainer";
 import { SplitLayout } from "./SplitLayout";
@@ -32,8 +32,8 @@ import { ViewerElement } from "./viewers/ViewerElement";
 import * as ViewerElementTypes from "./viewers/ViewerElementTypes";
 import { EtViewerTab } from "./ViewerTab";
 import { PtyIpcBridge } from "./PtyIpcBridge";
-import { ExtensionManager, injectExtensionManager, ViewerTabDisplay } from "./extension/InternalTypes";
-import { ConfigDatabase, SESSION_CONFIG, injectConfigDatabase } from "../Config";
+import { ExtensionManager, ViewerTabDisplay } from "./extension/InternalTypes";
+import { ConfigDatabase, SESSION_CONFIG, } from "../Config";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { NewTerminalContextArea } from "./NewTerminalContextArea";
 import { CommandAndShortcut } from "./command/CommandPalette";
@@ -88,7 +88,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   private _log: Logger;
 
   #ptyIpcBridge: PtyIpcBridge = null;
-  #configManager: ConfigDatabase = null;
+  #configDatabase: ConfigDatabase = null;
   #keybindingsManager: KeybindingsManager = null;
   #extensionManager: ExtensionManager = null;
   #themes: ThemeTypes.ThemeInfo[] = [];
@@ -104,10 +104,10 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
     this._handleViewerElementFocus = this._handleViewerElementFocus.bind(this);
   }
 
-  setDependencies(configManager: ConfigDatabase, keyBindingManager: KeybindingsManager,
+  setDependencies(configDatabase: ConfigDatabase, keyBindingManager: KeybindingsManager,
       extensionManager: ExtensionManager): void {
 
-    this.#configManager = configManager;
+    this.#configDatabase = configDatabase;
     this.#keybindingsManager = keyBindingManager;
     this.#extensionManager = extensionManager;
     this._registerCommands(extensionManager);
@@ -362,8 +362,8 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
         while (el != null && ! (el instanceof TabWidget)) {
           el = el.parentElement;
         }
-        if (this.#configManager.getConfig(SESSION_CONFIG).length !== 0) {
-          const sessionUuid = this.#configManager.getConfig(SESSION_CONFIG)[0].uuid;
+        if (this.#configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
+          const sessionUuid = this.#configDatabase.getConfig(SESSION_CONFIG)[0].uuid;
           this.commandNewTerminal({sessionUuid});
         }
       }
@@ -434,7 +434,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   }
 
   private _showWindowControls(): boolean {
-    const systemConfig = <config.SystemConfig> this.#configManager.getConfig(config.SYSTEM_CONFIG);
+    const systemConfig = <config.SystemConfig> this.#configDatabase.getConfig(config.SYSTEM_CONFIG);
     return systemConfig.titleBarStyle === "theme" && process.platform !== "darwin";
   }
 
@@ -557,11 +557,10 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
       tabWidget: TabWidget=null): EtTerminal {
 
     const newTerminal = <EtTerminal> document.createElement(EtTerminal.TAG_NAME);
+    newTerminal.setDependencies(this.#configDatabase, this.#keybindingsManager, this.#extensionManager,
+      this.#fileBroker);
+
     newTerminal.setWindowId(this.windowId);
-    newTerminal.setBulkFileBroker(this.#fileBroker);
-    config.injectConfigDatabase(newTerminal, this.#configManager);
-    injectKeybindingsManager(newTerminal, this.#keybindingsManager);
-    newTerminal.setExtensionManager(this.#extensionManager);
     newTerminal.setFrameFinder(this._frameFinder.bind(this));
     newTerminal.setTerminalVisualConfig(this.#terminalVisualConfig);
     newTerminal.setSessionConfiguration(sessionConfiguration);
@@ -578,7 +577,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   }
 
   private _getSessionByUuid(sessionUuid: string): SessionConfiguration {
-    const sessions = this.#configManager.getConfigCopy(SESSION_CONFIG);
+    const sessions = this.#configDatabase.getConfigCopy(SESSION_CONFIG);
     for (const session of sessions) {
       if (session.uuid === sessionUuid) {
         return session;
@@ -588,7 +587,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   }
 
   private _getSessionByName(sessionName: string): SessionConfiguration {
-    const sessions = this.#configManager.getConfigCopy(SESSION_CONFIG);
+    const sessions = this.#configDatabase.getConfigCopy(SESSION_CONFIG);
     for (const session of sessions) {
       if (session.name === sessionName) {
         return session;
@@ -648,9 +647,8 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   private _openEmbeddedViewerInTab(embeddedViewer: EmbeddedViewer, fontAdjust: number): EtViewerTab {
     const viewerElement = embeddedViewer.getViewerElement();
     const viewerTab = <EtViewerTab> document.createElement(EtViewerTab.TAG_NAME);
+    viewerTab.setDependencies(this.#configDatabase, this.#keybindingsManager, this.#extensionManager);
     viewerTab.setFontAdjust(fontAdjust);
-    injectKeybindingsManager(viewerTab, this.#keybindingsManager);
-    injectConfigDatabase(viewerTab, this.#configManager);
     viewerTab.setTitle(embeddedViewer.getMetadata().title);
     viewerTab.setTag(embeddedViewer.getTag());
 
@@ -705,11 +703,8 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
       this.focusTab(settingsTab);
     } else {
       const settingsTabElement = <SettingsTab> document.createElement(SettingsTab.TAG_NAME);
-      config.injectConfigDatabase(settingsTabElement, this.#configManager);
-      injectKeybindingsManager(settingsTabElement, this.#keybindingsManager);
-      injectExtensionManager(settingsTabElement, this.#extensionManager);
+      settingsTabElement.setDependencies(this.#configDatabase, this.#keybindingsManager, this.#extensionManager);
       settingsTabElement.setTerminalVisualConfig(this.#terminalVisualConfig);
-
       settingsTabElement.setThemes(this.#themes);
       if (tabName != null) {
         settingsTabElement.setSelectedTab(tabName);
@@ -1035,7 +1030,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   async commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}):
       Promise<void> {
 
-    let sessionConfiguration: SessionConfiguration = this.#configManager.getConfig(SESSION_CONFIG)[0];
+    let sessionConfiguration: SessionConfiguration = this.#configDatabase.getConfig(SESSION_CONFIG)[0];
     if (args.sessionUuid != null) {
       sessionConfiguration = this._getSessionByUuid(args.sessionUuid);
       if (sessionConfiguration == null) {

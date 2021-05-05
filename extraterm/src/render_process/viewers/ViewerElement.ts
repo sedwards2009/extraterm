@@ -5,11 +5,14 @@
  */
 import {BulkFileHandle, Disposable, Event, ViewerMetadata, ViewerPosture} from '@extraterm/extraterm-extension-api';
 import { DebouncedDoLater } from "extraterm-later";
+import { ConfigDatabase } from '../../Config';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {VirtualScrollable, SetterState} from '../VirtualScrollArea';
 import {Mode, VisualState, CursorMoveDetail, RefreshLevel} from './ViewerElementTypes';
 import { EventEmitter } from 'extraterm-event-emitter';
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
+import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
+import { ExtensionManager } from '../extension/InternalTypes';
 
 
 export abstract class ViewerElement extends ThemeableElementBase implements VirtualScrollable, Disposable {
@@ -41,6 +44,10 @@ export abstract class ViewerElement extends ThemeableElementBase implements Virt
       this.dispatchEvent(event);
     });
     this.onDispose = this.#onDisposeEventEmitter.event;
+  }
+
+  setDependencies(configDatabase: ConfigDatabase, keybindingsManager: KeybindingsManager,
+      extensionManager: ExtensionManager): void {
   }
 
   getMetadata(): ViewerMetadata {

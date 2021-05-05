@@ -18,7 +18,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType, EVENT_HYPERLINK_CLICK, HyperlinkEventDetail } from './command/CommandUtils';
 
-import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
+import {ConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
@@ -41,7 +41,7 @@ import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
 import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
-import { KeybindingsManager, injectKeybindingsManager, loadKeybindingsFromObject, TermKeybindingsMapping } from './keybindings/KeyBindingsManager';
+import { KeybindingsManager, loadKeybindingsFromObject, TermKeybindingsMapping } from './keybindings/KeyBindingsManager';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ApplicationContextMenu } from "./command/ApplicationContextMenu";
 import { registerCommands as TextCommandsRegisterCommands } from "./viewers/TextCommands";

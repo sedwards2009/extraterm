@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -12,9 +12,9 @@ import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { Color as UtilColor } from 'extraterm-color-utilities';
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
-  CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_SYNTAX_THEME, FALLBACK_TERMINAL_THEME, FALLBACK_UI_THEME,
-  cssFileToFilename, cssFileToExtension, SYNTAX_CSS_THEME, TERMINAL_CSS_THEME} from './Theme';
-import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig } from '../Config';
+  CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_UI_THEME, cssFileToFilename, cssFileToExtension,
+  SYNTAX_CSS_THEME, TERMINAL_CSS_THEME} from './Theme';
+import { ConfigDatabase, GENERAL_CONFIG, GeneralConfig } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
@@ -330,14 +330,19 @@ const DEFAULT_TERMINAL_THEME: TerminalTheme = {
 
 };
 
-export class ThemeManager implements AcceptsConfigDatabase {
+export class ThemeManager {
 
   private _log: Logger = null;
-  private _configDatabase: ConfigDatabase = null;
-  private _themes: Map<string, ThemeInfo> = null;
+  #configDatabase: ConfigDatabase = null;
+  #themes: Map<string, ThemeInfo> = null;
+  #paths: ThemeTypePaths = null;
+  #mainExtensionManager: MainExtensionManager = null;
 
-  constructor(private _paths: ThemeTypePaths, private _mainExtensionManager: MainExtensionManager) {
+  constructor(paths: ThemeTypePaths, mainExtensionManager: MainExtensionManager, configDatabase: ConfigDatabase) {
     this._log = getLogger("ThemeManagerImpl", this);
+    this.#paths = paths;
+    this.#mainExtensionManager = mainExtensionManager;
+    this.#configDatabase = configDatabase;
     this._updateThemesList();
   }
 
@@ -346,13 +351,13 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   private _updateThemesList(): void {
-    this._themes = this._scanThemePaths(this._paths, this._getSyntaxThemeExtensionPaths(),
+    this.#themes = this._scanThemePaths(this.#paths, this._getSyntaxThemeExtensionPaths(),
       this._getTerminalThemeExtensionPaths());
   }
 
   private _getSyntaxThemeExtensionPaths(): string [] {
     const paths: string[] = [];
-    for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
+    for (const extension of this.#mainExtensionManager.getExtensionMetadata()) {
       for (const st of extension.contributes.syntaxThemes) {
         paths.push(path.join(extension.path, st.path));
       }
@@ -362,7 +367,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
   private _getTerminalThemeExtensionPaths(): string [] {
     const paths: string[] = [];
-    for (const extension of this._mainExtensionManager.getExtensionMetadata()) {
+    for (const extension of this.#mainExtensionManager.getExtensionMetadata()) {
       for (const st of extension.contributes.terminalThemes) {
         paths.push(path.join(extension.path, st.path));
       }
@@ -387,10 +392,6 @@ export class ThemeManager implements AcceptsConfigDatabase {
     });
 
     return allThemes;
-  }
-
-  setConfigDatabase(configDistributor: ConfigDatabase): void {
-    this._configDatabase = configDistributor;
   }
 
   /**
@@ -447,7 +448,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
   private _scanThemesWithSyntaxThemeProviders(paths: string[]): ThemeInfo[] {
     const result: ThemeInfo[] = [];
-    for (const provider of this._mainExtensionManager.getSyntaxThemeProviderContributions()) {
+    for (const provider of this.#mainExtensionManager.getSyntaxThemeProviderContributions()) {
       for (const theme of provider.syntaxThemeProvider.scanThemes(paths)) {
         const themeId = provider.metadata.name + ":" + theme.id;
         const themeInfo: ThemeInfo = {
@@ -474,7 +475,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
 
   private _scanThemesWithTerminalThemeProviders(paths: string[]): ThemeInfo[] {
     const result: ThemeInfo[] = [];
-    for (const provider of this._mainExtensionManager.getTerminalThemeProviderContributions()) {
+    for (const provider of this.#mainExtensionManager.getTerminalThemeProviderContributions()) {
       for (const theme of provider.terminalThemeProvider.scanThemes(paths)) {
         const themeId = provider.metadata.name + ":" + theme.id;
         const themeInfo: ThemeInfo = {
@@ -500,12 +501,12 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   getTheme(themeId: string): ThemeInfo {
-    return this._themes.get(themeId) || null;
+    return this.#themes.get(themeId) || null;
   }
 
   getAllThemes(): ThemeInfo[] {
     const result: ThemeInfo[] = [];
-    this._themes.forEach( themeInfo => {
+    this.#themes.forEach( themeInfo => {
       if (themeInfo.type === "gui" && themeInfo.id === "default") {
         return;
       }
@@ -515,7 +516,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = <GeneralConfig> this._configDatabase.getConfig(GENERAL_CONFIG);
+    const config = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
     switch (themeType) {
       case "gui":
         return await this.renderGui(config.themeGUI, config.themeTerminal, globalVariables);
@@ -530,7 +531,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   async renderGui(themeGUI: string, themeTerminal: string=null, globalVariables: GlobalVariableMap=null): Promise<RenderResult> {
     let terminalGlobalVariables: GlobalVariableMap = null;
     if (themeTerminal != null) {
-      const terminalThemeInfo = this._themes.get(themeTerminal);
+      const terminalThemeInfo = this.#themes.get(themeTerminal);
       terminalGlobalVariables = this._getTerminalThemeVariablesFromInfo(terminalThemeInfo);
     } else {
       terminalGlobalVariables = this._convertTerminalThemeToVariables(DEFAULT_TERMINAL_THEME);
@@ -568,7 +569,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
     const cssFileIds = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_TERMINAL);
     const cssFileList = cssFileIds.map(id => ({ id, cssFile: cssFileToFilename(id) }));
     try {
-      const terminalThemeInfo = this._themes.get(themeTerminal);
+      const terminalThemeInfo = this.#themes.get(themeTerminal);
       const completeGlobalVariables = new Map([...this._getTerminalThemeVariablesFromInfo(terminalThemeInfo),
                                         ...(globalVariables == null ? new Map() : globalVariables)]);
       const result = await this._renderThemes([TERMINAL_CSS_THEME], cssFileList, completeGlobalVariables);
@@ -593,8 +594,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   private _getTerminalThemeContentsFromInfo(terminalThemeInfo: ThemeInfo): TerminalTheme {
-    const paths = [...this._paths.terminal, ...this._getTerminalThemeExtensionPaths()];
-    for (const provider of this._mainExtensionManager.getTerminalThemeProviderContributions()) {
+    const paths = [...this.#paths.terminal, ...this._getTerminalThemeExtensionPaths()];
+    for (const provider of this.#mainExtensionManager.getTerminalThemeProviderContributions()) {
       if (provider.metadata.name === terminalThemeInfo.provider) {
         const parts = terminalThemeInfo.id.split(":");
         if (parts.length === 2) {
@@ -607,7 +608,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   getTerminalTheme(id: string): TerminalTheme {
-    const terminalThemeInfo = this._themes.get(id);
+    const terminalThemeInfo = this.#themes.get(id);
     if (terminalThemeInfo == null) {
       return null;
     }
@@ -654,9 +655,9 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   async _renderSyntax(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = <GeneralConfig> this._configDatabase.getConfig(GENERAL_CONFIG);
+    const config = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
 
-    const syntaxThemeInfo = this._themes.get(config.themeSyntax);
+    const syntaxThemeInfo = this.#themes.get(config.themeSyntax);
     const neededCssFileIds = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);
     const cssFileList = neededCssFileIds.map(id => ({ id, cssFile: cssFileToFilename(id) }));
 
@@ -883,7 +884,7 @@ export class ThemeManager implements AcceptsConfigDatabase {
       errorMessage: ""
     };
 
-    for (const extensionMetadata of this._mainExtensionManager.getExtensionMetadata()) {
+    for (const extensionMetadata of this.#mainExtensionManager.getExtensionMetadata()) {
       const extensionCssList: ExtensionCss[] = [];
       for (const metadata of extensionMetadata.contributes.viewers) {
         extensionCssList.push(metadata.css);
@@ -947,8 +948,8 @@ export class ThemeManager implements AcceptsConfigDatabase {
   }
 
   private _getSyntaxThemeContentsFromInfo(syntaxThemeInfo: ThemeInfo): SyntaxTheme {
-    const paths = [...this._paths.syntax, ...this._getSyntaxThemeExtensionPaths()];
-    for (const provider of this._mainExtensionManager.getSyntaxThemeProviderContributions()) {
+    const paths = [...this.#paths.syntax, ...this._getSyntaxThemeExtensionPaths()];
+    for (const provider of this.#mainExtensionManager.getSyntaxThemeProviderContributions()) {
       if (provider.metadata.name === syntaxThemeInfo.provider) {
         const parts = syntaxThemeInfo.id.split(":");
         if (parts.length === 2) {

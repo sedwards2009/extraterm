@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, SessionConfiguration, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
+import { Event, SessionConfiguration, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
 import { createUuid } from 'extraterm-uuid';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';
-import { AcceptsConfigDatabase, ConfigDatabase, SESSION_CONFIG } from '../../Config';
+import { ConfigDatabase, SESSION_CONFIG } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import * as Util from '../../render_process/gui/Util';
 import { EventEmitter } from '../../utils/EventEmitter';
@@ -35,16 +35,16 @@ export interface PtyAvailableWriteBufferSizeChangeEvent {
 
 export class PtyManager {
   private _log: Logger;
-  private _configDistributor: ConfigDatabase = null;
+  private _configDatabase: ConfigDatabase = null;
   private _ptyCounter = 0;
   private _ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
   private _onPtyExitEventEmitter = new EventEmitter<number>();
   private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
   private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
 
-  constructor(private _extensionManager: MainExtensionManager, configDistributor: ConfigDatabase) {
+  constructor(private _extensionManager: MainExtensionManager, configDatabase: ConfigDatabase) {
     this._log = getLogger("PtyManager", this);
-    this._configDistributor = configDistributor;
+    this._configDatabase = configDatabase;
 
     this.onPtyExit = this._onPtyExitEventEmitter.event;
     this.onPtyData = this._onPtyDataEventEmitter.event;
@@ -70,7 +70,7 @@ export class PtyManager {
   onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
   createPty(sessionUuid: string, sessionOptions: CreateSessionOptions): number {
-    const sessions = this._configDistributor.getConfig(SESSION_CONFIG);
+    const sessions = this._configDatabase.getConfig(SESSION_CONFIG);
     let sessionConfiguration: SessionConfiguration = null;
     for (sessionConfiguration of sessions) {
       if (sessionConfiguration.uuid === sessionUuid) {

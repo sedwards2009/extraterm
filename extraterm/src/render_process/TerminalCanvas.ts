@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -14,7 +14,7 @@ import { VirtualScrollAreaWithSpacing, Spacer } from "./VirtualScrollAreaWithSpa
 import { EVENT_RESIZE, VirtualScrollable } from "./VirtualScrollArea";
 import { ViewerElement } from "./viewers/ViewerElement";
 import { TerminalViewer } from "./viewers/TerminalAceViewer";
-import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, GeneralConfig, ConfigChangeEvent } from "../Config";
+import { ConfigDatabase, GENERAL_CONFIG, GeneralConfig, ConfigChangeEvent } from "../Config";
 import { doLater } from "extraterm-later";
 import * as DomUtils from './DomUtils';
 import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
@@ -50,7 +50,7 @@ const ID_SCROLLBAR_CONTAINER = "ID_SCROLLBAR_CONTAINER";
 const ID_SCROLLBAR = "ID_SCROLLBAR";
 
 @CustomElement("et-terminal-canvas")
-export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfigDatabase {
+export class TerminalCanvas extends ThemeableElementBase {
 
   static TAG_NAME = "et-terminal-canvas";
   private static _resizeNotifier = new ResizeNotifier();
@@ -96,6 +96,24 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     super();
     this._log = getLogger("TerminalCanvas", this);
     this._elementAttached = false;
+  }
+
+  setDependencies(configDatabase: ConfigDatabase): void {
+    this._configDatabase = configDatabase;
+
+    this._configDatabaseDisposable = this._configDatabase.onChange((event: ConfigChangeEvent) => {
+      if (event.key === "general") {
+        const oldConfig = <GeneralConfig> event.oldConfig;
+        const newConfig = <GeneralConfig> event.newConfig;
+        if (oldConfig.uiScalePercent !== newConfig.uiScalePercent ||
+            oldConfig.terminalMarginStyle !== newConfig.terminalMarginStyle) {
+          if (this._elementAttached) {
+            this._updateScrollableSpacing();
+            this.refresh(RefreshLevel.COMPLETE);
+          }
+        }
+      }
+    });
   }
 
   connectedCallback(): void {
@@ -330,24 +348,6 @@ export class TerminalCanvas extends ThemeableElementBase implements AcceptsConfi
     this._scrollArea = null;
 
     this._onBeforeSelectionChangeEmitter.dispose();
-  }
-
-  setConfigDatabase(configManager: ConfigDatabase): void {
-    this._disposeConfigDatabase();
-    this._configDatabase = configManager;
-    this._configDatabaseDisposable = this._configDatabase.onChange((event: ConfigChangeEvent) => {
-      if (event.key === "general") {
-        const oldConfig = <GeneralConfig> event.oldConfig;
-        const newConfig = <GeneralConfig> event.newConfig;
-        if (oldConfig.uiScalePercent !== newConfig.uiScalePercent ||
-            oldConfig.terminalMarginStyle !== newConfig.terminalMarginStyle) {
-          if (this._elementAttached) {
-            this._updateScrollableSpacing();
-            this.refresh(RefreshLevel.COMPLETE);
-          }
-        }
-      }
-    });
   }
 
   private _disposeConfigDatabase(): void {

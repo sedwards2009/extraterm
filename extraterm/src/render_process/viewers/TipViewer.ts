@@ -1,8 +1,8 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019-2021 Simon Edwards <simon@simonzone.com>
+ *
+ * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
-"use strict";
 import * as Electron from 'electron';
 const shell = Electron.shell;
 import * as fs from 'fs';
@@ -14,8 +14,9 @@ import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 import {Logger, getLogger} from "extraterm-logging";
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
-import { AcceptsConfigDatabase, ConfigDatabase, GENERAL_CONFIG, ShowTipsStrEnum } from '../../Config';
-import { KeybindingsManager, AcceptsKeybindingsManager } from '../keybindings/KeyBindingsManager';
+import { ConfigDatabase, GENERAL_CONFIG, ShowTipsStrEnum } from '../../Config';
+import { ExtensionManager } from '../extension/InternalTypes';
+import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {ViewerElement} from '../viewers/ViewerElement';
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
@@ -51,21 +52,11 @@ function loadTipFile(): string[] {
 const tipData = loadTipFile();
 
 @CustomElement("et-tip-viewer")
-export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, AcceptsKeybindingsManager, Disposable {
+export class TipViewer extends ViewerElement implements Disposable {
 
   static TAG_NAME = "ET-TIP-VIEWER";
   static MIME_TYPE = "application/x-extraterm-tip";
   private static _resizeNotifier = new ResizeNotifier();
-
-  /**
-   * Type guard for detecting a EtTipViewer instance.
-   *
-   * @param  node the node to test
-   * @return      True if the node is a EtTipViewer.
-   */
-  static is(node: Node): node is TipViewer {
-    return node !== null && node !== undefined && node instanceof TipViewer;
-  }
 
   private _log: Logger;
   private _configManager: ConfigDatabase = null;
@@ -78,6 +69,18 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
   constructor() {
     super();
     this._log = getLogger(TipViewer.TAG_NAME, this);
+  }
+
+  setDependencies(configManager: ConfigDatabase, keybindingsManager: KeybindingsManager,
+      extensionManager: ExtensionManager): void {
+
+    super.setDependencies(configManager, keybindingsManager, extensionManager);
+
+    this._configManager = configManager;
+    this._configManagerDisposable = this._configManager.onChange(this._configChanged.bind(this));
+
+    this._keybindingsManager = keybindingsManager;
+    this._keybindingsManagerDisposable = this._keybindingsManager.onChange(this._keyBindingChanged.bind(this));
   }
 
   dispose(): void {
@@ -178,30 +181,6 @@ export class TipViewer extends ViewerElement implements AcceptsConfigDatabase, A
     }
     this._height = rect.height;
     emitResizeEvent(this);
-  }
-
-  setConfigDatabase(newConfigManager: ConfigDatabase): void {
-    if (this._configManagerDisposable !== null) {
-      this._configManagerDisposable.dispose();
-      this._configManagerDisposable = null;
-    }
-
-    this._configManager = newConfigManager;
-    if (this._configManager !== null) {
-      this._configManagerDisposable = this._configManager.onChange(this._configChanged.bind(this));
-    }
-  }
-
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    if (this._keybindingsManagerDisposable !== null) {
-      this._keybindingsManagerDisposable.dispose();
-      this._keybindingsManagerDisposable = null;
-    }
-
-    this._keybindingsManager = newKeybindingsManager;
-    if (this._keybindingsManager !== null) {
-      this._keybindingsManagerDisposable = this._keybindingsManager.onChange(this._keyBindingChanged.bind(this));
-    }
   }
 
   getSelectionText(): string {

@@ -38,7 +38,7 @@ import {TextViewer} from "./viewers/TextAceViewer";
 import {ImageViewer} from "./viewers/ImageViewer";
 import {TipViewer} from "./viewers/TipViewer";
 import * as GeneralEvents from "./GeneralEvents";
-import {KeybindingsManager, injectKeybindingsManager, AcceptsKeybindingsManager} from "./keybindings/KeyBindingsManager";
+import { KeybindingsManager } from "./keybindings/KeyBindingsManager";
 import { dispatchContextMenuRequest } from "./command/CommandUtils";
 import * as DomUtils from "./DomUtils";
 import {doLater, DebouncedDoLater} from "extraterm-later";
@@ -49,9 +49,8 @@ import * as Messages from "../WindowMessages";
 import { TerminalCanvas } from "./TerminalCanvas";
 import { SidebarLayout, BorderSide } from "./gui/SidebarLayout";
 import {FrameFinder} from "./FrameFinderType";
-import { ConfigDatabase, CommandLineAction, injectConfigDatabase, AcceptsConfigDatabase, COMMAND_LINE_ACTIONS_CONFIG,
-  GENERAL_CONFIG,
-  MouseButtonAction} from "../Config";
+import { ConfigDatabase, CommandLineAction, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG,
+  MouseButtonAction } from "../Config";
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from "./extension/InternalTypes";
@@ -107,9 +106,8 @@ export interface LineRangeChange {
  * UI chrome wrapped around the smaller terminal emulation part (term.js).
  */
 @CustomElement("et-terminal")
-export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindingsManager,
-  AcceptsConfigDatabase, Disposable, SupportsClipboardPaste.SupportsClipboardPaste,
-  SupportsDialogStack.SupportsDialogStack {
+export class EtTerminal extends ThemeableElementBase implements Disposable,
+    SupportsClipboardPaste.SupportsClipboardPaste, SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-TERMINAL";
   static EVENT_TITLE = "et-terminal_title";
@@ -223,6 +221,15 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     this.onDidScreenChange = this.#onDidScreenChangeEventEmitter.event;
   }
 
+  setDependencies(configDatabase: ConfigDatabase, keyBindingManager: KeybindingsManager,
+      extensionManager: ExtensionManager, fileBroker: BulkFileBroker): void {
+
+    this._configDatabase = configDatabase;
+    this._keyBindingManager = keyBindingManager;
+    this._extensionManager = extensionManager;
+    this._fileBroker = fileBroker;
+  }
+
   connectedCallback(): void {
     super.connectedCallback();
     if ( ! this._elementAttached) {
@@ -240,7 +247,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
       this.addEventListener("dragleave", this._handleDragLeave.bind(this));
 
       this._terminalCanvas = new TerminalCanvas();
-      this._terminalCanvas.setConfigDatabase(this._configDatabase);
+      this._terminalCanvas.setDependencies(this._configDatabase);
       this._terminalCanvas.setTerminalVisualConfig(this._terminalVisualConfig);
       this._containerElement = DomUtils.getShadowId(this, ID_CONTAINER);
       this._containerElement.appendChild(this._terminalCanvas);
@@ -358,29 +365,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     doLater(() => {
       pty.resize(this._columns, this._rows);
     });
-  }
-
-  setConfigDatabase(configDatabase: ConfigDatabase): void {
-    this._configDatabase = configDatabase;
-    if (this._terminalCanvas != null) {
-      this._terminalCanvas.setConfigDatabase(configDatabase);
-    }
-  }
-
-  setKeybindingsManager(keyBindingManager: KeybindingsManager): void {
-    this._keyBindingManager = keyBindingManager;
-  }
-
-  setBulkFileBroker(fileBroker: BulkFileBroker): void {
-    this._fileBroker = fileBroker;
-
-    if (this._emulator != null) {
-      this._initDownloadApplicationModeHandler();
-    }
-  }
-
-  setExtensionManager(extensionManager: ExtensionManager): void {
-    this._extensionManager = extensionManager;
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
@@ -701,8 +685,7 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
 
   private _createTerminalViewer(): TerminalViewer {
     const terminalViewer = <TerminalViewer> document.createElement(TerminalViewer.TAG_NAME);
-    injectKeybindingsManager(terminalViewer, this._keyBindingManager);
-    injectConfigDatabase(terminalViewer, this._configDatabase);
+    terminalViewer.setDependencies(this._configDatabase);
     terminalViewer.setVisualState(DomUtils.getShadowRoot(this).activeElement !== null
                                       ? VisualState.FOCUSED
                                       : VisualState.UNFOCUSED);
@@ -1208,8 +1191,6 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     // Create and set up a new command-frame.
     const el = <EmbeddedViewer> this._getWindow().document.createElement(EmbeddedViewer.TAG_NAME);
     el.setWindowId(this._windowId);
-    injectKeybindingsManager(el, this._keyBindingManager);
-    injectConfigDatabase(el, this._configDatabase);
     el.addEventListener(EmbeddedViewer.EVENT_CLOSE_REQUEST, () => {
       this.deleteEmbeddedViewer(el);
       focusElement(this, this._log);
@@ -1505,8 +1486,8 @@ export class EtTerminal extends ThemeableElementBase implements AcceptsKeybindin
     }
 
     const dataViewer = <ViewerElement> this._getWindow().document.createElement(tag);
-    injectKeybindingsManager(dataViewer, this._keyBindingManager);
-    injectConfigDatabase(dataViewer, this._configDatabase);
+    dataViewer.setDependencies(this._configDatabase, this._keyBindingManager, this._extensionManager);
+
     if (bulkFileHandle !== null) {
       dataViewer.setBulkFileHandle(bulkFileHandle);
     }

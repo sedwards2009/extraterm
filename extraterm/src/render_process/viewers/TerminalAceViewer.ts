@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
 
 import * as XRegExp from "xregexp";
@@ -57,7 +57,7 @@ import { TextEditor } from './TextEditorType';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { ConfigCursorStyle } from '../../Config';
 import { dispatchContextMenuRequest, ContextMenuType, dispatchHyperlinkClick } from '../command/CommandUtils';
-import { ConfigDatabase, AcceptsConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
+import { ConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 import { focusElement } from "../DomUtils";
 
@@ -81,8 +81,8 @@ export interface AppendScrollbackLinesDetail {
 
 
 @CustomElement("et-terminal-ace-viewer")
-export class TerminalViewer extends ViewerElement implements AcceptsConfigDatabase,
-    SupportsClipboardPaste.SupportsClipboardPaste, TextEditor, AcceptsTerminalVisualConfig, Disposable {
+export class TerminalViewer extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
+    TextEditor, AcceptsTerminalVisualConfig, Disposable {
 
   static TAG_NAME = "ET-TERMINAL-ACE-VIEWER";
   static EVENT_KEYBOARD_ACTIVITY = "et-terminal-ace-viewer_keyboard-activity";
@@ -157,7 +157,7 @@ export class TerminalViewer extends ViewerElement implements AcceptsConfigDataba
     this._renderEventHandler = this._handleRenderEvent.bind(this);
   }
 
-  setConfigDatabase(configDatabase: ConfigDatabase): void {
+  setDependencies(configDatabase: ConfigDatabase): void {
     this._configDatabase = configDatabase;
   }
 

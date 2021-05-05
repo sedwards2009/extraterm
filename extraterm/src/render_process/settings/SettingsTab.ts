@@ -7,13 +7,13 @@ import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
-import { AcceptsConfigDatabase, ConfigDatabase } from '../../Config';
-import { AcceptsKeybindingsManager, KeybindingsManager } from '../keybindings/KeyBindingsManager';
+import { ConfigDatabase } from '../../Config';
+import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import * as ThemeTypes from '../../theme/Theme';
 import { SettingsUi } from './SettingsUi';
-import { AcceptsExtensionManager, ExtensionManager } from '../extension/InternalTypes';
+import { ExtensionManager } from '../extension/InternalTypes';
 import * as SupportsDialogStack from "../SupportsDialogStack";
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
@@ -23,16 +23,13 @@ const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";
 
 
 @CustomElement("et-settings-tab")
-export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
-    AcceptsExtensionManager, AcceptsKeybindingsManager, SupportsDialogStack.SupportsDialogStack {
+export class SettingsTab extends ViewerElement implements SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-SETTINGS-TAB";
 
   private _log: Logger = null;
   private _ui: SettingsUi = null;
   private _dialogStack: HTMLElement[] = [];
-  private _terminalVisualConfig: TerminalVisualConfig = null;
-
 
   constructor() {
     super();
@@ -53,6 +50,12 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
     component.$el.addEventListener('contextmenu', (ev: MouseEvent) => this._handleContextMenuCapture(ev), true);
   }
 
+  setDependencies(configDatabase: ConfigDatabase, newKeybindingsManager: KeybindingsManager,
+      extensionManager: ExtensionManager): void {
+
+    this._ui.setDependencies(configDatabase, newKeybindingsManager, extensionManager);
+  }
+
   getMetadata(): ViewerMetadata {
     const metadata = super.getMetadata();
     metadata.title = "Settings";
@@ -69,21 +72,7 @@ export class SettingsTab extends ViewerElement implements AcceptsConfigDatabase,
   }
 
   hasFocus(): boolean {
-    // const root = util.getShadowRoot(this);
-    // return root.activeElement !== null;
     return false;
-  }
-
-  setConfigDatabase(configDatabase: ConfigDatabase): void {
-    this._ui.setConfigDatabase(configDatabase);
-  }
-
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._ui.setKeybindingsManager(newKeybindingsManager);
-  }
-
-  setExtensionManager(extensionManager: ExtensionManager): void {
-    this._ui.setExtensionManager(extensionManager);
   }
 
   setThemes(themes: ThemeTypes.ThemeInfo[]): void {

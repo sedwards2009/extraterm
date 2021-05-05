@@ -132,6 +132,14 @@ export class SettingsUi extends Vue {
     ];
   }
 
+  setDependencies(configDatabase: ConfigDatabase, keybindingsManager: KeybindingsManager,
+      extensionManager: ExtensionManager): void {
+    this._configDatabase = configDatabase;
+    this._keybindingsManager = keybindingsManager;
+    this._extensionManager = extensionManager;
+    this.$forceUpdate();
+  }
+
   mounted(): void {
     if (this.firstShowComplete) {
       return;
@@ -146,27 +154,12 @@ export class SettingsUi extends Vue {
     this.selectedTab = id;
   }
 
-  setConfigDatabase(configDatabase: ConfigDatabase) {
-    this._configDatabase = configDatabase;
-    this.$forceUpdate();
-  }
-
   getConfigDatabase(): ConfigDatabase {
     return this._configDatabase;
   }
 
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void {
-    this._keybindingsManager = newKeybindingsManager;
-    this.$forceUpdate();
-  }
-
   getKeybindingsManager(): KeybindingsManager {
     return this._keybindingsManager;
-  }
-
-  setExtensionManager(extensionManager: ExtensionManager): void {
-    this._extensionManager = extensionManager;
-    this.$forceUpdate();
   }
 
   getExtensionManager(): ExtensionManager {

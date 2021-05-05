@@ -180,17 +180,3 @@ export interface ConfigDatabase {
   setConfig(key: "system", newConfig: SystemConfig | DeepReadonly<SystemConfig>): void;
   setConfig(key: ConfigKey, newConfig: any): void;
 }
-
-export interface AcceptsConfigDatabase {
-  setConfigDatabase(newConfigDatabase: ConfigDatabase): void;
-}
-
-export function isAcceptsConfigDatabase(instance: any): instance is AcceptsConfigDatabase {
-  return (<AcceptsConfigDatabase> instance).setConfigDatabase !== undefined;
-}
-
-export function injectConfigDatabase(instance: any, configDatabase: ConfigDatabase): void {
-  if (isAcceptsConfigDatabase(instance)) {
-    instance.setConfigDatabase(configDatabase);
-  }
-}

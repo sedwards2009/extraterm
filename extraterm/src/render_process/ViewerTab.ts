@@ -22,10 +22,11 @@ import { ViewerElement } from "./viewers/ViewerElement";
 import { RefreshLevel, Mode, VisualState } from "./viewers/ViewerElementTypes";
 import * as VirtualScrollArea from "./VirtualScrollArea";
 import * as WebIpc from "./WebIpc";
-import { AcceptsConfigDatabase, ConfigDatabase } from "../Config";
+import { ConfigDatabase } from "../Config";
 import { ExtensionManager } from "./extension/InternalTypes";
 import { ResizeNotifier } from "extraterm-resize-notifier";
 import { focusElement } from "./DomUtils";
+import { KeybindingsManager } from "./keybindings/KeyBindingsManager";
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -48,8 +49,8 @@ const SCROLL_STEP = 1;
  * A viewer tab which can contain any ViewerElement.
  */
 @CustomElement("et-viewer-tab")
-export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
-    SupportsClipboardPaste.SupportsClipboardPaste, SupportsDialogStack.SupportsDialogStack {
+export class EtViewerTab extends ViewerElement implements SupportsClipboardPaste.SupportsClipboardPaste,
+    SupportsDialogStack.SupportsDialogStack {
 
   static TAG_NAME = "ET-VIEWER-TAB";
   private static _resizeNotifier = new ResizeNotifier();
@@ -93,6 +94,13 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     this._log = getLogger(EtViewerTab.TAG_NAME, this);
     this.onDispose = this.#onDisposeEventEmitter.event;
     this._copyToClipboardLater = new DebouncedDoLater(this.copyToClipboard.bind(this), 100);
+  }
+
+  setDependencies(configDatabase: ConfigDatabase, keybindingsManager: KeybindingsManager,
+      extensionManager: ExtensionManager): void {
+
+    super.setDependencies(configDatabase, keybindingsManager, extensionManager);
+    this._configDatabase = configDatabase;
   }
 
   getMetadata(): ViewerMetadata {
@@ -188,10 +196,6 @@ export class EtViewerTab extends ViewerElement implements AcceptsConfigDatabase,
     if (element !== null) {
       element.dispose();
     }
-  }
-
-  setConfigDatabase(newConfigDatabase: ConfigDatabase): void {
-    this._configDatabase = newConfigDatabase;
   }
 
   // FIXME delete

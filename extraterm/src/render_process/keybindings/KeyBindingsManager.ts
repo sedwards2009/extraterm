@@ -119,20 +119,3 @@ export interface KeybindingsManager {
 
   setEnabled(on: boolean): void;
 }
-
-export interface AcceptsKeybindingsManager {
-  setKeybindingsManager(newKeybindingsManager: KeybindingsManager): void;
-}
-
-export function isAcceptsKeybindingsManager(instance: any): instance is AcceptsKeybindingsManager {
-  if (instance === null || instance === undefined) {
-    return false;
-  }
-  return (<AcceptsKeybindingsManager> instance).setKeybindingsManager !== undefined;
-}
-
-export function injectKeybindingsManager(instance: any, keybindingsManager: KeybindingsManager): void {
-  if (isAcceptsKeybindingsManager(instance)) {
-    instance.setKeybindingsManager(keybindingsManager);
-  }
-}

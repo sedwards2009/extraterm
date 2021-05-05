@@ -21,7 +21,7 @@ import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
 import { later } from "extraterm-later";
 
 import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
-import { SystemConfig, FontInfo, injectConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG,
+import { SystemConfig, FontInfo, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG,
   TitleBarStyle, ConfigDatabase } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import { ThemeManager } from "../theme/ThemeManager";
@@ -217,8 +217,7 @@ function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: Mai
   const themeManager = new ThemeManager({
     css: [themesDir],
     syntax: [getUserSyntaxThemeDirectory()],
-    terminal: [getUserTerminalThemeDirectory()]}, extensionManager);
-  injectConfigDatabase(themeManager, configDatabase);
+    terminal: [getUserTerminalThemeDirectory()]}, extensionManager, configDatabase);
   return themeManager;
 }
 
