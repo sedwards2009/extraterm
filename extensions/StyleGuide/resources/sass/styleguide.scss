@@ -1,0 +1,100 @@
+/**
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ */
+@import "general-gui/variables";
+
+#guide {
+  padding: $panel-body-padding;
+}
+
+.code-example {
+  display: grid;
+  grid: auto-flow / 1fr 1fr;
+  column-gap: $panel-body-padding;
+}
+
+$card-background-color: lighten($tool-panel-background-color, 8%);
+
+.code-example-result, .code-example-source {
+  padding: $component-padding-vertical*1.5 $component-padding-horizontal*1.5;
+  margin-bottom: $component-padding-vertical;
+  font-size: 1.2rem;
+  list-style-type: none;
+  border-radius: $border-radius*2;
+  border: 1px solid $base-border-color;
+  background-color: $card-background-color;
+  overflow: hidden;
+}
+
+.color-patch {
+  display: inline-block;
+  height: 1.5rem;
+  width: 3rem;
+}
+
+.color-patch__text-color {
+  background-color: $text-color;
+}
+.color-patch__text-color-subtle {
+  background-color: $text-color-subtle;
+}
+.color-patch__text-minor-color {
+  background-color: $text-minor-color;
+}
+.color-patch__text-highlight-color {
+  background-color: $text-highlight-color;
+}
+.color-patch__text-selected-color {
+  background-color: $text-selected-color;
+}
+.color-patch__background-highlight-color {
+  background-color: $background-highlight-color;
+}
+.color-patch__background-color {
+  background-color: $background-color;
+}
+.color-patch__background-selected-color {
+  background-color: $background-selected-color;
+}
+.color-patch__text-muted-color  {
+  background-color: $text-muted-color ;
+}
+.color-patch__brand-primary {
+  background-color: $brand-primary;
+}
+.color-patch__brand-success {
+  background-color: $brand-success;
+}
+.color-patch__brand-info {
+  background-color: $brand-info;
+}
+.color-patch__brand-warning {
+  background-color: $brand-warning;
+}
+.color-patch__brand-danger {
+  background-color: $brand-danger;
+}
+.color-patch__brand-text-primary {
+  background-color: $brand-text-primary;
+}
+.color-patch__brand-text-success {
+  background-color: $brand-text-success;
+}
+.color-patch__brand-text-info {
+  background-color: $brand-text-info;
+}
+.color-patch__brand-text-warning {
+  background-color: $brand-text-warning;
+}
+.color-patch__brand-text-danger {
+  background-color: $brand-text-danger;
+}
+
+.panel-example {
+  border: 1px dashed $text-color;
+  padding: $panel-body-padding;
+
+  & > div {
+    border: 1px dashed $text-color;
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "styleguide",
+  "displayName": "Style Guide",
+  "description": "Extraterm style guide for extension developers",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "version": "1.0.0",
+  "main": "dist/StyleGuideExtension.js",
+  "scripts": {
+    "build": "yarn run build-fast && yarn run lint",
+    "build-fast": "tsc",
+    "clean": "shx rm -rf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.13.0",
+    "@types/he": "^1.1.1",
+    "@types/node": "^14.14.37",
+    "eslint": "7.19.0",
+    "eslint-config-extraterm": "1.0.0",
+    "typescript": "4.1.3"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "styleguide:open",
+        "title": "Style Guide",
+        "category": "application",
+        "icon": "fas fa-swatchbook",
+        "when": ""
+      }
+    ],
+    "tabs": [
+      {
+        "name": "styleguide",
+        "css": {
+          "directory": "resources/sass",
+          "cssFile": [
+            "styleguide.scss"
+          ],
+          "fontAwesome": true
+        }
+      }
+    ]
+  },
+  "dependencies": {
+    "he": "^1.2.0"
+  }
+}
