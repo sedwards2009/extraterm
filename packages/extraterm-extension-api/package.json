@@ -29,6 +29,6 @@
     "eslint": "7.19.0",
     "eslint-config-extraterm": "1.0.0",
     "shx": "^0.3.2",
-    "typedoc": "^0.16.10"
+    "typedoc": "^0.20.36"
   }
 }
