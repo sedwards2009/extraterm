@@ -52,6 +52,7 @@ export class ExtensionContainerElement extends ThemeableElementBase  {
     this.shadowRoot.appendChild(styleElement);
 
     this._containerDivElement = document.createElement("div");
+    this._containerDivElement.id = "container_root";
     this.shadowRoot.appendChild(this._containerDivElement);
 
     this.updateThemeCss();
@@ -80,7 +81,7 @@ export class ExtensionContainerElement extends ThemeableElementBase  {
       const name = this._extensionContext._extensionMetadata.name;
       const cssFiles = cssDecl.cssFile.map(cf =>  name + ":" + path.join(cssDecl.directory, cf));
       const fontAwesomeCss = cssDecl.fontAwesome ? [CssFile.FONT_AWESOME] : [];
-      return [CssFile.GENERAL_GUI, ...fontAwesomeCss, ...cssFiles];
+      return [CssFile.GENERAL_GUI, CssFile.EXTENSION_CONTAINER, ...fontAwesomeCss, ...cssFiles];
     }
     return [];
   }
