@@ -31,7 +31,7 @@ import { getFonts } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory,
   getUserKeybindingsDirectory, setupAppData, sanitizeAndIinitializeConfigs as sanitizeAndInitializeConfigs,
-  readUserStoredConfigFile, getUserExtensionDirectory, getConfigurationFilename } from "./MainConfig";
+  getUserExtensionDirectory, getUserSettingsDirectory } from "./MainConfig";
 import { ConfigDatabaseImpl } from "./ConfigDatabaseImpl";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler";
@@ -58,7 +58,8 @@ const _log = getLogger("main");
 
 async function main(): Promise<void> {
   let failed = false;
-  const configDatabase = new ConfigDatabaseImpl(getConfigurationFilename());
+  const configDatabase = new ConfigDatabaseImpl(getUserSettingsDirectory());
+  configDatabase.init();
 
   setupAppData();
   setupLogging();
@@ -92,25 +93,24 @@ async function main(): Promise<void> {
   const options = parsedArgs.opts();
 
   const availableFonts = getFonts();
-  const userStoredConfig = readUserStoredConfigFile();
   const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
 
   // We have to start up the extension manager before we can scan themes (with the help of extensions)
   // and properly sanitize the config.
-  const extensionManager = setupExtensionManager(configDatabase, userStoredConfig.activeExtensions,
-    packageJson.version);
+  const extensionManager = setupExtensionManager(configDatabase, packageJson.version);
 
   const keybindingsIOManager = setupKeybindingsIOManager(configDatabase, extensionManager);
   const themeManager = setupThemeManager(configDatabase, extensionManager);
 
-  sanitizeAndInitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
+  sanitizeAndInitializeConfigs(configDatabase, themeManager, keybindingsIOManager,
     availableFonts);
-  const titleBarStyle = userStoredConfig.titleBarStyle;
-  const systemConfig = systemConfiguration(userStoredConfig, keybindingsIOManager, availableFonts, packageJson,
+  const generalConfig = configDatabase.getGeneralConfig();
+  const titleBarStyle = generalConfig.titleBarStyle;
+  const systemConfig = systemConfiguration(generalConfig, keybindingsIOManager, availableFonts, packageJson,
     titleBarStyle);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 
-  if ( ! userStoredConfig.isHardwareAccelerated) {
+  if ( ! generalConfig.isHardwareAccelerated) {
     app.disableHardwareAcceleration();
   }
 
@@ -174,10 +174,7 @@ function electronReady(): Promise<void> {
   });
 }
 
-function setupExtensionManager(configDatabase: ConfigDatabase,
-    initialActiveExtensions: {[name: string]: boolean;},
-    applicationVersion: string): MainExtensionManager {
-
+function setupExtensionManager(configDatabase: ConfigDatabase, applicationVersion: string): MainExtensionManager {
   const extensionPaths = [path.join(__dirname, "../../../extensions" )];
   const userExtensionDirectory = getUserExtensionDirectory();
   _log.info(`User extension directory is: ${userExtensionDirectory}`);
@@ -186,8 +183,7 @@ function setupExtensionManager(configDatabase: ConfigDatabase,
   }
 
   const extensionManager = new MainExtensionManager(configDatabase, extensionPaths, applicationVersion);
-  extensionManager.startUpExtensions(initialActiveExtensions);
-
+  extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
   return extensionManager;
 }
 

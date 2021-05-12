@@ -5,6 +5,7 @@
  */
 import * as fs from 'fs';
 import * as _ from 'lodash';
+import * as path from 'path';
 
 import { Event, SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { Logger, getLogger } from "extraterm-logging";
@@ -18,19 +19,25 @@ import {ConfigDatabase, ConfigKey, UserStoredConfig, ConfigChangeEvent, GeneralC
   COMMAND_LINE_ACTIONS_CONFIG,
   SYSTEM_CONFIG} from '../Config';
 
+const MAIN_CONFIG = "extraterm.json";
+
 
 export class ConfigDatabaseImpl implements ConfigDatabase {
   private _log: Logger;
 
-  #configurationFilename: string;
+  #configDirectory: string;
   #configDb = new Map<ConfigKey, any>();
   #onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
   onChange: Event<ConfigChangeEvent>;
 
-  constructor(configurationFilename: string) {
+  constructor(configDirectory: string) {
     this._log = getLogger("ConfigDatabaseImpl", this);
-    this.#configurationFilename = configurationFilename;
+    this.#configDirectory = configDirectory;
     this.onChange = this.#onChangeEventEmitter.event;
+  }
+
+  init(): void {
+    this._loadConfigs();
   }
 
   getConfig(key: ConfigKey): any {
@@ -141,16 +148,51 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
 
     this.setConfigNoWrite(key, newConfig);
     if ([GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, SESSION_CONFIG, "*"].indexOf(key) !== -1) {
-      this._writeApplicationConfigurationFile();
+      this._writeUserConfigFile();
     }
   }
 
-  private _writeApplicationConfigurationFile(): void {
+  private _loadConfigs(): void {
+    const userConfig = this._readUserConfigFile();
+
+    const commandLineActions = userConfig.commandLineActions ?? [];
+    const sessions = userConfig.sessions ?? [];
+    userConfig.commandLineActions = null;
+    userConfig.sessions = null;
+
+    this.setConfigNoWrite(GENERAL_CONFIG, userConfig);
+    this.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, commandLineActions);
+    this.setConfigNoWrite(SESSION_CONFIG, sessions);
+  }
+
+  private _readUserConfigFile(): UserStoredConfig {
+    const filename = this._getUserConfigFilename();
+    let config: UserStoredConfig = { };
+
+    if (fs.existsSync(filename)) {
+      this._log.info("Reading user configuration from " + filename);
+      const configJson = fs.readFileSync(filename, {encoding: "utf8"});
+      try {
+        config = <UserStoredConfig>JSON.parse(configJson);
+      } catch(ex) {
+        this._log.warn("Unable to read " + filename, ex);
+      }
+    } else {
+      this._log.info("Couldn't find user configuration file at " + filename);
+    }
+    return config;
+  }
+
+  private _getUserConfigFilename(): string {
+    return path.join(this.#configDirectory, MAIN_CONFIG);
+  }
+
+  private _writeUserConfigFile(): void {
     const cleanConfig = <UserStoredConfig> this.getConfigCopy(GENERAL_CONFIG);
     cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
     cleanConfig.sessions = this.getConfig(SESSION_CONFIG);
 
     const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
-    fs.writeFileSync(this.#configurationFilename, formattedConfig);
+    fs.writeFileSync(this._getUserConfigFilename(), formattedConfig);
   }
 }
