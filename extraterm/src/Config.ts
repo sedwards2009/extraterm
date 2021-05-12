@@ -129,35 +129,49 @@ export interface FontInfo {
   postscriptName: string;
 }
 
-export type ConfigKey = "*" | "general" | "session" | "command_line_action" | "system";
-
 export interface ConfigChangeEvent {
-  key: ConfigKey;
+  key: string;
   newConfig: any;
   oldConfig: any;
 }
+
+export type ConfigKey = string;
 
 
 /**
  * Interface for distributing configuration changes.
  */
 export interface ConfigDatabase {
+  getGeneralConfig(): DeepReadonly<GeneralConfig>;
+  getSessionConfig(): DeepReadonly<SessionConfiguration[]>;
+  getCommandLineActionConfig(): DeepReadonly<CommandLineAction[]>;
+  getSystemConfig(): DeepReadonly<SystemConfig>;
+
+  getGeneralConfigCopy(): GeneralConfig;
+  getSessionConfigCopy(): SessionConfiguration[];
+  getCommandLineActionConfigCopy(): CommandLineAction[];
+  getSystemConfigCopy(): SystemConfig;
+
   /**
-   * Get the current config object.
+   * Get a config object.
    *
-   * @return the current config.
+   * Returns a reference to the requested config object. DO NOT MODIFY IT!
+   * @return the config object, may be `undefined` or `null`
    */
-  getConfig(key: "general"): DeepReadonly<GeneralConfig>;
-  getConfig(key: "session"): DeepReadonly<SessionConfiguration[]>;
-  getConfig(key: "command_line_action"): DeepReadonly<CommandLineAction[]>;
-  getConfig(key: "system"): DeepReadonly<SystemConfig>;
   getConfig(key: ConfigKey): any;
 
-  getConfigCopy(key: "general"): GeneralConfig;
-  getConfigCopy(key: "session"): SessionConfiguration[];
-  getConfigCopy(key: "command_line_action"): CommandLineAction[];
-  getConfigCopy(key: "system"): SystemConfig;
+  /**
+   * Get a copy of a config object.
+   *
+   * Returns a copy of the requested config object, which you can may edit.
+   * @return the config object, may be `undefined` or `null`
+   */
   getConfigCopy(key: ConfigKey): any;
+
+  /**
+   * Set config object.
+   */
+  setConfig(key: ConfigKey, newConfig: any): void;
 
   /**
    * Register a listener to hear when the config has changed.
@@ -174,9 +188,8 @@ export interface ConfigDatabase {
    * to the parts of the application which run in different threads/processes.
    * @param newConfig the new config object.
    */
-  setConfig(key: "general", newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void;
-  setConfig(key: "session", newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void;
-  setConfig(key: "command_line_action", newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void;
-  setConfig(key: "system", newConfig: SystemConfig | DeepReadonly<SystemConfig>): void;
-  setConfig(key: ConfigKey, newConfig: any): void;
+  setGeneralConfig(newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void;
+  setSessionConfig(newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void;
+  setCommandLineActionConfig(newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void;
+  setSystemConfig(newConfig: SystemConfig | DeepReadonly<SystemConfig>): void;
 }

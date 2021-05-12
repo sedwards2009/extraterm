@@ -9,19 +9,17 @@ import * as _ from 'lodash';
 import {app, BrowserWindow } from 'electron';
 import { createUuid } from 'extraterm-uuid';
 
-import { Event } from '@extraterm/extraterm-extension-api';
 import { Logger, getLogger } from "extraterm-logging";
-import { freezeDeep } from 'extraterm-readonly-toolbox';
 
 import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME, FALLBACK_SYNTAX_THEME } from '../theme/Theme';
-import { EventEmitter } from '../utils/EventEmitter';
-import {CommandLineAction, SystemConfig, ConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG,
-  SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, FontInfo,
-  ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle, WindowBackgroundMode } from '../Config';
+import {CommandLineAction, UserStoredConfig, GeneralConfig, ConfigChangeEvent, FontInfo, ConfigCursorStyle,
+  TerminalMarginStyle, FrameRule, TitleBarStyle, WindowBackgroundMode, SESSION_CONFIG,
+  COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, SYSTEM_CONFIG } from '../Config';
 import * as Messages from '../WindowMessages';
 import { ThemeManager } from '../theme/ThemeManager';
 import { KeybindingsIOManager } from './KeybindingsIOManager';
 import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from '../keybindings/KeybindingsTypes';
+import { ConfigDatabaseImpl } from './ConfigDatabaseImpl';
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
 const PATHS_CONFIG_FILENAME = "application_paths.json";
@@ -162,7 +160,7 @@ export function getUserKeybindingsDirectory(): string {
   return path.join(getUserSettingsDirectory(), USER_KEYBINDINGS_DIR);
 }
 
-function getConfigurationFilename(): string {
+export function getConfigurationFilename(): string {
   return path.join(getUserSettingsDirectory(), MAIN_CONFIG);
 }
 
@@ -177,8 +175,9 @@ export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean
   return themeInfo.type === themeType;
 }
 
-export function sanitizeAndIinitializeConfigs(userStoredConfig: UserStoredConfig, themeManager: ThemeManager, configDatabase: ConfigDatabaseImpl,
-    keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[]): UserStoredConfig {
+export function sanitizeAndIinitializeConfigs(userStoredConfig: UserStoredConfig, themeManager: ThemeManager,
+    configDatabase: ConfigDatabaseImpl, keybindingsIOManager: KeybindingsIOManager,
+    availableFonts: FontInfo[]): UserStoredConfig {
   sanitizeUserStoredConfig(userStoredConfig, availableFonts);
   sanitizeUserStoredConfigThemes(userStoredConfig, themeManager);
   distributeUserStoredConfig(userStoredConfig, configDatabase, keybindingsIOManager);
@@ -347,7 +346,7 @@ function distributeUserStoredConfig(userStoredConfig: UserStoredConfig, configDa
 
   delete userStoredConfig.sessions;
   delete userStoredConfig.commandLineActions;
-  configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
+  configDatabase.setGeneralConfig(userStoredConfig);
 
   configDatabase.onChange((event: ConfigChangeEvent): void => {
     if (event.key === GENERAL_CONFIG) {
@@ -356,7 +355,7 @@ function distributeUserStoredConfig(userStoredConfig: UserStoredConfig, configDa
       const newGeneralConfig = <GeneralConfig> event.newConfig;
       if (newGeneralConfig != null) {
         if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
-          const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+          const systemConfig = configDatabase.getSystemConfigCopy();
           systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(newGeneralConfig.keybindingsName);
           configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
         }
@@ -386,92 +385,5 @@ function sendMessageToAllWindows(msg: Messages.Message): void {
       _log.debug(`Broadcasting message to window ${window.id}`);
     }
     window.webContents.send(Messages.CHANNEL_NAME, msg);
-  }
-}
-
-
-export class ConfigDatabaseImpl implements ConfigDatabase {
-  private _configDb = new Map<ConfigKey, any>();
-  private _onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
-  onChange: Event<ConfigChangeEvent>;
-  private _log: Logger;
-
-  constructor() {
-    this.onChange = this._onChangeEventEmitter.event;
-    this._log = getLogger("ConfigDatabaseImpl", this);
-  }
-
-  getConfig(key: ConfigKey): any {
-    if (key === "*") {
-      // Wildcard fetch all.
-      const result = {};
-
-      for (const [dbKey, value] of this._configDb.entries()) {
-        result[dbKey] = value;
-      }
-      freezeDeep(result);
-      return result;
-    } else {
-      const result = this._configDb.get(key);
-      if (result == null) {
-        this._log.warn("Unable to find config for key ", key);
-      } else {
-        return result;
-      }
-    }
-  }
-
-  getConfigCopy(key: ConfigKey): any {
-    const data = this.getConfig(key);
-    if (data == null) {
-      return null;
-    }
-    return _.cloneDeep(data);
-  }
-
-  setConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    if (key === "*") {
-      for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
-        this._setSingleConfigNoWrite(<ConfigKey> objectKey, newConfig[objectKey]);
-      }
-    } else {
-      this._setSingleConfigNoWrite(key, newConfig);
-    }
-  }
-
-  private _setSingleConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    const oldConfig = this.getConfig(key);
-    if (_.isEqual(oldConfig, newConfig)) {
-      return;
-    }
-
-    if (Object.isFrozen(newConfig)) {
-      this._configDb.set(key, newConfig);
-    } else {
-      this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
-    }
-
-    this._onChangeEventEmitter.fire({key, oldConfig, newConfig: this.getConfig(key)});
-  }
-
-  setConfig(key: ConfigKey, newConfig: any): void {
-    if (newConfig == null) {
-      this._log.warn("setConfig() newConfig is null for key ", key);
-    }
-
-    this.setConfigNoWrite(key, newConfig);
-    if ([GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, SESSION_CONFIG, "*"].indexOf(key) !== -1) {
-      this._writeConfigurationFile();
-    }
-  }
-
-  private _writeConfigurationFile(): void {
-    const cleanConfig = <UserStoredConfig> this.getConfigCopy(GENERAL_CONFIG);
-    cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
-    cleanConfig.sessions = this.getConfig(SESSION_CONFIG);
-
-    const filename = getConfigurationFilename();
-    const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
-    fs.writeFileSync(filename, formattedConfig);
   }
 }

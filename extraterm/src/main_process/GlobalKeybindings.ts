@@ -5,7 +5,7 @@
  */
 import * as _ from 'lodash';
 
-import { ConfigDatabaseImpl } from "./MainConfig";
+import { ConfigDatabaseImpl } from "./ConfigDatabaseImpl";
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { GeneralConfig } from "../Config";
 import { GENERAL_CONFIG } from "../Config";

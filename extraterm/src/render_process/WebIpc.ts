@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { BulkFileMetadata, EnvironmentMap, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
+import { BulkFileMetadata, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 import * as Electron from 'electron';
 const ipc = Electron.ipcRenderer;
 

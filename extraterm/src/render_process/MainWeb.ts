@@ -7,6 +7,7 @@ import * as Electron from 'electron';
 import * as _ from 'lodash';
 import * as SourceMapSupport from 'source-map-support';
 
+import { DeepReadonly, freezeDeep } from 'extraterm-readonly-toolbox';
 import { Event, CustomizedCommand, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import { doLater, later } from 'extraterm-later';
@@ -18,7 +19,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType, EVENT_HYPERLINK_CLICK, HyperlinkEventDetail } from './command/CommandUtils';
 
-import {ConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
+import {ConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo, CommandLineAction, COMMAND_LINE_ACTIONS_CONFIG} from '../Config';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
@@ -39,7 +40,6 @@ import * as ThemeConsumer from '../theme/ThemeConsumer';
 import * as WebIpc from './WebIpc';
 import * as Messages from '../WindowMessages';
 import { EventEmitter } from '../utils/EventEmitter';
-import { freezeDeep } from 'extraterm-readonly-toolbox';
 import { log } from "extraterm-logging";
 import { KeybindingsManager, loadKeybindingsFromObject, TermKeybindingsMapping } from './keybindings/KeyBindingsManager';
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
@@ -819,6 +819,54 @@ class ConfigDatabaseImpl implements ConfigDatabase {
     } else {
       return result;
     }
+  }
+
+  getGeneralConfig(): DeepReadonly<GeneralConfig> {
+    return <DeepReadonly<GeneralConfig>> this.getConfig(GENERAL_CONFIG);
+  }
+
+  getSessionConfig(): DeepReadonly<SessionConfiguration[]> {
+    return <DeepReadonly<SessionConfiguration[]>> this.getConfig(SESSION_CONFIG);
+  }
+
+  getCommandLineActionConfig(): DeepReadonly<CommandLineAction[]> {
+    return <DeepReadonly<CommandLineAction[]>> this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
+  }
+
+  getSystemConfig(): DeepReadonly<SystemConfig> {
+    return <DeepReadonly<SystemConfig>> this.getConfig(SYSTEM_CONFIG);
+  }
+
+  getGeneralConfigCopy(): GeneralConfig {
+    return <GeneralConfig> this.getConfigCopy(GENERAL_CONFIG);
+  }
+
+  getSessionConfigCopy(): SessionConfiguration[] {
+    return <SessionConfiguration[]> this.getConfigCopy(SESSION_CONFIG);
+  }
+
+  getCommandLineActionConfigCopy(): CommandLineAction[] {
+    return <CommandLineAction[]> this.getConfigCopy(COMMAND_LINE_ACTIONS_CONFIG);
+  }
+
+  getSystemConfigCopy(): SystemConfig {
+    return <SystemConfig> this.getConfigCopy(SYSTEM_CONFIG);
+  }
+
+  setGeneralConfig(newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void {
+    this.setConfig(GENERAL_CONFIG, newConfig);
+  }
+
+  setSessionConfig(newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void {
+    this.setConfig(SESSION_CONFIG, newConfig);
+  }
+
+  setCommandLineActionConfig(newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void {
+    this.setConfig(COMMAND_LINE_ACTIONS_CONFIG, newConfig);
+  }
+
+  setSystemConfig(newConfig: SystemConfig | DeepReadonly<SystemConfig>): void {
+    this.setConfig(SYSTEM_CONFIG, newConfig);
   }
 
   _getConfigNoWarnings(key: ConfigKey): any {

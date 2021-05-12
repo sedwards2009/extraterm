@@ -408,7 +408,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
       }
     }
 
-    const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this._configDatabase.getGeneralConfig();
     switch (generalConfig.frameRule) {
       case "always_frame":
         return true;

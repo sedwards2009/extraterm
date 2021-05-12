@@ -21,8 +21,7 @@ import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
 import { later } from "extraterm-later";
 
 import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
-import { SystemConfig, FontInfo, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG,
-  TitleBarStyle, ConfigDatabase } from "../Config";
+import { SystemConfig, FontInfo, GeneralConfig, TitleBarStyle, ConfigDatabase, SYSTEM_CONFIG } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import { ThemeManager } from "../theme/ThemeManager";
 import * as Messages from "../WindowMessages";
@@ -30,9 +29,10 @@ import { MainExtensionManager } from "./extension/MainExtensionManager";
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { getFonts } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
-import { ConfigDatabaseImpl, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory,
+import { EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory,
   getUserKeybindingsDirectory, setupAppData, sanitizeAndIinitializeConfigs as sanitizeAndInitializeConfigs,
-  readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
+  readUserStoredConfigFile, getUserExtensionDirectory, getConfigurationFilename } from "./MainConfig";
+import { ConfigDatabaseImpl } from "./ConfigDatabaseImpl";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
@@ -58,7 +58,7 @@ const _log = getLogger("main");
 
 async function main(): Promise<void> {
   let failed = false;
-  const configDatabase = new ConfigDatabaseImpl();
+  const configDatabase = new ConfigDatabaseImpl(getConfigurationFilename());
 
   setupAppData();
   setupLogging();
@@ -205,8 +205,8 @@ function updateSystemConfigKeybindings(configDatabase: ConfigDatabaseImpl,
     keybindingsIOManager: KeybindingsIOManager): void {
 
   // Broadcast the updated bindings.
-  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
-  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  const generalConfig = <GeneralConfig> configDatabase.getGeneralConfig();
+  const systemConfig = <SystemConfig> configDatabase.getSystemConfigCopy();
   systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
   configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
 }
@@ -375,10 +375,10 @@ function setupPtyManager(configDatabase: ConfigDatabaseImpl, extensionManager: M
 }
 
 function setupDefaultSessions(configDatabase: ConfigDatabaseImpl, ptyManager: PtyManager): void {
-  const sessions = configDatabase.getConfigCopy(SESSION_CONFIG);
+  const sessions = configDatabase.getSessionConfigCopy();
   if (sessions == null || sessions.length === 0) {
     const newSessions = ptyManager.getDefaultSessions();
-    configDatabase.setConfig(SESSION_CONFIG, newSessions);
+    configDatabase.setSessionConfig(newSessions);
   }
 }
 
