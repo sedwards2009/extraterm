@@ -20,6 +20,8 @@ import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { isThemeType } from "./MainConfig";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { MainDesktop } from "./MainDesktop";
+import * as SharedMap from "../shared_map/SharedMap";
+import { MainWindow } from "./MainWindow";
 
 
 const LOG_FINE = false;
@@ -47,6 +49,7 @@ export class MainIpc {
   #keybindingsIOManager: KeybindingsIOManager = null;
   #mainDesktop: MainDesktop = null;
   #ptyManager: PtyManager = null;
+  #sharedMap: SharedMap.SharedMap = null;
   #themeManager: ThemeManager = null;
 
   #ptyToSenderMap = new Map<number, number>();
@@ -54,7 +57,7 @@ export class MainIpc {
 
   constructor(configDatabase: ConfigDatabase, bulkFileStorage: BulkFileStorage, extensionManager: MainExtensionManager,
       ptyManager: PtyManager, keybindingsIOManager: KeybindingsIOManager, mainDesktop: MainDesktop,
-      themeManager: ThemeManager, globalKeybindingsManager: GlobalKeybindingsManager) {
+      themeManager: ThemeManager, globalKeybindingsManager: GlobalKeybindingsManager, sharedMap: SharedMap.SharedMap) {
 
     this._log = getLogger("MainIpc", this);
     this.#bulkFileStorage = bulkFileStorage;
@@ -64,12 +67,66 @@ export class MainIpc {
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#mainDesktop = mainDesktop;
     this.#ptyManager = ptyManager;
+    this.#sharedMap = sharedMap;
     this.#themeManager = themeManager;
   }
 
   start(): void {
+    this._connectToServiceEvents();
+
     this.setupPtyManager();
     ipc.on(Messages.CHANNEL_NAME, this._handleIpc.bind(this));
+  }
+
+  private _connectToServiceEvents(): void {
+    this.#extensionManager.onDesiredStateChanged(() => {
+      this.sendExtensionDesiredStateMessage();
+    });
+
+    this.#bulkFileStorage.onWriteBufferSize((event: BufferSizeEvent) => {
+      this.sendBulkFileWriteBufferSizeEvent(event);
+    });
+
+    this.#bulkFileStorage.onClose((event: CloseEvent) => {
+      this.sendBulkFileStateChangeEvent(event);
+    });
+
+    this.#mainDesktop.onAboutSelected(() => {
+      for (const win of this.#mainDesktop.getWindows()) {
+        this.sendCommandToWindow("extraterm:window.openAbout", win.id, null);
+      }
+    });
+
+    this.#mainDesktop.onPreferencesSelected(() => {
+      for (const win of this.#mainDesktop.getWindows()) {
+        this.sendCommandToWindow("extraterm:window.openSettings", win.id, null);
+      }
+    });
+
+    this.#mainDesktop.onQuitSelected(() => {
+      this.sendQuitApplicationRequest();
+    });
+
+    this.#mainDesktop.onDevToolsClosed((devToolsWindow: MainWindow)=> {
+      this.sendDevToolStatus(devToolsWindow.id, false);
+    });
+
+    this.#mainDesktop.onDevToolsOpened((devToolsWindow: MainWindow)=> {
+      this.sendDevToolStatus(devToolsWindow.id, true);
+    });
+
+    this.#mainDesktop.onWindowClosed((webContentsId: number) => {
+      this.cleanUpPtyWindow(webContentsId);
+    });
+
+    this.#sharedMap.onChange((ev: SharedMap.ChangeEvent): void => {
+      if ( ! ev.isLocalOrigin) {
+        return;
+      }
+
+      const msg: Messages.SharedMapEventMessage = { type: Messages.MessageType.SHARED_MAP_EVENT, event: ev };
+      this._sendMessageToAllWindows(msg);
+    });
   }
 
   private setupPtyManager(): void {
@@ -167,7 +224,8 @@ export class MainIpc {
     window.webContents.send(Messages.CHANNEL_NAME, msg);
   }
 
-  sendDevToolStatus(window: Electron.BrowserWindow, open: boolean): void {
+  sendDevToolStatus(windowId: number, open: boolean): void {
+    const window = BrowserWindow.fromId(windowId);
     const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
     window.webContents.send(Messages.CHANNEL_NAME, msg);
   }
@@ -380,6 +438,10 @@ export class MainIpc {
 
       case Messages.MessageType.WINDOW_READY:
         this._handleWindowReady(event.sender);
+        break;
+
+      case Messages.MessageType.SHARED_MAP_EVENT:
+        this._handleSharedMapEvent(<Messages.SharedMapEventMessage> msg);
         break;
 
       default:
@@ -636,4 +698,7 @@ export class MainIpc {
     this.#mainDesktop.handleWindowReady(sender.id);
   }
 
+  private _handleSharedMapEvent(msg: Messages.SharedMapEventMessage): void {
+    this.#sharedMap.sync(msg.event);
+  }
 }

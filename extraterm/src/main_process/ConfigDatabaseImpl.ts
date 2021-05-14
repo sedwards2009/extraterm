@@ -37,19 +37,23 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
   }
 
   init(): void {
-    this._loadConfigs();
+    this._loadAllConfigs();
+  }
+
+  getAllConfigs(): {[key: string]: any; } {
+    // Wildcard fetch all.
+    const result = {};
+
+    for (const [dbKey, value] of this.#configDb.entries()) {
+      result[dbKey] = value;
+    }
+    freezeDeep(result);
+    return result;
   }
 
   getConfig(key: ConfigKey): any {
     if (key === "*") {
-      // Wildcard fetch all.
-      const result = {};
-
-      for (const [dbKey, value] of this.#configDb.entries()) {
-        result[dbKey] = value;
-      }
-      freezeDeep(result);
-      return result;
+      return this.getAllConfigs();
     } else {
       const result = this.#configDb.get(key);
       if (result == null) {
@@ -152,7 +156,7 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
     }
   }
 
-  private _loadConfigs(): void {
+  private _loadAllConfigs(): void {
     const userConfig = this._readUserConfigFile();
 
     const commandLineActions = userConfig.commandLineActions ?? [];

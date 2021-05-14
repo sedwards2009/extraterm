@@ -160,6 +160,8 @@ export interface ConfigDatabase {
    */
   getConfig(key: ConfigKey): any;
 
+  getAllConfigs(): {[key: string]: any};
+
   /**
    * Get a copy of a config object.
    *

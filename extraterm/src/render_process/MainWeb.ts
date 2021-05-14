@@ -53,6 +53,7 @@ import { TerminalVisualConfig } from './TerminalVisualConfig';
 import { FontLoader, DpiWatcher } from './gui/Util';
 import { CachingLigatureMarker } from './CachingLigatureMarker';
 import { focusElement } from './DomUtils';
+import * as SharedMap from "../shared_map/SharedMap";
 
 type ThemeInfo = ThemeTypes.ThemeInfo;
 
@@ -81,6 +82,7 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   const parsedWindowUrl = new URL(windowUrl);
   const bareWindow = parsedWindowUrl.searchParams.get("bareWindow") !== null;
 
+  const sharedMap = new SharedMap.SharedMap();
   const fontLoader = new FontLoader();
   const dpiWatcher = new DpiWatcher();
   startUpTheming();
@@ -109,7 +111,7 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   extensionManager.setViewerTabDisplay(mainWebUi);
 
   const applicationContextMenu = startUpApplicationContextMenu(extensionManager, keybindingsManager, mainWebUi);
-  registerIpcHandlers(extensionManager, mainWebUi, applicationContextMenu);
+  registerIpcHandlers(extensionManager, mainWebUi, applicationContextMenu, sharedMap);
   startUpWebIpcConfigHandling(configDatabase, keybindingsManager, fontLoader, mainWebUi);
 
   const commandPalette = startUpCommandPalette(extensionManager, keybindingsManager);
@@ -164,7 +166,7 @@ function startUpWebIpc(): void {
 }
 
 function registerIpcHandlers(extensionManager: ExtensionManager, mainWebUi: MainWebUi,
-    applicationContextMenu: ApplicationContextMenu): void {
+    applicationContextMenu: ApplicationContextMenu, sharedMap: SharedMap.SharedMap): void {
 
   WebIpc.registerDefaultHandler(Messages.MessageType.DEV_TOOLS_STATUS,
     (msg: Messages.Message) => handleDevToolsStatus(applicationContextMenu, msg));
@@ -180,6 +182,16 @@ function registerIpcHandlers(extensionManager: ExtensionManager, mainWebUi: Main
 
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ,
     (msg: Messages.Message) => handleClipboardRead(mainWebUi, msg));
+
+  WebIpc.registerDefaultHandler(Messages.MessageType.SHARED_MAP_EVENT,
+    (msg: Messages.Message) => handleSharedMapEvent(sharedMap, msg));
+
+  sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
+    if ( ! ev.isLocalOrigin) {
+      return;
+    }
+    WebIpc.sendSharedMapEvent(ev);
+  });
 }
 
 function closeSplash(): void {
@@ -610,6 +622,11 @@ function handleClipboardRead(mainWebUi: MainWebUi, msg: Messages.Message): void 
   mainWebUi.pasteText(clipboardReadMessage.text);
 }
 
+function handleSharedMapEvent(sharedMap: SharedMap.SharedMap, msg: Messages.Message): void {
+  const sharedMapEventMessage = <Messages.SharedMapEventMessage> msg;
+  sharedMap.sync(sharedMapEventMessage.event);
+}
+
 //-------------------------------------------------------------------------
 let oldSystemConfig: SystemConfig = null;
 let oldGeneralConfig: GeneralConfig = null;
@@ -869,16 +886,20 @@ class ConfigDatabaseImpl implements ConfigDatabase {
     this.setConfig(SYSTEM_CONFIG, newConfig);
   }
 
-  _getConfigNoWarnings(key: ConfigKey): any {
-    if (key === "*") {
-      // Wildcard fetch all.
-      const result = {};
+  getAllConfigs(): {[key: string]: any;} {
+    // Wildcard fetch all.
+    const result = {};
 
-      for (const [dbKey, value] of this._configDb.entries()) {
-        result[dbKey] = value;
-      }
-      freezeDeep(result);
-      return result;
+    for (const [dbKey, value] of this._configDb.entries()) {
+      result[dbKey] = value;
+    }
+    freezeDeep(result);
+    return result;
+  }
+
+  private _getConfigNoWarnings(key: ConfigKey): any {
+    if (key === "*") {
+      return this.getAllConfigs();
     } else {
       return this._configDb.get(key);
     }

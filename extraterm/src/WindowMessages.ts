@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -8,13 +8,14 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
-import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
+import { BulkFileMetadata, BulkFileState, TerminalTheme, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 
 import * as Config from './Config';
 import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
 import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
 import { ExtensionMetadata, ExtensionDesiredState } from './ExtensionMetadata';
 import { CustomKeybindingsSet, LogicalKeybindingsName, StackedKeybindingsSet } from './keybindings/KeybindingsTypes';
+import { ChangeEvent as SharedMapChangeEvent } from "./shared_map/SharedMap";
 
 
 /**
@@ -86,6 +87,7 @@ export enum MessageType {
   WINDOW_SHOW_RESPONSE,
   WINDOW_READY,
   CLOSE_SPLASH,
+  SHARED_MAP_EVENT,
 }
 
 /**
@@ -96,6 +98,10 @@ export interface Message {
    * Identifies this message type and the specific subinterface which it conforms to.
    */
   type: MessageType;
+}
+
+export interface SharedMapEventMessage extends Message {
+  event: SharedMapChangeEvent;
 }
 
 /**

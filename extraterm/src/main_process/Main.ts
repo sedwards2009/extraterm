@@ -13,18 +13,17 @@ import * as SourceMapSupport from "source-map-support";
 
 import * as child_process from "child_process";
 import { Command } from "commander";
-import { app, BrowserWindow, dialog } from "electron";
+import { app, dialog } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
 import { later } from "extraterm-later";
 
-import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
+import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
 import { SystemConfig, FontInfo, GeneralConfig, TitleBarStyle, ConfigDatabase, SYSTEM_CONFIG } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import { ThemeManager } from "../theme/ThemeManager";
-import * as Messages from "../WindowMessages";
 import { MainExtensionManager } from "./extension/MainExtensionManager";
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { getFonts } from "./FontList";
@@ -39,7 +38,7 @@ import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHand
 import { MainIpc } from "./MainIpc";
 import { MainDesktop } from "./MainDesktop";
 import { registerInternalCommands } from "./InternalMainCommands";
-import { MainWindow } from "./MainWindow";
+import { SharedMap } from "../shared_map/SharedMap";
 
 
 SourceMapSupport.install();
@@ -58,6 +57,7 @@ const _log = getLogger("main");
 
 async function main(): Promise<void> {
   let failed = false;
+  const sharedMap = new SharedMap();
   const configDatabase = new ConfigDatabaseImpl(getUserSettingsDirectory());
   configDatabase.init();
 
@@ -140,7 +140,7 @@ async function main(): Promise<void> {
   registerInternalCommands(extensionManager, mainDesktop);
 
   const mainIpc = setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
-    keybindingsIOManager, themeManager, ptyManager);
+    keybindingsIOManager, themeManager, ptyManager, sharedMap);
 
   const localHttpServer = await setupLocalHttpServer(bulkFileStorage);
   const commandRequestHandler = setupHttpCommandRequestHandler(mainDesktop, extensionManager, mainIpc, localHttpServer);
@@ -311,51 +311,11 @@ function setupOSX(): void {
 
 function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileStorage,
   extensionManager: MainExtensionManager, globalKeybindingsManager: GlobalKeybindingsManager, mainDesktop: MainDesktop,
-  keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, ptyManager: PtyManager): MainIpc {
+  keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, ptyManager: PtyManager,
+  sharedMap: SharedMap): MainIpc {
 
-  const mainIpc = new MainIpc(configDatabase, bulkFileStorage,
-    extensionManager, ptyManager,keybindingsIOManager,
-    mainDesktop, themeManager, globalKeybindingsManager);
-
-  extensionManager.onDesiredStateChanged(() => {
-    mainIpc.sendExtensionDesiredStateMessage();
-  });
-
-  bulkFileStorage.onWriteBufferSize((event: BufferSizeEvent) => {
-    mainIpc.sendBulkFileWriteBufferSizeEvent(event);
-  });
-
-  bulkFileStorage.onClose((event: CloseEvent) => {
-    mainIpc.sendBulkFileStateChangeEvent(event);
-  });
-
-  mainDesktop.onAboutSelected(() => {
-    for (const win of mainDesktop.getWindows()) {
-      mainIpc.sendCommandToWindow("extraterm:window.openAbout", win.id, null);
-    }
-  });
-
-  mainDesktop.onPreferencesSelected(() => {
-    for (const win of mainDesktop.getWindows()) {
-      mainIpc.sendCommandToWindow("extraterm:window.openSettings", win.id, null);
-    }
-  });
-
-  mainDesktop.onQuitSelected(() => {
-    mainIpc.sendQuitApplicationRequest();
-  });
-
-  mainDesktop.onDevToolsClosed((devToolsWindow: MainWindow)=> {
-    sendDevToolStatus(devToolsWindow.id, false);
-  });
-
-  mainDesktop.onDevToolsOpened((devToolsWindow: MainWindow)=> {
-    sendDevToolStatus(devToolsWindow.id, true);
-  });
-
-  mainDesktop.onWindowClosed((webContentsId: number) => {
-    mainIpc.cleanUpPtyWindow(webContentsId);
-  });
+  const mainIpc = new MainIpc(configDatabase, bulkFileStorage, extensionManager, ptyManager,keybindingsIOManager,
+    mainDesktop, themeManager, globalKeybindingsManager, sharedMap);
 
   mainIpc.start();
   return mainIpc;
@@ -376,12 +336,6 @@ function setupDefaultSessions(configDatabase: ConfigDatabaseImpl, ptyManager: Pt
     const newSessions = ptyManager.getDefaultSessions();
     configDatabase.setSessionConfig(newSessions);
   }
-}
-
-function sendDevToolStatus(windowId: number, open: boolean): void {
-  const window = BrowserWindow.fromId(windowId);
-  const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
-  window.webContents.send(Messages.CHANNEL_NAME, msg);
 }
 
 main();

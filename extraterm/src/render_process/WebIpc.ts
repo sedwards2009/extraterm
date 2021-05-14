@@ -16,6 +16,7 @@ import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
 import { LogicalKeybindingsName, CustomKeybindingsSet } from '../keybindings/KeybindingsTypes';
 import { ClipboardType } from '../WindowMessages';
+import * as SharedMap from "../shared_map/SharedMap";
 
 const _log = getLogger("WebIPC");
 
@@ -75,7 +76,7 @@ function request(msg: Messages.Message, replyType: Messages.MessageType): Promis
     _log.debug("request: ${Messages.MessageType[msg.type]} => ", msg);
   }
   ipc.send(Messages.CHANNEL_NAME, msg);
-  return new Promise<Messages.Message>( (resolve,cancel) => {
+  return new Promise<Messages.Message>( (resolve, cancel) => {
     promiseQueue.push( { promiseResolve: resolve, messageType: replyType } );
   });
 }
@@ -300,6 +301,14 @@ export function commandResponse(uuid: string, result: any, exception: Error): vo
     uuid,
     result,
     exception: exception?.message
+  };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function sendSharedMapEvent(ev: SharedMap.ChangeEvent): void {
+  const msg: Messages.SharedMapEventMessage = {
+    type: Messages.MessageType.SHARED_MAP_EVENT,
+    event: ev
   };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
