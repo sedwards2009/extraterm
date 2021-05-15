@@ -4,12 +4,12 @@
 import { Logger, getLogger } from "extraterm-logging";
 import { CustomElement } from 'extraterm-web-component-decorators';
 import { SettingsBase } from '../SettingsBase';
-import { ConfigKey } from '../../../Config';
 
 import { ExtensionSettingsUi, EVENT_ENABLE_EXTENSION, EVENT_DISABLE_EXTENSION } from './ExtensionSettingsUi';
 import { ExtensionManager } from "../../extension/InternalTypes";
 import { Disposable } from '@extraterm/extraterm-extension-api';
 import { ExtensionMetadataAndState } from "./ExtensionMetadataAndStateType";
+import { ConfigKey } from "../../../ConfigDatabase";
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
 

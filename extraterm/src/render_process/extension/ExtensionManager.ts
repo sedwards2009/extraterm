@@ -32,7 +32,7 @@ import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 import { SplitLayout } from "../SplitLayout";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { focusElement } from "../DomUtils";
-import { ConfigDatabase, SYSTEM_CONFIG } from "../../Config";
+import { ConfigDatabase } from "../../ConfigDatabase";
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;

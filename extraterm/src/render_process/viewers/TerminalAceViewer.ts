@@ -57,9 +57,10 @@ import { TextEditor } from './TextEditorType';
 import { TerminalVisualConfig, AcceptsTerminalVisualConfig } from '../TerminalVisualConfig';
 import { ConfigCursorStyle } from '../../Config';
 import { dispatchContextMenuRequest, ContextMenuType, dispatchHyperlinkClick } from '../command/CommandUtils';
-import { ConfigDatabase, GENERAL_CONFIG, MouseButtonAction } from "../../Config";
+import { MouseButtonAction } from "../../Config";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState";
 import { focusElement } from "../DomUtils";
+import { ConfigDatabase } from "../../ConfigDatabase";
 
 const ID = "EtTerminalAceViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";

@@ -49,8 +49,7 @@ import * as Messages from "../WindowMessages";
 import { TerminalCanvas } from "./TerminalCanvas";
 import { SidebarLayout, BorderSide } from "./gui/SidebarLayout";
 import {FrameFinder} from "./FrameFinderType";
-import { ConfigDatabase, CommandLineAction, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG,
-  MouseButtonAction } from "../Config";
+import { CommandLineAction, MouseButtonAction } from "../Config";
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from "./extension/InternalTypes";
@@ -58,6 +57,7 @@ import { TerminalVisualConfig } from "./TerminalVisualConfig";
 import { ClipboardType } from "../WindowMessages";
 import { ScreenChangeEvent, TitleChangeEvent, DataEvent, WriteBufferSizeEvent } from "term-api";
 import { focusElement } from "./DomUtils";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 const log = LogDecorator;
 

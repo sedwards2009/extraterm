@@ -8,11 +8,11 @@ import { Event } from "@extraterm/extraterm-extension-api";
 import { BrowserWindow, Menu, Tray, MenuItemConstructorOptions, App } from "electron";
 import { Logger, getLogger } from "extraterm-logging";
 
-import { ConfigChangeEvent, ConfigDatabase, GeneralConfig, GENERAL_CONFIG } from "../Config";
 import { MainWindow, OpenWindowOptions } from "./MainWindow";
 import { ThemeManager } from "../theme/ThemeManager";
 import { EventEmitter } from "../utils/EventEmitter";
 import { MainWindowImpl } from "./MainWindowImpl";
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 
 const isLinux = process.platform === "linux";

@@ -5,10 +5,11 @@
 import { CustomElement } from 'extraterm-web-component-decorators';
 
 import { GeneralSettingsUi } from './GeneralSettingsUi';
-import { GeneralConfig, ConfigKey, GENERAL_CONFIG } from '../../Config';
+import { GeneralConfig, GENERAL_CONFIG } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
+import { ConfigKey } from "../../ConfigDatabase";
 
 export const GENERAL_SETTINGS_TAG = "et-general-settings";
 

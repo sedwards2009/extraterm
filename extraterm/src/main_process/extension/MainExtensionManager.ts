@@ -15,10 +15,10 @@ import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
 import { isMainProcessExtension, isSupportedOnThisPlatform } from "../../render_process/extension/InternalTypes";
-import { ConfigDatabase, GENERAL_CONFIG, SYSTEM_CONFIG } from "../../Config";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { MainInternalExtensionContext, LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution,
   LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
+import { ConfigDatabase } from "../../ConfigDatabase";
 
 
 interface ActiveExtension {

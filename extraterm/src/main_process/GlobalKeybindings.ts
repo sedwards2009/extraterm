@@ -6,13 +6,14 @@
 import * as _ from "lodash";
 
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
-import { ConfigDatabase, ConfigChangeEvent, GENERAL_CONFIG } from "../Config";
+import { GENERAL_CONFIG } from "../Config";
 import { KeyStroke, KeybindingsMapping } from "../keybindings/KeybindingsMapping";
 import { getLogger, Logger } from "extraterm-logging";
 import { EventEmitter } from "../utils/EventEmitter";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { globalShortcut } from "electron";
 import { doLater } from "extraterm-later";
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 
 export class GlobalKeybindingsManager {

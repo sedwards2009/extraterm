@@ -3,22 +3,21 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as fs from 'fs';
-import * as path from 'path';
-import * as _ from 'lodash';
-import {app, BrowserWindow } from 'electron';
-import { createUuid } from 'extraterm-uuid';
+import * as fs from "fs";
+import * as path from "path";
+import * as _ from "lodash";
+import { app } from "electron";
 
+import { createUuid } from "extraterm-uuid";
 import { Logger, getLogger } from "extraterm-logging";
-
-import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME, FALLBACK_SYNTAX_THEME } from '../theme/Theme';
-import { GeneralConfig, ConfigChangeEvent, FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle,
-  WindowBackgroundMode, GENERAL_CONFIG, SYSTEM_CONFIG, ConfigDatabase } from '../Config';
-import * as Messages from '../WindowMessages';
-import { ThemeManager } from '../theme/ThemeManager';
-import { KeybindingsIOManager } from './KeybindingsIOManager';
-import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from '../keybindings/KeybindingsTypes';
-import { ConfigDatabaseImpl } from './ConfigDatabaseImpl';
+import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME, FALLBACK_SYNTAX_THEME } from "../theme/Theme";
+import { GeneralConfig, FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle,
+  WindowBackgroundMode, GENERAL_CONFIG } from "../Config";
+import { ThemeManager } from "../theme/ThemeManager";
+import { KeybindingsIOManager } from "./KeybindingsIOManager";
+import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from "../keybindings/KeybindingsTypes";
+import { ConfigDatabaseImpl } from "./ConfigDatabaseImpl";
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
 const PATHS_CONFIG_FILENAME = "application_paths.json";
@@ -267,7 +266,7 @@ function sanitizeGeneralConfig(configDatabase: ConfigDatabase, themeManager: The
   }
 
   sanitizeField(generalConfig, "themeGUI", "two-dark-ui");
-  if (generalConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(generalConfig.themeGUI), 'gui')) {
+  if (generalConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(generalConfig.themeGUI), "gui")) {
     generalConfig.themeGUI = "two-dark-ui";
   }
 

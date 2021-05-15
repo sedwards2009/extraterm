@@ -9,12 +9,13 @@ import { later } from "extraterm-later";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { BrowserWindow, screen } from "electron";
 
-import { ConfigDatabase, GeneralConfig, GENERAL_CONFIG, SingleWindowConfiguration } from "../Config";
+import { SingleWindowConfiguration } from "../Config";
 import * as ResourceLoader from "../ResourceLoader";
 import { MainWindow, OpenWindowOptions } from "./MainWindow";
 import { ThemeManager } from "../theme/ThemeManager";
 import { bestOverlap } from "./RectangleMatch";
 import { EventEmitter } from "../utils/EventEmitter";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";

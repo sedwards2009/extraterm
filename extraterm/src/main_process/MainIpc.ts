@@ -10,7 +10,6 @@ import { getLogger, Logger, log } from "extraterm-logging";
 import { createUuid } from 'extraterm-uuid';
 
 import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
-import { ConfigDatabase } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import * as ThemeTypes from "../theme/Theme";
 import { ThemeManager, GlobalVariableMap } from "../theme/ThemeManager";
@@ -22,6 +21,7 @@ import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { MainDesktop } from "./MainDesktop";
 import * as SharedMap from "../shared_map/SharedMap";
 import { MainWindow } from "./MainWindow";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 
 const LOG_FINE = false;

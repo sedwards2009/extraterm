@@ -33,7 +33,6 @@ import * as ViewerElementTypes from "./viewers/ViewerElementTypes";
 import { EtViewerTab } from "./ViewerTab";
 import { PtyIpcBridge } from "./PtyIpcBridge";
 import { ExtensionManager, ViewerTabDisplay } from "./extension/InternalTypes";
-import { ConfigDatabase, SESSION_CONFIG, } from "../Config";
 import { trimBetweenTags } from "extraterm-trim-between-tags";
 import { NewTerminalContextArea } from "./NewTerminalContextArea";
 import { CommandAndShortcut } from "./command/CommandPalette";
@@ -41,6 +40,7 @@ import { dispatchContextMenuRequest, ContextMenuType, ExtensionContextOverride }
 import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
 import { doLater } from "extraterm-later";
 import { focusElement } from "./DomUtils";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 const VisualState = ViewerElementTypes.VisualState;
 

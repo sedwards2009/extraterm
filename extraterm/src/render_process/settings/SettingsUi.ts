@@ -6,7 +6,6 @@
 import Component from 'vue-class-component';
 import Vue from 'vue';
 
-import { ConfigDatabase } from '../../Config';
 import * as ThemeTypes from '../../theme/Theme';
 import { APPEARANCE_SETTINGS_TAG } from './AppearanceSettings';
 import { FRAME_SETTINGS_TAG } from './frames/FrameSettings';
@@ -21,6 +20,7 @@ import { VUE_TERMINAL_ACE_VIEWER_ELEMENT_TAG } from './VueTerminalAceViewerEleme
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
 import { EXTENSION_SETTINGS_TAG } from './extensions/ExtensionSettings';
+import { ConfigDatabase } from "../../ConfigDatabase";
 
 
 for (const el of [

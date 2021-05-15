@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -128,49 +128,3 @@ export interface FontInfo {
   name: string;
   postscriptName: string;
 }
-
-export interface ConfigChangeEvent {
-  key: string;
-  newConfig: any;
-  oldConfig: any;
-}
-
-export type ConfigKey = string;
-
-
-/**
- * Interface for distributing configuration changes.
- */
-export interface ConfigDatabase {
-  getGeneralConfig(): DeepReadonly<GeneralConfig>;
-  getSessionConfig(): DeepReadonly<SessionConfiguration[]>;
-  getCommandLineActionConfig(): DeepReadonly<CommandLineAction[]>;
-  getSystemConfig(): DeepReadonly<SystemConfig>;
-
-  getGeneralConfigCopy(): GeneralConfig;
-  getSessionConfigCopy(): SessionConfiguration[];
-  getCommandLineActionConfigCopy(): CommandLineAction[];
-  getSystemConfigCopy(): SystemConfig;
-
-  /**
-   * Register a listener to hear when the config has changed.
-   *
-   * Be sure to dispose of the registration once you are finished with it,
-   * otherwise this connect may keep your listener object alive.
-   */
-  onChange: Event<ConfigChangeEvent>;
-
-  /**
-   * Set a new application wide config.
-   *
-   * Note that the full effects of this method are asynchronous with respect
-   * to the parts of the application which run in different threads/processes.
-   * @param newConfig the new config object.
-   */
-  setGeneralConfig(newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void;
-  setSessionConfig(newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void;
-  setCommandLineActionConfig(newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void;
-  setSystemConfig(newConfig: SystemConfig | DeepReadonly<SystemConfig>): void;
-}
-
-export const SHARED_MAP_CONFIG_NAMESPACE = "extraterm";

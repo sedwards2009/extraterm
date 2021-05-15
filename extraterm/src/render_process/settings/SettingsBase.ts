@@ -1,12 +1,13 @@
 /**
  * Copyright 2018-2021 Simon Edwards <simon@simonzone.com>
  */
-import { COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, ConfigDatabase, ConfigKey, GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG } from '../../Config';
+import { COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG } from '../../Config';
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import Vue from 'vue';
 import { log } from 'extraterm-logging/dist/LogDecorator';
 import { Disposable } from "@extraterm/extraterm-extension-api";
+import { ConfigChangeEvent, ConfigDatabase, ConfigKey } from "../../ConfigDatabase";
 
 
 export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {

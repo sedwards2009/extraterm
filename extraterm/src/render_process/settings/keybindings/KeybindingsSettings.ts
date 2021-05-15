@@ -5,7 +5,7 @@
 import { CustomElement } from 'extraterm-web-component-decorators';
 
 import { KeybindingsSettingsUi } from './KeybindingsSettingsUi';
-import { ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
+import { GENERAL_CONFIG, GeneralConfig } from '../../../Config';
 import { log, Logger, getLogger } from "extraterm-logging";
 import { SettingsBase } from '../SettingsBase';
 import * as WebIpc from '../../WebIpc';
@@ -16,6 +16,7 @@ import { ExtensionManager } from '../../extension/InternalTypes';
 import { ExtensionCommandContribution } from '../../../ExtensionMetadata';
 import { Disposable } from '@extraterm/extraterm-extension-api';
 import { LogicalKeybindingsName } from 'extraterm/src/keybindings/KeybindingsTypes';
+import { ConfigKey } from "../../../ConfigDatabase";
 
 export const KEY_BINDINGS_SETTINGS_TAG = "et-key-bindings-settings";
 

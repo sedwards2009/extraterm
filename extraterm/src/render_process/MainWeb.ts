@@ -18,8 +18,8 @@ import './gui/All'; // Need to load all of the GUI web components into the brows
 import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType, EVENT_HYPERLINK_CLICK, HyperlinkEventDetail } from './command/CommandUtils';
-
-import {ConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo, CommandLineAction, COMMAND_LINE_ACTIONS_CONFIG, SHARED_MAP_CONFIG_NAMESPACE} from '../Config';
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
+import { SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, FontInfo, } from '../Config';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
@@ -88,7 +88,8 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   startUpWebIpc();
 
   const sharedMap = await setupSharedMap();
-  const configDatabase = new ConfigDatabaseImpl(sharedMap);
+  const configDatabase = new ConfigDatabase(sharedMap);
+  configDatabase.start();
   const keybindingsManager = new KeybindingsManagerImpl();
 
   configDatabase.onChange( (ev: ConfigChangeEvent) => {
@@ -126,11 +127,11 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
 
   dpiWatcher.onChange(newDpi => handleDpiChange(mainWebUi, newDpi));
 
-  if (configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
+  if (configDatabase.getSessionConfig().length !== 0) {
     if (bareWindow) {
       mainWebUi.render();
     } else {
-      await mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getConfig(SESSION_CONFIG)[0].uuid });
+      await mainWebUi.commandNewTerminal({ sessionUuid: configDatabase.getSessionConfig()[0].uuid });
     }
   } else {
     mainWebUi.commandOpenSettingsTab("session");
@@ -497,7 +498,7 @@ function registerCommands(extensionManager: ExtensionManager, commandPalette: Co
   extensionManager.getExtensionContextByName("internal-commands")._debugRegisteredCommands();
 }
 
-function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: ExtensionManager): void {
+function startUpSessions(configDatabase: ConfigDatabase, extensionManager: ExtensionManager): void {
   const disposables = new DisposableHolder();
 
   const createSessionCommands = (sessionConfigs: SessionConfiguration[]): void => {
@@ -533,7 +534,7 @@ function startUpSessions(configDatabase: ConfigDatabaseImpl, extensionManager: E
     }
   });
 
-  const sessionConfig = <SessionConfiguration[]> configDatabase.getConfig(SESSION_CONFIG);
+  const sessionConfig = <SessionConfiguration[]> configDatabase.getSessionConfig();
   createSessionCommands(sessionConfig);
 }
 
@@ -803,106 +804,6 @@ function startUpApplicationContextMenu(extensionManager: ExtensionManager,
 
   return applicationContextMenu;
 }
-
-class ConfigDatabaseImpl implements ConfigDatabase {
-  private _log: Logger;
-  #sharedMap: SharedMap.SharedMap = null;
-  #onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
-  onChange: Event<ConfigChangeEvent>;
-
-  constructor(sharedMap: SharedMap.SharedMap) {
-    this._log = getLogger("ConfigDatabaseImpl", this);
-    this.#sharedMap = sharedMap;
-    this.onChange = this.#onChangeEventEmitter.event;
-
-    this.#sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
-      if (ev.type !== SharedMap.ChangeType.CHANGED || ev.namespace !== SHARED_MAP_CONFIG_NAMESPACE) {
-        return;
-      }
-
-      this.#onChangeEventEmitter.fire({
-        key: ev.key,
-        newConfig: ev.value,
-        oldConfig: ev.oldValue,
-      });
-    });
-  }
-
-  getConfig(key: ConfigKey): any {
-    const result = this.#sharedMap.get(SHARED_MAP_CONFIG_NAMESPACE, key);
-    if (result == null) {
-      this._log.warn("Unable to find config for key ", key);
-    } else {
-      return result;
-    }
-  }
-
-  getConfigCopy(key: ConfigKey): any {
-    const data = this.getConfig(key);
-    if (data == null) {
-      return null;
-    }
-    return _.cloneDeep(data);
-  }
-
-  getGeneralConfig(): DeepReadonly<GeneralConfig> {
-    return <DeepReadonly<GeneralConfig>> this.getConfig(GENERAL_CONFIG);
-  }
-
-  getSessionConfig(): DeepReadonly<SessionConfiguration[]> {
-    return <DeepReadonly<SessionConfiguration[]>> this.getConfig(SESSION_CONFIG);
-  }
-
-  getCommandLineActionConfig(): DeepReadonly<CommandLineAction[]> {
-    return <DeepReadonly<CommandLineAction[]>> this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
-  }
-
-  getSystemConfig(): DeepReadonly<SystemConfig> {
-    return <DeepReadonly<SystemConfig>> this.getConfig(SYSTEM_CONFIG);
-  }
-
-  getGeneralConfigCopy(): GeneralConfig {
-    return <GeneralConfig> this.getConfigCopy(GENERAL_CONFIG);
-  }
-
-  getSessionConfigCopy(): SessionConfiguration[] {
-    return <SessionConfiguration[]> this.getConfigCopy(SESSION_CONFIG);
-  }
-
-  getCommandLineActionConfigCopy(): CommandLineAction[] {
-    return <CommandLineAction[]> this.getConfigCopy(COMMAND_LINE_ACTIONS_CONFIG);
-  }
-
-  getSystemConfigCopy(): SystemConfig {
-    return <SystemConfig> this.getConfigCopy(SYSTEM_CONFIG);
-  }
-
-  setGeneralConfig(newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void {
-    this.setConfig(GENERAL_CONFIG, newConfig);
-  }
-
-  setSessionConfig(newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void {
-    this.setConfig(SESSION_CONFIG, newConfig);
-  }
-
-  setCommandLineActionConfig(newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void {
-    this.setConfig(COMMAND_LINE_ACTIONS_CONFIG, newConfig);
-  }
-
-  setSystemConfig(newConfig: SystemConfig | DeepReadonly<SystemConfig>): void {
-    this.setConfig(SYSTEM_CONFIG, newConfig);
-  }
-
-  setConfig(key: ConfigKey, newConfig: any): void {
-    const oldConfig = this.getConfig(key);
-    if (_.isEqual(oldConfig, newConfig)) {
-      return;
-    }
-    this.#sharedMap.set(SHARED_MAP_CONFIG_NAMESPACE, key, newConfig);
-    this.#onChangeEventEmitter.fire({ key, oldConfig, newConfig });
-  }
-}
-
 
 class KeybindingsManagerImpl implements KeybindingsManager {
   private _log: Logger;

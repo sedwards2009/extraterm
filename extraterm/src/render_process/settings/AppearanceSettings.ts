@@ -6,7 +6,7 @@ import { CustomElement } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { AppearanceSettingsUi } from './AppearanceSettingsUi';
-import { FontInfo, GeneralConfig, GENERAL_CONFIG, ConfigKey, SYSTEM_CONFIG, SystemConfig } from '../../Config';
+import { FontInfo, GeneralConfig, GENERAL_CONFIG, SYSTEM_CONFIG, SystemConfig } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
@@ -15,6 +15,7 @@ import { shell } from 'electron';
 import * as WebIpc from '../WebIpc';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { ConfigKey } from "../../ConfigDatabase";
 
 export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 

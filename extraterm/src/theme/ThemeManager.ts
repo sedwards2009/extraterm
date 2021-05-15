@@ -14,7 +14,6 @@ import { Color as UtilColor } from 'extraterm-color-utilities';
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_UI_THEME, cssFileToFilename, cssFileToExtension,
   SYNTAX_CSS_THEME, TERMINAL_CSS_THEME} from './Theme';
-import { ConfigDatabase, GENERAL_CONFIG, GeneralConfig } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
@@ -23,6 +22,7 @@ import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
 // So we reuse the `node-sass` typing.
 import * as DartSass from 'sass';
 import { Importer, ImporterReturnType, renderSync, SassError } from 'node-sass';
+import { ConfigDatabase } from '../ConfigDatabase';
 
 const Sass = {
   renderSync: <typeof renderSync>DartSass.renderSync

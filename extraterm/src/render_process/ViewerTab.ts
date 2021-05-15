@@ -22,11 +22,11 @@ import { ViewerElement } from "./viewers/ViewerElement";
 import { RefreshLevel, Mode, VisualState } from "./viewers/ViewerElementTypes";
 import * as VirtualScrollArea from "./VirtualScrollArea";
 import * as WebIpc from "./WebIpc";
-import { ConfigDatabase } from "../Config";
 import { ExtensionManager } from "./extension/InternalTypes";
 import { ResizeNotifier } from "extraterm-resize-notifier";
 import { focusElement } from "./DomUtils";
 import { KeybindingsManager } from "./keybindings/KeyBindingsManager";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;

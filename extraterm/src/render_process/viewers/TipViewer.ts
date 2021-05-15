@@ -14,7 +14,7 @@ import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 import {Logger, getLogger} from "extraterm-logging";
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
-import { ConfigDatabase, ShowTipsStrEnum } from '../../Config';
+import { ShowTipsStrEnum } from '../../Config';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {ViewerElement} from '../viewers/ViewerElement';
@@ -22,6 +22,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
+import { ConfigDatabase } from 'extraterm/src/ConfigDatabase';
 
 const ID = "EtTipViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";

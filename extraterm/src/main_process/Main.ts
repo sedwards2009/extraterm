@@ -21,7 +21,7 @@ import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
 import { later } from "extraterm-later";
 
 import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
-import { SystemConfig, FontInfo, GeneralConfig, TitleBarStyle, ConfigDatabase, SYSTEM_CONFIG } from "../Config";
+import { SystemConfig, FontInfo, GeneralConfig, TitleBarStyle } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import { ThemeManager } from "../theme/ThemeManager";
 import { MainExtensionManager } from "./extension/MainExtensionManager";
@@ -39,6 +39,7 @@ import { MainIpc } from "./MainIpc";
 import { MainDesktop } from "./MainDesktop";
 import { registerInternalCommands } from "./InternalMainCommands";
 import { SharedMap } from "../shared_map/SharedMap";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 
 SourceMapSupport.install();
@@ -59,7 +60,7 @@ async function main(): Promise<void> {
   let failed = false;
   const sharedMap = new SharedMap();
   const configDatabase = new ConfigDatabaseImpl(getUserSettingsDirectory(), sharedMap);
-  configDatabase.init();
+  configDatabase.start();
 
   setupAppData();
   setupLogging();
