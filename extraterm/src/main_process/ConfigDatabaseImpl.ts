@@ -17,55 +17,56 @@ import {ConfigDatabase, ConfigKey, UserStoredConfig, ConfigChangeEvent, GeneralC
   GENERAL_CONFIG,
   SESSION_CONFIG,
   COMMAND_LINE_ACTIONS_CONFIG,
-  SYSTEM_CONFIG} from '../Config';
+  SYSTEM_CONFIG,
+  SHARED_MAP_CONFIG_NAMESPACE} from '../Config';
+import * as SharedMap from '../shared_map/SharedMap';
 
 const MAIN_CONFIG = "extraterm.json";
 
 
 export class ConfigDatabaseImpl implements ConfigDatabase {
   private _log: Logger;
-
-  #configDirectory: string;
-  #configDb = new Map<ConfigKey, any>();
+  #sharedMap: SharedMap.SharedMap = null;
   #onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
   onChange: Event<ConfigChangeEvent>;
 
-  constructor(configDirectory: string) {
+  #configDirectory: string;
+
+  constructor(configDirectory: string, sharedMap: SharedMap.SharedMap) {
     this._log = getLogger("ConfigDatabaseImpl", this);
-    this.#configDirectory = configDirectory;
+    this.#sharedMap = sharedMap;
     this.onChange = this.#onChangeEventEmitter.event;
+
+    this.#configDirectory = configDirectory;
   }
 
   init(): void {
     this._loadAllConfigs();
-  }
 
-  getAllConfigs(): {[key: string]: any; } {
-    // Wildcard fetch all.
-    const result = {};
-
-    for (const [dbKey, value] of this.#configDb.entries()) {
-      result[dbKey] = value;
-    }
-    freezeDeep(result);
-    return result;
-  }
-
-  getConfig(key: ConfigKey): any {
-    if (key === "*") {
-      return this.getAllConfigs();
-    } else {
-      const result = this.#configDb.get(key);
-      if (result == null) {
-        this._log.warn("Unable to find config for key ", key);
-      } else {
-        return result;
+    this.#sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
+      if (ev.type !== SharedMap.ChangeType.CHANGED || ev.namespace !== SHARED_MAP_CONFIG_NAMESPACE) {
+        return;
       }
+
+      this.#onChangeEventEmitter.fire({
+        key: ev.key,
+        newConfig: ev.value,
+        oldConfig: ev.oldValue,
+      });
+    });
+  }
+
+  private _getConfig(key: ConfigKey): any {
+    const result = this.#sharedMap.get(SHARED_MAP_CONFIG_NAMESPACE, key);
+    if (result == null) {
+      this._log.warn("Unable to find config for key ", key);
+    } else {
+      return result;
     }
   }
 
-  getConfigCopy(key: ConfigKey): any {
-    const data = this.getConfig(key);
+  private _getConfigCopy(key: ConfigKey): any {
+    const data = this._getConfig(key);
     if (data == null) {
       return null;
     }
@@ -73,85 +74,69 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
   }
 
   getGeneralConfig(): DeepReadonly<GeneralConfig> {
-    return <DeepReadonly<GeneralConfig>> this.getConfig(GENERAL_CONFIG);
+    return <DeepReadonly<GeneralConfig>> this._getConfig(GENERAL_CONFIG);
   }
 
   getSessionConfig(): DeepReadonly<SessionConfiguration[]> {
-    return <DeepReadonly<SessionConfiguration[]>> this.getConfig(SESSION_CONFIG);
+    return <DeepReadonly<SessionConfiguration[]>> this._getConfig(SESSION_CONFIG);
   }
 
   getCommandLineActionConfig(): DeepReadonly<CommandLineAction[]> {
-    return <DeepReadonly<CommandLineAction[]>> this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
+    return <DeepReadonly<CommandLineAction[]>> this._getConfig(COMMAND_LINE_ACTIONS_CONFIG);
   }
 
   getSystemConfig(): DeepReadonly<SystemConfig> {
-    return <DeepReadonly<SystemConfig>> this.getConfig(SYSTEM_CONFIG);
+    return <DeepReadonly<SystemConfig>> this._getConfig(SYSTEM_CONFIG);
   }
 
   getGeneralConfigCopy(): GeneralConfig {
-    return <GeneralConfig> this.getConfigCopy(GENERAL_CONFIG);
+    return <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
   }
 
   getSessionConfigCopy(): SessionConfiguration[] {
-    return <SessionConfiguration[]> this.getConfigCopy(SESSION_CONFIG);
+    return <SessionConfiguration[]> this._getConfigCopy(SESSION_CONFIG);
   }
 
   getCommandLineActionConfigCopy(): CommandLineAction[] {
-    return <CommandLineAction[]> this.getConfigCopy(COMMAND_LINE_ACTIONS_CONFIG);
+    return <CommandLineAction[]> this._getConfigCopy(COMMAND_LINE_ACTIONS_CONFIG);
   }
 
   getSystemConfigCopy(): SystemConfig {
-    return <SystemConfig> this.getConfigCopy(SYSTEM_CONFIG);
+    return <SystemConfig> this._getConfigCopy(SYSTEM_CONFIG);
   }
 
   setGeneralConfig(newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void {
-    this.setConfig(GENERAL_CONFIG, newConfig);
+    this._setConfig(GENERAL_CONFIG, newConfig);
   }
 
   setSessionConfig(newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void {
-    this.setConfig(SESSION_CONFIG, newConfig);
+    this._setConfig(SESSION_CONFIG, newConfig);
   }
 
   setCommandLineActionConfig(newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void {
-    this.setConfig(COMMAND_LINE_ACTIONS_CONFIG, newConfig);
+    this._setConfig(COMMAND_LINE_ACTIONS_CONFIG, newConfig);
   }
 
   setSystemConfig(newConfig: SystemConfig | DeepReadonly<SystemConfig>): void {
-    this.setConfig(SYSTEM_CONFIG, newConfig);
+    this._setConfig(SYSTEM_CONFIG, newConfig);
   }
 
-  setConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    if (key === "*") {
-      for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
-        this._setSingleConfigNoWrite(<ConfigKey> objectKey, newConfig[objectKey]);
-      }
-    } else {
-      this._setSingleConfigNoWrite(key, newConfig);
-    }
-  }
-
-  private _setSingleConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    const oldConfig = this.getConfig(key);
+  private _setConfigNoWrite(key: ConfigKey, newConfig: any): void {
+    const oldConfig = this._getConfig(key);
     if (_.isEqual(oldConfig, newConfig)) {
       return;
     }
-
-    if (Object.isFrozen(newConfig)) {
-      this.#configDb.set(key, newConfig);
-    } else {
-      this.#configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
-    }
-
-    this.#onChangeEventEmitter.fire({key, oldConfig, newConfig: this.getConfig(key)});
+    this.#sharedMap.set(SHARED_MAP_CONFIG_NAMESPACE, key, newConfig);
+    this.#onChangeEventEmitter.fire({key, oldConfig, newConfig: this._getConfig(key)});
   }
 
-  setConfig(key: ConfigKey, newConfig: any): void {
+  private _setConfig(key: ConfigKey, newConfig: any): void {
     if (newConfig == null) {
       this._log.warn("setConfig() newConfig is null for key ", key);
     }
 
-    this.setConfigNoWrite(key, newConfig);
-    if ([GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, SESSION_CONFIG, "*"].indexOf(key) !== -1) {
+    this._setConfigNoWrite(key, newConfig);
+    if ([GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, SESSION_CONFIG].indexOf(key) !== -1) {
       this._writeUserConfigFile();
     }
   }
@@ -164,9 +149,9 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
     userConfig.commandLineActions = null;
     userConfig.sessions = null;
 
-    this.setConfigNoWrite(GENERAL_CONFIG, userConfig);
-    this.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, commandLineActions);
-    this.setConfigNoWrite(SESSION_CONFIG, sessions);
+    this._setConfigNoWrite(GENERAL_CONFIG, userConfig);
+    this._setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, commandLineActions);
+    this._setConfigNoWrite(SESSION_CONFIG, sessions);
   }
 
   private _readUserConfigFile(): UserStoredConfig {
@@ -192,9 +177,9 @@ export class ConfigDatabaseImpl implements ConfigDatabase {
   }
 
   private _writeUserConfigFile(): void {
-    const cleanConfig = <UserStoredConfig> this.getConfigCopy(GENERAL_CONFIG);
-    cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
-    cleanConfig.sessions = this.getConfig(SESSION_CONFIG);
+    const cleanConfig = <UserStoredConfig> this._getConfigCopy(GENERAL_CONFIG);
+    cleanConfig.commandLineActions = this._getConfig(COMMAND_LINE_ACTIONS_CONFIG);
+    cleanConfig.sessions = this._getConfig(SESSION_CONFIG);
 
     const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
     fs.writeFileSync(this._getUserConfigFilename(), formattedConfig);

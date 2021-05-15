@@ -1289,7 +1289,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
 
     const key = this._mapEventToMouseButtonActionKey(ev);
     if (key != null) {
-      const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const generalConfig = this._configDatabase.getGeneralConfig();
       const action = <MouseButtonAction> generalConfig[key];
       if (action === "context_menu") {
         let activeHyperlinkURL: string = null;
@@ -1322,7 +1322,7 @@ export class TerminalViewer extends ViewerElement implements SupportsClipboardPa
   private _handleMouseUp(ev: MouseEvent): void {
     const key = this._mapEventToMouseButtonActionKey(ev);
     if (key != null) {
-      const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const generalConfig = this._configDatabase.getGeneralConfig();
       const action = <MouseButtonAction> generalConfig[key];
       if (action === "context_menu") {
         ev.preventDefault();

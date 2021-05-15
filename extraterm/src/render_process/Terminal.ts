@@ -394,7 +394,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
     }
 
     const commandLineActions: DeepReadonly<CommandLineAction[]> =
-      this._configDatabase.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
+      this._configDatabase.getCommandLineActionConfig() || [];
     for (const cla of commandLineActions) {
       if (this._commandLineActionMatches(commandLine, cla)) {
         switch (cla.frameRule) {
@@ -596,7 +596,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
   }
 
   private _showTip(): void {
-    const config = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
+    const config = this._configDatabase.getGeneralConfigCopy();
     switch (config.showTips) {
       case "always":
         break;
@@ -610,7 +610,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
 
     config.tipTimestamp = Date.now();
     config.tipCounter = config.tipCounter + 1;
-    this._configDatabase.setConfig(GENERAL_CONFIG, config);
+    this._configDatabase.setGeneralConfig(config);
 
     this._appendMimeViewer(TipViewer.MIME_TYPE, null);
   }
@@ -763,7 +763,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
       return;
     }
 
-    const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this._configDatabase.getGeneralConfig();
     const action = <MouseButtonAction> generalConfig[key];
 
     switch (action) {
@@ -882,7 +882,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
 
   private _handleBeforeSelectionChange(ev: {sourceMouse: boolean}): void {
     if (ev.sourceMouse) {
-      const generalConfig = this._configDatabase.getConfig("general");
+      const generalConfig = this._configDatabase.getGeneralConfig();
       if (generalConfig.autoCopySelectionToClipboard) {
         this._copyToClipboardLater.trigger();
       }
@@ -1458,7 +1458,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
       this._appendViewerElement(viewerElement);
 
       if (this._configDatabase != null) {
-        const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+        const config = this._configDatabase.getGeneralConfig();
         this._terminalCanvas.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
       this._emitDidAppendViewer(mimeViewerElement);

@@ -10,12 +10,11 @@
 
 import { BulkFileMetadata, BulkFileState, TerminalTheme, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 
-import * as Config from './Config';
-import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
-import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
+import { ThemeContents, ThemeInfo, ThemeType } from './theme/Theme';
+import { BulkFileIdentifier } from './main_process/bulk_file_handling/BulkFileStorage';
 import { ExtensionMetadata, ExtensionDesiredState } from './ExtensionMetadata';
 import { CustomKeybindingsSet, LogicalKeybindingsName, StackedKeybindingsSet } from './keybindings/KeybindingsTypes';
-import { ChangeEvent as SharedMapChangeEvent } from "./shared_map/SharedMap";
+import * as SharedMap from "./shared_map/SharedMap";
 
 
 /**
@@ -38,9 +37,6 @@ export enum MessageType {
   CLIPBOARD_READ_REQUEST,
   CLIPBOARD_READ,
   CLIPBOARD_WRITE,
-  CONFIG_REQUEST,
-  CONFIG,
-  CONFIG_BROADCAST,
   DEV_TOOLS_REQUEST,
   DEV_TOOLS_STATUS,
   EXECUTE_COMMAND_REQUEST,
@@ -88,6 +84,8 @@ export enum MessageType {
   WINDOW_READY,
   CLOSE_SPLASH,
   SHARED_MAP_EVENT,
+  SHARED_MAP_DUMP_REQUEST,
+  SHARED_MAP_DUMP,
 }
 
 /**
@@ -101,29 +99,14 @@ export interface Message {
 }
 
 export interface SharedMapEventMessage extends Message {
-  event: SharedMapChangeEvent;
+  event: SharedMap.ChangeEvent;
 }
 
-/**
- * A request from a render process to main requesting the configuration to be
- * sent. The response is a `ConfigMessage`.
- */
-export interface ConfigRequestMessage extends Message {
-  key: Config.ConfigKey;
+export interface SharedMapDumpRequestMessage extends Message {
 }
 
-/**
- * The current configuration.
- *
- * This message sent from the main process to a render process and is often a
- * response to a ConfigRequestMessage.
- */
-export interface ConfigMessage extends Message {
-  key: Config.ConfigKey;
-  /**
-   * The current configuration.
-   */
-  config: any;
+export interface SharedMapDumpMessage extends Message {
+  data: SharedMap.AllData;
 }
 
 /**

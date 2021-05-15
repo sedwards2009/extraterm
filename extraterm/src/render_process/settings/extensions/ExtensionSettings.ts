@@ -21,7 +21,7 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
   private _stateChangedDisposable: Disposable = null;
 
   constructor() {
-    super(ExtensionSettingsUi, []);
+    super(ExtensionSettingsUi);
     this._log = getLogger(EXTENSION_SETTINGS_TAG, this);
 
     this._getUi().$on(EVENT_ENABLE_EXTENSION, (extensionName: string): void => {

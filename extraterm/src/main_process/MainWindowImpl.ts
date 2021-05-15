@@ -89,7 +89,7 @@ export class MainWindowImpl implements MainWindow {
   }
 
   open(options: OpenWindowOptions=null): void {
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     const themeInfo = this.#themeManager.getTheme(generalConfig.themeGUI);
 
     // Create the browser window.
@@ -293,7 +293,7 @@ export class MainWindowImpl implements MainWindow {
   }
 
   private _getWindowDimensionsFromConfig(): SingleWindowConfiguration {
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     if (generalConfig.windowConfiguration == null) {
       return null;
     }
@@ -306,7 +306,7 @@ export class MainWindowImpl implements MainWindow {
 
   private _setupTransparentBackground(window: BrowserWindow): void {
     const setWindowComposition = () => {
-      const generalConfig = <GeneralConfig> this.#configDatabase.getConfig("general");
+      const generalConfig = this.#configDatabase.getGeneralConfig();
       const isWindowOpaque = generalConfig.windowBackgroundMode === "opaque";
       if (isWindows) {
         const accent = isWindowOpaque
@@ -335,7 +335,7 @@ export class MainWindowImpl implements MainWindow {
   }
 
   async restore(): Promise<void> {
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     const window = this._getBrowserWindow();
 
     const bounds = generalConfig.windowConfiguration[this.#configIndex];

@@ -11,6 +11,10 @@ import { getLogger, Logger, log } from "extraterm-logging";
 
 export type JsonValue = any;
 
+export interface AllData {
+  [namespace: string]: {[key: string]: JsonValue};
+}
+
 export enum ChangeType {
   ADDED = "ADDED",
   CHANGED = "CHANGED",
@@ -37,6 +41,11 @@ export interface ChangeEvent {
    * The affected key inside the namespace.
    */
   key: string;
+
+  /**
+   * The previous value.
+   */
+  oldValue: JsonValue;
 
   /**
    * The new value or the last value in the case of a delete event.
@@ -81,12 +90,33 @@ export class SharedMap {
   /**
    * Update this map with an event from a remote instance.
    */
-  @log
   sync(event: ChangeEvent): void {
     if (event.originUUID === this.#instanceUUID) {
       return;
     }
     this._applyEvent(event);
+  }
+
+  loadAll(allData: AllData): void {
+    this.#data = new PairKeyMap<string, string, JsonValue>();
+    for (const namespace of Object.getOwnPropertyNames(allData)) {
+      const namespaceObject = allData[namespace];
+      for (const key of Object.getOwnPropertyNames(namespaceObject)) {
+        this.#data.set(namespace, key, namespaceObject[key]);
+      }
+    }
+  }
+
+  dumpAll(): AllData {
+    const result = {};
+    for (const namespace of this.#data.level0Keys()) {
+      const namespaceObject = {};
+      result[namespace] = namespaceObject;
+      for (const key of this.#data.level1Keys(namespace)) {
+        namespaceObject[key] = this.#data.get(namespace, key);
+      }
+    }
+    return result;
   }
 
   private _applyEvent(event: ChangeEvent): void {
@@ -116,13 +146,13 @@ export class SharedMap {
    *
    * This will fire an event before the method returns.
    */
-  @log
   set(namespace: string, key: string, value: JsonValue): void {
-    const exists = this.#data.has(namespace, key);
+    const oldValue = this.#data.get(namespace, key);
     this._applyEvent({
-      type: exists ? ChangeType.CHANGED : ChangeType.ADDED,
+      type: oldValue === undefined ? ChangeType.ADDED : ChangeType.CHANGED,
       namespace,
       key,
+      oldValue,
       value,
       originUUID: this.#instanceUUID,
       isLocalOrigin: true,
@@ -151,7 +181,8 @@ export class SharedMap {
       type: ChangeType.DELETED,
       namespace,
       key,
-      value: oldValue,
+      oldValue: oldValue,
+      value: null,
       originUUID: this.#instanceUUID,
       isLocalOrigin: true,
     });

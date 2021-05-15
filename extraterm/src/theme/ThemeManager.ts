@@ -516,7 +516,7 @@ export class ThemeManager {
   }
 
   async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const config = this.#configDatabase.getGeneralConfig();
     switch (themeType) {
       case "gui":
         return await this.renderGui(config.themeGUI, config.themeTerminal, globalVariables);
@@ -655,7 +655,7 @@ export class ThemeManager {
   }
 
   async _renderSyntax(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const config = this.#configDatabase.getGeneralConfig();
 
     const syntaxThemeInfo = this.#themes.get(config.themeSyntax);
     const neededCssFileIds = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);

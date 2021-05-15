@@ -362,8 +362,8 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
         while (el != null && ! (el instanceof TabWidget)) {
           el = el.parentElement;
         }
-        if (this.#configDatabase.getConfig(SESSION_CONFIG).length !== 0) {
-          const sessionUuid = this.#configDatabase.getConfig(SESSION_CONFIG)[0].uuid;
+        if (this.#configDatabase.getSessionConfig().length !== 0) {
+          const sessionUuid = this.#configDatabase.getSessionConfig()[0].uuid;
           this.commandNewTerminal({sessionUuid});
         }
       }
@@ -434,7 +434,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   }
 
   private _showWindowControls(): boolean {
-    const systemConfig = <config.SystemConfig> this.#configDatabase.getConfig(config.SYSTEM_CONFIG);
+    const systemConfig = this.#configDatabase.getSystemConfig();
     return systemConfig.titleBarStyle === "theme" && process.platform !== "darwin";
   }
 
@@ -577,7 +577,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   }
 
   private _getSessionByUuid(sessionUuid: string): SessionConfiguration {
-    const sessions = this.#configDatabase.getConfigCopy(SESSION_CONFIG);
+    const sessions = this.#configDatabase.getSessionConfigCopy();
     for (const session of sessions) {
       if (session.uuid === sessionUuid) {
         return session;
@@ -587,7 +587,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   }
 
   private _getSessionByName(sessionName: string): SessionConfiguration {
-    const sessions = this.#configDatabase.getConfigCopy(SESSION_CONFIG);
+    const sessions = this.#configDatabase.getSessionConfigCopy();
     for (const session of sessions) {
       if (session.name === sessionName) {
         return session;
@@ -1030,7 +1030,7 @@ export class MainWebUi extends ThemeableElementBase implements ViewerTabDisplay 
   async commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}):
       Promise<void> {
 
-    let sessionConfiguration: SessionConfiguration = this.#configDatabase.getConfig(SESSION_CONFIG)[0];
+    let sessionConfiguration: SessionConfiguration = this.#configDatabase.getSessionConfig()[0];
     if (args.sessionUuid != null) {
       sessionConfiguration = this._getSessionByUuid(args.sessionUuid);
       if (sessionConfiguration == null) {

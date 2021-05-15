@@ -58,7 +58,7 @@ const _log = getLogger("main");
 async function main(): Promise<void> {
   let failed = false;
   const sharedMap = new SharedMap();
-  const configDatabase = new ConfigDatabaseImpl(getUserSettingsDirectory());
+  const configDatabase = new ConfigDatabaseImpl(getUserSettingsDirectory(), sharedMap);
   configDatabase.init();
 
   setupAppData();
@@ -102,13 +102,12 @@ async function main(): Promise<void> {
   const keybindingsIOManager = setupKeybindingsIOManager(configDatabase, extensionManager);
   const themeManager = setupThemeManager(configDatabase, extensionManager);
 
-  sanitizeAndInitializeConfigs(configDatabase, themeManager, keybindingsIOManager,
-    availableFonts);
+  sanitizeAndInitializeConfigs(configDatabase, themeManager, keybindingsIOManager, availableFonts);
   const generalConfig = configDatabase.getGeneralConfig();
   const titleBarStyle = generalConfig.titleBarStyle;
   const systemConfig = systemConfiguration(generalConfig, keybindingsIOManager, availableFonts, packageJson,
     titleBarStyle);
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+  configDatabase.setSystemConfig(systemConfig);
 
   if ( ! generalConfig.isHardwareAccelerated) {
     app.disableHardwareAcceleration();
@@ -204,7 +203,7 @@ function updateSystemConfigKeybindings(configDatabase: ConfigDatabaseImpl,
   const generalConfig = <GeneralConfig> configDatabase.getGeneralConfig();
   const systemConfig = <SystemConfig> configDatabase.getSystemConfigCopy();
   systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+  configDatabase.setSystemConfig(systemConfig);
 }
 
 function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: MainExtensionManager): ThemeManager {

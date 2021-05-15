@@ -18,7 +18,7 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
   private _log: Logger = null;
 
   constructor() {
-    super(FrameSettingsUi, [GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG]);
+    super(FrameSettingsUi);
     this._log = getLogger(FRAME_SETTINGS_TAG, this);
   }
 
@@ -49,13 +49,13 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
     const ui = this._getUi();
     const commandLineActions = _.cloneDeep(ui.commandLineActions);
     stripIds(commandLineActions);
-    this._updateConfig(COMMAND_LINE_ACTIONS_CONFIG, commandLineActions);
+    this.configDatabase.setCommandLineActionConfig(commandLineActions);
 
-    const generalConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
-    generalConfig.frameByDefault = ui.frameByDefault === "true" ? true : false;
+    const generalConfig = this.configDatabase.getGeneralConfigCopy();
+    generalConfig.frameByDefault = ui.frameByDefault === "true";
     generalConfig.frameRule = ui.frameRule;
     generalConfig.frameRuleLines = ui.frameRuleLines;
-    this._updateConfig(GENERAL_CONFIG, generalConfig);
+    this.configDatabase.setGeneralConfig(generalConfig);
   }
 }
 

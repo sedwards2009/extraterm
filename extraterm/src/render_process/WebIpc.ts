@@ -10,7 +10,6 @@ const ipc = Electron.ipcRenderer;
 
 import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
-import * as config from '../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
@@ -79,11 +78,6 @@ function request(msg: Messages.Message, replyType: Messages.MessageType): Promis
   return new Promise<Messages.Message>( (resolve, cancel) => {
     promiseQueue.push( { promiseResolve: resolve, messageType: replyType } );
   });
-}
-
-export function requestConfig(key: config.ConfigKey): Promise<Messages.ConfigMessage> {
-  const msg: Messages.ConfigRequestMessage = {type: Messages.MessageType.CONFIG_REQUEST, key};
-  return <Promise<Messages.ConfigMessage>> request(msg, Messages.MessageType.CONFIG);
 }
 
 export function requestThemeList(): Promise<Messages.ThemeListMessage> {
@@ -165,11 +159,6 @@ export function clipboardReadRequest(clipboardType=ClipboardType.DEFAULT): void 
 
 export function windowCloseRequest(): void {
   const msg: Messages.WindowCloseRequestMessage = { type: Messages.MessageType.WINDOW_CLOSE_REQUEST };
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
-export function sendConfig(key: config.ConfigKey, config: any): void {
-  const msg: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, key, config };
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
@@ -311,4 +300,9 @@ export function sendSharedMapEvent(ev: SharedMap.ChangeEvent): void {
     event: ev
   };
   ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function requestSharedMapDump(): Promise<Messages.SharedMapDumpMessage> {
+  const msg: Messages.SharedMapDumpRequestMessage = { type: Messages.MessageType.SHARED_MAP_DUMP_REQUEST };
+  return <Promise<Messages.SharedMapDumpMessage>> request(msg, Messages.MessageType.SHARED_MAP_DUMP);
 }

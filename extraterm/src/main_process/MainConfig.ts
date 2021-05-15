@@ -344,33 +344,9 @@ function distributeUserStoredConfig(configDatabase: ConfigDatabaseImpl,
         if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
           const systemConfig = configDatabase.getSystemConfigCopy();
           systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(newGeneralConfig.keybindingsName);
-          configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+          configDatabase.setSystemConfig(systemConfig);
         }
       }
     }
-
-    broadcastConfigToWindows(event);
   });
-}
-
-function broadcastConfigToWindows(event: ConfigChangeEvent): void {
-  const newConfigMsg: Messages.ConfigMessage = {
-    type: Messages.MessageType.CONFIG_BROADCAST,
-    key: event.key,
-    config: event.newConfig
-  };
-  sendMessageToAllWindows(newConfigMsg);
-}
-
-function sendMessageToAllWindows(msg: Messages.Message): void {
-  if (LOG_FINE) {
-    _log.debug("Broadcasting message to all windows");
-  }
-
-  for (const window of BrowserWindow.getAllWindows()) {
-    if (LOG_FINE) {
-      _log.debug(`Broadcasting message to window ${window.id}`);
-    }
-    window.webContents.send(Messages.CHANNEL_NAME, msg);
-  }
 }

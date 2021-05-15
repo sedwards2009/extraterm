@@ -222,9 +222,9 @@ export class MainExtensionManager {
     this._startExtension(metadata);
     this._extensionDesiredState[metadata.name] = true;
 
-    const generalConfig = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
+    const generalConfig = this._configDatabase.getGeneralConfigCopy();
     generalConfig.activeExtensions[metadata.name] = true;
-    this._configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+    this._configDatabase.setGeneralConfig(generalConfig);
 
     this._desiredStateChangeEventEmitter.fire();
   }
@@ -254,9 +254,9 @@ export class MainExtensionManager {
     this._stopExtension(activeExtension);
     this._extensionDesiredState[metadata.name] = false;
 
-    const generalConfig = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
+    const generalConfig = this._configDatabase.getGeneralConfigCopy();
     generalConfig.activeExtensions[metadata.name] = false;
-    this._configDatabase.setConfig(GENERAL_CONFIG, generalConfig);
+    this._configDatabase.setGeneralConfig(generalConfig);
 
     this._desiredStateChangeEventEmitter.fire();
   }

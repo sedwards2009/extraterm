@@ -23,11 +23,11 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
   private _updateLater: DebouncedDoLater = null;
 
   constructor() {
-    super(SessionSettingsUi, [SESSION_CONFIG]);
+    super(SessionSettingsUi);
     this._log = getLogger(SESSION_SETTINGS_TAG, this);
 
     this._updateLater = new DebouncedDoLater(() => {
-      this._updateConfig(SESSION_CONFIG, this._getUi().sessions);
+      this.configDatabase.setSessionConfig(this._getUi().sessions);
     }, 500);
   }
 

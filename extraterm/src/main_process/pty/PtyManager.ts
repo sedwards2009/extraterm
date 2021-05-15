@@ -70,7 +70,7 @@ export class PtyManager {
   onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
   createPty(sessionUuid: string, sessionOptions: CreateSessionOptions): number {
-    const sessions = this._configDatabase.getConfig(SESSION_CONFIG);
+    const sessions = this._configDatabase.getSessionConfig();
     let sessionConfiguration: SessionConfiguration = null;
     for (sessionConfiguration of sessions) {
       if (sessionConfiguration.uuid === sessionUuid) {

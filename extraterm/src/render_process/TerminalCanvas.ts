@@ -359,7 +359,7 @@ export class TerminalCanvas extends ThemeableElementBase {
   }
 
   private _updateScrollableSpacing(): void {
-    const generalConfig = this._configDatabase.getConfig("general");
+    const generalConfig = this._configDatabase.getGeneralConfig();
     let spacing = 0;
     switch (generalConfig.terminalMarginStyle) {
       case "none":
@@ -379,7 +379,7 @@ export class TerminalCanvas extends ThemeableElementBase {
   }
 
   private _rootFontSize(): number {
-    const generalConfig = this._configDatabase.getConfig("general");
+    const generalConfig = this._configDatabase.getGeneralConfig();
     const unitHeightPx = 12;
     const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent / 100), 5);
     return rootFontSize;
@@ -564,7 +564,7 @@ export class TerminalCanvas extends ThemeableElementBase {
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
     if (this._configDatabase != null) {
-      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const config = this._configDatabase.getGeneralConfig();
       this.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
   }
@@ -612,7 +612,7 @@ export class TerminalCanvas extends ThemeableElementBase {
       this._virtualScrollArea.reapplyState();
 
       if (this._configDatabase != null) {
-        const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+        const config = this._configDatabase.getGeneralConfig();
         this.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
     }
@@ -821,7 +821,7 @@ export class TerminalCanvas extends ThemeableElementBase {
     this._enforceScrollbackLengthGuard = oldGuardFlag;
 
     if (this._configDatabase != null) {
-      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const config = this._configDatabase.getGeneralConfig();
       this.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
     return rc;

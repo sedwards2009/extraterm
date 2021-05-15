@@ -10,7 +10,7 @@ import { getLogger, Logger, log } from "extraterm-logging";
 import { createUuid } from 'extraterm-uuid';
 
 import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
-import { GENERAL_CONFIG, GeneralConfig, ConfigDatabase } from "../Config";
+import { ConfigDatabase } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import * as ThemeTypes from "../theme/Theme";
 import { ThemeManager, GlobalVariableMap } from "../theme/ThemeManager";
@@ -305,14 +305,6 @@ export class MainIpc {
         this._handleClipboardWrite(<Messages.ClipboardWriteMessage> msg);
         break;
 
-      case Messages.MessageType.CONFIG:
-        this._handleConfig(<Messages.ConfigMessage> msg);
-        break;
-
-      case Messages.MessageType.CONFIG_REQUEST:
-        reply = this._handleConfigRequest(<Messages.ConfigRequestMessage> msg);
-        break;
-
       case Messages.MessageType.DEV_TOOLS_REQUEST:
         this._handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
         break;
@@ -444,6 +436,10 @@ export class MainIpc {
         this._handleSharedMapEvent(<Messages.SharedMapEventMessage> msg);
         break;
 
+      case Messages.MessageType.SHARED_MAP_DUMP_REQUEST:
+        reply = this._handleSharedMapDumpRequest();
+        break;
+
       default:
         break;
     }
@@ -454,22 +450,6 @@ export class MainIpc {
       }
       event.sender.send(Messages.CHANNEL_NAME, reply);
     }
-  }
-
-  private _handleConfig(msg: Messages.ConfigMessage): void {
-    if (LOG_FINE) {
-      this._log.debug("Incoming new config: ", msg);
-    }
-    this.#configDatabase.setConfig(msg.key, msg.config);
-  }
-
-  private _handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.ConfigMessage {
-    const reply: Messages.ConfigMessage = {
-      type: Messages.MessageType.CONFIG,
-      key: msg.key,
-      config: this.#configDatabase.getConfig(msg.key)
-    };
-    return reply;
   }
 
   sendQuitApplicationRequest(): void {
@@ -496,7 +476,7 @@ export class MainIpc {
 
     const globalVariables: GlobalVariableMap = new Map();
 
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     globalVariables.set("extraterm-gpu-driver-workaround", generalConfig.gpuDriverWorkaround);
     globalVariables.set("extraterm-titlebar-style", generalConfig.titleBarStyle);
     globalVariables.set("extraterm-platform", process.platform);
@@ -533,10 +513,10 @@ export class MainIpc {
   private _handleThemeRescan(): Messages.ThemeListMessage {
     this.#themeManager.rescan();
 
-    const userStoredConfig = this.#configDatabase.getConfigCopy(GENERAL_CONFIG);
+    const userStoredConfig = this.#configDatabase.getGeneralConfigCopy();
     if ( ! isThemeType(this.#themeManager.getTheme(userStoredConfig.themeSyntax), 'syntax')) {
       userStoredConfig.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
-      this.#configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
+      this.#configDatabase.setGeneralConfig(userStoredConfig);
     }
 
     return this._handleThemeListRequest();
@@ -700,5 +680,13 @@ export class MainIpc {
 
   private _handleSharedMapEvent(msg: Messages.SharedMapEventMessage): void {
     this.#sharedMap.sync(msg.event);
+  }
+
+  private _handleSharedMapDumpRequest(): Messages.SharedMapDumpMessage {
+    const msg: Messages.SharedMapDumpMessage = {
+      type: Messages.MessageType.SHARED_MAP_DUMP,
+      data: this.#sharedMap.dumpAll()
+    };
+    return msg;
   }
 }

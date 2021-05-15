@@ -5,7 +5,7 @@
 import { CustomElement } from 'extraterm-web-component-decorators';
 
 import { KeybindingsSettingsUi } from './KeybindingsSettingsUi';
-import { SYSTEM_CONFIG, ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
+import { ConfigKey, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
 import { log, Logger, getLogger } from "extraterm-logging";
 import { SettingsBase } from '../SettingsBase';
 import * as WebIpc from '../../WebIpc';
@@ -27,7 +27,7 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   private _commandChangedDisposable: Disposable = null;
 
   constructor() {
-    super(KeybindingsSettingsUi, [SYSTEM_CONFIG, GENERAL_CONFIG]);
+    super(KeybindingsSettingsUi);
     this._log = getLogger(KEY_BINDINGS_SETTINGS_TAG, this);
 
     this._getUi().$on(EVENT_START_KEY_INPUT, () => {
@@ -66,12 +66,12 @@ export class KeybindingsSettings extends SettingsBase<KeybindingsSettingsUi> {
   }
 
   protected _dataChanged(): void {
-    const newGeneralConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
+    const newGeneralConfig = this.configDatabase.getGeneralConfigCopy();
     const ui = this._getUi();
 
     if (newGeneralConfig.keybindingsName !== ui.selectedKeybindingsSetName) {
       newGeneralConfig.keybindingsName = ui.selectedKeybindingsSetName;
-      this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
+      this.configDatabase.setGeneralConfig(newGeneralConfig);
       this._loadKeybindings(ui.selectedKeybindingsSetName);
     }
 

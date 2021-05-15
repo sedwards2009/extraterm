@@ -28,7 +28,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   private _terminalVisualConfig: TerminalVisualConfig = null;
 
   constructor() {
-    super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
+    super(AppearanceSettingsUi);
     this._log = getLogger(APPEARANCE_SETTINGS_TAG, this);
     this._getUi().$on("openUserTerminalThemesDir", () => {
       shell.showItemInFolder(this._userTerminalThemeDirectory);
@@ -88,7 +88,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   }
 
   protected _dataChanged(): void {
-    const newConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
+    const newConfig = this.configDatabase.getGeneralConfigCopy();
     const ui = this._getUi();
 
     newConfig.titleBarStyle = ui.titleBarStyle;
@@ -106,7 +106,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.terminalMarginStyle = ui.terminalMarginStyle;
     newConfig.windowBackgroundMode = ui.windowBackgroundMode;
     newConfig.windowBackgroundTransparencyPercent = ui.windowBackgroundTransparencyPercent;
-    this._updateConfig(GENERAL_CONFIG, newConfig);
+    this.configDatabase.setGeneralConfig(newConfig);
   }
 
   set themes(themes: ThemeTypes.ThemeInfo[]) {

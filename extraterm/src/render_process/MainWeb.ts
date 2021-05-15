@@ -19,7 +19,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType, EVENT_HYPERLINK_CLICK, HyperlinkEventDetail } from './command/CommandUtils';
 
-import {ConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo, CommandLineAction, COMMAND_LINE_ACTIONS_CONFIG} from '../Config';
+import {ConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo, CommandLineAction, COMMAND_LINE_ACTIONS_CONFIG, SHARED_MAP_CONFIG_NAMESPACE} from '../Config';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
@@ -82,18 +82,22 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   const parsedWindowUrl = new URL(windowUrl);
   const bareWindow = parsedWindowUrl.searchParams.get("bareWindow") !== null;
 
-  const sharedMap = new SharedMap.SharedMap();
   const fontLoader = new FontLoader();
   const dpiWatcher = new DpiWatcher();
   startUpTheming();
   startUpWebIpc();
 
-  // Get the Config working.
-  const configDatabase = new ConfigDatabaseImpl();
-  const keybindingsManager = new KeybindingsManagerImpl();  // depends on the config.
+  const sharedMap = await setupSharedMap();
+  const configDatabase = new ConfigDatabaseImpl(sharedMap);
+  const keybindingsManager = new KeybindingsManagerImpl();
 
-  const configMsg = await WebIpc.requestConfig("*");
-  await asyncHandleConfigMessage(configDatabase, keybindingsManager, fontLoader, null, configMsg);
+  configDatabase.onChange( (ev: ConfigChangeEvent) => {
+    if ([GENERAL_CONFIG, SYSTEM_CONFIG].indexOf(ev.key) === -1) {
+      return;
+    }
+    applyConfiguration(configDatabase, keybindingsManager, fontLoader, mainWebUi);
+  });
+  await applyConfiguration(configDatabase, keybindingsManager, fontLoader, null);
 
   const themeListMsg = await WebIpc.requestThemeList();
   const themesMessage = <Messages.ThemeListMessage> themeListMsg;
@@ -112,7 +116,6 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
 
   const applicationContextMenu = startUpApplicationContextMenu(extensionManager, keybindingsManager, mainWebUi);
   registerIpcHandlers(extensionManager, mainWebUi, applicationContextMenu, sharedMap);
-  startUpWebIpcConfigHandling(configDatabase, keybindingsManager, fontLoader, mainWebUi);
 
   const commandPalette = startUpCommandPalette(extensionManager, keybindingsManager);
   registerCommands(extensionManager, commandPalette);
@@ -138,6 +141,28 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   window.focus();
 
   WebIpc.windowReady();
+}
+
+async function setupSharedMap(): Promise<SharedMap.SharedMap> {
+  const sharedMap = new SharedMap.SharedMap();
+
+  WebIpc.registerDefaultHandler(Messages.MessageType.SHARED_MAP_EVENT,
+    (msg: Messages.Message) => {
+      const sharedMapEventMessage = <Messages.SharedMapEventMessage> msg;
+      sharedMap.sync(sharedMapEventMessage.event);
+    });
+
+  const sharedMapDumpMsg = await WebIpc.requestSharedMapDump();
+  sharedMap.loadAll(sharedMapDumpMsg.data);
+
+  sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
+    if ( ! ev.isLocalOrigin) {
+      return;
+    }
+    WebIpc.sendSharedMapEvent(ev);
+  });
+
+  return sharedMap;
 }
 
 function startUpTheming(): void {
@@ -183,15 +208,6 @@ function registerIpcHandlers(extensionManager: ExtensionManager, mainWebUi: Main
   WebIpc.registerDefaultHandler(Messages.MessageType.CLIPBOARD_READ,
     (msg: Messages.Message) => handleClipboardRead(mainWebUi, msg));
 
-  WebIpc.registerDefaultHandler(Messages.MessageType.SHARED_MAP_EVENT,
-    (msg: Messages.Message) => handleSharedMapEvent(sharedMap, msg));
-
-  sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
-    if ( ! ev.isLocalOrigin) {
-      return;
-    }
-    WebIpc.sendSharedMapEvent(ev);
-  });
 }
 
 function closeSplash(): void {
@@ -220,23 +236,9 @@ async function handleExecuteCommand(extensionManager: ExtensionManager, msg: Mes
   WebIpc.commandResponse(msg.uuid, result, exception);
 }
 
-function startUpWebIpcConfigHandling(configDatabaseImpl: ConfigDatabaseImpl, keybindingsManager: KeybindingsManager,
-    fontLoader: FontLoader, mainWebUi: MainWebUi): void {
-
-  // Default handling for config messages.
-  WebIpc.registerDefaultHandler(Messages.MessageType.CONFIG_BROADCAST,
-    (msg: Messages.Message) => {
-      asyncHandleConfigMessage(configDatabaseImpl, keybindingsManager, fontLoader, mainWebUi, msg);
-    });
-
-  // Fetch a fresh version of the config in case
-  // we missed an pushed update from main process.
-  WebIpc.requestConfig("*");
-}
-
 async function asyncLoadTerminalTheme(configDatabase: ConfigDatabase, fontLoader: FontLoader): Promise<void> {
-  const config = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
-  const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
+  const config = configDatabase.getGeneralConfig();
+  const systemConfig = configDatabase.getSystemConfig();
   const themeMsg = await WebIpc.requestTerminalTheme(config.themeTerminal);
 
   const fontFilePath = getFontFilePath(systemConfig.availableFonts, config.terminalFont);
@@ -271,7 +273,7 @@ function startUpMainWebUi(configDatabase: ConfigDatabase, extensionManager: Exte
   mainWebUi.setDependencies(configDatabase, keybindingsManager, extensionManager);
   mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 
-  const systemConfig = <SystemConfig> configDatabase.getConfig(SYSTEM_CONFIG);
+  const systemConfig = configDatabase.getSystemConfig();
   const showWindowControls = systemConfig.titleBarStyle === "compact" && process.platform !== "darwin";
   let windowControls = "";
   if (showWindowControls) {
@@ -289,7 +291,7 @@ function startUpMainWebUi(configDatabase: ConfigDatabase, extensionManager: Exte
 
   // Detect when the last tab has closed.
   mainWebUi.addEventListener(MainWebUi.EVENT_TAB_CLOSED, (ev: CustomEvent) => {
-    const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = <GeneralConfig> configDatabase.getGeneralConfig();
     if (generalConfig.closeWindowWhenEmpty && mainWebUi.getTabCount() === 0) {
       WebIpc.windowCloseRequest();
     }
@@ -574,17 +576,6 @@ function handleDpiChange(mainWebUi: MainWebUi, dpi: number): void {
   mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
 }
 
-async function asyncHandleConfigMessage(configDatabaseImpl: ConfigDatabaseImpl, keybindingsManager: KeybindingsManager,
-    fontLoader: FontLoader, mainWebUi: MainWebUi, msg: Messages.Message): Promise<void> {
-
-  const configMessage = <Messages.ConfigMessage> msg;
-  const key = configMessage.key;
-  configDatabaseImpl.setConfigFromMainProcess(key, configMessage.config);
-  if ([GENERAL_CONFIG, SYSTEM_CONFIG, "*"].indexOf(key) !== -1) {
-    await applyConfiguration(configDatabaseImpl, keybindingsManager, fontLoader, mainWebUi);
-  }
-}
-
 function handleCloseWindow(mainWebUi: MainWebUi, msg: Messages.Message): void {
   mainWebUi.closeAllTabs();
   WebIpc.windowCloseRequest();
@@ -622,11 +613,6 @@ function handleClipboardRead(mainWebUi: MainWebUi, msg: Messages.Message): void 
   mainWebUi.pasteText(clipboardReadMessage.text);
 }
 
-function handleSharedMapEvent(sharedMap: SharedMap.SharedMap, msg: Messages.Message): void {
-  const sharedMapEventMessage = <Messages.SharedMapEventMessage> msg;
-  sharedMap.sync(sharedMapEventMessage.event);
-}
-
 //-------------------------------------------------------------------------
 let oldSystemConfig: SystemConfig = null;
 let oldGeneralConfig: GeneralConfig = null;
@@ -634,8 +620,8 @@ let oldGeneralConfig: GeneralConfig = null;
 async function applyConfiguration(configDatabase: ConfigDatabase, keybindingsManager: KeybindingsManager,
     fontLoader: FontLoader, mainWebUi: MainWebUi): Promise<void> {
 
-  const newSystemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
-  const newGeneralConfig = <GeneralConfig> configDatabase.getConfigCopy(GENERAL_CONFIG);
+  const newSystemConfig = configDatabase.getSystemConfigCopy();
+  const newGeneralConfig = configDatabase.getGeneralConfigCopy();
 
   if (newSystemConfig == null || newGeneralConfig == null) {
     // Not initialised yet. This can happen with the different (race) timing between main and render process.
@@ -726,7 +712,7 @@ async function applyConfiguration(configDatabase: ConfigDatabase, keybindingsMan
       };
       terminalVisualConfigChanged = true;
     }
-    if (terminalVisualConfigChanged) {
+    if (terminalVisualConfigChanged && mainWebUi != null) {
       mainWebUi.setTerminalVisualConfig(terminalVisualConfig);
     }
   }
@@ -735,7 +721,7 @@ async function applyConfiguration(configDatabase: ConfigDatabase, keybindingsMan
   oldSystemConfig = newSystemConfig;
 }
 
-function getFontFilePath(availableFonts: FontInfo[], fontFamily: string): string {
+function getFontFilePath(availableFonts: DeepReadonly<FontInfo[]>, fontFamily: string): string {
   for (const fontInfo of availableFonts) {
     if (fontFamily === fontInfo.postscriptName) {
       return fontInfo.path;
@@ -819,23 +805,44 @@ function startUpApplicationContextMenu(extensionManager: ExtensionManager,
 }
 
 class ConfigDatabaseImpl implements ConfigDatabase {
-  private _configDb = new Map<ConfigKey, any>();
-  private _onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
-  onChange: Event<ConfigChangeEvent>;
   private _log: Logger;
+  #sharedMap: SharedMap.SharedMap = null;
+  #onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
+  onChange: Event<ConfigChangeEvent>;
 
-  constructor() {
-    this.onChange = this._onChangeEventEmitter.event;
+  constructor(sharedMap: SharedMap.SharedMap) {
     this._log = getLogger("ConfigDatabaseImpl", this);
+    this.#sharedMap = sharedMap;
+    this.onChange = this.#onChangeEventEmitter.event;
+
+    this.#sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
+      if (ev.type !== SharedMap.ChangeType.CHANGED || ev.namespace !== SHARED_MAP_CONFIG_NAMESPACE) {
+        return;
+      }
+
+      this.#onChangeEventEmitter.fire({
+        key: ev.key,
+        newConfig: ev.value,
+        oldConfig: ev.oldValue,
+      });
+    });
   }
 
   getConfig(key: ConfigKey): any {
-    const result = this._getConfigNoWarnings(key);
+    const result = this.#sharedMap.get(SHARED_MAP_CONFIG_NAMESPACE, key);
     if (result == null) {
       this._log.warn("Unable to find config for key ", key);
     } else {
       return result;
     }
+  }
+
+  getConfigCopy(key: ConfigKey): any {
+    const data = this.getConfig(key);
+    if (data == null) {
+      return null;
+    }
+    return _.cloneDeep(data);
   }
 
   getGeneralConfig(): DeepReadonly<GeneralConfig> {
@@ -886,100 +893,43 @@ class ConfigDatabaseImpl implements ConfigDatabase {
     this.setConfig(SYSTEM_CONFIG, newConfig);
   }
 
-  getAllConfigs(): {[key: string]: any;} {
-    // Wildcard fetch all.
-    const result = {};
-
-    for (const [dbKey, value] of this._configDb.entries()) {
-      result[dbKey] = value;
-    }
-    freezeDeep(result);
-    return result;
-  }
-
-  private _getConfigNoWarnings(key: ConfigKey): any {
-    if (key === "*") {
-      return this.getAllConfigs();
-    } else {
-      return this._configDb.get(key);
-    }
-  }
-
-  getConfigCopy(key: ConfigKey): any {
-    const data = this.getConfig(key);
-    if (data == null) {
-      return null;
-    }
-    return _.cloneDeep(data);
-  }
-
   setConfig(key: ConfigKey, newConfig: any): void {
-    if ( ! this._setConfigNoWrite(key, newConfig)) {
+    const oldConfig = this.getConfig(key);
+    if (_.isEqual(oldConfig, newConfig)) {
       return;
     }
-
-    WebIpc.sendConfig(key, newConfig);
-  }
-
-  setConfigFromMainProcess(key: ConfigKey, newConfig: any): void {
-    this._setConfigNoWrite(key, newConfig);
-  }
-
-  private _setConfigNoWrite(key: ConfigKey, newConfig: any): boolean {
-    if (key === "*") {
-      let changed = false;
-      for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
-        changed = this._setSingleConfigNoWrite(<ConfigKey> objectKey, newConfig[objectKey]) || changed;
-      }
-      return changed;
-    } else {
-      return this._setSingleConfigNoWrite(key, newConfig);
-    }
-  }
-
-  private _setSingleConfigNoWrite(key: ConfigKey, newConfig: any): boolean {
-    const oldConfig = this._getConfigNoWarnings(key);
-    if (_.isEqual(oldConfig, newConfig)) {
-      return false;
-    }
-
-    if (Object.isFrozen(newConfig)) {
-      this._configDb.set(key, newConfig);
-    } else {
-      this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
-    }
-
-    this._onChangeEventEmitter.fire({key, oldConfig, newConfig: this.getConfig(key)});
-    return true;
+    this.#sharedMap.set(SHARED_MAP_CONFIG_NAMESPACE, key, newConfig);
+    this.#onChangeEventEmitter.fire({ key, oldConfig, newConfig });
   }
 }
 
+
 class KeybindingsManagerImpl implements KeybindingsManager {
-  private _keybindingsMapping: TermKeybindingsMapping = null;
   private _log: Logger;
-  private _onChangeEventEmitter = new EventEmitter<void>();
+  #keybindingsMapping: TermKeybindingsMapping = null;
+  #onChangeEventEmitter = new EventEmitter<void>();
   onChange: Event<void>;
-  private _enabled = true;
+  #enabled = true;
 
   constructor() {
     this._log = getLogger("KeybindingsManagerImpl", self);
-    this.onChange = this._onChangeEventEmitter.event;
+    this.onChange = this.#onChangeEventEmitter.event;
   }
 
   getKeybindingsMapping(): TermKeybindingsMapping {
-    return this._keybindingsMapping;
+    return this.#keybindingsMapping;
   }
 
   setKeybindingsMapping(newKeybindingContexts: TermKeybindingsMapping): void {
-    this._keybindingsMapping = newKeybindingContexts;
-    this._keybindingsMapping.setEnabled(this._enabled);
-    this._onChangeEventEmitter.fire(undefined);
+    this.#keybindingsMapping = newKeybindingContexts;
+    this.#keybindingsMapping.setEnabled(this.#enabled);
+    this.#onChangeEventEmitter.fire(undefined);
   }
 
   setEnabled(enabled: boolean): void {
-    this._enabled = enabled;
-    if (this._keybindingsMapping != null) {
-      this._keybindingsMapping.setEnabled(this._enabled);
+    this.#enabled = enabled;
+    if (this.#keybindingsMapping != null) {
+      this.#keybindingsMapping.setEnabled(this.#enabled);
     }
 
     WebIpc.enableGlobalKeybindings(enabled);

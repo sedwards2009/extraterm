@@ -152,7 +152,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
     if ( ! isMainProcessExtension(metadata)) {
 
-      const applicationVersion = this.#configDatabase.getConfig(SYSTEM_CONFIG).applicationVersion;
+      const applicationVersion = this.#configDatabase.getSystemConfig().applicationVersion;
       contextImpl = new ExtensionContextImpl(this, metadata, this._commonExtensionWindowState, applicationVersion);
       if (metadata.main != null) {
         module = this._loadExtensionModule(metadata);

@@ -455,7 +455,7 @@ export class EtViewerTab extends ViewerElement implements SupportsClipboardPaste
 
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     if (ev.detail.originMouse) {
-      const generalConfig = this._configDatabase.getConfig("general");
+      const generalConfig = this._configDatabase.getGeneralConfig();
       if (generalConfig.autoCopySelectionToClipboard) {
         this._copyToClipboardLater.trigger();
       }

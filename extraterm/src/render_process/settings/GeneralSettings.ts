@@ -17,7 +17,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
   private _log: Logger = null;
 
   constructor() {
-    super(GeneralSettingsUi, [GENERAL_CONFIG]);
+    super(GeneralSettingsUi);
     this._log = getLogger(GENERAL_SETTINGS_TAG, this);
   }
 
@@ -72,7 +72,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
   }
 
   protected _dataChanged(): void {
-    const newGeneralConfig = this._getConfigCopy(GENERAL_CONFIG);
+    const newGeneralConfig = this.configDatabase.getGeneralConfigCopy();
     const ui = this._getUi();
 
     newGeneralConfig.showTips = ui.showTips;
@@ -87,6 +87,6 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     newGeneralConfig.rightMouseButtonAction = ui.rightMouseButtonAction;
     newGeneralConfig.rightMouseButtonShiftAction = ui.rightMouseButtonShiftAction;
     newGeneralConfig.rightMouseButtonControlAction = ui.rightMouseButtonControlAction;
-    this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
+    this.configDatabase.setGeneralConfig(newGeneralConfig);
   }
 }

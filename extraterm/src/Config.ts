@@ -153,29 +153,6 @@ export interface ConfigDatabase {
   getSystemConfigCopy(): SystemConfig;
 
   /**
-   * Get a config object.
-   *
-   * Returns a reference to the requested config object. DO NOT MODIFY IT!
-   * @return the config object, may be `undefined` or `null`
-   */
-  getConfig(key: ConfigKey): any;
-
-  getAllConfigs(): {[key: string]: any};
-
-  /**
-   * Get a copy of a config object.
-   *
-   * Returns a copy of the requested config object, which you can may edit.
-   * @return the config object, may be `undefined` or `null`
-   */
-  getConfigCopy(key: ConfigKey): any;
-
-  /**
-   * Set config object.
-   */
-  setConfig(key: ConfigKey, newConfig: any): void;
-
-  /**
    * Register a listener to hear when the config has changed.
    *
    * Be sure to dispose of the registration once you are finished with it,
@@ -195,3 +172,5 @@ export interface ConfigDatabase {
   setCommandLineActionConfig(newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void;
   setSystemConfig(newConfig: SystemConfig | DeepReadonly<SystemConfig>): void;
 }
+
+export const SHARED_MAP_CONFIG_NAMESPACE = "extraterm";
