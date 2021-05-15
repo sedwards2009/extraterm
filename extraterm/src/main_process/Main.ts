@@ -31,7 +31,7 @@ import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory,
   getUserKeybindingsDirectory, setupAppData, sanitizeAndIinitializeConfigs as sanitizeAndInitializeConfigs,
   getUserExtensionDirectory, getUserSettingsDirectory } from "./MainConfig";
-import { ConfigDatabaseImpl } from "./ConfigDatabaseImpl";
+import { PersistentConfigDatabase } from "./PersistentConfigDatabase";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
@@ -59,7 +59,7 @@ const _log = getLogger("main");
 async function main(): Promise<void> {
   let failed = false;
   const sharedMap = new SharedMap();
-  const configDatabase = new ConfigDatabaseImpl(getUserSettingsDirectory(), sharedMap);
+  const configDatabase = new PersistentConfigDatabase(getUserSettingsDirectory(), sharedMap);
   configDatabase.start();
 
   setupAppData();
@@ -187,7 +187,7 @@ function setupExtensionManager(configDatabase: ConfigDatabase, applicationVersio
   return extensionManager;
 }
 
-function setupKeybindingsIOManager(configDatabase: ConfigDatabaseImpl,
+function setupKeybindingsIOManager(configDatabase: PersistentConfigDatabase,
     extensionManager: MainExtensionManager): KeybindingsIOManager {
 
   const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
@@ -197,7 +197,7 @@ function setupKeybindingsIOManager(configDatabase: ConfigDatabaseImpl,
   return keybindingsIOManager;
 }
 
-function updateSystemConfigKeybindings(configDatabase: ConfigDatabaseImpl,
+function updateSystemConfigKeybindings(configDatabase: PersistentConfigDatabase,
     keybindingsIOManager: KeybindingsIOManager): void {
 
   // Broadcast the updated bindings.
@@ -252,7 +252,7 @@ function shutdown(bulkFileStorage: BulkFileStorage, localHttpServer: LocalHttpSe
   app.quit();
 }
 
-function setupGlobalKeybindingsManager(configDatabase: ConfigDatabaseImpl, keybindingsIOManager: KeybindingsIOManager,
+function setupGlobalKeybindingsManager(configDatabase: PersistentConfigDatabase, keybindingsIOManager: KeybindingsIOManager,
     mainDesktop: MainDesktop): GlobalKeybindingsManager {
 
   const globalKeybindingsManager = new GlobalKeybindingsManager(keybindingsIOManager, configDatabase);
@@ -309,7 +309,7 @@ function setupOSX(): void {
     "com.electron.extraterm", "ApplePressAndHoldEnabled", "-bool", "false"]);
 }
 
-function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileStorage,
+function setupIpc(configDatabase: PersistentConfigDatabase, bulkFileStorage: BulkFileStorage,
   extensionManager: MainExtensionManager, globalKeybindingsManager: GlobalKeybindingsManager, mainDesktop: MainDesktop,
   keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, ptyManager: PtyManager,
   sharedMap: SharedMap): MainIpc {
@@ -321,7 +321,7 @@ function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileS
   return mainIpc;
 }
 
-function setupPtyManager(configDatabase: ConfigDatabaseImpl, extensionManager: MainExtensionManager): PtyManager {
+function setupPtyManager(configDatabase: PersistentConfigDatabase, extensionManager: MainExtensionManager): PtyManager {
   try {
     return new PtyManager(extensionManager, configDatabase);
   } catch(err) {
@@ -330,7 +330,7 @@ function setupPtyManager(configDatabase: ConfigDatabaseImpl, extensionManager: M
   }
 }
 
-function setupDefaultSessions(configDatabase: ConfigDatabaseImpl, ptyManager: PtyManager): void {
+function setupDefaultSessions(configDatabase: PersistentConfigDatabase, ptyManager: PtyManager): void {
   const sessions = configDatabase.getSessionConfigCopy();
   if (sessions == null || sessions.length === 0) {
     const newSessions = ptyManager.getDefaultSessions();

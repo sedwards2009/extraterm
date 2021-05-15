@@ -14,13 +14,15 @@ import { COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, SESSION_CONFIG, UserStored
 
 const MAIN_CONFIG = "extraterm.json";
 
-
-export class ConfigDatabaseImpl extends ConfigDatabase {
+/**
+ * Config database which also loads and stores some config information on disk.
+ */
+export class PersistentConfigDatabase extends ConfigDatabase {
   #configDirectory: string;
 
   constructor(configDirectory: string, sharedMap: SharedMap.SharedMap) {
     super(sharedMap);
-    this._log = getLogger("ConfigDatabaseImpl", this);
+    this._log = getLogger("PersistentConfigDatabase", this);
     this.#configDirectory = configDirectory;
   }
 

@@ -16,7 +16,7 @@ import { GeneralConfig, FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameR
 import { ThemeManager } from "../theme/ThemeManager";
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from "../keybindings/KeybindingsTypes";
-import { ConfigDatabaseImpl } from "./ConfigDatabaseImpl";
+import { PersistentConfigDatabase } from "./PersistentConfigDatabase";
 import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
@@ -173,7 +173,7 @@ export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean
   return themeInfo.type === themeType;
 }
 
-export function sanitizeAndIinitializeConfigs(configDatabase: ConfigDatabaseImpl, themeManager: ThemeManager,
+export function sanitizeAndIinitializeConfigs(configDatabase: PersistentConfigDatabase, themeManager: ThemeManager,
     keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[]): void {
 
   sanitizeGeneralConfig(configDatabase, themeManager, availableFonts);
@@ -331,7 +331,7 @@ function sanitizeStringEnumField<T, K extends keyof T>(object: T, key: K, availa
   }
 }
 
-function distributeUserStoredConfig(configDatabase: ConfigDatabaseImpl,
+function distributeUserStoredConfig(configDatabase: PersistentConfigDatabase,
     keybindingsIOManager: KeybindingsIOManager): void {
 
   configDatabase.onChange((event: ConfigChangeEvent): void => {
