@@ -11,7 +11,6 @@ const ipc = Electron.ipcRenderer;
 import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
 import { LogicalKeybindingsName, CustomKeybindingsSet } from '../keybindings/KeybindingsTypes';
 import { ClipboardType } from '../WindowMessages';
@@ -219,20 +218,6 @@ export function refBulkFile(identifier: BulkFileIdentifier): void {
 export function derefBulkFile(identifier: BulkFileIdentifier): void {
   const msg: Messages.BulkFileDerefMessage = {type: Messages.MessageType.BULK_FILE_DEREF, identifier};
   ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
-export function requestExtensionMetadataSync(): ExtensionMetadata[] {
-  const msg: Messages.ExtensionMetadataRequestMessage = {type: Messages.MessageType.EXTENSION_METADATA_REQUEST};
-  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
-  const extensionMetadataMessage = <Messages.ExtensionMetadataMessage> event;
-  return extensionMetadataMessage.extensionMetadata;
-}
-
-export function requestExtensionDesiredStateSync(): ExtensionDesiredState {
-  const msg: Messages.ExtensionDesiredStateRequestMesssage = {type: Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST};
-  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
-  const extensionDesriedStateMessage = <Messages.ExtensionDesiredStateMessage> event;
-  return extensionDesriedStateMessage.desiredState;
 }
 
 export function enableExtension(extensionName: string): void {

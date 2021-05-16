@@ -27,12 +27,13 @@ import { EmbeddedViewer } from "../viewers/EmbeddedViewer";
 import { TabWidget } from "../gui/TabWidget";
 import { EventEmitter } from "../../utils/EventEmitter";
 import { DebouncedDoLater } from "extraterm-later";
-import { MessageType, ExtensionDesiredStateMessage } from "../../WindowMessages";
 import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 import { SplitLayout } from "../SplitLayout";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { focusElement } from "../DomUtils";
 import { ConfigDatabase } from "../../ConfigDatabase";
+import * as SharedMap from "../../shared_map/SharedMap";
+import { ExtensionManagerIpc } from "../../ExtensionManagerIpc";
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
@@ -59,17 +60,18 @@ const allCategories: Category[] = [
  */
 export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
-  private _extensionMetadata: ExtensionMetadata[] = [];
-  private _activeExtensions: ActiveExtension[] = [];
-  private _extensionDesiredState: ExtensionDesiredState;
-  private _onStateChangedEventEmitter = new EventEmitter<void>();
+
+  #sharedData: ExtensionManagerIpc = null;
+  #activeExtensions: ActiveExtension[] = [];
+  #extensionLocalState: ExtensionDesiredState;
+  #splitLayout: SplitLayout = null;
+  #viewerTabDisplay: ViewerTabDisplay = null;
+  #configDatabase: ConfigDatabase = null;
+
+  #onStateChangedEventEmitter = new EventEmitter<void>();
   onStateChanged: ExtensionApi.Event<void>;
 
   extensionUiUtils: ExtensionUiUtils = null;
-
-  private _splitLayout: SplitLayout = null;
-  #viewerTabDisplay: ViewerTabDisplay = null;
-  #configDatabase: ConfigDatabase = null;
 
   private _commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
@@ -85,18 +87,19 @@ export class ExtensionManagerImpl implements ExtensionManager {
   onCommandsChanged: ExtensionApi.Event<void>;
   private _commandsChangedLater: DebouncedDoLater = null;
 
-  constructor(configDatabase: ConfigDatabase) {
+  constructor(configDatabase: ConfigDatabase, sharedMap: SharedMap.SharedMap) {
     this._log = getLogger("ExtensionManager", this);
     this.#configDatabase = configDatabase;
+    this.#sharedData = new ExtensionManagerIpc(sharedMap);
 
-    this.onStateChanged = this._onStateChangedEventEmitter.event;
+    this.onStateChanged = this.#onStateChangedEventEmitter.event;
     this.onCommandsChanged = this._onCommandsChangedEventEmitter.event;
     this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire(undefined));
     this.extensionUiUtils = new ExtensionUiUtilsImpl();
   }
 
   setSplitLayout(splitLayout: SplitLayout): void {
-    this._splitLayout = splitLayout;
+    this.#splitLayout = splitLayout;
   }
 
   setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void {
@@ -108,18 +111,16 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   startUp(): void {
-    this._extensionMetadata = WebIpc.requestExtensionMetadataSync();
+    this.#extensionLocalState = {};
 
-    this._extensionDesiredState = {};
-    this._goToNewDesiredState(WebIpc.requestExtensionDesiredStateSync());
-
-    WebIpc.registerDefaultHandler(MessageType.EXTENSION_DESIRED_STATE, (msg: ExtensionDesiredStateMessage) => {
-      this._goToNewDesiredState(msg.desiredState);
+    this._goToNewDesiredState(this.#sharedData.getDesiredState());
+    this.#sharedData.onDesiredStateChange(() => {
+      this._goToNewDesiredState(this.#sharedData.getDesiredState());
     });
   }
 
   private _goToNewDesiredState(newExtensionDesiredState: ExtensionDesiredState): void {
-    const desiredKeys = Object.keys(this._extensionDesiredState).filter(key => this._extensionDesiredState[key]);
+    const desiredKeys = Object.keys(this.#extensionLocalState).filter(key => this.#extensionLocalState[key]);
     const newDesiredKeys = Object.keys(newExtensionDesiredState).filter(key => newExtensionDesiredState[key]);
 
     const disableList = _.difference(desiredKeys, newDesiredKeys);
@@ -131,7 +132,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     }
 
-    for (const extensionInfo of this._extensionMetadata) {
+    for (const extensionInfo of this.#sharedData.getExtensionMetadata()) {
       if (enableList.indexOf(extensionInfo.name) !== -1) {
         if ( ! isMainProcessExtension(extensionInfo)) {
           this._startExtension(extensionInfo);
@@ -139,8 +140,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     }
 
-    this._extensionDesiredState = newExtensionDesiredState;
-    this._onStateChangedEventEmitter.fire();
+    this.#extensionLocalState = newExtensionDesiredState;
+    this.#onStateChangedEventEmitter.fire();
   }
 
   private _startExtension(metadata: ExtensionMetadata): void {
@@ -169,7 +170,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     }
 
-    this._activeExtensions.push({metadata, publicApi, contextImpl, module});
+    this.#activeExtensions.push({metadata, publicApi, contextImpl, module});
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {
@@ -197,19 +198,19 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     }
 
-    this._activeExtensions = this._activeExtensions.filter(ex => ex !== activeExtension);
+    this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
   }
 
   private _getActiveRenderExtensions(): ActiveExtension[] {
-    return this._activeExtensions.filter(ae => ae.contextImpl != null);
+    return this.#activeExtensions.filter(ae => ae.contextImpl != null);
   }
 
   getAllExtensions(): ExtensionMetadata[] {
-    return [...this._extensionMetadata];
+    return [...this.#sharedData.getExtensionMetadata()];
   }
 
   isExtensionRunning(name: string): boolean {
-    return this._extensionDesiredState[name] === true;
+    return this.#extensionLocalState[name] === true;
   }
 
   enableExtension(name: string): void {
@@ -221,7 +222,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   getExtensionContextByName(name: string): InternalExtensionContext {
-    for (const ext of this._activeExtensions) {
+    for (const ext of this.#activeExtensions) {
       if (ext.metadata.name === name) {
         return ext.contextImpl;
       }
@@ -281,7 +282,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
-    for (const metadata of this._extensionMetadata) {
+    for (const metadata of this.#sharedData.getExtensionMetadata()) {
       for (const provider of metadata.contributes.terminalThemeProviders) {
         for (const formatName of provider.humanFormatNames) {
           results.push( { name: provider.name, formatName } );
@@ -293,7 +294,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   getAllSyntaxThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
-    for (const metadata of this._extensionMetadata) {
+    for (const metadata of this.#sharedData.getExtensionMetadata()) {
       for (const provider of metadata.contributes.syntaxThemeProviders) {
         for (const formatName of provider.humanFormatNames) {
           results.push( { name: provider.name, formatName } );
@@ -434,7 +435,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       textEditorFocus: false,
       isTextEditing: false,
       viewerFocus: false,
-      isWindowSplit: this._splitLayout.isSplit(),
+      isWindowSplit: this.#splitLayout.isSplit(),
       isHyperlink: false,
       hyperlinkURL: null,
       hyperlinkProtocol: null,

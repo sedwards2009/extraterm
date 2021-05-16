@@ -109,7 +109,7 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   const doc = window.document;
   doc.body.classList.add(CLASS_ENABLE_WINDOW_MOVE);
 
-  const extensionManager = startUpExtensions(configDatabase);
+  const extensionManager = startUpExtensions(configDatabase, sharedMap);
 
   const mainWebUi = startUpMainWebUi(configDatabase, extensionManager, keybindingsManager, themes);
   extensionManager.setSplitLayout(mainWebUi.getSplitLayout());
@@ -475,8 +475,8 @@ function startUpWindowEvents(mainWebUi: MainWebUi): void {
   });
 }
 
-function startUpExtensions(configDatabase: ConfigDatabase): ExtensionManager {
-  const extensionManager = new ExtensionManagerImpl(configDatabase);
+function startUpExtensions(configDatabase: ConfigDatabase, sharedMap: SharedMap.SharedMap): ExtensionManager {
+  const extensionManager = new ExtensionManagerImpl(configDatabase, sharedMap);
   extensionManager.startUp();
   return extensionManager;
 }

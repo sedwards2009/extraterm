@@ -79,10 +79,6 @@ export class MainIpc {
   }
 
   private _connectToServiceEvents(): void {
-    this.#extensionManager.onDesiredStateChanged(() => {
-      this.sendExtensionDesiredStateMessage();
-    });
-
     this.#bulkFileStorage.onWriteBufferSize((event: BufferSizeEvent) => {
       this.sendBulkFileWriteBufferSizeEvent(event);
     });
@@ -206,18 +202,6 @@ export class MainIpc {
     this._sendMessageToAllWindows(msg);
   }
 
-  private _makeExtensionDesiredStateMessage(): Messages.ExtensionDesiredStateMessage {
-    const msg: Messages.ExtensionDesiredStateMessage = {
-      type: Messages.MessageType.EXTENSION_DESIRED_STATE,
-      desiredState: this.#extensionManager.getDesiredState()
-    };
-    return msg;
-  }
-
-  sendExtensionDesiredStateMessage(): void {
-    this._sendMessageToAllWindows(this._makeExtensionDesiredStateMessage());
-  }
-
   sendCloseSplashToWindow(windowId: number): void {
     const window = BrowserWindow.fromId(windowId);
     const msg: Messages.CloseSplashMessage = { type: Messages.MessageType.CLOSE_SPLASH };
@@ -313,10 +297,6 @@ export class MainIpc {
         this._handleCommandResponse(<Messages.ExecuteCommandResponseMessage> msg);
         break;
 
-      case Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST:
-        event.returnValue = this._makeExtensionDesiredStateMessage();
-        return;
-
       case Messages.MessageType.EXTENSION_DISABLE:
         this.#extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
         break;
@@ -324,10 +304,6 @@ export class MainIpc {
       case Messages.MessageType.EXTENSION_ENABLE:
         this.#extensionManager.enableExtension((<Messages.ExtensionEnableMessage>msg).extensionName);
         break;
-
-      case Messages.MessageType.EXTENSION_METADATA_REQUEST:
-        event.returnValue = this._handleExtensionMetadataRequest();
-        return;
 
       case Messages.MessageType.FRAME_DATA_REQUEST:
         this._log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
@@ -648,13 +624,6 @@ export class MainIpc {
 
   private _handleDerefBulkFile(msg: Messages.BulkFileDerefMessage): void {
     this.#bulkFileStorage.deref(msg.identifier);
-  }
-
-  private _handleExtensionMetadataRequest(): Messages.ExtensionMetadataMessage {
-    return {
-      type: Messages.MessageType.EXTENSION_METADATA,
-      extensionMetadata: this.#extensionManager.getExtensionMetadata()
-    };
   }
 
   private _handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {

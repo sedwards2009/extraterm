@@ -98,7 +98,7 @@ async function main(): Promise<void> {
 
   // We have to start up the extension manager before we can scan themes (with the help of extensions)
   // and properly sanitize the config.
-  const extensionManager = setupExtensionManager(configDatabase, packageJson.version);
+  const extensionManager = setupExtensionManager(configDatabase, sharedMap, packageJson.version);
 
   const keybindingsIOManager = setupKeybindingsIOManager(configDatabase, extensionManager);
   const themeManager = setupThemeManager(configDatabase, extensionManager);
@@ -174,7 +174,7 @@ function electronReady(): Promise<void> {
   });
 }
 
-function setupExtensionManager(configDatabase: ConfigDatabase, applicationVersion: string): MainExtensionManager {
+function setupExtensionManager(configDatabase: ConfigDatabase, sharedMap: SharedMap, applicationVersion: string): MainExtensionManager {
   const extensionPaths = [path.join(__dirname, "../../../extensions" )];
   const userExtensionDirectory = getUserExtensionDirectory();
   _log.info(`User extension directory is: ${userExtensionDirectory}`);
@@ -182,7 +182,7 @@ function setupExtensionManager(configDatabase: ConfigDatabase, applicationVersio
     extensionPaths.push(userExtensionDirectory);
   }
 
-  const extensionManager = new MainExtensionManager(configDatabase, extensionPaths, applicationVersion);
+  const extensionManager = new MainExtensionManager(configDatabase, sharedMap, extensionPaths, applicationVersion);
   extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
   return extensionManager;
 }

@@ -12,7 +12,6 @@ import { BulkFileMetadata, BulkFileState, TerminalTheme, CreateSessionOptions } 
 
 import { ThemeContents, ThemeInfo, ThemeType } from './theme/Theme';
 import { BulkFileIdentifier } from './main_process/bulk_file_handling/BulkFileStorage';
-import { ExtensionMetadata, ExtensionDesiredState } from './ExtensionMetadata';
 import { CustomKeybindingsSet, LogicalKeybindingsName, StackedKeybindingsSet } from './keybindings/KeybindingsTypes';
 import * as SharedMap from "./shared_map/SharedMap";
 
@@ -41,12 +40,8 @@ export enum MessageType {
   DEV_TOOLS_STATUS,
   EXECUTE_COMMAND_REQUEST,
   EXECUTE_COMMAND_RESPONSE,
-  EXTENSION_DESIRED_STATE_REQUEST,
-  EXTENSION_DESIRED_STATE,
   EXTENSION_DISABLE,
   EXTENSION_ENABLE,
-  EXTENSION_METADATA_REQUEST,
-  EXTENSION_METADATA,
   FRAME_DATA_REQUEST,
   FRAME_DATA,
   GLOBAL_KEYBINDINGS_ENABLE,
@@ -477,21 +472,6 @@ export interface BulkFileDerefMessage extends Message {
 export interface BulkFileStateMessage extends Message {
   identifier: BulkFileIdentifier;
   state: BulkFileState;
-}
-
-
-export interface ExtensionMetadataRequestMessage extends Message {
-}
-
-export interface ExtensionMetadataMessage extends Message {
-  extensionMetadata: ExtensionMetadata[];
-}
-
-export interface ExtensionDesiredStateRequestMesssage extends Message {
-}
-
-export interface ExtensionDesiredStateMessage extends Message {
-  desiredState: ExtensionDesiredState;
 }
 
 export interface ExtensionEnableMessage extends Message {
