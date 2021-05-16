@@ -40,8 +40,6 @@ export enum MessageType {
   DEV_TOOLS_STATUS,
   EXECUTE_COMMAND_REQUEST,
   EXECUTE_COMMAND_RESPONSE,
-  EXTENSION_DISABLE,
-  EXTENSION_ENABLE,
   FRAME_DATA_REQUEST,
   FRAME_DATA,
   GLOBAL_KEYBINDINGS_ENABLE,
@@ -472,14 +470,6 @@ export interface BulkFileDerefMessage extends Message {
 export interface BulkFileStateMessage extends Message {
   identifier: BulkFileIdentifier;
   state: BulkFileState;
-}
-
-export interface ExtensionEnableMessage extends Message {
-  extensionName: string;
-}
-
-export interface ExtensionDisableMessage extends Message {
-  extensionName: string;
 }
 
 //-------------------------------------------------------------------------

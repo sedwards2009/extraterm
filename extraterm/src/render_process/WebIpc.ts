@@ -220,16 +220,6 @@ export function derefBulkFile(identifier: BulkFileIdentifier): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function enableExtension(extensionName: string): void {
-  const msg: Messages.ExtensionEnableMessage = {type: Messages.MessageType.EXTENSION_ENABLE, extensionName};
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
-export function disableExtension(extensionName: string): void {
-  const msg: Messages.ExtensionDisableMessage = {type: Messages.MessageType.EXTENSION_DISABLE, extensionName};
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
 export function keybindingsRequestRead(name: LogicalKeybindingsName): Promise<Messages.KeybindingsReadMessage> {
   const msg: Messages.KeybindingsReadRequestMessage = {
     type: Messages.MessageType.KEYBINDINGS_READ_REQUEST,

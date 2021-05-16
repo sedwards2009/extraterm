@@ -297,14 +297,6 @@ export class MainIpc {
         this._handleCommandResponse(<Messages.ExecuteCommandResponseMessage> msg);
         break;
 
-      case Messages.MessageType.EXTENSION_DISABLE:
-        this.#extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
-        break;
-
-      case Messages.MessageType.EXTENSION_ENABLE:
-        this.#extensionManager.enableExtension((<Messages.ExtensionEnableMessage>msg).extensionName);
-        break;
-
       case Messages.MessageType.FRAME_DATA_REQUEST:
         this._log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
         break;

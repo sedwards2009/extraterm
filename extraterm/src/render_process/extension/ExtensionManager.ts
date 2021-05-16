@@ -16,7 +16,6 @@ import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
 import { ExtensionUiUtilsImpl } from "./ExtensionUiUtilsImpl";
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionDesiredState
 } from "../../ExtensionMetadata";
-import * as WebIpc from "../WebIpc";
 import { CommandMenuEntry } from "./CommandsRegistry";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { Mode } from "../viewers/ViewerElementTypes";
@@ -214,11 +213,11 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   enableExtension(name: string): void {
-    WebIpc.enableExtension(name);
+    this.#ipc.enableExtension(name);
   }
 
   disableExtension(name: string): void {
-    WebIpc.disableExtension(name);
+    this.#ipc.disableExtension(name);
   }
 
   getExtensionContextByName(name: string): InternalExtensionContext {

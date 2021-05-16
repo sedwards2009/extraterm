@@ -47,7 +47,15 @@ export class MainExtensionManager {
 
     this._log = getLogger("MainExtensionManager", this);
     this.#configDatabase = configDatabase;
+
     this.#ipc = new ExtensionManagerIpc(sharedMap);
+    this.#ipc.onEnableExtension((name: string) => {
+      this.enableExtension(name);
+    });
+    this.#ipc.onDisableExtension((name: string) => {
+      this.disableExtension(name);
+    });
+
     this.#extensionPaths = extensionPaths;
     this.onDesiredStateChanged = this.#desiredStateChangeEventEmitter.event;
     this.#ipc.setExtensionMetadata(this._scan(this.#extensionPaths));
