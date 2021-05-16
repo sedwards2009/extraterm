@@ -13,6 +13,10 @@ const EXTENSION_NAMESPACE = "extension_manager";
 const METADATA_KEY = "metadata";
 const DESIRED_STATE_KEY = "desired_state";
 
+/**
+ * Handles extension management IPC and sharing of data/state between the main
+ * and render/window processes.
+ */
 export class ExtensionManagerIpc {
   #sharedMap: SharedMap = null;
   #onDesiredStateChangeEventEmitter = new EventEmitter<void>();

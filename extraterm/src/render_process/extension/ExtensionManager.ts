@@ -61,7 +61,7 @@ const allCategories: Category[] = [
 export class ExtensionManagerImpl implements ExtensionManager {
   private _log: Logger = null;
 
-  #sharedData: ExtensionManagerIpc = null;
+  #ipc: ExtensionManagerIpc = null;
   #activeExtensions: ActiveExtension[] = [];
   #extensionLocalState: ExtensionDesiredState;
   #splitLayout: SplitLayout = null;
@@ -73,7 +73,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   extensionUiUtils: ExtensionUiUtils = null;
 
-  private _commonExtensionWindowState: CommonExtensionWindowState = {
+  #commonExtensionWindowState: CommonExtensionWindowState = {
     activeTabContent: null,
     activeTerminal: null,
     activeTextEditor: null,
@@ -83,18 +83,18 @@ export class ExtensionManagerImpl implements ExtensionManager {
     activeHyperlinkURL: null,
   };
 
-  private _onCommandsChangedEventEmitter = new EventEmitter<void>();
+  #onCommandsChangedEventEmitter = new EventEmitter<void>();
   onCommandsChanged: ExtensionApi.Event<void>;
-  private _commandsChangedLater: DebouncedDoLater = null;
+  #commandsChangedLater: DebouncedDoLater = null;
 
   constructor(configDatabase: ConfigDatabase, sharedMap: SharedMap.SharedMap) {
     this._log = getLogger("ExtensionManager", this);
     this.#configDatabase = configDatabase;
-    this.#sharedData = new ExtensionManagerIpc(sharedMap);
+    this.#ipc = new ExtensionManagerIpc(sharedMap);
 
     this.onStateChanged = this.#onStateChangedEventEmitter.event;
-    this.onCommandsChanged = this._onCommandsChangedEventEmitter.event;
-    this._commandsChangedLater = new DebouncedDoLater(() => this._onCommandsChangedEventEmitter.fire(undefined));
+    this.onCommandsChanged = this.#onCommandsChangedEventEmitter.event;
+    this.#commandsChangedLater = new DebouncedDoLater(() => this.#onCommandsChangedEventEmitter.fire(undefined));
     this.extensionUiUtils = new ExtensionUiUtilsImpl();
   }
 
@@ -113,9 +113,9 @@ export class ExtensionManagerImpl implements ExtensionManager {
   startUp(): void {
     this.#extensionLocalState = {};
 
-    this._goToNewDesiredState(this.#sharedData.getDesiredState());
-    this.#sharedData.onDesiredStateChange(() => {
-      this._goToNewDesiredState(this.#sharedData.getDesiredState());
+    this._goToNewDesiredState(this.#ipc.getDesiredState());
+    this.#ipc.onDesiredStateChange(() => {
+      this._goToNewDesiredState(this.#ipc.getDesiredState());
     });
   }
 
@@ -132,7 +132,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
       }
     }
 
-    for (const extensionInfo of this.#sharedData.getExtensionMetadata()) {
+    for (const extensionInfo of this.#ipc.getExtensionMetadata()) {
       if (enableList.indexOf(extensionInfo.name) !== -1) {
         if ( ! isMainProcessExtension(extensionInfo)) {
           this._startExtension(extensionInfo);
@@ -154,7 +154,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
     if ( ! isMainProcessExtension(metadata)) {
 
       const applicationVersion = this.#configDatabase.getSystemConfig().applicationVersion;
-      contextImpl = new ExtensionContextImpl(this, metadata, this._commonExtensionWindowState, applicationVersion);
+      contextImpl = new ExtensionContextImpl(this, metadata, this.#commonExtensionWindowState, applicationVersion);
       if (metadata.main != null) {
         module = this._loadExtensionModule(metadata);
         if (module == null) {
@@ -206,7 +206,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   getAllExtensions(): ExtensionMetadata[] {
-    return [...this.#sharedData.getExtensionMetadata()];
+    return [...this.#ipc.getExtensionMetadata()];
   }
 
   isExtensionRunning(name: string): boolean {
@@ -282,7 +282,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
-    for (const metadata of this.#sharedData.getExtensionMetadata()) {
+    for (const metadata of this.#ipc.getExtensionMetadata()) {
       for (const provider of metadata.contributes.terminalThemeProviders) {
         for (const formatName of provider.humanFormatNames) {
           results.push( { name: provider.name, formatName } );
@@ -294,7 +294,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   getAllSyntaxThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
-    for (const metadata of this.#sharedData.getExtensionMetadata()) {
+    for (const metadata of this.#ipc.getExtensionMetadata()) {
       for (const provider of metadata.contributes.syntaxThemeProviders) {
         for (const formatName of provider.humanFormatNames) {
           results.push( { name: provider.name, formatName } );
@@ -305,31 +305,31 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   getActiveTab(): HTMLElement {
-    return this._commonExtensionWindowState.activeTabContent;
+    return this.#commonExtensionWindowState.activeTabContent;
   }
 
   getActiveTerminal(): EtTerminal {
-    return this._commonExtensionWindowState.activeTerminal;
+    return this.#commonExtensionWindowState.activeTerminal;
   }
 
   getActiveTextEditor(): TextEditor {
-    return this._commonExtensionWindowState.activeTextEditor;
+    return this.#commonExtensionWindowState.activeTextEditor;
   }
 
   getActiveTabContent(): HTMLElement {
-    return this._commonExtensionWindowState.activeTabContent;
+    return this.#commonExtensionWindowState.activeTabContent;
   }
 
   getActiveTabWidget(): TabWidget {
-    return this._commonExtensionWindowState.activeTabsWidget;
+    return this.#commonExtensionWindowState.activeTabsWidget;
   }
 
   isInputFieldFocus(): boolean {
-    return this._commonExtensionWindowState.isInputFieldFocus;
+    return this.#commonExtensionWindowState.isInputFieldFocus;
   }
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[] {
-    return this.queryCommandsWithExtensionWindowState(options, this._commonExtensionWindowState);
+    return this.queryCommandsWithExtensionWindowState(options, this.#commonExtensionWindowState);
   }
 
   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[] {
@@ -530,7 +530,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   copyExtensionWindowState(): CommonExtensionWindowState {
-    return { ...this._commonExtensionWindowState };
+    return { ...this.#commonExtensionWindowState };
   }
 
   executeCommand(command: string, args?: any): any {
@@ -589,7 +589,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   private _mergeExtensionWindowState(newState: CommonExtensionWindowState): void {
-    const state = this._commonExtensionWindowState;
+    const state = this.#commonExtensionWindowState;
 
     if (state.activeTabContent === newState.activeTabContent) {
       state.activeTerminal = newState.activeTerminal || state.activeTerminal;
@@ -609,7 +609,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
   private _setExtensionWindowState(newState: CommonExtensionWindowState): void {
     for (const key in newState) {
-      this._commonExtensionWindowState[key] = newState[key];
+      this.#commonExtensionWindowState[key] = newState[key];
     }
   }
 
@@ -715,6 +715,6 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   commandRegistrationChanged(): void {
-    this._commandsChangedLater.trigger();
+    this.#commandsChangedLater.trigger();
   }
 }
