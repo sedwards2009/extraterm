@@ -14,7 +14,7 @@ import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 import {Logger, getLogger} from "extraterm-logging";
 import { trimBetweenTags } from 'extraterm-trim-between-tags';
 import { ResizeNotifier } from 'extraterm-resize-notifier';
-import { ConfigDatabase, GENERAL_CONFIG, ShowTipsStrEnum } from '../../Config';
+import { ShowTipsStrEnum } from '../../Config';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {ViewerElement} from '../viewers/ViewerElement';
@@ -22,6 +22,7 @@ import {ThemeableElementBase} from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import * as DomUtils from '../DomUtils';
 import { emitResizeEvent, SetterState } from '../VirtualScrollArea';
+import { ConfigDatabase } from 'extraterm/src/ConfigDatabase';
 
 const ID = "EtTipViewerTemplate";
 const ID_CONTAINER = "ID_CONTAINER";
@@ -113,7 +114,7 @@ export class TipViewer extends ViewerElement implements Disposable {
     super.connectedCallback();
 
     if (DomUtils.getShadowRoot(this) == null) {
-      this._tipIndex = this._configManager.getConfig(GENERAL_CONFIG).tipCounter % this._getTipCount();
+      this._tipIndex = this._configManager.getGeneralConfig().tipCounter % this._getTipCount();
       const shadow = this.attachShadow({ mode: 'open', delegatesFocus: false });
       const clone = this.createClone();
       shadow.appendChild(clone);
@@ -155,11 +156,11 @@ export class TipViewer extends ViewerElement implements Disposable {
       });
 
       const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-      showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
+      showTipsSelect.value = this._configManager.getGeneralConfig().showTips;
       showTipsSelect.addEventListener('change', () => {
-        const newConfig = this._configManager.getConfigCopy(GENERAL_CONFIG);
+        const newConfig = this._configManager.getGeneralConfigCopy();
         newConfig.showTips = <ShowTipsStrEnum> showTipsSelect.value;
-        this._configManager.setConfig(GENERAL_CONFIG, newConfig);
+        this._configManager.setGeneralConfig(newConfig);
       });
     }
     this._handleResize();
@@ -262,7 +263,7 @@ export class TipViewer extends ViewerElement implements Disposable {
 
   private _configChanged(): void {
     const showTipsSelect = <HTMLSelectElement> DomUtils.getShadowId(this, ID_SHOW_TIPS);
-    showTipsSelect.value = this._configManager.getConfig(GENERAL_CONFIG).showTips;
+    showTipsSelect.value = this._configManager.getGeneralConfig().showTips;
   }
 
   private _keyBindingChanged(): void {

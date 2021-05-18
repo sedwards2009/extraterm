@@ -6,7 +6,7 @@ import { CustomElement } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { AppearanceSettingsUi } from './AppearanceSettingsUi';
-import { FontInfo, GeneralConfig, GENERAL_CONFIG, ConfigKey, SYSTEM_CONFIG, SystemConfig } from '../../Config';
+import { FontInfo, GeneralConfig, GENERAL_CONFIG, SYSTEM_CONFIG, SystemConfig } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
@@ -15,6 +15,7 @@ import { shell } from 'electron';
 import * as WebIpc from '../WebIpc';
 import { ExtensionManager } from '../extension/InternalTypes';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { ConfigKey } from "../../ConfigDatabase";
 
 export const APPEARANCE_SETTINGS_TAG = "et-appearance-settings";
 
@@ -28,7 +29,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   private _terminalVisualConfig: TerminalVisualConfig = null;
 
   constructor() {
-    super(AppearanceSettingsUi, [GENERAL_CONFIG, SYSTEM_CONFIG]);
+    super(AppearanceSettingsUi);
     this._log = getLogger(APPEARANCE_SETTINGS_TAG, this);
     this._getUi().$on("openUserTerminalThemesDir", () => {
       shell.showItemInFolder(this._userTerminalThemeDirectory);
@@ -88,7 +89,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
   }
 
   protected _dataChanged(): void {
-    const newConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
+    const newConfig = this.configDatabase.getGeneralConfigCopy();
     const ui = this._getUi();
 
     newConfig.titleBarStyle = ui.titleBarStyle;
@@ -106,7 +107,7 @@ export class AppearanceSettings extends SettingsBase<AppearanceSettingsUi> {
     newConfig.terminalMarginStyle = ui.terminalMarginStyle;
     newConfig.windowBackgroundMode = ui.windowBackgroundMode;
     newConfig.windowBackgroundTransparencyPercent = ui.windowBackgroundTransparencyPercent;
-    this._updateConfig(GENERAL_CONFIG, newConfig);
+    this.configDatabase.setGeneralConfig(newConfig);
   }
 
   set themes(themes: ThemeTypes.ThemeInfo[]) {

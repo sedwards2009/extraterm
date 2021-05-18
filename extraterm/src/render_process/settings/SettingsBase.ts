@@ -1,23 +1,23 @@
 /**
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018-2021 Simon Edwards <simon@simonzone.com>
  */
-import { ConfigDatabase, ConfigKey } from '../../Config';
-import { ConfigElementLifecycleBinder } from './ConfigElementLifecycleBinder';
+import { COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG } from '../../Config';
 import { ThemeableElementBase } from '../ThemeableElementBase';
 import * as ThemeTypes from '../../theme/Theme';
 import Vue from 'vue';
 import { log } from 'extraterm-logging/dist/LogDecorator';
+import { Disposable } from "@extraterm/extraterm-extension-api";
+import { ConfigChangeEvent, ConfigDatabase, ConfigKey } from "../../ConfigDatabase";
 
 
 export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
-  private _configBinder: ConfigElementLifecycleBinder = null;
+  #configDatabase: ConfigDatabase = null;
+  #configDatabaseEventDispose: Disposable = null;
   private _ui: V;
   private _isMounted = false;
 
-  constructor(uiConstructor: { new(): V}, keys: ConfigKey[]) {
+  constructor(uiConstructor: { new(): V}) {
     super();
-    this._configBinder = new ConfigElementLifecycleBinder(
-      (key: ConfigKey, config: any): void => this._handleConfigChange(key, config), keys);
 
     this._ui = new uiConstructor();
     this._ui.$watch('$data', this._dataChanged.bind(this), { deep: true, immediate: false } );
@@ -30,10 +30,6 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
     this.updateThemeCss();
   }
 
-  private _handleConfigChange(key: ConfigKey, config: any): void {
-    this._setConfigInUi(key, config);
-  }
-
   protected _getUi(): V {
     return this._ui;
   }
@@ -43,11 +39,37 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
   }
 
   set configDatabase(configDatabase: ConfigDatabase) {
-    this._configBinder.setConfigDatabase(configDatabase);
+    this._disposeConfigDatabaseOnChange();
+    this.#configDatabase = configDatabase;
+    if (this.#configDatabase == null) {
+      return;
+    }
+    this._connectdConfigDatabaseOnChange();
+
+    this._setConfigInUi(SYSTEM_CONFIG, this.#configDatabase.getSystemConfig());
+    this._setConfigInUi(GENERAL_CONFIG, this.#configDatabase.getGeneralConfig());
+    this._setConfigInUi(COMMAND_LINE_ACTIONS_CONFIG, this.#configDatabase.getCommandLineActionConfig());
+    this._setConfigInUi(SESSION_CONFIG, this.#configDatabase.getSessionConfig());
   }
 
   get configDatabase(): ConfigDatabase {
-    return this._configBinder.getConfigDatabase();
+    return this.#configDatabase;
+  }
+
+  private _connectdConfigDatabaseOnChange(): void {
+    this._disposeConfigDatabaseOnChange();
+    if (this.#configDatabase != null) {
+      this.#configDatabaseEventDispose = this.#configDatabase.onChange((ev: ConfigChangeEvent) => {
+        this._setConfigInUi(ev.key, ev.newConfig);
+      });
+    }
+  }
+
+  private _disposeConfigDatabaseOnChange(): void {
+    if (this.#configDatabaseEventDispose != null) {
+      this.#configDatabaseEventDispose.dispose();
+      this.#configDatabaseEventDispose = null;
+    }
   }
 
   connectedCallback(): void {
@@ -59,25 +81,12 @@ export abstract class SettingsBase<V extends Vue> extends ThemeableElementBase {
       this._isMounted = true;
     }
 
-    this._configBinder.connectedCallback();
+    this._connectdConfigDatabaseOnChange();
   }
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._configBinder.disconnectedCallback();
-  }
-
-  protected _getConfigCopy(key: ConfigKey): any {
-    if (this._configBinder.getConfigDatabase() != null) {
-      return this._configBinder.getConfigDatabase().getConfigCopy(key);
-    }
-    return null;
-  }
-
-  protected _updateConfig(key: ConfigKey, newConfig: any): void {
-    if (this._configBinder.getConfigDatabase() != null) {
-      this._configBinder.getConfigDatabase().setConfig(key, newConfig);
-    }
+    this._disposeConfigDatabaseOnChange();
   }
 
   protected abstract _setConfigInUi(key: ConfigKey, config: any): void;

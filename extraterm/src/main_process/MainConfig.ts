@@ -3,25 +3,21 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as fs from 'fs';
-import * as path from 'path';
-import * as _ from 'lodash';
-import {app, BrowserWindow } from 'electron';
-import { createUuid } from 'extraterm-uuid';
+import * as fs from "fs";
+import * as path from "path";
+import * as _ from "lodash";
+import { app } from "electron";
 
-import { Event } from '@extraterm/extraterm-extension-api';
+import { createUuid } from "extraterm-uuid";
 import { Logger, getLogger } from "extraterm-logging";
-import { freezeDeep } from 'extraterm-readonly-toolbox';
-
-import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME, FALLBACK_SYNTAX_THEME } from '../theme/Theme';
-import { EventEmitter } from '../utils/EventEmitter';
-import {CommandLineAction, SystemConfig, ConfigDatabase, ConfigKey, UserStoredConfig, GENERAL_CONFIG,
-  SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, ConfigChangeEvent, FontInfo,
-  ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle, WindowBackgroundMode } from '../Config';
-import * as Messages from '../WindowMessages';
-import { ThemeManager } from '../theme/ThemeManager';
-import { KeybindingsIOManager } from './KeybindingsIOManager';
-import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from '../keybindings/KeybindingsTypes';
+import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME, FALLBACK_SYNTAX_THEME } from "../theme/Theme";
+import { GeneralConfig, FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle,
+  WindowBackgroundMode, GENERAL_CONFIG } from "../Config";
+import { ThemeManager } from "../theme/ThemeManager";
+import { KeybindingsIOManager } from "./KeybindingsIOManager";
+import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from "../keybindings/KeybindingsTypes";
+import { PersistentConfigDatabase } from "./PersistentConfigDatabase";
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 export const EXTRATERM_CONFIG_DIR = "extraterm";
 const PATHS_CONFIG_FILENAME = "application_paths.json";
@@ -105,7 +101,7 @@ export function setupAppData(): void {
 
 let userSettingsPath: string = null;
 
-function getUserSettingsDirectory(): string {
+export function getUserSettingsDirectory(): string {
   if (userSettingsPath == null) {
     const overridePath = getUserSettingsDirectoryFromPathsConfig();
     if (overridePath != null) {
@@ -162,7 +158,7 @@ export function getUserKeybindingsDirectory(): string {
   return path.join(getUserSettingsDirectory(), USER_KEYBINDINGS_DIR);
 }
 
-function getConfigurationFilename(): string {
+export function getConfigurationFilename(): string {
   return path.join(getUserSettingsDirectory(), MAIN_CONFIG);
 }
 
@@ -177,79 +173,114 @@ export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean
   return themeInfo.type === themeType;
 }
 
-export function sanitizeAndIinitializeConfigs(userStoredConfig: UserStoredConfig, themeManager: ThemeManager, configDatabase: ConfigDatabaseImpl,
-    keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[]): UserStoredConfig {
-  sanitizeUserStoredConfig(userStoredConfig, availableFonts);
-  sanitizeUserStoredConfigThemes(userStoredConfig, themeManager);
-  distributeUserStoredConfig(userStoredConfig, configDatabase, keybindingsIOManager);
-  return userStoredConfig;
+export function sanitizeAndIinitializeConfigs(configDatabase: PersistentConfigDatabase, themeManager: ThemeManager,
+    keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[]): void {
+
+  sanitizeGeneralConfig(configDatabase, themeManager, availableFonts);
+  sanitizeSessionConfig(configDatabase);
+  sanitizeCommandLineActionsConfig(configDatabase);
+
+  distributeUserStoredConfig(configDatabase, keybindingsIOManager);
 }
 
-/**
- * Read the configuration.
- *
- * @returns The configuration object.
- */
-export function readUserStoredConfigFile(): UserStoredConfig {
-  const filename = getConfigurationFilename();
-  let config: UserStoredConfig = { };
+const frameRules: FrameRule[] = ["always_frame", "frame_if_lines", "never_frame"];
 
-  if (fs.existsSync(filename)) {
-    _log.info("Reading user configuration from " + filename);
-    const configJson = fs.readFileSync(filename, {encoding: "utf8"});
-    try {
-      config = <UserStoredConfig>JSON.parse(configJson);
-    } catch(ex) {
-      _log.warn("Unable to read " + filename, ex);
-    }
-  } else {
-    _log.info("Couldn't find user configuration file at " + filename);
-  }
-  return config;
-}
+function sanitizeGeneralConfig(configDatabase: ConfigDatabase, themeManager: ThemeManager,
+    availableFonts: FontInfo[]): void {
 
-function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, availableFonts: FontInfo[]): void {
+  const generalConfig = configDatabase.getGeneralConfigCopy() ?? {};
+
   const configCursorStyles: ConfigCursorStyle[] = ["block", "underscore", "beam"];
-  const frameRules: FrameRule[] = ["always_frame", "frame_if_lines", "never_frame"];
 
-  sanitizeField(userStoredConfig, "autoCopySelectionToClipboard", true);
-  sanitizeField(userStoredConfig, "blinkingCursor", false);
+  sanitizeField(generalConfig, "autoCopySelectionToClipboard", true);
+  sanitizeField(generalConfig, "blinkingCursor", false);
 
-  if (userStoredConfig.commandLineActions == null) {
-    const defaultCLA: CommandLineAction[] = [
-      { frameRule: "never_frame", frameRuleLines: 5, match: "show", matchType: "name" }
-    ];
-    userStoredConfig.commandLineActions = defaultCLA;
-  } else {
-    for (const action of userStoredConfig.commandLineActions) {
-      sanitizeStringEnumField(action, "frameRule", frameRules, "never_frame");
-      sanitizeField(action, "frameRuleLines", 5);
-      sanitizeField(action, "match", "");
-      sanitizeStringEnumField(action, "matchType", ["name", "regexp"], "name");
-    }
+  sanitizeStringEnumField(generalConfig, "cursorStyle", configCursorStyles, "block");
+  sanitizeField(generalConfig, "frameByDefault", true);
+  sanitizeStringEnumField(generalConfig, "frameRule", frameRules, "frame_if_lines");
+  sanitizeField(generalConfig, "frameRuleLines", 10);
+  sanitizeStringEnumField(generalConfig, "gpuDriverWorkaround", ["none", "no_blend"], "none");
+
+  sanitizeField(generalConfig, "isHardwareAccelerated", true);
+  generalConfig.isHardwareAccelerated = true;  // Always on since WebGL was introduced.
+
+  sanitizeField(generalConfig, "keybindingsName", process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC);
+  if ( ! AllLogicalKeybindingsNames.includes(generalConfig.keybindingsName)) {
+    generalConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
   }
 
-  sanitizeStringEnumField(userStoredConfig, "cursorStyle", configCursorStyles, "block");
-  sanitizeField(userStoredConfig, "frameByDefault", true);
-  sanitizeStringEnumField(userStoredConfig, "frameRule", frameRules, "frame_if_lines");
-  sanitizeField(userStoredConfig, "frameRuleLines", 10);
-  sanitizeStringEnumField(userStoredConfig, "gpuDriverWorkaround", ["none", "no_blend"], "none");
+  sanitizeField(generalConfig, "minimizeToTray", false);
+  sanitizeField(generalConfig, "scrollbackMaxFrames", 100);
+  sanitizeField(generalConfig, "scrollbackMaxLines", 500000);
 
-  sanitizeField(userStoredConfig, "isHardwareAccelerated", true);
-  userStoredConfig.isHardwareAccelerated = true;  // Always on since WebGL was introduced.
+  sanitizeStringEnumField(generalConfig, "showTips", ["always", "daily", "never"], "always");
+  sanitizeField(generalConfig, "showTrayIcon", false);
 
-  sanitizeField(userStoredConfig, "keybindingsName", process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC);
-  if ( ! AllLogicalKeybindingsNames.includes(userStoredConfig.keybindingsName)) {
-    userStoredConfig.keybindingsName = process.platform === "darwin" ? KEYBINDINGS_OSX : KEYBINDINGS_PC;
+  sanitizeField(generalConfig, "terminalFont", DEFAULT_TERMINALFONT);
+  if ( ! availableFonts.some( (font) => font.postscriptName === generalConfig.terminalFont)) {
+    generalConfig.terminalFont = DEFAULT_TERMINALFONT;
   }
 
-  sanitizeField(userStoredConfig, "minimizeToTray", false);
-  sanitizeField(userStoredConfig, "scrollbackMaxFrames", 100);
-  sanitizeField(userStoredConfig, "scrollbackMaxLines", 500000);
+  sanitizeField(generalConfig, "terminalFontSize", 13);
+  generalConfig.terminalFontSize = Math.max(Math.min(1024, generalConfig.terminalFontSize), 4);
 
-  sanitizeField(userStoredConfig, "sessions", []);
+  sanitizeField(generalConfig, "terminalDisplayLigatures", true);
+
+  const marginStyles: TerminalMarginStyle[] = ["normal", "none", "thick", "thin"];
+  sanitizeStringEnumField(generalConfig, "terminalMarginStyle", marginStyles, "normal");
+
+  sanitizeField(generalConfig, "tipCounter", 0);
+  sanitizeField(generalConfig, "tipTimestamp", 0);
+
+  const titleBarStyles: TitleBarStyle[] = ["compact", "native", "theme"];
+  sanitizeStringEnumField(generalConfig, "titleBarStyle", titleBarStyles, "compact");
+
+  sanitizeField(generalConfig, "uiScalePercent", 100);
+  generalConfig.uiScalePercent = Math.min(500, Math.max(5, generalConfig.uiScalePercent || 100));
+
+  const windowBackgroundModes: WindowBackgroundMode[] = ["opaque", "blur"];
+  sanitizeStringEnumField(generalConfig, "windowBackgroundMode", windowBackgroundModes, "opaque");
+
+  sanitizeField(generalConfig, "windowBackgroundTransparencyPercent", 50);
+  generalConfig.windowBackgroundTransparencyPercent = Math.max(Math.min(100,
+    generalConfig.windowBackgroundTransparencyPercent), 0);
+
+  sanitizeField(generalConfig, "closeWindowWhenEmpty", true);
+
+  sanitizeField(generalConfig, "middleMouseButtonAction", "paste");
+  sanitizeField(generalConfig, "middleMouseButtonShiftAction", "paste");
+  sanitizeField(generalConfig, "middleMouseButtonControlAction", "paste");
+  sanitizeField(generalConfig, "rightMouseButtonAction", "context_menu");
+  sanitizeField(generalConfig, "rightMouseButtonShiftAction", "context_menu");
+  sanitizeField(generalConfig, "rightMouseButtonControlAction", "context_menu");
+
+  sanitizeField(generalConfig, "activeExtensions", {});
+
+  sanitizeField(generalConfig, "themeTerminal", FALLBACK_TERMINAL_THEME);
+  if ( ! isThemeType(themeManager.getTheme(generalConfig.themeTerminal), "terminal")) {
+    generalConfig.themeTerminal = FALLBACK_TERMINAL_THEME;
+  }
+  sanitizeField(generalConfig, "themeSyntax", FALLBACK_SYNTAX_THEME);
+  if ( ! isThemeType(themeManager.getTheme(generalConfig.themeSyntax), "syntax")) {
+    generalConfig.themeSyntax = FALLBACK_SYNTAX_THEME;
+  }
+
+  sanitizeField(generalConfig, "themeGUI", "two-dark-ui");
+  if (generalConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(generalConfig.themeGUI), "gui")) {
+    generalConfig.themeGUI = "two-dark-ui";
+  }
+
+  configDatabase.setGeneralConfig(generalConfig);
+}
+
+function sanitizeSessionConfig(configDatabase: ConfigDatabase): void {
+  let sessionConfigs = configDatabase.getSessionConfigCopy();
+  if (sessionConfigs == null || ! Array.isArray(sessionConfigs)) {
+    sessionConfigs = [];
+  }
+
   // Ensure that when reading a config file where args is not defined, we define it as an empty string
-  for (const sessionConfiguration of userStoredConfig.sessions) {
+  for (const sessionConfiguration of sessionConfigs) {
     sanitizeField(sessionConfiguration, "name", "");
     sanitizeField(sessionConfiguration, "uuid", createUuid());
 
@@ -264,64 +295,25 @@ function sanitizeUserStoredConfig(userStoredConfig: UserStoredConfig, availableF
     sanitizeField(sessionConfiguration, "args", "");
   }
 
-  sanitizeStringEnumField(userStoredConfig, "showTips", ["always", "daily", "never"], "always");
-  sanitizeField(userStoredConfig, "showTrayIcon", false);
-
-  sanitizeField(userStoredConfig, "terminalFont", DEFAULT_TERMINALFONT);
-  if ( ! availableFonts.some( (font) => font.postscriptName === userStoredConfig.terminalFont)) {
-    userStoredConfig.terminalFont = DEFAULT_TERMINALFONT;
-  }
-
-  sanitizeField(userStoredConfig, "terminalFontSize", 13);
-  userStoredConfig.terminalFontSize = Math.max(Math.min(1024, userStoredConfig.terminalFontSize), 4);
-
-  sanitizeField(userStoredConfig, "terminalDisplayLigatures", true);
-
-  const marginStyles: TerminalMarginStyle[] = ["normal", "none", "thick", "thin"];
-  sanitizeStringEnumField(userStoredConfig, "terminalMarginStyle", marginStyles, "normal");
-
-  sanitizeField(userStoredConfig, "tipCounter", 0);
-  sanitizeField(userStoredConfig, "tipTimestamp", 0);
-
-  const titleBarStyles: TitleBarStyle[] = ["compact", "native", "theme"];
-  sanitizeStringEnumField(userStoredConfig, "titleBarStyle", titleBarStyles, "compact");
-
-  sanitizeField(userStoredConfig, "uiScalePercent", 100);
-  userStoredConfig.uiScalePercent = Math.min(500, Math.max(5, userStoredConfig.uiScalePercent || 100));
-
-  const windowBackgroundModes: WindowBackgroundMode[] = ["opaque", "blur"];
-  sanitizeStringEnumField(userStoredConfig, "windowBackgroundMode", windowBackgroundModes, "opaque");
-
-  sanitizeField(userStoredConfig, "windowBackgroundTransparencyPercent", 50);
-  userStoredConfig.windowBackgroundTransparencyPercent = Math.max(Math.min(100,
-    userStoredConfig.windowBackgroundTransparencyPercent), 0);
-
-  sanitizeField(userStoredConfig, "closeWindowWhenEmpty", true);
-
-  sanitizeField(userStoredConfig, "middleMouseButtonAction", "paste");
-  sanitizeField(userStoredConfig, "middleMouseButtonShiftAction", "paste");
-  sanitizeField(userStoredConfig, "middleMouseButtonControlAction", "paste");
-  sanitizeField(userStoredConfig, "rightMouseButtonAction", "context_menu");
-  sanitizeField(userStoredConfig, "rightMouseButtonShiftAction", "context_menu");
-  sanitizeField(userStoredConfig, "rightMouseButtonControlAction", "context_menu");
-
-  sanitizeField(userStoredConfig, "activeExtensions", {});
+  configDatabase.setSessionConfig(sessionConfigs);
 }
 
-function sanitizeUserStoredConfigThemes(userStoredConfig: UserStoredConfig, themeManager: ThemeManager): void {
-  sanitizeField(userStoredConfig, "themeTerminal", FALLBACK_TERMINAL_THEME);
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeTerminal), "terminal")) {
-    userStoredConfig.themeTerminal = FALLBACK_TERMINAL_THEME;
-  }
-  sanitizeField(userStoredConfig, "themeSyntax", FALLBACK_SYNTAX_THEME);
-  if ( ! isThemeType(themeManager.getTheme(userStoredConfig.themeSyntax), "syntax")) {
-    userStoredConfig.themeSyntax = FALLBACK_SYNTAX_THEME;
+function sanitizeCommandLineActionsConfig(configDatabase: ConfigDatabase): void {
+  let commandLineActions = configDatabase.getCommandLineActionConfigCopy();
+  if ( ! Array.isArray(commandLineActions)) {
+    commandLineActions = [
+      { frameRule: "never_frame", frameRuleLines: 5, match: "show", matchType: "name" }
+    ];
+  } else {
+    for (const action of commandLineActions) {
+      sanitizeStringEnumField(action, "frameRule", frameRules, "never_frame");
+      sanitizeField(action, "frameRuleLines", 5);
+      sanitizeField(action, "match", "");
+      sanitizeStringEnumField(action, "matchType", ["name", "regexp"], "name");
+    }
   }
 
-  sanitizeField(userStoredConfig, "themeGUI", "two-dark-ui");
-  if (userStoredConfig.themeGUI === "default" || ! isThemeType(themeManager.getTheme(userStoredConfig.themeGUI), 'gui')) {
-    userStoredConfig.themeGUI = "two-dark-ui";
-  }
+  configDatabase.setCommandLineActionConfig(commandLineActions);
 }
 
 function sanitizeField<T, K extends keyof T>(object: T, key: K, defaultValue: T[K]): void {
@@ -339,15 +331,8 @@ function sanitizeStringEnumField<T, K extends keyof T>(object: T, key: K, availa
   }
 }
 
-function distributeUserStoredConfig(userStoredConfig: UserStoredConfig, configDatabase: ConfigDatabaseImpl,
+function distributeUserStoredConfig(configDatabase: PersistentConfigDatabase,
     keybindingsIOManager: KeybindingsIOManager): void {
-
-  configDatabase.setConfigNoWrite(SESSION_CONFIG, userStoredConfig.sessions);
-  configDatabase.setConfigNoWrite(COMMAND_LINE_ACTIONS_CONFIG, userStoredConfig.commandLineActions);
-
-  delete userStoredConfig.sessions;
-  delete userStoredConfig.commandLineActions;
-  configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
 
   configDatabase.onChange((event: ConfigChangeEvent): void => {
     if (event.key === GENERAL_CONFIG) {
@@ -356,122 +341,11 @@ function distributeUserStoredConfig(userStoredConfig: UserStoredConfig, configDa
       const newGeneralConfig = <GeneralConfig> event.newConfig;
       if (newGeneralConfig != null) {
         if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
-          const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+          const systemConfig = configDatabase.getSystemConfigCopy();
           systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(newGeneralConfig.keybindingsName);
-          configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+          configDatabase.setSystemConfig(systemConfig);
         }
       }
     }
-
-    broadcastConfigToWindows(event);
   });
-}
-
-function broadcastConfigToWindows(event: ConfigChangeEvent): void {
-  const newConfigMsg: Messages.ConfigMessage = {
-    type: Messages.MessageType.CONFIG_BROADCAST,
-    key: event.key,
-    config: event.newConfig
-  };
-  sendMessageToAllWindows(newConfigMsg);
-}
-
-function sendMessageToAllWindows(msg: Messages.Message): void {
-  if (LOG_FINE) {
-    _log.debug("Broadcasting message to all windows");
-  }
-
-  for (const window of BrowserWindow.getAllWindows()) {
-    if (LOG_FINE) {
-      _log.debug(`Broadcasting message to window ${window.id}`);
-    }
-    window.webContents.send(Messages.CHANNEL_NAME, msg);
-  }
-}
-
-
-export class ConfigDatabaseImpl implements ConfigDatabase {
-  private _configDb = new Map<ConfigKey, any>();
-  private _onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
-  onChange: Event<ConfigChangeEvent>;
-  private _log: Logger;
-
-  constructor() {
-    this.onChange = this._onChangeEventEmitter.event;
-    this._log = getLogger("ConfigDatabaseImpl", this);
-  }
-
-  getConfig(key: ConfigKey): any {
-    if (key === "*") {
-      // Wildcard fetch all.
-      const result = {};
-
-      for (const [dbKey, value] of this._configDb.entries()) {
-        result[dbKey] = value;
-      }
-      freezeDeep(result);
-      return result;
-    } else {
-      const result = this._configDb.get(key);
-      if (result == null) {
-        this._log.warn("Unable to find config for key ", key);
-      } else {
-        return result;
-      }
-    }
-  }
-
-  getConfigCopy(key: ConfigKey): any {
-    const data = this.getConfig(key);
-    if (data == null) {
-      return null;
-    }
-    return _.cloneDeep(data);
-  }
-
-  setConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    if (key === "*") {
-      for (const objectKey of Object.getOwnPropertyNames(newConfig)) {
-        this._setSingleConfigNoWrite(<ConfigKey> objectKey, newConfig[objectKey]);
-      }
-    } else {
-      this._setSingleConfigNoWrite(key, newConfig);
-    }
-  }
-
-  private _setSingleConfigNoWrite(key: ConfigKey, newConfig: any): void {
-    const oldConfig = this.getConfig(key);
-    if (_.isEqual(oldConfig, newConfig)) {
-      return;
-    }
-
-    if (Object.isFrozen(newConfig)) {
-      this._configDb.set(key, newConfig);
-    } else {
-      this._configDb.set(key, freezeDeep(_.cloneDeep(newConfig)));
-    }
-
-    this._onChangeEventEmitter.fire({key, oldConfig, newConfig: this.getConfig(key)});
-  }
-
-  setConfig(key: ConfigKey, newConfig: any): void {
-    if (newConfig == null) {
-      this._log.warn("setConfig() newConfig is null for key ", key);
-    }
-
-    this.setConfigNoWrite(key, newConfig);
-    if ([GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG, SESSION_CONFIG, "*"].indexOf(key) !== -1) {
-      this._writeConfigurationFile();
-    }
-  }
-
-  private _writeConfigurationFile(): void {
-    const cleanConfig = <UserStoredConfig> this.getConfigCopy(GENERAL_CONFIG);
-    cleanConfig.commandLineActions = this.getConfig(COMMAND_LINE_ACTIONS_CONFIG);
-    cleanConfig.sessions = this.getConfig(SESSION_CONFIG);
-
-    const filename = getConfigurationFilename();
-    const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
-    fs.writeFileSync(filename, formattedConfig);
-  }
 }

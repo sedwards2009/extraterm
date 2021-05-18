@@ -7,7 +7,6 @@ import {ViewerMetadata, Disposable} from '@extraterm/extraterm-extension-api';
 
 import {ThemeableElementBase} from '../ThemeableElementBase';
 import {ViewerElement} from '../viewers/ViewerElement';
-import { ConfigDatabase } from '../../Config';
 import { KeybindingsManager } from '../keybindings/KeyBindingsManager';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -17,6 +16,7 @@ import { ExtensionManager } from '../extension/InternalTypes';
 import * as SupportsDialogStack from "../SupportsDialogStack";
 import { dispatchContextMenuRequest } from '../command/CommandUtils';
 import { TerminalVisualConfig } from '../TerminalVisualConfig';
+import { ConfigDatabase } from "../../ConfigDatabase";
 
 
 const CLASS_VISITOR_DIALOG = "CLASS_VISITOR_DIALOG";

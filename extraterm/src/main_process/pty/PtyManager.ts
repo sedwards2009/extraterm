@@ -7,12 +7,12 @@ import { Event, SessionConfiguration, CreateSessionOptions} from '@extraterm/ext
 import { createUuid } from 'extraterm-uuid';
 
 import { Pty, BufferSizeChange } from '../../pty/Pty';
-import { ConfigDatabase, SESSION_CONFIG } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import * as Util from '../../render_process/gui/Util';
 import { EventEmitter } from '../../utils/EventEmitter';
 import { MainExtensionManager } from '../extension/MainExtensionManager';
 import { log } from "extraterm-logging";
+import { ConfigDatabase } from "../../ConfigDatabase";
 
 
 const LOG_FINE = false;
@@ -70,7 +70,7 @@ export class PtyManager {
   onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
   createPty(sessionUuid: string, sessionOptions: CreateSessionOptions): number {
-    const sessions = this._configDatabase.getConfig(SESSION_CONFIG);
+    const sessions = this._configDatabase.getSessionConfig();
     let sessionConfiguration: SessionConfiguration = null;
     for (sessionConfiguration of sessions) {
       if (sessionConfiguration.uuid === sessionUuid) {

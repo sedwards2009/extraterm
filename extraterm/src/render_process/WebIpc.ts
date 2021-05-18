@@ -4,18 +4,17 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { BulkFileMetadata, EnvironmentMap, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
+import { BulkFileMetadata, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 import * as Electron from 'electron';
 const ipc = Electron.ipcRenderer;
 
 import {BulkFileIdentifier} from '../main_process/bulk_file_handling/BulkFileStorage';
 import * as Messages from '../WindowMessages';
-import * as config from '../Config';
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionDesiredState } from '../ExtensionMetadata';
 import { ThemeType } from '../theme/Theme';
 import { LogicalKeybindingsName, CustomKeybindingsSet } from '../keybindings/KeybindingsTypes';
 import { ClipboardType } from '../WindowMessages';
+import * as SharedMap from "../shared_map/SharedMap";
 
 const _log = getLogger("WebIPC");
 
@@ -75,14 +74,9 @@ function request(msg: Messages.Message, replyType: Messages.MessageType): Promis
     _log.debug("request: ${Messages.MessageType[msg.type]} => ", msg);
   }
   ipc.send(Messages.CHANNEL_NAME, msg);
-  return new Promise<Messages.Message>( (resolve,cancel) => {
+  return new Promise<Messages.Message>( (resolve, cancel) => {
     promiseQueue.push( { promiseResolve: resolve, messageType: replyType } );
   });
-}
-
-export function requestConfig(key: config.ConfigKey): Promise<Messages.ConfigMessage> {
-  const msg: Messages.ConfigRequestMessage = {type: Messages.MessageType.CONFIG_REQUEST, key};
-  return <Promise<Messages.ConfigMessage>> request(msg, Messages.MessageType.CONFIG);
 }
 
 export function requestThemeList(): Promise<Messages.ThemeListMessage> {
@@ -167,11 +161,6 @@ export function windowCloseRequest(): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function sendConfig(key: config.ConfigKey, config: any): void {
-  const msg: Messages.ConfigMessage = { type: Messages.MessageType.CONFIG, key, config };
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
 export function requestNewTag(): Promise<Messages.NewTagMessage> {
   const msg: Messages.NewTagRequestMessage = {type: Messages.MessageType.NEW_TAG_REQUEST, async: true};
   return <Promise<Messages.NewTagMessage>> request(msg, Messages.MessageType.NEW_TAG);
@@ -231,30 +220,6 @@ export function derefBulkFile(identifier: BulkFileIdentifier): void {
   ipc.send(Messages.CHANNEL_NAME, msg);
 }
 
-export function requestExtensionMetadataSync(): ExtensionMetadata[] {
-  const msg: Messages.ExtensionMetadataRequestMessage = {type: Messages.MessageType.EXTENSION_METADATA_REQUEST};
-  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
-  const extensionMetadataMessage = <Messages.ExtensionMetadataMessage> event;
-  return extensionMetadataMessage.extensionMetadata;
-}
-
-export function requestExtensionDesiredStateSync(): ExtensionDesiredState {
-  const msg: Messages.ExtensionDesiredStateRequestMesssage = {type: Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST};
-  const event = <any> ipc.sendSync(Messages.CHANNEL_NAME, msg);
-  const extensionDesriedStateMessage = <Messages.ExtensionDesiredStateMessage> event;
-  return extensionDesriedStateMessage.desiredState;
-}
-
-export function enableExtension(extensionName: string): void {
-  const msg: Messages.ExtensionEnableMessage = {type: Messages.MessageType.EXTENSION_ENABLE, extensionName};
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
-export function disableExtension(extensionName: string): void {
-  const msg: Messages.ExtensionDisableMessage = {type: Messages.MessageType.EXTENSION_DISABLE, extensionName};
-  ipc.send(Messages.CHANNEL_NAME, msg);
-}
-
 export function keybindingsRequestRead(name: LogicalKeybindingsName): Promise<Messages.KeybindingsReadMessage> {
   const msg: Messages.KeybindingsReadRequestMessage = {
     type: Messages.MessageType.KEYBINDINGS_READ_REQUEST,
@@ -302,4 +267,17 @@ export function commandResponse(uuid: string, result: any, exception: Error): vo
     exception: exception?.message
   };
   ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function sendSharedMapEvent(ev: SharedMap.ChangeEvent): void {
+  const msg: Messages.SharedMapEventMessage = {
+    type: Messages.MessageType.SHARED_MAP_EVENT,
+    event: ev
+  };
+  ipc.send(Messages.CHANNEL_NAME, msg);
+}
+
+export function requestSharedMapDump(): Promise<Messages.SharedMapDumpMessage> {
+  const msg: Messages.SharedMapDumpRequestMessage = { type: Messages.MessageType.SHARED_MAP_DUMP_REQUEST };
+  return <Promise<Messages.SharedMapDumpMessage>> request(msg, Messages.MessageType.SHARED_MAP_DUMP);
 }

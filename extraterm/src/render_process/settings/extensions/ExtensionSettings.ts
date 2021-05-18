@@ -4,12 +4,12 @@
 import { Logger, getLogger } from "extraterm-logging";
 import { CustomElement } from 'extraterm-web-component-decorators';
 import { SettingsBase } from '../SettingsBase';
-import { ConfigKey } from '../../../Config';
 
 import { ExtensionSettingsUi, EVENT_ENABLE_EXTENSION, EVENT_DISABLE_EXTENSION } from './ExtensionSettingsUi';
 import { ExtensionManager } from "../../extension/InternalTypes";
 import { Disposable } from '@extraterm/extraterm-extension-api';
 import { ExtensionMetadataAndState } from "./ExtensionMetadataAndStateType";
+import { ConfigKey } from "../../../ConfigDatabase";
 
 export const EXTENSION_SETTINGS_TAG = "et-extension-settings";
 
@@ -21,7 +21,7 @@ export class ExtensionSettings extends SettingsBase<ExtensionSettingsUi> {
   private _stateChangedDisposable: Disposable = null;
 
   constructor() {
-    super(ExtensionSettingsUi, []);
+    super(ExtensionSettingsUi);
     this._log = getLogger(EXTENSION_SETTINGS_TAG, this);
 
     this._getUi().$on(EVENT_ENABLE_EXTENSION, (extensionName: string): void => {

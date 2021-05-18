@@ -7,12 +7,13 @@ import { DebouncedDoLater } from 'extraterm-later';
 import * as _ from 'lodash';
 
 import { SessionSettingsUi } from './SessionSettingsUi';
-import { SESSION_CONFIG, ConfigKey } from '../../../Config';
+import { SESSION_CONFIG } from '../../../Config';
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from '../SettingsBase';
 import { ExtensionManager } from '../../extension/InternalTypes';
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
+import { ConfigKey } from "../../../ConfigDatabase";
 
 export const SESSION_SETTINGS_TAG = "et-session-settings";
 
@@ -23,11 +24,11 @@ export class SessionSettings extends SettingsBase<SessionSettingsUi> {
   private _updateLater: DebouncedDoLater = null;
 
   constructor() {
-    super(SessionSettingsUi, [SESSION_CONFIG]);
+    super(SessionSettingsUi);
     this._log = getLogger(SESSION_SETTINGS_TAG, this);
 
     this._updateLater = new DebouncedDoLater(() => {
-      this._updateConfig(SESSION_CONFIG, this._getUi().sessions);
+      this.configDatabase.setSessionConfig(this._getUi().sessions);
     }, 500);
   }
 

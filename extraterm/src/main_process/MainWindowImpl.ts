@@ -9,12 +9,13 @@ import { later } from "extraterm-later";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { BrowserWindow, screen } from "electron";
 
-import { ConfigDatabase, GeneralConfig, GENERAL_CONFIG, SingleWindowConfiguration } from "../Config";
+import { SingleWindowConfiguration } from "../Config";
 import * as ResourceLoader from "../ResourceLoader";
 import { MainWindow, OpenWindowOptions } from "./MainWindow";
 import { ThemeManager } from "../theme/ThemeManager";
 import { bestOverlap } from "./RectangleMatch";
 import { EventEmitter } from "../utils/EventEmitter";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 const PNG_ICON_PATH = "../../resources/logo/extraterm_small_logo_256x256.png";
 const ICO_ICON_PATH = "../../resources/logo/extraterm_small_logo.ico";
@@ -89,7 +90,7 @@ export class MainWindowImpl implements MainWindow {
   }
 
   open(options: OpenWindowOptions=null): void {
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     const themeInfo = this.#themeManager.getTheme(generalConfig.themeGUI);
 
     // Create the browser window.
@@ -293,7 +294,7 @@ export class MainWindowImpl implements MainWindow {
   }
 
   private _getWindowDimensionsFromConfig(): SingleWindowConfiguration {
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     if (generalConfig.windowConfiguration == null) {
       return null;
     }
@@ -306,7 +307,7 @@ export class MainWindowImpl implements MainWindow {
 
   private _setupTransparentBackground(window: BrowserWindow): void {
     const setWindowComposition = () => {
-      const generalConfig = <GeneralConfig> this.#configDatabase.getConfig("general");
+      const generalConfig = this.#configDatabase.getGeneralConfig();
       const isWindowOpaque = generalConfig.windowBackgroundMode === "opaque";
       if (isWindows) {
         const accent = isWindowOpaque
@@ -335,7 +336,7 @@ export class MainWindowImpl implements MainWindow {
   }
 
   async restore(): Promise<void> {
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     const window = this._getBrowserWindow();
 
     const bounds = generalConfig.windowConfiguration[this.#configIndex];

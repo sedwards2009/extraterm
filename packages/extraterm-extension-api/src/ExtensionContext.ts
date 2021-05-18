@@ -169,6 +169,34 @@ export interface Application {
 }
 
 /**
+ * A way of writing and reading an opaque JSON configuration object.
+ *
+ * The object is stored on disk between Extraterm runs and automatically
+ * synchronized across the main process and any render processes.
+ */
+export interface Configuration {
+  /**
+   * Get the stored configuration.
+   *
+   * @returns the previously stored configuration object .This may be `null`
+   *          or `undefined` or some other random JSON compatible type.
+   */
+  get(): any;
+
+  /**
+   * Set and store a configuration.
+   *
+   * @param config the JSON compatible object to store and save .
+   */
+  set(config: any): void;
+
+  /**
+   * Fires whenever a config is `set()`.
+   */
+  onChange: Event<void>;
+}
+
+/**
  * Access to the Extraterm extension API
  *
  * This provides extensions access to the whole Extraterm extension API, as
@@ -181,6 +209,12 @@ export interface ExtensionContext {
   readonly commands: Commands;
 
   readonly application: Application;
+
+  /**
+   * Configuration object which the extension can use to store its own
+   * configuration data.
+   */
+  readonly configuration: Configuration;
 
   /**
    * Extension APIs which can be used from a front-end render process.

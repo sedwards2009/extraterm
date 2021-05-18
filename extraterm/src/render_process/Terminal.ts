@@ -49,8 +49,7 @@ import * as Messages from "../WindowMessages";
 import { TerminalCanvas } from "./TerminalCanvas";
 import { SidebarLayout, BorderSide } from "./gui/SidebarLayout";
 import {FrameFinder} from "./FrameFinderType";
-import { ConfigDatabase, CommandLineAction, COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG,
-  MouseButtonAction } from "../Config";
+import { CommandLineAction, MouseButtonAction } from "../Config";
 import * as SupportsClipboardPaste from "./SupportsClipboardPaste";
 import * as SupportsDialogStack from "./SupportsDialogStack";
 import { ExtensionManager } from "./extension/InternalTypes";
@@ -58,6 +57,7 @@ import { TerminalVisualConfig } from "./TerminalVisualConfig";
 import { ClipboardType } from "../WindowMessages";
 import { ScreenChangeEvent, TitleChangeEvent, DataEvent, WriteBufferSizeEvent } from "term-api";
 import { focusElement } from "./DomUtils";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 const log = LogDecorator;
 
@@ -394,7 +394,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
     }
 
     const commandLineActions: DeepReadonly<CommandLineAction[]> =
-      this._configDatabase.getConfig(COMMAND_LINE_ACTIONS_CONFIG) || [];
+      this._configDatabase.getCommandLineActionConfig() || [];
     for (const cla of commandLineActions) {
       if (this._commandLineActionMatches(commandLine, cla)) {
         switch (cla.frameRule) {
@@ -408,7 +408,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
       }
     }
 
-    const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this._configDatabase.getGeneralConfig();
     switch (generalConfig.frameRule) {
       case "always_frame":
         return true;
@@ -596,7 +596,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
   }
 
   private _showTip(): void {
-    const config = this._configDatabase.getConfigCopy(GENERAL_CONFIG);
+    const config = this._configDatabase.getGeneralConfigCopy();
     switch (config.showTips) {
       case "always":
         break;
@@ -610,7 +610,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
 
     config.tipTimestamp = Date.now();
     config.tipCounter = config.tipCounter + 1;
-    this._configDatabase.setConfig(GENERAL_CONFIG, config);
+    this._configDatabase.setGeneralConfig(config);
 
     this._appendMimeViewer(TipViewer.MIME_TYPE, null);
   }
@@ -763,7 +763,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
       return;
     }
 
-    const generalConfig = this._configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this._configDatabase.getGeneralConfig();
     const action = <MouseButtonAction> generalConfig[key];
 
     switch (action) {
@@ -882,7 +882,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
 
   private _handleBeforeSelectionChange(ev: {sourceMouse: boolean}): void {
     if (ev.sourceMouse) {
-      const generalConfig = this._configDatabase.getConfig("general");
+      const generalConfig = this._configDatabase.getGeneralConfig();
       if (generalConfig.autoCopySelectionToClipboard) {
         this._copyToClipboardLater.trigger();
       }
@@ -1458,7 +1458,7 @@ export class EtTerminal extends ThemeableElementBase implements Disposable,
       this._appendViewerElement(viewerElement);
 
       if (this._configDatabase != null) {
-        const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+        const config = this._configDatabase.getGeneralConfig();
         this._terminalCanvas.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
       this._emitDidAppendViewer(mimeViewerElement);

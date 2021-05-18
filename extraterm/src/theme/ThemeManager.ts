@@ -14,7 +14,6 @@ import { Color as UtilColor } from 'extraterm-color-utilities';
 import {CssFile, ThemeInfo, ThemeContents, ThemeType, CSS_MODULE_INTERNAL_GUI, CSS_MODULE_INTERNAL_TERMINAL,
   CSS_MODULE_INTERNAL_SYNTAX, cssFileEnumItems, FALLBACK_UI_THEME, cssFileToFilename, cssFileToExtension,
   SYNTAX_CSS_THEME, TERMINAL_CSS_THEME} from './Theme';
-import { ConfigDatabase, GENERAL_CONFIG, GeneralConfig } from '../Config';
 import { MainExtensionManager } from '../main_process/extension/MainExtensionManager';
 import { ExtensionCss, ExtensionMetadata } from '../ExtensionMetadata';
 import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
@@ -23,6 +22,7 @@ import { SyntaxTheme, TerminalTheme } from '@extraterm/extraterm-extension-api';
 // So we reuse the `node-sass` typing.
 import * as DartSass from 'sass';
 import { Importer, ImporterReturnType, renderSync, SassError } from 'node-sass';
+import { ConfigDatabase } from '../ConfigDatabase';
 
 const Sass = {
   renderSync: <typeof renderSync>DartSass.renderSync
@@ -516,7 +516,7 @@ export class ThemeManager {
   }
 
   async render(themeType: ThemeType, globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const config = this.#configDatabase.getGeneralConfig();
     switch (themeType) {
       case "gui":
         return await this.renderGui(config.themeGUI, config.themeTerminal, globalVariables);
@@ -655,7 +655,7 @@ export class ThemeManager {
   }
 
   async _renderSyntax(globalVariables?: GlobalVariableMap): Promise<RenderResult> {
-    const config = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const config = this.#configDatabase.getGeneralConfig();
 
     const syntaxThemeInfo = this.#themes.get(config.themeSyntax);
     const neededCssFileIds = cssFileEnumItems.filter(cssFile => cssFileToExtension(cssFile) === CSS_MODULE_INTERNAL_SYNTAX);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -127,56 +127,4 @@ export interface FontInfo {
   path: string;
   name: string;
   postscriptName: string;
-}
-
-export type ConfigKey = "*" | "general" | "session" | "command_line_action" | "system";
-
-export interface ConfigChangeEvent {
-  key: ConfigKey;
-  newConfig: any;
-  oldConfig: any;
-}
-
-
-/**
- * Interface for distributing configuration changes.
- */
-export interface ConfigDatabase {
-  /**
-   * Get the current config object.
-   *
-   * @return the current config.
-   */
-  getConfig(key: "general"): DeepReadonly<GeneralConfig>;
-  getConfig(key: "session"): DeepReadonly<SessionConfiguration[]>;
-  getConfig(key: "command_line_action"): DeepReadonly<CommandLineAction[]>;
-  getConfig(key: "system"): DeepReadonly<SystemConfig>;
-  getConfig(key: ConfigKey): any;
-
-  getConfigCopy(key: "general"): GeneralConfig;
-  getConfigCopy(key: "session"): SessionConfiguration[];
-  getConfigCopy(key: "command_line_action"): CommandLineAction[];
-  getConfigCopy(key: "system"): SystemConfig;
-  getConfigCopy(key: ConfigKey): any;
-
-  /**
-   * Register a listener to hear when the config has changed.
-   *
-   * Be sure to dispose of the registration once you are finished with it,
-   * otherwise this connect may keep your listener object alive.
-   */
-  onChange: Event<ConfigChangeEvent>;
-
-  /**
-   * Set a new application wide config.
-   *
-   * Note that the full effects of this method are asynchronous with respect
-   * to the parts of the application which run in different threads/processes.
-   * @param newConfig the new config object.
-   */
-  setConfig(key: "general", newConfig: GeneralConfig | DeepReadonly<GeneralConfig>): void;
-  setConfig(key: "session", newConfig: SessionConfiguration[] | DeepReadonly<SessionConfiguration[]>): void;
-  setConfig(key: "command_line_action", newConfig: CommandLineAction[] | DeepReadonly<CommandLineAction[]>): void;
-  setConfig(key: "system", newConfig: SystemConfig | DeepReadonly<SystemConfig>): void;
-  setConfig(key: ConfigKey, newConfig: any): void;
 }

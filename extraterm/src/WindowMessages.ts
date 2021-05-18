@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -8,13 +8,12 @@
  * Message formats for the IPC between the main process and render processes.
  */
 
-import { BulkFileMetadata, BulkFileState, EnvironmentMap, TerminalTheme, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
+import { BulkFileMetadata, BulkFileState, TerminalTheme, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
 
-import * as Config from './Config';
-import {ThemeContents, ThemeInfo, ThemeType} from './theme/Theme';
-import {BulkFileIdentifier} from './main_process/bulk_file_handling/BulkFileStorage';
-import { ExtensionMetadata, ExtensionDesiredState } from './ExtensionMetadata';
+import { ThemeContents, ThemeInfo, ThemeType } from './theme/Theme';
+import { BulkFileIdentifier } from './main_process/bulk_file_handling/BulkFileStorage';
 import { CustomKeybindingsSet, LogicalKeybindingsName, StackedKeybindingsSet } from './keybindings/KeybindingsTypes';
+import * as SharedMap from "./shared_map/SharedMap";
 
 
 /**
@@ -37,19 +36,10 @@ export enum MessageType {
   CLIPBOARD_READ_REQUEST,
   CLIPBOARD_READ,
   CLIPBOARD_WRITE,
-  CONFIG_REQUEST,
-  CONFIG,
-  CONFIG_BROADCAST,
   DEV_TOOLS_REQUEST,
   DEV_TOOLS_STATUS,
   EXECUTE_COMMAND_REQUEST,
   EXECUTE_COMMAND_RESPONSE,
-  EXTENSION_DESIRED_STATE_REQUEST,
-  EXTENSION_DESIRED_STATE,
-  EXTENSION_DISABLE,
-  EXTENSION_ENABLE,
-  EXTENSION_METADATA_REQUEST,
-  EXTENSION_METADATA,
   FRAME_DATA_REQUEST,
   FRAME_DATA,
   GLOBAL_KEYBINDINGS_ENABLE,
@@ -86,6 +76,9 @@ export enum MessageType {
   WINDOW_SHOW_RESPONSE,
   WINDOW_READY,
   CLOSE_SPLASH,
+  SHARED_MAP_EVENT,
+  SHARED_MAP_DUMP_REQUEST,
+  SHARED_MAP_DUMP,
 }
 
 /**
@@ -98,26 +91,15 @@ export interface Message {
   type: MessageType;
 }
 
-/**
- * A request from a render process to main requesting the configuration to be
- * sent. The response is a `ConfigMessage`.
- */
-export interface ConfigRequestMessage extends Message {
-  key: Config.ConfigKey;
+export interface SharedMapEventMessage extends Message {
+  event: SharedMap.ChangeEvent;
 }
 
-/**
- * The current configuration.
- *
- * This message sent from the main process to a render process and is often a
- * response to a ConfigRequestMessage.
- */
-export interface ConfigMessage extends Message {
-  key: Config.ConfigKey;
-  /**
-   * The current configuration.
-   */
-  config: any;
+export interface SharedMapDumpRequestMessage extends Message {
+}
+
+export interface SharedMapDumpMessage extends Message {
+  data: SharedMap.AllData;
 }
 
 /**
@@ -488,29 +470,6 @@ export interface BulkFileDerefMessage extends Message {
 export interface BulkFileStateMessage extends Message {
   identifier: BulkFileIdentifier;
   state: BulkFileState;
-}
-
-
-export interface ExtensionMetadataRequestMessage extends Message {
-}
-
-export interface ExtensionMetadataMessage extends Message {
-  extensionMetadata: ExtensionMetadata[];
-}
-
-export interface ExtensionDesiredStateRequestMesssage extends Message {
-}
-
-export interface ExtensionDesiredStateMessage extends Message {
-  desiredState: ExtensionDesiredState;
-}
-
-export interface ExtensionEnableMessage extends Message {
-  extensionName: string;
-}
-
-export interface ExtensionDisableMessage extends Message {
-  extensionName: string;
 }
 
 //-------------------------------------------------------------------------

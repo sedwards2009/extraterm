@@ -22,11 +22,11 @@ import { ViewerElement } from "./viewers/ViewerElement";
 import { RefreshLevel, Mode, VisualState } from "./viewers/ViewerElementTypes";
 import * as VirtualScrollArea from "./VirtualScrollArea";
 import * as WebIpc from "./WebIpc";
-import { ConfigDatabase } from "../Config";
 import { ExtensionManager } from "./extension/InternalTypes";
 import { ResizeNotifier } from "extraterm-resize-notifier";
 import { focusElement } from "./DomUtils";
 import { KeybindingsManager } from "./keybindings/KeyBindingsManager";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 
 type VirtualScrollable = VirtualScrollArea.VirtualScrollable;
@@ -455,7 +455,7 @@ export class EtViewerTab extends ViewerElement implements SupportsClipboardPaste
 
   private _handleBeforeSelectionChange(ev: CustomEvent): void {
     if (ev.detail.originMouse) {
-      const generalConfig = this._configDatabase.getConfig("general");
+      const generalConfig = this._configDatabase.getGeneralConfig();
       if (generalConfig.autoCopySelectionToClipboard) {
         this._copyToClipboardLater.trigger();
       }

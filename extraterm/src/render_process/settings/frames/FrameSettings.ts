@@ -6,10 +6,11 @@ import { CustomElement } from 'extraterm-web-component-decorators';
 import * as _ from 'lodash';
 
 import { FrameSettingsUi, nextId, Identifiable, IdentifiableCommandLineAction} from './FrameSettingsUi';
-import { COMMAND_LINE_ACTIONS_CONFIG, ConfigKey, CommandLineAction, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
+import { COMMAND_LINE_ACTIONS_CONFIG, CommandLineAction, GENERAL_CONFIG, GeneralConfig } from '../../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from '../SettingsBase';
+import { ConfigKey } from "../../../ConfigDatabase";
 
 export const FRAME_SETTINGS_TAG = "et-frame-settings";
 
@@ -18,7 +19,7 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
   private _log: Logger = null;
 
   constructor() {
-    super(FrameSettingsUi, [GENERAL_CONFIG, COMMAND_LINE_ACTIONS_CONFIG]);
+    super(FrameSettingsUi);
     this._log = getLogger(FRAME_SETTINGS_TAG, this);
   }
 
@@ -49,13 +50,13 @@ export class FrameSettings extends SettingsBase<FrameSettingsUi> {
     const ui = this._getUi();
     const commandLineActions = _.cloneDeep(ui.commandLineActions);
     stripIds(commandLineActions);
-    this._updateConfig(COMMAND_LINE_ACTIONS_CONFIG, commandLineActions);
+    this.configDatabase.setCommandLineActionConfig(commandLineActions);
 
-    const generalConfig = <GeneralConfig> this._getConfigCopy(GENERAL_CONFIG);
-    generalConfig.frameByDefault = ui.frameByDefault === "true" ? true : false;
+    const generalConfig = this.configDatabase.getGeneralConfigCopy();
+    generalConfig.frameByDefault = ui.frameByDefault === "true";
     generalConfig.frameRule = ui.frameRule;
     generalConfig.frameRuleLines = ui.frameRuleLines;
-    this._updateConfig(GENERAL_CONFIG, generalConfig);
+    this.configDatabase.setGeneralConfig(generalConfig);
   }
 }
 

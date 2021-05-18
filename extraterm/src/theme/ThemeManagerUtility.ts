@@ -18,6 +18,7 @@ import {MainExtensionManager} from '../main_process/extension/MainExtensionManag
 
 import {Logger, getLogger} from "extraterm-logging";
 import { cssFileToFilename } from './Theme';
+import { SharedMap } from '../shared_map/SharedMap';
 
 const print = console.log.bind(console);
 
@@ -42,7 +43,8 @@ class ThemeManagerUtility {
       syntax: [],
       terminal: []
     };
-    this._tm = new ThemeManager(paths, new MainExtensionManager(null, [], "0.1.0"), null);  // FIXME null isn't likely to be good enough.
+    const sharedMap = new SharedMap();
+    this._tm = new ThemeManager(paths, new MainExtensionManager(null, sharedMap, [], "0.1.0"), null);  // FIXME null isn't likely to be good enough.
 
     if (options.list) {
       this._listThemes();

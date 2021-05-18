@@ -3,19 +3,17 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from 'lodash';
+import * as _ from "lodash";
 
-import { ConfigDatabaseImpl } from "./MainConfig";
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
-import { GeneralConfig } from "../Config";
 import { GENERAL_CONFIG } from "../Config";
-import { ConfigChangeEvent } from "../Config";
 import { KeyStroke, KeybindingsMapping } from "../keybindings/KeybindingsMapping";
 import { getLogger, Logger } from "extraterm-logging";
-import { EventEmitter } from '../utils/EventEmitter';
-import { Event } from '@extraterm/extraterm-extension-api';
-import { globalShortcut } from 'electron';
-import { doLater } from 'extraterm-later';
+import { EventEmitter } from "../utils/EventEmitter";
+import { Event } from "@extraterm/extraterm-extension-api";
+import { globalShortcut } from "electron";
+import { doLater } from "extraterm-later";
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 
 export class GlobalKeybindingsManager {
@@ -33,7 +31,7 @@ export class GlobalKeybindingsManager {
   private _onMaximizeEventEmitter = new EventEmitter<void>();
   onMaximizeWindow: Event<void>;
 
-  constructor(private keybindingsIOManager: KeybindingsIOManager, private configDatabase: ConfigDatabaseImpl) {
+  constructor(private keybindingsIOManager: KeybindingsIOManager, private configDatabase: ConfigDatabase) {
     this._log = getLogger("GlobalKeybindingsManager", this);
 
     this.onMaximizeWindow = this._onMaximizeEventEmitter.event;
@@ -49,7 +47,7 @@ export class GlobalKeybindingsManager {
 
     configDatabase.onChange((e: ConfigChangeEvent) => {
       if (e.key === GENERAL_CONFIG) {
-        const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
+        const generalConfig = configDatabase.getGeneralConfig();
         if (generalConfig.keybindingsName !== this._configuredKeybindingsName) {
           this._updateGlobalKeybindings();
         }
@@ -75,7 +73,7 @@ export class GlobalKeybindingsManager {
 
   private _createGlobalKeybindings(): void {
     globalShortcut.unregisterAll();
-    const generalConfig = <GeneralConfig> this.configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.configDatabase.getGeneralConfig();
     const keybindingsFile = this.keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
     const globalKeybindings = new KeybindingsMapping(KeyStroke.parseConfigString, keybindingsFile, process.platform);
 

@@ -94,6 +94,13 @@ export class PairKeyMap<K1, K2, V> {
   }
 
   /**
+   * Create an iterator for the K1 keys.
+   */
+  level0Keys(): IterableIterator<K1> {
+    return this._rootMap.keys();
+  }
+
+  /**
    * Create an iterator for the K2 keys given a K1 key.
    */
   *level1Keys(key1: K1): IterableIterator<K2> {

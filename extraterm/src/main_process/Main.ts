@@ -13,33 +13,33 @@ import * as SourceMapSupport from "source-map-support";
 
 import * as child_process from "child_process";
 import { Command } from "commander";
-import { app, BrowserWindow, dialog } from "electron";
+import { app, dialog } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
 import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
 import { later } from "extraterm-later";
 
-import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
-import { SystemConfig, FontInfo, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, SESSION_CONFIG,
-  TitleBarStyle, ConfigDatabase } from "../Config";
+import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
+import { SystemConfig, FontInfo, GeneralConfig, TitleBarStyle } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import { ThemeManager } from "../theme/ThemeManager";
-import * as Messages from "../WindowMessages";
 import { MainExtensionManager } from "./extension/MainExtensionManager";
 import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { getFonts } from "./FontList";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
-import { ConfigDatabaseImpl, EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory,
+import { EXTRATERM_CONFIG_DIR, getUserSyntaxThemeDirectory, getUserTerminalThemeDirectory,
   getUserKeybindingsDirectory, setupAppData, sanitizeAndIinitializeConfigs as sanitizeAndInitializeConfigs,
-  readUserStoredConfigFile, getUserExtensionDirectory } from "./MainConfig";
+  getUserExtensionDirectory, getUserSettingsDirectory } from "./MainConfig";
+import { PersistentConfigDatabase } from "./PersistentConfigDatabase";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
 import { MainIpc } from "./MainIpc";
 import { MainDesktop } from "./MainDesktop";
 import { registerInternalCommands } from "./InternalMainCommands";
-import { MainWindow } from "./MainWindow";
+import { SharedMap } from "../shared_map/SharedMap";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 
 SourceMapSupport.install();
@@ -58,7 +58,9 @@ const _log = getLogger("main");
 
 async function main(): Promise<void> {
   let failed = false;
-  const configDatabase = new ConfigDatabaseImpl();
+  const sharedMap = new SharedMap();
+  const configDatabase = new PersistentConfigDatabase(getUserSettingsDirectory(), sharedMap);
+  configDatabase.start();
 
   setupAppData();
   setupLogging();
@@ -92,25 +94,23 @@ async function main(): Promise<void> {
   const options = parsedArgs.opts();
 
   const availableFonts = getFonts();
-  const userStoredConfig = readUserStoredConfigFile();
   const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
 
   // We have to start up the extension manager before we can scan themes (with the help of extensions)
   // and properly sanitize the config.
-  const extensionManager = setupExtensionManager(configDatabase, userStoredConfig.activeExtensions,
-    packageJson.version);
+  const extensionManager = setupExtensionManager(configDatabase, sharedMap, packageJson.version);
 
   const keybindingsIOManager = setupKeybindingsIOManager(configDatabase, extensionManager);
   const themeManager = setupThemeManager(configDatabase, extensionManager);
 
-  sanitizeAndInitializeConfigs(userStoredConfig, themeManager, configDatabase, keybindingsIOManager,
-    availableFonts);
-  const titleBarStyle = userStoredConfig.titleBarStyle;
-  const systemConfig = systemConfiguration(userStoredConfig, keybindingsIOManager, availableFonts, packageJson,
+  sanitizeAndInitializeConfigs(configDatabase, themeManager, keybindingsIOManager, availableFonts);
+  const generalConfig = configDatabase.getGeneralConfig();
+  const titleBarStyle = generalConfig.titleBarStyle;
+  const systemConfig = systemConfiguration(generalConfig, keybindingsIOManager, availableFonts, packageJson,
     titleBarStyle);
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+  configDatabase.setSystemConfig(systemConfig);
 
-  if ( ! userStoredConfig.isHardwareAccelerated) {
+  if ( ! generalConfig.isHardwareAccelerated) {
     app.disableHardwareAcceleration();
   }
 
@@ -139,8 +139,8 @@ async function main(): Promise<void> {
 
   registerInternalCommands(extensionManager, mainDesktop);
 
-  const mainIpc = setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
-    keybindingsIOManager, themeManager, ptyManager);
+  const mainIpc = setupIpc(configDatabase, bulkFileStorage, globalKeybindingsManager, mainDesktop,
+    keybindingsIOManager, themeManager, ptyManager, sharedMap);
 
   const localHttpServer = await setupLocalHttpServer(bulkFileStorage);
   const commandRequestHandler = setupHttpCommandRequestHandler(mainDesktop, extensionManager, mainIpc, localHttpServer);
@@ -174,10 +174,7 @@ function electronReady(): Promise<void> {
   });
 }
 
-function setupExtensionManager(configDatabase: ConfigDatabase,
-    initialActiveExtensions: {[name: string]: boolean;},
-    applicationVersion: string): MainExtensionManager {
-
+function setupExtensionManager(configDatabase: ConfigDatabase, sharedMap: SharedMap, applicationVersion: string): MainExtensionManager {
   const extensionPaths = [path.join(__dirname, "../../../extensions" )];
   const userExtensionDirectory = getUserExtensionDirectory();
   _log.info(`User extension directory is: ${userExtensionDirectory}`);
@@ -185,13 +182,12 @@ function setupExtensionManager(configDatabase: ConfigDatabase,
     extensionPaths.push(userExtensionDirectory);
   }
 
-  const extensionManager = new MainExtensionManager(configDatabase, extensionPaths, applicationVersion);
-  extensionManager.startUpExtensions(initialActiveExtensions);
-
+  const extensionManager = new MainExtensionManager(configDatabase, sharedMap, extensionPaths, applicationVersion);
+  extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
   return extensionManager;
 }
 
-function setupKeybindingsIOManager(configDatabase: ConfigDatabaseImpl,
+function setupKeybindingsIOManager(configDatabase: PersistentConfigDatabase,
     extensionManager: MainExtensionManager): KeybindingsIOManager {
 
   const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
@@ -201,14 +197,14 @@ function setupKeybindingsIOManager(configDatabase: ConfigDatabaseImpl,
   return keybindingsIOManager;
 }
 
-function updateSystemConfigKeybindings(configDatabase: ConfigDatabaseImpl,
+function updateSystemConfigKeybindings(configDatabase: PersistentConfigDatabase,
     keybindingsIOManager: KeybindingsIOManager): void {
 
   // Broadcast the updated bindings.
-  const generalConfig = <GeneralConfig> configDatabase.getConfig(GENERAL_CONFIG);
-  const systemConfig = <SystemConfig> configDatabase.getConfigCopy(SYSTEM_CONFIG);
+  const generalConfig = <GeneralConfig> configDatabase.getGeneralConfig();
+  const systemConfig = <SystemConfig> configDatabase.getSystemConfigCopy();
   systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
-  configDatabase.setConfigNoWrite(SYSTEM_CONFIG, systemConfig);
+  configDatabase.setSystemConfig(systemConfig);
 }
 
 function setupThemeManager(configDatabase: ConfigDatabase, extensionManager: MainExtensionManager): ThemeManager {
@@ -256,7 +252,7 @@ function shutdown(bulkFileStorage: BulkFileStorage, localHttpServer: LocalHttpSe
   app.quit();
 }
 
-function setupGlobalKeybindingsManager(configDatabase: ConfigDatabaseImpl, keybindingsIOManager: KeybindingsIOManager,
+function setupGlobalKeybindingsManager(configDatabase: PersistentConfigDatabase, keybindingsIOManager: KeybindingsIOManager,
     mainDesktop: MainDesktop): GlobalKeybindingsManager {
 
   const globalKeybindingsManager = new GlobalKeybindingsManager(keybindingsIOManager, configDatabase);
@@ -313,59 +309,19 @@ function setupOSX(): void {
     "com.electron.extraterm", "ApplePressAndHoldEnabled", "-bool", "false"]);
 }
 
-function setupIpc(configDatabase: ConfigDatabaseImpl, bulkFileStorage: BulkFileStorage,
-  extensionManager: MainExtensionManager, globalKeybindingsManager: GlobalKeybindingsManager, mainDesktop: MainDesktop,
-  keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, ptyManager: PtyManager): MainIpc {
+function setupIpc(configDatabase: PersistentConfigDatabase, bulkFileStorage: BulkFileStorage,
+  globalKeybindingsManager: GlobalKeybindingsManager, mainDesktop: MainDesktop,
+  keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, ptyManager: PtyManager,
+  sharedMap: SharedMap): MainIpc {
 
-  const mainIpc = new MainIpc(configDatabase, bulkFileStorage,
-    extensionManager, ptyManager,keybindingsIOManager,
-    mainDesktop, themeManager, globalKeybindingsManager);
-
-  extensionManager.onDesiredStateChanged(() => {
-    mainIpc.sendExtensionDesiredStateMessage();
-  });
-
-  bulkFileStorage.onWriteBufferSize((event: BufferSizeEvent) => {
-    mainIpc.sendBulkFileWriteBufferSizeEvent(event);
-  });
-
-  bulkFileStorage.onClose((event: CloseEvent) => {
-    mainIpc.sendBulkFileStateChangeEvent(event);
-  });
-
-  mainDesktop.onAboutSelected(() => {
-    for (const win of mainDesktop.getWindows()) {
-      mainIpc.sendCommandToWindow("extraterm:window.openAbout", win.id, null);
-    }
-  });
-
-  mainDesktop.onPreferencesSelected(() => {
-    for (const win of mainDesktop.getWindows()) {
-      mainIpc.sendCommandToWindow("extraterm:window.openSettings", win.id, null);
-    }
-  });
-
-  mainDesktop.onQuitSelected(() => {
-    mainIpc.sendQuitApplicationRequest();
-  });
-
-  mainDesktop.onDevToolsClosed((devToolsWindow: MainWindow)=> {
-    sendDevToolStatus(devToolsWindow.id, false);
-  });
-
-  mainDesktop.onDevToolsOpened((devToolsWindow: MainWindow)=> {
-    sendDevToolStatus(devToolsWindow.id, true);
-  });
-
-  mainDesktop.onWindowClosed((webContentsId: number) => {
-    mainIpc.cleanUpPtyWindow(webContentsId);
-  });
+  const mainIpc = new MainIpc(configDatabase, bulkFileStorage, ptyManager,keybindingsIOManager,
+    mainDesktop, themeManager, globalKeybindingsManager, sharedMap);
 
   mainIpc.start();
   return mainIpc;
 }
 
-function setupPtyManager(configDatabase: ConfigDatabaseImpl, extensionManager: MainExtensionManager): PtyManager {
+function setupPtyManager(configDatabase: PersistentConfigDatabase, extensionManager: MainExtensionManager): PtyManager {
   try {
     return new PtyManager(extensionManager, configDatabase);
   } catch(err) {
@@ -374,18 +330,12 @@ function setupPtyManager(configDatabase: ConfigDatabaseImpl, extensionManager: M
   }
 }
 
-function setupDefaultSessions(configDatabase: ConfigDatabaseImpl, ptyManager: PtyManager): void {
-  const sessions = configDatabase.getConfigCopy(SESSION_CONFIG);
+function setupDefaultSessions(configDatabase: PersistentConfigDatabase, ptyManager: PtyManager): void {
+  const sessions = configDatabase.getSessionConfigCopy();
   if (sessions == null || sessions.length === 0) {
     const newSessions = ptyManager.getDefaultSessions();
-    configDatabase.setConfig(SESSION_CONFIG, newSessions);
+    configDatabase.setSessionConfig(newSessions);
   }
-}
-
-function sendDevToolStatus(windowId: number, open: boolean): void {
-  const window = BrowserWindow.fromId(windowId);
-  const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
-  window.webContents.send(Messages.CHANNEL_NAME, msg);
 }
 
 main();

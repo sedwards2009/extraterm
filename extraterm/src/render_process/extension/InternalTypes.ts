@@ -144,7 +144,7 @@ export interface InternalWindow extends ExtensionApi.Window {
  * Extension and all the different things it may have registered and
  * provided.
  */
-export interface InternalExtensionContext extends ExtensionApi.ExtensionContext {
+export interface InternalExtensionContext extends ExtensionApi.ExtensionContext, ExtensionApi.Disposable {
    // Note: Most of these fields start with `_` to signal to any extension
    // developers that these fields are internal.
 

@@ -14,7 +14,7 @@ import { VirtualScrollAreaWithSpacing, Spacer } from "./VirtualScrollAreaWithSpa
 import { EVENT_RESIZE, VirtualScrollable } from "./VirtualScrollArea";
 import { ViewerElement } from "./viewers/ViewerElement";
 import { TerminalViewer } from "./viewers/TerminalAceViewer";
-import { ConfigDatabase, GENERAL_CONFIG, GeneralConfig, ConfigChangeEvent } from "../Config";
+import { GeneralConfig } from "../Config";
 import { doLater } from "extraterm-later";
 import * as DomUtils from './DomUtils';
 import { EmbeddedViewer } from "./viewers/EmbeddedViewer";
@@ -28,6 +28,7 @@ import { CssFile } from '../theme/Theme';
 import { EVENT_DRAG_STARTED, EVENT_DRAG_ENDED } from './GeneralEvents';
 import { TerminalVisualConfig, injectTerminalVisualConfig } from "./TerminalVisualConfig";
 import { focusElement } from "./DomUtils";
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 const SCROLL_STEP = 1;
 const CHILD_RESIZE_BATCH_SIZE = 3;
@@ -359,7 +360,7 @@ export class TerminalCanvas extends ThemeableElementBase {
   }
 
   private _updateScrollableSpacing(): void {
-    const generalConfig = this._configDatabase.getConfig("general");
+    const generalConfig = this._configDatabase.getGeneralConfig();
     let spacing = 0;
     switch (generalConfig.terminalMarginStyle) {
       case "none":
@@ -379,7 +380,7 @@ export class TerminalCanvas extends ThemeableElementBase {
   }
 
   private _rootFontSize(): number {
-    const generalConfig = this._configDatabase.getConfig("general");
+    const generalConfig = this._configDatabase.getGeneralConfig();
     const unitHeightPx = 12;
     const rootFontSize = Math.max(Math.floor(unitHeightPx * generalConfig.uiScalePercent / 100), 5);
     return rootFontSize;
@@ -564,7 +565,7 @@ export class TerminalCanvas extends ThemeableElementBase {
   private _updateVirtualScrollableSize(virtualScrollable: VirtualScrollable): void {
     this._virtualScrollArea.updateScrollableSize(virtualScrollable);
     if (this._configDatabase != null) {
-      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const config = this._configDatabase.getGeneralConfig();
       this.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
   }
@@ -612,7 +613,7 @@ export class TerminalCanvas extends ThemeableElementBase {
       this._virtualScrollArea.reapplyState();
 
       if (this._configDatabase != null) {
-        const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+        const config = this._configDatabase.getGeneralConfig();
         this.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
       }
     }
@@ -821,7 +822,7 @@ export class TerminalCanvas extends ThemeableElementBase {
     this._enforceScrollbackLengthGuard = oldGuardFlag;
 
     if (this._configDatabase != null) {
-      const config = this._configDatabase.getConfig(GENERAL_CONFIG);
+      const config = this._configDatabase.getGeneralConfig();
       this.enforceScrollbackSize(config.scrollbackMaxLines, config.scrollbackMaxFrames);
     }
     return rc;

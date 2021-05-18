@@ -5,10 +5,11 @@
 import { CustomElement } from 'extraterm-web-component-decorators';
 
 import { GeneralSettingsUi } from './GeneralSettingsUi';
-import { GeneralConfig, ConfigKey, GENERAL_CONFIG } from '../../Config';
+import { GeneralConfig, GENERAL_CONFIG } from '../../Config';
 import { Logger, getLogger } from "extraterm-logging";
 import { log } from "extraterm-logging";
 import { SettingsBase } from './SettingsBase';
+import { ConfigKey } from "../../ConfigDatabase";
 
 export const GENERAL_SETTINGS_TAG = "et-general-settings";
 
@@ -17,7 +18,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
   private _log: Logger = null;
 
   constructor() {
-    super(GeneralSettingsUi, [GENERAL_CONFIG]);
+    super(GeneralSettingsUi);
     this._log = getLogger(GENERAL_SETTINGS_TAG, this);
   }
 
@@ -72,7 +73,7 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
   }
 
   protected _dataChanged(): void {
-    const newGeneralConfig = this._getConfigCopy(GENERAL_CONFIG);
+    const newGeneralConfig = this.configDatabase.getGeneralConfigCopy();
     const ui = this._getUi();
 
     newGeneralConfig.showTips = ui.showTips;
@@ -87,6 +88,6 @@ export class GeneralSettings extends SettingsBase<GeneralSettingsUi> {
     newGeneralConfig.rightMouseButtonAction = ui.rightMouseButtonAction;
     newGeneralConfig.rightMouseButtonShiftAction = ui.rightMouseButtonShiftAction;
     newGeneralConfig.rightMouseButtonControlAction = ui.rightMouseButtonControlAction;
-    this._updateConfig(GENERAL_CONFIG, newGeneralConfig);
+    this.configDatabase.setGeneralConfig(newGeneralConfig);
   }
 }

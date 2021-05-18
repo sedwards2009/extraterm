@@ -10,7 +10,6 @@ import { getLogger, Logger, log } from "extraterm-logging";
 import { createUuid } from 'extraterm-uuid';
 
 import { BulkFileStorage, BufferSizeEvent, CloseEvent } from "./bulk_file_handling/BulkFileStorage";
-import { GENERAL_CONFIG, GeneralConfig, ConfigDatabase } from "../Config";
 import { PtyManager } from "./pty/PtyManager";
 import * as ThemeTypes from "../theme/Theme";
 import { ThemeManager, GlobalVariableMap } from "../theme/ThemeManager";
@@ -20,6 +19,9 @@ import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { isThemeType } from "./MainConfig";
 import { GlobalKeybindingsManager } from "./GlobalKeybindings";
 import { MainDesktop } from "./MainDesktop";
+import * as SharedMap from "../shared_map/SharedMap";
+import { MainWindow } from "./MainWindow";
+import { ConfigDatabase } from "../ConfigDatabase";
 
 
 const LOG_FINE = false;
@@ -42,34 +44,83 @@ export class MainIpc {
 
   #bulkFileStorage: BulkFileStorage = null;
   #configDatabase: ConfigDatabase = null;
-  #extensionManager: MainExtensionManager = null;
   #globalKeybindingsManager: GlobalKeybindingsManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #mainDesktop: MainDesktop = null;
   #ptyManager: PtyManager = null;
+  #sharedMap: SharedMap.SharedMap = null;
   #themeManager: ThemeManager = null;
 
   #ptyToSenderMap = new Map<number, number>();
   #waitingExecuteCommands = new Map<string, PromisePairFunctions>();
 
-  constructor(configDatabase: ConfigDatabase, bulkFileStorage: BulkFileStorage, extensionManager: MainExtensionManager,
-      ptyManager: PtyManager, keybindingsIOManager: KeybindingsIOManager, mainDesktop: MainDesktop,
-      themeManager: ThemeManager, globalKeybindingsManager: GlobalKeybindingsManager) {
+  constructor(configDatabase: ConfigDatabase, bulkFileStorage: BulkFileStorage, ptyManager: PtyManager,
+      keybindingsIOManager: KeybindingsIOManager, mainDesktop: MainDesktop, themeManager: ThemeManager,
+      globalKeybindingsManager: GlobalKeybindingsManager, sharedMap: SharedMap.SharedMap) {
 
     this._log = getLogger("MainIpc", this);
     this.#bulkFileStorage = bulkFileStorage;
     this.#configDatabase = configDatabase;
-    this.#extensionManager = extensionManager;
     this.#globalKeybindingsManager = globalKeybindingsManager;
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#mainDesktop = mainDesktop;
     this.#ptyManager = ptyManager;
+    this.#sharedMap = sharedMap;
     this.#themeManager = themeManager;
   }
 
   start(): void {
+    this._connectToServiceEvents();
+
     this.setupPtyManager();
     ipc.on(Messages.CHANNEL_NAME, this._handleIpc.bind(this));
+  }
+
+  private _connectToServiceEvents(): void {
+    this.#bulkFileStorage.onWriteBufferSize((event: BufferSizeEvent) => {
+      this.sendBulkFileWriteBufferSizeEvent(event);
+    });
+
+    this.#bulkFileStorage.onClose((event: CloseEvent) => {
+      this.sendBulkFileStateChangeEvent(event);
+    });
+
+    this.#mainDesktop.onAboutSelected(() => {
+      for (const win of this.#mainDesktop.getWindows()) {
+        this.sendCommandToWindow("extraterm:window.openAbout", win.id, null);
+      }
+    });
+
+    this.#mainDesktop.onPreferencesSelected(() => {
+      for (const win of this.#mainDesktop.getWindows()) {
+        this.sendCommandToWindow("extraterm:window.openSettings", win.id, null);
+      }
+    });
+
+    this.#mainDesktop.onQuitSelected(() => {
+      this.sendQuitApplicationRequest();
+    });
+
+    this.#mainDesktop.onDevToolsClosed((devToolsWindow: MainWindow)=> {
+      this.sendDevToolStatus(devToolsWindow.id, false);
+    });
+
+    this.#mainDesktop.onDevToolsOpened((devToolsWindow: MainWindow)=> {
+      this.sendDevToolStatus(devToolsWindow.id, true);
+    });
+
+    this.#mainDesktop.onWindowClosed((webContentsId: number) => {
+      this.cleanUpPtyWindow(webContentsId);
+    });
+
+    this.#sharedMap.onChange((ev: SharedMap.ChangeEvent): void => {
+      if ( ! ev.isLocalOrigin) {
+        return;
+      }
+
+      const msg: Messages.SharedMapEventMessage = { type: Messages.MessageType.SHARED_MAP_EVENT, event: ev };
+      this._sendMessageToAllWindows(msg);
+    });
   }
 
   private setupPtyManager(): void {
@@ -149,25 +200,14 @@ export class MainIpc {
     this._sendMessageToAllWindows(msg);
   }
 
-  private _makeExtensionDesiredStateMessage(): Messages.ExtensionDesiredStateMessage {
-    const msg: Messages.ExtensionDesiredStateMessage = {
-      type: Messages.MessageType.EXTENSION_DESIRED_STATE,
-      desiredState: this.#extensionManager.getDesiredState()
-    };
-    return msg;
-  }
-
-  sendExtensionDesiredStateMessage(): void {
-    this._sendMessageToAllWindows(this._makeExtensionDesiredStateMessage());
-  }
-
   sendCloseSplashToWindow(windowId: number): void {
     const window = BrowserWindow.fromId(windowId);
     const msg: Messages.CloseSplashMessage = { type: Messages.MessageType.CLOSE_SPLASH };
     window.webContents.send(Messages.CHANNEL_NAME, msg);
   }
 
-  sendDevToolStatus(window: Electron.BrowserWindow, open: boolean): void {
+  sendDevToolStatus(windowId: number, open: boolean): void {
+    const window = BrowserWindow.fromId(windowId);
     const msg: Messages.DevToolsStatusMessage = { type: Messages.MessageType.DEV_TOOLS_STATUS, open: open };
     window.webContents.send(Messages.CHANNEL_NAME, msg);
   }
@@ -247,14 +287,6 @@ export class MainIpc {
         this._handleClipboardWrite(<Messages.ClipboardWriteMessage> msg);
         break;
 
-      case Messages.MessageType.CONFIG:
-        this._handleConfig(<Messages.ConfigMessage> msg);
-        break;
-
-      case Messages.MessageType.CONFIG_REQUEST:
-        reply = this._handleConfigRequest(<Messages.ConfigRequestMessage> msg);
-        break;
-
       case Messages.MessageType.DEV_TOOLS_REQUEST:
         this._handleDevToolsRequest(event.sender, <Messages.DevToolsRequestMessage> msg);
         break;
@@ -262,22 +294,6 @@ export class MainIpc {
       case Messages.MessageType.EXECUTE_COMMAND_RESPONSE:
         this._handleCommandResponse(<Messages.ExecuteCommandResponseMessage> msg);
         break;
-
-      case Messages.MessageType.EXTENSION_DESIRED_STATE_REQUEST:
-        event.returnValue = this._makeExtensionDesiredStateMessage();
-        return;
-
-      case Messages.MessageType.EXTENSION_DISABLE:
-        this.#extensionManager.disableExtension((<Messages.ExtensionDisableMessage>msg).extensionName);
-        break;
-
-      case Messages.MessageType.EXTENSION_ENABLE:
-        this.#extensionManager.enableExtension((<Messages.ExtensionEnableMessage>msg).extensionName);
-        break;
-
-      case Messages.MessageType.EXTENSION_METADATA_REQUEST:
-        event.returnValue = this._handleExtensionMetadataRequest();
-        return;
 
       case Messages.MessageType.FRAME_DATA_REQUEST:
         this._log.debug('Messages.MessageType.FRAME_DATA_REQUEST is not implemented.');
@@ -382,6 +398,14 @@ export class MainIpc {
         this._handleWindowReady(event.sender);
         break;
 
+      case Messages.MessageType.SHARED_MAP_EVENT:
+        this._handleSharedMapEvent(<Messages.SharedMapEventMessage> msg);
+        break;
+
+      case Messages.MessageType.SHARED_MAP_DUMP_REQUEST:
+        reply = this._handleSharedMapDumpRequest();
+        break;
+
       default:
         break;
     }
@@ -392,22 +416,6 @@ export class MainIpc {
       }
       event.sender.send(Messages.CHANNEL_NAME, reply);
     }
-  }
-
-  private _handleConfig(msg: Messages.ConfigMessage): void {
-    if (LOG_FINE) {
-      this._log.debug("Incoming new config: ", msg);
-    }
-    this.#configDatabase.setConfig(msg.key, msg.config);
-  }
-
-  private _handleConfigRequest(msg: Messages.ConfigRequestMessage): Messages.ConfigMessage {
-    const reply: Messages.ConfigMessage = {
-      type: Messages.MessageType.CONFIG,
-      key: msg.key,
-      config: this.#configDatabase.getConfig(msg.key)
-    };
-    return reply;
   }
 
   sendQuitApplicationRequest(): void {
@@ -434,7 +442,7 @@ export class MainIpc {
 
     const globalVariables: GlobalVariableMap = new Map();
 
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     globalVariables.set("extraterm-gpu-driver-workaround", generalConfig.gpuDriverWorkaround);
     globalVariables.set("extraterm-titlebar-style", generalConfig.titleBarStyle);
     globalVariables.set("extraterm-platform", process.platform);
@@ -471,10 +479,10 @@ export class MainIpc {
   private _handleThemeRescan(): Messages.ThemeListMessage {
     this.#themeManager.rescan();
 
-    const userStoredConfig = this.#configDatabase.getConfigCopy(GENERAL_CONFIG);
+    const userStoredConfig = this.#configDatabase.getGeneralConfigCopy();
     if ( ! isThemeType(this.#themeManager.getTheme(userStoredConfig.themeSyntax), 'syntax')) {
       userStoredConfig.themeSyntax = ThemeTypes.FALLBACK_SYNTAX_THEME;
-      this.#configDatabase.setConfig(GENERAL_CONFIG, userStoredConfig);
+      this.#configDatabase.setGeneralConfig(userStoredConfig);
     }
 
     return this._handleThemeListRequest();
@@ -608,13 +616,6 @@ export class MainIpc {
     this.#bulkFileStorage.deref(msg.identifier);
   }
 
-  private _handleExtensionMetadataRequest(): Messages.ExtensionMetadataMessage {
-    return {
-      type: Messages.MessageType.EXTENSION_METADATA,
-      extensionMetadata: this.#extensionManager.getExtensionMetadata()
-    };
-  }
-
   private _handleKeybindingsReadRequest(msg: Messages.KeybindingsReadRequestMessage): Messages.KeybindingsReadMessage {
     const stackedKeybindingsFile = this.#keybindingsIOManager.getStackedKeybindings(msg.name);
     const reply: Messages.KeybindingsReadMessage = {
@@ -636,4 +637,15 @@ export class MainIpc {
     this.#mainDesktop.handleWindowReady(sender.id);
   }
 
+  private _handleSharedMapEvent(msg: Messages.SharedMapEventMessage): void {
+    this.#sharedMap.sync(msg.event);
+  }
+
+  private _handleSharedMapDumpRequest(): Messages.SharedMapDumpMessage {
+    const msg: Messages.SharedMapDumpMessage = {
+      type: Messages.MessageType.SHARED_MAP_DUMP,
+      data: this.#sharedMap.dumpAll()
+    };
+    return msg;
+  }
 }

@@ -8,11 +8,11 @@ import { Event } from "@extraterm/extraterm-extension-api";
 import { BrowserWindow, Menu, Tray, MenuItemConstructorOptions, App } from "electron";
 import { Logger, getLogger } from "extraterm-logging";
 
-import { ConfigChangeEvent, ConfigDatabase, GeneralConfig, GENERAL_CONFIG } from "../Config";
 import { MainWindow, OpenWindowOptions } from "./MainWindow";
 import { ThemeManager } from "../theme/ThemeManager";
 import { EventEmitter } from "../utils/EventEmitter";
 import { MainWindowImpl } from "./MainWindowImpl";
+import { ConfigChangeEvent, ConfigDatabase } from "../ConfigDatabase";
 
 
 const isLinux = process.platform === "linux";
@@ -94,7 +94,7 @@ export class MainDesktop {
   }
 
   private _createTrayIcon(): void {
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
 
     if (generalConfig.showTrayIcon) {
       if (this.#tray == null) {
@@ -221,7 +221,7 @@ export class MainDesktop {
   async minimizeAllWindows(): Promise<void> {
     this._saveAllWindowDimensions();
 
-    const generalConfig = <GeneralConfig> this.#configDatabase.getConfig(GENERAL_CONFIG);
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     for (const ew of this.#extratermWindows) {
       if (generalConfig.showTrayIcon && generalConfig.minimizeToTray) {
         ew.hide();
@@ -276,8 +276,7 @@ export class MainDesktop {
       const rect = ew.getNormalBounds();
       const isMaximized = ew.isMaximized();
 
-      const newGeneralConfig = <GeneralConfig> this.#configDatabase.getConfigCopy(GENERAL_CONFIG);
-
+      const newGeneralConfig = this.#configDatabase.getGeneralConfigCopy();
       if (newGeneralConfig.windowConfiguration == null) {
         newGeneralConfig.windowConfiguration = {};
       }
@@ -288,7 +287,7 @@ export class MainDesktop {
         width: rect.width,
         height: rect.height
       };
-      this.#configDatabase.setConfig(GENERAL_CONFIG, newGeneralConfig);
+      this.#configDatabase.setGeneralConfig(newGeneralConfig);
     }
   }
 
