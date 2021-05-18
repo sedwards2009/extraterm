@@ -44,7 +44,6 @@ export class MainIpc {
 
   #bulkFileStorage: BulkFileStorage = null;
   #configDatabase: ConfigDatabase = null;
-  #extensionManager: MainExtensionManager = null;
   #globalKeybindingsManager: GlobalKeybindingsManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #mainDesktop: MainDesktop = null;
@@ -55,14 +54,13 @@ export class MainIpc {
   #ptyToSenderMap = new Map<number, number>();
   #waitingExecuteCommands = new Map<string, PromisePairFunctions>();
 
-  constructor(configDatabase: ConfigDatabase, bulkFileStorage: BulkFileStorage, extensionManager: MainExtensionManager,
-      ptyManager: PtyManager, keybindingsIOManager: KeybindingsIOManager, mainDesktop: MainDesktop,
-      themeManager: ThemeManager, globalKeybindingsManager: GlobalKeybindingsManager, sharedMap: SharedMap.SharedMap) {
+  constructor(configDatabase: ConfigDatabase, bulkFileStorage: BulkFileStorage, ptyManager: PtyManager,
+      keybindingsIOManager: KeybindingsIOManager, mainDesktop: MainDesktop, themeManager: ThemeManager,
+      globalKeybindingsManager: GlobalKeybindingsManager, sharedMap: SharedMap.SharedMap) {
 
     this._log = getLogger("MainIpc", this);
     this.#bulkFileStorage = bulkFileStorage;
     this.#configDatabase = configDatabase;
-    this.#extensionManager = extensionManager;
     this.#globalKeybindingsManager = globalKeybindingsManager;
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#mainDesktop = mainDesktop;

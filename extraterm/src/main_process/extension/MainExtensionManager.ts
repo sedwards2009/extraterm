@@ -26,7 +26,7 @@ import { ExtensionManagerIpc } from "../../ExtensionManagerIpc";
 interface ActiveExtension {
   metadata: ExtensionMetadata;
   publicApi: any;
-  contextImpl: MainInternalExtensionContext;
+  contextImpl: ExtensionContextImpl;
   module: any;
 }
 
@@ -166,7 +166,7 @@ export class MainExtensionManager {
     if (isMainProcessExtension(metadata)) {
       this._log.info(`Starting extension '${metadata.name}' in the main process.`);
 
-      contextImpl = new ExtensionContextImpl(metadata, this.#applicationVersion);
+      contextImpl = new ExtensionContextImpl(metadata, this.#configDatabase, this.#applicationVersion);
       if (metadata.main != null) {
         module = this._loadExtensionModule(metadata);
         if (module == null) {
@@ -208,6 +208,7 @@ export class MainExtensionManager {
       }
     }
 
+    activeExtension.contextImpl.dispose();
     this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
   }
 

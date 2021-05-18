@@ -139,7 +139,7 @@ async function main(): Promise<void> {
 
   registerInternalCommands(extensionManager, mainDesktop);
 
-  const mainIpc = setupIpc(configDatabase, bulkFileStorage, extensionManager, globalKeybindingsManager, mainDesktop,
+  const mainIpc = setupIpc(configDatabase, bulkFileStorage, globalKeybindingsManager, mainDesktop,
     keybindingsIOManager, themeManager, ptyManager, sharedMap);
 
   const localHttpServer = await setupLocalHttpServer(bulkFileStorage);
@@ -310,11 +310,11 @@ function setupOSX(): void {
 }
 
 function setupIpc(configDatabase: PersistentConfigDatabase, bulkFileStorage: BulkFileStorage,
-  extensionManager: MainExtensionManager, globalKeybindingsManager: GlobalKeybindingsManager, mainDesktop: MainDesktop,
+  globalKeybindingsManager: GlobalKeybindingsManager, mainDesktop: MainDesktop,
   keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, ptyManager: PtyManager,
   sharedMap: SharedMap): MainIpc {
 
-  const mainIpc = new MainIpc(configDatabase, bulkFileStorage, extensionManager, ptyManager,keybindingsIOManager,
+  const mainIpc = new MainIpc(configDatabase, bulkFileStorage, ptyManager,keybindingsIOManager,
     mainDesktop, themeManager, globalKeybindingsManager, sharedMap);
 
   mainIpc.start();

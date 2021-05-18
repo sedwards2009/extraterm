@@ -153,7 +153,8 @@ export class ExtensionManagerImpl implements ExtensionManager {
     if ( ! isMainProcessExtension(metadata)) {
 
       const applicationVersion = this.#configDatabase.getSystemConfig().applicationVersion;
-      contextImpl = new ExtensionContextImpl(this, metadata, this.#commonExtensionWindowState, applicationVersion);
+      contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, this.#commonExtensionWindowState,
+        applicationVersion);
       if (metadata.main != null) {
         module = this._loadExtensionModule(metadata);
         if (module == null) {
@@ -196,7 +197,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
         this._log.warn(`Exception occurred while deactivating extension ${activeExtension.metadata.name}. ${ex}`);
       }
     }
-
+    activeExtension.contextImpl.dispose();
     this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
   }
 

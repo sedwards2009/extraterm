@@ -7,12 +7,15 @@ import * as fs from "fs";
 import * as _ from "lodash";
 import * as path from "path";
 
-import { getLogger } from "extraterm-logging";
-import { ConfigDatabase, ConfigKey } from "../ConfigDatabase";
+import { getLogger, log } from "extraterm-logging";
+import { DebouncedDoLater } from "extraterm-later";
+
+import { ConfigChangeEvent, ConfigDatabase, ConfigKey } from "../ConfigDatabase";
 import * as SharedMap from "../shared_map/SharedMap";
 import { COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, SESSION_CONFIG, UserStoredConfig } from "../Config";
 
 const MAIN_CONFIG = "extraterm.json";
+const EXTENSION_CONFIG_DIR = "extension_config";
 
 /**
  * Config database which also loads and stores some config information on disk.
@@ -20,14 +23,23 @@ const MAIN_CONFIG = "extraterm.json";
 export class PersistentConfigDatabase extends ConfigDatabase {
   #configDirectory: string;
 
+  #writeExtensionConfig: DebouncedDoLater = null;
+  #queuedWriteExtensionConfig = new Set<string>();
+
   constructor(configDirectory: string, sharedMap: SharedMap.SharedMap) {
     super(sharedMap);
     this._log = getLogger("PersistentConfigDatabase", this);
     this.#configDirectory = configDirectory;
+    this.#writeExtensionConfig = new DebouncedDoLater(this._writeQueuedExtensionConfigs.bind(this), 250);
   }
 
   start(): void {
-    this._loadAllConfigs();
+    this._setUpDirectory();
+    this._loadApplicationConfigs();
+    this._loadExtensionConfigs();
+    this.onExtensionChange((e: ConfigChangeEvent) => {
+      this._queueWriteExtensionConfig(e.key);
+    });
     super.start();
   }
 
@@ -38,7 +50,14 @@ export class PersistentConfigDatabase extends ConfigDatabase {
     }
   }
 
-  private _loadAllConfigs(): void {
+  private _setUpDirectory(): void {
+    const extConfigPath = this._getExtensionConfigDirectory();
+    if ( ! fs.existsSync(extConfigPath)) {
+      fs.mkdirSync(extConfigPath);
+    }
+  }
+
+  private _loadApplicationConfigs(): void {
     const userConfig = this._readUserConfigFile();
 
     const commandLineActions = userConfig.commandLineActions ?? [];
@@ -80,5 +99,43 @@ export class PersistentConfigDatabase extends ConfigDatabase {
 
     const formattedConfig = JSON.stringify(cleanConfig, null, "  ");
     fs.writeFileSync(this._getUserConfigFilename(), formattedConfig);
+  }
+
+  private _getExtensionConfigDirectory(): string {
+    return path.join(this.#configDirectory, EXTENSION_CONFIG_DIR);
+  }
+
+  private _loadExtensionConfigs(): void {
+    const extConfigDirectory = this._getExtensionConfigDirectory();
+    for (const filename of fs.readdirSync(extConfigDirectory)) {
+      if (filename.endsWith(".json")) {
+        const extensionName = filename.slice(0, -5);
+        const configJson = fs.readFileSync(path.join(extConfigDirectory, filename), {encoding: "utf8"});
+        try {
+          const config = JSON.parse(configJson);
+          super.setExtensionConfig(extensionName, config);
+        } catch(ex) {
+          this._log.warn("Unable to read " + filename, ex);
+        }
+      }
+    }
+  }
+
+  private _queueWriteExtensionConfig(extensionName: string): void {
+    this.#queuedWriteExtensionConfig.add(extensionName);
+    this.#writeExtensionConfig.trigger();
+  }
+
+  private _writeQueuedExtensionConfigs(): void {
+    for (const extensionName of this.#queuedWriteExtensionConfig) {
+      this._writeExtensionConfig(extensionName, this.getExtensionConfig(extensionName));
+    }
+    this.#queuedWriteExtensionConfig.clear();
+  }
+
+  private _writeExtensionConfig(extensionName: string, config: any): void {
+    const formattedConfig = JSON.stringify(config, null, "  ");
+    const extConfigFilename = path.join(this._getExtensionConfigDirectory(), `${extensionName}.json`);
+    fs.writeFileSync(extConfigFilename, formattedConfig);
   }
 }

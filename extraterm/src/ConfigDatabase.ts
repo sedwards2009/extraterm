@@ -23,6 +23,7 @@ export interface ConfigChangeEvent {
 export type ConfigKey = string;
 
 const SHARED_MAP_CONFIG_NAMESPACE = "extraterm";
+const SHARED_MAP_EXTENSION_CONFIG_NAMESPACE = "extension_config";
 
 
 export class ConfigDatabase {
@@ -32,23 +33,44 @@ export class ConfigDatabase {
   #onChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
   onChange: Event<ConfigChangeEvent>;
 
+  #onExtensionChangeEventEmitter = new EventEmitter<ConfigChangeEvent>();
+  onExtensionChange: Event<ConfigChangeEvent>;
+
   constructor(sharedMap: SharedMap.SharedMap) {
     this._log = getLogger("ConfigDatabase", this);
     this.#sharedMap = sharedMap;
     this.onChange = this.#onChangeEventEmitter.event;
+    this.onExtensionChange = this.#onExtensionChangeEventEmitter.event;
   }
 
   start(): void {
     this.#sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
-      if (ev.type !== SharedMap.ChangeType.CHANGED || ev.namespace !== SHARED_MAP_CONFIG_NAMESPACE) {
-        return;
-      }
+      this._handleApplicationConfigChange(ev);
+      this._handleExtensionConfigChange(ev);
+    });
+  }
 
-      this.#onChangeEventEmitter.fire({
-        key: ev.key,
-        newConfig: ev.value,
-        oldConfig: ev.oldValue,
-      });
+  private _handleApplicationConfigChange(ev: SharedMap.ChangeEvent): void {
+    if (ev.type !== SharedMap.ChangeType.CHANGED || ev.namespace !== SHARED_MAP_CONFIG_NAMESPACE) {
+      return;
+    }
+
+    this.#onChangeEventEmitter.fire({
+      key: ev.key,
+      newConfig: ev.value,
+      oldConfig: ev.oldValue,
+    });
+  }
+
+  private _handleExtensionConfigChange(ev: SharedMap.ChangeEvent): void {
+    if (ev.namespace !== SHARED_MAP_EXTENSION_CONFIG_NAMESPACE) {
+      return;
+    }
+
+    this.#onExtensionChangeEventEmitter.fire({
+      key: ev.key,
+      newConfig: ev.value,
+      oldConfig: ev.oldValue,
     });
   }
 
@@ -67,6 +89,14 @@ export class ConfigDatabase {
       return null;
     }
     return _.cloneDeep(data);
+  }
+
+  getExtensionConfig(extensionName: string): any {
+    return this.#sharedMap.get(SHARED_MAP_EXTENSION_CONFIG_NAMESPACE, extensionName);
+  }
+
+  setExtensionConfig(extensionName: string, config: any): void {
+    this.#sharedMap.set(SHARED_MAP_EXTENSION_CONFIG_NAMESPACE, extensionName, config);
   }
 
   getGeneralConfig(): DeepReadonly<GeneralConfig> {

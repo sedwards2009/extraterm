@@ -18,13 +18,16 @@ import { CommandsRegistry } from "./CommandsRegistry";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { ExtensionContainerElement } from "./ExtensionContainerElement";
 import { ApplicationImpl } from "./ApplicationImpl";
+import { ConfigurationImpl } from "../../extension/ConfigurationImpl";
+import { ConfigDatabase } from "../../ConfigDatabase";
 
 
-export class ExtensionContextImpl implements InternalExtensionContext {
+export class ExtensionContextImpl implements InternalExtensionContext, ExtensionApi.Disposable {
   private _log: Logger = null;
 
   application: ApplicationImpl = null;
   commands: CommandsRegistry = null;
+  configuration: ConfigurationImpl = null;
   window: ExtensionApi.Window = null;
   _internalWindow: InternalWindow = null;
   aceModule: typeof Ace = Ace;
@@ -35,22 +38,32 @@ export class ExtensionContextImpl implements InternalExtensionContext {
 
   extensionPath: string = null;
 
-  private _tabTitleWidgetFactoryMap = new Map<string, ExtensionApi.TabTitleWidgetFactory>();
+  _extensionManager: ExtensionManager;
+  _extensionMetadata: ExtensionMetadata;
 
-  constructor(public _extensionManager: ExtensionManager, public _extensionMetadata: ExtensionMetadata,
+  #tabTitleWidgetFactoryMap = new Map<string, ExtensionApi.TabTitleWidgetFactory>();
+
+  constructor(extensionManager: ExtensionManager, extensionMetadata: ExtensionMetadata, configDatabase: ConfigDatabase,
               commonExtensionState: CommonExtensionWindowState, applicationVersion: string) {
 
     this._log = getLogger("InternalExtensionContextImpl", this);
+
+    this._extensionManager = extensionManager;
+    this._extensionMetadata = extensionMetadata;
     this._proxyFactory = new ProxyFactoryImpl(this);
     this.application = new ApplicationImpl(applicationVersion);
-    this.commands = new CommandsRegistry(this, _extensionMetadata.name,
-                                          _extensionMetadata.contributes.commands, _extensionMetadata.contributes.menus);
+    this.commands = new CommandsRegistry(this, extensionMetadata.name,
+                                          extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
     this._internalWindow = new WindowProxy(this, commonExtensionState);
     this.window = this._internalWindow;
 
     this.extensionPath = this._extensionMetadata.path;
+    this.configuration = new ConfigurationImpl(configDatabase, extensionMetadata.name);
+    this.logger = getLogger(extensionMetadata.name);
+  }
 
-    this.logger = getLogger(_extensionMetadata.name);
+  dispose() {
+    this.configuration.dispose();
   }
 
   get backend(): never {
@@ -98,7 +111,7 @@ export class ExtensionContextImpl implements InternalExtensionContext {
     const tabTitleWidgetMeta = this._extensionMetadata.contributes.tabTitleWidgets;
     for (const data of tabTitleWidgetMeta) {
       if (data.name === name) {
-        this._tabTitleWidgetFactoryMap.set(name, factory);
+        this.#tabTitleWidgetFactoryMap.set(name, factory);
         return;
       }
     }
@@ -111,7 +124,7 @@ export class ExtensionContextImpl implements InternalExtensionContext {
     const tabTitleWidgetsContrib = this._extensionMetadata.contributes.tabTitleWidgets;
     const result: HTMLElement[] = [];
     for (const contrib of tabTitleWidgetsContrib) {
-      const factory = this._tabTitleWidgetFactoryMap.get(contrib.name);
+      const factory = this.#tabTitleWidgetFactoryMap.get(contrib.name);
       if (factory != null) {
         const extensionContainerElement = <ExtensionContainerElement>
           document.createElement(ExtensionContainerElement.TAG_NAME);
