@@ -6,13 +6,13 @@
 
 /**
  * Create a UUID v4
- * 
+ *
  * Works in browser and node environments.
  * @return New cryptographcially secure UUID.
  */
 export function createUuid(): string {
   const buffer = new Uint8Array(16);
-  if (typeof window !== "undefined") {
+  if (window?.crypto?.getRandomValues != null) {
     window.crypto.getRandomValues(buffer);
   } else {
     const crypto = require("crypto");
