@@ -12,7 +12,7 @@
  */
 export function createUuid(): string {
   const buffer = new Uint8Array(16);
-  if (window != null && window?.crypto?.getRandomValues != null) {
+  if (typeof window !== "undefined" && window?.crypto?.getRandomValues != null) {
     window.crypto.getRandomValues(buffer);
   } else {
     const crypto = require("crypto");
