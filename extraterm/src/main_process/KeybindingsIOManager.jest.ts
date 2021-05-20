@@ -9,11 +9,13 @@ import { KeybindingsIOManager } from "./KeybindingsIOManager";
 import { MainExtensionManager } from './extension/MainExtensionManager';
 import * as path from 'path';
 import { SharedMap } from '../shared_map/SharedMap';
+import { ConfigDatabase } from '../ConfigDatabase';
 
 
 test("Scan & Flatten", () => {
   const sharedMap = new SharedMap();
-  const extensionManager = new MainExtensionManager(null, sharedMap, ["../extensions"], "0.1.0");
+  const configDatabase = new ConfigDatabase(sharedMap);
+  const extensionManager = new MainExtensionManager(configDatabase, sharedMap, ["../extensions"], "0.1.0");
   extensionManager.startUpExtensions({"default-keybindings": true}, false);
 
   const kbm = new KeybindingsIOManager(path.join(__dirname, "..", "..", "src", "main_process", "test_files"), extensionManager);
