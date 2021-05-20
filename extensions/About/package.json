@@ -5,7 +5,8 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "dist/AboutExtension.js",
+  "main": "dist/AboutExtensionMainProcess.js",
+  "windowMain": "dist/AboutExtension.js",
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
     "build-fast": "tsc",

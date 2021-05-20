@@ -3,7 +3,7 @@
   "displayName": "Autolink",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/Autolink.js",
+  "windowMain": "dist/Autolink.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist",

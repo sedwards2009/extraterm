@@ -3,7 +3,7 @@
   "displayName": "Autocomplete",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/Autocomplete.js",
+  "windowMain": "dist/Autocomplete.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist"

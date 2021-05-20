@@ -3,7 +3,7 @@
   "displayName": "Directory Commands",
   "version": "1.0.0",
   "description": "Commands related to the current directory",
-  "main": "dist/DirectoryCommandsExtension.js",
+  "windowMain": "dist/DirectoryCommandsExtension.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist"

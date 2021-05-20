@@ -3,7 +3,7 @@
   "displayName": "Insert Emoji",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/main.js",
+  "windowMain": "dist/main.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist",

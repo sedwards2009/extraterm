@@ -14,7 +14,7 @@ import { ExtensionMetadata, ExtensionDesiredState } from "../../ExtensionMetadat
 import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
-import { isMainProcessExtension, isSupportedOnThisPlatform } from "../../render_process/extension/InternalTypes";
+import { isSupportedOnThisPlatform } from "../../render_process/extension/InternalTypes";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { MainInternalExtensionContext, LoadedSessionBackendContribution, LoadedSyntaxThemeProviderContribution,
   LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
@@ -163,21 +163,20 @@ export class MainExtensionManager {
     let module = null;
     let publicApi = null;
     let contextImpl: ExtensionContextImpl = null;
-    if (isMainProcessExtension(metadata)) {
-      this._log.info(`Starting extension '${metadata.name}' in the main process.`);
 
-      contextImpl = new ExtensionContextImpl(metadata, this.#configDatabase, this.#applicationVersion);
-      if (metadata.main != null) {
-        module = this._loadExtensionModule(metadata);
-        if (module == null) {
-          return null;
-        }
-        try {
-          publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-        } catch(ex) {
-          this._log.warn(`Exception occurred while activating extension ${metadata.name}. ${ex}`);
-          return null;
-        }
+    this._log.info(`Starting extension '${metadata.name}' in the main process.`);
+
+    contextImpl = new ExtensionContextImpl(metadata, this.#configDatabase, this.#applicationVersion);
+    if (metadata.main != null) {
+      module = this._loadExtensionModule(metadata);
+      if (module == null) {
+        return null;
+      }
+      try {
+        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+      } catch(ex) {
+        this._log.warn(`Exception occurred while activating extension ${metadata.name}. ${ex}`);
+        return null;
       }
     }
     const activeExtension: ActiveExtension = {metadata, publicApi, contextImpl, module};

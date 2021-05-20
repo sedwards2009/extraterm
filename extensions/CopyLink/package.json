@@ -3,7 +3,7 @@
   "displayName": "Copy Link",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/CopyLink.js",
+  "windowMain": "dist/CopyLink.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist data"

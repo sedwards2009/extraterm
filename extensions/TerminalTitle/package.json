@@ -3,7 +3,7 @@
   "description": "Terminal title and tab editing and configuration",
   "displayName": "Terminal Title",
   "version": "1.0.0",
-  "main": "dist/TerminalTitleExtension.js",
+  "windowMain": "dist/TerminalTitleExtension.js",
   "license": "MIT",
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",

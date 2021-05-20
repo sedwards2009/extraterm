@@ -194,21 +194,6 @@ export interface InternalSessionEditor extends ExtensionApi.SessionEditorBase {
   _init(): void;
 }
 
-
-export function isMainProcessExtension(metadata: ExtensionMetadata): boolean {
-  if (metadata.process === "main") {
-    return true;
-  }
-  if (metadata.process === "render") {
-    return false;
-  }
-  return metadata.contributes.sessionBackends.length !== 0 ||
-    metadata.contributes.syntaxThemeProviders.length !== 0 ||
-    metadata.contributes.syntaxThemes.length !== 0 ||
-    metadata.contributes.terminalThemeProviders.length !== 0 ||
-    metadata.contributes.terminalThemes.length !== 0;
-}
-
 export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {
   let included = metadata.includePlatform.length === 0;
   for (const platform of metadata.includePlatform) {

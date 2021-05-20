@@ -4,7 +4,7 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "dist/WindowsConsoleSessionEditorExtension.js",
+  "windowMain": "dist/WindowsConsoleSessionEditorExtension.js",
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
     "build-fast": "tsc",

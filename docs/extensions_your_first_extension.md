@@ -54,7 +54,7 @@ Extraterm's extension API leans towards configuration inside `package.json` over
 
 Our first extension does have some JavaScript code which we need to connect to the command we defined in `package.json`.
 
-When Extraterm starts up an extension it will try to find the extension's main script by looking at the `main` field inside `package.json`. It will then load the script and run the `activate` function inside.
+When Extraterm starts up an extension it will try to find the extension's main script by looking at the `windowMain` field inside `package.json`. It will then load the script and run the `activate` function inside.
 
 Every extension is passed an [`ExtensionContext`](extension_api/interfaces/extensioncontext.html) instance. This is the gateway extensions use to access the extension API and actually perform useful work inside Extraterm.
 

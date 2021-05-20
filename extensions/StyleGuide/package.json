@@ -5,7 +5,7 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "main": "dist/StyleGuideExtension.js",
+  "windowMain": "dist/StyleGuideExtension.js",
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
     "build-fast": "tsc",

@@ -3,7 +3,7 @@
   "displayName": "TLDR Pages",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/main.js",
+  "windowMain": "dist/main.js",
   "scripts": {
     "build": "yarn run fetch-data && tsc",
     "clean": "shx rm -rf dist data",

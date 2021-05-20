@@ -11,8 +11,8 @@ import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluat
 import { Logger, getLogger, log } from "extraterm-logging";
 import { EtTerminal, LineRangeChange } from "../Terminal";
 import { TextViewer } from"../viewers/TextAceViewer";
-import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext,
-  isMainProcessExtension, CommandQueryOptions, InternalSessionSettingsEditor, InternalSessionEditor, ViewerTabDisplay } from "./InternalTypes";
+import { ExtensionManager, ExtensionUiUtils, InternalExtensionContext, CommandQueryOptions,
+  InternalSessionSettingsEditor, InternalSessionEditor, ViewerTabDisplay } from "./InternalTypes";
 import { ExtensionUiUtilsImpl } from "./ExtensionUiUtilsImpl";
 import { ExtensionMetadata, ExtensionCommandContribution, Category, WhenVariables, ExtensionDesiredState
 } from "../../ExtensionMetadata";
@@ -133,9 +133,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
 
     for (const extensionInfo of this.#ipc.getExtensionMetadata()) {
       if (enableList.indexOf(extensionInfo.name) !== -1) {
-        if ( ! isMainProcessExtension(extensionInfo)) {
-          this._startExtension(extensionInfo);
-        }
+        this._startExtension(extensionInfo);
       }
     }
 
@@ -150,23 +148,20 @@ export class ExtensionManagerImpl implements ExtensionManager {
     let publicApi = null;
     let contextImpl: ExtensionContextImpl = null;
 
-    if ( ! isMainProcessExtension(metadata)) {
+    const applicationVersion = this.#configDatabase.getSystemConfig().applicationVersion;
+    contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, this.#commonExtensionWindowState,
+      applicationVersion);
+    if (metadata.windowMain != null) {
+      module = this._loadExtensionModule(metadata);
+      if (module == null) {
+        return;
+      }
 
-      const applicationVersion = this.#configDatabase.getSystemConfig().applicationVersion;
-      contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, this.#commonExtensionWindowState,
-        applicationVersion);
-      if (metadata.main != null) {
-        module = this._loadExtensionModule(metadata);
-        if (module == null) {
-          return;
-        }
-
-        try {
-          publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-        } catch(ex) {
-          this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
-          return;
-        }
+      try {
+        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+      } catch(ex) {
+        this._log.warn(`Exception occurred while starting extensions ${metadata.name}. ${ex}`);
+        return;
       }
     }
 
@@ -174,7 +169,7 @@ export class ExtensionManagerImpl implements ExtensionManager {
   }
 
   private _loadExtensionModule(extension: ExtensionMetadata): any {
-    const mainJsPath = path.join(extension.path, extension.main);
+    const mainJsPath = path.join(extension.path, extension.windowMain);
     try {
       const module = require(mainJsPath);
       return module;

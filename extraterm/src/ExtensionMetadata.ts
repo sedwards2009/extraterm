@@ -8,6 +8,7 @@ export interface ExtensionMetadata {
   readonly name: string;
   readonly path: string;
   readonly main?: string;
+  readonly windowMain?: string;
   readonly version?: string;
   readonly description?: string;
   readonly homepage?: string;
@@ -18,7 +19,6 @@ export interface ExtensionMetadata {
   readonly excludePlatform?: ExtensionPlatform[];
   readonly isInternal?: boolean;
   readonly readmePath?: string;
-  readonly process?: string;
 }
 
 export interface ExtensionPlatform {

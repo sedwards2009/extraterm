@@ -88,6 +88,7 @@ class PackageParser {
         name: getJsonStringField(packageJson, "name"),
         path: this._extensionPath,
         main: getJsonStringField(packageJson, "main", null),
+        windowMain: getJsonStringField(packageJson, "windowMain", null),
         version: getJsonStringField(packageJson, "version"),
         homepage: getJsonStringField(packageJson, "homepage", null),
         keywords: getJsonStringArrayField(packageJson, "keywords", []),
@@ -97,7 +98,6 @@ class PackageParser {
         description: getJsonStringField(packageJson, "description"),
         contributes: this.parseContributesJson(packageJson),
         isInternal: getJsonBooleanField(packageJson, "isInternal", false),
-        process: getJsonStringField(packageJson, "process", null),
       };
       return result;
     } catch(ex) {
