@@ -16,12 +16,14 @@
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
+    "run:test-font-atlas": "yarn run build-fast && qode ./dist/font_metrics/test/TestFontAtlas.js",
     "run": "false"
   },
   "dependencies": {
-    "extraterm-data-structures": "1.0.0",
+    "@nodegui/nodegui": "^0.30.3",
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-color-utilities": "1.0.0",
+    "extraterm-data-structures": "1.0.0",
     "extraterm-logging": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0",
     "floyd-rivest": "1.0.1",

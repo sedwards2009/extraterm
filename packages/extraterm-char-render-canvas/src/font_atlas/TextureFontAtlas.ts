@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
 import { ArrayKeyTrie } from "extraterm-data-structures";
 import { StyleCode } from "extraterm-char-cell-grid";
@@ -21,13 +21,10 @@ export class TextureFontAtlas extends FontAtlasBase<TextureCachedGlyph> {
   private _nextFreeCodePoint = 0x11000000;
 
   protected _createCachedGlyphStruct(cg: CachedGlyph): TextureCachedGlyph {
-    const canvasWidth = this._pageCanvas.width;
-    const canvasHeight = this._pageCanvas.height;
-
-    const textureXpx = cg.xPixels / canvasWidth;
-    const textureX2px = (cg.xPixels + cg.widthPx) / canvasWidth;
-    const textureYpx = cg.yPixels / canvasHeight;
-    const textureY2px = (cg.yPixels + this._metrics.heightPx) / canvasHeight;
+    const textureXpx = cg.xPixels / this._pageImageWidth;
+    const textureX2px = (cg.xPixels + cg.widthPx) / this._pageImageWidth;
+    const textureYpx = cg.yPixels / this._pageImageWidth;
+    const textureY2px = (cg.yPixels + this._metrics.heightPx) / this._pageImageWidth;
 
     return {...cg, textureXpx, textureX2px, textureYpx, textureY2px};
   }
@@ -52,12 +49,10 @@ export class TextureFontAtlas extends FontAtlasBase<TextureCachedGlyph> {
   }
 
   getTextureCellWidth(): number {
-    const canvasWidth = this._pageCanvas.width;
-    return this._metrics.widthPx / canvasWidth;
+    return this._metrics.widthPx / this._pageImageWidth;
   }
 
   getTextureCellHeight(): number {
-    const canvasHeight = this._pageCanvas.height;
-    return this._metrics.heightPx / canvasHeight;
+    return this._metrics.heightPx / this._pageImageHeight;
   }
 }

@@ -1,6 +1,8 @@
 /**
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
+import { QColor, QFont, QFontMetrics, QFontWeight, QImage, QImageFormat, QPainter, QPainterPath, QPen } from "@nodegui/nodegui";
+
 import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE,
   STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, STYLE_MASK_HYPERLINK_HIGHLIGHT, UNDERLINE_STYLE_NORMAL,
   UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
@@ -12,6 +14,8 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
 import { TripleKeyMap } from "extraterm-data-structures";
 import { RGBAToCss } from "../RGBAToCss";
+import { RGBAToQColor } from "../RGBAToQColor";
+import { mat2d } from "gl-matrix";
 
 
 const TWO_TO_THE_24 = 2 ** 24;
@@ -37,8 +41,10 @@ export interface CachedGlyph {
 export abstract class FontAtlasBase<CG extends CachedGlyph> {
   private _log: Logger = null;
 
-  protected _pageCanvas: HTMLCanvasElement = null;
-  protected _pageCtx: CanvasRenderingContext2D = null;
+  protected _pageImage: QImage = null;
+  protected _pageImageWidth = 0;
+  protected _pageImageHeight = 0;
+  protected _painter: QPainter = null;
 
   private _atlasWidthInCells: number;
   private _atlasHeightInCells: number;
@@ -53,6 +59,11 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   private _nextEmptyCellY: number = 0;
   private _lookupTable = new TripleKeyMap<number, number, number, CG>();
 
+  private _qfont: QFont = null;
+  private _qmetrics: QFontMetrics = null;
+  private _extraQfonts: QFont[] = [];
+  private _extraQmetrics: QFontMetrics[] = [];
+
   constructor(protected readonly _metrics: MonospaceFontMetrics,
       protected readonly _extraFonts: MonospaceFontMetrics[],
       protected readonly _transparentBackground: boolean,
@@ -60,6 +71,21 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       protected readonly _screenHeightHintPx: number) {
 
     this._log = getLogger("FontAtlasPage", this);
+
+    this._qfont = new QFont();
+    this._qfont.setFamily(this._metrics.fontFamily);
+    this._qfont.setPixelSize(this._metrics.fontSizePx);
+    this._qmetrics = new QFontMetrics(this._qfont);
+
+    for (const extraFont of this._extraFonts) {
+      const font = new QFont();
+      font.setFamily(extraFont.fontFamily);
+      font.setPixelSize(extraFont.fontSizePx);
+      this._extraQfonts.push(font);
+
+      const qmetrics = new QFontMetrics(font);
+      this._extraQmetrics.push(qmetrics);
+    }
 
     // this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
     this._initialize();
@@ -73,20 +99,17 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
 
     this._safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) / 6);
 
-    this._pageCanvas = document.createElement("canvas");
-    this._pageCanvas.width = this._atlasWidthInCells * (this._metrics.widthPx + this._safetyPadding * 2);
-    this._pageCanvas.height = this._atlasHeightInCells * (this._metrics.heightPx + this._safetyPadding * 2);
+    this._pageImageWidth = this._atlasWidthInCells * (this._metrics.widthPx + this._safetyPadding * 2);
+    this._pageImageHeight = this._atlasHeightInCells * (this._metrics.heightPx + this._safetyPadding * 2);
+
+    this._pageImage = new QImage(this._pageImageWidth, this._pageImageHeight, QImageFormat.RGB32);
 
     this._initializeSlots();
 
-    // document.body.appendChild(this._pageCanvas);
-
-    this._pageCtx = this._pageCanvas.getContext("2d", {alpha: this._transparentBackground});
-    this._pageCtx.textBaseline = "top";
-
-    this._pageCtx.fillStyle = "#00000000";
-    this._pageCtx.fillRect(0, 0, this._pageCanvas.width, this._pageCanvas.height);
-    this._pageCtx.fillStyle = "#ffffffff";
+    this._painter = new QPainter(); //{alpha: this._transparentBackground});
+    this._painter.begin(this._pageImage);
+    this._painter.fillRect(0, 0, this._pageImageWidth, this._pageImageHeight, new QColor(0, 0, 0, 255));
+    this._painter.end();
   }
 
   private _initializeSlots(): void {
@@ -104,7 +127,11 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   }
 
   getCanvas(): HTMLCanvasElement {
-    return this._pageCanvas;
+    return null;
+  }
+
+  getQImage(): QImage {
+    return this._pageImage;
   }
 
   getMetrics(): MonospaceFontMetrics {
@@ -168,27 +195,25 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   protected _insertCharAt(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
       fgRGBA: number, bgRGBA: number, xPx: number, yPx: number, widthPx: number, widthInCells: number): CG {
 
-    const ctx = this._pageCtx;
+    const painter = this._painter;
 
-    ctx.save();
+    painter.begin(this._pageImage);
+    painter.save();
 
-    ctx.clearRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
-    ctx.fillStyle = RGBAToCss(bgRGBA);
-    ctx.fillRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx);
+    const bgColor = RGBAToQColor(bgRGBA);
+    painter.fillRect(xPx, yPx, widthInCells * this._metrics.widthPx, this._metrics.heightPx, bgColor);
 
-    ctx.globalCompositeOperation = "source-over";
-    const fgCSS = RGBAToCss(fgRGBA);
-    ctx.fillStyle = fgCSS;
-    ctx.strokeStyle = fgCSS;
+    const fgColor = RGBAToQColor(fgRGBA);
+    painter.setPen(fgColor);
 
     if (isBoxCharacter(codePoint)) {
-      drawBoxCharacter(ctx, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx);
+      drawBoxCharacter(painter, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx, fgColor);
     } else {
-      this._drawPlainCharacter(ctx, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx, widthInCells);
+      this._drawPlainCharacter(painter, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx, widthInCells);
     }
 
     for (let i=0; i<widthInCells; i++) {
-      this._drawDecoration(ctx, style, xPx + i * widthPx, yPx, widthPx, fgRGBA);
+      this._drawDecoration(painter, style, xPx + i * widthPx, yPx, widthPx, fgRGBA);
     }
 
     const cachedGlyph = this._createCachedGlyphStruct({
@@ -206,12 +231,13 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       fontIndex
     });
 
-    this._pageCtx.restore();
+    painter.restore();
+    painter.end();
 
     return cachedGlyph;
   }
 
-  private _drawPlainCharacter(ctx: CanvasRenderingContext2D, codePoint: number, alternateCodePoints: number[],
+  private _drawPlainCharacter(painter: QPainter, codePoint: number, alternateCodePoints: number[],
       style: StyleCode, fontIndex: number, xPx: number, yPx: number, widthInCells: number): void {
 
     let str: string;
@@ -221,19 +247,26 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       str = String.fromCodePoint(...alternateCodePoints);
     }
 
-    let styleName = "";
+    let font: QFont = null;
+    if (fontIndex === 0) {
+      font = this._qfont;
+    } else {
+      font = this._extraQfonts[fontIndex-1];
+    }
+
     if (style & STYLE_MASK_BOLD) {
-      styleName += "bold ";
+      font.setWeight(QFontWeight.Bold);
     }
     if (style & STYLE_MASK_ITALIC) {
-      styleName += "italic ";
+      font.setItalic(true);
     }
+
+    painter.setFont(font);
 
     let metrics = this._metrics;
     if (fontIndex !== 0) {
       metrics = this._extraFonts[fontIndex-1];
     }
-    ctx.font = styleName + metrics.fontSizePx + "px " + metrics.fontFamily;
 
     const textXPx = xPx + this._metrics.fillTextXOffset;
     const textYPx = yPx + this._metrics.fillTextYOffset;
@@ -245,9 +278,9 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       //   to be a monospace and the glyph is meant to be just one cell.
       // * Extra fonts often have different width compared to our base font.
       //   We chell all of them.
-      const charMetrics = ctx.measureText(str);
-      const measuredWidth = charMetrics.actualBoundingBoxRight - charMetrics.actualBoundingBoxLeft;
-      if (measuredWidth > 1.25 * this._metrics.widthPx) {
+      const qmetrics = fontIndex === 0 ? this._qmetrics : this._extraQmetrics[fontIndex-1];
+      const charWidthPx = qmetrics.horizontalAdvance(str);
+      if (charWidthPx > 1.25 * this._metrics.widthPx) {
         // We give a 25% leniency to avoid catching glyphs which render
         // slightly outside the cell.
         shrink = true;
@@ -256,26 +289,30 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
 
     const isItalic = (style & STYLE_MASK_ITALIC) !== 0 && metrics.widthPx !== metrics.boldItalicWidthPx;
     if (isItalic && fontIndex === 0) {
-      ctx.save();
-      const m = new DOMMatrix();
-      m.translateSelf(textXPx, textYPx);
-      m.scaleSelf(metrics.widthPx / metrics.boldItalicWidthPx, 1);
-      ctx.setTransform(m);
-      ctx.fillText(str, 0, 0);
-      ctx.restore();
+      painter.save();
+
+      const matrix = mat2d.create();
+      mat2d.translate(matrix, matrix, [textXPx, textYPx]);
+      mat2d.scale(matrix, matrix, [metrics.widthPx / metrics.boldItalicWidthPx, 1]);
+      painter.setTransform(matrix);
+
+      painter.drawText(0, 0, str);
+      painter.restore();
     } else {
       if (! shrink) {
-        ctx.fillText(str, textXPx, textYPx);
+        painter.drawText(textXPx, textYPx, str);
       } else {
 
         // Shrink big glyphs by 50%.
-        ctx.save();
-        const m = new DOMMatrix();
-        m.translateSelf(textXPx, textYPx + Math.floor(this._metrics.heightPx/4));
-        m.scaleSelf(0.5, 0.5);
-        ctx.setTransform(m);
-        ctx.fillText(str, 0, 0);
-        ctx.restore();
+        painter.save();
+
+        const matrix = mat2d.create();
+        mat2d.translate(matrix, matrix, [textXPx, textYPx + Math.floor(this._metrics.heightPx/4)]);
+        mat2d.scale(matrix, matrix, [0.5, 0.5]);
+        painter.setTransform(matrix);
+
+        painter.drawText(0, 0, str);
+        painter.restore();
       }
     }
   }
@@ -284,50 +321,53 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     return  (codePoint >= 0x2000 && codePoint < 0x2c00) || (codePoint & 0x1f000) === 0x1f000;
   }
 
-  private _drawDecoration(ctx: CanvasRenderingContext2D, style: StyleCode, xPx: number, yPx: number,
+  private _drawDecoration(painter: QPainter, style: StyleCode, xPx: number, yPx: number,
       widthPx: number, fgRGBA: number): void {
 
+    const fgColor = RGBAToQColor(fgRGBA);
     if (style & STYLE_MASK_STRIKETHROUGH) {
-      ctx.fillRect(xPx, yPx + this._metrics.strikethroughY, widthPx, this._metrics.strikethroughHeight);
+      painter.fillRect(xPx, yPx + this._metrics.strikethroughY, widthPx, this._metrics.strikethroughHeight, fgColor);
     }
 
     const underline = style & STYLE_MASK_UNDERLINE;
     if (underline === UNDERLINE_STYLE_NORMAL || underline === UNDERLINE_STYLE_DOUBLE) {
-      ctx.fillRect(xPx, yPx + this._metrics.underlineY, widthPx, this._metrics.underlineHeight);
+      painter.fillRect(xPx, yPx + this._metrics.underlineY, widthPx, this._metrics.underlineHeight, fgColor);
     }
     if (underline === UNDERLINE_STYLE_DOUBLE || style & STYLE_MASK_HYPERLINK_HIGHLIGHT) {
-      ctx.fillRect(xPx, yPx + this._metrics.secondUnderlineY, widthPx, this._metrics.underlineHeight);
+      painter.fillRect(xPx, yPx + this._metrics.secondUnderlineY, widthPx, this._metrics.underlineHeight, fgColor);
     }
     if (underline === UNDERLINE_STYLE_CURLY) {
-      ctx.save();
-      ctx.lineWidth = this._metrics.curlyThickness;
-      ctx.beginPath();
-      ctx.moveTo(xPx, yPx+this._metrics.curlyY);
-      ctx.quadraticCurveTo(xPx + widthPx/4, yPx+this._metrics.curlyY-this._metrics.curlyHeight/2,
+      const path = new QPainterPath();
+      path.moveTo(xPx, yPx+this._metrics.curlyY);
+      path.quadTo(xPx + widthPx/4, yPx+this._metrics.curlyY-this._metrics.curlyHeight/2,
                                       xPx + widthPx/2, yPx+this._metrics.curlyY);
-      ctx.quadraticCurveTo(xPx + widthPx*3/4, yPx+this._metrics.curlyY+this._metrics.curlyHeight/2,
+      path.quadTo(xPx + widthPx*3/4, yPx+this._metrics.curlyY+this._metrics.curlyHeight/2,
                                         xPx + widthPx, yPx+this._metrics.curlyY);
-      ctx.stroke();
-      ctx.restore();
+
+      painter.save();
+      const pen = new QPen();
+      pen.setColor(fgColor);
+      pen.setWidth(this._metrics.curlyThickness);
+      painter.setPen(pen);
+      painter.drawPath(path);
+      painter.restore();
     }
 
     if (style & STYLE_MASK_OVERLINE) {
-      ctx.fillRect(xPx, yPx + this._metrics.overlineY, widthPx, this._metrics.overlineHeight);
+      painter.fillRect(xPx, yPx + this._metrics.overlineY, widthPx, this._metrics.overlineHeight, fgColor);
     }
 
     if (style & STYLE_MASK_HYPERLINK && ! (style & STYLE_MASK_HYPERLINK_HIGHLIGHT)) {
-      ctx.save();
+      painter.save();
       const halfAlphaFgRGBA = (fgRGBA & 0xffffff00) | ((fgRGBA >> 1) & 0x7f);
-      const fgCSS = RGBAToCss(halfAlphaFgRGBA);
-      ctx.fillStyle = fgCSS;
-      ctx.strokeStyle = fgCSS;
+      const fgHalfTrans = RGBAToQColor(halfAlphaFgRGBA);
 
       // One litle dash at second underline height.
       const dashWidthPx = Math.max(1, Math.floor(widthPx / 3));
       const firstXPx = Math.floor(widthPx / 3);
-      ctx.fillRect(xPx + firstXPx, yPx + this._metrics.secondUnderlineY, dashWidthPx,
-        this._metrics.underlineHeight);
-      ctx.restore();
+      painter.fillRect(xPx + firstXPx, yPx + this._metrics.secondUnderlineY, dashWidthPx,
+        this._metrics.underlineHeight, fgHalfTrans);
+      painter.restore();
     }
   }
 

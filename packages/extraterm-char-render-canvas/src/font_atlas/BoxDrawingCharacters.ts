@@ -1,8 +1,8 @@
 /**
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
+import { QColor, QPainter, QPainterPath, QPen } from "@nodegui/nodegui";
 import { Logger, getLogger, log } from "extraterm-logging";
-import { Color } from "extraterm-color-utilities";
 
 
 const _log = getLogger("BoxDrawingCharacters");
@@ -49,67 +49,67 @@ export function isBoxCharacter(codePoint: number): boolean {
   return codePoint >= FIRST_BOX_CODE_POINT && codePoint < (FIRST_BOX_CODE_POINT + glyphData.length);
 }
 
-export function drawBoxCharacter(ctx: CanvasRenderingContext2D, codePoint: number, dx: number, dy: number,
-    width: number, height: number): void {
+export function drawBoxCharacter(painter: QPainter, codePoint: number, dx: number, dy: number,
+    width: number, height: number, fgColor: QColor): void {
 
   const thisGlyphData = glyphData[codePoint-FIRST_BOX_CODE_POINT];
   switch (thisGlyphData.glyphRenderer) {
     case GlyphRenderer.FIVE_BY_FIVE:
-      draw5x5BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      draw5x5BoxCharacter(painter, thisGlyphData, dx, dy, width, height, fgColor);
       break;
 
     case GlyphRenderer.EIGHT_BY_EIGHT:
-      draw8x8BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      draw8x8BoxCharacter(painter, thisGlyphData, dx, dy, width, height, fgColor);
       break;
 
     case GlyphRenderer.FIVE_BY_EIGHT:
-      draw5x8BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      draw5x8BoxCharacter(painter, thisGlyphData, dx, dy, width, height, fgColor);
       break;
 
     case GlyphRenderer.EIGHT_BY_FIVE:
-      draw8x5BoxCharacter(ctx, thisGlyphData, dx, dy, width, height);
+      draw8x5BoxCharacter(painter, thisGlyphData, dx, dy, width, height, fgColor);
       break;
 
     case GlyphRenderer.DIAGONAL_UPPER_RIGHT_TO_LOWER_LEFT:
-      drawDiagonalUpperRightToLowerLeft(ctx, dx, dy, width, height);
+      drawDiagonalUpperRightToLowerLeft(painter, dx, dy, width, height, fgColor);
       break;
 
     case GlyphRenderer.DIAGONAL_UPPER_LEFT_TO_LOWER_RIGHT:
-      drawDiagonalUpperLeftToLowerRight(ctx, dx, dy, width, height);
+      drawDiagonalUpperLeftToLowerRight(painter, dx, dy, width, height, fgColor);
       break;
 
     case GlyphRenderer.DIAGONAL_CROSS:
-      drawDiagonalUpperRightToLowerLeft(ctx, dx, dy, width, height);
-      drawDiagonalUpperLeftToLowerRight(ctx, dx, dy, width, height);
+      drawDiagonalUpperRightToLowerLeft(painter, dx, dy, width, height, fgColor);
+      drawDiagonalUpperLeftToLowerRight(painter, dx, dy, width, height, fgColor);
       break;
 
     case GlyphRenderer.LIGHT_SHADE:
-      drawShade(ctx, dx, dy, width, height, 0.25);
+      drawShade(painter, dx, dy, width, height, 0.25, fgColor);
       break;
 
     case GlyphRenderer.MEDIUM_SHADE:
-      drawShade(ctx, dx, dy, width, height, 0.5);
+      drawShade(painter, dx, dy, width, height, 0.5, fgColor);
       break;
 
     case GlyphRenderer.DARK_SHADE:
-      drawShade(ctx, dx, dy, width, height, 0.75);
+      drawShade(painter, dx, dy, width, height, 0.75, fgColor);
       break;
 
     case GlyphRenderer.ARC_DOWN_AND_RIGHT:
     case GlyphRenderer.ARC_DOWN_AND_LEFT:
     case GlyphRenderer.ARC_UP_AND_LEFT:
     case GlyphRenderer.ARC_UP_AND_RIGHT:
-      drawRoundArc(ctx, thisGlyphData.glyphRenderer, dx, dy, width, height);
+      drawRoundArc(painter, thisGlyphData.glyphRenderer, dx, dy, width, height, fgColor);
       break;
   }
 }
 
-function draw5x5BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
-    width: number, height: number): void {
+function draw5x5BoxCharacter(painter: QPainter, thisGlyphData: GlyphData, dx: number, dy: number,
+    width: number, height: number, fgColor: QColor): void {
 
   const glyphString = thisGlyphData.glyphString;
   const metrics = compute5x5GlyphGrid(width, height);
-  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(painter, glyphString, dx, dy, metrics, fgColor);
 }
 
 function compute5x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
@@ -170,8 +170,8 @@ function compute5LineSegmentsFromBaseLength(totalLength: number, baseLength: num
   };
 }
 
-function drawNxMGlyph(ctx: CanvasRenderingContext2D, glyphString: string, dx: number, dy: number,
-  metrics: GlyphGridMetrics): void {
+function drawNxMGlyph(painter: QPainter, glyphString: string, dx: number, dy: number,
+  metrics: GlyphGridMetrics, fgColor: QColor): void {
 
   const { gridWidth, gridHeight, horizontalGridLines, verticalGridLines, horizontalThickness,
     verticalThickness } = metrics;
@@ -180,43 +180,56 @@ function drawNxMGlyph(ctx: CanvasRenderingContext2D, glyphString: string, dx: nu
   for (let y=0; y < gridHeight; y++) {
     for (let x=0; x < gridWidth; x++) {
       if (glyphString.charAt(pixelOffset) === "#") {
-        ctx.fillRect(dx + horizontalGridLines[x], dy+verticalGridLines[y], horizontalThickness[x], verticalThickness[y]);
+        painter.fillRect(dx + horizontalGridLines[x], dy+verticalGridLines[y], horizontalThickness[x],
+          verticalThickness[y], fgColor);
       }
       pixelOffset++;
     }
   }
 }
 
-function drawDiagonalUpperRightToLowerLeft(ctx: CanvasRenderingContext2D, dx: number, dy: number, width: number,
-    height: number): void {
+function drawDiagonalUpperRightToLowerLeft(painter: QPainter, dx: number, dy: number, width: number,
+    height: number, fgColor: QColor): void {
 
-  ctx.save();
-  ctx.lineWidth = Math.ceil(width/7);
-  ctx.beginPath();
-  ctx.moveTo(dx+width, dy);
-  ctx.lineTo(dx, dy+height);
-  ctx.stroke();
-  ctx.restore();
+  painter.save();
+
+  const path = new QPainterPath();
+  path.moveTo(dx+width, dy);
+  path.lineTo(dx, dy+height);
+
+  const pen = new QPen();
+  pen.setWidth(Math.ceil(width/7));
+  pen.setColor(fgColor);
+  painter.setPen(pen);
+  painter.drawPath(path);
+
+  painter.restore();
 }
 
-function drawDiagonalUpperLeftToLowerRight(ctx: CanvasRenderingContext2D, dx: number, dy: number, width: number,
-    height: number): void {
+function drawDiagonalUpperLeftToLowerRight(painter: QPainter, dx: number, dy: number, width: number,
+    height: number, fgColor: QColor): void {
 
-  ctx.save();
-  ctx.lineWidth = Math.ceil(width/7);
-  ctx.beginPath();
-  ctx.moveTo(dx, dy);
-  ctx.lineTo(dx+width, dy+height);
-  ctx.stroke();
-  ctx.restore();
+  painter.save();
+
+  const path = new QPainterPath();
+  path.moveTo(dx, dy);
+  path.lineTo(dx+width, dy+height);
+
+  const pen = new QPen();
+  pen.setWidth(Math.ceil(width/7));
+  pen.setColor(fgColor);
+  painter.setPen(pen);
+  painter.drawPath(path);
+
+  painter.restore();
 }
 
-function draw8x8BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
-  width: number, height: number): void {
+function draw8x8BoxCharacter(painter: QPainter, thisGlyphData: GlyphData, dx: number, dy: number,
+  width: number, height: number, fgColor: QColor): void {
 
   const glyphString = thisGlyphData.glyphString;
   const metrics = compute8x8GlyphGrid(width, height);
-  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(painter, glyphString, dx, dy, metrics, fgColor);
 }
 
 function compute8x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
@@ -256,11 +269,11 @@ function computeIntegerLineSegments(totalLength: number, gridSize: number): Grid
   };
 }
 
-function draw5x8BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
-    width: number, height: number): void {
+function draw5x8BoxCharacter(painter: QPainter, thisGlyphData: GlyphData, dx: number, dy: number,
+    width: number, height: number, fgColor: QColor): void {
   const glyphString = thisGlyphData.glyphString;
   const metrics = compute5x8GlyphGrid(width, height);
-  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(painter, glyphString, dx, dy, metrics, fgColor);
 }
 
 function compute5x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
@@ -278,11 +291,11 @@ function compute5x8GlyphGrid(width: number, height: number): GlyphGridMetrics {
   };
 }
 
-function draw8x5BoxCharacter(ctx: CanvasRenderingContext2D, thisGlyphData: GlyphData, dx: number, dy: number,
-    width: number, height: number): void {
+function draw8x5BoxCharacter(painter: QPainter, thisGlyphData: GlyphData, dx: number, dy: number,
+    width: number, height: number, fgColor: QColor): void {
   const glyphString = thisGlyphData.glyphString;
   const metrics = compute8x5GlyphGrid(width, height);
-  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(painter, glyphString, dx, dy, metrics, fgColor);
 }
 
 function compute8x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
@@ -300,14 +313,17 @@ function compute8x5GlyphGrid(width: number, height: number): GlyphGridMetrics {
   };
 }
 
-function drawShade(ctx: CanvasRenderingContext2D, dx: number, dy: number, width: number, height: number, alpha: number): void {
-  ctx.save();
+function drawShade(painter: QPainter, dx: number, dy: number, width: number, height: number, alpha: number,
+    fgColor: QColor): void {
+  painter.save();
 
-  const fillColor = new Color(<string> ctx.fillStyle);
-  ctx.fillStyle = fillColor.opacity(alpha * 255).toRGBAString();
-
-  ctx.fillRect(dx, dy, width, height);
-  ctx.restore();
+  const fillColor = new QColor();
+  fillColor.setRed(fgColor.red());
+  fillColor.setGreen(fgColor.green());
+  fillColor.setBlue(fgColor.blue());
+  fillColor.setAlpha(alpha * 255);
+  painter.fillRect(dx, dy, width, height, fillColor);
+  painter.restore();
 }
 
 const arc5x5Glyphs = {
@@ -374,30 +390,35 @@ const arcStartEndPoints: { [index: number]: ArcStartEndPoint } = {
   },
 };
 
-function drawRoundArc(ctx: CanvasRenderingContext2D, renderer: GlyphRenderer, dx: number, dy: number,
-    width: number, height: number): void {
+function drawRoundArc(painter: QPainter, renderer: GlyphRenderer, dx: number, dy: number,
+    width: number, height: number, fgColor: QColor): void {
 
   const metrics = compute5x5GlyphGrid(width, height);
   const glyphString = arc5x5Glyphs[renderer];
-  drawNxMGlyph(ctx, glyphString, dx, dy, metrics);
+  drawNxMGlyph(painter, glyphString, dx, dy, metrics, fgColor);
 
-  ctx.save();
-
-  ctx.lineWidth = 1/3;
+  painter.save();
 
   // We scale and translate the middle 3x3 part of the 5x5 grid to be a unit square, and
   // then draw into that distorted square. This simplifies the drawing code and also ensures
   // that the line widths are correct at the start and end of the arc.
-  ctx.translate(dx + metrics.horizontalGridLines[1], dy + metrics.verticalGridLines[1]);
-  ctx.scale(metrics.horizontalGridLines[4]-metrics.horizontalGridLines[1],
+  painter.translate(dx + metrics.horizontalGridLines[1], dy + metrics.verticalGridLines[1]);
+  painter.scale(metrics.horizontalGridLines[4]-metrics.horizontalGridLines[1],
     metrics.verticalGridLines[4]-metrics.verticalGridLines[1]);
 
   const arcStartEndPoint = arcStartEndPoints[renderer];
-  ctx.moveTo(arcStartEndPoint.startPointX, arcStartEndPoint.startPointY);
-  ctx.quadraticCurveTo(0.5, 0.5, arcStartEndPoint.endPointX, arcStartEndPoint.endPointY);
-  ctx.stroke();
+  const path = new QPainterPath();
 
-  ctx.restore();
+  path.moveTo(arcStartEndPoint.startPointX, arcStartEndPoint.startPointY);
+  path.quadTo(0.5, 0.5, arcStartEndPoint.endPointX, arcStartEndPoint.endPointY);
+
+  const pen = new QPen();
+  pen.setWidth(1/3);
+  pen.setColor(fgColor);
+  painter.setPen(pen);
+  painter.drawPath(path);
+
+  painter.restore();
 }
 
 const glyphData: GlyphData[] = [
