@@ -29,7 +29,6 @@
     "extraterm-data-structures": "1.0.0",
     "extraterm-font-ligatures": "1.0.0",
     "extraterm-later": "1.0.0",
-    "extraterm-lit-html": "1.2.1",
     "extraterm-logging": "1.0.0",
     "extraterm-mimetype-detector": "1.0.0",
     "extraterm-readonly-toolbox": "0.1.0",
@@ -86,7 +85,7 @@
     "serve-static": "1.10.0",
     "shelljs": "0.8.3",
     "shx": "^0.3.2",
-    "typescript": "4.1.3",
+    "typescript": "4.3.4",
     "webfont": "^4.0.0"
   },
   "jshintConfig": {

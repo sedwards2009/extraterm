@@ -33,6 +33,6 @@
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.13.0",
     "shelljs": "0.8.3",
-    "typescript": "4.1.3"
+    "typescript": "4.3.4"
   }
 }

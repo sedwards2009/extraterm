@@ -158,16 +158,6 @@ interface ResizeObserverCallback {
   (entires: ResizeObserverEntry[], observer: ResizeObserver): void;
 }
 
-interface ResizeObserver {
-  observe(target: Element): void;
-  unobserve(target: Element): void;
-  disconnect(): void
-}
-
-declare const ResizeObserver: {
-  new(callback: ResizeObserverCallback): ResizeObserver;
-};
-
 interface FinalizationRegistry {
  register(obj: any, heldValue: any, token?: any): void;
  unregister(token: any): void;
