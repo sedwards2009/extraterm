@@ -1,0 +1,15 @@
+{
+    "extends": "../tsconfig",
+    "compilerOptions": {
+        "outDir": "dist",
+        "rootDir": "src",
+        "types": ["fontinfo"],
+        "typeRoots" : ["./src/typings"],
+        "paths": {
+         "*": ["./src/typings/*"]
+        }
+    },
+    "include": [
+        "./src/**/*.ts"
+    ]
+}

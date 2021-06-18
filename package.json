@@ -10,13 +10,10 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "electron extraterm/dist/main_process/Main.js --dev-tools",
-    "run-release": "electron extraterm/dist/main_process/Main.js",
+    "run": "qode extraterm/dist/main.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
     "download-launcher-executable": "node build_scripts/download_launcher_executables.js v2",
-    "electron-rebuild": "node ./node_modules/electron-rebuild/lib/src/cli.js -o node-pty -f -v 12.0.2",
-    "electron-rebuild-win32": "./node_modules/.bin/electron-rebuild.cmd -o windows-swca,node-pty -f -v 12.0.2",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
     "package": "node build_scripts/build_packages.js",
@@ -39,9 +36,7 @@
   "workspaces": {
     "packages": [
       "extraterm",
-      "packages/*",
-      "extensions/*",
-      "test/*"
+      "packages/*"
     ],
     "nohoist": [
       "**/chai",
@@ -54,18 +49,15 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "node-abi": "2.21.0"
+    "node-abi": "2.21.0",
+    "qode": "^0.1.0"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
-    "node-pty": "0.10.0-beta19",
-    "windows-swca": "2.0.2"
+    "node-pty": "0.10.0-beta19"
   },
   "devDependencies": {
     "@yarnpkg/lockfile": "^1.1.0",
-    "electron": "12.0.2",
-    "electron-packager": "15.2.0",
-    "electron-rebuild": "2.3.5",
     "git-repo-info": "^1.4.1",
     "jest": "26.6.3",
     "modclean": "3.0.0-beta.1",
