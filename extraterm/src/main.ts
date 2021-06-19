@@ -7,44 +7,65 @@ import * as fs from "fs";
 import * as path from "path";
 import * as envPaths from "env-paths";
 
+import { Window } from "./Window";
+
+
 const EXTRATERM_CONFIG_DIR = "extraterm";
 const paths = envPaths(EXTRATERM_CONFIG_DIR, {suffix: ""});
 
-import { FileLogWriter, getLogger, addLogWriter } from "extraterm-logging";
+import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
 
-const _log = getLogger("main");
 
+class Main {
 
-async function main(): Promise<void> {
-  console.log("Hello Qt World");
-  console.log(`paths.config: ${paths.config}`);
+  private _log: Logger = null;
 
-  setupLogging();
+  #windows: Window[] = [];
 
-  process.exit(0);
-}
-
-function setupLogging(): void {
-  const logFilePath = path.join(paths.config, LOG_FILENAME);
-  if (fs.existsSync(logFilePath)) {
-    fs.unlinkSync(logFilePath);
+  constructor() {
+    this._log = getLogger("main", this);
   }
 
-  const logWriter = new FileLogWriter(logFilePath);
-  try {
-    logWriter.open();
-  } catch (error) {
-    // The primary reason why this may happen is if an instance of Extraterm is already running.
-    _log.warn(error);
-    _log.warn("Unable to write to log file ", logFilePath);
-    return;
+  init(): void {
+    console.log("Hello Qt World");
+
+    this.setupLogging();
+
+    this.openWindow();
+
+    // process.exit(0);
   }
 
-  addLogWriter(logWriter);
-  _log.info("Recording logs to ", logFilePath);
+  setupLogging(): void {
+    const logFilePath = path.join(paths.config, LOG_FILENAME);
+    if (fs.existsSync(logFilePath)) {
+      fs.unlinkSync(logFilePath);
+    }
+
+    const logWriter = new FileLogWriter(logFilePath);
+    try {
+      logWriter.open();
+    } catch (error) {
+      // The primary reason why this may happen is if an instance of Extraterm is already running.
+      this._log.warn(error);
+      this._log.warn("Unable to write to log file ", logFilePath);
+      return;
+    }
+
+    addLogWriter(logWriter);
+    this._log.info("Recording logs to ", logFilePath);
+  }
+
+  openWindow(): void {
+    const win = new Window();
+    this.#windows.push(win);
+    win.open();
+  }
 }
 
-main();
+const main =  new Main();
+main.init();
+(global as any).main = main;
