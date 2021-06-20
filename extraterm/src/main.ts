@@ -13,8 +13,10 @@ import { Window } from "./Window";
 import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
 import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
 import { SharedMap } from "./shared_map/SharedMap";
-import { getUserSettingsDirectory, setupAppData } from "./config/MainConfig";
+import { getUserExtensionDirectory, getUserSettingsDirectory, setupAppData } from "./config/MainConfig";
 import { getFonts, installBundledFonts } from "./ui/FontList";
+import { ConfigDatabase } from "./config/ConfigDatabase";
+import { ExtensionManager } from "./extension/ExtensionManager";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -51,7 +53,7 @@ class Main {
 
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
-    // const extensionManager = setupExtensionManager(configDatabase, packageJson.version);
+    const extensionManager = this.setupExtensionManager(configDatabase, sharedMap, packageJson.version);
 
     this.openWindow();
 
@@ -77,6 +79,20 @@ class Main {
     addLogWriter(logWriter);
     this._log.info("Recording logs to ", logFilePath);
   }
+
+  setupExtensionManager(configDatabase: ConfigDatabase, sharedMap: SharedMap, applicationVersion: string): ExtensionManager {
+    const extensionPaths = [path.join(__dirname, "../../extensions" )];
+    const userExtensionDirectory = getUserExtensionDirectory();
+    this._log.info(`User extension directory is: ${userExtensionDirectory}`);
+    if (fs.existsSync(userExtensionDirectory)) {
+      extensionPaths.push(userExtensionDirectory);
+    }
+
+    const extensionManager = new ExtensionManager(configDatabase, sharedMap, extensionPaths, applicationVersion);
+    extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
+    return extensionManager;
+  }
+
 
   openWindow(): void {
     const win = new Window();

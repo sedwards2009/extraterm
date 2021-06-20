@@ -3,18 +3,18 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 
 import { Logger, getLogger, log } from "extraterm-logging";
 
-import { ExtensionManager } from '../extension/ExtensionManager';
-import { KeybindingsFileInfo } from '../config/Config';
+import { ExtensionManager } from "../extension/ExtensionManager";
+import { KeybindingsFileInfo } from "../config/Config";
 import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsBinding, StackedKeybindingsSet,
-  CustomKeybindingsSet } from './KeybindingsTypes';
+  CustomKeybindingsSet } from "./KeybindingsTypes";
 import { EventEmitter } from "extraterm-event-emitter";
 
-import { Event } from '@extraterm/extraterm-extension-api';
+import { Event } from "@extraterm/extraterm-extension-api";
 
 /**
  * Manages reading keybindings files and r/w keybinding customisation files.

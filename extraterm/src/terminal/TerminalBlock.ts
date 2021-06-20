@@ -42,8 +42,8 @@ export class TerminalBlock implements Block {
 
   #handlePaintEvent(event: QPaintEvent): void {
     const paintRect = event.rect();
-this._log.debug(`paintRect.left: ${paintRect.left()}, paintRect.top: ${paintRect.top()}`);
-this._log.debug(`paintRect.width: ${paintRect.width()}, paintRect.height: ${paintRect.height()}`);
+// this._log.debug(`paintRect.left: ${paintRect.left()}, paintRect.top: ${paintRect.top()}`);
+// this._log.debug(`paintRect.width: ${paintRect.width()}, paintRect.height: ${paintRect.height()}`);
 
     const geo = this.#widget.geometry();
     const painter = new QPainter(this.#widget);

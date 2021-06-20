@@ -21,7 +21,6 @@ export function getFonts(): FontInfo[] {
   const db = new QFontDatabase();
   for (const family of db.families()) {
     for (const style of db.styles(family)) {
-      log.debug(`${family} ${style} = ${db.isFixedPitch(family, style)}`);
       const fontInfo: FontInfo = {
         name: `${family} ${style}`,
         family,
