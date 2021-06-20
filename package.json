@@ -37,6 +37,7 @@
     "packages": [
       "extraterm",
       "packages/*",
+      "extensions/InternalCommands",
       "extensions/UnixSessionBackend"
     ],
     "nohoist": [

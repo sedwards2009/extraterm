@@ -9,7 +9,6 @@ import {
   Category,
   ExtensionCommandContribution,
   ExtensionContributes,
-  ExtensionCss,
   ExtensionKeybindingsContribution,
   ExtensionMenu,
   ExtensionMenusContribution,
@@ -18,8 +17,6 @@ import {
   ExtensionSessionBackendContribution,
   ExtensionSessionEditorContribution,
   ExtensionSessionSettingsContribution,
-  ExtensionSyntaxThemeContribution,
-  ExtensionSyntaxThemeProviderContribution,
   ExtensionTabContribution,
   ExtensionTabTitlesWidgetContribution,
   ExtensionTerminalBorderContribution,
@@ -37,8 +34,6 @@ import { JsonError, assertIsJsonObject, getJsonProperty, throwJsonError, parseOb
   getJsonNumberField, getJsonStringArrayField, getJsonBooleanField, assertKnownJsonObjectKeys
 } from "./JsonToAstUtils";
 
-const FONT_AWESOME_DEFAULT = false;
-
 export function parsePackageJsonString(packageJsonString: string, extensionPath: string): ExtensionMetadata {
   return (new PackageParser(extensionPath)).parse(packageJsonString);
 }
@@ -47,9 +42,7 @@ const categoryList: Category[] = [
   "global",
   "application",
   "window",
-  "textEditing",
   "terminal",
-  "terminalCursorMode",
   "hyperlink",
   "viewer"
 ];
@@ -65,12 +58,7 @@ class PackageParser {
       true: true,
       false: false,
       terminalFocus: false,
-      isCursorMode: false,
-      isNormalMode: false,
-      textEditorFocus: false,
-      isTextEditing: false,
       viewerFocus: false,
-      isWindowSplit: false,
       isHyperlink: false,
       hyperlinkURL: null,
       hyperlinkProtocol: null,
@@ -88,7 +76,6 @@ class PackageParser {
         name: getJsonStringField(packageJson, "name"),
         path: this._extensionPath,
         main: getJsonStringField(packageJson, "main", null),
-        windowMain: getJsonStringField(packageJson, "windowMain", null),
         version: getJsonStringField(packageJson, "version"),
         homepage: getJsonStringField(packageJson, "homepage", null),
         keywords: getJsonStringArrayField(packageJson, "keywords", []),
@@ -164,7 +151,6 @@ class PackageParser {
         menus: {
           contextMenu: [],
           commandPalette: [],
-          emptyPane: [],
           newTerminal: [],
           terminalTab: [],
           windowMenu: [],
@@ -172,8 +158,6 @@ class PackageParser {
         sessionBackends: [],
         sessionEditors: [],
         sessionSettings: [],
-        syntaxThemes: [],
-        syntaxThemeProviders: [],
         tabs: [],
         tabTitleWidgets: [],
         terminalBorderWidgets: [],
@@ -195,8 +179,6 @@ class PackageParser {
       "sessionEditors",
       "sessionBackends",
       "sessionSettings",
-      "syntaxThemes",
-      "syntaxThemeProviders",
       "tabs",
       "tabTitleWidgets",
       "terminalBorderWidgets",
@@ -212,8 +194,6 @@ class PackageParser {
       sessionBackends: parseObjectListJson(contributes, "sessionBackends", node => this.parseSessionBackendConstributionJson(node)),
       sessionEditors: parseObjectListJson(contributes, "sessionEditors", node => this.parseSessionEditorConstributionJson(node)),
       sessionSettings: parseObjectListJson(contributes, "sessionSettings", node => this.parseSessionSettingsConstributionJson(node)),
-      syntaxThemes: parseObjectListJson(contributes, "syntaxThemes", node => this.parseSyntaxThemeContributionsJson(node)),
-      syntaxThemeProviders: parseObjectListJson(contributes, "syntaxThemeProviders", node => this.parseSyntaxThemeProviderContributionsJson(node)),
       tabs: parseObjectListJson(contributes, "tabs", node => this.parseTabContributionJson(node)),
       tabTitleWidgets: parseObjectListJson(contributes, "tabTitleWidgets", node => this.parseTabTitleItemContributionsJson(node)),
       terminalBorderWidgets: parseObjectListJson(contributes, "terminalBorderWidgets", node => this.parseTerminalBorderWidgetContributionsJson(node)),
@@ -227,39 +207,12 @@ class PackageParser {
     const knownKeys: (keyof ExtensionViewerContribution)[] = [
       "name",
       "mimeTypes",
-      "css",
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
 
     return {
       name: getJsonStringField(packageJson, "name"),
       mimeTypes: getJsonStringArrayField(packageJson, "mimeTypes"),
-      css: this.parseCss(packageJson)
-    };
-  }
-
-  private  parseCss(packageJson: JsonNode): ExtensionCss {
-    const jsonObject = assertIsJsonObject(packageJson);
-    const value = getJsonProperty(jsonObject, "css");
-    if (value == null) {
-      return {
-        directory: null,
-        cssFile: [],
-        fontAwesome: FONT_AWESOME_DEFAULT
-      };
-    }
-
-    const knownKeys: (keyof ExtensionCss)[] = [
-      "directory",
-      "cssFile",
-      "fontAwesome",
-    ];
-    assertKnownJsonObjectKeys(value, knownKeys);
-
-    return {
-      directory: getJsonStringField(value, "directory", "."),
-      cssFile: getJsonStringArrayField(value, "cssFile", []),
-      fontAwesome: getJsonBooleanField(value, "fontAwesome", FONT_AWESOME_DEFAULT)
     };
   }
 
@@ -290,7 +243,6 @@ class PackageParser {
       return {
         contextMenu: [],
         commandPalette: [],
-        emptyPane: [],
         newTerminal: [],
         terminalTab: [],
         windowMenu: [],
@@ -300,7 +252,6 @@ class PackageParser {
     const knownKeys: (keyof ExtensionMenusContribution)[] = [
       "contextMenu",
       "commandPalette",
-      "emptyPane",
       "newTerminal",
       "terminalTab",
       "windowMenu",
@@ -311,7 +262,6 @@ class PackageParser {
     return {
       contextMenu: this.parseMenuContribution(menusObject, "contextMenu"),
       commandPalette: this.parseMenuContribution(menusObject, "commandPalette"),
-      emptyPane: this.parseMenuContribution(menusObject, "emptyPane"),
       newTerminal: this.parseMenuContribution(menusObject, "newTerminal"),
       terminalTab: this.parseMenuContribution(menusObject, "terminalTab"),
       windowMenu: this.parseMenuContribution(menusObject, "windowMenu"),
@@ -361,14 +311,12 @@ class PackageParser {
     const knownKeys: (keyof ExtensionSessionEditorContribution)[] = [
       "name",
       "type",
-      "css",
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
 
     return {
       name: getJsonStringField(packageJson, "name"),
       type: getJsonStringField(packageJson, "type"),
-      css: this.parseCss(packageJson)
     };
   }
 
@@ -388,48 +336,22 @@ class PackageParser {
     const knownKeys: (keyof ExtensionSessionSettingsContribution)[] = [
       "id",
       "name",
-      "css"
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
 
     return {
       id: getJsonStringField(packageJson, "id"),
       name: getJsonStringField(packageJson, "name"),
-      css: this.parseCss(packageJson)
-    };
-  }
-
-  private parseSyntaxThemeContributionsJson(packageJson: JsonNode): ExtensionSyntaxThemeContribution {
-    const knownKeys: (keyof ExtensionSyntaxThemeContribution)[] = [
-      "path",
-    ];
-    assertKnownJsonObjectKeys(packageJson, knownKeys);
-    return {
-      path: getJsonStringField(packageJson, "path")
-    };
-  }
-
-  private parseSyntaxThemeProviderContributionsJson(packageJson: JsonNode): ExtensionSyntaxThemeProviderContribution {
-    const knownKeys: (keyof ExtensionSyntaxThemeProviderContribution)[] = [
-      "name",
-      "humanFormatNames",
-    ];
-    assertKnownJsonObjectKeys(packageJson, knownKeys);
-    return {
-      name: getJsonStringField(packageJson, "name"),
-      humanFormatNames: getJsonStringArrayField(packageJson, "humanFormatNames", [])
     };
   }
 
   private parseTabTitleItemContributionsJson(packageJson: JsonNode): ExtensionTabTitlesWidgetContribution {
     const knownKeys: (keyof ExtensionTabTitlesWidgetContribution)[] = [
       "name",
-      "css",
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
     return {
       name: getJsonStringField(packageJson, "name"),
-      css: this.parseCss(packageJson)
     };
   }
 
@@ -437,13 +359,11 @@ class PackageParser {
     const knownKeys: (keyof ExtensionTerminalBorderContribution)[] = [
       "name",
       "border",
-      "css",
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
     return {
       name: getJsonStringField(packageJson, "name"),
       border: this.getJsonBorderDirectionField(packageJson, "border"),
-      css: this.parseCss(packageJson)
     };
   }
 
@@ -500,12 +420,10 @@ class PackageParser {
   private parseTabContributionJson(packageJson: JsonNode): ExtensionTabContribution {
     const knownKeys: (keyof ExtensionTerminalBorderContribution)[] = [
       "name",
-      "css",
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
     return {
       name: getJsonStringField(packageJson, "name"),
-      css: this.parseCss(packageJson)
     };
   }
 

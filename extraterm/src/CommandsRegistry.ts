@@ -12,7 +12,6 @@ export interface CommandMenuEntry {
   commandContribution: ExtensionCommandContribution;
   contextMenu: boolean;
   commandPalette: boolean;
-  emptyPane: boolean;
   newTerminal: boolean;
   terminalTab: boolean;
   windowMenu: boolean;
@@ -49,7 +48,6 @@ export class CommandsRegistry implements ExtensionApi.Commands {
         commandContribution,
         commandPalette: true,
         contextMenu: false,
-        emptyPane: false,
         newTerminal: false,
         terminalTab: false,
         windowMenu: false,
@@ -59,7 +57,6 @@ export class CommandsRegistry implements ExtensionApi.Commands {
     const menuKeys: (keyof ExtensionMenusContribution & keyof CommandMenuEntry)[] = [
       "commandPalette",
       "contextMenu",
-      "emptyPane",
       "newTerminal",
       "terminalTab",
       "windowMenu",
@@ -97,11 +94,10 @@ export class CommandsRegistry implements ExtensionApi.Commands {
     if ( ! this._commandToMenuEntryMap.has(commandContribution.command)) {
       this._commandToMenuEntryMap.set(commandContribution.command, []);
     }
-    const newEntry = {
+    const newEntry: CommandMenuEntry = {
       commandContribution,
       commandPalette: true,
       contextMenu: false,
-      emptyPane: false,
       newTerminal: false,
       terminalTab: false,
       windowMenu: false,

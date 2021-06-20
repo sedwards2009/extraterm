@@ -8,7 +8,6 @@ export interface ExtensionMetadata {
   readonly name: string;
   readonly path: string;
   readonly main?: string;
-  readonly windowMain?: string;
   readonly version?: string;
   readonly description?: string;
   readonly homepage?: string;
@@ -33,8 +32,6 @@ export interface ExtensionContributes {
   readonly sessionBackends: ExtensionSessionBackendContribution[];
   readonly sessionEditors: ExtensionSessionEditorContribution[];
   readonly sessionSettings: ExtensionSessionSettingsContribution[];
-  readonly syntaxThemes: ExtensionSyntaxThemeContribution[];
-  readonly syntaxThemeProviders: ExtensionSyntaxThemeProviderContribution[];
   readonly tabs: ExtensionTabContribution[];
   readonly tabTitleWidgets: ExtensionTabTitlesWidgetContribution[];
   readonly terminalBorderWidgets: ExtensionTerminalBorderContribution[];
@@ -46,9 +43,7 @@ export interface ExtensionContributes {
 export type Category = "global" |
                         "application" |
                         "window" |
-                        "textEditing" |
                         "terminal" |
-                        "terminalCursorMode" |
                         "hyperlink" |
                         "viewer";
 
@@ -56,12 +51,7 @@ export interface WhenVariables {
   true: boolean;
   false: boolean;
   terminalFocus: boolean;
-  isCursorMode: boolean;
-  isNormalMode: boolean;
-  textEditorFocus: boolean;
-  isTextEditing: boolean;
   viewerFocus: boolean;
-  isWindowSplit: boolean;
   isHyperlink: boolean;
   hyperlinkURL: string;
   hyperlinkProtocol: string;
@@ -82,19 +72,11 @@ export interface ExtensionCommandContribution {
 export interface ExtensionViewerContribution {
   readonly name: string;
   readonly mimeTypes: string[];
-  readonly css: ExtensionCss;
-}
-
-export interface ExtensionCss {
-  readonly directory: string;
-  readonly cssFile: string[];
-  readonly fontAwesome: boolean;
 }
 
 export interface ExtensionSessionEditorContribution {
   readonly name: string;
   readonly type: string;
-  readonly css: ExtensionCss;
 }
 
 export interface ExtensionSessionBackendContribution {
@@ -105,29 +87,17 @@ export interface ExtensionSessionBackendContribution {
 export interface ExtensionSessionSettingsContribution {
   readonly id: string;
   readonly name: string;
-  readonly css: ExtensionCss;
-}
-
-export interface ExtensionSyntaxThemeProviderContribution {
-  readonly name: string;
-  readonly humanFormatNames: string[];
-}
-
-export interface ExtensionSyntaxThemeContribution {
-  readonly path: string;
 }
 
 export type BorderDirection = "north" | "south" | "east" | "west";
 
 export interface ExtensionTabTitlesWidgetContribution {
   readonly name: string;
-  readonly css: ExtensionCss;
 }
 
 export interface ExtensionTerminalBorderContribution {
   readonly name: string;
   readonly border: BorderDirection;
-  readonly css: ExtensionCss;
 }
 
 export interface ExtensionTerminalThemeProviderContribution {
@@ -146,7 +116,6 @@ export interface ExtensionKeybindingsContribution {
 export interface ExtensionMenusContribution {
   readonly contextMenu: ExtensionMenu[];
   readonly commandPalette: ExtensionMenu[];
-  readonly emptyPane: ExtensionMenu[];
   readonly newTerminal: ExtensionMenu[];
   readonly terminalTab: ExtensionMenu[];
   readonly windowMenu: ExtensionMenu[];
@@ -163,5 +132,4 @@ export interface ExtensionDesiredState {
 
 export interface ExtensionTabContribution {
   readonly name: string;
-  readonly css: ExtensionCss;
 }

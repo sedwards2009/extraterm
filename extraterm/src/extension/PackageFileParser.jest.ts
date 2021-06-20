@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018-2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -75,14 +75,7 @@ test("viewers", () => {
             "mimeTypes": [
               "audio/vorbis",
               "audio/mpeg"
-            ],
-            "css": {
-              "directory": "resources/sass",
-              "cssFile": [
-                "audio-viewer.scss"
-              ],
-              "fontAwesome": true
-            }
+            ]
           }
         ]
       }
@@ -93,10 +86,6 @@ test("viewers", () => {
   expect(parsed.contributes.viewers.length).toBe(1);
   expect(parsed.contributes.viewers[0].name).toBe("AudioViewer");
   expect(parsed.contributes.viewers[0].mimeTypes.length).toBe(2);
-  expect(parsed.contributes.viewers[0].css.directory).toBe("resources/sass");
-  expect(parsed.contributes.viewers[0].css.cssFile.length).toBe(1);
-  expect(parsed.contributes.viewers[0].css.cssFile[0]).toBe("audio-viewer.scss");
-  expect(parsed.contributes.viewers[0].css.fontAwesome).toBe(true);
 });
 
 test("platform", () => {
@@ -129,25 +118,6 @@ test("platform", () => {
   expect(parsed.excludePlatform[1].arch).toBe("mips");
 });
 
-test("syntax themes", () => {
-  const parsed = parsePackageJsonString(JSON.stringify({
-    "name": "community-syntax-themes",
-    "description": "Popular syntax themes from the community",
-    "version": "1.0.0",
-    "contributes": {
-      "syntaxThemes": [
-        {
-          "path": "theme"
-        }
-      ]
-    }
-  }), "");
-
-  expect(parsed.name).toBe("community-syntax-themes");
-  expect(parsed.contributes.syntaxThemes.length).toBe(1);
-  expect(parsed.contributes.syntaxThemes[0].path).toBe("theme");
-});
-
 const extensionsPath = path.join(__filename, "..", "..", "..", "..", "..", "extensions");
 describe.each(
   sh.ls(extensionsPath)
@@ -168,10 +138,7 @@ test("tab title widgets", () => {
   "contributes": {
     "tabTitleWidgets": [
       {
-        "name": "title",
-        "css": {
-          "fontAwesome": true
-        }
+        "name": "title"
       }
     ],
   }
