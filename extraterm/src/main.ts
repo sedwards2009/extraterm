@@ -13,12 +13,13 @@ import { Window } from "./Window";
 import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
 import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
 import { SharedMap } from "./shared_map/SharedMap";
-import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, setupAppData } from "./config/MainConfig";
+import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, getUserTerminalThemeDirectory, setupAppData } from "./config/MainConfig";
 import { getFonts, installBundledFonts } from "./ui/FontList";
 import { ConfigDatabase } from "./config/ConfigDatabase";
 import { ExtensionManager } from "./extension/ExtensionManager";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { GeneralConfig, SystemConfig } from "./config/Config";
+import { ThemeManager } from "./theme/ThemeManager";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -58,6 +59,7 @@ class Main {
     const extensionManager = this.setupExtensionManager(configDatabase, sharedMap, packageJson.version);
 
     const keybindingsIOManager = this.setupKeybindingsIOManager(configDatabase, extensionManager);
+    const themeManager = this.setupThemeManager(extensionManager);
 
     this.openWindow();
 
@@ -115,6 +117,11 @@ class Main {
     const systemConfig = <SystemConfig> configDatabase.getSystemConfigCopy();
     systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
     configDatabase.setSystemConfig(systemConfig);
+  }
+
+  setupThemeManager(extensionManager: ExtensionManager): ThemeManager {
+    const themeManager = new ThemeManager({ terminal: [getUserTerminalThemeDirectory()]}, extensionManager);
+    return themeManager;
   }
 
   openWindow(): void {
