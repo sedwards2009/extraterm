@@ -20,6 +20,7 @@ import { ExtensionManager } from "./extension/ExtensionManager";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { FontInfo, GeneralConfig, SystemConfig, TitleBarStyle } from "./config/Config";
 import { ThemeManager } from "./theme/ThemeManager";
+import { PtyManager } from "./pty/PtyManager";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -67,6 +68,9 @@ class Main {
     const systemConfig = this.systemConfiguration(generalConfig, keybindingsIOManager, availableFonts, packageJson,
       titleBarStyle);
     configDatabase.setSystemConfig(systemConfig);
+
+    const ptyManager = this.setupPtyManager(configDatabase, extensionManager);
+
 
     this.openWindow();
 
@@ -146,6 +150,15 @@ class Main {
       titleBarStyle,
       userTerminalThemeDirectory: getUserTerminalThemeDirectory()
     };
+  }
+
+  setupPtyManager(configDatabase: PersistentConfigDatabase, extensionManager: ExtensionManager): PtyManager {
+    try {
+      return new PtyManager(extensionManager, configDatabase);
+    } catch(err) {
+      this._log.severe("Error occured while creating the PTY connector factory: " + err.message);
+      return null;
+    }
   }
 
   openWindow(): void {
