@@ -3,8 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { DeepReadonly } from 'extraterm-readonly-toolbox';
-import { Event, SessionConfiguration } from '@extraterm/extraterm-extension-api';
+import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { KeybindingsSet, LogicalKeybindingsName } from '../keybindings/KeybindingsTypes';
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
@@ -113,9 +112,6 @@ export interface SystemConfig {
   titleBarStyle: TitleBarStyle;
 
   userTerminalThemeDirectory: string;
-  userSyntaxThemeDirectory: string;
-
-  isHardwareAccelerated: boolean;
 }
 
 export interface FontInfo {

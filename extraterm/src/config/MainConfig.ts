@@ -167,7 +167,7 @@ export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean
   return themeInfo.type === themeType;
 }
 
-export function sanitizeAndIinitializeConfigs(configDatabase: PersistentConfigDatabase, themeManager: ThemeManager,
+export function sanitizeAndInitializeConfigs(configDatabase: PersistentConfigDatabase, themeManager: ThemeManager,
     keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[]): void {
 
   sanitizeGeneralConfig(configDatabase, themeManager, availableFonts);

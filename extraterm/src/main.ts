@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as SourceMapSupport from "source-map-support";
-
+import * as os from "os";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -13,12 +13,12 @@ import { Window } from "./Window";
 import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
 import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
 import { SharedMap } from "./shared_map/SharedMap";
-import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, getUserTerminalThemeDirectory, setupAppData } from "./config/MainConfig";
+import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, getUserTerminalThemeDirectory, sanitizeAndInitializeConfigs, setupAppData } from "./config/MainConfig";
 import { getFonts, installBundledFonts } from "./ui/FontList";
 import { ConfigDatabase } from "./config/ConfigDatabase";
 import { ExtensionManager } from "./extension/ExtensionManager";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
-import { GeneralConfig, SystemConfig } from "./config/Config";
+import { FontInfo, GeneralConfig, SystemConfig, TitleBarStyle } from "./config/Config";
 import { ThemeManager } from "./theme/ThemeManager";
 
 const LOG_FILENAME = "extraterm.log";
@@ -60,6 +60,13 @@ class Main {
 
     const keybindingsIOManager = this.setupKeybindingsIOManager(configDatabase, extensionManager);
     const themeManager = this.setupThemeManager(extensionManager);
+
+    sanitizeAndInitializeConfigs(configDatabase, themeManager, keybindingsIOManager, availableFonts);
+    const generalConfig = configDatabase.getGeneralConfig();
+    const titleBarStyle = generalConfig.titleBarStyle;
+    const systemConfig = this.systemConfiguration(generalConfig, keybindingsIOManager, availableFonts, packageJson,
+      titleBarStyle);
+    configDatabase.setSystemConfig(systemConfig);
 
     this.openWindow();
 
@@ -122,6 +129,23 @@ class Main {
   setupThemeManager(extensionManager: ExtensionManager): ThemeManager {
     const themeManager = new ThemeManager({ terminal: [getUserTerminalThemeDirectory()]}, extensionManager);
     return themeManager;
+  }
+
+  /**
+   * Extra information about the system configuration and platform.
+   */
+  systemConfiguration(config: GeneralConfig, keybindingsIOManager: KeybindingsIOManager,
+      availableFonts: FontInfo[], packageJson: any, titleBarStyle: TitleBarStyle): SystemConfig {
+    const homeDir = os.homedir();
+    const flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsSet(config.keybindingsName);
+    return {
+      homeDir,
+      applicationVersion: packageJson.version,
+      flatKeybindingsSet: flatKeybindingsFile,
+      availableFonts: availableFonts,
+      titleBarStyle,
+      userTerminalThemeDirectory: getUserTerminalThemeDirectory()
+    };
   }
 
   openWindow(): void {
