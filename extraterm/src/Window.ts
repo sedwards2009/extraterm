@@ -29,8 +29,6 @@ export class Window {
     this.#contentStack = new QStackedWidget();
     topLayout.addWidget(this.#contentStack);
 
-    this.#tabs.push(new Terminal());
-
     this.#updateTabBar(this.#tabs);
     this.#updateContentStack(this.#tabs);
   }

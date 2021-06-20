@@ -6,15 +6,16 @@
 import * as crypto from "crypto";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
-
+import { doLater } from "extraterm-later";
 import {
   Disposable,
   Event,
   SessionConfiguration,
   TerminalEnvironment,
 } from "@extraterm/extraterm-extension-api";
-
 import { Direction, QBoxLayout, QScrollArea, QWidget, SizeConstraint } from "@nodegui/nodegui";
+
+import * as Term from "../emulator/Term";
 import { Tab } from "../Tab";
 import { Block } from "./Block";
 import { TerminalBlock } from "./TerminalBlock";
@@ -28,11 +29,13 @@ export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
 
   #pty: Pty = null;
+  #emulator: Term.Emulator = null;
+
   #cookie: string = null;
 
   // The current size of the emulator. This is used to detect changes in size.
-  #columns = -1;
-  #rows = -1;
+  #columns = 80;
+  #rows = 24;
 
   #scrollArea: QScrollArea = null;
   #blocks: Block[] = [];
@@ -53,13 +56,26 @@ export class Terminal implements Tab, Disposable {
     { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: "" },
   ]);
 
-
-  constructor() {
+  constructor(pty: Pty, emulator: Term.Emulator) {
     this._log = getLogger("Terminal", this);
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
+    this.#pty = pty;
+    this.#emulator = emulator;
 
+    pty.onData((text: string): void => {
+      this.#emulator.write(text);
+    });
+
+    doLater(() => {
+      pty.resize(this.#columns, this.#rows);
+    });
+
+    this.#createUi();
+  }
+
+  #createUi() : void {
     this.#scrollArea = new QScrollArea();
     this.#scrollArea.setWidgetResizable(true);
     const contentWidget = new QWidget();
@@ -110,18 +126,6 @@ export class Terminal implements Tab, Disposable {
     return this.#pty;
   }
 
-  setPty(pty: Pty): void {
-    this.#pty = pty;
-
-    // pty.onData((text: string): void => {
-    //   this._emulator.write(text);
-    // });
-
-    // doLater(() => {
-    //   pty.resize(this._columns, this._rows);
-    // });
-  }
-
   /**
    * Send data to the pty and process connected to the terminal.
    * @param text the data to send.
@@ -129,10 +133,6 @@ export class Terminal implements Tab, Disposable {
   sendToPty(text: string): void {
     this.#pty.write(text);
   }
-
-  // getEmulator(): Term.Emulator {
-  //   return this._emulator;
-  // }
 
   /**
    * The number of columns in the terminal screen.
@@ -152,8 +152,7 @@ export class Terminal implements Tab, Disposable {
     return this.#cookie;
   }
 
-  getEmulator(): any { //Term.Emulator {
-    return null;
-    // return this._emulator;
+  getEmulator(): Term.Emulator {
+    return this.#emulator;
   }
 }

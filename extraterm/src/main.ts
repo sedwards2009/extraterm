@@ -54,7 +54,6 @@ class Main {
 
     // this._log.startRecording();
 
-
     installBundledFonts();
     const availableFonts = getFonts();
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
