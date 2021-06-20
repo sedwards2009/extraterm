@@ -119,7 +119,8 @@ export interface SystemConfig {
 }
 
 export interface FontInfo {
-  path: string;
   name: string;
-  postscriptName: string;
+  family: string;
+  style: string;
+  id: string;
 }

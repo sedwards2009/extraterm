@@ -14,6 +14,7 @@ import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-loggin
 import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
 import { SharedMap } from "./shared_map/SharedMap";
 import { getUserSettingsDirectory, setupAppData } from "./config/MainConfig";
+import { getFonts, installBundledFonts } from "./ui/FontList";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -44,6 +45,8 @@ class Main {
 
     this.setupLogging();
 
+    installBundledFonts();
+    const availableFonts = getFonts();
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
 
     // We have to start up the extension manager before we can scan themes (with the help of extensions)

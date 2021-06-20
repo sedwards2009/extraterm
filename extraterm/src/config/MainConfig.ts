@@ -207,7 +207,7 @@ function sanitizeGeneralConfig(configDatabase: ConfigDatabase, themeManager: The
   sanitizeField(generalConfig, "showTrayIcon", false);
 
   sanitizeField(generalConfig, "terminalFont", DEFAULT_TERMINALFONT);
-  if ( ! availableFonts.some( (font) => font.postscriptName === generalConfig.terminalFont)) {
+  if ( ! availableFonts.some( (font) => font.id === generalConfig.terminalFont)) {
     generalConfig.terminalFont = DEFAULT_TERMINALFONT;
   }
 
