@@ -36,7 +36,8 @@
   "workspaces": {
     "packages": [
       "extraterm",
-      "packages/*"
+      "packages/*",
+      "extensions/UnixSessionBackend"
     ],
     "nohoist": [
       "**/chai",

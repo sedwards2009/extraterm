@@ -165,19 +165,19 @@ export class ExtensionManager {
 
     this._log.info(`Starting extension '${metadata.name}' in the main process.`);
 
-    // contextImpl = new ExtensionContextImpl(metadata, this.#configDatabase, this.#applicationVersion);
-    // if (metadata.main != null) {
-    //   module = this._loadExtensionModule(metadata);
-    //   if (module == null) {
-    //     return null;
-    //   }
-    //   try {
-    //     publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
-    //   } catch(ex) {
-    //     this._log.warn(`Exception occurred while activating extension ${metadata.name}. ${ex}`);
-    //     return null;
-    //   }
-    // }
+    contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, null, this.#applicationVersion);
+    if (metadata.main != null) {
+      module = this._loadExtensionModule(metadata);
+      if (module == null) {
+        return null;
+      }
+      try {
+        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+      } catch(ex) {
+        this._log.warn(`Exception occurred while activating extension ${metadata.name}. ${ex}`);
+        return null;
+      }
+    }
     const activeExtension: ActiveExtension = {metadata, publicApi, contextImpl, module};
     this.#activeExtensions.push(activeExtension);
     return activeExtension;
@@ -294,9 +294,8 @@ export class ExtensionManager {
   }
 
   getSessionBackendContributions(): LoadedSessionBackendContribution[] {
-    // return _.flatten(this._getActiveBackendExtensions().map(
-    //   ae => ae.contextImpl._internalBackend._sessionBackends));
-return [];
+    return _.flatten(this._getActiveBackendExtensions().map(
+      ae => ae.contextImpl._internalBackend._sessionBackends));
   }
 
   getSessionBackend(type: string): ExtensionApi.SessionBackend {

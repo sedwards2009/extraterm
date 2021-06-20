@@ -17,6 +17,8 @@ import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { ApplicationImpl } from "./ApplicationImpl";
 import { ConfigurationImpl } from "./ConfigurationImpl";
 import { ConfigDatabase } from "../config/ConfigDatabase";
+import { InternalBackend } from "./ExtensionManagerTypes";
+import { BackendImpl } from "./BackendImpl";
 
 
 export class ExtensionContextImpl implements InternalExtensionContext, ExtensionApi.Disposable {
@@ -28,9 +30,9 @@ export class ExtensionContextImpl implements InternalExtensionContext, Extension
   window: ExtensionApi.Window = null;
   _internalWindow: InternalWindow = null;
   logger: ExtensionApi.Logger = null;
-  isBackendProcess = false;
 
   _proxyFactory: ProxyFactory = null;
+  _internalBackend: InternalBackend;
 
   extensionPath: string = null;
 
@@ -54,6 +56,7 @@ export class ExtensionContextImpl implements InternalExtensionContext, Extension
     this.window = this._internalWindow;
 
     this.extensionPath = this._extensionMetadata.path;
+    this._internalBackend = new BackendImpl(this._extensionMetadata);
     this.configuration = new ConfigurationImpl(configDatabase, extensionMetadata.name);
     this.logger = getLogger(extensionMetadata.name);
   }
@@ -62,9 +65,8 @@ export class ExtensionContextImpl implements InternalExtensionContext, Extension
     this.configuration.dispose();
   }
 
-  get backend(): never {
-    this.logger.warn("'ExtensionContext.backend' is not available from a render process.");
-    throw Error("'ExtensionContext.backend' is not available from a render process.");
+  get backend(): ExtensionApi.Backend {
+    return this._internalBackend;
   }
 
   _findViewerElementTagByMimeType(mimeType: string): string {
