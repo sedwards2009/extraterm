@@ -21,6 +21,7 @@ import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { FontInfo, GeneralConfig, SystemConfig, TitleBarStyle } from "./config/Config";
 import { ThemeManager } from "./theme/ThemeManager";
 import { PtyManager } from "./pty/PtyManager";
+import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -84,6 +85,8 @@ class Main {
     // _log.stopRecording();
 
     this.setupDefaultSessions(configDatabase, ptyManager);
+
+    const bulkFileStorage = this.setupBulkFileStorage();
 
     this.openWindow();
 
@@ -180,6 +183,11 @@ class Main {
       const newSessions = ptyManager.getDefaultSessions();
       configDatabase.setSessionConfig(newSessions);
     }
+  }
+
+  setupBulkFileStorage(): BulkFileStorage {
+    const bulkFileStorage = new BulkFileStorage(os.tmpdir());
+    return bulkFileStorage;
   }
 
   openWindow(): void {
