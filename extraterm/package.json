@@ -58,7 +58,7 @@
     "xregexp": "4.2.4"
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.13.0",
+    "@extraterm/extraterm-extension-api": "0.14.0",
     "@types/he": "1.1.0",
     "@types/jest": "23.3.13",
     "@types/lodash": "^4.14.121",

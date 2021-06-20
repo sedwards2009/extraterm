@@ -1,6 +1,6 @@
 {
   "name": "@extraterm/extraterm-extension-api",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "Extension API for the Extraterm terminal",
   "author": "Simon Edwards",
   "license": "MIT",
@@ -21,7 +21,6 @@
     "publish-pkg": "yarn publish --access public"
   },
   "dependencies": {
-    "@extraterm/ace-ts": "0.22.0",
     "@types/node": "^14.14.37",
     "extraterm-event-emitter": "1.0.0"
   },

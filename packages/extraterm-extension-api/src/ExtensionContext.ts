@@ -3,14 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as Ace from "@extraterm/ace-ts";
 import { Event } from "extraterm-event-emitter";
 
 import { Terminal, TerminalBorderWidgetFactory } from "./Terminal";
 import { ExtensionViewerBaseConstructor } from "./Viewers";
 import { SessionEditorFactory, SessionSettingsEditorFactory, SessionBackend } from "./Sessions";
 import { TabTitleWidgetFactory } from "./Tab";
-import { SyntaxThemeProvider } from "./SyntaxTheme";
 import { Commands } from "./Commands";
 import { TerminalThemeProvider } from "./TerminalTheme";
 import { Logger } from "./Logger";
@@ -110,7 +108,6 @@ export interface ExtensionTab {
  */
 export interface Backend {
   registerSessionBackend(name: string, backend: SessionBackend): void;
-  registerSyntaxThemeProvider(name: string, provider: SyntaxThemeProvider): void;
   registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void;
 }
 
@@ -220,16 +217,6 @@ export interface ExtensionContext {
    * Extension APIs which can be used from a front-end render process.
    */
   readonly window: Window;
-
-  /**
-   * Access to Extraterm's own Ace module.
-   */
-  readonly aceModule: typeof Ace;
-
-  /**
-   * True if this process is the backend process. False if it is a render process.
-   */
-  readonly isBackendProcess: boolean;
 
   /**
    * Extension APIs which may only be used from the backend process.
