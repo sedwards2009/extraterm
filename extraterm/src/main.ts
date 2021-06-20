@@ -51,6 +51,9 @@ class Main {
 
     this.setupLogging();
 
+    // this._log.startRecording();
+
+
     installBundledFonts();
     const availableFonts = getFonts();
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
@@ -71,6 +74,16 @@ class Main {
 
     const ptyManager = this.setupPtyManager(configDatabase, extensionManager);
 
+    // if (failed) {
+    //   dialog.showErrorBox("Sorry, something went wrong",
+    //     "Something went wrong while starting up Extraterm.\n" +
+    //     "Message log is:\n" + _log.getFormattedLogMessages());
+    //   process.exit(1);
+    // }
+
+    // _log.stopRecording();
+
+    this.setupDefaultSessions(configDatabase, ptyManager);
 
     this.openWindow();
 
@@ -158,6 +171,14 @@ class Main {
     } catch(err) {
       this._log.severe("Error occured while creating the PTY connector factory: " + err.message);
       return null;
+    }
+  }
+
+  setupDefaultSessions(configDatabase: PersistentConfigDatabase, ptyManager: PtyManager): void {
+    const sessions = configDatabase.getSessionConfigCopy();
+    if (sessions == null || sessions.length === 0) {
+      const newSessions = ptyManager.getDefaultSessions();
+      configDatabase.setSessionConfig(newSessions);
     }
   }
 
