@@ -13,10 +13,12 @@ import { Window } from "./Window";
 import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
 import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
 import { SharedMap } from "./shared_map/SharedMap";
-import { getUserExtensionDirectory, getUserSettingsDirectory, setupAppData } from "./config/MainConfig";
+import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, setupAppData } from "./config/MainConfig";
 import { getFonts, installBundledFonts } from "./ui/FontList";
 import { ConfigDatabase } from "./config/ConfigDatabase";
 import { ExtensionManager } from "./extension/ExtensionManager";
+import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
+import { GeneralConfig, SystemConfig } from "./config/Config";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -54,6 +56,8 @@ class Main {
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
     const extensionManager = this.setupExtensionManager(configDatabase, sharedMap, packageJson.version);
+
+    const keybindingsIOManager = this.setupKeybindingsIOManager(configDatabase, extensionManager);
 
     this.openWindow();
 
@@ -93,6 +97,25 @@ class Main {
     return extensionManager;
   }
 
+  setupKeybindingsIOManager(configDatabase: PersistentConfigDatabase,
+    extensionManager: ExtensionManager): KeybindingsIOManager {
+
+    const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
+    keybindingsIOManager.onUpdate(() => {
+      this.updateSystemConfigKeybindings(configDatabase, keybindingsIOManager);
+    });
+    return keybindingsIOManager;
+  }
+
+  updateSystemConfigKeybindings(configDatabase: PersistentConfigDatabase,
+      keybindingsIOManager: KeybindingsIOManager): void {
+
+    // Broadcast the updated bindings.
+    const generalConfig = <GeneralConfig> configDatabase.getGeneralConfig();
+    const systemConfig = <SystemConfig> configDatabase.getSystemConfigCopy();
+    systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
+    configDatabase.setSystemConfig(systemConfig);
+  }
 
   openWindow(): void {
     const win = new Window();
