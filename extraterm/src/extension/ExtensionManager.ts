@@ -20,7 +20,7 @@ import { MainInternalExtensionContext, LoadedSessionBackendContribution, LoadedT
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import * as SharedMap from "../shared_map/SharedMap";
 import { ExtensionManagerIpc } from "./ExtensionManagerIpc";
-
+import * as InternalTypes from "../InternalTypes";
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
@@ -29,7 +29,7 @@ interface ActiveExtension {
   module: any;
 }
 
-export class ExtensionManager {
+export class ExtensionManager implements InternalTypes.ExtensionManager {
   private _log: Logger = null;
 
   #configDatabase: ConfigDatabase = null;
@@ -163,7 +163,7 @@ export class ExtensionManager {
     let publicApi = null;
     let contextImpl: ExtensionContextImpl = null;
 
-    this._log.info(`Starting extension '${metadata.name}' in the main process.`);
+    this._log.info(`Starting extension '${metadata.name}'`);
 
     contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, null, this.#applicationVersion);
     if (metadata.main != null) {
@@ -218,10 +218,9 @@ export class ExtensionManager {
     return this.#activeExtensions.map(ae => ae.metadata);
   }
 
-  getExtensionContextByName(name: string): MainInternalExtensionContext {
-    // const extension = this._getActiveExtension(name);
-    // return extension != null ? extension.contextImpl : null;
-    return null;
+  getExtensionContextByName(name: string): InternalTypes.InternalExtensionContext {
+    const extension = this._getActiveExtension(name);
+    return extension != null ? extension.contextImpl : null;
   }
 
   enableExtension(name: string): void {
@@ -299,13 +298,13 @@ export class ExtensionManager {
   }
 
   getSessionBackend(type: string): ExtensionApi.SessionBackend {
-    // for (const extension of this._getActiveBackendExtensions()) {
-    //   for (const backend of extension.contextImpl._internalBackend._sessionBackends) {
-    //     if (backend.sessionBackendMetadata.type === type) {
-    //       return backend.sessionBackend;
-    //     }
-    //   }
-    // }
+    for (const extension of this._getActiveBackendExtensions()) {
+      for (const backend of extension.contextImpl._internalBackend._sessionBackends) {
+        if (backend.sessionBackendMetadata.type === type) {
+          return backend.sessionBackend;
+        }
+      }
+    }
     return null;
   }
 

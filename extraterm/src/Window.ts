@@ -5,7 +5,6 @@
  */
 import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout } from "@nodegui/nodegui";
 import { Tab } from "./Tab";
-import { Terminal } from "./terminal/Terminal";
 
 
 export class Window {
@@ -28,9 +27,6 @@ export class Window {
 
     this.#contentStack = new QStackedWidget();
     topLayout.addWidget(this.#contentStack);
-
-    this.#updateTabBar(this.#tabs);
-    this.#updateContentStack(this.#tabs);
   }
 
   #createTabBar(): QTabBar {
@@ -42,20 +38,16 @@ export class Window {
     return tabBar;
   }
 
-  #updateTabBar(tabs: Tab[]): void {
-    for (const tab of tabs) {
-      const header = tab.getTitle();
-      this.#tabBar.addTab(null, header);
-    }
-  }
-
-  #updateContentStack(tabs: Tab[]): void {
-    for (const tab of tabs) {
-      this.#contentStack.addWidget(tab.getContents());
-    }
-  }
-
   open(): void {
     this.#windowWidget.show();
+  }
+
+  addTab(tab: Tab): void {
+    this.#tabs.push(tab);
+
+    const header = tab.getTitle();
+    this.#tabBar.addTab(null, header);
+
+    this.#contentStack.addWidget(tab.getContents());
   }
 }

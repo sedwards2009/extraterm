@@ -43,7 +43,7 @@ export interface ExtensionManager {
 
 //   extensionUiUtils: ExtensionUiUtils;
 
-//   getExtensionContextByName(name: string): InternalExtensionContext;
+   getExtensionContextByName(name: string): InternalExtensionContext;
 
 //   findViewerElementTagByMimeType(mimeType: string): string;
 
@@ -156,8 +156,8 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext,
   _proxyFactory: ProxyFactory;
 
   // _findViewerElementTagByMimeType(mimeType: string): string;
-  // _registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
-  // _setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean);
+  _registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
+  _setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean);
   // _debugRegisteredCommands(): void;
 
   // _registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void;

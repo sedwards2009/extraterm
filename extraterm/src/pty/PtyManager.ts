@@ -6,7 +6,7 @@
 import { Event, SessionConfiguration, CreateSessionOptions} from "@extraterm/extraterm-extension-api";
 import { createUuid } from "extraterm-uuid";
 import { EventEmitter } from "extraterm-event-emitter";
-import { Logger, getLogger } from "extraterm-logging";
+import { Logger, getLogger, log } from "extraterm-logging";
 import { Pty, BufferSizeChange } from "./Pty";
 import { ExtensionManager } from "../extension/ExtensionManager";
 import { ConfigDatabase } from "../config/ConfigDatabase";
@@ -14,38 +14,36 @@ import { ConfigDatabase } from "../config/ConfigDatabase";
 
 const LOG_FINE = false;
 
-interface PtyTuple {
-  ptyTerm: Pty;
-  outputBufferSize: number; // The number of characters we are allowed to send.
-  outputPaused: boolean;    // True if the term's output is paused.
-};
+// interface PtyTuple {
+//   ptyTerm: Pty;
+//   outputBufferSize: number; // The number of characters we are allowed to send.
+//   outputPaused: boolean;    // True if the term's output is paused.
+// };
 
-export interface PtyDataEvent {
-  ptyId: number;
-  data: string;
-}
+// export interface PtyDataEvent {
+//   ptyId: number;
+//   data: string;
+// }
 
-export interface PtyAvailableWriteBufferSizeChangeEvent {
-  ptyId: number;
-  bufferSizeChange: BufferSizeChange;
-}
+// export interface PtyAvailableWriteBufferSizeChangeEvent {
+//   ptyId: number;
+//   bufferSizeChange: BufferSizeChange;
+// }
 
 export class PtyManager {
   private _log: Logger;
-  private _configDatabase: ConfigDatabase = null;
-  private _ptyCounter = 0;
-  private _ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
-  private _onPtyExitEventEmitter = new EventEmitter<number>();
-  private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
-  private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
+  // private _ptyCounter = 0;
+  // private _ptyMap: Map<number, PtyTuple> = new Map<number, PtyTuple>();
+  // private _onPtyExitEventEmitter = new EventEmitter<number>();
+  // private _onPtyDataEventEmitter = new EventEmitter<PtyDataEvent>();
+  // private _onPtyAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<PtyAvailableWriteBufferSizeChangeEvent>();
 
-  constructor(private _extensionManager: ExtensionManager, configDatabase: ConfigDatabase) {
+  constructor(private _extensionManager: ExtensionManager) {
     this._log = getLogger("PtyManager", this);
-    this._configDatabase = configDatabase;
 
-    this.onPtyExit = this._onPtyExitEventEmitter.event;
-    this.onPtyData = this._onPtyDataEventEmitter.event;
-    this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
+    // this.onPtyExit = this._onPtyExitEventEmitter.event;
+    // this.onPtyData = this._onPtyDataEventEmitter.event;
+    // this.onPtyAvailableWriteBufferSizeChange = this._onPtyAvailableWriteBufferSizeChangeEventEmitter.event;
   }
 
   getDefaultSessions(): SessionConfiguration[] {
@@ -62,109 +60,97 @@ export class PtyManager {
     return results;
   }
 
-  onPtyExit: Event<number>;
-  onPtyData: Event<PtyDataEvent>;
-  onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
+  // onPtyExit: Event<number>;
+  // onPtyData: Event<PtyDataEvent>;
+  // onPtyAvailableWriteBufferSizeChange: Event<PtyAvailableWriteBufferSizeChangeEvent>;
 
-  createPty(sessionUuid: string, sessionOptions: CreateSessionOptions): number {
-    const sessions = this._configDatabase.getSessionConfig();
-    let sessionConfiguration: SessionConfiguration = null;
-    for (sessionConfiguration of sessions) {
-      if (sessionConfiguration.uuid === sessionUuid) {
-        break;
-      }
-    }
-
-    if (sessionConfiguration === null) {
-      this._log.warn(`Unable to find a session for UUID '${sessionUuid}'.`);
-      return null;
-    }
-
+  createPty(sessionConfiguration: SessionConfiguration, sessionOptions: CreateSessionOptions): Pty {
     const backend = this._extensionManager.getSessionBackend(sessionConfiguration.type);
+this._log.debug(JSON.stringify(sessionConfiguration));
     const ptyTerm = backend.createSession(sessionConfiguration, sessionOptions);
 
-    this._ptyCounter++;
-    const ptyId = this._ptyCounter;
-    const ptyTup = { ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };
-    this._ptyMap.set(ptyId, ptyTup);
+    // this._ptyCounter++;
+    // const ptyId = this._ptyCounter;
+    // const ptyTup = { ptyTerm: ptyTerm, outputBufferSize: 0, outputPaused: true };
+    // this._ptyMap.set(ptyId, ptyTup);
 
-    ptyTerm.onData( (data: string) => {
-      if (LOG_FINE) {
-        this._log.debug("pty process got data for ptyID=" + ptyId);
-        this._logJSData(data);
-      }
+    // ptyTerm.onData( (data: string) => {
+    //   if (LOG_FINE) {
+    //     this._log.debug("pty process got data for ptyID=" + ptyId);
+    //     this._logJSData(data);
+    //   }
 
-      this._onPtyDataEventEmitter.fire({ptyId, data});
-    });
+    //   this._onPtyDataEventEmitter.fire({ptyId, data});
+    // });
 
-    ptyTerm.onExit( () => {
-      if (LOG_FINE) {
-        this._log.debug("pty process exited.");
-      }
+    // ptyTerm.onExit( () => {
+    //   if (LOG_FINE) {
+    //     this._log.debug("pty process exited.");
+    //   }
 
-      this._onPtyExitEventEmitter.fire(ptyId);
+    //   this._onPtyExitEventEmitter.fire(ptyId);
 
-      ptyTerm.destroy();
-      this._ptyMap.delete(ptyId);
-    });
+    //   ptyTerm.destroy();
+    //   this._ptyMap.delete(ptyId);
+    // });
 
-    ptyTerm.onAvailableWriteBufferSizeChange( (bufferSizeChange: BufferSizeChange) => {
-      this._onPtyAvailableWriteBufferSizeChangeEventEmitter.fire({ptyId, bufferSizeChange});
-    });
+    // ptyTerm.onAvailableWriteBufferSizeChange( (bufferSizeChange: BufferSizeChange) => {
+    //   this._onPtyAvailableWriteBufferSizeChangeEventEmitter.fire({ptyId, bufferSizeChange});
+    // });
 
-    return ptyId;
+    return ptyTerm;
   }
 
-  ptyInput(ptyId: number, data: string): void {
-    const ptyTerminalTuple = this._ptyMap.get(ptyId);
-    if (ptyTerminalTuple === undefined) {
-      this._log.debug("handlePtyInput() WARNING: Input arrived for a terminal which doesn't exist.");
-      return;
-    }
+  // ptyInput(ptyId: number, data: string): void {
+  //   const ptyTerminalTuple = this._ptyMap.get(ptyId);
+  //   if (ptyTerminalTuple === undefined) {
+  //     this._log.debug("handlePtyInput() WARNING: Input arrived for a terminal which doesn't exist.");
+  //     return;
+  //   }
 
-    ptyTerminalTuple.ptyTerm.write(data);
-  }
+  //   ptyTerminalTuple.ptyTerm.write(data);
+  // }
 
-  ptyOutputBufferSize(ptyId: number, size: number): void {
-    const ptyTerminalTuple = this._ptyMap.get(ptyId);
-    if (ptyTerminalTuple === undefined) {
-      this._log.debug("handlePtyOutputBufferSize() WARNING: Input arrived for a terminal which doesn't exist.");
-      return;
-    }
+  // ptyOutputBufferSize(ptyId: number, size: number): void {
+  //   const ptyTerminalTuple = this._ptyMap.get(ptyId);
+  //   if (ptyTerminalTuple === undefined) {
+  //     this._log.debug("handlePtyOutputBufferSize() WARNING: Input arrived for a terminal which doesn't exist.");
+  //     return;
+  //   }
 
-    if (LOG_FINE) {
-      this._log.debug(`Received Output Buffer Size message. id: ${ptyId}, size: ${size}`);
-    }
-    ptyTerminalTuple.ptyTerm.permittedDataSize(size);
-  }
+  //   if (LOG_FINE) {
+  //     this._log.debug(`Received Output Buffer Size message. id: ${ptyId}, size: ${size}`);
+  //   }
+  //   ptyTerminalTuple.ptyTerm.permittedDataSize(size);
+  // }
 
-  ptyResize(ptyId: number, columns: number, rows: number): void {
-    const ptyTerminalTuple = this._ptyMap.get(ptyId);
-    if (ptyTerminalTuple === undefined) {
-      this._log.debug("handlePtyResize() WARNING: Input arrived for a terminal which doesn't exist.");
-      return;
-    }
-    ptyTerminalTuple.ptyTerm.resize(columns, rows);
-  }
+  // ptyResize(ptyId: number, columns: number, rows: number): void {
+  //   const ptyTerminalTuple = this._ptyMap.get(ptyId);
+  //   if (ptyTerminalTuple === undefined) {
+  //     this._log.debug("handlePtyResize() WARNING: Input arrived for a terminal which doesn't exist.");
+  //     return;
+  //   }
+  //   ptyTerminalTuple.ptyTerm.resize(columns, rows);
+  // }
 
-  closePty(ptyId: number): void {
-    const ptyTerminalTuple = this._ptyMap.get(ptyId);
-    if (ptyTerminalTuple === undefined) {
-      this._log.debug("handlePtyCloseRequest() WARNING: Input arrived for a terminal which doesn't exist.");
-      return;
-    }
-    ptyTerminalTuple.ptyTerm.destroy();
-    this._ptyMap.delete(ptyId);
-  }
+  // closePty(ptyId: number): void {
+  //   const ptyTerminalTuple = this._ptyMap.get(ptyId);
+  //   if (ptyTerminalTuple === undefined) {
+  //     this._log.debug("handlePtyCloseRequest() WARNING: Input arrived for a terminal which doesn't exist.");
+  //     return;
+  //   }
+  //   ptyTerminalTuple.ptyTerm.destroy();
+  //   this._ptyMap.delete(ptyId);
+  // }
 
-  async ptyGetWorkingDirectory(ptyId: number): Promise<string> {
-    const ptyTerminalTuple = this._ptyMap.get(ptyId);
-    if (ptyTerminalTuple === undefined) {
-      this._log.debug("handlePtyGetWorkingDirectory() WARNING: Request arrived for a terminal which doesn't exist.");
-      return null;
-    }
-    return await ptyTerminalTuple.ptyTerm.getWorkingDirectory();
-  }
+  // async ptyGetWorkingDirectory(ptyId: number): Promise<string> {
+  //   const ptyTerminalTuple = this._ptyMap.get(ptyId);
+  //   if (ptyTerminalTuple === undefined) {
+  //     this._log.debug("handlePtyGetWorkingDirectory() WARNING: Request arrived for a terminal which doesn't exist.");
+  //     return null;
+  //   }
+  //   return await ptyTerminalTuple.ptyTerm.getWorkingDirectory();
+  // }
 
   private _logData(data: string): void {
     this._log.debug(substituteBadChars(data));

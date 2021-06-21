@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as crypto from "crypto";
+import * as TermApi from "term-api";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
 import { doLater } from "extraterm-later";
@@ -14,6 +15,7 @@ import {
   TerminalEnvironment,
 } from "@extraterm/extraterm-extension-api";
 import { Direction, QBoxLayout, QScrollArea, QWidget, SizeConstraint } from "@nodegui/nodegui";
+const performanceNow = require('performance-now');
 
 import * as Term from "../emulator/Term";
 import { Tab } from "../Tab";
@@ -56,22 +58,12 @@ export class Terminal implements Tab, Disposable {
     { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: "" },
   ]);
 
-  constructor(pty: Pty, emulator: Term.Emulator) {
+  constructor() {
     this._log = getLogger("Terminal", this);
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
-    this.#pty = pty;
-    this.#emulator = emulator;
-
-    pty.onData((text: string): void => {
-      this.#emulator.write(text);
-    });
-
-    doLater(() => {
-      pty.resize(this.#columns, this.#rows);
-    });
-
+    this.#initEmulator(this.#cookie);
     this.#createUi();
   }
 
@@ -90,7 +82,23 @@ export class Terminal implements Tab, Disposable {
     this.#scrollArea.setWidget(contentWidget);
     this.#contentLayout.addStretch(1);
 
-    this.appendBlock(new TerminalBlock());
+    const terminalBlock = new TerminalBlock();
+    this.appendBlock(terminalBlock);
+    terminalBlock.setEmulator(this.#emulator);
+  }
+
+  setPty(pty: Pty): void {
+    this.#pty = pty;
+
+    pty.onData((text: string): void => {
+this._log.debug(`onData: ${text}`);
+      this.#emulator.write(text);
+    });
+
+    doLater(() => {
+      pty.resize(this.#columns, this.#rows);
+      pty.permittedDataSize(1024);
+    });
   }
 
   dispose(): void {
@@ -155,4 +163,60 @@ export class Terminal implements Tab, Disposable {
   getEmulator(): Term.Emulator {
     return this.#emulator;
   }
+
+  #initEmulator(cookie: string): void {
+    const emulator = new Term.Emulator({
+      platform: <Term.Platform> process.platform,
+      applicationModeCookie: cookie,
+      debug: true,
+      performanceNowFunc: performanceNow
+    });
+
+    emulator.debug = true;
+    // emulator.onTitleChange(this._handleTitle.bind(this));
+    // emulator.onData(this._handleTermData.bind(this));
+    emulator.onRender(this.#handleTermSize.bind(this));
+    // emulator.onScreenChange(this._handleScreenChange.bind(this));
+
+    // Application mode handlers
+    // const applicationModeHandler: TermApi.ApplicationModeHandler = {
+    //   start: this._handleApplicationModeStart.bind(this),
+    //   data: this._handleApplicationModeData.bind(this),
+    //   end: this._handleApplicationModeEnd.bind(this)
+    // };
+    // emulator.registerApplicationModeHandler(applicationModeHandler);
+    emulator.onWriteBufferSize(this.#handleWriteBufferSize.bind(this));
+    // if (this._terminalVisualConfig != null) {
+    //   emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
+    // }
+    this.#emulator = emulator;
+    // this._initDownloadApplicationModeHandler();
+  }
+
+  #handleTermSize(event: TermApi.RenderEvent): void {
+    const newColumns = event.columns;
+    const newRows = event.rows;
+    if (this.#columns === newColumns && this.#rows === newRows) {
+      return;
+    }
+    this.#columns = newColumns;
+    this.#rows = newRows;
+
+    if (this.#pty != null) {
+      this.#pty.resize(newColumns, newRows);
+
+      this.environment.setList([
+        { key: TerminalEnvironment.TERM_ROWS, value: "" + newRows},
+        { key: TerminalEnvironment.TERM_COLUMNS, value: "" + newColumns},
+      ]);
+    }
+  }
+
+  #handleWriteBufferSize(event: TermApi.WriteBufferSizeEvent): void {
+    this._log.debug("#handleWriteBufferSize()");
+    if (this.#pty != null) {
+      this.#pty.permittedDataSize(event.status.bufferSize);
+    }
+  }
+
 }

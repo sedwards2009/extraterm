@@ -5,7 +5,11 @@
  */
 import { QColor, QFrame, QPainter, QPen, QWidget, QLabel, QPaintEvent, TextFormat, QImage, WidgetEventTypes } from "@nodegui/nodegui";
 import { getLogger, Logger } from "extraterm-logging";
+import { Disposable } from "extraterm-event-emitter";
+
 import { Block } from "./Block";
+import * as Term from "../emulator/Term";
+import { RenderEvent } from "packages/term-api/dist/TermApi";
 
 /**
  * Shows the contents of a terminal and can accept input.
@@ -14,6 +18,8 @@ export class TerminalBlock implements Block {
   private _log: Logger = null;
 
   #widget: QWidget = null;
+  #emulator: Term.Emulator = null;
+  #onRenderDispose: Disposable =null;
 
   constructor() {
     this._log = getLogger("TerminalBlock", this);
@@ -38,6 +44,29 @@ export class TerminalBlock implements Block {
 
   getWidget(): QWidget {
     return this.#widget;
+  }
+
+  setEmulator(emulator: Term.Emulator): void {
+    if (this.#emulator !== null) {
+      // Disconnect the last emulator.
+      this.#onRenderDispose.dispose();
+      this.#onRenderDispose = null;
+      this.#emulator = null;
+    }
+
+    if (emulator !== null) {
+      this.#onRenderDispose = emulator.onRender(this.#renderEventHandler.bind(this));
+    }
+
+    this.#emulator = emulator;
+  }
+
+  #renderEventHandler(event: RenderEvent): void {
+    if (event.refreshStartRow !== -1) {
+      for (let i=event.refreshStartRow; i<event.refreshEndRow; i++) {
+        this._log.debug("|> " + this.#emulator.getLineText(i));
+      }
+    }
   }
 
   #handlePaintEvent(event: QPaintEvent): void {

@@ -7,21 +7,26 @@ import * as SourceMapSupport from "source-map-support";
 import * as os from "os";
 import * as fs from "fs";
 import * as path from "path";
+import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
+import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 
 import { Window } from "./Window";
-
-import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
+import { SESSION_CONFIG } from './config/Config';
+import { ConfigDatabase } from "./config/ConfigDatabase";
+import { ExtensionCommandContribution } from './extension/ExtensionMetadata';
+import { DisposableHolder } from "./utils/DisposableUtils";
 import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
 import { SharedMap } from "./shared_map/SharedMap";
 import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, getUserTerminalThemeDirectory, sanitizeAndInitializeConfigs, setupAppData } from "./config/MainConfig";
 import { getFonts, installBundledFonts } from "./ui/FontList";
-import { ConfigDatabase } from "./config/ConfigDatabase";
-import { ExtensionManager } from "./extension/ExtensionManager";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { FontInfo, GeneralConfig, SystemConfig, TitleBarStyle } from "./config/Config";
 import { ThemeManager } from "./theme/ThemeManager";
 import { PtyManager } from "./pty/PtyManager";
 import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
+import { ExtensionManager } from "./extension/ExtensionManager";
+import { EXTRATERM_COOKIE_ENV, Terminal } from "./terminal/Terminal";
+
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -38,6 +43,8 @@ class Main {
 
   private _log: Logger = null;
   #windows: Window[] = [];
+  #configDatabase: ConfigDatabase = null;
+  #ptyManager: PtyManager = null;
 
   constructor() {
     this._log = getLogger("main", this);
@@ -48,6 +55,7 @@ class Main {
 
     const sharedMap = new SharedMap();
     const configDatabase = new PersistentConfigDatabase(getUserSettingsDirectory(), sharedMap);
+    this.#configDatabase = configDatabase;
     configDatabase.start();
 
     this.setupLogging();
@@ -72,7 +80,8 @@ class Main {
       titleBarStyle);
     configDatabase.setSystemConfig(systemConfig);
 
-    const ptyManager = this.setupPtyManager(configDatabase, extensionManager);
+    const ptyManager = this.setupPtyManager(extensionManager);
+    this.#ptyManager = ptyManager;
 
     // if (failed) {
     //   dialog.showErrorBox("Sorry, something went wrong",
@@ -86,10 +95,17 @@ class Main {
     this.setupDefaultSessions(configDatabase, ptyManager);
 
     const bulkFileStorage = this.setupBulkFileStorage();
+    // TODO: MainDesktop()
+    // TODO: setupGlobalKeybindingsManager()
+    // TODO: registerInternalCommands()
+
+    // TODO: setupLocalHttpServer()
+
+    this.registerCommands(extensionManager);
+    this.startUpSessions(configDatabase, extensionManager);
 
     this.openWindow();
-
-    // process.exit(0);
+    this.commandNewTerminal({});
   }
 
   setupLogging(): void {
@@ -167,9 +183,9 @@ class Main {
     };
   }
 
-  setupPtyManager(configDatabase: PersistentConfigDatabase, extensionManager: ExtensionManager): PtyManager {
+  setupPtyManager(extensionManager: ExtensionManager): PtyManager {
     try {
-      return new PtyManager(extensionManager, configDatabase);
+      return new PtyManager(extensionManager);
     } catch(err) {
       this._log.severe("Error occured while creating the PTY connector factory: " + err.message);
       return null;
@@ -188,6 +204,130 @@ class Main {
     const bulkFileStorage = new BulkFileStorage(os.tmpdir());
     return bulkFileStorage;
   }
+
+  registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
+  }
+
+  commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): void {
+    let sessionConfiguration: SessionConfiguration = this.#configDatabase.getSessionConfig()[0];
+    if (args.sessionUuid != null) {
+      sessionConfiguration = this.#getSessionByUuid(args.sessionUuid);
+      if (sessionConfiguration == null) {
+        throw new Error(`Unable to find session with UUID ${args.sessionUuid}`);
+      }
+    } else if (args.sessionName != null) {
+      sessionConfiguration = this.#getSessionByName(args.sessionName);
+      if (sessionConfiguration == null) {
+        throw new Error(`Unable to find session with name ${args.sessionName}`);
+      }
+    }
+
+    let workingDirectory: string = null;
+    // if (args.workingDirectory != null) {
+    //   workingDirectory = args.workingDirectory;
+    // } else {
+    //   const activeTerminal = this.#extensionManager.getActiveTerminal();
+    //   if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
+    //     workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
+    //   }
+    // }
+
+    const newTerminal = new Terminal();
+
+    const extraEnv = {
+      [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
+      "COLORTERM": "truecolor",   // Advertise that we support 24bit color
+    };
+
+    const sessionOptions: CreateSessionOptions = {
+      extraEnv,
+      cols: newTerminal.getColumns(),
+      rows: newTerminal.getRows()
+    };
+
+    if (workingDirectory != null) {
+      sessionOptions.workingDirectory = workingDirectory;
+    }
+
+    const pty = this.#ptyManager.createPty(sessionConfiguration, sessionOptions);
+
+    // newTerminal.setTerminalVisualConfig(this.#terminalVisualConfig);
+    // newTerminal.setSessionConfiguration(sessionConfiguration);
+
+    // Set the default name of the terminal tab to the session name.
+    // newTerminal.setTerminalTitle(sessionConfiguration.name);
+
+    this.#windows[0].addTab(newTerminal);
+    newTerminal.setPty(pty);
+
+    // this._setUpNewTerminalEventHandlers(newTerminal);
+    // this._sendTabOpenedEvent();
+
+    // this.focusTab(newTerminal);
+    // this.#extensionManager.newTerminalCreated(newTerminal, this._getAllTerminals());
+  }
+
+  #getSessionByUuid(sessionUuid: string): SessionConfiguration {
+    const sessions = this.#configDatabase.getSessionConfigCopy();
+    for (const session of sessions) {
+      if (session.uuid === sessionUuid) {
+        return session;
+      }
+    }
+    return null;
+  }
+
+  #getSessionByName(sessionName: string): SessionConfiguration {
+    const sessions = this.#configDatabase.getSessionConfigCopy();
+    for (const session of sessions) {
+      if (session.name === sessionName) {
+        return session;
+      }
+    }
+    return null;
+  }
+
+  startUpSessions(configDatabase: ConfigDatabase, extensionManager: ExtensionManager): void {
+    const disposables = new DisposableHolder();
+
+    const createSessionCommands = (sessionConfigs: SessionConfiguration[]): void => {
+      const extensionContext = extensionManager.getExtensionContextByName("internal-commands");
+
+      for (const session of sessionConfigs) {
+        const args = {
+          sessionUuid: session.uuid
+        };
+        const command = "extraterm:window.newTerminal?" + encodeURIComponent(JSON.stringify(args));
+        const contrib: ExtensionCommandContribution = {
+          command,
+          title: "New Terminal: " + session.name,
+          category: "window",
+          order: 1000,
+          when: "",
+          icon: "fa fa-plus",
+        };
+        disposables.add(extensionContext._registerCommandContribution(contrib));
+
+        extensionContext._setCommandMenu(command, "contextMenu", false);
+        extensionContext._setCommandMenu(command, "commandPalette", true);
+        extensionContext._setCommandMenu(command, "newTerminal", true);
+        extensionContext._setCommandMenu(command, "windowMenu", true);
+      }
+    };
+
+    configDatabase.onChange(event => {
+      if (event.key === SESSION_CONFIG) {
+        disposables.dispose();
+        createSessionCommands(event.newConfig);
+      }
+    });
+
+    const sessionConfig = <SessionConfiguration[]> configDatabase.getSessionConfig();
+    createSessionCommands(sessionConfig);
+  }
+
 
   openWindow(): void {
     const win = new Window();
