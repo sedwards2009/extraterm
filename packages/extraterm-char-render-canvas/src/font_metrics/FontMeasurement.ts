@@ -9,7 +9,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 const computeFontMetricsCache = new Map<string, MonospaceFontMetrics>();
 
 
-export function computeFontMetrics(fontFamily: string, fontSizePx: number, sampleChars: string[]=null): MonospaceFontMetrics {
+export function computeFontMetrics(fontFamily: string, fontStyle: string, fontSizePx: number, sampleChars: string[]=null): MonospaceFontMetrics {
   const cacheKey = `${fontFamily};${fontSizePx};${sampleChars == null ? "" : sampleChars.join("")}`;
 
   let metrics = computeFontMetricsCache.get(cacheKey);
@@ -18,7 +18,7 @@ export function computeFontMetrics(fontFamily: string, fontSizePx: number, sampl
   }
 
   const fm = new FontMeasurement();
-  metrics = fm.computeFontMetrics({ family: fontFamily, sizePx: fontSizePx, sampleChars });
+  metrics = fm.computeFontMetrics({ family: fontFamily, style: fontStyle, sizePx: fontSizePx, sampleChars });
 
   computeFontMetricsCache.set(cacheKey, metrics);
   return metrics;
@@ -27,6 +27,7 @@ export function computeFontMetrics(fontFamily: string, fontSizePx: number, sampl
 
 interface ComputeFontMetricsOptions {
   family: string;
+  style: string;
   sizePx: number;
   sampleChars?: string[];
 }
@@ -39,13 +40,14 @@ class FontMeasurement {
   }
 
   computeFontMetrics(options: ComputeFontMetricsOptions): MonospaceFontMetrics {
-    let { family, sizePx, sampleChars }  = options;
+    let { family, sizePx, style, sampleChars }  = options;
 
     if (sampleChars == null) {
       sampleChars = ["X", "W", "_", "g", "\u00C5", "\u00E7", "\u014A", "\u013B","\u0141", "\u0126"];
     }
 
     const font = new QFont(family);
+    font.setStyleName(style);
     font.setPixelSize(sizePx);
 
     const metrics = new QFontMetrics(font);

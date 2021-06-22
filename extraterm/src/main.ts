@@ -45,6 +45,7 @@ class Main {
   #windows: Window[] = [];
   #configDatabase: ConfigDatabase = null;
   #ptyManager: PtyManager = null;
+  #themeManager: ThemeManager = null;
 
   constructor() {
     this._log = getLogger("main", this);
@@ -72,6 +73,7 @@ class Main {
 
     const keybindingsIOManager = this.setupKeybindingsIOManager(configDatabase, extensionManager);
     const themeManager = this.setupThemeManager(extensionManager);
+    this.#themeManager = themeManager;
 
     sanitizeAndInitializeConfigs(configDatabase, themeManager, keybindingsIOManager, availableFonts);
     const generalConfig = configDatabase.getGeneralConfig();
@@ -330,7 +332,7 @@ class Main {
 
 
   openWindow(): void {
-    const win = new Window();
+    const win = new Window(this.#configDatabase, this.#themeManager);
     this.#windows.push(win);
     win.open();
   }

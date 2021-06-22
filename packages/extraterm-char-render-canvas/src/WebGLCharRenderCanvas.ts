@@ -123,6 +123,8 @@ export interface WebGLCharRenderCanvasOptions {
    */
   fontFamily: string;
 
+  fontStyle: string;
+
   /**
    * Height of the primary font in pixels
    */
@@ -184,6 +186,7 @@ export class WebGLCharRenderCanvas implements Disposable {
   private _heightChars = 0;
 
   private _fontFamily = "sans";
+  private _fontStyle = "";
   private _fontSizePx = 10;
 
   private _extraFontSlices: ExtraFontSlice[] = [];
@@ -205,6 +208,7 @@ export class WebGLCharRenderCanvas implements Disposable {
       debugParentElement,
       extraFonts,
       fontFamily,
+      fontStyle,
       fontSizePx,
       heightChars,
       heightPx,
@@ -225,9 +229,10 @@ export class WebGLCharRenderCanvas implements Disposable {
 
     this._fontSizePx = fontSizePx || 10;
     this._fontFamily = fontFamily || "monospace";
+    this._fontStyle = fontStyle;
     this._transparentBackground = transparentBackground;
 
-    const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontSizePx, extraFonts,
+    const webglRenderer = webGLRendererRepository.getWebGLRenderer(this._fontFamily, this._fontStyle, this._fontSizePx, extraFonts,
       transparentBackground, screenWidthHintPx, screenHeightHintPx, );
     this._disposables.push(webglRenderer);
     this._webglRenderer = webglRenderer;

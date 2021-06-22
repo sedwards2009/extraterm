@@ -19,7 +19,7 @@ log("Font Metrics Test App");
 // const database = new QFontDatabase();
 // log(database.families().join("\n"));
 
-const metrics: MonospaceFontMetrics = computeFontMetrics("DejaVu Sans Mono", 20);
+const metrics: MonospaceFontMetrics = computeFontMetrics("DejaVu Sans Mono", "book", 20);
 log(JSON.stringify(metrics, null, "  "));
 
 const atlas = new TextureFontAtlas(metrics, [], false, 2560, 1440);

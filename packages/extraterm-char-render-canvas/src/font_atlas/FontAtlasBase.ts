@@ -13,7 +13,6 @@ import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { isBoxCharacter, drawBoxCharacter } from "./BoxDrawingCharacters";
 import { TripleKeyMap } from "extraterm-data-structures";
-import { RGBAToCss } from "../RGBAToCss";
 import { RGBAToQColor } from "../RGBAToQColor";
 import { mat2d } from "gl-matrix";
 
@@ -22,10 +21,10 @@ const TWO_TO_THE_24 = 2 ** 24;
 const FRACTION_CELLS_TO_CLEAR_ON_FLUSH = 0.2;
 
 export interface CachedGlyph {
-  xPixels: number;
-  yPixels: number;
-  widthCells: number;
-  widthPx: number;
+  xPixels: number;  // X position of the top left corner of the glyph in the atlas.
+  yPixels: number;  // Y position of the top left corner of the glyph in the atlas.
+  widthCells: number; // Width of the glyph in cells.
+  widthPx: number;    // Width of the glyph in pixels
 
   key1: number;
   key2: number;

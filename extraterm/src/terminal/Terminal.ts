@@ -23,6 +23,7 @@ import { Block } from "./Block";
 import { TerminalBlock } from "./TerminalBlock";
 import { Pty } from "../pty/Pty";
 import { TerminalEnvironmentImpl } from "./TerminalEnvironmentImpl";
+import { TerminalVisualConfig } from "./TerminalVisualConfig";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -47,6 +48,7 @@ export class Terminal implements Tab, Disposable {
   #onDisposeEventEmitter = new EventEmitter<void>();
 
   #sessionConfiguration: SessionConfiguration = null;
+  #terminalVisualConfig: TerminalVisualConfig = null;
 
   environment = new TerminalEnvironmentImpl([
     { key: TerminalEnvironment.TERM_ROWS, value: "" },
@@ -99,6 +101,15 @@ this._log.debug(`onData: ${text}`);
       pty.resize(this.#columns, this.#rows);
       pty.permittedDataSize(1024);
     });
+  }
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this.#terminalVisualConfig = terminalVisualConfig;
+    for (const block of this.#blocks) {
+      if (block instanceof TerminalBlock) {
+        block.setTerminalVisualConfig(terminalVisualConfig);
+      }
+    }
   }
 
   dispose(): void {

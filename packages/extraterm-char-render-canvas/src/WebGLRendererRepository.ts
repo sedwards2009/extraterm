@@ -17,7 +17,7 @@ export class WebGLRendererRepository {
   private _map = new Map<string, WebGLRenderer & Disposable>();
   private _refCount = new Map<string, number>();
 
-  getWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[], transparentBackground: boolean,
+  getWebGLRenderer(fontFamily: string, fontStyle: string, fontSizePx: number, extraFonts: FontSlice[], transparentBackground: boolean,
       screenWidthHintPx: number, screenHeightHintPx: number): WebGLRenderer & Disposable {
 
     const key = this._key(fontFamily, fontSizePx, transparentBackground, extraFonts);
@@ -29,7 +29,7 @@ export class WebGLRendererRepository {
       return existingRenderer;
     }
 
-    const renderer = this._newWebGLRenderer(fontFamily, fontSizePx, extraFonts, transparentBackground,
+    const renderer = this._newWebGLRenderer(fontFamily, fontStyle, fontSizePx, extraFonts, transparentBackground,
       screenWidthHintPx, screenHeightHintPx);
     const disposableRenderer = <WebGLRenderer & Disposable> <unknown> {
       __proto__: renderer,
@@ -48,12 +48,12 @@ export class WebGLRendererRepository {
     return disposableRenderer;
   }
 
-  private _newWebGLRenderer(fontFamily: string, fontSizePx: number, extraFonts: FontSlice[],
+  private _newWebGLRenderer(fontFamily: string, fontStyle: string, fontSizePx: number, extraFonts: FontSlice[],
       transparentBackground: boolean, screenWidthHintPx: number, screenHeightHintPx: number): WebGLRenderer {
 
-    const metrics = computeFontMetrics(fontFamily, fontSizePx);
+    const metrics = computeFontMetrics(fontFamily, fontStyle, fontSizePx);
     const extraFontMetrics = extraFonts.map(
-      (extraFont) => this._computeEmojiMetrics(metrics, extraFont.fontFamily, extraFont.fontSizePx));
+      (extraFont) => this._computeEmojiMetrics(metrics, extraFont.fontFamily, "", extraFont.fontSizePx));
 
     const fontAtlas = new TextureFontAtlas(metrics, extraFontMetrics, transparentBackground, screenWidthHintPx,
       screenHeightHintPx);
@@ -67,13 +67,15 @@ export class WebGLRendererRepository {
       extraFonts.map(ef => `${ef.fontFamily}:${ef.fontSizePx}:`).join("");
   }
 
-  private _computeEmojiMetrics(metrics: MonospaceFontMetrics, fontFamily: string, fontSizePx: number): MonospaceFontMetrics {
+  private _computeEmojiMetrics(metrics: MonospaceFontMetrics, fontFamily: string, fontStyle: string,
+      fontSizePx: number): MonospaceFontMetrics {
+
     const customMetrics = {
       ...metrics,
       fontFamily: fontFamily,
       fontSizePx: fontSizePx,
     };
-    const actualFontMetrics = computeFontMetrics(fontFamily, fontSizePx, ["\u{1f600}"]  /* Smile emoji */);
+    const actualFontMetrics = computeFontMetrics(fontFamily, fontStyle, fontSizePx, ["\u{1f600}"]  /* Smile emoji */);
     customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
     customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
 
