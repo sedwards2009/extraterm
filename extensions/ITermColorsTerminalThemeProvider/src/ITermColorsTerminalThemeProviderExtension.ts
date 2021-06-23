@@ -17,7 +17,7 @@ export class ItermColorTerminalThemeProvider implements TerminalThemeProvider {
   }
 
   scanThemes(paths: string[]): TerminalThemeInfo[] {
-  
+
     let results: TerminalThemeInfo[] = [];
     for (const themePath of paths) {
       results = [...results, ...this._scanDirectory(themePath)];

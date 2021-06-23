@@ -14,6 +14,7 @@ export interface TerminalVisualConfig {
   fontInfo: FontInfo;
   fontSizePx: number;
   // fontFilePath: string;
+  palette: number[];
   terminalTheme: TerminalTheme;
   transparentBackground: boolean;
   useLigatures: boolean;

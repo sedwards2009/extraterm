@@ -121,10 +121,11 @@ export class TerminalBlock implements Block {
     const qimage = this.#fontAtlas.getQImage();
     const heightPx = this.#metrics.heightPx;
     const widthPx = this.#metrics.widthPx;
+    const palette = this.#terminalVisualConfig.palette;
 
     for (let row=0; row<emulatorDimensions.materializedRows; row++) {
       const line = this.#emulator.lineAtRow(row);
-      // line.setPalette(this.#terminalVisualConfig.terminalTheme.
+      line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
       const rowWidth = line.width;
       let x = 0;
       for (let column=0; column<rowWidth; column++) {

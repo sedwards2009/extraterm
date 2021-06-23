@@ -37,7 +37,10 @@
     "packages": [
       "extraterm",
       "packages/*",
+      "extensions/DefaultTerminalTheme",
+      "extensions/CommunityTerminalThemes",
       "extensions/InternalCommands",
+      "extensions/ITermColorsTerminalThemeProvider",
       "extensions/UnixSessionBackend"
     ],
     "nohoist": [

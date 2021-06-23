@@ -309,9 +309,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
-    // return _.flatten(this._getActiveBackendExtensions().map(
-    //   ae => ae.contextImpl._internalBackend._terminalThemeProviders));
-    return [];
+    return _.flatten(this._getActiveBackendExtensions().map(
+      ae => ae.contextImpl._internalBackend._terminalThemeProviders));
   }
 
   hasCommand(command: string): boolean {
