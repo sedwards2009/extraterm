@@ -425,5 +425,9 @@ function mapQKeyEventToDOMKey(ev: QKeyEvent): string {
   if (qkeyToDOMMapping.has(key)) {
     return qkeyToDOMMapping.get(key);
   }
-  return ev.text();
+  const text = ev.text();
+  if ((text.charCodeAt(0) <= 31) && (key < 256)) {
+    return String.fromCodePoint(key);
+  }
+  return text;
 }
