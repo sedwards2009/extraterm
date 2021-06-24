@@ -23,3 +23,7 @@ export interface TerminalVisualConfig {
   screenWidthHintPx: number;
   screenHeightHintPx: number;
 }
+
+export const PALETTE_BG_INDEX = 256;
+export const PALETTE_FG_INDEX = 257;
+export const PALETTE_CURSOR_INDEX = 258;

@@ -6,13 +6,13 @@
 import { QColor, QFrame, QPainter, QPen, QWidget, QLabel, QPaintEvent, TextFormat, QImage, WidgetEventTypes } from "@nodegui/nodegui";
 import { getLogger, Logger } from "extraterm-logging";
 import { Disposable } from "extraterm-event-emitter";
+import { normalizedCellIterator, NormalizedCell, computeFontMetrics, MonospaceFontMetrics, TextureFontAtlas } from "extraterm-char-render-canvas";
+import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 
 import { Block } from "./Block";
 import * as Term from "../emulator/Term";
-import { RenderEvent } from "packages/term-api/dist/TermApi";
-import { TerminalVisualConfig } from "./TerminalVisualConfig";
-
-import { computeFontMetrics, MonospaceFontMetrics, TextureFontAtlas } from "extraterm-char-render-canvas";
+import { RenderEvent } from "term-api";
+import { PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
 
 
 /**
@@ -111,6 +111,7 @@ export class TerminalBlock implements Block {
     painter.drawLine(left, top, right, bottom);
     painter.drawLine(right, top, left, bottom);
 
+
     const emulatorDimensions = this.#emulator.getDimensions();
     let y = 0;
     const qimage = this.#fontAtlas.getQImage();
@@ -118,20 +119,50 @@ export class TerminalBlock implements Block {
     const widthPx = this.#metrics.widthPx;
     const palette = this.#terminalVisualConfig.palette;
 
+    const renderCursor = true;
+
+    const normalizedCell: NormalizedCell = {
+      x: 0,
+      segment: 0,
+      codePoint: 0,
+      extraFontFlag: false,
+      isLigature: false,
+      ligatureCodePoints: null
+    };
+
+    const cursorColor = this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX];
+
     for (let row=0; row<emulatorDimensions.materializedRows; row++) {
       const line = this.#emulator.lineAtRow(row);
       line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
-      const rowWidth = line.width;
-      let x = 0;
-      for (let column=0; column<rowWidth; column++) {
-        const glyph = this.#fontAtlas.loadCodePoint(line.getCodePoint(column, 0), line.getStyle(column, 0), 0,
-          line.getFgRGBA(column, 0), line.getBgRGBA(column, 0));
-        painter.drawImage(x, y, qimage, glyph.xPixels, glyph.yPixels, glyph.widthPx, heightPx);
-        x += widthPx;
+
+      let px = 0;
+      for (const column of normalizedCellIterator(line, 0, normalizedCell)) {
+        const codePoint = line.getCodePoint(column, 0);
+        const fontIndex = 0;
+
+        let fgRGBA = line.getFgRGBA(column, 0);
+        let bgRGBA = line.getBgRGBA(column, 0);
+
+        const style = line.getStyle(column, 0);
+        if ((style & STYLE_MASK_CURSOR) && renderCursor) {
+          fgRGBA = bgRGBA;
+          bgRGBA = cursorColor;
+        } else {
+          if (style & STYLE_MASK_INVERSE) {
+            const tmp = fgRGBA;
+            fgRGBA = bgRGBA;
+            bgRGBA = tmp;
+          }
+        }
+        fgRGBA |= 0x000000ff;
+
+        const glyph = this.#fontAtlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
+        painter.drawImage(px, y, qimage, glyph.xPixels, glyph.yPixels, glyph.widthPx, heightPx);
+        px += widthPx;
       }
       y += heightPx;
     }
-
     painter.end();
   }
 }

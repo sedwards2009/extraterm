@@ -10,3 +10,4 @@ export { WebGLRenderer } from "./WebGLRenderer";
 export { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas";
 export { WebGLCharRenderCanvas } from "./WebGLCharRenderCanvas";
 export { xtermPalette,  } from "./WebGLCharRenderCanvas";
+export { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator";
