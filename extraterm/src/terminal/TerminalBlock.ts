@@ -80,11 +80,6 @@ export class TerminalBlock implements Block {
   }
 
   #renderEventHandler(event: RenderEvent): void {
-    if (event.refreshStartRow !== -1) {
-      for (let i=event.refreshStartRow; i<event.refreshEndRow; i++) {
-        this._log.debug("|> " + this.#emulator.getLineText(i));
-      }
-    }
     this.#widget.update();
   }
 

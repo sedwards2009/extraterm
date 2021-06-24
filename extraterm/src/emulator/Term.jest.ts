@@ -163,7 +163,7 @@ describe.each([
       collectedData = collectedData + event.data;
     });
 
-    emulator.keyPress(ev);
+    emulator.keyDown(ev);
     expect(collectedData).toBe(output);
 
     done();

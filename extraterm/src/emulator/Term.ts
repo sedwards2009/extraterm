@@ -637,7 +637,7 @@ export class Emulator implements EmulatorApi {
     }
 
     if (this._blinkIntervalId !== null) {
-      window.clearInterval(this._blinkIntervalId);
+      clearInterval(this._blinkIntervalId);
     }
     this._blinkIntervalId = setInterval(this._blinker, BLINK_INTERVAL_MS);
 
@@ -658,7 +658,7 @@ export class Emulator implements EmulatorApi {
     }
 
     if (this._blinkIntervalId !== null) {
-      window.clearInterval(this._blinkIntervalId);
+      clearInterval(this._blinkIntervalId);
       this._blinkIntervalId = null;
     }
 
@@ -2078,15 +2078,8 @@ export class Emulator implements EmulatorApi {
       return null;
     }
 
-    let altKey = ev.altKey;
-    let ctrlKey = ev.ctrlKey;
-
-    if (platform === "win32" && altKey && ctrlKey) {
-      // This looks like AltGr on Windows being sent with Ctrl+Alt.
-      altKey = false;
-      ctrlKey = false;
-      // FIXME Remove this hack after the move to Electron 4 or later.
-    }
+    const altKey = ev.altKey;
+    const ctrlKey = ev.ctrlKey;
 
     // Modifiers keys are often encoded using this scheme.
     const mod = (ev.shiftKey ? 1 : 0) + (altKey ? 2 : 0) + (ctrlKey ? 4: 0) + 1;
@@ -2284,6 +2277,8 @@ export class Emulator implements EmulatorApi {
             if (ev.key.length === 1) {
               key = '\x1b' + ev.key;
             }
+          } else {
+            key = ev.key;
           }
         }
         break;
@@ -2293,15 +2288,11 @@ export class Emulator implements EmulatorApi {
 
   keyDown(ev: MinimalKeyboardEvent): boolean {
     const key = Emulator._translateKey(this._platform, ev, this.applicationKeypad, this.applicationCursorKeys);
-
     if (key === null) {
       return false;
     }
-
     this._showCursor();
     this.handler(key);
-
-    cancelEvent(ev);
     return true;
   }
 
@@ -2315,19 +2306,6 @@ export class Emulator implements EmulatorApi {
     if (this.glevel === g) {
       this.charset = charset;
     }
-  }
-
-  keyPress(ev: MinimalKeyboardEvent): boolean {
-    const key = ev.key;
-    if ( ! key || key.length !== 1) {
-      return false;
-    }
-
-    this._showCursor();
-    this.handler(key);
-
-    cancelEvent(ev);
-    return true;
   }
 
   plainKeyPress(key: string): boolean {
@@ -4030,20 +4008,4 @@ export class Emulator implements EmulatorApi {
       this.log(""+y+": "+this.getLineText(y));
     }
   }
-}
-
-/**
- * Helpers
- */
-
-function cancelEvent(ev) {
-  if (ev.preventDefault) {
-    ev.preventDefault();
-  }
-  ev.returnValue = false;
-  if (ev.stopPropagation) {
-    ev.stopPropagation();
-  }
-  ev.cancelBubble = true;
-  return false;
 }
