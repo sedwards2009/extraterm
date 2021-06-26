@@ -11,3 +11,4 @@ export { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAt
 export { WebGLCharRenderCanvas } from "./WebGLCharRenderCanvas";
 export { xtermPalette,  } from "./WebGLCharRenderCanvas";
 export { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator";
+export { RGBAToQColor } from "./RGBAToQColor";

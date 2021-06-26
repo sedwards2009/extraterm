@@ -6,13 +6,13 @@
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes } from "@nodegui/nodegui";
 import { getLogger, Logger } from "extraterm-logging";
 import { Disposable } from "extraterm-event-emitter";
-import { normalizedCellIterator, NormalizedCell, TextureFontAtlas } from "extraterm-char-render-canvas";
+import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 
 import { Block } from "./Block";
 import * as Term from "../emulator/Term";
-import { RenderEvent } from "term-api";
-import { PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
+import { Line, RenderEvent } from "term-api";
+import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
 
 
 /**
@@ -27,6 +27,8 @@ export class TerminalBlock implements Block {
   #terminalVisualConfig: TerminalVisualConfig = null;
   #fontAtlas: TextureFontAtlas = null;
   #heightPx = 1;
+
+  #scrollback: Line[] = [];
 
   constructor() {
     this._log = getLogger("TerminalBlock", this);
@@ -69,7 +71,7 @@ export class TerminalBlock implements Block {
 
     const metrics= this.#terminalVisualConfig.fontMetrics;
     const dimensions = this.#emulator.getDimensions();
-    const newHeightPx = dimensions.materializedRows * metrics.heightPx;
+    const newHeightPx = (dimensions.materializedRows + this.#scrollback.length) * metrics.heightPx;
     if (newHeightPx === this.#heightPx) {
       return;
     }
@@ -97,26 +99,61 @@ export class TerminalBlock implements Block {
 
   #renderEventHandler(event: RenderEvent): void {
     this.#updateWidgetSize();
+
+    if (event.scrollbackLines.length !== 0) {
+      this.#scrollback.splice(this.#scrollback.length, 0, ...event.scrollbackLines);
+      this.#updateWidgetSize();
+    }
+
     this.#widget.update();
   }
 
   #handlePaintEvent(event: QPaintEvent): void {
-    // const paintRect = event.rect();
-// this._log.debug(`paintRect.left: ${paintRect.left()}, paintRect.top: ${paintRect.top()}`);
-// this._log.debug(`paintRect.width: ${paintRect.width()}, paintRect.height: ${paintRect.height()}`);
+    const paintRect = event.rect();
+
+    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const heightPx = metrics.heightPx;
+
+    const topRenderRow = Math.floor(paintRect.top() / heightPx);
+    const heightRows = Math.ceil(paintRect.height() / heightPx) + 1;
 
     const painter = new QPainter(this.#widget);
     const emulatorDimensions = this.#emulator.getDimensions();
-    let y = 0;
+
+    const bgRGBA = this.#terminalVisualConfig.palette[PALETTE_BG_INDEX];
+    painter.fillRect(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(), RGBAToQColor(bgRGBA));
+
+    const scrollbackLength = this.#scrollback.length;
+    if (topRenderRow < scrollbackLength) {
+      const lastRenderRow = Math.min(topRenderRow + heightRows, scrollbackLength);
+      const lines = this.#scrollback.slice(topRenderRow, lastRenderRow);
+      this.#renderLines(painter, lines, topRenderRow * heightPx, false);
+    }
+
+    if (topRenderRow + heightRows >= scrollbackLength) {
+      const screenTopRow = Math.max(topRenderRow, scrollbackLength) - scrollbackLength;
+      const screenLastRow = Math.min(topRenderRow + heightRows - scrollbackLength, emulatorDimensions.materializedRows);
+
+      const lines: Line[] = [];
+      for (let i = screenTopRow; i < screenLastRow; i++) {
+        const line = this.#emulator.lineAtRow(i);
+        lines.push(line);
+      }
+      this.#renderLines(painter, lines, (screenTopRow + scrollbackLength) * heightPx, true);
+    }
+
+    painter.end();
+  }
+
+  #renderLines(painter: QPainter, lines: Line[], startY: number, renderCursor: boolean): void {
     const qimage = this.#fontAtlas.getQImage();
+    let y = startY;
 
     const metrics= this.#terminalVisualConfig.fontMetrics;
     const heightPx = metrics.heightPx;
     const widthPx = metrics.widthPx;
-    const palette = this.#terminalVisualConfig.palette;
 
-    const renderCursor = true;
-
+    const cursorColor = this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX];
     const normalizedCell: NormalizedCell = {
       x: 0,
       segment: 0,
@@ -126,10 +163,9 @@ export class TerminalBlock implements Block {
       ligatureCodePoints: null
     };
 
-    const cursorColor = this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX];
+    const palette = this.#terminalVisualConfig.palette;
 
-    for (let row=0; row<emulatorDimensions.materializedRows; row++) {
-      const line = this.#emulator.lineAtRow(row);
+    for (const line of lines) {
       line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
 
       let px = 0;
@@ -159,6 +195,5 @@ export class TerminalBlock implements Block {
       }
       y += heightPx;
     }
-    painter.end();
   }
 }
