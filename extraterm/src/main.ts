@@ -237,11 +237,13 @@ class Main {
     // }
 
     const newTerminal = new Terminal();
+    this.#windows[0].addTab(newTerminal);
 
     const extraEnv = {
       [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
       "COLORTERM": "truecolor",   // Advertise that we support 24bit color
     };
+    newTerminal.resizeEmulatorFromTerminalSize();
 
     const sessionOptions: CreateSessionOptions = {
       extraEnv,
@@ -253,15 +255,14 @@ class Main {
       sessionOptions.workingDirectory = workingDirectory;
     }
 
-    const pty = this.#ptyManager.createPty(sessionConfiguration, sessionOptions);
-
     // newTerminal.setTerminalVisualConfig(this.#terminalVisualConfig);
     // newTerminal.setSessionConfiguration(sessionConfiguration);
 
     // Set the default name of the terminal tab to the session name.
     // newTerminal.setTerminalTitle(sessionConfiguration.name);
 
-    this.#windows[0].addTab(newTerminal);
+
+    const pty = this.#ptyManager.createPty(sessionConfiguration, sessionOptions);
     newTerminal.setPty(pty);
 
     // this._setUpNewTerminalEventHandlers(newTerminal);

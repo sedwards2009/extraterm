@@ -24,7 +24,9 @@ import {
   SizeConstraint,
   WidgetEventTypes,
   Modifier,
-  Key
+  Key,
+  Shape,
+  ScrollBarPolicy
 } from "@nodegui/nodegui";
 const performanceNow = require('performance-now');
 
@@ -48,10 +50,12 @@ export class Terminal implements Tab, Disposable {
   #cookie: string = null;
 
   // The current size of the emulator. This is used to detect changes in size.
-  #columns = 80;
-  #rows = 24;
+  #columns = -1;
+  #rows = -1;
 
   #scrollArea: QScrollArea = null;
+  #marginPx = 11;
+
   #blocks: Block[] = [];
   #contentLayout: QBoxLayout = null;
 
@@ -78,6 +82,10 @@ export class Terminal implements Tab, Disposable {
     this.#cookie = crypto.randomBytes(10).toString("hex");
     this.#initEmulator(this.#cookie);
     this.#createUi();
+
+    doLater(() => {
+      this.resizeEmulatorFromTerminalSize();
+    });
   }
 
   #createUi() : void {
@@ -94,14 +102,63 @@ export class Terminal implements Tab, Disposable {
     contentWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
+    this.#scrollArea.addEventListener(WidgetEventTypes.Resize, () => {
+      this.#handleResize();
+    });
+
     this.#contentLayout = new QBoxLayout(Direction.TopToBottom, contentWidget);
     this.#contentLayout.setSizeConstraint(SizeConstraint.SetMinimumSize);
+    this.#contentLayout.setContentsMargins(this.#marginPx, this.#marginPx, this.#marginPx, this.#marginPx);
+    this.#scrollArea.setFrameShape(Shape.NoFrame);
+    this.#scrollArea.setVerticalScrollBarPolicy(ScrollBarPolicy.ScrollBarAlwaysOn);
     this.#scrollArea.setWidget(contentWidget);
+
     this.#contentLayout.addStretch(1);
 
     const terminalBlock = new TerminalBlock();
     this.appendBlock(terminalBlock);
     terminalBlock.setEmulator(this.#emulator);
+  }
+
+  #handleResize(): void {
+    this.resizeEmulatorFromTerminalSize();
+  }
+
+  computeTerminalSize(): { rows: number, columns: number } {
+    if (this.#terminalVisualConfig == null) {
+      return null;
+    }
+
+    const metrics = this.#terminalVisualConfig.fontMetrics;
+    const maxSize = this.#scrollArea.maximumViewportSize();
+    const columns = Math.floor((maxSize.width() - 2 * this.#marginPx) / metrics.widthPx);
+    const rows = Math.floor((maxSize.height() - 2 * this.#marginPx) / metrics.heightPx);
+    return { rows, columns };
+  }
+
+  resizeEmulatorFromTerminalSize(): void {
+    const size = this.computeTerminalSize();
+    if (size == null) {
+      return;
+    }
+
+    const { columns, rows } = size;
+    if (columns === this.#columns && rows === this.#rows) {
+      return;
+    }
+    this.#columns = columns;
+    this.#rows = rows;
+
+    if (this.#pty != null) {
+      this.#pty.resize(columns, rows);
+    }
+
+    this.#emulator.resize({rows, columns});
+
+    this.environment.setList([
+      { key: TerminalEnvironment.TERM_ROWS, value: "" + rows},
+      { key: TerminalEnvironment.TERM_COLUMNS, value: "" + columns},
+    ]);
   }
 
   #handleKeyPress(event: QKeyEvent): void {
@@ -218,7 +275,7 @@ export class Terminal implements Tab, Disposable {
     emulator.debug = true;
     // emulator.onTitleChange(this._handleTitle.bind(this));
     emulator.onData(this.#handleTermData.bind(this));
-    emulator.onRender(this.#handleTermSize.bind(this));
+
     // emulator.onScreenChange(this._handleScreenChange.bind(this));
 
     // Application mode handlers
@@ -236,27 +293,7 @@ export class Terminal implements Tab, Disposable {
     // this._initDownloadApplicationModeHandler();
   }
 
-  #handleTermSize(event: TermApi.RenderEvent): void {
-    const newColumns = event.columns;
-    const newRows = event.rows;
-    if (this.#columns === newColumns && this.#rows === newRows) {
-      return;
-    }
-    this.#columns = newColumns;
-    this.#rows = newRows;
-
-    if (this.#pty != null) {
-      this.#pty.resize(newColumns, newRows);
-
-      this.environment.setList([
-        { key: TerminalEnvironment.TERM_ROWS, value: "" + newRows},
-        { key: TerminalEnvironment.TERM_COLUMNS, value: "" + newColumns},
-      ]);
-    }
-  }
-
   #handleWriteBufferSize(event: TermApi.WriteBufferSizeEvent): void {
-    this._log.debug("#handleWriteBufferSize()");
     if (this.#pty != null) {
       this.#pty.permittedDataSize(event.status.bufferSize);
     }

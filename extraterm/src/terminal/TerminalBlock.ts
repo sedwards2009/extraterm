@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QColor, QFrame, QPainter, QPen, QWidget, QLabel, QPaintEvent, TextFormat, QImage, WidgetEventTypes } from "@nodegui/nodegui";
+import { QPainter, QWidget, QPaintEvent, WidgetEventTypes } from "@nodegui/nodegui";
 import { getLogger, Logger } from "extraterm-logging";
 import { Disposable } from "extraterm-event-emitter";
-import { normalizedCellIterator, NormalizedCell, computeFontMetrics, MonospaceFontMetrics, TextureFontAtlas } from "extraterm-char-render-canvas";
+import { normalizedCellIterator, NormalizedCell, TextureFontAtlas } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 
 import { Block } from "./Block";
@@ -25,8 +25,8 @@ export class TerminalBlock implements Block {
   #emulator: Term.Emulator = null;
   #onRenderDispose: Disposable =null;
   #terminalVisualConfig: TerminalVisualConfig = null;
-  #metrics: MonospaceFontMetrics = null;
   #fontAtlas: TextureFontAtlas = null;
+  #heightPx = 1;
 
   constructor() {
     this._log = getLogger("TerminalBlock", this);
@@ -39,10 +39,7 @@ export class TerminalBlock implements Block {
     const widget = new QWidget();
     widget.setObjectName(this._log.getName());
 
-    const height = 1024;
-
-    widget.setMaximumSize(16777215, height);
-    widget.setMinimumSize(0, height);
+    widget.setMaximumSize(16777215, this.#heightPx);
 
     widget.addEventListener(WidgetEventTypes.Paint, (nativeEvent) => {
       this.#handlePaintEvent(new QPaintEvent(nativeEvent));
@@ -57,11 +54,29 @@ export class TerminalBlock implements Block {
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this.#terminalVisualConfig = terminalVisualConfig;
-    const { family, style } = terminalVisualConfig.fontInfo;
 
-    this.#metrics = computeFontMetrics(family, style, terminalVisualConfig.fontSizePx);
-    this.#fontAtlas = new TextureFontAtlas(this.#metrics, [], terminalVisualConfig.transparentBackground,
-      terminalVisualConfig.screenWidthHintPx, terminalVisualConfig.screenHeightHintPx);
+    this.#fontAtlas = new TextureFontAtlas(this.#terminalVisualConfig.fontMetrics, [],
+      terminalVisualConfig.transparentBackground, terminalVisualConfig.screenWidthHintPx,
+      terminalVisualConfig.screenHeightHintPx);
+
+    this.#updateWidgetSize();
+  }
+
+  #updateWidgetSize(): void {
+    if (this.#emulator == null || this.#terminalVisualConfig == null) {
+      return;
+    }
+
+    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const dimensions = this.#emulator.getDimensions();
+    const newHeightPx = dimensions.materializedRows * metrics.heightPx;
+    if (newHeightPx === this.#heightPx) {
+      return;
+    }
+
+    this.#widget.setMinimumSize(10 * metrics.widthPx, newHeightPx);
+    this.#widget.setMaximumSize(16777215, newHeightPx);
+    this.#heightPx = newHeightPx;
   }
 
   setEmulator(emulator: Term.Emulator): void {
@@ -77,46 +92,27 @@ export class TerminalBlock implements Block {
     }
 
     this.#emulator = emulator;
+    this.#updateWidgetSize();
   }
 
   #renderEventHandler(event: RenderEvent): void {
+    this.#updateWidgetSize();
     this.#widget.update();
   }
 
   #handlePaintEvent(event: QPaintEvent): void {
-    const paintRect = event.rect();
+    // const paintRect = event.rect();
 // this._log.debug(`paintRect.left: ${paintRect.left()}, paintRect.top: ${paintRect.top()}`);
 // this._log.debug(`paintRect.width: ${paintRect.width()}, paintRect.height: ${paintRect.height()}`);
 
-    const geo = this.#widget.geometry();
     const painter = new QPainter(this.#widget);
-    // painter.begin(this.#widget);
-    const pen = new QPen();
-    pen.setColor(new QColor(255, 0, 0));
-    const penWidth = 5;
-    pen.setWidth(penWidth);
-    painter.setPen(pen);
-
-    const left = 0 + penWidth;
-    const right = geo.width() - penWidth;
-    const top = 0 + penWidth;
-    const bottom = geo.height() - penWidth;
-
-    painter.drawLine(left, top, right, top);
-    painter.drawLine(left, bottom, right, bottom);
-
-    painter.drawLine(left, top, left, bottom);
-    painter.drawLine(right, top, right, bottom);
-
-    painter.drawLine(left, top, right, bottom);
-    painter.drawLine(right, top, left, bottom);
-
-
     const emulatorDimensions = this.#emulator.getDimensions();
     let y = 0;
     const qimage = this.#fontAtlas.getQImage();
-    const heightPx = this.#metrics.heightPx;
-    const widthPx = this.#metrics.widthPx;
+
+    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const heightPx = metrics.heightPx;
+    const widthPx = metrics.widthPx;
     const palette = this.#terminalVisualConfig.palette;
 
     const renderCursor = true;

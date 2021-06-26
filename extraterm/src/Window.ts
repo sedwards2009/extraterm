@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Logger, log, getLogger } from "extraterm-logging";
+import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout } from "@nodegui/nodegui";
 import { FontInfo } from "./config/Config";
@@ -32,10 +33,13 @@ export class Window {
     this.#themeManager = themeManager;
     this.#windowWidget = new QWidget();
     this.#windowWidget.setWindowTitle("Extraterm Qt");
+    this.#windowWidget.resize(800, 480);
 
     this.#terminalVisualConfig = this.#createTerminalVisualConfig();
 
     const topLayout = new QBoxLayout(Direction.TopToBottom, this.#windowWidget);
+    topLayout.setContentsMargins(0, 11, 0, 0);
+    topLayout.setSpacing(0);
 
     this.#tabBar = this.#createTabBar();
 
@@ -67,13 +71,14 @@ export class Window {
     //   }
     // }
     const transparentBackground = config.windowBackgroundMode !== "opaque";
-
+    const fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, config.terminalFontSize);
     const terminalVisualConfig: TerminalVisualConfig = {
       cursorStyle: config.cursorStyle,
       cursorBlink: config.blinkingCursor,
       fontInfo,
       fontSizePx: config.terminalFontSize,
-      palette: this._extractPalette(terminalTheme, transparentBackground),
+      fontMetrics,
+      palette: this.#extractPalette(terminalTheme, transparentBackground),
       terminalTheme,
       transparentBackground,
       useLigatures: config.terminalDisplayLigatures,
@@ -84,15 +89,15 @@ export class Window {
     return terminalVisualConfig;
   }
 
-  private _extractPalette(terminalTheme: TerminalTheme, transparentBackground: boolean): number[] {
-    const palette = this._extractPaletteFromTerminalVisualConfig(terminalTheme);
+  #extractPalette(terminalTheme: TerminalTheme, transparentBackground: boolean): number[] {
+    const palette = this.#extractPaletteFromTerminalVisualConfig(terminalTheme);
     if (transparentBackground) {
       palette[256] = 0x00000000;
     }
     return palette;
   }
 
-  private _extractPaletteFromTerminalVisualConfig(terminalTheme: TerminalTheme): number[] {
+  #extractPaletteFromTerminalVisualConfig(terminalTheme: TerminalTheme): number[] {
     const result: number[] = [];
     for (let i=0; i<256; i++) {
       result.push(cssHexColorToRGBA(terminalTheme[i]));
