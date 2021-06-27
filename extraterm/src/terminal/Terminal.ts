@@ -26,7 +26,10 @@ import {
   Modifier,
   Key,
   Shape,
-  ScrollBarPolicy
+  ScrollBarPolicy,
+  QScrollBar,
+  Orientation,
+  QAbstractSliderSignals
 } from "@nodegui/nodegui";
 const performanceNow = require('performance-now');
 
@@ -46,7 +49,6 @@ export class Terminal implements Tab, Disposable {
 
   #pty: Pty = null;
   #emulator: Term.Emulator = null;
-
   #cookie: string = null;
 
   // The current size of the emulator. This is used to detect changes in size.
@@ -55,6 +57,9 @@ export class Terminal implements Tab, Disposable {
 
   #scrollArea: QScrollArea = null;
   #marginPx = 11;
+  #verticalScrollBar: QScrollBar = null;
+  #atBottom = true; // True if the terminal is scrolled to the bottom and should
+                    // automatically scroll to the end as new rows arrive.
 
   #blocks: Block[] = [];
   #contentLayout: QBoxLayout = null;
@@ -113,6 +118,18 @@ export class Terminal implements Tab, Disposable {
     this.#scrollArea.setVerticalScrollBarPolicy(ScrollBarPolicy.ScrollBarAlwaysOn);
     this.#scrollArea.setWidget(contentWidget);
 
+    this.#verticalScrollBar = new QScrollBar();
+    this.#verticalScrollBar.setOrientation(Orientation.Vertical);
+    this.#verticalScrollBar.addEventListener("rangeChanged", (min: number, max: number) => {
+      this.#handleVerticalScrollBarRangeChanged();
+    });
+
+    this.#verticalScrollBar.addEventListener("actionTriggered", (action: number) => {
+      this.#handleVerticalScrollBarAction();
+    });
+
+    this.#scrollArea.setVerticalScrollBar(this.#verticalScrollBar);
+
     this.#contentLayout.addStretch(1);
 
     const terminalBlock = new TerminalBlock();
@@ -159,6 +176,16 @@ export class Terminal implements Tab, Disposable {
       { key: TerminalEnvironment.TERM_ROWS, value: "" + rows},
       { key: TerminalEnvironment.TERM_COLUMNS, value: "" + columns},
     ]);
+  }
+
+  #handleVerticalScrollBarAction(): void {
+    this.#atBottom = this.#verticalScrollBar.sliderPosition() > (this.#verticalScrollBar.maximum() - this.#marginPx);
+  }
+
+  #handleVerticalScrollBarRangeChanged(): void {
+    if (this.#atBottom) {
+      this.#verticalScrollBar.setSliderPosition(this.#verticalScrollBar.maximum());
+    }
   }
 
   #handleKeyPress(event: QKeyEvent): void {
