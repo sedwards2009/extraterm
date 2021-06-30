@@ -9,6 +9,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
+import { QApplication } from "@nodegui/nodegui";
 
 import { Window } from "./Window";
 import { SESSION_CONFIG } from './config/Config';
@@ -100,6 +101,7 @@ class Main {
 
     const bulkFileStorage = this.setupBulkFileStorage();
     // TODO: MainDesktop()
+    this.setupDesktopSupport();
     // TODO: setupGlobalKeybindingsManager()
     // TODO: registerInternalCommands()
 
@@ -212,6 +214,19 @@ class Main {
   registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
+  }
+
+  setupDesktopSupport(): void {
+    QApplication.instance().addEventListener('focusWindowChanged', () => {
+      let activeWindow: Window = null;
+      for (const window of this.#windows) {
+        if (window.isActiveWindow()) {
+          activeWindow = window;
+        }
+      }
+
+      this.#extensionManager.setActiveWindow(activeWindow);
+    });
   }
 
   commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): void {

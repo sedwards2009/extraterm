@@ -7,7 +7,7 @@ import { Logger, log, getLogger } from "extraterm-logging";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
-import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QPushButton, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction } from "@nodegui/nodegui";
+import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction } from "@nodegui/nodegui";
 import { FontInfo } from "./config/Config";
 import { ConfigDatabase } from "./config/ConfigDatabase";
 import { Tab } from "./Tab";
@@ -187,6 +187,10 @@ export class Window {
 
   open(): void {
     this.#windowWidget.show();
+  }
+
+  isActiveWindow(): boolean {
+    return this.#windowWidget.isActiveWindow();
   }
 
   addTab(tab: Tab): void {

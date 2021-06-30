@@ -23,6 +23,8 @@ import { ExtensionManagerIpc } from "./ExtensionManagerIpc";
 import * as InternalTypes from "../InternalTypes";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { CommandMenuEntry } from "../CommandsRegistry";
+import { Window } from "../Window";
+
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
@@ -55,6 +57,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   #commonExtensionWindowState: CommonExtensionWindowState = {
     // activeTabContent: null,
+    activeWindow: null,
     activeTerminal: null,
     // activeTabsWidget: null,
     // activeViewerElement: null,
@@ -359,6 +362,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return null;
     }
     return ext.contextImpl.commands.getCommandFunction(command);
+  }
+
+  setActiveWindow(window: Window): void {
+    this.#commonExtensionWindowState.activeWindow = window;
   }
 
   /**
