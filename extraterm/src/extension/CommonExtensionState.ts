@@ -8,16 +8,18 @@
 // import { TabWidget } from '../gui/TabWidget';
 // import { ViewerElement } from '../viewers/ViewerElement';
 
+import { Terminal } from "../terminal/Terminal";
+
 // This is a way of passing through all of the state which is common across all extension contexts.
 
 export interface CommonExtensionWindowState {
   // activeTabContent: HTMLElement;
-  // activeTerminal: EtTerminal;
+  activeTerminal: Terminal;
   // activeTextEditor: TextEditor;
   // activeTabsWidget: TabWidget;
   // activeViewerElement: ViewerElement;
 
   // isInputFieldFocus: boolean;
 
-  // activeHyperlinkURL: string;
+  activeHyperlinkURL: string;
 }

@@ -59,7 +59,7 @@ export interface ExtensionManager {
 //   getActiveTextEditor(): TextEditor;
 //   isInputFieldFocus(): boolean;
 
-//   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
+  queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
 //   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
 
   executeCommand(command: string, args?: any): any;

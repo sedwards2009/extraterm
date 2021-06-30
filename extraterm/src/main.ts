@@ -45,6 +45,7 @@ class Main {
   #windows: Window[] = [];
   #configDatabase: ConfigDatabase = null;
   #ptyManager: PtyManager = null;
+  #extensionManager: ExtensionManager = null;
   #themeManager: ThemeManager = null;
 
   constructor() {
@@ -70,6 +71,7 @@ class Main {
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
     const extensionManager = this.setupExtensionManager(configDatabase, sharedMap, packageJson.version);
+    this.#extensionManager = extensionManager;
 
     const keybindingsIOManager = this.setupKeybindingsIOManager(configDatabase, extensionManager);
     const themeManager = this.setupThemeManager(extensionManager);
@@ -333,7 +335,7 @@ class Main {
 
 
   openWindow(): void {
-    const win = new Window(this.#configDatabase, this.#themeManager);
+    const win = new Window(this.#configDatabase, this.#extensionManager, this.#themeManager);
     this.#windows.push(win);
     win.open();
   }

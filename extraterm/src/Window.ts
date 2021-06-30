@@ -6,7 +6,8 @@
 import { Logger, log, getLogger } from "extraterm-logging";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
-import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout } from "@nodegui/nodegui";
+import { doLater } from "extraterm-later";
+import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QPushButton, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction } from "@nodegui/nodegui";
 import { FontInfo } from "./config/Config";
 import { ConfigDatabase } from "./config/ConfigDatabase";
 import { Tab } from "./Tab";
@@ -14,22 +15,30 @@ import { Terminal } from "./terminal/Terminal";
 import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig";
 import { ThemeManager } from "./theme/ThemeManager";
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
+import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
 
 
 export class Window {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
+  #extensionManager: ExtensionManager = null;
+
   #windowWidget: QWidget = null;
+  #tabBarContainerWidget: QWidget = null;
   #tabBar: QTabBar = null;
   #contentStack: QStackedWidget = null;
+
+  #hamburgerMenuButton: QToolButton = null;
+  #hamburgerMenu: QMenu = null;
 
   #tabs: Tab[] = [];
   #terminalVisualConfig: TerminalVisualConfig = null;
   #themeManager: ThemeManager = null;
 
-  constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager) {
+  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager) {
     this._log = getLogger("Window", this);
     this.#configDatabase = configDatabase;
+    this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
     this.#windowWidget = new QWidget();
     this.#windowWidget.setWindowTitle("Extraterm Qt");
@@ -41,9 +50,15 @@ export class Window {
     topLayout.setContentsMargins(0, 11, 0, 0);
     topLayout.setSpacing(0);
 
-    this.#tabBar = this.#createTabBar();
+    this.#tabBarContainerWidget = new QWidget();
 
-    topLayout.addWidget(this.#tabBar);
+    const tabBarLayout = new QBoxLayout(Direction.LeftToRight, this.#tabBarContainerWidget);
+    tabBarLayout.setContentsMargins(0, 0, 0, 0);
+    this.#tabBar = this.#createTabBar();
+    tabBarLayout.addWidget(this.#tabBar, 1);
+    tabBarLayout.addWidget(this.#createHamburgerMenu(), 0);
+
+    topLayout.addWidget(this.#tabBarContainerWidget);
 
     this.#contentStack = new QStackedWidget();
     topLayout.addWidget(this.#contentStack);
@@ -56,6 +71,56 @@ export class Window {
     tabbarContainerLayout.addWidget(tabBar);
 
     return tabBar;
+  }
+
+  #createHamburgerMenu(): QToolButton {
+    this.#hamburgerMenuButton = new QToolButton();
+    this.#hamburgerMenuButton.setText("=");
+    this.#hamburgerMenuButton.setPopupMode(ToolButtonPopupMode.InstantPopup);
+
+    this.#hamburgerMenu = new QMenu();
+    this.#hamburgerMenuButton.setMenu(this.#hamburgerMenu);
+    this.#hamburgerMenu.addEventListener("triggered", (nativeAction) => {
+      const action = new QAction(nativeAction);
+      this.#handleWindowMenuTriggered(action.data().toString());
+    });
+    this.#updateHamburgerMenu();
+
+    return this.#hamburgerMenuButton;
+  }
+
+  #updateHamburgerMenu(): void {
+    const options: CommandQueryOptions = {
+      when: true,
+      windowMenu: true,
+    };
+
+    this.#hamburgerMenu.clear();
+    const entries = this.#extensionManager.queryCommands(options);
+    if (entries.length === 0) {
+      return;
+    }
+
+    let category = entries[0].category;
+    for (const entry of entries) {
+      if (entry.category !== category) {
+        this.#hamburgerMenu.addSeparator();
+        category = entry.category;
+      }
+      const action = this.#hamburgerMenu.addAction(entry.title);
+      action.setData(new QVariant(entry.command));
+    }
+  }
+
+  #handleWindowMenuTriggered(commandName: string): void {
+    // const contextWindowState = this._contextWindowState;
+    doLater( () => {
+      // if (contextWindowState != null) {
+      //   this.extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
+      // } else {
+      this.#extensionManager.executeCommand(commandName);
+      // }
+    });
   }
 
   #createTerminalVisualConfig(): TerminalVisualConfig {

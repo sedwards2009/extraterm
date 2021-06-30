@@ -8,19 +8,21 @@ import { EventEmitter } from "extraterm-event-emitter";
 import * as fs from "fs";
 import * as _ from "lodash";
 import * as path from "path";
+import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
 
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionDesiredState } from "./ExtensionMetadata";
+import { ExtensionMetadata, ExtensionDesiredState, ExtensionCommandContribution, WhenVariables, Category } from "./ExtensionMetadata";
 import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
-import { MainInternalExtensionContext, LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution
-  } from "./ExtensionManagerTypes";
+import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import * as SharedMap from "../shared_map/SharedMap";
 import { ExtensionManagerIpc } from "./ExtensionManagerIpc";
 import * as InternalTypes from "../InternalTypes";
+import { CommonExtensionWindowState } from "./CommonExtensionState";
+import { CommandMenuEntry } from "../CommandsRegistry";
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
@@ -28,6 +30,16 @@ interface ActiveExtension {
   contextImpl: ExtensionContextImpl;
   module: any;
 }
+
+const allCategories: Category[] = [
+  "hyperlink",
+  "terminal",
+  "viewer",
+  "window",
+  "application",
+  "global",
+];
+
 
 export class ExtensionManager implements InternalTypes.ExtensionManager {
   private _log: Logger = null;
@@ -40,6 +52,15 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #applicationVersion = "";
   onDesiredStateChanged: Event<void>;
   #extensionPaths: string[] = null;
+
+  #commonExtensionWindowState: CommonExtensionWindowState = {
+    // activeTabContent: null,
+    activeTerminal: null,
+    // activeTabsWidget: null,
+    // activeViewerElement: null,
+    // isInputFieldFocus: false,
+    activeHyperlinkURL: null,
+  };
 
   constructor(configDatabase: ConfigDatabase, sharedMap: SharedMap.SharedMap, extensionPaths: string[],
       applicationVersion: string) {
@@ -340,6 +361,21 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return ext.contextImpl.commands.getCommandFunction(command);
   }
 
+  /**
+   * Execute a function with a different temporary extension context.
+   */
+  private _executeFuncWithExtensionWindowState<R>(tempState: CommonExtensionWindowState, func: () => R): R {
+    const oldState = this.copyExtensionWindowState();
+    this._setExtensionWindowState(tempState);
+    const result = func();
+    this._setExtensionWindowState(oldState);
+    return result;
+  }
+
+  copyExtensionWindowState(): CommonExtensionWindowState {
+    return { ...this.#commonExtensionWindowState };
+  }
+
   executeCommand(command: string, args?: any): any {
     const commandFunc = this._getCommand(command);
     if (commandFunc == null) {
@@ -359,4 +395,171 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return ex;
     }
   }
+
+  private _setExtensionWindowState(newState: CommonExtensionWindowState): void {
+    for (const key in newState) {
+      this.#commonExtensionWindowState[key] = newState[key];
+    }
+  }
+
+  queryCommands(options: InternalTypes.CommandQueryOptions): ExtensionCommandContribution[] {
+    return this.queryCommandsWithExtensionWindowState(options, this.#commonExtensionWindowState);
+  }
+
+  queryCommandsWithExtensionWindowState(options: InternalTypes.CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[] {
+    const truePredicate = (command: CommandMenuEntry): boolean => true;
+
+    let commandPalettePredicate = truePredicate;
+    if (options.commandPalette != null) {
+      const commandPalette = options.commandPalette;
+      commandPalettePredicate = commandEntry => commandEntry.commandPalette === commandPalette;
+    }
+
+    let contextMenuPredicate = truePredicate;
+    if (options.contextMenu != null) {
+      const contextMenu = options.contextMenu;
+      contextMenuPredicate = command => command.contextMenu === contextMenu;
+    }
+
+    let newTerminalMenuPredicate = truePredicate;
+    if (options.newTerminalMenu != null) {
+      const newTerminalMenu = options.newTerminalMenu;
+      newTerminalMenuPredicate = commandEntry => commandEntry.newTerminal === newTerminalMenu;
+    }
+
+    let terminalTabMenuPredicate = truePredicate;
+    if (options.terminalTitleMenu != null) {
+      const terminalTabMenu = options.terminalTitleMenu;
+      terminalTabMenuPredicate = commandEntry => commandEntry.terminalTab === terminalTabMenu;
+    }
+
+    let windowMenuPredicate = truePredicate;
+    if (options.windowMenu != null) {
+      const windowMenu = options.windowMenu;
+      windowMenuPredicate = commandEntry => commandEntry.windowMenu === windowMenu;
+    }
+
+    let categoryPredicate = truePredicate;
+    if (options.categories != null) {
+      const categories = options.categories;
+      categoryPredicate = commandEntry => categories.indexOf(commandEntry.commandContribution.category) !== -1;
+    }
+
+    let commandPredicate = truePredicate;
+    if (options.commands != null) {
+      const commands = options.commands;
+      commandPredicate = commandEntry => {
+        return commands.indexOf(commandEntry.commandContribution.command) !== -1;
+      };
+    }
+
+    const whenPredicate = options.when ? this._createWhenPredicate(context) : truePredicate;
+
+    const entries: ExtensionCommandContribution[] = [];
+    for (const activeExtension  of this.#activeExtensions) {
+      for (const [command, commandEntryList] of activeExtension.contextImpl.commands._commandToMenuEntryMap) {
+        for (const commandEntry of commandEntryList) {
+          if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) &&
+              contextMenuPredicate(commandEntry) && newTerminalMenuPredicate(commandEntry) &&
+              terminalTabMenuPredicate(commandEntry) && windowMenuPredicate(commandEntry) &&
+              categoryPredicate(commandEntry) &&
+              whenPredicate(commandEntry)) {
+
+            const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
+                                commandEntry.commandContribution.command);
+            if (customizer != null) {
+              this._executeFuncWithExtensionWindowState(context, () => {
+                entries.push( {...commandEntry.commandContribution, ...customizer() });
+              });
+            } else {
+              entries.push(commandEntry.commandContribution);
+            }
+          }
+        }
+      }
+    }
+    this._sortCommandsInPlace(entries);
+    return entries;
+  }
+
+  private _createWhenPredicate(state: CommonExtensionWindowState): (ecc: CommandMenuEntry) => boolean {
+    const variables = this._createWhenVariables(state);
+    const bee = new BooleanExpressionEvaluator(variables);
+    return (ecc: CommandMenuEntry): boolean => {
+      if (ecc.commandContribution.when === "") {
+        return true;
+      }
+      return bee.evaluate(ecc.commandContribution.when);
+    };
+  }
+
+  private _createWhenVariables(state: CommonExtensionWindowState): WhenVariables {
+    const whenVariables: WhenVariables = {
+      true: true,
+      false: false,
+      terminalFocus: false,
+      viewerFocus: false,
+      isHyperlink: false,
+      hyperlinkURL: null,
+      hyperlinkProtocol: null,
+      hyperlinkDomain: null,
+      hyperlinkFileExtension: null,
+    };
+
+    if (state.activeTerminal != null) {
+      whenVariables.terminalFocus = true;
+    } else {
+      // if (state.activeViewerElement) {
+      //   whenVariables.viewerFocus = true;
+      // }
+    }
+
+    if (state.activeHyperlinkURL != null) {
+      whenVariables.isHyperlink = true;
+      whenVariables.hyperlinkURL = state.activeHyperlinkURL;
+      try {
+        const url = new URL(state.activeHyperlinkURL);
+        whenVariables.hyperlinkProtocol = url.protocol;
+        whenVariables.hyperlinkDomain = url.hostname;
+        whenVariables.hyperlinkFileExtension = this._getExtensionFromPath(url.pathname);
+      } catch (e) {
+        whenVariables.hyperlinkProtocol = "";
+        whenVariables.hyperlinkDomain = "";
+        whenVariables.hyperlinkFileExtension = this._getExtensionFromPath(state.activeHyperlinkURL);
+      }
+    }
+    return whenVariables;
+  }
+
+  private _getExtensionFromPath(path: string): string {
+    const pathParts = path.split("/");
+    const lastPathPart = pathParts[pathParts.length -1];
+    if (lastPathPart.includes(".")) {
+      return lastPathPart.substr(lastPathPart.lastIndexOf(".") + 1);
+    }
+    return "";
+  }
+
+  private _sortCommandsInPlace(entries: ExtensionCommandContribution[]): void {
+    entries.sort(this._sortCompareFunc);
+  }
+
+  private _sortCompareFunc(a: ExtensionCommandContribution, b: ExtensionCommandContribution): number {
+    const aIndex = allCategories.indexOf(a.category);
+    const bIndex = allCategories.indexOf(b.category);
+    if (aIndex !== bIndex) {
+      return aIndex < bIndex ? -1 : 1;
+    }
+
+    if (a.order !== b.order) {
+      return a.order < b.order ? -1 : 1;
+    }
+
+    if (a.title !== b.title) {
+      return a.title < b.title ? -1 : 1;
+    }
+    return 0;
+  }
+
+
 }
