@@ -113,13 +113,8 @@ export class Window {
   }
 
   #handleWindowMenuTriggered(commandName: string): void {
-    // const contextWindowState = this._contextWindowState;
     doLater( () => {
-      // if (contextWindowState != null) {
-      //   this.extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
-      // } else {
       this.#extensionManager.executeCommand(commandName);
-      // }
     });
   }
 

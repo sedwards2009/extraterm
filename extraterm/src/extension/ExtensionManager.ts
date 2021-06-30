@@ -68,7 +68,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   constructor(configDatabase: ConfigDatabase, sharedMap: SharedMap.SharedMap, extensionPaths: string[],
       applicationVersion: string) {
 
-    this._log = getLogger("MainExtensionManager", this);
+    this._log = getLogger("ExtensionManager", this);
     this.#configDatabase = configDatabase;
 
     this.#ipc = new ExtensionManagerIpc(sharedMap);
@@ -350,7 +350,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     let extensionName = parts[0];
     if (extensionName === "extraterm") {
-      extensionName = "internal-main-commands";
+      extensionName = "internal-commands";
     }
     return extensionName;
   }
@@ -384,14 +384,44 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   executeCommand(command: string, args?: any): any {
-    const commandFunc = this._getCommand(command);
-    if (commandFunc == null) {
-      const extensionName = this._getExtensionNameFromCommand(command);
-      this._log.warn(`Unable to find command '${command}' in extension '${extensionName}'.`);
-      return null;
+    let commandName = command;
+    let argsString: string = null;
+
+    const qIndex = command.indexOf("?");
+    if (qIndex !== -1) {
+      commandName = command.slice(0, qIndex);
+      argsString = command.slice(qIndex+1);
     }
 
-    return this._runCommandFunc(command, commandFunc, args);
+    const parts = commandName.split(":");
+    if (parts.length !== 2) {
+      throw new Error(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
+    }
+
+    let extensionName = parts[0];
+    if (extensionName === "extraterm") {
+      extensionName = "internal-commands";
+    }
+
+    if (args === undefined) {
+      if (argsString != null) {
+        args = JSON.parse(decodeURIComponent(argsString));
+      } else {
+        args = {};
+      }
+    }
+
+    for (const ext of this.#activeExtensions) {
+      if (ext.metadata.name === extensionName) {
+        const commandFunc = ext.contextImpl.commands.getCommandFunction(commandName);
+        if (commandFunc == null) {
+          throw new Error(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
+        }
+        return this._runCommandFunc(commandName, commandFunc, args);
+      }
+    }
+
+    throw new Error(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
   }
 
   private _runCommandFunc(name: string, commandFunc: (args: any) => any, args: any): any {
