@@ -54,7 +54,15 @@ export class Window {
 
     const tabBarLayout = new QBoxLayout(Direction.LeftToRight, this.#tabBarContainerWidget);
     tabBarLayout.setContentsMargins(0, 0, 0, 0);
-    this.#tabBar = this.#createTabBar();
+
+    const tabbarContainer = new QWidget();
+    const tabbarContainerLayout = new QBoxLayout(Direction.LeftToRight, tabbarContainer);
+    this.#tabBar = new QTabBar();
+    this.#tabBar.addEventListener("currentChanged", (index: number) => {
+      this.#handleTabBarChanged(index);
+    });
+    tabbarContainerLayout.addWidget(this.#tabBar);
+
     tabBarLayout.addWidget(this.#tabBar, 1);
     tabBarLayout.addWidget(this.#createHamburgerMenu(), 0);
 
@@ -62,15 +70,6 @@ export class Window {
 
     this.#contentStack = new QStackedWidget();
     topLayout.addWidget(this.#contentStack);
-  }
-
-  #createTabBar(): QTabBar {
-    const tabbarContainer = new QWidget();
-    const tabbarContainerLayout = new QBoxLayout(Direction.LeftToRight, tabbarContainer);
-    const tabBar = new QTabBar();
-    tabbarContainerLayout.addWidget(tabBar);
-
-    return tabBar;
   }
 
   #createHamburgerMenu(): QToolButton {
@@ -116,6 +115,10 @@ export class Window {
     doLater( () => {
       this.#extensionManager.executeCommand(commandName);
     });
+  }
+
+  #handleTabBarChanged(index: number): void {
+    this.#contentStack.setCurrentIndex(index);
   }
 
   #createTerminalVisualConfig(): TerminalVisualConfig {
