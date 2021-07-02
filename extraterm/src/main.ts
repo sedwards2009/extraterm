@@ -27,6 +27,7 @@ import { PtyManager } from "./pty/PtyManager";
 import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
 import { ExtensionManager } from "./extension/ExtensionManager";
 import { EXTRATERM_COOKIE_ENV, Terminal } from "./terminal/Terminal";
+import { Tab } from "./Tab";
 
 
 const LOG_FILENAME = "extraterm.log";
@@ -280,6 +281,9 @@ class Main {
 
 
     const pty = this.#ptyManager.createPty(sessionConfiguration, sessionOptions);
+    pty.onExit(() => {
+      this.#disposeTerminalTab(newTerminal);
+    });
     newTerminal.setPty(pty);
 
     // this._setUpNewTerminalEventHandlers(newTerminal);
@@ -307,6 +311,14 @@ class Main {
       }
     }
     return null;
+  }
+
+  #disposeTerminalTab(terminal: Terminal): void {
+    terminal.dispose();
+
+    for (const window of this.#windows) {
+      window.removeTab(terminal);
+    }
   }
 
   startUpSessions(configDatabase: ConfigDatabase, extensionManager: ExtensionManager): void {
@@ -348,9 +360,13 @@ class Main {
     createSessionCommands(sessionConfig);
   }
 
-
   openWindow(): void {
     const win = new Window(this.#configDatabase, this.#extensionManager, this.#themeManager);
+    win.onTabCloseRequest((tab: Tab): void => {
+      if (tab instanceof Terminal) {
+        this.#disposeTerminalTab(tab);
+      }
+    });
     this.#windows.push(win);
     win.open();
   }

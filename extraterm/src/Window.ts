@@ -7,7 +7,9 @@ import { Logger, log, getLogger } from "extraterm-logging";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
+import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction } from "@nodegui/nodegui";
+
 import { FontInfo } from "./config/Config";
 import { ConfigDatabase } from "./config/ConfigDatabase";
 import { Tab } from "./Tab";
@@ -35,11 +37,17 @@ export class Window {
   #terminalVisualConfig: TerminalVisualConfig = null;
   #themeManager: ThemeManager = null;
 
+  onTabCloseRequest: Event<Tab> = null;
+  #onTabCloseRequestEventEmitter = new EventEmitter<Tab>();
+
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager) {
     this._log = getLogger("Window", this);
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
+
+    this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
+
     this.#windowWidget = new QWidget();
     this.#windowWidget.setWindowTitle("Extraterm Qt");
     this.#windowWidget.resize(800, 480);
@@ -61,6 +69,12 @@ export class Window {
     this.#tabBar.addEventListener("currentChanged", (index: number) => {
       this.#handleTabBarChanged(index);
     });
+
+    this.#tabBar.setTabsClosable(true);
+    this.#tabBar.addEventListener("tabCloseRequested", (index: number) => {
+      this.#handleTabBarCloseClicked(index);
+    });
+
     tabbarContainerLayout.addWidget(this.#tabBar);
 
     tabBarLayout.addWidget(this.#tabBar, 1);
@@ -119,6 +133,10 @@ export class Window {
 
   #handleTabBarChanged(index: number): void {
     this.#contentStack.setCurrentIndex(index);
+  }
+
+  #handleTabBarCloseClicked(index: number): void {
+    this.#onTabCloseRequestEventEmitter.fire(this.#tabs[index]);
   }
 
   #createTerminalVisualConfig(): TerminalVisualConfig {
@@ -191,6 +209,15 @@ export class Window {
     return this.#windowWidget.isActiveWindow();
   }
 
+  setCurrentTabIndex(index: number): void {
+    this.#tabBar.setCurrentIndex(index);
+    this.#contentStack.setCurrentIndex(index);
+  }
+
+  getCurrentTabIndex(): number {
+    return this.#tabBar.currentIndex();
+  }
+
   addTab(tab: Tab): void {
     this.#tabs.push(tab);
 
@@ -202,6 +229,20 @@ export class Window {
     this.#tabBar.addTab(null, header);
 
     this.#contentStack.addWidget(tab.getContents());
+  }
+
+  removeTab(targetTab: Tab): boolean {
+    for (const [index, tab] of this.#tabs.entries()) {
+      if (targetTab === tab) {
+        this.#tabBar.removeTab(index);
+        this.#contentStack.removeWidget(tab.getContents());
+        this.#tabs.splice(index, 1);
+
+        this.setCurrentTabIndex(index - 1);
+        return true;
+      }
+    }
+    return false;
   }
 }
 

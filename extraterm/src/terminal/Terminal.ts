@@ -232,7 +232,10 @@ export class Terminal implements Tab, Disposable {
     this.#onDisposeEventEmitter.fire();
     this.#onDisposeEventEmitter.dispose();
 
-    this.#pty = null;
+    if (this.#pty != null) {
+      this.#pty.destroy();
+      this.#pty = null;
+    }
   }
 
   setSessionConfiguration(sessionConfiguration: SessionConfiguration): void {
