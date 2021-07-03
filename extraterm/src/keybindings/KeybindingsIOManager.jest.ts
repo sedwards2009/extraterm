@@ -18,7 +18,8 @@ test("Scan & Flatten", () => {
   const extensionManager = new ExtensionManager(configDatabase, sharedMap, ["../extensions"], "0.1.0");
   extensionManager.startUpExtensions({"default-keybindings": true}, false);
 
-  const kbm = new KeybindingsIOManager(path.join(__dirname, "..", "..", "src", "main_process", "test_files"), extensionManager);
+  const kbm = new KeybindingsIOManager(path.join(__dirname, "..", "..", "src", "main_process", "test_files"),
+    extensionManager, configDatabase);
 
   const stackedBindings = kbm.getStackedKeybindings("pc-style");
   expect(stackedBindings.keybindingsSet.bindings.filter(b => b.command === "extraterm:application.openCommandPalette").length).toBe(1);

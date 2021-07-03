@@ -7,9 +7,9 @@ import * as SourceMapSupport from "source-map-support";
 import * as os from "os";
 import * as fs from "fs";
 import * as path from "path";
-import { FileLogWriter, getLogger, addLogWriter, Logger } from "extraterm-logging";
+import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import { QApplication } from "@nodegui/nodegui";
+import { QApplication, QKeyEvent, QObject, QObjectSignals, WidgetEventTypes } from "@nodegui/nodegui";
 
 import { Window } from "./Window";
 import { SESSION_CONFIG } from './config/Config';
@@ -28,6 +28,7 @@ import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
 import { ExtensionManager } from "./extension/ExtensionManager";
 import { EXTRATERM_COOKIE_ENV, Terminal } from "./terminal/Terminal";
 import { Tab } from "./Tab";
+import { SettingsTab } from "./settings/SettingsTab";
 
 
 const LOG_FILENAME = "extraterm.log";
@@ -49,6 +50,9 @@ class Main {
   #ptyManager: PtyManager = null;
   #extensionManager: ExtensionManager = null;
   #themeManager: ThemeManager = null;
+  #keybindingsIOManager: KeybindingsIOManager = null;
+
+  #settingsTab: SettingsTab = null;
 
   constructor() {
     this._log = getLogger("main", this);
@@ -75,15 +79,15 @@ class Main {
     const extensionManager = this.setupExtensionManager(configDatabase, sharedMap, packageJson.version);
     this.#extensionManager = extensionManager;
 
-    const keybindingsIOManager = this.setupKeybindingsIOManager(configDatabase, extensionManager);
+    this.#keybindingsIOManager = this.setupKeybindingsManager(configDatabase, extensionManager);
+
     const themeManager = this.setupThemeManager(extensionManager);
     this.#themeManager = themeManager;
 
-    sanitizeAndInitializeConfigs(configDatabase, themeManager, keybindingsIOManager, availableFonts);
+    sanitizeAndInitializeConfigs(configDatabase, themeManager, availableFonts);
     const generalConfig = configDatabase.getGeneralConfig();
     const titleBarStyle = generalConfig.titleBarStyle;
-    const systemConfig = this.systemConfiguration(generalConfig, keybindingsIOManager, availableFonts, packageJson,
-      titleBarStyle);
+    const systemConfig = this.systemConfiguration(availableFonts, packageJson, titleBarStyle);
     configDatabase.setSystemConfig(systemConfig);
 
     const ptyManager = this.setupPtyManager(extensionManager);
@@ -148,24 +152,11 @@ class Main {
     return extensionManager;
   }
 
-  setupKeybindingsIOManager(configDatabase: PersistentConfigDatabase,
-    extensionManager: ExtensionManager): KeybindingsIOManager {
-
-    const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager);
-    keybindingsIOManager.onUpdate(() => {
-      this.updateSystemConfigKeybindings(configDatabase, keybindingsIOManager);
-    });
+  setupKeybindingsManager(configDatabase: PersistentConfigDatabase,
+      extensionManager: ExtensionManager): KeybindingsIOManager {
+    const keybindingsIOManager = new KeybindingsIOManager(getUserKeybindingsDirectory(), extensionManager,
+      configDatabase);
     return keybindingsIOManager;
-  }
-
-  updateSystemConfigKeybindings(configDatabase: PersistentConfigDatabase,
-      keybindingsIOManager: KeybindingsIOManager): void {
-
-    // Broadcast the updated bindings.
-    const generalConfig = <GeneralConfig> configDatabase.getGeneralConfig();
-    const systemConfig = <SystemConfig> configDatabase.getSystemConfigCopy();
-    systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(generalConfig.keybindingsName);
-    configDatabase.setSystemConfig(systemConfig);
   }
 
   setupThemeManager(extensionManager: ExtensionManager): ThemeManager {
@@ -176,14 +167,11 @@ class Main {
   /**
    * Extra information about the system configuration and platform.
    */
-  systemConfiguration(config: GeneralConfig, keybindingsIOManager: KeybindingsIOManager,
-      availableFonts: FontInfo[], packageJson: any, titleBarStyle: TitleBarStyle): SystemConfig {
+  systemConfiguration(availableFonts: FontInfo[], packageJson: any, titleBarStyle: TitleBarStyle): SystemConfig {
     const homeDir = os.homedir();
-    const flatKeybindingsFile = keybindingsIOManager.getFlatKeybindingsSet(config.keybindingsName);
     return {
       homeDir,
       applicationVersion: packageJson.version,
-      flatKeybindingsSet: flatKeybindingsFile,
       availableFonts: availableFonts,
       titleBarStyle,
       userTerminalThemeDirectory: getUserTerminalThemeDirectory()
@@ -215,6 +203,7 @@ class Main {
   registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
+    commands.registerCommand("extraterm:window.openSettings", () => this.commandOpenSettings());
   }
 
   setupDesktopSupport(): void {
@@ -254,7 +243,7 @@ class Main {
     //   }
     // }
 
-    const newTerminal = new Terminal();
+    const newTerminal = new Terminal(this.#extensionManager, this.#keybindingsIOManager);
     this.#windows[0].addTab(newTerminal);
 
     const extraEnv = {
@@ -361,7 +350,8 @@ class Main {
   }
 
   openWindow(): void {
-    const win = new Window(this.#configDatabase, this.#extensionManager, this.#themeManager);
+    const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
+      this.#themeManager);
     win.onTabCloseRequest((tab: Tab): void => {
       if (tab instanceof Terminal) {
         this.#disposeTerminalTab(tab);
@@ -369,6 +359,13 @@ class Main {
     });
     this.#windows.push(win);
     win.open();
+  }
+
+  commandOpenSettings(): void {
+    if (this.#settingsTab == null) {
+      this.#settingsTab = new SettingsTab();
+    }
+    this.#extensionManager.getActiveWindow().addTab(this.#settingsTab);
   }
 }
 

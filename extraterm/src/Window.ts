@@ -8,7 +8,7 @@ import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
-import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction } from "@nodegui/nodegui";
+import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, WidgetEventTypes, QKeyEvent } from "@nodegui/nodegui";
 
 import { FontInfo } from "./config/Config";
 import { ConfigDatabase } from "./config/ConfigDatabase";
@@ -18,12 +18,15 @@ import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig";
 import { ThemeManager } from "./theme/ThemeManager";
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
+import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
+import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
 
 
 export class Window {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
+  #keybindingsIOManager: KeybindingsIOManager = null;
 
   #windowWidget: QWidget = null;
   #tabBarContainerWidget: QWidget = null;
@@ -40,16 +43,24 @@ export class Window {
   onTabCloseRequest: Event<Tab> = null;
   #onTabCloseRequestEventEmitter = new EventEmitter<Tab>();
 
-  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager) {
+  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
+      keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager) {
+
     this._log = getLogger("Window", this);
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
+    this.#keybindingsIOManager = keybindingsIOManager;
     this.#themeManager = themeManager;
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
 
     this.#windowWidget = new QWidget();
     this.#windowWidget.setWindowTitle("Extraterm Qt");
+    this.#windowWidget.setFocusPolicy(FocusPolicy.ClickFocus);
+    this.#windowWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
+      this.#handleKeyPress(new QKeyEvent(nativeEvent));
+    });
+
     this.#windowWidget.resize(800, 480);
 
     this.#terminalVisualConfig = this.#createTerminalVisualConfig();
@@ -127,7 +138,11 @@ export class Window {
 
   #handleWindowMenuTriggered(commandName: string): void {
     doLater( () => {
-      this.#extensionManager.executeCommand(commandName);
+      try {
+        this.#extensionManager.executeCommand(commandName);
+      } catch(e) {
+        this._log.warn(e);
+      }
     });
   }
 
@@ -137,6 +152,25 @@ export class Window {
 
   #handleTabBarCloseClicked(index: number): void {
     this.#onTabCloseRequestEventEmitter.fire(this.#tabs[index]);
+  }
+
+  #handleKeyPress(event: QKeyEvent): void {
+    const ev = qKeyEventToMinimalKeyboardEvent(event);
+    const commands = this.#keybindingsIOManager.mapEventToCommands(ev);
+    const filteredCommands = this.#extensionManager.queryCommands({
+      commands,
+      when: true
+    });
+    if (filteredCommands.length !== 0) {
+      if (filteredCommands.length !== 1) {
+        this._log.warn(`Commands ${filteredCommands.map(fc => fc.command).join(", ")} have conflicting keybindings.`);
+      }
+      try {
+        this.#extensionManager.executeCommand(filteredCommands[0].command);
+      } catch(ex) {
+        this._log.warn(ex);
+      }
+    }
   }
 
   #createTerminalVisualConfig(): TerminalVisualConfig {

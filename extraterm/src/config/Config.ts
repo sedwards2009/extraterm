@@ -106,7 +106,6 @@ export interface SingleWindowConfiguration {
 export interface SystemConfig {
   homeDir: string;
   applicationVersion: string;
-  flatKeybindingsSet: KeybindingsSet;
 
   availableFonts: FontInfo[];
   titleBarStyle: TitleBarStyle;

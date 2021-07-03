@@ -368,6 +368,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     this.#commonExtensionWindowState.activeWindow = window;
   }
 
+  getActiveWindow(): Window {
+    return this.#commonExtensionWindowState.activeWindow;
+  }
+
   /**
    * Execute a function with a different temporary extension context.
    */

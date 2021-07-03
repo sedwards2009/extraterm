@@ -168,13 +168,11 @@ export function isThemeType(themeInfo: ThemeInfo, themeType: ThemeType): boolean
 }
 
 export function sanitizeAndInitializeConfigs(configDatabase: PersistentConfigDatabase, themeManager: ThemeManager,
-    keybindingsIOManager: KeybindingsIOManager, availableFonts: FontInfo[]): void {
+    availableFonts: FontInfo[]): void {
 
   sanitizeGeneralConfig(configDatabase, themeManager, availableFonts);
   sanitizeSessionConfig(configDatabase);
   sanitizeCommandLineActionsConfig(configDatabase);
-
-  distributeUserStoredConfig(configDatabase, keybindingsIOManager);
 }
 
 const frameRules: FrameRule[] = ["always_frame", "frame_if_lines", "never_frame"];
@@ -310,23 +308,4 @@ function sanitizeStringEnumField<T, K extends keyof T>(object: T, key: K, availa
   } else if ( ! availableValues.includes(object[key])) {
     object[key] = defaultValue;
   }
-}
-
-function distributeUserStoredConfig(configDatabase: PersistentConfigDatabase,
-    keybindingsIOManager: KeybindingsIOManager): void {
-
-  configDatabase.onChange((event: ConfigChangeEvent): void => {
-    if (event.key === GENERAL_CONFIG) {
-      //Check if the selected keybindings changed. If so update and broadcast the system config.
-      const oldGeneralConfig = <GeneralConfig> event.oldConfig;
-      const newGeneralConfig = <GeneralConfig> event.newConfig;
-      if (newGeneralConfig != null) {
-        if (oldGeneralConfig == null || oldGeneralConfig.keybindingsName !== newGeneralConfig.keybindingsName) {
-          const systemConfig = configDatabase.getSystemConfigCopy();
-          systemConfig.flatKeybindingsSet = keybindingsIOManager.getFlatKeybindingsSet(newGeneralConfig.keybindingsName);
-          configDatabase.setSystemConfig(systemConfig);
-        }
-      }
-    }
-  });
 }

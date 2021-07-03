@@ -12,62 +12,76 @@ import { ExtensionManager } from "../extension/ExtensionManager";
 import { KeybindingsFileInfo } from "../config/Config";
 import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsBinding, StackedKeybindingsSet,
   CustomKeybindingsSet } from "./KeybindingsTypes";
-import { EventEmitter } from "extraterm-event-emitter";
-
-import { Event } from "@extraterm/extraterm-extension-api";
+import { ConfigChangeEvent, ConfigDatabase } from "../config/ConfigDatabase";
+import { MinimalKeyboardEvent, TermKeybindingsMapping } from "./KeybindingsManager";
 
 /**
  * Manages reading keybindings files and r/w keybinding customisation files.
  */
 export class KeybindingsIOManager {
-
   private _log: Logger = null;
-  private _keybindingsFileList: KeybindingsFileInfo[] = null;
-  private _baseKeybindingsMap: Map<LogicalKeybindingsName, KeybindingsSet> = null;
-  private _customKeybindingsMap: Map<LogicalKeybindingsName, CustomKeybindingsSet> = null;
 
-  private _onUpdateEventEmitter = new EventEmitter<void>();
-  onUpdate: Event<void>;
+  #keybindingsFileList: KeybindingsFileInfo[] = null;
+  #baseKeybindingsMap: Map<LogicalKeybindingsName, KeybindingsSet> = null;
+  #customKeybindingsMap: Map<LogicalKeybindingsName, CustomKeybindingsSet> = null;
+  #configDatabase: ConfigDatabase = null;
 
-  constructor(private _userPath: string, private _extensionManager: ExtensionManager) {
+  #userPath: string = null;
+  #extensionManager: ExtensionManager = null;
+  #termKeybindingsMapping: TermKeybindingsMapping = null;
+
+  constructor(userPath: string, extensionManager: ExtensionManager, configDatabase: ConfigDatabase) {
     this._log = getLogger("KeybindingsIOManager", this);
-    this._clearCaches();
-    this.onUpdate = this._onUpdateEventEmitter.event;
+    this.#userPath = userPath;
+    this.#extensionManager = extensionManager;
+    this.#configDatabase = configDatabase;
+    this.#initializeCaches();
 
-    // FIXME
-    // this._extensionManager.onDesiredStateChanged(() => {
-    //   this._clearCaches();
-    //   this._onUpdateEventEmitter.fire();
-    // });
+    this.#extensionManager.onDesiredStateChanged(() => {
+      this.#initializeCaches();
+    });
+
+    this.#configDatabase.onChange((e: ConfigChangeEvent) => {
+      if (e.oldConfig?.keybinding !== e.newConfig.keybinding) {
+        this.#initializeCaches();
+      }
+    });
   }
 
-  private _getKeybindingsFileList(): KeybindingsFileInfo[] {
-    this._scan();
-    return this._keybindingsFileList;
+  #getKeybindingsFileList(): KeybindingsFileInfo[] {
+    this.#scan();
+    return this.#keybindingsFileList;
   }
 
-  private _scan(): void {
-    if (this._keybindingsFileList != null) {
+  #scan(): void {
+    if (this.#keybindingsFileList != null) {
       return;
     }
 
-    const infoLists = this._getKeybindingsExtensionPaths().map(p => this._scanKeybindingsDirectory(p));
-    this._keybindingsFileList = infoLists.reduce( (list, accu) => [...list, ...accu], []);
+    const infoLists = this.#getKeybindingsExtensionPaths().map(p => this.#scanKeybindingsDirectory(p));
+    this.#keybindingsFileList = infoLists.reduce( (list, accu) => [...list, ...accu], []);
   }
 
-  private _clearCaches(): void {
-    this._clearBaseCaches();
-    this._customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsSet>();
-    this._keybindingsFileList = null;
+  #initializeCaches(): void {
+    this.#clearBaseCaches();
+    this.#customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsSet>();
+    this.#keybindingsFileList = null;
+
+    const flatSet = this.getFlatKeybindingsSet(this.#configDatabase.getGeneralConfig().keybindingsName);
+    this.#termKeybindingsMapping = new TermKeybindingsMapping(flatSet, process.platform);
   }
 
-  private _clearBaseCaches(): void {
-    this._baseKeybindingsMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
+  #clearBaseCaches(): void {
+    this.#baseKeybindingsMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
   }
 
-  private _getKeybindingsExtensionPaths(): string [] {
+  mapEventToCommands(ev: MinimalKeyboardEvent): string[] {
+    return this.#termKeybindingsMapping.mapEventToCommands(ev);
+  }
+
+  #getKeybindingsExtensionPaths(): string [] {
     const paths: string[] = [];
-    for (const extension of this._extensionManager.getActiveExtensionMetadata()) {
+    for (const extension of this.#extensionManager.getActiveExtensionMetadata()) {
       for (const st of extension.contributes.keybindings) {
         paths.push(path.join(extension.path, st.path));
       }
@@ -75,7 +89,7 @@ export class KeybindingsIOManager {
     return paths;
   }
 
-  private _scanKeybindingsDirectory(directory: string): KeybindingsFileInfo[] {
+  #scanKeybindingsDirectory(directory: string): KeybindingsFileInfo[] {
     const result: KeybindingsFileInfo[] = [];
     if (fs.existsSync(directory)) {
       const contents = fs.readdirSync(directory);
@@ -101,10 +115,10 @@ export class KeybindingsIOManager {
    * Get a keybindings set with the base set and customisations flatten together.
    */
   getFlatKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
-    const baseKeybindingsSet = this._getBaseKeybindingsSet(name);
+    const baseKeybindingsSet = this.#getBaseKeybindingsSet(name);
 
     // Hash the custom bindings for speed purposes
-    const customizations = this._getCustomKeybindingsFile(name);
+    const customizations = this.#getCustomKeybindingsFile(name);
     const customBindingsHash = new Map<string, string[]>();
     for (const customBinding of customizations.customBindings) {
       customBindingsHash.set(customBinding.command, customBinding.keys);
@@ -137,15 +151,15 @@ export class KeybindingsIOManager {
     };
   }
 
-  private _getBaseKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
-    if (this._baseKeybindingsMap.has(name)) {
-      return this._baseKeybindingsMap.get(name);
+  #getBaseKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
+    if (this.#baseKeybindingsMap.has(name)) {
+      return this.#baseKeybindingsMap.get(name);
     }
 
     const flatKeybindings = new Map<string, KeybindingsBinding>();
-    for (const fileInfo of this._getKeybindingsFileList()) {
+    for (const fileInfo of this.#getKeybindingsFileList()) {
       if (fileInfo.name === name) {
-        const keybindingsFile = this._readKeybindingsFile(name, fileInfo);
+        const keybindingsFile = this.#readKeybindingsFile(name, fileInfo);
         for (const binding of keybindingsFile.bindings) {
           flatKeybindings.set(binding.command, binding);
         }
@@ -156,12 +170,12 @@ export class KeybindingsIOManager {
       extends: name,
       bindings: Array.from(flatKeybindings.values())
     };
-    this._baseKeybindingsMap.set(name, result);
+    this.#baseKeybindingsMap.set(name, result);
 
     return result;
   }
 
-  private _readKeybindingsFile(name: LogicalKeybindingsName, fileInfo: KeybindingsFileInfo): KeybindingsSet {
+  #readKeybindingsFile(name: LogicalKeybindingsName, fileInfo: KeybindingsFileInfo): KeybindingsSet {
     const fullPath = path.join(fileInfo.path, fileInfo.filename);
     const keyBindingJsonString = fs.readFileSync(fullPath, { encoding: "utf8" } );
     let keyBindingsJSON: KeybindingsSet = JSON.parse(keyBindingJsonString);
@@ -181,27 +195,27 @@ export class KeybindingsIOManager {
   getStackedKeybindings(name: LogicalKeybindingsName): StackedKeybindingsSet {
     return {
       name,
-      keybindingsSet: this._getBaseKeybindingsSet(name),
-      customKeybindingsSet: this._getCustomKeybindingsFile(name)
+      keybindingsSet: this.#getBaseKeybindingsSet(name),
+      customKeybindingsSet: this.#getCustomKeybindingsFile(name)
     };
   }
 
-  private _getCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsSet {
-    if (this._customKeybindingsMap.has(name)) {
-      return this._customKeybindingsMap.get(name);
+  #getCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsSet {
+    if (this.#customKeybindingsMap.has(name)) {
+      return this.#customKeybindingsMap.get(name);
     }
 
-    const customKeybindingsFile = this._readCustomKeybindingsFile(name);
-    this._customKeybindingsMap.set(name, customKeybindingsFile);
+    const customKeybindingsFile = this.#readCustomKeybindingsFile(name);
+    this.#customKeybindingsMap.set(name, customKeybindingsFile);
     return customKeybindingsFile;
   }
 
-  private _getCustomKeybindingsFilePath(name: LogicalKeybindingsName): string {
-    return path.join(this._userPath, name + ".json");
+  #getCustomKeybindingsFilePath(name: LogicalKeybindingsName): string {
+    return path.join(this.#userPath, name + ".json");
   }
 
-  private _readCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsSet {
-    const filePath = this._getCustomKeybindingsFilePath(name);
+  #readCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsSet {
+    const filePath = this.#getCustomKeybindingsFilePath(name);
     if ( ! fs.existsSync(filePath)) {
       return {
         basedOn: name,
@@ -225,15 +239,13 @@ export class KeybindingsIOManager {
    * Update a set of customisations and persist it.
    */
   updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): void {
-    this._writeCustomKeybindingsFile(customKeybindingsFile);
-    this._customKeybindingsMap.set(customKeybindingsFile.basedOn, customKeybindingsFile);
-    this._clearBaseCaches();
-
-    this._onUpdateEventEmitter.fire();
+    this.#writeCustomKeybindingsFile(customKeybindingsFile);
+    this.#customKeybindingsMap.set(customKeybindingsFile.basedOn, customKeybindingsFile);
+    this.#clearBaseCaches();
   }
 
-  private _writeCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): boolean {
-    const filePath = this._getCustomKeybindingsFilePath(customKeybindingsFile.basedOn);
+  #writeCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): boolean {
+    const filePath = this.#getCustomKeybindingsFilePath(customKeybindingsFile.basedOn);
     try {
       fs.writeFileSync(filePath, JSON.stringify(customKeybindingsFile, null, "  "));
     } catch(err) {
