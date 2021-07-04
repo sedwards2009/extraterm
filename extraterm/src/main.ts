@@ -204,6 +204,9 @@ class Main {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openSettings", () => this.commandOpenSettings());
+    commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
+    commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
+    commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
   }
 
   setupDesktopSupport(): void {
@@ -245,6 +248,7 @@ class Main {
 
     const newTerminal = new Terminal(this.#extensionManager, this.#keybindingsIOManager);
     this.#windows[0].addTab(newTerminal);
+    this.#windows[0].focusTab(newTerminal);
 
     const extraEnv = {
       [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
@@ -353,19 +357,48 @@ class Main {
     const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
       this.#themeManager);
     win.onTabCloseRequest((tab: Tab): void => {
-      if (tab instanceof Terminal) {
-        this.#disposeTerminalTab(tab);
-      }
+      this.#closeTab(win, tab);
     });
     this.#windows.push(win);
     win.open();
+  }
+
+  #closeTab(win: Window, tab: Tab): void {
+    if (tab instanceof Terminal) {
+      this.#disposeTerminalTab(tab);
+    }
+    if (tab instanceof SettingsTab) {
+      win.removeTab(this.#settingsTab);
+    }
   }
 
   commandOpenSettings(): void {
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab();
     }
-    this.#extensionManager.getActiveWindow().addTab(this.#settingsTab);
+    const win = this.#extensionManager.getActiveWindow();
+    win.addTab(this.#settingsTab);
+    win.focusTab(this.#settingsTab);
+  }
+
+  commandFocusTabLeft(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    const tabCount = win.getTabCount();
+    const index = win.getCurrentTabIndex() - 1;
+    win.setCurrentTabIndex(index < 0 ? tabCount - 1 : index);
+  }
+
+  commandFocusTabRight(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    const tabCount = win.getTabCount();
+    const index = win.getCurrentTabIndex() + 1;
+    win.setCurrentTabIndex(index >= tabCount ? 0 : index);
+  }
+
+  commandCloseTab(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    const tab = win.getTab(win.getCurrentTabIndex());
+    this.#closeTab(win, tab);
   }
 }
 

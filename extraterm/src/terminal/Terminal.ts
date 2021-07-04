@@ -59,6 +59,7 @@ export class Terminal implements Tab, Disposable {
   #rows = -1;
 
   #scrollArea: QScrollArea = null;
+  #contentWidget: QWidget = null;
   #marginPx = 11;
   #verticalScrollBar: QScrollBar = null;
   #atBottom = true; // True if the terminal is scrolled to the bottom and should
@@ -101,27 +102,27 @@ export class Terminal implements Tab, Disposable {
   #createUi() : void {
     this.#scrollArea = new QScrollArea();
     this.#scrollArea.setWidgetResizable(true);
-    const contentWidget = new QWidget();
-    contentWidget.setObjectName("content");
-    contentWidget.setFocusPolicy(FocusPolicy.ClickFocus);
-    contentWidget.setStyleSheet(`
+    this.#contentWidget = new QWidget();
+    this.#contentWidget.setObjectName("content");
+    this.#contentWidget.setFocusPolicy(FocusPolicy.ClickFocus);
+    this.#contentWidget.setStyleSheet(`
     #content {
       background-color: #00ff00;
     }
     `);
-    contentWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
+    this.#contentWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
     this.#scrollArea.addEventListener(WidgetEventTypes.Resize, () => {
       this.#handleResize();
     });
 
-    this.#contentLayout = new QBoxLayout(Direction.TopToBottom, contentWidget);
+    this.#contentLayout = new QBoxLayout(Direction.TopToBottom, this.#contentWidget);
     this.#contentLayout.setSizeConstraint(SizeConstraint.SetMinimumSize);
     this.#contentLayout.setContentsMargins(this.#marginPx, this.#marginPx, this.#marginPx, this.#marginPx);
     this.#scrollArea.setFrameShape(Shape.NoFrame);
     this.#scrollArea.setVerticalScrollBarPolicy(ScrollBarPolicy.ScrollBarAlwaysOn);
-    this.#scrollArea.setWidget(contentWidget);
+    this.#scrollArea.setWidget(this.#contentWidget);
 
     this.#verticalScrollBar = new QScrollBar();
     this.#verticalScrollBar.setOrientation(Orientation.Vertical);
@@ -144,6 +145,14 @@ export class Terminal implements Tab, Disposable {
 
   #handleResize(): void {
     this.resizeEmulatorFromTerminalSize();
+  }
+
+  focus(): void {
+    this.#contentWidget.setFocus();
+  }
+
+  unfocus(): void {
+    this.#contentWidget.clearFocus();
   }
 
   computeTerminalSize(): { rows: number, columns: number } {
@@ -193,6 +202,14 @@ export class Terminal implements Tab, Disposable {
     }
   }
 
+  #scrollToBottom(): void {
+    if (this.#atBottom) {
+      return;
+    }
+    this.#atBottom = true;
+    this.#verticalScrollBar.setSliderPosition(this.#verticalScrollBar.maximum());
+  }
+
   #handleKeyPress(event: QKeyEvent): void {
     const ev = qKeyEventToMinimalKeyboardEvent(event);
 
@@ -207,6 +224,8 @@ export class Terminal implements Tab, Disposable {
 
     this.#emulator.keyDown(ev);
     event.accept();
+
+    this.#scrollToBottom();
   }
 
   setPty(pty: Pty): void {

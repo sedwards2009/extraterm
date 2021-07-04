@@ -27,4 +27,12 @@ export class SettingsTab implements Tab {
   getContents(): QWidget {
     return this.#contentWidget;
   }
+
+  focus(): void {
+    this.#contentWidget.setFocus();
+  }
+
+  unfocus(): void {
+
+  }
 }

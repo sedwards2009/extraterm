@@ -147,7 +147,10 @@ export class Window {
   }
 
   #handleTabBarChanged(index: number): void {
-    this.#contentStack.setCurrentIndex(index);
+    if (index < 0 || index >= this.#tabs.length) {
+      return;
+    }
+    this.setCurrentTabIndex(index);
   }
 
   #handleTabBarCloseClicked(index: number): void {
@@ -244,12 +247,24 @@ export class Window {
   }
 
   setCurrentTabIndex(index: number): void {
+    const currentIndex = this.getCurrentTabIndex();
+    this.#tabs[currentIndex].unfocus();
+
     this.#tabBar.setCurrentIndex(index);
     this.#contentStack.setCurrentIndex(index);
+    this.#tabs[index].focus();
   }
 
   getCurrentTabIndex(): number {
     return this.#tabBar.currentIndex();
+  }
+
+  getTabCount(): number {
+    return this.#tabs.length;
+  }
+
+  getTab(index: number): Tab {
+    return this.#tabs[index];
   }
 
   addTab(tab: Tab): void {
@@ -272,11 +287,24 @@ export class Window {
         this.#contentStack.removeWidget(tab.getContents());
         this.#tabs.splice(index, 1);
 
-        this.setCurrentTabIndex(index - 1);
+        const newCurrentIndex = Math.max(0, index - 1);
+        if (this.#tabs.length !== 0) {
+          this.setCurrentTabIndex(newCurrentIndex);
+        }
+
         return true;
       }
     }
     return false;
+  }
+
+  focusTab(tab: Tab): void {
+    const index = this.#tabs.indexOf(tab);
+    if (index === -1) {
+      return;
+    }
+    this.setCurrentTabIndex(index);
+    tab.focus();
   }
 }
 

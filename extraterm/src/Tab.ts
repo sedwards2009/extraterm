@@ -8,4 +8,6 @@ import { QWidget } from "@nodegui/nodegui";
 export interface Tab {
   getTitle(): string;
   getContents(): QWidget;
+  focus(): void;
+  unfocus(): void;
 }
