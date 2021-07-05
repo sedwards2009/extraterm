@@ -10,8 +10,8 @@ import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, WidgetEventTypes, QKeyEvent } from "@nodegui/nodegui";
 
-import { FontInfo } from "./config/Config";
-import { ConfigDatabase } from "./config/ConfigDatabase";
+import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
+import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
 import { Tab } from "./Tab";
 import { Terminal } from "./terminal/Terminal";
 import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig";
@@ -64,6 +64,7 @@ export class Window {
     this.#windowWidget.resize(800, 480);
 
     this.#terminalVisualConfig = this.#createTerminalVisualConfig();
+    this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
     const topLayout = new QBoxLayout(Direction.TopToBottom, this.#windowWidget);
     topLayout.setContentsMargins(0, 11, 0, 0);
@@ -205,6 +206,26 @@ export class Window {
       screenWidthHintPx: 1024,  // FIXME
     };
     return terminalVisualConfig;
+  }
+
+  #handleConfigChangeEvent(event: ConfigChangeEvent): void {
+    if (event.key !== GENERAL_CONFIG) {
+      return;
+    }
+    const oldConfig = <GeneralConfig> event.oldConfig;
+    const newConfig = <GeneralConfig> event.newConfig;
+
+    if (oldConfig.terminalFont === newConfig.terminalFont &&
+        oldConfig.terminalFontSize === newConfig.terminalFontSize) {
+      return;
+    }
+
+    this.#terminalVisualConfig = this.#createTerminalVisualConfig();
+    for (const tab of this.#tabs) {
+      if (tab instanceof Terminal) {
+        tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+      }
+    }
   }
 
   #extractPalette(terminalTheme: TerminalTheme, transparentBackground: boolean): number[] {

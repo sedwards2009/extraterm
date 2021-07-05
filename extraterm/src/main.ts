@@ -374,7 +374,7 @@ class Main {
 
   commandOpenSettings(): void {
     if (this.#settingsTab == null) {
-      this.#settingsTab = new SettingsTab();
+      this.#settingsTab = new SettingsTab(this.#configDatabase);
     }
     const win = this.#extensionManager.getActiveWindow();
     win.addTab(this.#settingsTab);

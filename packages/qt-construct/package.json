@@ -1,0 +1,28 @@
+{
+  "name": "qt-construct",
+  "version": "0.1.0",
+  "description": "Ergonomic construction of Qt widget",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/sedwards2009/extraterm.git"
+  },
+  "scripts": {
+    "build": "yarn run build-code && yarn run lint",
+    "build-code": "tsc",
+    "clean": "shx rm -rf dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@nodegui/nodegui": "^0.30.3"
+  },
+  "devDependencies": {
+    "eslint": "7.19.0",
+    "eslint-config-extraterm": "1.0.0",
+    "shelljs": "0.8.3",
+    "typescript": "4.3.4"
+  }
+}

@@ -47,6 +47,7 @@
     "marked": "^0.8.2",
     "mime-types": "^2.1.21",
     "qs": "6.3.2",
+    "qt-construct": "0.1.0",
     "sass": "^1.26.10",
     "smart-buffer": "4.0.2",
     "source-map-support": "^0.3.2",
