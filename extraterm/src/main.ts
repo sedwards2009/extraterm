@@ -246,7 +246,7 @@ class Main {
     //   }
     // }
 
-    const newTerminal = new Terminal(this.#extensionManager, this.#keybindingsIOManager);
+    const newTerminal = new Terminal(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager);
     this.#windows[0].addTab(newTerminal);
     this.#windows[0].focusTab(newTerminal);
 

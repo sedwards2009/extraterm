@@ -25,9 +25,9 @@ export class Color {
    * @param blue    Blue compoennt (0-255).
    * @param opacity Opacity or alpha (0-255). 0 is fully transparent, 255 is fully opaque.
    */
-  constructor(redOrString: string | number, green?: number, blue?: number, opacity?: number) {
-    if (typeof redOrString === "string") {
-      const stringColor = <string> redOrString;
+  constructor(rgbaOrRedOrString: string | number, green?: number, blue?: number, opacity?: number) {
+    if (typeof rgbaOrRedOrString === "string") {
+      const stringColor = <string> rgbaOrRedOrString;
       if (stringColor.startsWith("#")) {
         if (stringColor.length === 4) {
           // Parse the 4bit colour values and expand then to 8bit.
@@ -62,12 +62,21 @@ export class Color {
         // What now?!
       }
     } else {
-      // Assume numbers.
-      const red = <number> redOrString;
-      this._red = red;
-      this._green = green !== undefined ? green : 0;
-      this._blue = blue !== undefined ? blue : 0;
-      this._opacity = opacity !== undefined ? opacity : 255;
+      if (green === undefined) {
+        // `red` is actually 32bit RGBA
+        const rgba = <number> rgbaOrRedOrString;
+        this._red = (rgba & 0xff000000) >> 24;
+        this._green = (rgba & 0x00ff0000) >> 16;
+        this._blue = (rgba & 0x0000ff00) >> 8;
+        this._opacity = rgba & 0x000000ff;
+
+      } else {
+        const red = <number> rgbaOrRedOrString;
+        this._red = red;
+        this._green = green !== undefined ? green : 0;
+        this._blue = blue !== undefined ? blue : 0;
+        this._opacity = opacity !== undefined ? opacity : 255;
+      }
     }
   }
   /**

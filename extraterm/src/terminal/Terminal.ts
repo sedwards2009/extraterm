@@ -36,10 +36,12 @@ import { Block } from "./Block";
 import { TerminalBlock } from "./TerminalBlock";
 import { Pty } from "../pty/Pty";
 import { TerminalEnvironmentImpl } from "./TerminalEnvironmentImpl";
-import { TerminalVisualConfig } from "./TerminalVisualConfig";
+import { PALETTE_BG_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
 import { qKeyEventToMinimalKeyboardEvent } from "../keybindings/QKeyEventUtilities";
 import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
 import { ExtensionManager } from "../extension/ExtensionManager";
+import { Color } from "extraterm-color-utilities";
+import { ConfigDatabase } from "../config/ConfigDatabase";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -47,6 +49,7 @@ export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
 
+  #configDatabase: ConfigDatabase = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #extensionManager: ExtensionManager = null;
 
@@ -84,8 +87,10 @@ export class Terminal implements Tab, Disposable {
     { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: "" },
   ]);
 
-  constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager) {
+  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager) {
     this._log = getLogger("Terminal", this);
+
+    this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
 
@@ -119,10 +124,13 @@ export class Terminal implements Tab, Disposable {
 
     this.#contentLayout = new QBoxLayout(Direction.TopToBottom, this.#contentWidget);
     this.#contentLayout.setSizeConstraint(SizeConstraint.SetMinimumSize);
-    this.#contentLayout.setContentsMargins(this.#marginPx, this.#marginPx, this.#marginPx, this.#marginPx);
+    this.#contentLayout.setContentsMargins(0, 0, 0, 0);
+
     this.#scrollArea.setFrameShape(Shape.NoFrame);
     this.#scrollArea.setVerticalScrollBarPolicy(ScrollBarPolicy.ScrollBarAlwaysOn);
+    this.#scrollArea.setViewportMargins(this.#marginPx, this.#marginPx, this.#marginPx, this.#marginPx);
     this.#scrollArea.setWidget(this.#contentWidget);
+    this.#scrollArea.viewport().setObjectName("viewport");
 
     this.#verticalScrollBar = new QScrollBar();
     this.#verticalScrollBar.setOrientation(Orientation.Vertical);
@@ -137,10 +145,45 @@ export class Terminal implements Tab, Disposable {
     this.#scrollArea.setVerticalScrollBar(this.#verticalScrollBar);
 
     this.#contentLayout.addStretch(1);
+    this.#updateMargins();
 
     const terminalBlock = new TerminalBlock();
     this.appendBlock(terminalBlock);
     terminalBlock.setEmulator(this.#emulator);
+  }
+
+  #updateMargins(): void {
+    const generalConfig = this.#configDatabase.getGeneralConfig();
+    let spacing = 0;
+    switch (generalConfig.terminalMarginStyle) {
+      case "none":
+        spacing = 0;
+        break;
+      case "thin":
+        spacing = Math.round(generalConfig.terminalFontSize / 2);
+        break;
+      case "normal":
+        spacing = generalConfig.terminalFontSize;
+        break;
+      case "thick":
+        spacing = generalConfig.terminalFontSize * 2;
+        break;
+    }
+
+    let vGap = 0;
+    if (this.#terminalVisualConfig != null) {
+      const metrics = this.#terminalVisualConfig.fontMetrics;
+
+      const viewportSize = this.#scrollArea.maximumViewportSize(); // <- the area inside the current margins.
+      const currentMargins = this.#scrollArea.viewportMargins();
+      const maxViewportHeight = viewportSize.height() + currentMargins.top + currentMargins.bottom;
+      const availableHeight = maxViewportHeight - spacing - spacing;
+      vGap = availableHeight % metrics.heightPx;
+    }
+
+    const topGap = Math.floor(vGap / 2);
+    const bottomGap = vGap - topGap;
+    this.#scrollArea.setViewportMargins(spacing, spacing + topGap, spacing, spacing + bottomGap);
   }
 
   #handleResize(): void {
@@ -155,6 +198,7 @@ export class Terminal implements Tab, Disposable {
     this.#contentWidget.clearFocus();
   }
 
+  // FIXME: combine computeTerminalSize() with #updateMargins() and compute the desired dimensions only.
   computeTerminalSize(): { rows: number, columns: number } {
     if (this.#terminalVisualConfig == null) {
       return null;
@@ -162,16 +206,19 @@ export class Terminal implements Tab, Disposable {
 
     const metrics = this.#terminalVisualConfig.fontMetrics;
     const maxSize = this.#scrollArea.maximumViewportSize();
-    const columns = Math.floor((maxSize.width() - 2 * this.#marginPx) / metrics.widthPx);
-    const rows = Math.floor((maxSize.height() - 2 * this.#marginPx) / metrics.heightPx);
+    const columns = Math.floor(maxSize.width() / metrics.widthPx);
+    const rows = Math.floor(maxSize.height() / metrics.heightPx);
     return { rows, columns };
   }
 
   resizeEmulatorFromTerminalSize(): void {
+    this.#updateMargins();
+
     const size = this.computeTerminalSize();
     if (size == null) {
       return;
     }
+
 
     const { columns, rows } = size;
     if (columns === this.#columns && rows === this.#rows) {
@@ -179,6 +226,7 @@ export class Terminal implements Tab, Disposable {
     }
     this.#columns = columns;
     this.#rows = rows;
+
 
     if (this.#pty != null) {
       this.#pty.resize(columns, rows);
@@ -248,6 +296,15 @@ export class Terminal implements Tab, Disposable {
         block.setTerminalVisualConfig(terminalVisualConfig);
       }
     }
+
+    const backgroundHex = new Color(terminalVisualConfig.palette[PALETTE_BG_INDEX]).toHexString();
+    this.#scrollArea.setStyleSheet(`
+      QScrollArea {
+        background-color: ${backgroundHex};
+      }
+    `);
+
+    this.#updateMargins();
   }
 
   dispose(): void {
