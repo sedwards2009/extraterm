@@ -11,10 +11,10 @@ const lockfile = require('@yarnpkg/lockfile');
 
 /**
  * Prune away yarn development dependencies
- * 
+ *
  * Prunes development dependencies from a node project with help from
  * yarn's lock file.
- * 
+ *
  * @param sourceRootPath Path to the source code root directory which contains
  *                       the root package.json file and the yarn.lock file.
  * @param targetPath     Path to the target directory which contains the built
@@ -63,7 +63,7 @@ function pruneDevDependencies(sourceRootPath, targetPath) {
   }
 
   echo("");
-  echo(`    Total modules in yar.lock:      ${keepPrune.keep.length + keepPrune.prune.length}`);
+  echo(`    Total modules in yarn.lock:     ${keepPrune.keep.length + keepPrune.prune.length}`);
   echo(`    Modules identified for keeping: ${keepPrune.keep.length}`);
   echo(`    Modules identified for pruning: ${keepPrune.prune.length}`);
   echo(`    Module directories deleted:     ${pruneCount}`);

@@ -141,14 +141,6 @@ function pruneNodeModules(versionedOutputDir, platform) {
 function pruneSpecificNodeModules() {
   [
     "globule",
-    "vue/src",
-    "vue/dist/vue.esm.browser.js",
-    "vue/dist/vue.esm.js",
-    "vue/dist/vue.js",
-    "vue/dist/vue.min.js",
-    "vue/dist/vue.runtime.esm.js",
-    "vue/dist/vue.runtime.js",
-    "vue/dist/vue.runtime.min.js",
     ".bin"
   ].forEach( (subpath) => {
     const fullPath = path.join("node_modules", subpath);
