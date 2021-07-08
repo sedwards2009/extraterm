@@ -45,6 +45,15 @@ import { ConfigDatabase } from "../config/ConfigDatabase";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
+interface TerminalSize {
+  rows: number;
+  columns: number;
+  leftMargin: number;
+  topMargin: number;
+  rightMargin: number;
+  bottomMargin: number;
+}
+
 
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
@@ -145,14 +154,33 @@ export class Terminal implements Tab, Disposable {
     this.#scrollArea.setVerticalScrollBar(this.#verticalScrollBar);
 
     this.#contentLayout.addStretch(1);
-    this.#updateMargins();
 
     const terminalBlock = new TerminalBlock();
     this.appendBlock(terminalBlock);
     terminalBlock.setEmulator(this.#emulator);
   }
 
-  #updateMargins(): void {
+  #handleResize(): void {
+    this.resizeEmulatorFromTerminalSize();
+  }
+
+  focus(): void {
+    this.#contentWidget.setFocus();
+  }
+
+  unfocus(): void {
+    this.#contentWidget.clearFocus();
+  }
+
+  #computeTerminalSize(): TerminalSize {
+    if (this.#terminalVisualConfig == null) {
+      return null;
+    }
+
+    const metrics = this.#terminalVisualConfig.fontMetrics;
+    const maxViewportSize = this.#scrollArea.maximumViewportSize();
+    const currentMargins = this.#scrollArea.viewportMargins();
+
     const generalConfig = this.#configDatabase.getGeneralConfig();
     let spacing = 0;
     switch (generalConfig.terminalMarginStyle) {
@@ -170,63 +198,48 @@ export class Terminal implements Tab, Disposable {
         break;
     }
 
-    let vGap = 0;
-    if (this.#terminalVisualConfig != null) {
-      const metrics = this.#terminalVisualConfig.fontMetrics;
+    const maxViewportHeight = maxViewportSize.height() + currentMargins.top + currentMargins.bottom;
+    const maxContentHeight = maxViewportHeight - spacing - spacing;
 
-      const viewportSize = this.#scrollArea.maximumViewportSize(); // <- the area inside the current margins.
-      const currentMargins = this.#scrollArea.viewportMargins();
-      const maxViewportHeight = viewportSize.height() + currentMargins.top + currentMargins.bottom;
-      const availableHeight = maxViewportHeight - spacing - spacing;
-      vGap = availableHeight % metrics.heightPx;
-    }
+    const maxViewportWidth = maxViewportSize.width() + currentMargins.left + currentMargins.right;
+    const maxContentWidth = maxViewportWidth - spacing - spacing;
 
+    const columns = Math.floor(maxContentWidth / metrics.widthPx);
+    const rows = Math.floor(maxContentHeight / metrics.heightPx);
+
+    const vGap = maxContentHeight % metrics.heightPx;
     const topGap = Math.floor(vGap / 2);
     const bottomGap = vGap - topGap;
-    this.#scrollArea.setViewportMargins(spacing, spacing + topGap, spacing, spacing + bottomGap);
-  }
 
-  #handleResize(): void {
-    this.resizeEmulatorFromTerminalSize();
-  }
+    const leftMargin = spacing;
+    const topMargin = spacing + topGap;
+    const rightMargin = spacing;
+    const bottomMargin = spacing + bottomGap;
 
-  focus(): void {
-    this.#contentWidget.setFocus();
-  }
-
-  unfocus(): void {
-    this.#contentWidget.clearFocus();
-  }
-
-  // FIXME: combine computeTerminalSize() with #updateMargins() and compute the desired dimensions only.
-  computeTerminalSize(): { rows: number, columns: number } {
-    if (this.#terminalVisualConfig == null) {
-      return null;
-    }
-
-    const metrics = this.#terminalVisualConfig.fontMetrics;
-    const maxSize = this.#scrollArea.maximumViewportSize();
-    const columns = Math.floor(maxSize.width() / metrics.widthPx);
-    const rows = Math.floor(maxSize.height() / metrics.heightPx);
-    return { rows, columns };
+    return {
+      rows,
+      columns,
+      leftMargin,
+      topMargin,
+      rightMargin,
+      bottomMargin,
+    };
   }
 
   resizeEmulatorFromTerminalSize(): void {
-    this.#updateMargins();
-
-    const size = this.computeTerminalSize();
+    const size = this.#computeTerminalSize();
     if (size == null) {
       return;
     }
 
+    const { columns, rows, leftMargin, topMargin, rightMargin, bottomMargin } = size;
+    this.#scrollArea.setViewportMargins(leftMargin, topMargin, rightMargin, bottomMargin);
 
-    const { columns, rows } = size;
     if (columns === this.#columns && rows === this.#rows) {
       return;
     }
     this.#columns = columns;
     this.#rows = rows;
-
 
     if (this.#pty != null) {
       this.#pty.resize(columns, rows);
@@ -304,7 +317,7 @@ export class Terminal implements Tab, Disposable {
       }
     `);
 
-    this.#updateMargins();
+    this.resizeEmulatorFromTerminalSize();
   }
 
   dispose(): void {
