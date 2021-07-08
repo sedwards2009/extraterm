@@ -29,7 +29,8 @@ import { ExtensionManager } from "./extension/ExtensionManager";
 import { EXTRATERM_COOKIE_ENV, Terminal } from "./terminal/Terminal";
 import { Tab } from "./Tab";
 import { SettingsTab } from "./settings/SettingsTab";
-
+import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
+import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -110,7 +111,7 @@ class Main {
     // TODO: setupGlobalKeybindingsManager()
     // TODO: registerInternalCommands()
 
-    // TODO: setupLocalHttpServer()
+    this.setupLocalHttpServer(bulkFileStorage);
 
     this.registerCommands(extensionManager);
     this.startUpSessions(configDatabase, extensionManager);
@@ -199,6 +200,19 @@ class Main {
     const bulkFileStorage = new BulkFileStorage(os.tmpdir());
     return bulkFileStorage;
   }
+
+  async setupLocalHttpServer(bulkFileStorage: BulkFileStorage): Promise<LocalHttpServer> {
+    const ipcFilePath = path.join(getUserSettingsDirectory(), IPC_FILENAME);
+    const localHttpServer = new LocalHttpServer(ipcFilePath);
+    await localHttpServer.start();
+
+    bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
+    const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
+    localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
+
+    return localHttpServer;
+  }
+
 
   registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
