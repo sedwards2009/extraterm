@@ -1,8 +1,0 @@
-{
-  "name": "helloworld",
-  "description": "Test extension for extraterm",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "node -e 'process.exit(0)'"
-  }
-}
