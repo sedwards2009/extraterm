@@ -120,11 +120,6 @@ export class Terminal implements Tab, Disposable {
     this.#contentWidget = new QWidget();
     this.#contentWidget.setObjectName("content");
     this.#contentWidget.setFocusPolicy(FocusPolicy.ClickFocus);
-    this.#contentWidget.setStyleSheet(`
-    #content {
-      background-color: #00ff00;
-    }
-    `);
     this.#contentWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
@@ -313,6 +308,11 @@ export class Terminal implements Tab, Disposable {
     }
 
     const backgroundHex = new Color(terminalVisualConfig.palette[PALETTE_BG_INDEX]).toHexString();
+    this.#contentWidget.setStyleSheet(`
+    #content {
+      background-color: ${backgroundHex};
+    }
+    `);
     this.#scrollArea.setStyleSheet(`
       QScrollArea {
         background-color: ${backgroundHex};
