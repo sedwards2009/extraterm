@@ -285,6 +285,7 @@ export class Terminal implements Tab, Disposable {
 
     this.#emulator.keyDown(ev);
     event.accept();
+    this.#contentWidget.setEventProcessed(true);
 
     this.#scrollToBottom();
   }
