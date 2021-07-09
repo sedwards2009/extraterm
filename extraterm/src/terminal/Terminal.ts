@@ -17,16 +17,17 @@ import {
 import {
   Direction,
   FocusPolicy,
+  Orientation,
   QBoxLayout,
   QKeyEvent,
   QScrollArea,
-  QWidget,
-  SizeConstraint,
-  WidgetEventTypes,
-  Shape,
-  ScrollBarPolicy,
   QScrollBar,
-  Orientation,
+  QWidget,
+  ScrollBarPolicy,
+  Shape,
+  SizeConstraint,
+  SliderAction,
+  WidgetEventTypes,
 } from "@nodegui/nodegui";
 const performanceNow = require('performance-now');
 
@@ -268,7 +269,7 @@ export class Terminal implements Tab, Disposable {
       return;
     }
     this.#atBottom = true;
-    this.#verticalScrollBar.setSliderPosition(this.#verticalScrollBar.maximum());
+    this.#verticalScrollBar.triggerAction(SliderAction.SliderToMaximum);
   }
 
   #handleKeyPress(event: QKeyEvent): void {
@@ -424,5 +425,13 @@ export class Terminal implements Tab, Disposable {
 
   #handleTermData(event: TermApi.DataEvent): void {
     this.sendToPty(event.data);
+  }
+
+  scrollPageDown(): void {
+    this.#verticalScrollBar.triggerAction(SliderAction.SliderPageStepAdd);
+  }
+
+  scrollPageUp(): void {
+    this.#verticalScrollBar.triggerAction(SliderAction.SliderPageStepSub);
   }
 }

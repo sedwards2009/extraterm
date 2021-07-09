@@ -43,6 +43,9 @@ export class Window {
   onTabCloseRequest: Event<Tab> = null;
   #onTabCloseRequestEventEmitter = new EventEmitter<Tab>();
 
+  onTabChange: Event<Tab> = null;
+  #onTabChangeEventEmitter = new EventEmitter<Tab>();
+
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
       keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager) {
 
@@ -53,6 +56,7 @@ export class Window {
     this.#themeManager = themeManager;
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
+    this.onTabChange = this.#onTabChangeEventEmitter.event;
 
     this.#windowWidget = new QWidget();
     this.#windowWidget.setWindowTitle("Extraterm Qt");
@@ -274,6 +278,8 @@ export class Window {
     this.#tabBar.setCurrentIndex(index);
     this.#contentStack.setCurrentIndex(index);
     this.#tabs[index].focus();
+
+    this.#onTabChangeEventEmitter.fire(this.#tabs[index]);
   }
 
   getCurrentTabIndex(): number {

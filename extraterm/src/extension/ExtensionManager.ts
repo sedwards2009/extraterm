@@ -24,6 +24,7 @@ import * as InternalTypes from "../InternalTypes";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { CommandMenuEntry } from "../CommandsRegistry";
 import { Window } from "../Window";
+import { Terminal } from "../terminal/Terminal";
 
 
 interface ActiveExtension {
@@ -370,6 +371,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   getActiveWindow(): Window {
     return this.#commonExtensionWindowState.activeWindow;
+  }
+
+  setActiveTerminal(terminal: Terminal):void {
+    this.#commonExtensionWindowState.activeTerminal = terminal;
+  }
+
+  getActiveTerminal(): Terminal {
+    return this.#commonExtensionWindowState.activeTerminal;
   }
 
   /**

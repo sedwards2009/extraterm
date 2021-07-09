@@ -221,6 +221,9 @@ class Main {
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
+
+    commands.registerCommand("extraterm:terminal.scrollPageDown", () => this.commandTerminalScrollPageDown());
+    commands.registerCommand("extraterm:terminal.scrollPageUp", () => this.commandTerminalScrollPageUp());
   }
 
   setupDesktopSupport(): void {
@@ -370,9 +373,15 @@ class Main {
   openWindow(): void {
     const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
       this.#themeManager);
+
     win.onTabCloseRequest((tab: Tab): void => {
       this.#closeTab(win, tab);
     });
+
+    win.onTabChange((tab: Tab): void => {
+      this.#extensionManager.setActiveTerminal(tab instanceof Terminal ? tab : null);
+    });
+
     this.#windows.push(win);
     win.open();
   }
@@ -413,6 +422,16 @@ class Main {
     const win = this.#extensionManager.getActiveWindow();
     const tab = win.getTab(win.getCurrentTabIndex());
     this.#closeTab(win, tab);
+  }
+
+  commandTerminalScrollPageDown(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    terminal.scrollPageDown();
+  }
+
+  commandTerminalScrollPageUp(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    terminal.scrollPageUp();
   }
 }
 
