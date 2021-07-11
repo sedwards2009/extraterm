@@ -3,16 +3,25 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QPainter, QWidget, QPaintEvent, WidgetEventTypes } from "@nodegui/nodegui";
+import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode } from "@nodegui/nodegui";
 import { getLogger, Logger } from "extraterm-logging";
 import { Disposable } from "extraterm-event-emitter";
 import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
+import { Color } from "extraterm-color-utilities";
+
+import * as TermApi from "term-api";
 
 import { Block } from "./Block";
 import * as Term from "../emulator/Term";
 import { Line, RenderEvent } from "term-api";
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
+
+
+enum SelectionMode {
+  NORMAL,
+  BLOCK
+};
 
 
 /**
@@ -30,6 +39,10 @@ export class TerminalBlock implements Block {
 
   #scrollback: Line[] = [];
 
+  #selectionStart: TermApi.TerminalCoord = null;
+  #selectionEnd: TermApi.TerminalCoord = null;
+  #selectionMode = SelectionMode.NORMAL;
+
   constructor() {
     this._log = getLogger("TerminalBlock", this);
     this.#widget = this.#createWidget();
@@ -45,6 +58,15 @@ export class TerminalBlock implements Block {
 
     widget.addEventListener(WidgetEventTypes.Paint, (nativeEvent) => {
       this.#handlePaintEvent(new QPaintEvent(nativeEvent));
+    });
+    widget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
+      this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
+    });
+    widget.addEventListener(WidgetEventTypes.MouseButtonRelease, (nativeEvent) => {
+      this.#handleMouseButtonRelease(new QMouseEvent(nativeEvent));
+    });
+    widget.addEventListener(WidgetEventTypes.MouseMove, (nativeEvent) => {
+      this.#handleMouseMove(new QMouseEvent(nativeEvent));
     });
 
     return widget;
@@ -111,7 +133,7 @@ export class TerminalBlock implements Block {
   #handlePaintEvent(event: QPaintEvent): void {
     const paintRect = event.rect();
 
-    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const metrics = this.#terminalVisualConfig.fontMetrics;
     const heightPx = metrics.heightPx;
 
     const topRenderRow = Math.floor(paintRect.top() / heightPx);
@@ -123,6 +145,7 @@ export class TerminalBlock implements Block {
     const bgRGBA = this.#terminalVisualConfig.palette[PALETTE_BG_INDEX];
     painter.fillRect(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(), RGBAToQColor(bgRGBA));
 
+    // Render any lines from the scrollback
     const scrollbackLength = this.#scrollback.length;
     if (topRenderRow < scrollbackLength) {
       const lastRenderRow = Math.min(topRenderRow + heightRows, scrollbackLength);
@@ -130,6 +153,7 @@ export class TerminalBlock implements Block {
       this.#renderLines(painter, lines, topRenderRow * heightPx, false);
     }
 
+    // Render any lines from the emulator screen
     if (topRenderRow + heightRows >= scrollbackLength) {
       const screenTopRow = Math.max(topRenderRow, scrollbackLength) - scrollbackLength;
       const screenLastRow = Math.min(topRenderRow + heightRows - scrollbackLength, emulatorDimensions.materializedRows);
@@ -142,7 +166,63 @@ export class TerminalBlock implements Block {
       this.#renderLines(painter, lines, (screenTopRow + scrollbackLength) * heightPx, true);
     }
 
+    this.#renderSelection(painter, topRenderRow, heightRows);
+
     painter.end();
+  }
+
+  #renderSelection(painter: QPainter, topRenderRow: number, heightRows: number): void {
+    const metrics = this.#terminalVisualConfig.fontMetrics;
+    const heightPx = metrics.heightPx;
+    const widthPx = metrics.widthPx;
+
+    let selectionStart = this.#selectionStart;
+    let selectionEnd = this.#selectionEnd;
+    if (selectionStart != null && selectionEnd != null) {
+      if ((selectionEnd.y < selectionStart.y) || (selectionEnd.y === selectionStart.y && selectionEnd.x < selectionStart.x)) {
+        selectionStart = this.#selectionEnd;
+        selectionEnd = this.#selectionStart;
+      }
+
+      const selectionColor = this.#terminalVisualConfig.terminalTheme.selectionBackgroundColor;
+      const selectionQColor = RGBAToQColor(new Color(selectionColor).toRGBA());
+      const firstRow = Math.max(topRenderRow, selectionStart.y);
+      const lastRow = Math.min(topRenderRow + heightRows + 1, selectionEnd.y + 1);
+
+      const emulatorWidth = this.#emulator.getDimensions().cols;
+
+      painter.setCompositionMode(CompositionMode.CompositionMode_Screen);
+
+      for (let i=firstRow; i<lastRow; i++) {
+        if (i === selectionStart.y) {
+          if (selectionStart.y === selectionEnd.y) {
+            // Small selection contained within one row.
+            painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
+              (selectionEnd.x - selectionStart.x) * widthPx, heightPx, selectionQColor);
+          } else {
+            // Top row of the selection.
+            let rowLength = emulatorWidth;
+            if (i < this.#scrollback.length) {
+              rowLength = this.#scrollback[i].width;
+            }
+            painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
+              (rowLength - selectionStart.x) * widthPx, heightPx, selectionQColor);
+          }
+        } else {
+          if (i !== selectionEnd.y) {
+            // A row within a multi-row selection.
+            let rowLength = emulatorWidth;
+            if (i < this.#scrollback.length) {
+              rowLength = this.#scrollback[i].width;
+            }
+            painter.fillRect(0, i*heightPx, rowLength*widthPx, heightPx, selectionQColor);
+          } else {
+            // The last row of a multi-row selection.
+            painter.fillRect(0, i*heightPx, selectionEnd.x*widthPx, heightPx, selectionQColor);
+          }
+        }
+      }
+    }
   }
 
   #renderLines(painter: QPainter, lines: Line[], startY: number, renderCursor: boolean): void {
@@ -194,6 +274,72 @@ export class TerminalBlock implements Block {
         px += widthPx;
       }
       y += heightPx;
+    }
+  }
+
+  #handleMouseButtonPress(event: QMouseEvent): void {
+    const termEvent = this.#qMouseEventToTermApi(event);
+
+    if (termEvent.ctrlKey) {
+
+    } else {
+      if (this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseDown(termEvent)) {
+        return;
+      }
+    }
+    this.#selectionStart = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
+    this.#selectionEnd = null;
+    this.#selectionMode = SelectionMode.NORMAL;
+
+    this.#widget.update();
+  }
+
+  #qMouseEventToTermApi(event: QMouseEvent): TermApi.MouseEventOptions {
+    const pos = this.#pixelToRowColumnEdge(event.x(), event.y());
+    const termEvent: TermApi.MouseEventOptions = {
+      row: pos.y - this.#scrollback.length,
+      column: pos.x,
+      leftButton: (event.buttons() & MouseButton.LeftButton) !== 0,
+      middleButton: (event.buttons() & MouseButton.MiddleButton) !== 0,
+      rightButton: (event.buttons() & MouseButton.RightButton) !== 0,
+      shiftKey: (event.modifiers() & KeyboardModifier.ShiftModifier) !== 0,
+      metaKey: (event.modifiers() & KeyboardModifier.MetaModifier) !== 0,
+      ctrlKey: (event.modifiers() & KeyboardModifier.ControlModifier) !== 0,
+    };
+    return termEvent;
+  }
+
+  #pixelToRowColumnEdge(x: number, y: number): TermApi.TerminalCoord {
+    const gridY = Math.floor(y / this.#terminalVisualConfig.fontMetrics.heightPx);
+    const gridX = Math.round(x / this.#terminalVisualConfig.fontMetrics.widthPx);
+    return { x: gridX, y: gridY };
+  }
+
+  #handleMouseButtonRelease(event: QMouseEvent): void {
+    const termEvent = this.#qMouseEventToTermApi(event);
+    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseUp(termEvent)) {
+      return;
+    }
+
+    // TODO: Copy to clipboard??
+
+  }
+
+  #handleMouseMove(event: QMouseEvent): void {
+    const termEvent = this.#qMouseEventToTermApi(event);
+    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseMove(termEvent)) {
+      return;
+    }
+
+    if (this.#selectionStart == null) {
+      this.#selectionStart = { x: termEvent.column, y: termEvent.row  + this.#scrollback.length };
+    }
+
+    if (this.#selectionEnd != null || termEvent.column !== this.#selectionStart.x ||
+        termEvent.row !== this.#selectionStart.y) {
+
+      this.#selectionEnd = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
+      this.#widget.update();
     }
   }
 }

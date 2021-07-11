@@ -117,25 +117,36 @@ export class Terminal implements Tab, Disposable {
   #createUi() : void {
     this.#scrollArea = new QScrollArea();
     this.#scrollArea.setWidgetResizable(true);
+    this.#scrollArea.setFrameShape(Shape.NoFrame);
+    this.#scrollArea.setVerticalScrollBarPolicy(ScrollBarPolicy.ScrollBarAlwaysOn);
+    this.#scrollArea.addEventListener(WidgetEventTypes.Resize, () => {
+      this.#handleResize();
+    });
+
     this.#contentWidget = new QWidget();
     this.#contentWidget.setObjectName("content");
     this.#contentWidget.setFocusPolicy(FocusPolicy.ClickFocus);
     this.#contentWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
-    this.#scrollArea.addEventListener(WidgetEventTypes.Resize, () => {
-      this.#handleResize();
-    });
-
     this.#contentLayout = new QBoxLayout(Direction.TopToBottom, this.#contentWidget);
     this.#contentLayout.setSizeConstraint(SizeConstraint.SetMinimumSize);
     this.#contentLayout.setContentsMargins(0, 0, 0, 0);
 
-    this.#scrollArea.setFrameShape(Shape.NoFrame);
-    this.#scrollArea.setVerticalScrollBarPolicy(ScrollBarPolicy.ScrollBarAlwaysOn);
-    this.#scrollArea.setViewportMargins(this.#marginPx, this.#marginPx, this.#marginPx, this.#marginPx);
     this.#scrollArea.setWidget(this.#contentWidget);
+
     this.#scrollArea.viewport().setObjectName("viewport");
+
+    // For some reason the viewport widget appears like small (invisible)
+    // postage stamp on top of the scrollarea contents and gets in the
+    // way by consuming mouse clicks etc. Here we make the problem visible
+    // and then hide it which seems to work around the problem.
+    this.#scrollArea.viewport().setStyleSheet(`
+      QWidget {
+        background-color: #0f0;
+      }
+    `);
+    this.#scrollArea.viewport().hide();
 
     this.#verticalScrollBar = new QScrollBar();
     this.#verticalScrollBar.setOrientation(Orientation.Vertical);
@@ -342,7 +353,6 @@ export class Terminal implements Tab, Disposable {
 
   appendBlock(block: Block): void {
     this.#blocks.push(block);
-    const geo = block.getWidget().geometry();
     this.#contentLayout.insertWidget(this.#blocks.length-1, block.getWidget());
   }
 
