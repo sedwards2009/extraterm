@@ -84,6 +84,9 @@ export class Terminal implements Tab, Disposable {
   onDispose: Event<void>;
   #onDisposeEventEmitter = new EventEmitter<void>();
 
+  #onSelectionChangedEventEmitter = new EventEmitter<void>();
+  onSelectionChanged: Event<void>;
+
   #sessionConfiguration: SessionConfiguration = null;
   #terminalVisualConfig: TerminalVisualConfig = null;
 
@@ -99,6 +102,7 @@ export class Terminal implements Tab, Disposable {
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager) {
     this._log = getLogger("Terminal", this);
+    this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
 
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
@@ -165,6 +169,9 @@ export class Terminal implements Tab, Disposable {
     const terminalBlock = new TerminalBlock();
     this.appendBlock(terminalBlock);
     terminalBlock.setEmulator(this.#emulator);
+    terminalBlock.onSelectionChanged(() => {
+      this.#onSelectionChangedEventEmitter.fire();
+    });
   }
 
   #handleResize(): void {
@@ -443,5 +450,18 @@ export class Terminal implements Tab, Disposable {
 
   scrollPageUp(): void {
     this.#verticalScrollBar.triggerAction(SliderAction.SliderPageStepSub);
+  }
+
+  getSelectionText(): string {
+    let text: string = null;
+    for (const block of this.#blocks) {
+      if (block instanceof TerminalBlock) {
+        text = block.getSelectionText();
+        if (text != null) {
+          return text;
+        }
+      }
+    }
+    return null;
   }
 }

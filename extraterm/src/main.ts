@@ -9,7 +9,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import { QApplication, QKeyEvent, QObject, QObjectSignals, WidgetEventTypes } from "@nodegui/nodegui";
+import { QApplication } from "@nodegui/nodegui";
 
 import { Window } from "./Window";
 import { SESSION_CONFIG } from './config/Config';
@@ -264,6 +264,9 @@ class Main {
     // }
 
     const newTerminal = new Terminal(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager);
+    newTerminal.onSelectionChanged(() => {
+      this.#handleTerminalSelectionChanged(newTerminal);
+    });
     this.#windows[0].addTab(newTerminal);
     this.#windows[0].focusTab(newTerminal);
 
@@ -321,6 +324,13 @@ class Main {
       }
     }
     return null;
+  }
+
+  #handleTerminalSelectionChanged(newTerminal: Terminal): void {
+    const generalConfig = this.#configDatabase.getGeneralConfig();
+    if (generalConfig.autoCopySelectionToClipboard) {
+      this.commandCopyToClipboard();
+    }
   }
 
   #disposeTerminalTab(terminal: Terminal): void {
@@ -432,6 +442,19 @@ class Main {
   commandTerminalScrollPageUp(): void {
     const terminal = this.#extensionManager.getActiveTerminal();
     terminal.scrollPageUp();
+  }
+
+  commandCopyToClipboard(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    if (terminal == null) {
+      return;
+    }
+    const text = terminal.getSelectionText();
+    if (text == null) {
+      return;
+    }
+    const clipboard = QApplication.clipboard();
+    clipboard.setText(text);
   }
 }
 

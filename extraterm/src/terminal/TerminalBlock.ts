@@ -5,16 +5,17 @@
  */
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode } from "@nodegui/nodegui";
 import { getLogger, Logger } from "extraterm-logging";
-import { Disposable } from "extraterm-event-emitter";
+import { Disposable, Event } from "extraterm-event-emitter";
 import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
-
-import * as TermApi from "term-api";
+import { EventEmitter } from "extraterm-event-emitter";
 
 import { Block } from "./Block";
 import * as Term from "../emulator/Term";
-import { Line, RenderEvent } from "term-api";
+import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
+
+
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
 
 
@@ -39,12 +40,17 @@ export class TerminalBlock implements Block {
 
   #scrollback: Line[] = [];
 
-  #selectionStart: TermApi.TerminalCoord = null;
-  #selectionEnd: TermApi.TerminalCoord = null;
+  #selectionStart: TerminalCoord = null;
+  #selectionEnd: TerminalCoord = null;
   #selectionMode = SelectionMode.NORMAL;
+
+  #onSelectionChangedEventEmitter = new EventEmitter<void>();
+  onSelectionChanged: Event<void>;
 
   constructor() {
     this._log = getLogger("TerminalBlock", this);
+    this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
+
     this.#widget = this.#createWidget();
 
     // new TextureFontAtlas();
@@ -294,9 +300,9 @@ export class TerminalBlock implements Block {
     this.#widget.update();
   }
 
-  #qMouseEventToTermApi(event: QMouseEvent): TermApi.MouseEventOptions {
+  #qMouseEventToTermApi(event: QMouseEvent): MouseEventOptions {
     const pos = this.#pixelToRowColumnEdge(event.x(), event.y());
-    const termEvent: TermApi.MouseEventOptions = {
+    const termEvent: MouseEventOptions = {
       row: pos.y - this.#scrollback.length,
       column: pos.x,
       leftButton: (event.buttons() & MouseButton.LeftButton) !== 0,
@@ -309,7 +315,7 @@ export class TerminalBlock implements Block {
     return termEvent;
   }
 
-  #pixelToRowColumnEdge(x: number, y: number): TermApi.TerminalCoord {
+  #pixelToRowColumnEdge(x: number, y: number): TerminalCoord {
     const gridY = Math.floor(y / this.#terminalVisualConfig.fontMetrics.heightPx);
     const gridX = Math.round(x / this.#terminalVisualConfig.fontMetrics.widthPx);
     return { x: gridX, y: gridY };
@@ -321,8 +327,7 @@ export class TerminalBlock implements Block {
       return;
     }
 
-    // TODO: Copy to clipboard??
-
+    this.#onSelectionChangedEventEmitter.fire();
   }
 
   #handleMouseMove(event: QMouseEvent): void {
@@ -341,5 +346,65 @@ export class TerminalBlock implements Block {
       this.#selectionEnd = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
       this.#widget.update();
     }
+  }
+
+  getSelectionText(): string {
+    let selectionStart = this.#selectionStart;
+    let selectionEnd = this.#selectionEnd;
+    if (selectionStart == null || selectionEnd == null) {
+      return null;
+    }
+
+    if ((selectionEnd.y < selectionStart.y) || (selectionEnd.y === selectionStart.y && selectionEnd.x < selectionStart.x)) {
+      selectionStart = this.#selectionEnd;
+      selectionEnd = this.#selectionStart;
+    }
+
+    const firstRow = selectionStart.y;
+    const lastRow = selectionEnd.y + 1;
+
+    const lineText: string[] = [];
+
+    let isLastLineWrapped = false;
+
+    for (let i=firstRow; i<lastRow; i++) {
+      const line = this.#getLine(i);
+      if (i === selectionStart.y) {
+        if (selectionStart.y === selectionEnd.y) {
+          // Small selection contained within one row.
+          lineText.push(line.getString(selectionStart.x, 0, selectionEnd.x - selectionStart.x).trim());
+        } else {
+          // Top row of the selection.
+          lineText.push(line.getString(selectionStart.x, 0, line.width-selectionStart.x).trim());
+        }
+      } else {
+        if ( ! isLastLineWrapped) {
+          lineText.push("\n");
+        }
+        if (i !== selectionEnd.y) {
+          lineText.push(line.getString(0, 0, line.width).trim());
+        } else {
+          // The last row of a multi-row selection.
+          lineText.push(line.getString(0, 0, selectionEnd.x));
+        }
+      }
+      isLastLineWrapped = line.wrapped;
+    }
+    return lineText.join("");
+  }
+
+  #getLine(row: number): Line {
+    if (row < this.#scrollback.length) {
+      return this.#scrollback[row];
+    }
+    const screenRow = row - this.#scrollback.length;
+    if (this.#emulator == null) {
+      return null;
+    }
+    const dimensions = this.#emulator.getDimensions();
+    if (screenRow >= dimensions.rows) {
+      return null;
+    }
+    return this.#emulator.lineAtRow(screenRow);
   }
 }
