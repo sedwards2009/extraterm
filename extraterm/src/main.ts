@@ -221,9 +221,10 @@ class Main {
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
-
     commands.registerCommand("extraterm:terminal.scrollPageDown", () => this.commandTerminalScrollPageDown());
     commands.registerCommand("extraterm:terminal.scrollPageUp", () => this.commandTerminalScrollPageUp());
+    commands.registerCommand("extraterm:terminal.pasteFromClipboard", () => this.commandPasteFromClipboard());
+    commands.registerCommand("extraterm:terminal.copyToClipboard", () => this.commandCopyToClipboard());
   }
 
   setupDesktopSupport(): void {
@@ -455,6 +456,16 @@ class Main {
     }
     const clipboard = QApplication.clipboard();
     clipboard.setText(text);
+  }
+
+  commandPasteFromClipboard(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    if (terminal == null) {
+      return;
+    }
+    const clipboard = QApplication.clipboard();
+    const text = clipboard.text();
+    terminal.pasteText(text);
   }
 }
 

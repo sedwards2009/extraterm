@@ -67,7 +67,7 @@
         "category": "terminal",
         "order": 1501,
         "icon": "fa fa-clipboard",
-        "when": "terminalFocus && isNormalMode"
+        "when": "terminalFocus"
       },
       {
         "command": "extraterm:terminal.openLastFrame",

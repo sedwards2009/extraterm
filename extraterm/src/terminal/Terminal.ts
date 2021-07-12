@@ -464,4 +464,10 @@ export class Terminal implements Tab, Disposable {
     }
     return null;
   }
+
+  pasteText(text: string): void {
+    if (this.#pty != null) {
+      this.#pty.write(text);
+    }
+  }
 }
