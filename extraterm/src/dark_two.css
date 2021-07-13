@@ -1,0 +1,71 @@
+* {
+  color: #9da5b4;
+  background-color: #282c34;
+}
+
+QCheckBox {
+
+}
+
+QCheckBox::indicator {
+  border-radius: 4px;
+  width: 1.2em;
+  height: 1.2em;
+
+  background-color: rgba(157, 165, 180, 0.6);
+}
+
+QCheckBox::indicator:checked {
+  background-color: #6494ed;
+}
+
+QCheckBox::indicator:pressed {
+  background-color: #6494ed;
+}
+
+
+QComboBox {
+  background-color: #353b45;
+  color: #9da5b4;
+
+  padding: 0.25em 0.5em;
+
+  border: 1px solid #181a1f;
+  border-radius: 4px;
+
+  selection-color: #d7dae0;
+  selection-background-color: #578af2;
+}
+
+QComboBox:hover, QComboBox:on {
+  color: #d7dae0;
+  background-color: #3a404b;
+}
+QComboBox:focus {
+  border-color: #578af2;
+}
+
+QComboBox::drop-down {
+  subcontrol-origin: padding;
+  subcontrol-position: top right;
+
+  border-left-width: 0px;
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  /* TODO: chevron svg */
+}
+
+QComboBox QAbstractItemView {
+  selection-background-color: #00ff00;
+  background-color: #3a404b;
+  /* color: #d7dae0; */
+  color: #ff00ff;
+}
+
+QComboBox QAbstractItemView:hover {
+color: #80ff00;
+}
+
+QComboBox QAbstractItemView:hover {
+  color: #ffff00;
+}
