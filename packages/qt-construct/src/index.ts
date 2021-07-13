@@ -16,3 +16,4 @@ export { ListWidgetItem, ListWidgetItemOptions } from "./ListWidgetItem";
 export { BoxLayout, BoxLayoutOptions } from "./BoxLayout";
 export { StackedWidget, StackedWidgetOptions } from "./StackedWidget";
 export { PushButton, PushButtonOptions} from "./PushButton";
+export { LineEdit, LineEditOptions } from "./LineEdit";

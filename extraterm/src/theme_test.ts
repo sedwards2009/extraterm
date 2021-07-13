@@ -1,5 +1,5 @@
 import { Direction, QApplication, QMainWindow, QWidget } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, Label, PushButton, Widget } from "qt-construct";
+import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, SpinBox, Widget } from "qt-construct";
 import * as fs from "fs";
 
 let centralWidget: QWidget = null;
@@ -17,6 +17,8 @@ function main(): void {
         CheckBox({text: "I like checkboxes"}),
 
         ComboBox({items: ["Pizza", "Chips"]}),
+        SpinBox({suffix: " frames", minimum: 0, maximum: 1000}),
+        LineEdit({text: "Some text"}),
         { widget: Widget({}), stretch: 1}
       ]
     })
@@ -30,7 +32,7 @@ function main(): void {
 }
 
 function loadStyle(): void {
-  const styleSheet = fs.readFileSync("/home/sbe/devel/extraterm_qt/extraterm/src/dark_two.css", {encoding: "utf8"});
+  const styleSheet = fs.readFileSync("c:/devel/extraterm/extraterm/src/dark_two.css", {encoding: "utf8"});
   centralWidget.setStyleSheet(styleSheet);
 }
 
