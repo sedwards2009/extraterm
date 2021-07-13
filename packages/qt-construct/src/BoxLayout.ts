@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QWidget } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, NodeWidget, QBoxLayout, QWidget } from "@nodegui/nodegui";
 
 
 export interface BoxLayoutItem {
@@ -14,7 +14,7 @@ export interface BoxLayoutItem {
 
 export interface BoxLayoutOptions {
   direction: Direction;
-  children: (QWidget | BoxLayoutItem)[];
+  children: (NodeWidget<any> | BoxLayoutItem)[];
 }
 
 export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
@@ -23,7 +23,7 @@ export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
   const boxLayout = new QBoxLayout(direction);
 
   for (const child of children) {
-    if (child instanceof QWidget) {
+    if (child instanceof NodeWidget) {
       boxLayout.addWidget(child);
     } else {
       boxLayout.addWidget(child.widget, child.stretch === undefined ? 0 : child.stretch,
