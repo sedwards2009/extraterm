@@ -3,15 +3,28 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { NodeLayout, QWidget } from "@nodegui/nodegui";
+import { NodeLayout, NodeWidget, QWidget } from "@nodegui/nodegui";
 
 export interface WidgetOptions {
+  enabled?: boolean;
+  id?: string;
   layout?: NodeLayout<any>;
+  cssClass?: string | string[];
 }
 
-export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): void {
-  if (options.layout !== undefined) {
-    widget.setLayout(options.layout);
+export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
+  const { enabled, id, cssClass, layout } = options;
+  if (enabled !== undefined) {
+    widget.setEnabled(enabled);
+  }
+  if (id !== undefined) {
+    widget.setObjectName(id);
+  }
+  if (layout !== undefined) {
+    widget.setLayout(layout);
+  }
+  if (cssClass !== undefined) {
+    widget.setProperty("cssClass", cssClass);
   }
 }
 
