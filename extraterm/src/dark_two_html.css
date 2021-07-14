@@ -1246,23 +1246,6 @@ table.table-hover > tbody > tr:hover {
   width: auto;
 }
 
-/* Note: The font-face directives have been moved out into fontawesome-fontface.scss */
-.fab {
-  font-family: "Font Awesome 5 Brands";
-  font-weight: 400;
-}
-
-.far {
-  font-family: "Font Awesome 5 Free";
-  font-weight: 400;
-}
-
-.fa,
-.fas {
-  font-family: "Font Awesome 5 Free";
-  font-weight: 900;
-}
-@charset "UTF-8";
 .extraicon {
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;

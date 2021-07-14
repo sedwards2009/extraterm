@@ -3,6 +3,36 @@
   background-color: #282c34;
 }
 
+QLabel[cssClass~="h1"],
+QLabel[cssClass~="h2"],
+QLabel[cssClass~="h3"],
+QLabel[cssClass~="h4"],
+QLabel[cssClass~="h5"],
+QLabel[cssClass~="h6"] {
+  font-size: 18pt;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+QLabel[cssClass~="h1"] {
+  font-size: 20pt;
+}
+QLabel[cssClass~="h2"] {
+  font-size: 17.5pt;
+}
+QLabel[cssClass~="h3"] {
+  font-size: 14pt;
+}
+QLabel[cssClass~="h4"] {
+  font-size: 11pt;
+}
+QLabel[cssClass~="h5"] {
+  font-size: 10pt;
+}
+QLabel[cssClass~="h6"] {
+  font-size: 8pt;
+}
+
 QCheckBox {
 
 }
@@ -91,7 +121,8 @@ QLineEdit:focus, QSpinBox:focus {
 
 QPushButton {
   padding: 0.8em 0.8em;
-  height: 3em;
+  height: 1.4em;
+  min-height: 1.4em;
   border-radius: 4px;
   border: 1px solid #181a1f;
   color: #9da5b4;
@@ -101,3 +132,67 @@ QPushButton:hover {
   color: #d7dae0;
   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #3e4451, stop: 1 #3a404b);
 }
+
+
+
+
+QTabBar::tab {
+  height: 1.6em;
+  margin: 0px;
+  padding: 0px 0px 0px 1px;
+  border-radius: 0px;
+
+  color: rgba(157, 165, 180, 0.6);
+  background-color: #21252b;
+
+  border-top: 1px solid #181a1f;
+  border-left: 1px solid #181a1f;
+  border-right: 1px solid #181a1f;
+
+}
+
+QTabBar::tab:selected {
+  color: #d7dae0;
+  background-color: #282c34;
+
+  border-left: 2px solid #578af2;
+}
+
+
+
+QScrollBar:vertical {
+  width: 0.5em;
+}
+QScrollBar::handle {
+  border-radius: 0.2em;
+  background-color: #4b5362;
+}
+QScrollBar::handle:hover {
+  background-color: #868fa2;
+}
+
+QScrollBar::add-line, QScrollBar::sub-line {
+  width: 0px;
+  margin: 0px;
+  padding: 0px;
+  height: 0px;
+}
+
+QRadioButton::indicator {
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 0.6em;
+  background-color: rgba(157, 165, 180, 0.6);
+}
+
+QRadioButton::indicator:checked {
+  width: 0.5em;
+  height: 0.5em;
+
+  background-color: #282c34;
+
+  border-radius: 0.25em;
+
+  border: 5px solid red;
+}
+
