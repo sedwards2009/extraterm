@@ -287,8 +287,7 @@ QPushButton {
   font-weight: ${buttonFontWeight};
   font-size: ${buttonFontSize}pt;
 
-  padding: 0.8em 0.8em;
-  height: 1.4em;
+  padding: 0.6em 0.6em;
   min-height: 1.4em;
   border-radius: ${borderRadius};
   border: ${btnBorder};
@@ -308,7 +307,7 @@ ${AtomButtonVariant('QPushButton[cssClass~="danger"]', buttonDangerBgColor)}
 
 QPushButton[cssClass~="small"] {
   font-size: ${buttonFontSizeSmall}pt;
-  padding: 0.4em 0.5em;
+  padding: 0.3em 0.5em;
 }
 `;
 }
