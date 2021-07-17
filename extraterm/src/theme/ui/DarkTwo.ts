@@ -15,6 +15,7 @@ const uiBg = "#282c34";
 const uiBorder = "#181a1f";
 
 const headingsColor = "#ffffff";
+const accentColor = "#578af2";
 
 // const level1Color = "#353b45";
 const level1Color = lighten(uiBg, 6);
@@ -309,14 +310,36 @@ QPushButton[cssClass~="small"] {
   font-size: ${buttonFontSizeSmall}pt;
   padding: 0.3em 0.5em;
 }
+
+QPushButton[cssClass~="group-left"] {
+ border-top-right-radius: 0px;
+ border-bottom-right-radius: 0px;
+}
+
+QPushButton[cssClass~="group-middle"] {
+  border-radius: 0px;
+  border-left-width: 0px;
+}
+
+QPushButton[cssClass~="group-right"] {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+  border-left-width: 0px;
+}
 `;
 }
 
 function AtomButtonBG(baseRule: string, color: string, hoverColor: string, selectedColor: string, textColor: string): string {
   return `
+
 ${baseRule} {
   color: ${textColor};
   background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 ${toHex(lighten(color, 2))}, stop: 1 ${toHex(color)});
+}
+
+${baseRule}:focus {
+  border-color: ${toHex(accentColor)};
+  outline: none;
 }
 
 ${baseRule}:hover {
@@ -365,9 +388,6 @@ ${baseRule}:hover, ${baseRule}:focus {
   color: ${_textColor};
 }
 
-${baseRule}:focus {
-  border-color: transparent;
-}
 `;
 }
 

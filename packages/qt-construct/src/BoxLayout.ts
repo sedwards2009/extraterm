@@ -15,12 +15,16 @@ export interface BoxLayoutItem {
 export interface BoxLayoutOptions {
   direction: Direction;
   children: (NodeWidget<any> | BoxLayoutItem)[];
+  spacing?: number;
 }
 
 export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
-  const { children, direction } = options;
+  const { children, direction, spacing } = options;
 
   const boxLayout = new QBoxLayout(direction);
+  if (spacing !== undefined) {
+    boxLayout.setSpacing(spacing);
+  }
 
   for (const child of children) {
     if (child instanceof NodeWidget) {

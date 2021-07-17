@@ -55,6 +55,33 @@ function main(): void {
           RadioButton({text: "Selected Radio button", checked: true}),
 
           SpinBox({suffix: " frames", minimum: 0, maximum: 1000}),
+
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                { widget: PushButton({ text: "Left", cssClass: ["group-left"] }), stretch: 0 },
+                { widget: PushButton({ text: "Right", cssClass: ["group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                { widget: PushButton({ text: "Left", cssClass: ["group-left"] }), stretch: 0 },
+                { widget: PushButton({ text: "Middle", cssClass: ["group-middle"] }), stretch: 0 },
+                { widget: PushButton({ text: "Right", cssClass: ["group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+
           TabWidget({tabs: [
             {label: "Extraterm", page: Widget({})},
             {label: "Tabs", page: Widget({})},
