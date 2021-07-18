@@ -148,7 +148,7 @@ export function DarkTwoStyleSheet(resourceDirectory: string): string {
     QLabelStyleSheet() +
     QLineEditQSpinBoxStyleSheet() +
     QPushButtonStyleSheet() +
-    QRadioButtonStyleSheet() +
+    QRadioButtonStyleSheet(resourceDirectory) +
     QScrollBarStyleSheet() +
     QTabBarStyleSheet() +
     "";
@@ -435,24 +435,18 @@ ${baseRule}:hover, ${baseRule}:focus {
 `;
 }
 
-function QRadioButtonStyleSheet(): string {
+function QRadioButtonStyleSheet(resourceDirectory: string): string {
   return `
 QRadioButton::indicator {
-  width: 1.2em;
-  height: 1.2em;
-  border-radius: 0.6em;
-  background-color: rgba(157, 165, 180, 0.6);
+  width: 1em;
+  height: 1em;
+  border-radius: 0.49em;
+  background-color: ${componentBackgroundColor};
 }
 
 QRadioButton::indicator:checked {
-  width: 0.5em;
-  height: 0.5em;
-
-  background-color: #282c34;
-
-  border-radius: 0.25em;
-
-  border: 5px solid red;
+  background-color: ${brandInfo};
+  image: url(${resourceDirectory}/radio_checked.svg);
 }
 `;
 }
