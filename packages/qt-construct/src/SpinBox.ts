@@ -4,9 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QSpinBox } from "@nodegui/nodegui";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 
-export interface SpinBoxOptions {
-  id?: string;
+export interface SpinBoxOptions extends WidgetOptions {
   minimum?: number;
   maximum?: number;
   prefix?: string;
@@ -18,6 +18,9 @@ export interface SpinBoxOptions {
 export function SpinBox(options: SpinBoxOptions): QSpinBox {
   const { prefix, maximum, minimum, suffix, value, onValueChanged } = options;
   const spinBox = new QSpinBox();
+
+  ApplyWidgetOptions(spinBox, options);
+
   if (minimum !== undefined) {
     spinBox.setMinimum(minimum);
   }

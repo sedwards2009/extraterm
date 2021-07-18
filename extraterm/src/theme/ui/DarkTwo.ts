@@ -129,19 +129,28 @@ const buttonDangerColor = textColor;
 const buttonDangerBgColor = backgroundDangerColor;
 const buttonDangerBorderColor =  darken(buttonDangerBgColor, 5);
 
+const inputBackgroundColor = darken(backgroundColor, 6);
+const inputBorderColor = baseBorderColor;
+const inputPaddingVertical = "0.25em";
+const inputPaddingHorizontal = "0.5em";
+const inputBorderWidth = "1px";
+const inputActiveBgColor = mix(accentBgColor, inputBackgroundColor, 10);
+
 const btnBorder = `1px solid ${buttonDefaultBorderColor}`;
+
+const groupTextBgColor = buttonDefaultBgColor;
 
 
 export function DarkTwoStyleSheet(): string {
   return BodyStyleSheet() +
+    QCheckBoxStyleSheet() +
+    QComboBoxStyleSheet() +
     QLabelStyleSheet() +
-    // QCheckBoxStyleSheet() +
-    // QComboBoxStyleSheet() +
-    // QLineEditStyleSheet() +
+    QLineEditQSpinBoxStyleSheet() +
     QPushButtonStyleSheet() +
-    // QRadioButtonStyleSheet() +
-    // QTabBarStyleSheet() +
-    // QScrollBarStyleSheet() +
+    QRadioButtonStyleSheet() +
+    QScrollBarStyleSheet() +
+    QTabBarStyleSheet() +
     "";
 }
 
@@ -155,38 +164,6 @@ function BodyStyleSheet(): string {
 `;
 }
 
-function QLabelStyleSheet(): string {
-  return `
-QLabel[cssClass~="h1"],
-QLabel[cssClass~="h2"],
-QLabel[cssClass~="h3"],
-QLabel[cssClass~="h4"],
-QLabel[cssClass~="h5"],
-QLabel[cssClass~="h6"] {
-  font-weight: bold;
-  color: ${headingsColor};
-}
-
-QLabel[cssClass~="h1"] {
-  font-size: ${Math.round(2 * fontSizeBase)}pt;
-}
-QLabel[cssClass~="h2"] {
-  font-size: ${Math.round(1.75 * fontSizeBase)}pt;
-}
-QLabel[cssClass~="h3"] {
-  font-size: ${Math.round(1.4 * fontSizeBase)}pt;
-}
-QLabel[cssClass~="h4"] {
-  font-size: ${Math.round(1.1 * fontSizeBase)}pt;
-}
-QLabel[cssClass~="h5"] {
-  font-size: ${fontSizeBase}pt;
-}
-QLabel[cssClass~="h6"] {
-  font-size: ${Math.round(0.8 * fontSizeBase)}pt;
-}
-`;
-}
 
 function QCheckBoxStyleSheet(): string {
   return `
@@ -258,26 +235,92 @@ QComboBox QAbstractItemView:hover {
 `;
 }
 
+function QLabelStyleSheet(): string {
+  return `
+QLabel[cssClass~="h1"],
+QLabel[cssClass~="h2"],
+QLabel[cssClass~="h3"],
+QLabel[cssClass~="h4"],
+QLabel[cssClass~="h5"],
+QLabel[cssClass~="h6"] {
+  font-weight: bold;
+  color: ${headingsColor};
+}
 
-function QLineEditStyleSheet(): string {
+QLabel[cssClass~="h1"] {
+  font-size: ${Math.round(2 * fontSizeBase)}pt;
+}
+QLabel[cssClass~="h2"] {
+  font-size: ${Math.round(1.75 * fontSizeBase)}pt;
+}
+QLabel[cssClass~="h3"] {
+  font-size: ${Math.round(1.4 * fontSizeBase)}pt;
+}
+QLabel[cssClass~="h4"] {
+  font-size: ${Math.round(1.1 * fontSizeBase)}pt;
+}
+QLabel[cssClass~="h5"] {
+  font-size: ${fontSizeBase}pt;
+}
+QLabel[cssClass~="h6"] {
+  font-size: ${Math.round(0.8 * fontSizeBase)}pt;
+}
+
+QLabel[cssClass~="group-left"], QLabel[cssClass~="group-right"] {
+  color: ${textColor};
+  background-color: ${groupTextBgColor};
+  padding: ${inputPaddingVertical} ${inputPaddingHorizontal};
+  border: ${inputBorderWidth} solid ${inputBorderColor};
+}
+
+QLabel[cssClass~="group-left"] {
+  border-right-width: 0px;
+  border-top-left-radius: ${borderRadius};
+  border-bottom-left-radius: ${borderRadius};
+}
+
+QLabel[cssClass~="group-right"] {
+  border-left-width: 0px;
+  border-top-right-radius: ${borderRadius};
+  border-bottom-right-radius: ${borderRadius};
+}
+`;
+}
+
+function QLineEditQSpinBoxStyleSheet(): string {
   return `
 QLineEdit, QSpinBox {
-  color: #9da5b4;
-  background-color: #1b1d23;
-  padding: 0.25em 0.5em;
-  border: 1px solid #181a1f;
+  color: ${textColor};
+  background-color: ${inputBackgroundColor};
+  padding: ${inputPaddingVertical} ${inputPaddingHorizontal};
+  border: ${inputBorderWidth} solid ${inputBorderColor};
   border-radius: ${borderRadius};
-
 }
+
 QLineEdit:hover, QSpinBox:hover {
-  color: #d7dae0;
+  color: ${textHighlightColor};
 }
 
 QLineEdit:focus, QSpinBox:focus {
-  color: #d7dae0;
-  background-color: #1f2533;
+  color: ${textHighlightColor};
+  background-color: ${inputActiveBgColor};
+
   outline: none;
-  border-color: #578af2;
+  border-color: ${accentColor};
+}
+
+QLineEdit[cssClass~="group-left"], QSpinBox[cssClass~="group-left"] {
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+QLineEdit[cssClass~="group-middle"], QSpinBox[cssClass~="group-middle"] {
+  border-radius: 0px;
+}
+
+QLineEdit[cssClass~="group-right"], QSpinBox[cssClass~="group-right"] {
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
 }
 `;
 }
@@ -391,28 +434,24 @@ ${baseRule}:hover, ${baseRule}:focus {
 `;
 }
 
-function QTabBarStyleSheet(): string {
+function QRadioButtonStyleSheet(): string {
   return `
-QTabBar::tab {
-  height: 1.6em;
-  margin: 0px;
-  padding: 0px 0px 0px 1px;
-  border-radius: 0px;
-
-  color: rgba(157, 165, 180, 0.6);
-  background-color: #21252b;
-
-  border-top: 1px solid #181a1f;
-  border-left: 1px solid #181a1f;
-  border-right: 1px solid #181a1f;
-
+QRadioButton::indicator {
+  width: 1.2em;
+  height: 1.2em;
+  border-radius: 0.6em;
+  background-color: rgba(157, 165, 180, 0.6);
 }
 
-QTabBar::tab:selected {
-  color: #d7dae0;
+QRadioButton::indicator:checked {
+  width: 0.5em;
+  height: 0.5em;
+
   background-color: #282c34;
 
-  border-left: 2px solid #578af2;
+  border-radius: 0.25em;
+
+  border: 5px solid red;
 }
 `;
 }
@@ -439,24 +478,28 @@ QScrollBar::add-line, QScrollBar::sub-line {
 `;
 }
 
-function QRadioButtonStyleSheet(): string {
+function QTabBarStyleSheet(): string {
   return `
-QRadioButton::indicator {
-  width: 1.2em;
-  height: 1.2em;
-  border-radius: 0.6em;
-  background-color: rgba(157, 165, 180, 0.6);
+QTabBar::tab {
+  height: 1.6em;
+  margin: 0px;
+  padding: 0px 0px 0px 1px;
+  border-radius: 0px;
+
+  color: rgba(157, 165, 180, 0.6);
+  background-color: #21252b;
+
+  border-top: 1px solid #181a1f;
+  border-left: 1px solid #181a1f;
+  border-right: 1px solid #181a1f;
+
 }
 
-QRadioButton::indicator:checked {
-  width: 0.5em;
-  height: 0.5em;
-
+QTabBar::tab:selected {
+  color: #d7dae0;
   background-color: #282c34;
 
-  border-radius: 0.25em;
-
-  border: 5px solid red;
+  border-left: 2px solid #578af2;
 }
 `;
 }

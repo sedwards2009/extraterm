@@ -81,6 +81,70 @@ function main(): void {
             })}
           ),
 
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                { widget: Label({ text: "I like", cssClass: ["group-left"] }), stretch: 0 },
+                { widget: LineEdit({ text: "bananas", cssClass: ["group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                { widget: Label({ text: "I like", cssClass: ["group-left"] }), stretch: 0 },
+                { widget: LineEdit({ text: "bananas", cssClass: ["group-middle"] }), stretch: 0 },
+                { widget: Label({ text: "for breakfast.", cssClass: ["group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                { widget: Label({ text: "$", cssClass: ["group-left"] }), stretch: 0 },
+                { widget: SpinBox({minimum: 0, maximum: 1000, cssClass: ["group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                { widget: Label({ text: "$", cssClass: ["group-left"] }), stretch: 0 },
+                { widget: SpinBox({minimum: 0, maximum: 1000, cssClass: ["group-middle"] }), stretch: 0 },
+                { widget: Label({ text: ".00", cssClass: ["group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                { widget: SpinBox({minimum: 0, maximum: 1000, cssClass: ["group-left"] }), stretch: 0 },
+                { widget: Label({ text: "euro", cssClass: ["group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+          SpinBox({suffix: " frames", minimum: 0, maximum: 1000}),
+
 
           TabWidget({tabs: [
             {label: "Extraterm", page: Widget({})},
