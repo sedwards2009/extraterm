@@ -2,6 +2,8 @@ import { Direction, QMainWindow, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton, ScrollArea, SpinBox, TabWidget,
   Widget } from "qt-construct";
 import * as fs from "fs";
+import * as path from "path";
+import * as SourceDir from './SourceDir';
 
 import { DarkTwoStyleSheet } from "./theme/ui/DarkTwo";
 
@@ -145,7 +147,6 @@ function main(): void {
 
           SpinBox({suffix: " frames", minimum: 0, maximum: 1000}),
 
-
           TabWidget({tabs: [
             {label: "Extraterm", page: Widget({})},
             {label: "Tabs", page: Widget({})},
@@ -156,7 +157,7 @@ function main(): void {
     })
   });
 
-  const styleSheet = DarkTwoStyleSheet();
+  const styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
   console.log(styleSheet);
 
   win.resize(600, 800);

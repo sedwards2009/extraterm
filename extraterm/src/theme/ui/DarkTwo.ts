@@ -141,9 +141,9 @@ const btnBorder = `1px solid ${buttonDefaultBorderColor}`;
 const groupTextBgColor = buttonDefaultBgColor;
 
 
-export function DarkTwoStyleSheet(): string {
+export function DarkTwoStyleSheet(resourceDirectory: string): string {
   return BodyStyleSheet() +
-    QCheckBoxStyleSheet() +
+    QCheckBoxStyleSheet(resourceDirectory) +
     QComboBoxStyleSheet() +
     QLabelStyleSheet() +
     QLineEditQSpinBoxStyleSheet() +
@@ -165,18 +165,19 @@ function BodyStyleSheet(): string {
 }
 
 
-function QCheckBoxStyleSheet(): string {
+function QCheckBoxStyleSheet(resourceDirectory: string): string {
   return `
 QCheckBox::indicator {
   border-radius: ${borderRadius};
-  width: 1.2em;
-  height: 1.2em;
+  width: 1em;
+  height: 1em;
 
   background-color: ${componentBackgroundColor};
 }
 
 QCheckBox::indicator:checked {
   background-color: ${brandInfo};
+  image: url(${resourceDirectory}/checkbox_checked.svg);
 }
 
 QCheckBox::indicator:pressed {
