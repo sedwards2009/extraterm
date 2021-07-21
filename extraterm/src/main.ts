@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as SourceMapSupport from "source-map-support";
+import * as SourceDir from './SourceDir';
 import * as os from "os";
 import * as fs from "fs";
 import * as path from "path";
@@ -31,6 +32,8 @@ import { Tab } from "./Tab";
 import { SettingsTab } from "./settings/SettingsTab";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
+import { DarkTwoStyleSheet } from "./theme/ui/DarkTwo";
+
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";

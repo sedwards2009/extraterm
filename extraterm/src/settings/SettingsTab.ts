@@ -46,6 +46,7 @@ export class SettingsTab implements Tab {
     let stackedWidget: QStackedWidget = null;
 
     this.#contentWidget = Widget({
+      cssClass: "background",
       layout: BoxLayout({
         direction: Direction.LeftToRight,
         children: [
@@ -65,27 +66,23 @@ export class SettingsTab implements Tab {
             stretch: 0,
           },
           {widget:
-            stackedWidget = StackedWidget({children: [
-              this.#createGeneralPage(),
-              this.#createAppearancePage()
-            ]}),
+            stackedWidget = StackedWidget({
+              cssClass: "background",
+              children: [
+                this.#createGeneralPage(),
+                this.#createAppearancePage()
+              ]}),
             stretch: 1,
           }
         ]
       })
     });
-
-    // this.#createGeneralPage();
-
-    // this.#contentLayout = new QBoxLayout(Direction.TopToBottom, this.#contentWidget);
-    // const lineEdit = new QLineEdit();
-    // this.#contentLayout.addWidget(lineEdit);
-
   }
 
   #createGeneralPage(): QScrollArea {
     return ScrollArea({
       widget: Widget({
+        cssClass: "background",
         layout: GridLayout({
           columns: 2,
           children: [
@@ -140,6 +137,7 @@ export class SettingsTab implements Tab {
 
     return ScrollArea({
       widget: Widget({
+        cssClass: "background",
         layout: GridLayout({
           columns: 2,
           children: [

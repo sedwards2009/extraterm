@@ -4,11 +4,13 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Logger, log, getLogger } from "extraterm-logging";
+import * as path from "path";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, WidgetEventTypes, QKeyEvent } from "@nodegui/nodegui";
+import * as SourceDir from './SourceDir';
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
@@ -20,6 +22,7 @@ import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
+import { DarkTwoStyleSheet } from "./theme/ui/DarkTwo";
 
 
 export class Window {
@@ -61,9 +64,13 @@ export class Window {
     this.#windowWidget = new QWidget();
     this.#windowWidget.setWindowTitle("Extraterm Qt");
     this.#windowWidget.setFocusPolicy(FocusPolicy.ClickFocus);
+    this.#windowWidget.setProperty("cssClass", ["background"]);
     this.#windowWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
+
+    const styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
+    this.#windowWidget.setStyleSheet(styleSheet);
 
     this.#windowWidget.resize(800, 480);
 

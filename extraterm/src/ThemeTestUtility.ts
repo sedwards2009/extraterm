@@ -16,6 +16,7 @@ function main(): void {
   centralWidget = ScrollArea({
     widgetResizable: true,
     widget: Widget({
+      cssClass: "background",
       layout: BoxLayout({
         direction: Direction.TopToBottom,
         children: [

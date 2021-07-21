@@ -97,7 +97,7 @@ export class TerminalBlock implements Block {
       return;
     }
 
-    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const metrics = this.#terminalVisualConfig.fontMetrics;
     const dimensions = this.#emulator.getDimensions();
     const newHeightPx = (dimensions.materializedRows + this.#scrollback.length) * metrics.heightPx;
     if (newHeightPx === this.#heightPx) {

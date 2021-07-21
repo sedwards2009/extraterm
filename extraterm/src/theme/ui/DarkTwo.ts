@@ -3,11 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { alpha, change, darken, fadeOut, hsl, lighten, lightness, mix, rgba, saturate, toHex } from "khroma";
+import { alpha, change, darken, hsl, lighten, lightness, mix, rgba, saturate, toHex } from "khroma";
 
 const fontSizeBase = 9;
 const fontSizeSmall = Math.round(fontSizeBase * 0.9);
-
 
 const uiFg = "#9da5b4";
 const accentBgColor = "hsl(219,  79%, 66%)";
@@ -19,11 +18,8 @@ const accentColor = "#578af2";
 
 // const level1Color = "#353b45";
 const level1Color = lighten(uiBg, 6);
-
-
 const level2Color = uiBg;
 const level3Color = darken(uiBg, 3);
-
 
 const textColor = uiFg;
 
@@ -36,7 +32,6 @@ const backgroundHighlightColor = rgba(255, 255, 255, 0.07);
 // Background color for `<body>`.
 const backgroundColor = uiBg;
 const backgroundSelectedColor = accentBgColor;
-
 
 // const textColorSubtle = "rgba(157, 165, 180, 0.6)";
 
@@ -60,7 +55,6 @@ const brandTextInfo = "#ffffff";
 const brandTextWarning = "#ffffff";
 const brandTextDanger = "#ffffff";
 
-
 const baseBorderColor = uiBorder;
 
 
@@ -73,8 +67,6 @@ const linkColor = brandPrimary;
 const linkHoverColor = darken(linkColor, 15);
 // Link hover decoration.
 const linkHoverDecoration = "underline";
-
-
 
 //-------------------------------------------------------------------------
 //  Buttons
@@ -129,6 +121,7 @@ const buttonDangerColor = textColor;
 const buttonDangerBgColor = backgroundDangerColor;
 const buttonDangerBorderColor =  darken(buttonDangerBgColor, 5);
 
+const inputFontSize = "1.2em";
 const inputBackgroundColor = darken(backgroundColor, 6);
 const inputBorderColor = baseBorderColor;
 const inputPaddingVertical = "0.25em";
@@ -139,16 +132,23 @@ const inputActiveBgColor = mix(accentBgColor, inputBackgroundColor, 10);
 const btnBorder = `1px solid ${buttonDefaultBorderColor}`;
 
 const groupTextBgColor = buttonDefaultBgColor;
+const dropdownBgColor = level3Color;
+const dropdownLinkHoverColor = textSelectedColor;
+const dropdownLinkHoverBg = backgroundSelectedColor;
+const dropdownBorder = baseBorderColor;
 
 
 export function DarkTwoStyleSheet(resourceDirectory: string): string {
   return BodyStyleSheet() +
+    QWidgetStyleSheet() +
     QCheckBoxStyleSheet(resourceDirectory) +
-    QComboBoxStyleSheet() +
+    QComboBoxStyleSheet(resourceDirectory) +
     QLabelStyleSheet() +
     QLineEditQSpinBoxStyleSheet() +
+    QMenuStyleSheet() +
     QPushButtonStyleSheet() +
     QRadioButtonStyleSheet(resourceDirectory) +
+    QScrollAreaStyleSheet() +
     QScrollBarStyleSheet() +
     QTabBarStyleSheet() +
     "";
@@ -158,12 +158,16 @@ function BodyStyleSheet(): string {
   return `
 * {
   color: ${textColor};
-  background-color: #282c34;
-  font-size: ${fontSizeBase}pt
+  font-size: ${fontSizeBase}pt;
 }
 `;
 }
 
+function IncludeDefaultBackground(): string {
+  return `
+    background-color: ${backgroundColor};
+`;
+}
 
 function QCheckBoxStyleSheet(resourceDirectory: string): string {
   return `
@@ -186,7 +190,7 @@ QCheckBox::indicator:pressed {
 `;
 }
 
-function QComboBoxStyleSheet(): string {
+function QComboBoxStyleSheet(resourceDirectory: string): string {
   return `
 QComboBox {
   background-color: #353b45;
@@ -226,12 +230,8 @@ QComboBox QAbstractItemView {
   /* color: #ff00ff; */
 }
 
-QComboBox QAbstractItemView:hover {
-color: #80ff80;
-}
-
-QComboBox QAbstractItemView:hover {
-  color: #ffff00;
+QComboBox::down-arrow {
+  image: url(${resourceDirectory}/combobox_arrow.svg);
 }
 `;
 }
@@ -435,6 +435,29 @@ ${baseRule}:hover, ${baseRule}:focus {
 `;
 }
 
+function QMenuStyleSheet(): string {
+  return `
+QMenu {
+  background-color: ${dropdownBgColor};
+  border: 1px solid ${dropdownBorder};
+  border-radius: ${borderRadius};
+}
+
+QMenu::item {
+  font-size: ${inputFontSize};
+  font-weight: normal;
+  color: ${textColor};
+  background-color: ${dropdownBgColor};
+  padding: 1px;
+}
+
+QMenu::item:selected {
+  color: ${dropdownLinkHoverColor};
+  background-color: ${dropdownLinkHoverBg};
+}
+`;
+}
+
 function QRadioButtonStyleSheet(resourceDirectory: string): string {
   return `
 QRadioButton::indicator {
@@ -451,9 +474,21 @@ QRadioButton::indicator:checked {
 `;
 }
 
+function QScrollAreaStyleSheet(): string {
+  return `
+QScrollArea {
+  ${IncludeDefaultBackground()}
+}
+`;
+}
+
 function QScrollBarStyleSheet(): string {
   return `
+QScrollBar {
+  ${IncludeDefaultBackground()}
+}
 QScrollBar:vertical {
+  ${IncludeDefaultBackground()}
   width: 0.5em;
 }
 QScrollBar::handle {
@@ -469,6 +504,7 @@ QScrollBar::add-line, QScrollBar::sub-line {
   margin: 0px;
   padding: 0px;
   height: 0px;
+  ${IncludeDefaultBackground()}
 }
 `;
 }
@@ -499,6 +535,14 @@ QTabBar::tab:selected {
 `;
 }
 
+function QWidgetStyleSheet(): string {
+  return `
+QWidget[cssClass~="background"] {
+  ${IncludeDefaultBackground()}
+}
+`;
+}
+
 function contrast(baseColor, color1, color2) {
   const brightBase = lightness(baseColor);
   const bright1 = lightness(color1);
@@ -509,4 +553,3 @@ function contrast(baseColor, color1, color2) {
     return color2;
   }
 }
-
