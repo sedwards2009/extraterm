@@ -89,6 +89,7 @@ export class Window {
     const tabbarContainer = new QWidget();
     const tabbarContainerLayout = new QBoxLayout(Direction.LeftToRight, tabbarContainer);
     this.#tabBar = new QTabBar();
+    this.#tabBar.setExpanding(false);
     this.#tabBar.addEventListener("currentChanged", (index: number) => {
       this.#handleTabBarChanged(index);
     });

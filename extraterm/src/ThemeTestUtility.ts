@@ -148,10 +148,12 @@ function main(): void {
 
           SpinBox({suffix: " frames", minimum: 0, maximum: 1000}),
 
-          TabWidget({tabs: [
-            {label: "Extraterm", page: Widget({})},
-            {label: "Tabs", page: Widget({})},
-          ]}),
+          TabWidget({
+            tabs: [
+              {label: "Extraterm", page: Widget({})},
+              {label: "Tabs", page: Widget({})},
+            ]
+          }),
           { widget: Widget({}), stretch: 1}
         ]
       })

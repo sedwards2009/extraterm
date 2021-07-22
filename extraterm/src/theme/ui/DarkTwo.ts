@@ -137,6 +137,12 @@ const dropdownLinkHoverColor = textSelectedColor;
 const dropdownLinkHoverBg = backgroundSelectedColor;
 const dropdownBorder = baseBorderColor;
 
+const tabBorderColor = baseBorderColor;
+const tabBackgroundColor = level3Color;
+const tabTextColor = textColorSubtle;
+
+const tabTextColorActive = textHighlightColor;
+const tabBackgroundColorActive = level2Color;
 
 export function DarkTwoStyleSheet(resourceDirectory: string): string {
   return BodyStyleSheet() +
@@ -150,7 +156,7 @@ export function DarkTwoStyleSheet(resourceDirectory: string): string {
     QRadioButtonStyleSheet(resourceDirectory) +
     QScrollAreaStyleSheet() +
     QScrollBarStyleSheet() +
-    QTabBarStyleSheet() +
+    QTabBarStyleSheet(resourceDirectory) +
     "";
 }
 
@@ -509,29 +515,61 @@ QScrollBar::add-line, QScrollBar::sub-line {
 `;
 }
 
-function QTabBarStyleSheet(): string {
+function QTabBarStyleSheet(resourceDirectory: string): string {
   return `
 QTabBar::tab {
   height: 1.6em;
   margin: 0px;
-  padding: 0px 0px 0px 1px;
+
+  padding-top: 0px;
+  padding-bottom: 1px;
+  padding-left: 0.666em;
+  padding-right: 0.666em;
+
   border-radius: 0px;
 
-  color: rgba(157, 165, 180, 0.6);
-  background-color: #21252b;
+  color: ${toHex(tabTextColor)};
+  background-color: ${toHex(tabBackgroundColor)};
 
-  border-top: 1px solid #181a1f;
-  border-left: 1px solid #181a1f;
-  border-right: 1px solid #181a1f;
+  border-top: 1px solid ${tabBorderColor};
+  border-left: 1px solid ${tabBorderColor};
+  border-bottom: 1px solid ${tabBorderColor};
+}
 
+QTabBar::tab:last, QTabBar::tab:only-one {
+  border-right: 1px solid ${tabBorderColor};
+}
+
+QTabBar {
+  qproperty-drawBase: 0;
+
+  background-color: ${tabBackgroundColor};
+  border-top: 0px;
+  border-bottom: 1px solid ${tabBorderColor};
+  margin: 0px;
 }
 
 QTabBar::tab:selected {
-  color: #d7dae0;
-  background-color: #282c34;
+  color: ${tabTextColorActive};
+  background-color: ${tabBackgroundColorActive};
 
-  border-left: 2px solid #578af2;
+  border-left: 2px solid ${accentColor};
+  border-bottom: 1px solid ${tabBackgroundColorActive};
 }
+
+QTabBar::close-button {
+  background-color: transparent;
+  border: 0px;
+
+  image: url(${resourceDirectory}/close_normal.svg);
+}
+
+QTabBar::close-button:hover {
+  border-radius: ${borderRadius};
+  background-color: ${buttonPrimaryBgColor};
+  image: url(${resourceDirectory}/close_hover.svg);
+}
+
 `;
 }
 
