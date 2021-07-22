@@ -43,6 +43,9 @@ export class Window {
   #terminalVisualConfig: TerminalVisualConfig = null;
   #themeManager: ThemeManager = null;
 
+  // FIXME: Apply stylesheets on the app level, not window.
+  #styleSheet: string = null;
+
   onTabCloseRequest: Event<Tab> = null;
   #onTabCloseRequestEventEmitter = new EventEmitter<Tab>();
 
@@ -69,8 +72,8 @@ export class Window {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
 
-    const styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
-    this.#windowWidget.setStyleSheet(styleSheet);
+    this.#styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
+    this.#windowWidget.setStyleSheet(this.#styleSheet);
 
     this.#windowWidget.resize(800, 480);
 
@@ -116,6 +119,7 @@ export class Window {
     this.#hamburgerMenuButton.setPopupMode(ToolButtonPopupMode.InstantPopup);
 
     this.#hamburgerMenu = new QMenu();
+    this.#hamburgerMenu.setStyleSheet(this.#styleSheet);
     this.#hamburgerMenuButton.setMenu(this.#hamburgerMenu);
     this.#hamburgerMenu.addEventListener("triggered", (nativeAction) => {
       const action = new QAction(nativeAction);

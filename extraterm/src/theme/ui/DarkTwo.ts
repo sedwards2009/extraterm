@@ -17,15 +17,15 @@ const headingsColor = "#ffffff";
 const accentColor = "#578af2";
 
 // const level1Color = "#353b45";
-const level1Color = lighten(uiBg, 6);
+const level1Color = toHex(lighten(uiBg, 6));
 const level2Color = uiBg;
-const level3Color = darken(uiBg, 3);
+const level3Color = toHex(darken(uiBg, 3));
 
 const textColor = uiFg;
 
 const textColorSubtle = change(textColor, { a: alpha(textColor) - 0.4});
 const textMinorColor = darken(textColor, 20);
-const textHighlightColor = lighten(textColor, 20);
+const textHighlightColor = toHex(lighten(textColor, 20));
 const textSelectedColor = "#ffffff";
 const backgroundHighlightColor = rgba(255, 255, 255, 0.07);
 
@@ -460,6 +460,12 @@ QMenu::item {
 QMenu::item:selected {
   color: ${dropdownLinkHoverColor};
   background-color: ${dropdownLinkHoverBg};
+}
+
+QMenu::separator {
+  height: 1em;
+  color: ${textColor};
+  backgrond-color: ${textColor};
 }
 `;
 }
