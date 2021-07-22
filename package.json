@@ -55,7 +55,7 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "@nodegui/nodegui": "^0.30.3",
+    "@nodegui/nodegui": "^0.34.0",
     "node-abi": "2.21.0",
     "qode": "^0.1.0"
   },

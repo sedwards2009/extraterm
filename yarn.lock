@@ -596,10 +596,10 @@
     node-fetch "^2.6.0"
     progress "^2.0.3"
 
-"@nodegui/nodegui@^0.30.3":
-  version "0.30.3"
-  resolved "https://registry.yarnpkg.com/@nodegui/nodegui/-/nodegui-0.30.3.tgz#e5537f96516f5c137a8dc8f4cc3edd475a9a6de7"
-  integrity sha512-fhMf6/tqO80VDc8AalJRQB2aesDLms0tWx+Rqs3Nm9C46l9xvVpNbfq7BxdPlotqajCWFbUKU7VC3xLvHLz8OA==
+"@nodegui/nodegui@^0.34.0":
+  version "0.34.0"
+  resolved "https://registry.yarnpkg.com/@nodegui/nodegui/-/nodegui-0.34.0.tgz#956418cea3c12d9e07aa741b4719aeef794cf5df"
+  integrity sha512-QB6TXkoCDBAbNy+7o8YSL30D7vaRDZaKAtavUGucxTcVSwJYb+GN37O7YLZRsg02lplR3R/nrCEU+ZMdrdyopA==
   dependencies:
     "@nodegui/artifact-installer" "^1.1.0"
     "@nodegui/qode" "^2.1.0"
@@ -786,7 +786,7 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-2.0.3.tgz#c893b73721db73699943bfc3653b1deb7faa4a3a"
   integrity sha512-Jus9s4CDbqwocc5pOAnh8ShfrnMcPHuJYzVcSUU7lrh8Ni5HuIqX3oilL86p3dlTrk0LzHRCgA/GQ7uNCw6l2Q==
 
-"@types/node@*", "@types/node@^14.14.37":
+"@types/node@*", "@types/node@14.14.37", "@types/node@^14.14.37":
   version "14.14.37"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.37.tgz#a3dd8da4eb84a996c36e331df98d82abd76b516e"
   integrity sha512-XYmBiy+ohOR4Lh5jE379fV2IU+6Jn4g5qASinhitfyO71b/sCo6MKsMLF5tc7Zf2CE8hViVQyYSobJNke8OvUw==
