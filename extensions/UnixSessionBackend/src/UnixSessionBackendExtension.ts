@@ -57,6 +57,9 @@ class UnixBackend implements SessionBackend {
 
     const ptyEnv = _.cloneDeep(process.env);
     ptyEnv["TERM"] = "xterm-256color";
+    if (process.platform === "darwin") {
+      ptyEnv["LANG"] = this._readAppleLocale() + ".UTF-8";
+    }
 
     let prop: string;
     for (prop in sessionOptions.extraEnv) {
@@ -143,6 +146,20 @@ class UnixBackend implements SessionBackend {
       const fields = line.split(/:/g);
       return { username: fields[0], homeDir: fields[5], shell: fields[6] };
     });
+  }
+
+  private _readAppleLocale(): string {
+    try {
+      const result: string = <any> child_process.execFileSync("defaults",
+        ["read", "-g", "AppleLocale"],
+        {encoding: "utf8"});
+      const locale = result.trim();
+      this._log.info("Found user locale: " + locale);
+      return locale;
+    } catch(e) {
+      this._log.warn("Couldn't run defaults command to find the user's locale. Defaulting to en_US");
+      return "en_US";
+    }
   }
 
   private _validateDirectoryPath(dirPath: string): string {
