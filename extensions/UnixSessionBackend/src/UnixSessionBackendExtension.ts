@@ -57,7 +57,7 @@ class UnixBackend implements SessionBackend {
 
     const ptyEnv = _.cloneDeep(process.env);
     ptyEnv["TERM"] = "xterm-256color";
-    if (process.platform === "darwin") {
+    if (process.platform === "darwin" && !("LANG" in ptyEnv)) {
       ptyEnv["LANG"] = this._readAppleLocale() + ".UTF-8";
     }
 
