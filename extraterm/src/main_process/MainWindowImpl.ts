@@ -39,6 +39,7 @@ export class MainWindowImpl implements MainWindow {
   private _log: Logger = null;
 
   #id = -1;
+  #webContentsId = -1;
   #configDatabase: ConfigDatabase = null;
   #themeManager: ThemeManager = null;
   #configIndex = -1;
@@ -78,6 +79,10 @@ export class MainWindowImpl implements MainWindow {
 
   get id(): number {
     return this.#id;
+  }
+
+  get webContentsId(): number {
+    return this.#webContentsId;
   }
 
   get browserId(): number {
@@ -137,7 +142,8 @@ export class MainWindowImpl implements MainWindow {
     }
 
     const newWindow = new BrowserWindow(newBrowserWindowOptions);
-
+    this.#id = newWindow.id;
+    this.#webContentsId = newWindow.webContents.id;
     if (options?.openDevTools) {
       newWindow.webContents.openDevTools();
     }
@@ -165,7 +171,7 @@ export class MainWindowImpl implements MainWindow {
 
     let params = "?loadingBackgroundColor=" + themeInfo.loadingBackgroundColor.replace("#", "") +
       "&loadingForegroundColor=" + themeInfo.loadingForegroundColor.replace("#", "");
-    if (options.bareWindow) {
+    if (options?.bareWindow) {
       params += "&bareWindow=true";
     }
 
@@ -178,8 +184,6 @@ export class MainWindowImpl implements MainWindow {
     newWindow.webContents.on("devtools-opened", () => {
       this.#onDevToolsOpenedEventEmitter.fire(newWindow);
     });
-
-    this.#id = newWindow.id;
   }
 
   async handleWindowReady(): Promise<void> {

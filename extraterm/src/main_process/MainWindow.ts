@@ -6,6 +6,7 @@
 
 export interface MainWindow {
   id: number;
+  webContentsId: number;
   isMinimized(): boolean;
   isVisible(): boolean;
   moveTop(): void;

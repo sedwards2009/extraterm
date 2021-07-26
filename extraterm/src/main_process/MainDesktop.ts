@@ -241,7 +241,7 @@ export class MainDesktop {
 
   getWindowById(windowId: number): MainWindow {
     for (const ew of this.#extratermWindows) {
-      if (ew.id === windowId) {
+      if (ew.id === windowId || ew.webContentsId === windowId) {
         return ew;
       }
     }

@@ -6,6 +6,7 @@
 import { BrowserWindow, ipcMain as ipc, clipboard, webContents } from "electron";
 import * as _ from "lodash";
 import { BulkFileState } from '@extraterm/extraterm-extension-api';
+import { later } from "extraterm-later";
 import { getLogger, Logger, log } from "extraterm-logging";
 import { createUuid } from 'extraterm-uuid';
 
@@ -418,7 +419,13 @@ export class MainIpc {
   }
 
   private _handleNewWindow(): void {
-    this.#mainDesktop.openWindow();
+    const newWindow = this.#mainDesktop.openWindow();
+    newWindow.ready().then(() => {
+      this.sendCloseSplashToWindow(newWindow.id);
+    });
+    later(10000).then(() => {
+      this.sendCloseSplashToWindow(newWindow.id);
+    });
   }
 
   private _handleThemeListRequest(): Messages.ThemeListMessage {
