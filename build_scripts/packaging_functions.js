@@ -82,16 +82,17 @@ async function pruneNodeGui(versionedOutputDir, platform) {
   const prevDir = pwd();
   cd(nodeGuiDir);
 
-  await materializeSymlinks(".");
+  // await materializeSymlinks(".");
 
   pruneDirTreeWithWhitelist("build", [
     /\.node$/
   ]);
   pruneDirTreeWithWhitelist("miniqt", [
-    /\.so$/
+    /\.so$/,
+    /\.so\..*$/
   ]);
 
-  // TODO: String the library .so files
+  // TODO: Strip the library .so files
 
   await pruneEmptyDirectories("build");
   await pruneEmptyDirectories("miniqt");
