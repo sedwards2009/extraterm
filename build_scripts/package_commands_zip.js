@@ -38,7 +38,7 @@ async function main() {
 
   const commandsDir = packageData.name + "-commands-" + version;
   echo("Creating " + commandsDir);
-  cp("-r", "extraterm/src/commands", path.join(BUILD_TMP_DIR, commandsDir));
+  cp("-r", "main/src/commands", path.join(BUILD_TMP_DIR, commandsDir));
   cd(BUILD_TMP_DIR);
   exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
   cd(SRC_DIR);

@@ -16,22 +16,21 @@ const makeDmg = packagingFunctions.makeDmg;
 const log = console.log.bind(console);
 
 async function main() {
-  "use strict";
-  
+
   if ( ! test('-f', './package.json')) {
     echo("This script was called from the wrong directory.");
     return;
   }
 
   const linuxZipOnly = process.argv.indexOf("--linux-zip-only") !== -1;
-  
-  const ROOT_SRC_DIR = "" + pwd();
-  const BUILD_TMP_DIR = path.join(ROOT_SRC_DIR, 'build_tmp');
-  if (test('-d', BUILD_TMP_DIR)) {
-    rm('-rf', BUILD_TMP_DIR);
+
+  const rootSrcDir = "" + pwd();
+  const buildTmpDir = path.join(rootSrcDir, 'build_tmp');
+  if (test('-d', buildTmpDir)) {
+    rm('-rf', buildTmpDir);
   }
-  mkdir(BUILD_TMP_DIR);
-  
+  mkdir(buildTmpDir);
+
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
 
@@ -40,8 +39,8 @@ async function main() {
 
   echo("Fetching a clean copy of the source code from " + gitUrl);
 
-  cd(BUILD_TMP_DIR);
-  
+  cd(buildTmpDir);
+
   exec("git clone -b " + info.branch + " " + gitUrl);
   cd("extraterm");
   const SRC_DIR = "" + pwd();
@@ -50,7 +49,6 @@ async function main() {
   echo("Setting up the run time dependencies in " + SRC_DIR);
 
   exec("yarn install");
-  exec("yarn run electron-rebuild");
   exec("yarn run build");
 
   echo("Removing development dependencies");
@@ -61,20 +59,17 @@ async function main() {
   // Create the commands zip
   echo("Creating commands.zip");
   const commandsDir = packageData.name + "-commands-" + version;
-  cp("-r", "extraterm/src/commands", path.join(BUILD_TMP_DIR, commandsDir));
-  cd(BUILD_TMP_DIR);
+  cp("-r", "extraterm/src/commands", path.join(buildTmpDir, commandsDir));
+  cd(buildTmpDir);
   exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
   cd(SRC_DIR);
-
-  const electronVersion = packageData.devDependencies['electron'];
 
   if (linuxZipOnly) {
     await makePackage( {
       arch: "x64",
       platform: "linux",
-      electronVersion,
       version,
-      outputDir: BUILD_TMP_DIR,
+      outputDir: buildTmpDir,
       replaceModuleDirs: true
     });
     log("Done");
@@ -82,20 +77,18 @@ async function main() {
     if (! await makePackage( {
           arch: "x64",
           platform: "win32",
-          electronVersion,
           version,
-          outputDir: BUILD_TMP_DIR,
+          outputDir: buildTmpDir,
           replaceModuleDirs: true
         })) {
       return;
     }
-    
+
     if (! await makePackage( {
           arch: "x64",
           platform: "linux",
-          electronVersion,
           version,
-          outputDir: BUILD_TMP_DIR,
+          outputDir: buildTmpDir,
           replaceModuleDirs: true
         })) {
       return;
@@ -104,9 +97,8 @@ async function main() {
     if (! await makePackage( {
           arch: "x64",
           platform: "darwin",
-          electronVersion,
           version,
-          outputDir: BUILD_TMP_DIR,
+          outputDir: buildTmpDir,
           replaceModuleDirs: true
         })) {
       return;
@@ -114,7 +106,7 @@ async function main() {
 
     if (! makeDmg({
           version,
-          outputDir: BUILD_TMP_DIR,
+          outputDir: buildTmpDir,
           useDocker: true
         })) {
       return;
@@ -122,7 +114,7 @@ async function main() {
 
     if (! makeNsis({
           version,
-          outputDir: BUILD_TMP_DIR,
+          outputDir: buildTmpDir,
           useDocker: true
         })) {
       return;

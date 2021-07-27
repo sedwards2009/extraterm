@@ -8,6 +8,7 @@ trigger:
     include:
     - master
     - release/*
+    - qt
   tags:
     include:
     - v*
@@ -48,8 +49,6 @@ jobs:
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
-      - script: yarn run electron-rebuild
-        displayName: "yarn run electron-rebuild"
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
       - script: yarn run lint-strict
@@ -69,6 +68,7 @@ jobs:
 
   - job: package_windows
     displayName: "Build Windows packages"
+    condition: ${{False}}
     pool:
       vmImage: 'vs2017-win2016'
     steps:
@@ -89,8 +89,6 @@ jobs:
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
-      - script: yarn run electron-rebuild-win32
-        displayName: "yarn run electron-rebuild-win32"
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
       - script: yarn run lint-strict
@@ -123,6 +121,7 @@ jobs:
 
   - job: package_macos
     displayName: "Build macOS packages"
+    condition: ${{False}}
     pool:
       vmImage: 'macOS-10.14'
     steps:
@@ -133,8 +132,6 @@ jobs:
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
-      - script: yarn run electron-rebuild
-        displayName: "yarn run electron-rebuild"
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
       - script: yarn run lint-strict

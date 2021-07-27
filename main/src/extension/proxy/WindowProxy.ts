@@ -18,7 +18,7 @@ import { SessionSettingsEditorFactory, SessionConfiguration, ViewerMetadata, Vie
 // import { WorkspaceSessionSettingsRegistry } from "../WorkspaceSessionSettingsRegistry";
 import { TerminalProxy } from "./TerminalProxy";
 import { ExtensionTabContribution } from "../ExtensionMetadata";
-import { Terminal } from "extraterm/src/terminal/Terminal";
+import { Terminal } from "../../terminal/Terminal";
 
 
 /**

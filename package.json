@@ -10,11 +10,11 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "qode extraterm/dist/main.js",
-    "run-theme-test": "qode extraterm/dist/ThemeTestUtility.js",
+    "run": "qode main/dist/main.js",
+    "run-theme-test": "qode main/dist/ThemeTestUtility.js",
     "build": "wsrun --concurrency 2 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
-    "download-launcher-executable": "node build_scripts/download_launcher_executables.js v2",
+    "download-launcher-executable": "node build_scripts/download_launcher_executables.js v5",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
     "package": "node build_scripts/build_packages.js",
@@ -36,7 +36,7 @@
   "private": true,
   "workspaces": {
     "packages": [
-      "extraterm",
+      "main",
       "packages/*",
       "extensions/DefaultTerminalTheme",
       "extensions/CommunityTerminalThemes",
@@ -56,8 +56,11 @@
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
     "@nodegui/nodegui": "^0.34.0",
+    "@types/fs-extra": "^9.0.12",
+    "fs-extra": "^10.0.0",
     "node-abi": "2.21.0",
-    "qode": "^0.1.0"
+    "qode": "^0.1.0",
+    "readdirp": "3.6.0"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "optionalDependencies": {
@@ -68,7 +71,7 @@
     "git-repo-info": "^1.4.1",
     "jest": "26.6.3",
     "modclean": "3.0.0-beta.1",
-    "shelljs": "0.8.3",
+    "shelljs": "0.8.4",
     "wsrun": "5.2.0"
   }
 }

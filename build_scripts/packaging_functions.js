@@ -1,20 +1,21 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 require('shelljs/global');
 const path = require('path');
 const fs = require('fs');
-const packager = require('electron-packager');
+const os = require('os');
+const uuid = require('extraterm-uuid');
+const readdirp = require('readdirp');
 const dependencyPruner = require('./dependency_pruner');
 const log = console.log.bind(console);
+const fsExtra = require('fs-extra');
 
-const CONST_EXTRATERM_ELECTRON_EXE = "extraterm_main";
 
 const ignoreRegExp = [
   /^\/build_scripts\b/,
-  /^\/extraterm-web-component-decorators\b/,
   /^\/extraterm-extension-api\b/,
   /^\/test\b/,
   /^\/build_tmp\b/,
@@ -25,26 +26,16 @@ const ignoreRegExp = [
   /^\/docs\b/,
   /^\/resources\/extra_icons\b/,
   /^\/src\/test\b/,
-  /^\/src\/testfiles\b/
+  /^\/src\/testfiles\b/,
+  /^\/node_modules\/@nodegui\/nodegui\/src\//,
 ];
-
-const ignoreFunc = function ignoreFunc(filePath) {
-  const result = ignoreRegExp.some( (exp) => exp.test(filePath));
-  return result;
-};
-
-function appDir(platform) {
-  return platform === "darwin" ? "Extraterm.app/Contents/Resources/app" : "resources/app";
-}
 
 function addLauncher(versionedOutputDir, platform) {
   echo(`Inserting launcher exe`);
 
-  const launcherDirPath = path.join(versionedOutputDir, appDir(platform), "downloads");
+  const launcherDirPath = path.join(versionedOutputDir, "downloads");
 
   if (platform === "linux") {
-    mv(path.join(versionedOutputDir, "extraterm"), path.join(versionedOutputDir, "extraterm_main"));
-
     const launcherPath = path.join(launcherDirPath, "linux-x64/extraterm-launcher");
     const launcherDestPath = path.join(versionedOutputDir, "extraterm");
     mv(launcherPath, launcherDestPath);
@@ -52,16 +43,11 @@ function addLauncher(versionedOutputDir, platform) {
   }
 
   if (platform === "win32") {
-    mv(path.join(versionedOutputDir, "extraterm.exe"), path.join(versionedOutputDir, "extraterm_main.exe"));
-
     const launcherPath = path.join(launcherDirPath, "win32-x64/extraterm-launcher.exe");
     mv(launcherPath, path.join(versionedOutputDir, "extraterm.exe"));
   }
 
   if (platform === "darwin") {
-    mv(path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm"),
-      path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/extraterm_main"));
-
     const launcherPath = path.join(launcherDirPath, "darwin-x64/extraterm-launcher");
     const launcherDestPath = path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm");
     mv(launcherPath, launcherDestPath);
@@ -71,24 +57,75 @@ function addLauncher(versionedOutputDir, platform) {
 
 function pruneTwemoji(versionedOutputDir, platform) {
   if (platform !== "linux") {
-    const twemojiPath = path.join(versionedOutputDir, appDir(platform), "extraterm/resources/themes/default/fonts/Twemoji.ttf");
+    const twemojiPath = path.join(versionedOutputDir, "main/resources/themes/default/fonts/Twemoji.ttf");
     rm(twemojiPath);
+  }
+}
+
+async function pruneNodeGui(versionedOutputDir, platform) {
+  echo("");
+  echo("---------------------------------------------------------------------------");
+  echo("Pruning NodeGui");
+  echo("");
+
+  const nodeGuiDir = path.join(versionedOutputDir, "node_modules/@nodegui/nodegui");
+  const prevDir = pwd();
+  cd(nodeGuiDir);
+
+  await materializeSymlinks(".");
+
+  pruneDirTreeWithWhitelist("build", [
+    /\.node$/
+  ]);
+  pruneDirTreeWithWhitelist("miniqt", [
+    /\.so$/
+  ]);
+
+  // TODO: String the library .so files
+
+  await pruneEmptyDirectories("build");
+  await pruneEmptyDirectories("miniqt");
+  cd(prevDir);
+}
+
+async function materializeSymlinks(directoryPath) {
+  const filter = entry => entry.stats.isSymbolicLink();
+  const allFileEntries = await readdirp.promise(directoryPath, {alwaysStat: true, lstat: true, fileFilter: filter});
+
+  for (const fileEntry of allFileEntries) {
+    // echo(`Materializing symlink: ${fileEntry.path}`);
+    const contents = fs.readFileSync(fileEntry.fullPath);
+    rm(fileEntry.fullPath);
+    fs.writeFileSync(fileEntry.fullPath, contents, { mode: fileEntry.stats.mode });
   }
 }
 
 function pruneListFontsJsonExe(versionedOutputDir, platform) {
   for (const p of ["darwin", "linux", "win32"]) {
     if (p !== platform) {
-      const listFontsJsonPath = path.join(versionedOutputDir, appDir(platform),
-        `extraterm/resources/list-fonts-json-binary/${p}-x64/`);
+      const listFontsJsonPath = path.join(versionedOutputDir,
+        `main/resources/list-fonts-json-binary/${p}-x64/`);
       echo(`Deleting ${listFontsJsonPath}`);
       rm('-rf', listFontsJsonPath);
     }
   }
 }
 
+async function pruneEmptyDirectories(directoryPath) {
+  const dirEntries = await readdirp.promise(directoryPath, { type: "directories", depth: 1 });
+  for (const dirEntry of dirEntries) {
+    await pruneEmptyDirectories(dirEntry.fullPath);
+  }
+
+  const allEntries = await readdirp.promise(directoryPath, { type: "files_directories", depth: 1 });
+  if (Array.from(allEntries).length === 0) {
+    // echo(`Pruning empty directory: ${directoryPath}`);
+    rm('-rf', directoryPath);
+  }
+}
+
 function hoistSubprojectsModules(versionedOutputDir, platform) {
-  const modulesDir = path.join(versionedOutputDir, appDir(platform), "node_modules");
+  const modulesDir = path.join(versionedOutputDir, "node_modules");
   echo("");
   echo("---------------------------------------------------------------------------");
   echo("Hoisting subproject modules");
@@ -112,7 +149,7 @@ function hoistSubprojectsModules(versionedOutputDir, platform) {
   }
 
   // Move the 'packages' subprojects up into this node_modules dir.
-  const packagesDir = path.join(versionedOutputDir, appDir(platform), "packages");
+  const packagesDir = path.join(versionedOutputDir, "packages");
   for (const item of ls(packagesDir)) {
     const packageJson = JSON.parse(fs.readFileSync(path.join(packagesDir, item, "package.json"), {encoding: "utf8"}));
     const destDir = path.join(modulesDir, packageJson.name);
@@ -128,11 +165,11 @@ function hoistSubprojectsModules(versionedOutputDir, platform) {
 function pruneNodeModules(versionedOutputDir, platform) {
   const prevDir = pwd();
 
-  cd(path.join(versionedOutputDir, appDir(platform)));
+  cd(versionedOutputDir);
 
   pruneNodePty();
 
-  exec("modclean -n default:safe -r --ignore windows-swca");
+  exec("modclean -n default:safe -r");
   pruneSpecificNodeModules();
 
   cd(prevDir);
@@ -177,43 +214,58 @@ function pruneNodePty() {
   ]);
 }
 
+/**
+ * @param {string} dependencyName
+ * @param {(RegExp | string)[]} subpathList
+ */
 function pruneDependencyWithWhitelist(dependencyName, subpathList) {
   const prevDir = pwd();
-
   cd("node_modules");
   cd(dependencyName);
+  pruneDirTreeWithWhitelist(".", subpathList)
+  cd(prevDir);
+}
 
-  for (const itemPath of find(".")) {
+/**
+ * @param {string} dir
+ * @param {(RegExp | string)[]} subpathList
+ */
+ function pruneDirTreeWithWhitelist(dir, subpathList) {
+  for (const itemPath of find(dir)) {
     if ( ! test('-f', itemPath)) {
       continue;
     }
 
     if (pathMatchWhitelist(subpathList, itemPath)) {
-      echo(`Keeping: ${itemPath}`);
+      // echo(`Keeping: ${itemPath}`);
     } else {
-      echo(`Pruning ${itemPath}`);
+      // echo(`Pruning ${itemPath}`);
       rm(itemPath);
     }
   }
-
-  cd(prevDir);
 }
 
 /**
- * Match a path to a whilelist.
+ * Match a path against a whilelist.
  *
  * Patterns in the whitelist have the follow rules:
  *
  *   * If it starts with a / then it matches the whole path.
  *   * If it ends with a / then everything under that directory is accepted.
  *   * No slashes in the path, then it matches on the file only.
+ *   * Patterns can be regular expressions.
  *
- * @param whitelist List of allowed path patterns.
- * @return True if the `testPath` is
+ * @param {(RegExp | string)[]} whitelist List of allowed path patterns.
+ * @param {string} testPath
+ * @return {boolean} True if the `testPath` is
  */
 function pathMatchWhitelist(whitelist, testPath) {
   for (const keepPath of whitelist) {
-    if (keepPath.startsWith("/")) {
+    if (keepPath instanceof RegExp) {
+      if (keepPath.test(testPath)) {
+        return true;
+      }
+    } else if (keepPath.startsWith("/")) {
       if (keepPath.endsWith("/")) {
         if (testPath.startsWith(keepPath.substring(1))) {
           return true;
@@ -252,14 +304,14 @@ function fixNodeModulesSubProjects() {
 
 exports.createOutputDirName = createOutputDirName;
 
-async function makePackage({ arch, platform, electronVersion, version, outputDir, replaceModuleDirs }) {
+async function makePackage({ arch, platform, version, outputDir }) {
   log("");
   const SRC_DIR = "" + pwd();
 
   fixNodeModulesSubProjects();
 
   // Clean up the output dirs and files first.
-  const versionedOutputDir = createOutputDirName({version, platform, arch});
+  const versionedOutputDir = path.join(outputDir, createOutputDirName({version, platform, arch}));
 
   if (test('-d', versionedOutputDir)) {
     rm('-rf', versionedOutputDir);
@@ -267,64 +319,28 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
 
   const outputZip = path.join(outputDir, versionedOutputDir + ".zip");
 
-  const packagerOptions = {
-    arch: arch,
-    dir: ".",
-    platform: platform,
-    version: electronVersion,
-    ignore: ignoreFunc,
-    name: platform === "darwin" ? "Extraterm" : "extraterm",
-    overwrite: true,
-    out: outputDir,
-    prune: false
-  };
-  if (platform === "win32") {
-    packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.ico";
-    packagerOptions.win32metadata = {
-      FileDescription: "Extraterm",
-      ProductName: "Extraterm",
-      LegalCopyright: "(C) 2021 Simon Edwards"
-    };
-  } else if (platform === "darwin") {
-    packagerOptions.icon = "extraterm/resources/logo/extraterm_small_logo.icns";
-  }
-
-  const appPath = await packager(packagerOptions);
-
-  // Rename the output dir to a one with a version number in it.
-  mv(appPath[0], path.join(outputDir, versionedOutputDir));
-
-  const targetAppRootPath = platform === "darwin"
-                    ? "Extraterm.app/Contents/Resources/app"
-                    : "resources/app";
-  const dirsDest = path.join(outputDir, versionedOutputDir, targetAppRootPath, "node_modules");
-  const dirsSource = path.join("" + SRC_DIR,`build_scripts/node_modules-${platform}-${arch}`);
-
-  if(replaceModuleDirs) {
-    replaceDirs(dirsDest, dirsSource);
-  }
+  echo("Copying source tree to versioned directory...");
+  copySourceTree(SRC_DIR, versionedOutputDir);
 
   const thisCD = pwd();
   cd(outputDir);
 
+  await pruneNodeGui(versionedOutputDir, platform);
+
   hoistSubprojectsModules(versionedOutputDir, platform);
-  dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, targetAppRootPath));
+
+  // dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, versionedOutputDir));
   pruneNodeModules(versionedOutputDir, platform);
-  pruneTwemoji(versionedOutputDir, platform);
-  pruneListFontsJsonExe(versionedOutputDir, platform);
+  // pruneTwemoji(versionedOutputDir, platform);
+
   addLauncher(versionedOutputDir, platform);
 
   // Zip it up.
   log("Zipping up the package");
 
-  mv(path.join(versionedOutputDir, "LICENSE"), path.join(versionedOutputDir, "LICENSE_electron.txt"));
-
   if (platform === "linux") {
-    cp(path.join(SRC_DIR, "extraterm", "resources", "extraterm.desktop"), versionedOutputDir);
+    cp(path.join(SRC_DIR, "main/resources/extraterm.desktop"), versionedOutputDir);
   }
-
-  cp(path.join(SRC_DIR, "README.md"), versionedOutputDir);
-  cp(path.join(SRC_DIR, "LICENSE.txt"), versionedOutputDir);
 
   const linkOption = process.platform === "win32" ? "" : " -y";
   exec(`zip ${linkOption} -r ${outputZip} ${versionedOutputDir}`);
@@ -334,15 +350,30 @@ async function makePackage({ arch, platform, electronVersion, version, outputDir
   return true;
 }
 
-function replaceDirs(targetDir, replacementsDir) {
-  const replacements = ls(replacementsDir);
-  replacements.forEach( (rDir) => {
-    const targetSubDir = path.join(targetDir, rDir);
-    if (test('-d', targetSubDir)) {
-      rm('-r', targetSubDir);
-    }
-    cp('-r', path.join(replacementsDir, rDir), targetSubDir);
-  });
-}
-
 exports.makePackage = makePackage;
+
+/**
+ * Copy a source tree.
+ *
+ * @param {string} sourceDir
+ * @param {string} destDir
+ * @return {void}
+ */
+function copySourceTree(sourceDir, destDir) {
+  const temp = tempdir();
+
+  const tempPath = path.join(temp, `extraterm-build-${uuid.createUuid()}`);
+  mkdir(tempPath);
+  echo(`Using tmp dir ${tempPath} during source tree copy.`);
+
+  const ignoreFunc = function ignoreFunc(rawFilePath) {
+    const filePath = rawFilePath.substr(sourceDir.length);
+    const result = ignoreRegExp.some( (exp) => exp.test(filePath));
+    // log(`ignoreFunc filePath: ${filePath} => ${(!result) ? "COPY" : "IGNORE" }`);
+    return ! result;
+  };
+
+  fsExtra.copySync(sourceDir, tempPath, {filter: ignoreFunc});
+
+  mv(tempPath, destDir);
+}

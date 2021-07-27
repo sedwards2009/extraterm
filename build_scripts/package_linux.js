@@ -25,17 +25,15 @@ async function main() {
     echo("This script was called from the wrong directory.");
     return;
   }
-  const SRC_DIR = "" + pwd();
-  const BUILD_TMP_DIR = path.join(SRC_DIR, 'build_tmp');
-  if (test('-d', BUILD_TMP_DIR)) {
-    rm('-rf', BUILD_TMP_DIR);
+  const srcDir = "" + pwd();
+  const buildTmpDir = path.join(srcDir, 'build_tmp');
+  if (test('-d', buildTmpDir)) {
+    rm('-rf', buildTmpDir);
   }
-  mkdir(BUILD_TMP_DIR);
+  mkdir(buildTmpDir);
 
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
-
-  const electronVersion = packageData.devDependencies['electron'];
 
   let version = options.version == null ? packageData.version : options.version;
   if (version[0] === "v") {
@@ -45,17 +43,17 @@ async function main() {
   await packaging_functions.makePackage({
     arch: "x64",
     platform: "linux",
-    electronVersion,
     version,
-    outputDir: BUILD_TMP_DIR,
+    outputDir: buildTmpDir,
     replaceModuleDirs: false
   });
   echo("");
 
   echo("Creating debian package");
-  await makeDeb({
+  cd(srcDir);
+  makeDeb({
     version,
-    buildDir: BUILD_TMP_DIR
+    buildDir: buildTmpDir
   });
 
   echo("Done.");
@@ -66,7 +64,7 @@ main().catch(ex => {
   process.exit(1);
 });
 
-async function makeDeb({version, buildDir}) {
+function makeDeb({version, buildDir}) {
   // Move the files into position
   const outputDirName = packaging_functions.createOutputDirName({version, platform: "linux", arch: "x64"});
   const debTmp = path.join(buildDir, `extraterm_${version}_amd64`);
@@ -102,9 +100,6 @@ Icon=extraterm
   fs.writeFileSync(path.join(appsDir, "extraterm.desktop"), desktopFile, {encoding: "utf-8"});
 
   cp("-r", "build_scripts/resources/linux/icons", path.join(debTmp, "usr", "share"));
-
-  // The sandbox exe needs suid otherwise the app doesn't run on hardened Linux kernels.
-  chmod("4775", path.join(debTmp, "opt", "extraterm", "chrome-sandbox"));
 
   // Package in .deb
   exec(`dpkg-deb --root-owner-group --build ${debTmp}`);
