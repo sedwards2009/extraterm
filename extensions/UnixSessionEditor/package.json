@@ -38,10 +38,7 @@
     "sessionEditors": [
       {
         "name": "Unix",
-        "type": "unix",
-        "css": {
-          "fontAwesome": true
-        }
+        "type": "unix"
       }
     ]
   }

@@ -38,17 +38,11 @@
     "sessionEditors": [
       {
         "name": "Cygwin",
-        "type": "cygwin",
-        "css": {
-          "fontAwesome": true
-        }
+        "type": "cygwin"
       },
       {
         "name": "Windows Subsystem for Linux",
-        "type": "wsl",
-        "css": {
-          "fontAwesome": true
-        }
+        "type": "wsl"
       }
     ]
   }

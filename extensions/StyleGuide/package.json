@@ -33,14 +33,7 @@
     ],
     "tabs": [
       {
-        "name": "styleguide",
-        "css": {
-          "directory": "resources/sass",
-          "cssFile": [
-            "styleguide.scss"
-          ],
-          "fontAwesome": true
-        }
+        "name": "styleguide"
       }
     ]
   },

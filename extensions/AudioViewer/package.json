@@ -44,14 +44,7 @@
           "audio/ogg",
           "audio/mp3",
           "audio/mpeg"
-        ],
-        "css": {
-          "directory": "resources/sass",
-          "cssFile": [
-            "audio-viewer.scss"
-          ],
-          "fontAwesome": true
-        }
+        ]
       }
     ]
   }

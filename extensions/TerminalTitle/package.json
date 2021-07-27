@@ -42,27 +42,13 @@
     ],
     "tabTitleWidgets": [
       {
-        "name": "title",
-        "css": {
-          "directory": "resources/sass",
-          "cssFile": [
-            "tab-title.scss"
-          ],
-          "fontAwesome": true
-        }
+        "name": "title"
       }
     ],
     "terminalBorderWidgets": [
       {
         "name": "edit-title",
-        "border": "north",
-        "css": {
-          "directory": "resources/sass",
-          "cssFile": [
-            "editor.scss"
-          ],
-          "fontAwesome": true
-        }
+        "border": "north"
       }
     ],
     "menus": {
@@ -76,14 +62,7 @@
     "sessionSettings": [
       {
         "id": "title",
-        "name": "Tab Title",
-        "css": {
-          "directory": "resources/sass",
-          "cssFile": [
-            "editor.scss"
-          ],
-          "fontAwesome": true
-        }
+        "name": "Tab Title"
       }
     ]
   }

@@ -41,13 +41,7 @@
     },
     "tabs": [
       {
-        "name": "about",
-        "css": {
-          "directory": "resources/sass",
-          "cssFile": [
-            "about.scss"
-          ]
-        }
+        "name": "about"
       }
     ]
   }

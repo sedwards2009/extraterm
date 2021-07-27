@@ -38,10 +38,7 @@
     "sessionEditors": [
       {
         "name": "Windows Console",
-        "type": "windows-console",
-        "css": {
-          "fontAwesome": true
-        }
+        "type": "windows-console"
       }
     ]
   }

@@ -44,10 +44,7 @@
     ],
     "terminalBorderWidgets": [
       {
-        "name": "find",
-        "css": {
-          "fontAwesome": true
-        }
+        "name": "find"
       }
     ],
     "menus": {

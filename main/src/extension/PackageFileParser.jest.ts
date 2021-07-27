@@ -118,7 +118,7 @@ test("platform", () => {
   expect(parsed.excludePlatform[1].arch).toBe("mips");
 });
 
-const extensionsPath = path.join(__filename, "..", "..", "..", "..", "..", "extensions");
+const extensionsPath = path.join(__filename, "..", "..", "..", "..", "extensions");
 describe.each(
   sh.ls(extensionsPath)
 )("Parse extensions package.json files", (input) => {

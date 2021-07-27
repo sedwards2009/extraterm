@@ -19,6 +19,12 @@ jobs:
     pool:
       vmImage: 'Ubuntu-18.04'
     steps:
+      - script: |
+          sudo apt-get update
+          sudo apt-get install pkg-config build-essential
+          sudo apt-get install cmake make
+          sudo apt-get install mesa-common-dev libglu1-mesa-dev
+        displayName: "Install development packages"
       - script: yarn install --frozen-lockfile
         displayName: 'Yarn install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
