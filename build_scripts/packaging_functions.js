@@ -338,7 +338,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
 
   hoistSubprojectsModules(versionedOutputDir, platform);
 
-  // dependencyPruner.pruneDevDependencies(SRC_DIR, versionedOutputDir);
+  dependencyPruner.pruneDevDependencies(SRC_DIR, versionedOutputDir);
   pruneNodeModules(versionedOutputDir, platform);
   // pruneTwemoji(versionedOutputDir, platform);
 
