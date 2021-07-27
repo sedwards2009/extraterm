@@ -26,10 +26,13 @@ const ignoreRegExp = [
   /^\/\.git/,
   /^\/azure-pipelines.yml$/,
   /^\/package\.json$/,
+  /^\/_config\.yml$/,
   /^\/tsconfig\.json$/,
   /^\/yarn\.lock$/,
   /^\/docs\b/,
   /^\/tools\b/,
+  /^\/main\/src\b/,
+  /^\/main\/src$/,
   /^\/resources\/extra_icons\b/,
   /^\/src\/test\b/,
   /^\/src\/testfiles\b/,
@@ -37,28 +40,29 @@ const ignoreRegExp = [
 ];
 
 function addLauncher(versionedOutputDir, platform) {
-  echo(`Inserting launcher exe`);
+  echo(`Inserting launcher executable`);
 
-  const launcherDirPath = path.join(versionedOutputDir, "downloads");
+  const downloadsDirPath = path.join(versionedOutputDir, "downloads");
 
   if (platform === "linux") {
-    const launcherPath = path.join(launcherDirPath, "linux-x64/extraterm-launcher");
+    const launcherPath = path.join(downloadsDirPath, "linux-x64/extraterm-launcher");
     const launcherDestPath = path.join(versionedOutputDir, "extraterm");
     mv(launcherPath, launcherDestPath);
     chmod('a+x', launcherDestPath);
   }
 
   if (platform === "win32") {
-    const launcherPath = path.join(launcherDirPath, "win32-x64/extraterm-launcher.exe");
+    const launcherPath = path.join(downloadsDirPath, "win32-x64/extraterm-launcher.exe");
     mv(launcherPath, path.join(versionedOutputDir, "extraterm.exe"));
   }
 
   if (platform === "darwin") {
-    const launcherPath = path.join(launcherDirPath, "darwin-x64/extraterm-launcher");
+    const launcherPath = path.join(downloadsDirPath, "darwin-x64/extraterm-launcher");
     const launcherDestPath = path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm");
     mv(launcherPath, launcherDestPath);
     chmod('a+x', launcherDestPath);
   }
+  rm('-rf', downloadsDirPath);
 }
 
 function pruneTwemoji(versionedOutputDir, platform) {
@@ -324,8 +328,6 @@ async function makePackage({ arch, platform, version, outputDir }) {
     rm('-rf', versionedOutputDir);
   }
 
-  const outputZip = versionedDirName + ".zip";
-
   echo("Copying source tree to versioned directory...");
   copySourceTree(SRC_DIR, versionedOutputDir);
 
@@ -342,7 +344,6 @@ async function makePackage({ arch, platform, version, outputDir }) {
 
   addLauncher(versionedOutputDir, platform);
 
-  // Zip it up.
   log("Zipping up the package");
 
   if (platform === "linux") {
@@ -351,7 +352,8 @@ async function makePackage({ arch, platform, version, outputDir }) {
 
   const linkOption = process.platform === "win32" ? "" : " -y";
   cd(outputDir);
-  exec(`zip ${linkOption} -r ${outputZip} ${versionedOutputDir}`);
+  const outputZip = versionedDirName + ".zip";
+  exec(`zip ${linkOption} -r ${outputZip} ${versionedDirName}`);
   cd(thisCD);
 
   log("App bundle written to " + versionedOutputDir);
