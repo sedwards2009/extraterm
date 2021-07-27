@@ -317,7 +317,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
     rm('-rf', versionedOutputDir);
   }
 
-  const outputZip = path.join(outputDir, versionedOutputDir + ".zip");
+  const outputZip = versionedOutputDir + ".zip";
 
   echo("Copying source tree to versioned directory...");
   copySourceTree(SRC_DIR, versionedOutputDir);
@@ -329,7 +329,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
 
   hoistSubprojectsModules(versionedOutputDir, platform);
 
-  // dependencyPruner.pruneDevDependencies(SRC_DIR, path.join(outputDir, versionedOutputDir, versionedOutputDir));
+  // dependencyPruner.pruneDevDependencies(SRC_DIR, versionedOutputDir);
   pruneNodeModules(versionedOutputDir, platform);
   // pruneTwemoji(versionedOutputDir, platform);
 
