@@ -257,7 +257,7 @@ class Main {
       }
     }
 
-    let workingDirectory: string = null;
+    const workingDirectory: string = null;
     // if (args.workingDirectory != null) {
     //   workingDirectory = args.workingDirectory;
     // } else {

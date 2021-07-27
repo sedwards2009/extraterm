@@ -66,7 +66,6 @@ export class PtyManager {
 
   createPty(sessionConfiguration: SessionConfiguration, sessionOptions: CreateSessionOptions): Pty {
     const backend = this._extensionManager.getSessionBackend(sessionConfiguration.type);
-this._log.debug(JSON.stringify(sessionConfiguration));
     const ptyTerm = backend.createSession(sessionConfiguration, sessionOptions);
 
     // this._ptyCounter++;
