@@ -40,6 +40,12 @@ jobs:
     pool:
       vmImage: 'Ubuntu-18.04'
     steps:
+      - script: |
+          sudo apt-get update
+          sudo apt-get install pkg-config build-essential
+          sudo apt-get install cmake make
+          sudo apt-get install mesa-common-dev libglu1-mesa-dev
+        displayName: "Install development packages"
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)

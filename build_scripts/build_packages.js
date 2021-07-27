@@ -43,10 +43,10 @@ async function main() {
 
   exec("git clone -b " + info.branch + " " + gitUrl);
   cd("extraterm");
-  const SRC_DIR = "" + pwd();
-  cd(SRC_DIR);
+  const srcDir = "" + pwd();
+  cd(srcDir);
 
-  echo("Setting up the run time dependencies in " + SRC_DIR);
+  echo("Setting up the run time dependencies in " + srcDir);
 
   exec("yarn install");
   exec("yarn run build");
@@ -62,7 +62,7 @@ async function main() {
   cp("-r", "extraterm/src/commands", path.join(buildTmpDir, commandsDir));
   cd(buildTmpDir);
   exec(`zip -y -r ${commandsDir}.zip ${commandsDir}`);
-  cd(SRC_DIR);
+  cd(srcDir);
 
   if (linuxZipOnly) {
     await makePackage( {
