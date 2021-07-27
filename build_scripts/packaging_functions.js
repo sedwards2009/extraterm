@@ -25,7 +25,6 @@ const ignoreRegExp = [
   /^\/\.git\b/,
   /^\/\.git/,
   /^\/azure-pipelines.yml$/,
-  /^\/package\.json$/,
   /^\/_config\.yml$/,
   /^\/tsconfig\.json$/,
   /^\/yarn\.lock$/,
@@ -91,6 +90,10 @@ async function pruneNodeGui(versionedOutputDir, platform) {
     /\.so$/,
     /\.so\..*$/
   ]);
+
+  // Set the RUNPATH inside the library so that it can find our Qt libs.
+  // Background info: https://nehckl0.medium.com/creating-relocatable-linux-executables-by-setting-rpath-with-origin-45de573a2e98
+  exec("chrpath -r '$ORIGIN/../../miniqt/5.14.1/gcc_64/lib' 'build/Release/nodegui_core.node'");
 
   // TODO: Strip the library .so files
 
