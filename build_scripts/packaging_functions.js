@@ -22,8 +22,14 @@ const ignoreRegExp = [
   /^\/src\/typedocs\b/,
   /\.ts$/,
   /\.js\.map$/,
-  /^\/\.git\//,
+  /^\/\.git\b/,
+  /^\/\.git/,
+  /^\/azure-pipelines.yml$/,
+  /^\/package\.json$/,
+  /^\/tsconfig\.json$/,
+  /^\/yarn\.lock$/,
   /^\/docs\b/,
+  /^\/tools\b/,
   /^\/resources\/extra_icons\b/,
   /^\/src\/test\b/,
   /^\/src\/testfiles\b/,
@@ -311,13 +317,14 @@ async function makePackage({ arch, platform, version, outputDir }) {
   fixNodeModulesSubProjects();
 
   // Clean up the output dirs and files first.
-  const versionedOutputDir = path.join(outputDir, createOutputDirName({version, platform, arch}));
+  const versionedDirName = createOutputDirName({version, platform, arch});
+  const versionedOutputDir = path.join(outputDir, versionedDirName);
 
   if (test('-d', versionedOutputDir)) {
     rm('-rf', versionedOutputDir);
   }
 
-  const outputZip = versionedOutputDir + ".zip";
+  const outputZip = versionedDirName + ".zip";
 
   echo("Copying source tree to versioned directory...");
   copySourceTree(SRC_DIR, versionedOutputDir);
@@ -343,6 +350,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
   }
 
   const linkOption = process.platform === "win32" ? "" : " -y";
+  cd(outputDir);
   exec(`zip ${linkOption} -r ${outputZip} ${versionedOutputDir}`);
   cd(thisCD);
 
