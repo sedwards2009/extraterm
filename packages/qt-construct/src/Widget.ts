@@ -12,11 +12,13 @@ export interface WidgetOptions {
   cssClass?: string | string[];
   windowTitle?: string;
   focusPolicy?: FocusPolicy;
+  onEnter?: () => void;
+  onLeave?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
-  const { enabled, id, cssClass, focusPolicy, layout, onKeyPress, windowTitle } = options;
+  const { enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, windowTitle } = options;
   if (enabled !== undefined) {
     widget.setEnabled(enabled);
   }
@@ -37,6 +39,12 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (onKeyPress !== undefined) {
     widget.addEventListener(WidgetEventTypes.KeyPress, onKeyPress);
+  }
+  if (onEnter !== undefined) {
+    widget.addEventListener(WidgetEventTypes.Enter, onEnter);
+  }
+  if (onLeave !== undefined) {
+    widget.addEventListener(WidgetEventTypes.Leave, onLeave);
   }
 }
 

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QFont, QIcon } from "@nodegui/nodegui";
-import { createFontIcon } from "nodegui-plugin-font-icon";
+import { createFontIcon, CreateFontIconOptions } from "nodegui-plugin-font-icon";
 
 const fontSetMapping = {
   solid: new QFont("FontAwesome5Free-Solid"),
@@ -12,12 +12,14 @@ const fontSetMapping = {
   regular: new QFont("FontAwesome5Free-Regular"),
 };
 
-export function createIcon(name: string): QIcon {
+export interface CreateIconOptions extends CreateFontIconOptions {}
+
+export function createIcon(name: string, options?: CreateIconOptions): QIcon {
   const entry = fontAwesomeIcons[name];
   if (entry === undefined) {
     return null;
   }
-  return createFontIcon(fontSetMapping[entry.set], entry.string);
+  return createFontIcon(fontSetMapping[entry.set], entry.string, options);
 }
 
 interface FontAwesomeIconMetadata {

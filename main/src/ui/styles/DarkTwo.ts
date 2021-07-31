@@ -3,7 +3,38 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { alpha, change, darken, hsl, lighten, lightness, mix, rgba, saturate, toHex } from "khroma";
+import { QIcon } from "@nodegui/nodegui";
+import { alpha, blue, change, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate, toHex } from "khroma";
+import { createIcon } from "../Icons";
+
+import { UiStyle } from "../UiStyle";
+
+
+export function createUiStyle(resourceDirectory: string): UiStyle {
+  return {
+    getApplicationStyleSheet(): string {
+      return DarkTwoStyleSheet(resourceDirectory);
+    },
+    getHamburgerMenuIcon(): QIcon {
+      const normalColor = toRgba(textColor);
+      return createIcon("fa-bars", {
+        normalOnRgba: normalColor,
+        normalOffRgba: normalColor,
+      });
+    },
+    getHamburgerMenuIconHover(): QIcon {
+      const hoverColor = toRgba(textHighlightColor);
+      return createIcon("fa-bars", {
+        normalOnRgba: hoverColor,
+        normalOffRgba: hoverColor,
+      });
+    }
+  };
+}
+
+function toRgba(color: string): number {
+  return (red(color) << 24) | (green(color) << 16) | (blue(color) << 8) | 0xff;
+}
 
 const fontSizeBase = 9;
 const fontSizeSmall = Math.round(fontSizeBase * 0.9);
@@ -16,7 +47,6 @@ const uiBorder = "#181a1f";
 const headingsColor = "#ffffff";
 const accentColor = "#578af2";
 
-// const level1Color = "#353b45";
 const level1Color = toHex(lighten(uiBg, 6));
 const level2Color = uiBg;
 const level3Color = toHex(darken(uiBg, 3));
@@ -144,7 +174,7 @@ const tabTextColor = textColorSubtle;
 const tabTextColorActive = textHighlightColor;
 const tabBackgroundColorActive = level2Color;
 
-export function DarkTwoStyleSheet(resourceDirectory: string): string {
+function DarkTwoStyleSheet(resourceDirectory: string): string {
   return BodyStyleSheet() +
     QWidgetStyleSheet() +
     QCheckBoxStyleSheet(resourceDirectory) +
@@ -157,6 +187,7 @@ export function DarkTwoStyleSheet(resourceDirectory: string): string {
     QScrollAreaStyleSheet() +
     QScrollBarStyleSheet() +
     QTabBarStyleSheet(resourceDirectory) +
+    QToolButtonStyleSheet() +
     "";
 }
 
@@ -576,6 +607,46 @@ QTabBar::close-button:hover {
   image: url(${resourceDirectory}/close_hover.svg);
 }
 
+`;
+}
+
+function QToolButtonStyleSheet(): string {
+  return `
+QToolButton {
+  border: 1px solid #00000000;
+  border-radius: ${borderRadius};
+
+  color: ${textColor};
+  padding: 0px 0px 1px 2px;
+}
+
+QToolButton:hover {
+  color: ${textHighlightColor};
+  background-color: ${buttonDefaultBgHoverColor};
+}
+
+QToolButton::menu-arrow {
+  image: none;
+  width: 0px;
+  height: 0px;
+  padding: 0px 0px 0px 0px;
+  margin: 0px 0px 0px 0px;
+}
+
+QToolButton::menu-indicator {
+  image: none;
+  width: 0px;
+  height: 0px;
+  padding: 0px 0px 0px 0px;
+  margin: 0px 0px 0px 0px;
+}
+
+QToolButton::menu-button {
+  width: 0px;
+  height: 0px;
+  padding: 0px 0px 0px 0px;
+  margin: 0px 0px 0px 0px;
+}
 `;
 }
 

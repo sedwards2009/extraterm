@@ -23,6 +23,7 @@ import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
 import { createIcon } from "./ui/Icons";
+import { UiStyle } from "./ui/UiStyle";
 
 
 export class Window {
@@ -49,7 +50,7 @@ export class Window {
   #onTabChangeEventEmitter = new EventEmitter<Tab>();
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
-      keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager) {
+      keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle) {
 
     this._log = getLogger("Window", this);
     this.#configDatabase = configDatabase;
@@ -95,7 +96,7 @@ export class Window {
                             this.#handleTabBarCloseClicked(index);
                           },
                         }), stretch: 1},
-                      {widget: this.#createHamburgerMenu(), stretch: 0}
+                      {widget: this.#createHamburgerMenu(uiStyle), stretch: 0}
                     ]
                   })
                 })
@@ -109,10 +110,19 @@ export class Window {
     this.#windowWidget.resize(800, 480);
   }
 
-  #createHamburgerMenu(): QToolButton {
+  #createHamburgerMenu(uiStyle: UiStyle): QToolButton {
+    const hamburgerMenuIcon = uiStyle.getHamburgerMenuIcon();
+    const hamburgerMenuIconHover = uiStyle.getHamburgerMenuIconHover();
+
     this.#hamburgerMenuButton = ToolButton({
-      icon: createIcon("fa-bars"),
+      icon: hamburgerMenuIcon,
       popupMode: ToolButtonPopupMode.InstantPopup,
+      onEnter: () => {
+        this.#hamburgerMenuButton.setIcon(hamburgerMenuIconHover);
+      },
+      onLeave: () => {
+        this.#hamburgerMenuButton.setIcon(hamburgerMenuIcon);
+      },
       menu: this.#hamburgerMenu = Menu({
         onTriggered: (nativeAction) => {
           const action = new QAction(nativeAction);

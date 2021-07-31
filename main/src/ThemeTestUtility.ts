@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as SourceDir from './SourceDir';
 
-import { DarkTwoStyleSheet } from "./ui/styles/DarkTwo";
+import { createUiStyle } from "./ui/styles/DarkTwo";
 
 let centralWidget: QWidget = null;
 
@@ -160,7 +160,8 @@ function main(): void {
     })
   });
 
-  const styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
+  const styleSheet = createUiStyle(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"))
+                      .getApplicationStyleSheet();
   console.log(styleSheet);
 
   win.resize(600, 800);

@@ -32,7 +32,8 @@ import { Tab } from "./Tab";
 import { SettingsTab } from "./settings/SettingsTab";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
-import { DarkTwoStyleSheet } from "./ui/styles/DarkTwo";
+import { createUiStyle } from "./ui/styles/DarkTwo";
+import { UiStyle } from "./ui/UiStyle";
 
 
 const LOG_FILENAME = "extraterm.log";
@@ -55,6 +56,7 @@ class Main {
   #extensionManager: ExtensionManager = null;
   #themeManager: ThemeManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
+  #uiStyle: UiStyle = null;
 
   #settingsTab: SettingsTab = null;
 
@@ -123,8 +125,8 @@ class Main {
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-regular-400.ttf"));
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-solid-900.ttf"));
 
-    const styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
-    QApplication.instance().setStyleSheet(styleSheet);
+    this.#uiStyle = createUiStyle(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
+    QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet());
 
     this.openWindow();
     this.commandNewTerminal({});
@@ -393,7 +395,7 @@ class Main {
 
   openWindow(): void {
     const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
-      this.#themeManager);
+      this.#themeManager, this.#uiStyle);
 
     win.onTabCloseRequest((tab: Tab): void => {
       this.#closeTab(win, tab);
