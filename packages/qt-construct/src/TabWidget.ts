@@ -4,8 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QIcon, QTabWidget, QWidget } from "@nodegui/nodegui";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 
-export interface TabWidgetOptions {
+export interface TabWidgetOptions extends WidgetOptions {
   tabs: TabWidgetTabOptions[];
 }
 
@@ -18,6 +19,8 @@ export interface TabWidgetTabOptions {
 export function TabWidget(options: TabWidgetOptions): QTabWidget {
   const tabWidget = new QTabWidget();
   const { tabs } = options;
+
+  ApplyWidgetOptions(tabWidget, options);
 
   for (const tabOptions of tabs) {
     const { icon, label, page }  = tabOptions;

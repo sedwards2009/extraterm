@@ -8,8 +8,9 @@ import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
-import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, WidgetEventTypes, QKeyEvent } from "@nodegui/nodegui";
-import { createFontIcon } from "nodegui-plugin-font-icon";
+import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
+  FocusPolicy, QKeyEvent } from "@nodegui/nodegui";
+import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
@@ -31,7 +32,6 @@ export class Window {
   #keybindingsIOManager: KeybindingsIOManager = null;
 
   #windowWidget: QWidget = null;
-  #tabBarContainerWidget: QWidget = null;
   #tabBar: QTabBar = null;
   #contentStack: QStackedWidget = null;
 
@@ -60,63 +60,67 @@ export class Window {
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
     this.onTabChange = this.#onTabChangeEventEmitter.event;
 
-    this.#windowWidget = new QWidget();
-    this.#windowWidget.setWindowTitle("Extraterm Qt");
-    this.#windowWidget.setFocusPolicy(FocusPolicy.ClickFocus);
-    this.#windowWidget.setProperty("cssClass", ["background"]);
-    this.#windowWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
-      this.#handleKeyPress(new QKeyEvent(nativeEvent));
-    });
-
-    this.#windowWidget.resize(800, 480);
-
     this.#terminalVisualConfig = this.#createTerminalVisualConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
-    const topLayout = new QBoxLayout(Direction.TopToBottom, this.#windowWidget);
-    topLayout.setContentsMargins(0, 11, 0, 0);
-    topLayout.setSpacing(0);
-
-    this.#tabBarContainerWidget = new QWidget();
-
-    const tabBarLayout = new QBoxLayout(Direction.LeftToRight, this.#tabBarContainerWidget);
-    tabBarLayout.setContentsMargins(0, 0, 0, 0);
-
-    const tabbarContainer = new QWidget();
-    const tabbarContainerLayout = new QBoxLayout(Direction.LeftToRight, tabbarContainer);
-    this.#tabBar = new QTabBar();
-    this.#tabBar.setExpanding(false);
-    this.#tabBar.addEventListener("currentChanged", (index: number) => {
-      this.#handleTabBarChanged(index);
+    this.#windowWidget = Widget({
+      windowTitle: "Extraterm Qt",
+      focusPolicy: FocusPolicy.ClickFocus,
+      cssClass: ["background"],
+      onKeyPress: (nativeEvent) => {
+        this.#handleKeyPress(new QKeyEvent(nativeEvent));
+      },
+      layout: BoxLayout({
+        direction: Direction.TopToBottom,
+        contentsMargins: [0, 11, 0, 0],
+        spacing: 0,
+        children: [
+          Widget({
+            layout: BoxLayout({
+              direction: Direction.LeftToRight,
+              children: [
+                Widget({
+                  layout: BoxLayout({
+                    direction: Direction.LeftToRight,
+                    contentsMargins: [0, 0, 0, 0],
+                    children: [
+                      {widget:
+                        this.#tabBar = TabBar({
+                          expanding: false,
+                          onCurrentChanged: (index: number) => {
+                            this.#handleTabBarChanged(index);
+                          },
+                          tabsClosable: true,
+                          onTabCloseRequested: (index: number) => {
+                            this.#handleTabBarCloseClicked(index);
+                          },
+                        }), stretch: 1},
+                      {widget: this.#createHamburgerMenu(), stretch: 0}
+                    ]
+                  })
+                })
+              ]
+            })
+          }),
+          this.#contentStack = StackedWidget({children: []})
+        ]
+      })
     });
-
-    this.#tabBar.setTabsClosable(true);
-    this.#tabBar.addEventListener("tabCloseRequested", (index: number) => {
-      this.#handleTabBarCloseClicked(index);
-    });
-
-    tabbarContainerLayout.addWidget(this.#tabBar);
-
-    tabBarLayout.addWidget(this.#tabBar, 1);
-    tabBarLayout.addWidget(this.#createHamburgerMenu(), 0);
-
-    topLayout.addWidget(this.#tabBarContainerWidget);
-
-    this.#contentStack = new QStackedWidget();
-    topLayout.addWidget(this.#contentStack);
+    this.#windowWidget.resize(800, 480);
   }
 
   #createHamburgerMenu(): QToolButton {
-    this.#hamburgerMenuButton = new QToolButton();
-    this.#hamburgerMenuButton.setIcon(createIcon("fa-bars"));
-    this.#hamburgerMenuButton.setPopupMode(ToolButtonPopupMode.InstantPopup);
-
-    this.#hamburgerMenu = new QMenu();
-    this.#hamburgerMenuButton.setMenu(this.#hamburgerMenu);
-    this.#hamburgerMenu.addEventListener("triggered", (nativeAction) => {
-      const action = new QAction(nativeAction);
-      this.#handleWindowMenuTriggered(action.data().toString());
+    this.#hamburgerMenuButton = ToolButton({
+      icon: createIcon("fa-bars"),
+      popupMode: ToolButtonPopupMode.InstantPopup,
+      menu: this.#hamburgerMenu = Menu({
+        onTriggered: (nativeAction) => {
+          const action = new QAction(nativeAction);
+          this.#handleWindowMenuTriggered(action.data().toString());
+        }
+      })
     });
+
     this.#updateHamburgerMenu();
 
     return this.#hamburgerMenuButton;
