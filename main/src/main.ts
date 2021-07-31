@@ -32,7 +32,7 @@ import { Tab } from "./Tab";
 import { SettingsTab } from "./settings/SettingsTab";
 import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
-import { DarkTwoStyleSheet } from "./theme/ui/DarkTwo";
+import { DarkTwoStyleSheet } from "./ui/styles/DarkTwo";
 
 
 const LOG_FILENAME = "extraterm.log";

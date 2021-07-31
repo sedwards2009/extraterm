@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as SourceDir from './SourceDir';
 
-import { DarkTwoStyleSheet } from "./theme/ui/DarkTwo";
+import { DarkTwoStyleSheet } from "./ui/styles/DarkTwo";
 
 let centralWidget: QWidget = null;
 
