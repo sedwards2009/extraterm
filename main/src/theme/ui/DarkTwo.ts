@@ -465,7 +465,7 @@ QMenu::item:selected {
 QMenu::separator {
   height: 1em;
   color: ${textColor};
-  backgrond-color: ${textColor};
+  background-color: ${textColor};
 }
 `;
 }

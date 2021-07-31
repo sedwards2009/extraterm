@@ -4,13 +4,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Logger, log, getLogger } from "extraterm-logging";
-import * as path from "path";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QBoxLayout, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, WidgetEventTypes, QKeyEvent } from "@nodegui/nodegui";
-import * as SourceDir from './SourceDir';
+import { createFontIcon } from "nodegui-plugin-font-icon";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
@@ -22,7 +21,7 @@ import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
-import { DarkTwoStyleSheet } from "./theme/ui/DarkTwo";
+import { createIcon } from "./ui/Icons";
 
 
 export class Window {
@@ -42,9 +41,6 @@ export class Window {
   #tabs: Tab[] = [];
   #terminalVisualConfig: TerminalVisualConfig = null;
   #themeManager: ThemeManager = null;
-
-  // FIXME: Apply stylesheets on the app level, not window.
-  #styleSheet: string = null;
 
   onTabCloseRequest: Event<Tab> = null;
   #onTabCloseRequestEventEmitter = new EventEmitter<Tab>();
@@ -71,9 +67,6 @@ export class Window {
     this.#windowWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
-
-    this.#styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
-    this.#windowWidget.setStyleSheet(this.#styleSheet);
 
     this.#windowWidget.resize(800, 480);
 
@@ -115,11 +108,10 @@ export class Window {
 
   #createHamburgerMenu(): QToolButton {
     this.#hamburgerMenuButton = new QToolButton();
-    this.#hamburgerMenuButton.setText("=");
+    this.#hamburgerMenuButton.setIcon(createIcon("fa-bars"));
     this.#hamburgerMenuButton.setPopupMode(ToolButtonPopupMode.InstantPopup);
 
     this.#hamburgerMenu = new QMenu();
-    this.#hamburgerMenu.setStyleSheet(this.#styleSheet);
     this.#hamburgerMenuButton.setMenu(this.#hamburgerMenu);
     this.#hamburgerMenu.addEventListener("triggered", (nativeAction) => {
       const action = new QAction(nativeAction);

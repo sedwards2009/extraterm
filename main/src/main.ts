@@ -10,7 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import { QApplication } from "@nodegui/nodegui";
+import { QApplication, QFontDatabase } from "@nodegui/nodegui";
 
 import { Window } from "./Window";
 import { SESSION_CONFIG } from './config/Config';
@@ -118,6 +118,13 @@ class Main {
 
     this.registerCommands(extensionManager);
     this.startUpSessions(configDatabase, extensionManager);
+
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-brands-400.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-regular-400.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-solid-900.ttf"));
+
+    const styleSheet = DarkTwoStyleSheet(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
+    QApplication.instance().setStyleSheet(styleSheet);
 
     this.openWindow();
     this.commandNewTerminal({});
