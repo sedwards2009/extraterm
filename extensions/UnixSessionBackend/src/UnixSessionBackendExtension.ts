@@ -85,7 +85,11 @@ class UnixBackend implements SessionBackend {
     }
 
     if (cwd == null) {
-      cwd = process.env.HOME;
+      if (process.platform === "darwin" && process.env.HOME == undefined) {
+        cwd = this._readHomeDirectoryFromOpenDirectory(process.env.USER);
+      } else {
+        cwd = process.env.HOME;
+      }
     }
 
     const dirError = this._validateDirectoryPath(cwd);
@@ -146,6 +150,21 @@ class UnixBackend implements SessionBackend {
       const fields = line.split(/:/g);
       return { username: fields[0], homeDir: fields[5], shell: fields[6] };
     });
+  }
+
+  private _readHomeDirectoryFromOpenDirectory(userName: string): string {
+    try {
+      const regResult: string = <any> child_process.execFileSync("dscl",
+        [".", "-read", "/Users/" + userName, "NFSHomeDirectory"],
+        {encoding: "utf8"});
+      const parts = regResult.split(/ /g);
+      const home = parts[1].trim();
+      this._log.info("Found home directory with Open Directory: " + home);
+      return home;
+    } catch(e) {
+      this._log.warn("Couldn't run Open Directory dscl command to find the user's home directory.");
+      return undefined;
+    }
   }
 
   private _readAppleLocale(): string {
