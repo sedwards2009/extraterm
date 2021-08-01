@@ -202,6 +202,7 @@ function DarkTwoStyleSheet(resourceDirectory: string): string {
     QScrollBarStyleSheet() +
     QTabBarStyleSheet(resourceDirectory) +
     QToolButtonStyleSheet() +
+    ApplicationSpecificStyleSheet() +
     "";
 }
 
@@ -680,6 +681,16 @@ QWidget[cssClass~="background"] {
 
 QWidget[cssClass~="window-background"] {
   background-color: ${level3Color};
+}
+`;
+}
+
+function ApplicationSpecificStyleSheet(): string {
+  return `
+QWidget[cssClass~="tabbar-gap"] {
+  border-top: 0px;
+  border-bottom: 1px solid ${tabBorderColor};
+  margin: 0px;
 }
 `;
 }

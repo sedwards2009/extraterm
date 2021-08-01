@@ -22,7 +22,6 @@ import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
-import { createIcon } from "./ui/Icons";
 import { UiStyle } from "./ui/UiStyle";
 
 
@@ -93,7 +92,18 @@ export class Window {
                       this.#handleTabBarCloseClicked(index);
                     },
                   }), stretch: 1},
-                {widget: this.#createHamburgerMenu(uiStyle), stretch: 0}
+
+                {widget: Widget({
+                  cssClass: ["tabbar-gap"],
+                  layout: BoxLayout({
+                    direction: Direction.LeftToRight,
+                    contentsMargins: [0, 0, 0, 0],
+                    spacing: 0,
+                    children: [
+                      {widget: this.#createHamburgerMenu(uiStyle), stretch: 0}
+                    ]
+                  })
+                }), stretch: 0}
               ]
             })
           }),
