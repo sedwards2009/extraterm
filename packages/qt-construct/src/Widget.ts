@@ -3,9 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { FocusPolicy, NodeLayout, NodeWidget, QWidget, WidgetEventTypes } from "@nodegui/nodegui";
+import { FocusPolicy, NodeLayout, NodeWidget, QWidget, WidgetAttribute, WidgetEventTypes } from "@nodegui/nodegui";
 
 export interface WidgetOptions {
+  attribute?: WidgetAttribute[];
   enabled?: boolean;
   id?: string;
   layout?: NodeLayout<any>;
@@ -18,9 +19,14 @@ export interface WidgetOptions {
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
-  const { enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, windowTitle } = options;
+  const { attribute, enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, windowTitle } = options;
   if (enabled !== undefined) {
     widget.setEnabled(enabled);
+  }
+  if (attribute !== undefined) {
+    for (const attr of attribute) {
+      widget.setAttribute(attr, true);
+    }
   }
   if (id !== undefined) {
     widget.setObjectName(id);

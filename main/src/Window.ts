@@ -9,7 +9,7 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
@@ -128,6 +128,7 @@ export class Window {
         this.#hamburgerMenuButton.setIcon(hamburgerMenuIcon);
       },
       menu: this.#hamburgerMenu = Menu({
+        attribute: [WidgetAttribute.WA_TranslucentBackground],
         onTriggered: (nativeAction) => {
           const action = new QAction(nativeAction);
           this.#handleWindowMenuTriggered(action.data().toString());
