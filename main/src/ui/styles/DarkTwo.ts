@@ -677,6 +677,10 @@ function QWidgetStyleSheet(): string {
 QWidget[cssClass~="background"] {
   ${IncludeDefaultBackground()}
 }
+
+QWidget[cssClass~="window-background"] {
+  background-color: ${level3Color};
+}
 `;
 }
 

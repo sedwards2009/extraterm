@@ -67,7 +67,7 @@ export class Window {
     this.#windowWidget = Widget({
       windowTitle: "Extraterm Qt",
       focusPolicy: FocusPolicy.ClickFocus,
-      cssClass: ["background"],
+      cssClass: ["window-background"],
       onKeyPress: (nativeEvent) => {
         this.#handleKeyPress(new QKeyEvent(nativeEvent));
       },
@@ -79,27 +79,21 @@ export class Window {
           Widget({
             layout: BoxLayout({
               direction: Direction.LeftToRight,
+              contentsMargins: [0, 0, 0, 0],
+              spacing: 0,
               children: [
-                Widget({
-                  layout: BoxLayout({
-                    direction: Direction.LeftToRight,
-                    contentsMargins: [0, 0, 0, 0],
-                    children: [
-                      {widget:
-                        this.#tabBar = TabBar({
-                          expanding: false,
-                          onCurrentChanged: (index: number) => {
-                            this.#handleTabBarChanged(index);
-                          },
-                          tabsClosable: true,
-                          onTabCloseRequested: (index: number) => {
-                            this.#handleTabBarCloseClicked(index);
-                          },
-                        }), stretch: 1},
-                      {widget: this.#createHamburgerMenu(uiStyle), stretch: 0}
-                    ]
-                  })
-                })
+                {widget:
+                  this.#tabBar = TabBar({
+                    expanding: false,
+                    onCurrentChanged: (index: number) => {
+                      this.#handleTabBarChanged(index);
+                    },
+                    tabsClosable: true,
+                    onTabCloseRequested: (index: number) => {
+                      this.#handleTabBarCloseClicked(index);
+                    },
+                  }), stretch: 1},
+                {widget: this.#createHamburgerMenu(uiStyle), stretch: 0}
               ]
             })
           }),
