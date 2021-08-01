@@ -492,6 +492,8 @@ QMenu {
   background-color: ${dropdownBgColor};
   border: 1px solid ${dropdownBorder};
   border-radius: ${borderRadius};
+  padding-top: ${borderRadius};
+  padding-bottom: ${borderRadius};
 }
 
 QMenu::item {
@@ -499,7 +501,11 @@ QMenu::item {
   font-weight: normal;
   color: ${textColor};
   background-color: ${dropdownBgColor};
-  padding: 1px;
+  padding: 1px 0px 0px 1.25em;
+}
+
+QMenu::icon {
+  padding-left: 2.5em;
 }
 
 QMenu::item:selected {
@@ -508,9 +514,11 @@ QMenu::item:selected {
 }
 
 QMenu::separator {
-  height: 1em;
+  height: 1px;
   color: ${textColor};
   background-color: ${textColor};
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
 }
 `;
 }

@@ -371,7 +371,7 @@ class Main {
           category: "window",
           order: 1000,
           when: "",
-          icon: "fa fa-plus",
+          icon: "fa-plus",
         };
         disposables.add(extensionContext._registerCommandContribution(contrib));
 
