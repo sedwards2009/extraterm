@@ -9,7 +9,7 @@
         "command": "extraterm:application.openCommandPalette",
         "title": "Command Palette",
         "category": "window",
-        "icon": "fas fa-toolbox",
+        "icon": "fa-toolbox",
         "when": "",
         "order": 900
       },
@@ -17,7 +17,7 @@
         "command": "extraterm:application.newWindow",
         "title": "New Window",
         "category": "window",
-        "icon": "far fa-window-restore",
+        "icon": "fa-window-restore",
         "when": "",
         "order": 900
       },
@@ -26,7 +26,7 @@
         "title": "Scroll Page Up",
         "category": "terminal",
         "order": 1300,
-        "icon": "fa fa-angle-double-up",
+        "icon": "fa-angle-double-up",
         "when": "terminalFocus"
       },
       {
@@ -34,7 +34,7 @@
         "title": "Scroll Page Down",
         "category": "terminal",
         "order": 1301,
-        "icon": "fa fa-angle-double-down",
+        "icon": "fa-angle-double-down",
         "when": "terminalFocus"
       },
       {
@@ -42,7 +42,7 @@
         "title": "Go to Previous Frame",
         "category": "terminal",
         "order": 1400,
-        "icon": "fas fa-step-backward fa-rotate-90",
+        "icon": "fa-step-backward fa-rotate-90",
         "when": "terminalFocus"
       },
       {
@@ -50,7 +50,7 @@
         "title": "Go to Next Frame",
         "category": "terminal",
         "order": 1401,
-        "icon": "fas fa-step-forward fa-rotate-90",
+        "icon": "fa-step-forward fa-rotate-90",
         "when": "terminalFocus"
       },
       {
@@ -58,7 +58,7 @@
         "title": "Copy to Clipboard",
         "category": "terminal",
         "order": 1500,
-        "icon": "far fa-copy",
+        "icon": "fa-copy",
         "when": "terminalFocus"
       },
       {
@@ -66,7 +66,7 @@
         "title": "Paste from Clipboard",
         "category": "terminal",
         "order": 1501,
-        "icon": "fa fa-clipboard",
+        "icon": "fa-clipboard",
         "when": "terminalFocus"
       },
       {
@@ -74,7 +74,7 @@
         "title": "Open Last Frame",
         "category": "terminal",
         "order": 1600,
-        "icon": "fas fa-external-link-square-alt",
+        "icon": "fa-external-link-square-alt",
         "when": "terminalFocus"
       },
       {
@@ -82,7 +82,7 @@
         "title": "Delete Last Frame",
         "category": "terminal",
         "order": 1601,
-        "icon": "fa fa-times-circle",
+        "icon": "fa-times-circle",
         "when": "terminalFocus"
       },
       {
@@ -111,7 +111,7 @@
         "title": "Clear Scrollback",
         "category": "terminal",
         "order": 1800,
-        "icon": "fa fa-eraser",
+        "icon": "fa-eraser",
         "when": "terminalFocus"
       },
       {
@@ -119,7 +119,7 @@
         "title": "Reset VT",
         "category": "terminal",
         "order": 1801,
-        "icon": "fa fa-sync",
+        "icon": "fa-sync",
         "when": "terminalFocus"
       },
       {
@@ -128,14 +128,14 @@
         "category": "window",
         "order": 1000,
         "when": "",
-        "icon": "fa fa-plus"
+        "icon": "fa-plus"
       },
       {
         "command": "extraterm:window.closeTab",
         "title": "Close Tab",
         "category": "window",
         "order": 1100,
-        "icon": "fas fa-window-close",
+        "icon": "fa-window-close",
         "when": ""
       },
       {
@@ -157,7 +157,7 @@
         "title": "Settings",
         "category": "application",
         "order": 2000,
-        "icon": "fa fa-wrench",
+        "icon": "fa-wrench",
         "when": ""
       },
       {
@@ -171,7 +171,7 @@
         "command": "extraterm:window.closeWindow",
         "title": "Close Window",
         "category": "window",
-        "icon": "fa fa-times",
+        "icon": "fa-times",
         "when": ""
       },
       {
@@ -208,7 +208,7 @@
         "command": "extraterm:application.quit",
         "title": "Quit",
         "category": "window",
-        "icon": "fas fa-sign-out-alt",
+        "icon": "fa-sign-out-alt",
         "when": ""
       }
     ],

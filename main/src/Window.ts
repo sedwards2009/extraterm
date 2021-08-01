@@ -131,12 +131,12 @@ export class Window {
       })
     });
 
-    this.#updateHamburgerMenu();
+    this.#updateHamburgerMenu(uiStyle);
 
     return this.#hamburgerMenuButton;
   }
 
-  #updateHamburgerMenu(): void {
+  #updateHamburgerMenu(uiStyle: UiStyle): void {
     const options: CommandQueryOptions = {
       when: true,
       windowMenu: true,
@@ -156,6 +156,12 @@ export class Window {
       }
       const action = this.#hamburgerMenu.addAction(entry.title);
       action.setData(new QVariant(entry.command));
+      if (entry.icon != null) {
+        const icon = uiStyle.getMenuIcon(entry.icon);
+        if (icon != null) {
+          action.setIcon(icon);
+        }
+      }
     }
   }
 

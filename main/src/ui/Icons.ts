@@ -3,8 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { getLogger } from "extraterm-logging";
+
 import { QFont, QIcon } from "@nodegui/nodegui";
 import { createFontIcon, CreateFontIconOptions } from "nodegui-plugin-font-icon";
+
+const _log = getLogger("Icons");
 
 const fontSetMapping = {
   solid: new QFont("FontAwesome5Free-Solid"),
@@ -17,6 +21,7 @@ export interface CreateIconOptions extends CreateFontIconOptions {}
 export function createIcon(name: string, options?: CreateIconOptions): QIcon {
   const entry = fontAwesomeIcons[name];
   if (entry === undefined) {
+    _log.warn(`Unknown icon name ${name}`);
     return null;
   }
   return createFontIcon(fontSetMapping[entry.set], entry.string, options);
