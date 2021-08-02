@@ -6,12 +6,58 @@
 require('shelljs/global');
 const path = require('path');
 const fs = require('fs');
-const os = require('os');
-const uuid = require('extraterm-uuid');
-const readdirp = require('readdirp');
 const dependencyPruner = require('./dependency_pruner');
 const log = console.log.bind(console);
-const fsExtra = require('fs-extra');
+const utilities = require('./packaging_utilities');
+
+
+async function makePackage({ arch, platform, version, outputDir }) {
+  log("");
+  const SRC_DIR = "" + pwd();
+
+  fixNodeModulesSubProjects();
+
+  // Clean up the output dirs and files first.
+  const versionedDirName = createOutputDirName({version, platform, arch});
+  const versionedOutputDir = path.join(outputDir, versionedDirName);
+
+  if (test('-d', versionedOutputDir)) {
+    rm('-rf', versionedOutputDir);
+  }
+
+  echo("Copying source tree to versioned directory...");
+  utilities.copySourceTree(SRC_DIR, versionedOutputDir, ignoreRegExp);
+
+  const thisCD = pwd();
+  cd(outputDir);
+
+  await pruneNodeGui(versionedOutputDir, platform);
+
+  hoistSubprojectsModules(versionedOutputDir, platform);
+
+  dependencyPruner.pruneDevDependencies(SRC_DIR, versionedOutputDir);
+  pruneNodeModules(versionedOutputDir, platform);
+  // pruneTwemoji(versionedOutputDir, platform);
+
+  addLauncher(versionedOutputDir, platform);
+
+  log("Zipping up the package");
+
+  if (platform === "linux") {
+    cp(path.join(SRC_DIR, "main/resources/extraterm.desktop"), versionedOutputDir);
+  }
+
+  const linkOption = process.platform === "win32" ? "" : " -y";
+  cd(outputDir);
+  const outputZip = versionedDirName + ".zip";
+  exec(`zip ${linkOption} -r ${outputZip} ${versionedDirName}`);
+  cd(thisCD);
+
+  log("App bundle written to " + versionedOutputDir);
+  return true;
+}
+
+exports.makePackage = makePackage;
 
 
 const ignoreRegExp = [
@@ -83,10 +129,10 @@ async function pruneNodeGui(versionedOutputDir, platform) {
 
   // await materializeSymlinks(".");
 
-  pruneDirTreeWithWhitelist("build", [
+  utilities.pruneDirTreeWithWhitelist("build", [
     /\.node$/
   ]);
-  pruneDirTreeWithWhitelist("miniqt", [
+  utilities.pruneDirTreeWithWhitelist("miniqt", [
     /\.so$/,
     /\.so\..*$/
   ]);
@@ -97,21 +143,9 @@ async function pruneNodeGui(versionedOutputDir, platform) {
 
   // TODO: Strip the library .so files
 
-  await pruneEmptyDirectories("build");
-  await pruneEmptyDirectories("miniqt");
+  await utilities.pruneEmptyDirectories("build");
+  await utilities.pruneEmptyDirectories("miniqt");
   cd(prevDir);
-}
-
-async function materializeSymlinks(directoryPath) {
-  const filter = entry => entry.stats.isSymbolicLink();
-  const allFileEntries = await readdirp.promise(directoryPath, {alwaysStat: true, lstat: true, fileFilter: filter});
-
-  for (const fileEntry of allFileEntries) {
-    // echo(`Materializing symlink: ${fileEntry.path}`);
-    const contents = fs.readFileSync(fileEntry.fullPath);
-    rm(fileEntry.fullPath);
-    fs.writeFileSync(fileEntry.fullPath, contents, { mode: fileEntry.stats.mode });
-  }
 }
 
 function pruneListFontsJsonExe(versionedOutputDir, platform) {
@@ -122,19 +156,6 @@ function pruneListFontsJsonExe(versionedOutputDir, platform) {
       echo(`Deleting ${listFontsJsonPath}`);
       rm('-rf', listFontsJsonPath);
     }
-  }
-}
-
-async function pruneEmptyDirectories(directoryPath) {
-  const dirEntries = await readdirp.promise(directoryPath, { type: "directories", depth: 1 });
-  for (const dirEntry of dirEntries) {
-    await pruneEmptyDirectories(dirEntry.fullPath);
-  }
-
-  const allEntries = await readdirp.promise(directoryPath, { type: "files_directories", depth: 1 });
-  if (Array.from(allEntries).length === 0) {
-    // echo(`Pruning empty directory: ${directoryPath}`);
-    rm('-rf', directoryPath);
   }
 }
 
@@ -209,7 +230,7 @@ function pruneSpecificNodeModules() {
 }
 
 function pruneNodePty() {
-  pruneDependencyWithWhitelist("node-pty", [
+  utilities.pruneDependencyWithWhitelist("node-pty", [
     "node-pty.node",
     "/lib/",
     "/README.md",
@@ -228,79 +249,6 @@ function pruneNodePty() {
   ]);
 }
 
-/**
- * @param {string} dependencyName
- * @param {(RegExp | string)[]} subpathList
- */
-function pruneDependencyWithWhitelist(dependencyName, subpathList) {
-  const prevDir = pwd();
-  cd("node_modules");
-  cd(dependencyName);
-  pruneDirTreeWithWhitelist(".", subpathList)
-  cd(prevDir);
-}
-
-/**
- * @param {string} dir
- * @param {(RegExp | string)[]} subpathList
- */
- function pruneDirTreeWithWhitelist(dir, subpathList) {
-  for (const itemPath of find(dir)) {
-    if ( ! test('-f', itemPath)) {
-      continue;
-    }
-
-    if (pathMatchWhitelist(subpathList, itemPath)) {
-      // echo(`Keeping: ${itemPath}`);
-    } else {
-      // echo(`Pruning ${itemPath}`);
-      rm(itemPath);
-    }
-  }
-}
-
-/**
- * Match a path against a whilelist.
- *
- * Patterns in the whitelist have the follow rules:
- *
- *   * If it starts with a / then it matches the whole path.
- *   * If it ends with a / then everything under that directory is accepted.
- *   * No slashes in the path, then it matches on the file only.
- *   * Patterns can be regular expressions.
- *
- * @param {(RegExp | string)[]} whitelist List of allowed path patterns.
- * @param {string} testPath
- * @return {boolean} True if the `testPath` is
- */
-function pathMatchWhitelist(whitelist, testPath) {
-  for (const keepPath of whitelist) {
-    if (keepPath instanceof RegExp) {
-      if (keepPath.test(testPath)) {
-        return true;
-      }
-    } else if (keepPath.startsWith("/")) {
-      if (keepPath.endsWith("/")) {
-        if (testPath.startsWith(keepPath.substring(1))) {
-          return true;
-        }
-      } else {
-        if (testPath === keepPath.substring(1)) {
-          return true;
-        }
-      }
-    } else {
-      if (keepPath === path.posix.basename(testPath)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-exports.pruneDependencyWithWhitelist = pruneDependencyWithWhitelist;
-
-
 function createOutputDirName({version, platform, arch}) {
   return "extraterm-" + version + "-" + platform + "-" + arch;
 }
@@ -317,77 +265,3 @@ function fixNodeModulesSubProjects() {
 }
 
 exports.createOutputDirName = createOutputDirName;
-
-async function makePackage({ arch, platform, version, outputDir }) {
-  log("");
-  const SRC_DIR = "" + pwd();
-
-  fixNodeModulesSubProjects();
-
-  // Clean up the output dirs and files first.
-  const versionedDirName = createOutputDirName({version, platform, arch});
-  const versionedOutputDir = path.join(outputDir, versionedDirName);
-
-  if (test('-d', versionedOutputDir)) {
-    rm('-rf', versionedOutputDir);
-  }
-
-  echo("Copying source tree to versioned directory...");
-  copySourceTree(SRC_DIR, versionedOutputDir);
-
-  const thisCD = pwd();
-  cd(outputDir);
-
-  await pruneNodeGui(versionedOutputDir, platform);
-
-  hoistSubprojectsModules(versionedOutputDir, platform);
-
-  dependencyPruner.pruneDevDependencies(SRC_DIR, versionedOutputDir);
-  pruneNodeModules(versionedOutputDir, platform);
-  // pruneTwemoji(versionedOutputDir, platform);
-
-  addLauncher(versionedOutputDir, platform);
-
-  log("Zipping up the package");
-
-  if (platform === "linux") {
-    cp(path.join(SRC_DIR, "main/resources/extraterm.desktop"), versionedOutputDir);
-  }
-
-  const linkOption = process.platform === "win32" ? "" : " -y";
-  cd(outputDir);
-  const outputZip = versionedDirName + ".zip";
-  exec(`zip ${linkOption} -r ${outputZip} ${versionedDirName}`);
-  cd(thisCD);
-
-  log("App bundle written to " + versionedOutputDir);
-  return true;
-}
-
-exports.makePackage = makePackage;
-
-/**
- * Copy a source tree.
- *
- * @param {string} sourceDir
- * @param {string} destDir
- * @return {void}
- */
-function copySourceTree(sourceDir, destDir) {
-  const temp = tempdir();
-
-  const tempPath = path.join(temp, `extraterm-build-${uuid.createUuid()}`);
-  mkdir(tempPath);
-  echo(`Using tmp dir ${tempPath} during source tree copy.`);
-
-  const ignoreFunc = function ignoreFunc(rawFilePath) {
-    const filePath = rawFilePath.substr(sourceDir.length);
-    const result = ignoreRegExp.some( (exp) => exp.test(filePath));
-    // log(`ignoreFunc filePath: ${filePath} => ${(!result) ? "COPY" : "IGNORE" }`);
-    return ! result;
-  };
-
-  fsExtra.copySync(sourceDir, tempPath, {filter: ignoreFunc});
-
-  mv(tempPath, destDir);
-}
