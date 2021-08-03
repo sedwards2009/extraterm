@@ -10,6 +10,7 @@ const dependencyPruner = require('./dependency_pruner');
 const log = console.log.bind(console);
 const utilities = require('./packaging_utilities');
 
+const qtConfig = require("@nodegui/nodegui/config/qtConfig");
 
 async function makePackage({ arch, platform, version, outputDir }) {
   log("");
@@ -40,6 +41,8 @@ async function makePackage({ arch, platform, version, outputDir }) {
   // pruneTwemoji(versionedOutputDir, platform);
 
   addLauncher(versionedOutputDir, platform);
+
+  runDeployQt(SRC_DIR, versionedOutputDir);
 
   log("Zipping up the package");
 
@@ -127,24 +130,11 @@ async function pruneNodeGui(versionedOutputDir, platform) {
   const prevDir = pwd();
   cd(nodeGuiDir);
 
-  // await materializeSymlinks(".");
-
   utilities.pruneDirTreeWithWhitelist("build", [
     /\.node$/
   ]);
-  utilities.pruneDirTreeWithWhitelist("miniqt", [
-    /\.so$/,
-    /\.so\..*$/
-  ]);
-
-  // Set the RUNPATH inside the library so that it can find our Qt libs.
-  // Background info: https://nehckl0.medium.com/creating-relocatable-linux-executables-by-setting-rpath-with-origin-45de573a2e98
-  exec("chrpath -r '$ORIGIN/../../miniqt/5.14.1/gcc_64/lib' 'build/Release/nodegui_core.node'");
-
-  // TODO: Strip the library .so files
 
   await utilities.pruneEmptyDirectories("build");
-  await utilities.pruneEmptyDirectories("miniqt");
   cd(prevDir);
 }
 
@@ -265,3 +255,45 @@ function fixNodeModulesSubProjects() {
 }
 
 exports.createOutputDirName = createOutputDirName;
+
+/**
+ * @param {string} srcDir
+ * @param {string} versionedOutputDir
+ */
+function runDeployQt(srcDir, versionedOutputDir) {
+  echo("");
+  echo("---------------------------------------------------------------------------");
+  echo("Deploy Qt");
+  echo("");
+
+  const prevDir = pwd();
+  cd(versionedOutputDir);
+
+  const qtHome = qtConfig.qtHome;
+  const LD_LIBRARY_PATH=`${qtHome}/lib:${process.env.LD_LIBRARY_PATH || ""}`;
+
+  mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode"), versionedOutputDir);
+
+  const nodeBinaryModules = ls("**/*.node");
+
+  const deployCommand = [path.resolve(srcDir, `downloads/linux-x64/linuxdeployqt-x86_64.AppImage`),
+                        `qode`,
+                        `-verbose=2`,
+                        `-qmake=${path.resolve(qtHome, "bin", "qmake")}`,
+                        nodeBinaryModules.map(x => `-executable=${x.toString()}`).join(" ")
+                      ].join(" ");
+
+  echo(deployCommand);
+  exec(deployCommand, { env: {...process.env, LD_LIBRARY_PATH} });
+
+  const qodeJson = {
+    distPath: "main/dist/main.js"
+  };
+  fs.writeFileSync("qode.json", JSON.stringify(qodeJson), {encoding: "utf8"});
+  // TODO: Strip the library .so and qode files
+
+  rm(`AppRun`);
+  rm("-rf", path.join(versionedOutputDir, "./node_modules/@nodegui/nodegui/miniqt"));
+
+  cd(prevDir);
+}

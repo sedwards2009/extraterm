@@ -63,6 +63,8 @@ jobs:
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
+      - script: "yarn run download-deploy-tool"
+        displayName: "Download the deploy packaging tool"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
@@ -103,6 +105,8 @@ jobs:
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
+      - script: "yarn run download-deploy-tool"
+        displayName: "Download the deploy packaging tool"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
@@ -146,6 +150,8 @@ jobs:
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
+      - script: "yarn run download-deploy-tool"
+        displayName: "Download the deploy packaging tool"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
