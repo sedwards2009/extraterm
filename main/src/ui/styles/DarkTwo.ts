@@ -208,7 +208,7 @@ function DarkTwoStyleSheet(resourceDirectory: string): string {
     QCheckBoxStyleSheet(resourceDirectory) +
     QComboBoxStyleSheet(resourceDirectory) +
     QLabelStyleSheet() +
-    QLineEditQSpinBoxStyleSheet() +
+    QLineEditQSpinBoxStyleSheet(resourceDirectory) +
     QMenuStyleSheet() +
     QPushButtonStyleSheet() +
     QRadioButtonStyleSheet(resourceDirectory) +
@@ -272,7 +272,8 @@ QComboBox {
 }
 
 QComboBox:hover, QComboBox:on {
-  color: #d7dae0;
+/* color: #d7dae0; */
+  color: ${textHighlightColor};
   background-color: #3a404b;
 }
 QComboBox:focus {
@@ -286,18 +287,20 @@ QComboBox::drop-down {
   border-left-width: 0px;
   border-top-right-radius: 4px;
   border-bottom-right-radius: 4px;
-  /* TODO: chevron svg */
 }
 
 QComboBox QAbstractItemView {
   selection-background-color: #578af2;
   background-color: #3a404b;
-  color: #d7dae0;
-  /* color: #ff00ff; */
+  color: ${textHighlightColor};
 }
 
 QComboBox::down-arrow {
   image: url(${resourceDirectory}/combobox_arrow.svg);
+}
+
+QComboBox::down-arrow:hover {
+  image: url(${resourceDirectory}/combobox_arrow_hover.svg);
 }
 `;
 }
@@ -312,6 +315,7 @@ QLabel[cssClass~="h5"],
 QLabel[cssClass~="h6"] {
   font-weight: bold;
   color: ${headingsColor};
+  padding-bottom: 0.4em;
 }
 
 QLabel[cssClass~="h1"] {
@@ -354,7 +358,7 @@ QLabel[cssClass~="group-right"] {
 `;
 }
 
-function QLineEditQSpinBoxStyleSheet(): string {
+function QLineEditQSpinBoxStyleSheet(resourceDirectory: string): string {
   return `
 QLineEdit, QSpinBox {
   color: ${textColor};
@@ -388,6 +392,22 @@ QLineEdit[cssClass~="group-middle"], QSpinBox[cssClass~="group-middle"] {
 QLineEdit[cssClass~="group-right"], QSpinBox[cssClass~="group-right"] {
   border-top-left-radius: 0px;
   border-bottom-left-radius: 0px;
+}
+
+QSpinBox::up-button {
+  image: url(${resourceDirectory}/spin_up_arrow.svg);
+}
+
+QSpinBox::up-button:hover {
+  image: url(${resourceDirectory}/spin_up_arrow_hover.svg);
+}
+
+QSpinBox::down-button {
+  image: url(${resourceDirectory}/spin_down_arrow.svg);
+}
+
+QSpinBox::down-button:hover {
+  image: url(${resourceDirectory}/spin_down_arrow_hover.svg);
 }
 `;
 }
