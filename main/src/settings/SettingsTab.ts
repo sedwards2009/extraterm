@@ -4,13 +4,16 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { Direction, QBoxLayout, QScrollArea, QStackedWidget, QWidget } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, ListWidget, ListWidgetItem, ScrollArea, SpinBox,
+import { Direction, QBoxLayout, QScrollArea, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
+import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, ListWidget, ListWidgetItem, ScrollArea, SpinBox,
   StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Tab } from "../Tab";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import { GeneralConfig } from "../config/Config";
+import { UiStyle } from "../ui/UiStyle";
+import { createHtmlIcon } from "../ui/Icons";
+import { makeGroupLayout } from "../ui/QtConstructExtra";
 
 
 export class SettingsTab implements Tab {
@@ -20,11 +23,10 @@ export class SettingsTab implements Tab {
   #contentLayout: QBoxLayout = null;
   #configDatabase: ConfigDatabase = null;
 
-  constructor(configDatabase: ConfigDatabase) {
+  constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle) {
     this._log = getLogger("SettingsTab", this);
     this.#configDatabase = configDatabase;
-    this.#createUI();
-
+    this.#createUI(uiStyle);
   }
 
   getTitle(): string {
@@ -42,7 +44,7 @@ export class SettingsTab implements Tab {
   unfocus(): void {
   }
 
-  #createUI(): void {
+  #createUI(uiStyle: UiStyle): void {
     let stackedWidget: QStackedWidget = null;
 
     this.#contentWidget = Widget({
@@ -52,8 +54,8 @@ export class SettingsTab implements Tab {
         children: [
           {widget:
             ListWidget({items: [
-              ListWidgetItem({text: "General", selected: true}),
-              ListWidgetItem({text: "Appearance"}),
+              ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-sliders-h"), text: "General", selected: true}),
+              ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-paint-brush"), text: "Appearance"}),
               // ListWidgetItem({text: "Session Types"}),
               // ListWidgetItem({text: "Keybindings"}),
               // ListWidgetItem({text: "Frames"}),
@@ -83,39 +85,52 @@ export class SettingsTab implements Tab {
     return ScrollArea({
       widget: Widget({
         cssClass: "background",
-        layout: GridLayout({
-          columns: 2,
+        layout: BoxLayout({
+          direction: Direction.TopToBottom,
           children: [
-            "Show Tips:",
-            ComboBox({items: ["Every time", "Daily", "Never"]}),
+            Label({
+              text: `${createHtmlIcon("fa-sliders-h")}&nbsp;&nbsp;General Settings`,
+              textFormat: TextFormat.RichText,
+              cssClass: ["h2"]}),
+            GridLayout({
+              columns: 2,
+              children: [
+                "Show Tips:",
+                ComboBox({items: ["Every time", "Daily", "Never"]}),
 
-            "Max. Scrollback Lines:",
-            SpinBox({
-              minimum: 0,
-              maximum: 10000,
-              value: 1000,
-              suffix: " lines"
-            }),
+                "Max. Scrollback Lines:",
+                makeGroupLayout(
+                  SpinBox({
+                    minimum: 0,
+                    maximum: 10000,
+                    value: 1000
+                  }),
+                  "lines"
+                ),
 
-            "Max. Scrollback Frames:",
-            SpinBox({
-              minimum: 0,
-              maximum: 10000,
-              value: 1000,
-              suffix: " frames"
-            }),
+                "Max. Scrollback Frames:",
+                makeGroupLayout(
+                  SpinBox({
+                    minimum: 0,
+                    maximum: 10000,
+                    value: 1000
+                  }),
+                  "frames"
+                ),
 
-            "",
-            CheckBox({
-              checkState: true,
-              text: "Automatically copy selection to clipboard"
-            }),
+                "",
+                CheckBox({
+                  checkState: true,
+                  text: "Automatically copy selection to clipboard"
+                }),
 
-            "",
-            CheckBox({
-              checkState: true,
-              text: "Close the window after closing the last tab"
-            }),
+                "",
+                CheckBox({
+                  checkState: true,
+                  text: "Close the window after closing the last tab"
+                }),
+              ]
+            })
           ]
         })
       })
@@ -138,27 +153,36 @@ export class SettingsTab implements Tab {
     return ScrollArea({
       widget: Widget({
         cssClass: "background",
-        layout: GridLayout({
-          columns: 2,
+        layout: BoxLayout({
+          direction: Direction.TopToBottom,
           children: [
-            "Font:",
-            ComboBox({
-              currentIndex: currentFontIndex,
-              items: allFonts.map((f): ComboBoxItem => ({ text: f.name, userData: f.id }))
-            }),
+            Label({
+              text: `${createHtmlIcon("fa-paint-brush")}&nbsp;&nbsp;Appearance`,
+              textFormat: TextFormat.RichText,
+              cssClass: ["h2"]}),
+            GridLayout({
+              columns: 2,
+              children: [
+                "Font:",
+                ComboBox({
+                  currentIndex: currentFontIndex,
+                  items: allFonts.map((f): ComboBoxItem => ({ text: f.name, userData: f.id }))
+                }),
 
-            "Font Size:",
-            SpinBox({
-              minimum: 1,
-              maximum: 1024,
-              value: generalConfig.terminalFontSize,
-              suffix: " pixels",
-              onValueChanged: (value: number) => {
-                update((c) => c.terminalFontSize = value);
-              },
-            }),
-          ]
-        })
+                "Font Size:",
+                SpinBox({
+                  minimum: 1,
+                  maximum: 1024,
+                  value: generalConfig.terminalFontSize,
+                  suffix: " pixels",
+                  onValueChanged: (value: number) => {
+                    update((c) => c.terminalFontSize = value);
+                  },
+                }),
+              ]
+            })
+          ]}
+        )
       })
     });
   }

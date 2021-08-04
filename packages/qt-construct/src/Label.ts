@@ -3,20 +3,25 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QLabel } from "@nodegui/nodegui";
+import { QLabel, TextFormat } from "@nodegui/nodegui";
 import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 
 export interface LabelOptions extends WidgetOptions {
   text?: string;
+  textFormat?: TextFormat;
 }
 
 export function Label(options: LabelOptions): QLabel {
   const label = new QLabel();
 
   ApplyWidgetOptions(label, options);
-
-  if (options.text !== undefined) {
-    label.setText(options.text);
+  const { text, textFormat } = options;
+  if (textFormat !== undefined) {
+    label.setTextFormat(textFormat);
   }
+  if (text !== undefined) {
+    label.setText(text);
+  }
+
   return label;
 }

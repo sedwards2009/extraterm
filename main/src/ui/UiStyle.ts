@@ -10,4 +10,5 @@ export interface UiStyle {
   getHamburgerMenuIcon(): QIcon;
   getHamburgerMenuIconHover(): QIcon;
   getMenuIcon(name: string): QIcon;
+  getSettingsMenuIcon(name: string): QIcon;
 }

@@ -27,6 +27,15 @@ export function createIcon(name: string, options?: CreateIconOptions): QIcon {
   return createFontIcon(fontSetMapping[entry.set], entry.string, options);
 }
 
+export function createHtmlIcon(name: string): string {
+  const entry = fontAwesomeIcons[name];
+  if (entry === undefined) {
+    _log.warn(`Unknown icon name ${name}`);
+    return null;
+  }
+  return `<font face="${fontSetMapping[entry.set]}">${entry.string}</font>`;
+}
+
 interface FontAwesomeIconMetadata {
   string: string;
   set: string;

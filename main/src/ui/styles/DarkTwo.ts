@@ -42,6 +42,20 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
         selectedOffRgba: hoverColor,
         activeOffRgba: hoverColor,
       });
+    },
+    getSettingsMenuIcon(name: string): QIcon {
+      const normalColor = toRgba(textColor);
+      const hoverColor = toRgba(dropdownLinkHoverColor);
+
+      return createIcon(name, {
+        normalOnRgba: normalColor,
+        selectedOnRgba: hoverColor,
+        activeOnRgba: hoverColor,
+
+        normalOffRgba: normalColor,
+        selectedOffRgba: hoverColor,
+        activeOffRgba: hoverColor,
+      });
     }
   };
 }

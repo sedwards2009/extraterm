@@ -3,22 +3,26 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QListWidgetItem } from "@nodegui/nodegui";
+import { QIcon, QListWidgetItem } from "@nodegui/nodegui";
 
 
 export interface ListWidgetItemOptions {
+  icon?: QIcon;
   text?: string;
   selected?: boolean;
 }
 
 export function ListWidgetItem(options: ListWidgetItemOptions): QListWidgetItem {
   const listWidgetItem = new QListWidgetItem();
-
-  if (options.text !== undefined) {
-    listWidgetItem.setText(options.text);
+  const { icon, text, selected } = options;
+  if (icon !== undefined) {
+    listWidgetItem.setIcon(icon);
   }
-  if (options.selected !== undefined) {
-    listWidgetItem.setSelected(options.selected);
+  if (text !== undefined) {
+    listWidgetItem.setText(text);
+  }
+  if (selected !== undefined) {
+    listWidgetItem.setSelected(selected);
   }
   return listWidgetItem;
 }
