@@ -51,25 +51,30 @@ export class SettingsTab implements Tab {
       cssClass: "background",
       layout: BoxLayout({
         direction: Direction.LeftToRight,
+        spacing: 0,
+        contentsMargins: [0, 0, 0, 0],
         children: [
           {widget:
-            ListWidget({items: [
-              ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-sliders-h"), text: "General", selected: true}),
-              ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-paint-brush"), text: "Appearance"}),
-              // ListWidgetItem({text: "Session Types"}),
-              // ListWidgetItem({text: "Keybindings"}),
-              // ListWidgetItem({text: "Frames"}),
-              // ListWidgetItem({text: "Extensions"}),
-            ],
-            currentRow: 0,
-            onCurrentRowChanged: (row) => {
-              stackedWidget.setCurrentIndex(row);
-            }}),
+            ListWidget({
+              cssClass: ["settings-menu"],
+              items: [
+                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-sliders-h"), text: "General", selected: true}),
+                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-paint-brush"), text: "Appearance"}),
+                // ListWidgetItem({text: "Session Types"}),
+                // ListWidgetItem({text: "Keybindings"}),
+                // ListWidgetItem({text: "Frames"}),
+                // ListWidgetItem({text: "Extensions"}),
+              ],
+              currentRow: 0,
+              onCurrentRowChanged: (row) => {
+                stackedWidget.setCurrentIndex(row);
+              }
+            }),
             stretch: 0,
           },
           {widget:
             stackedWidget = StackedWidget({
-              cssClass: "background",
+              cssClass: ["settings-stack"],
               children: [
                 this.#createGeneralPage(),
                 this.#createAppearancePage()
@@ -83,8 +88,10 @@ export class SettingsTab implements Tab {
 
   #createGeneralPage(): QScrollArea {
     return ScrollArea({
+      cssClass: "settings-tab",
+
       widget: Widget({
-        cssClass: "background",
+        cssClass: "settings-tab",
         layout: BoxLayout({
           direction: Direction.TopToBottom,
           children: [
@@ -151,8 +158,9 @@ export class SettingsTab implements Tab {
     };
 
     return ScrollArea({
+      cssClass: "settings-tab",
       widget: Widget({
-        cssClass: "background",
+        cssClass: "settings-tab",
         layout: BoxLayout({
           direction: Direction.TopToBottom,
           children: [
@@ -170,15 +178,17 @@ export class SettingsTab implements Tab {
                 }),
 
                 "Font Size:",
-                SpinBox({
-                  minimum: 1,
-                  maximum: 1024,
-                  value: generalConfig.terminalFontSize,
-                  suffix: " pixels",
-                  onValueChanged: (value: number) => {
-                    update((c) => c.terminalFontSize = value);
-                  },
-                }),
+                makeGroupLayout(
+                  SpinBox({
+                    minimum: 1,
+                    maximum: 1024,
+                    value: generalConfig.terminalFontSize,
+                    onValueChanged: (value: number) => {
+                      update((c) => c.terminalFontSize = value);
+                    },
+                  }),
+                  "pixels"
+                )
               ]
             })
           ]}

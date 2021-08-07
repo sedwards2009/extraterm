@@ -33,11 +33,11 @@
      inkscape:current-layer="layer1"
      showgrid="true"
      units="px"
-     inkscape:window-width="1278"
+     inkscape:window-width="2558"
      inkscape:window-height="1382"
      inkscape:window-x="0"
      inkscape:window-y="0"
-     inkscape:window-maximized="0"
+     inkscape:window-maximized="1"
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:document-rotation="0">
@@ -76,7 +76,7 @@
      transform="translate(0,-1020.3622)">
     <path
        style="fill:#9da5b4;fill-opacity:1;stroke:none;stroke-width:1.75;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.97747749"
-       d="m 27,1042.3622 -11,-11 -11,11 z"
+       d="m 27,1041.3622 -11,-11 -11.0000002,11 z"
        id="path835"
        sodipodi:nodetypes="cccc"
        inkscape:connector-curvature="0" />

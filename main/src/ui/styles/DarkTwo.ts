@@ -55,6 +55,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
         normalOffRgba: normalColor,
         selectedOffRgba: hoverColor,
         activeOffRgba: hoverColor,
+
+        scale: 0.7,
       });
     }
   };
@@ -130,6 +132,7 @@ const linkHoverDecoration = "underline";
 //  Buttons
 const componentBackgroundColor = textColorSubtle;
 
+const componentPaddingVertical = "1em";
 
 const borderRadius = "4px";
 const borderRadiusSmall = "3px";
@@ -195,12 +198,21 @@ const dropdownLinkHoverColor = textSelectedColor;
 const dropdownLinkHoverBg = backgroundSelectedColor;
 const dropdownBorder = baseBorderColor;
 
+const navLinkPadding = "0.5em 0.75em 0.5em 0em";
+// Hack because padding-left doesn't seem to work for unselected list item.
+// See https://forum.qt.io/topic/87208/strange-stylesheet-behavior-with-qlistview-item/14
+const navLinkPaddingLeft = "0.5em";
+
 const tabBorderColor = baseBorderColor;
 const tabBackgroundColor = level3Color;
 const tabTextColor = textColorSubtle;
 
 const tabTextColorActive = textHighlightColor;
 const tabBackgroundColorActive = level2Color;
+
+
+const settingsBgSelectedColor = lighten(backgroundColor, 8);
+
 
 function DarkTwoStyleSheet(resourceDirectory: string): string {
   return BodyStyleSheet() +
@@ -725,6 +737,46 @@ QWidget[cssClass~="tabbar-gap"] {
   border-top: 0px;
   border-bottom: 1px solid ${tabBorderColor};
   margin: 0px;
+}
+
+/* --- Settings page --- */
+
+QListWidget[cssClass~="settings-menu"] {
+  show-decoration-selected: 1;
+  padding-top: ${componentPaddingVertical};
+  background-color: ${backgroundColor};
+
+  border: none;
+}
+
+QListWidget[cssClass~="settings-menu"]::item {
+  padding: ${navLinkPadding};
+  border-left: ${navLinkPaddingLeft} solid transparent;  /* Hack, see 'navLinkPaddingLeft' def.*/
+}
+
+QListWidget[cssClass~="settings-menu"]::item:selected, QListWidget[cssClass~="settings-menu"]::item:hover {
+  color: ${textSelectedColor};
+  background-color: ${settingsBgSelectedColor};
+}
+
+QListWidget[cssClass~="settings-menu"]::item:focus {
+  outline: none;
+}
+
+QStackedWidget[cssClass~="settings-stack"] {
+  border-left: 1px solid ${baseBorderColor};
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+}
+
+QScrollArea[cssClass~="settings-tab"] {
+  border: none;
+}
+
+QWidget[cssClass~="settings-tab"] {
+  ${IncludeDefaultBackground()}
+  border: none;
 }
 `;
 }
