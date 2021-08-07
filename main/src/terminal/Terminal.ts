@@ -367,6 +367,10 @@ export class Terminal implements Tab, Disposable {
     return "Terminal";
   }
 
+  getIconName(): string {
+    return null;
+  }
+
   getContents(): QWidget {
     return this.#scrollArea;
   }

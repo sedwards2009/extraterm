@@ -33,6 +33,10 @@ export class SettingsTab implements Tab {
     return "Settings";
   }
 
+  getIconName(): string {
+    return "extraicons-pocketknife";
+  }
+
   getContents(): QWidget {
     return this.#contentWidget;
   }

@@ -6,6 +6,7 @@
 import { QWidget } from "@nodegui/nodegui";
 
 export interface Tab {
+  getIconName(): string;
   getTitle(): string;
   getContents(): QWidget;
   focus(): void;

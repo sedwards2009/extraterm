@@ -121,9 +121,10 @@ class Main {
     this.registerCommands(extensionManager);
     this.startUpSessions(configDatabase, extensionManager);
 
-    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-brands-400.ttf"));
-    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-regular-400.ttf"));
-    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "./resources/fonts/fa-solid-900.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/extraicons.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-brands-400.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-regular-400.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
 
     this.#uiStyle = createUiStyle(path.join(SourceDir.path, "../resources/theme_ui/DarkTwo/"));
     QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet());

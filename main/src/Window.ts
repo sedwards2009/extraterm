@@ -9,7 +9,7 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
@@ -23,6 +23,7 @@ import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
 import { UiStyle } from "./ui/UiStyle";
+import { createIcon } from "./ui/Icons";
 
 
 export class Window {
@@ -331,7 +332,12 @@ export class Window {
     }
 
     const header = tab.getTitle();
-    this.#tabBar.addTab(null, header);
+    const iconName = tab.getIconName();
+    let icon: QIcon = null;
+    if (iconName != null) {
+      icon = createIcon(iconName);
+    }
+    this.#tabBar.addTab(icon, header);
 
     this.#contentStack.addWidget(tab.getContents());
   }
