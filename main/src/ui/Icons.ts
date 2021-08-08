@@ -12,9 +12,8 @@ const _log = getLogger("Icons");
 
 const fontSetMapping = {
   extraicons: new QFont("extraicons"),
-  solid: new QFont("FontAwesome5Free-Solid"),
-  brands: new QFont("FontAwesome5Brands-Regular"),
-  regular: new QFont("FontAwesome5Free-Regular"),
+  solid: new QFont("Font Awesome 5 Free"),
+  brands: new QFont("Font Awesome 5 Brands"),
 };
 
 export interface CreateIconOptions extends CreateFontIconOptions {}
@@ -566,7 +565,6 @@ const allIcons: IconMetadataSet = {
   "fa-font-awesome": {string: "\u{f2b4}", set: "brands"},
   "fa-font-awesome-alt": {string: "\u{f35c}", set: "brands"},
   "fa-font-awesome-flag": {string: "\u{f425}", set: "brands"},
-  "fa-font-awesome-logo-full": {string: "\u{f4e6}", set: "regular"},
   "fa-fonticons": {string: "\u{f280}", set: "brands"},
   "fa-fonticons-fi": {string: "\u{f3a2}", set: "brands"},
   "fa-football-ball": {string: "\u{f44e}", set: "solid"},
