@@ -58,6 +58,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
         scale: 0.7,
       });
+    },
+    getTabIcon(name: string): QIcon {
+      return this.getMenuIcon(name);
     }
   };
 }

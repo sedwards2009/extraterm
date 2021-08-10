@@ -34,6 +34,7 @@ import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
 import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
 import { createUiStyle } from "./ui/styles/DarkTwo";
 import { UiStyle } from "./ui/UiStyle";
+import { CommandPalette } from "./CommandPalette";
 
 
 const LOG_FILENAME = "extraterm.log";
@@ -228,6 +229,7 @@ class Main {
 
   registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    commands.registerCommand("extraterm:application.openCommandPalette", () => this.commandOpenCommandPalette());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openSettings", () => this.commandOpenSettings());
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
@@ -250,6 +252,14 @@ class Main {
 
       this.#extensionManager.setActiveWindow(activeWindow);
     });
+  }
+
+  commandOpenCommandPalette(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    // const tab = this.#extensionManager.getActiveTab();
+    const tab = win.getTab(win.getCurrentTabIndex());
+    const commandPalette = new CommandPalette(win.getWidget());
+    commandPalette.show(win, tab);
   }
 
   commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): void {

@@ -9,7 +9,7 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
@@ -42,6 +42,7 @@ export class Window {
   #tabs: Tab[] = [];
   #terminalVisualConfig: TerminalVisualConfig = null;
   #themeManager: ThemeManager = null;
+  #uiStyle: UiStyle = null;
 
   onTabCloseRequest: Event<Tab> = null;
   #onTabCloseRequestEventEmitter = new EventEmitter<Tab>();
@@ -57,6 +58,7 @@ export class Window {
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#themeManager = themeManager;
+    this.#uiStyle = uiStyle;
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
     this.onTabChange = this.#onTabChangeEventEmitter.event;
@@ -301,6 +303,10 @@ export class Window {
     return this.#windowWidget.isActiveWindow();
   }
 
+  getWidget(): QWidget {
+    return this.#windowWidget;  
+  }
+
   setCurrentTabIndex(index: number): void {
     const currentIndex = this.getCurrentTabIndex();
     this.#tabs[currentIndex].unfocus();
@@ -325,6 +331,10 @@ export class Window {
   }
 
   addTab(tab: Tab): void {
+    if (this.#tabs.includes(tab)) {
+      return;
+    }
+
     this.#tabs.push(tab);
 
     if (tab instanceof Terminal) {
@@ -335,7 +345,7 @@ export class Window {
     const iconName = tab.getIconName();
     let icon: QIcon = null;
     if (iconName != null) {
-      icon = createIcon(iconName);
+      icon = this.#uiStyle.getTabIcon(iconName);
     }
     this.#tabBar.addTab(icon, header);
 
@@ -367,6 +377,12 @@ export class Window {
     }
     this.setCurrentTabIndex(index);
     tab.focus();
+  }
+
+  getTabGlobalGeometry(tab: Tab): QRect {
+    const localGeometry = this.#contentStack.geometry();
+    const topLeftGlobal = this.#windowWidget.mapToGlobal(new QPoint(localGeometry.left(), localGeometry.top()));
+    return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
   }
 }
 
