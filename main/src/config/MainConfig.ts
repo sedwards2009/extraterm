@@ -47,7 +47,7 @@ const paths = envPaths(EXTRATERM_CONFIG_DIR, {suffix: ""});
 export function setupAppData(): void {
   const configDir = getUserSettingsDirectory();
   if ( ! fs.existsSync(configDir)) {
-    fs.mkdirSync(configDir);
+    fs.mkdirSync(configDir, {recursive: true});
   } else {
     const statInfo = fs.statSync(configDir);
     if ( ! statInfo.isDirectory()) {
@@ -58,7 +58,7 @@ export function setupAppData(): void {
 
   const userKeybindingsDir = getUserKeybindingsDirectory();
   if ( ! fs.existsSync(userKeybindingsDir)) {
-    fs.mkdirSync(userKeybindingsDir);
+    fs.mkdirSync(userKeybindingsDir, {recursive: true});
   } else {
     const statInfo = fs.statSync(userKeybindingsDir);
     if ( ! statInfo.isDirectory()) {
@@ -69,7 +69,7 @@ export function setupAppData(): void {
 
   const userThemesDir = getUserThemeDirectory();
   if ( ! fs.existsSync(userThemesDir)) {
-    fs.mkdirSync(userThemesDir);
+    fs.mkdirSync(userThemesDir, {recursive: true});
   } else {
     const statInfo = fs.statSync(userThemesDir);
     if ( ! statInfo.isDirectory()) {
@@ -80,7 +80,7 @@ export function setupAppData(): void {
 
   const userTerminalThemesDir = getUserTerminalThemeDirectory();
   if ( ! fs.existsSync(userTerminalThemesDir)) {
-    fs.mkdirSync(userTerminalThemesDir);
+    fs.mkdirSync(userTerminalThemesDir, {recursive: true});
   } else {
     const statInfo = fs.statSync(userTerminalThemesDir);
     if ( ! statInfo.isDirectory()) {
