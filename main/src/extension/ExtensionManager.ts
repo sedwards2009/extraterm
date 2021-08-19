@@ -92,7 +92,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): void {
     const desiredState: ExtensionDesiredState = {};
     for (const extensionInfo of this.#ipc.getExtensionMetadata()) {
-      desiredState[extensionInfo.name] = startByDefault;
+      desiredState[extensionInfo.name] = startByDefault && InternalTypes.isSupportedOnThisPlatform(extensionInfo);;
     }
 
     // Merge in the explicitly enabled/disabled extensions from the config.

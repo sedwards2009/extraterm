@@ -195,37 +195,37 @@ export interface InternalSessionEditor extends ExtensionApi.SessionEditorBase {
 //   _init(): void;
 }
 
-// export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {
-//   let included = metadata.includePlatform.length === 0;
-//   for (const platform of metadata.includePlatform) {
-//     included = included || _platformMatches(platform);
-//   }
+export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {
+  let included = metadata.includePlatform.length === 0;
+  for (const platform of metadata.includePlatform) {
+    included = included || _platformMatches(platform);
+  }
 
-//   if ( ! included) {
-//     return false;
-//   }
+  if ( ! included) {
+    return false;
+  }
 
-//   if (metadata.excludePlatform.length === 0) {
-//     return true;
-//   }
+  if (metadata.excludePlatform.length === 0) {
+    return true;
+  }
 
-//   for (const platform of metadata.excludePlatform) {
-//     if (_platformMatches(platform)) {
-//       return false;
-//     }
-//   }
-//   return true;
-// }
+  for (const platform of metadata.excludePlatform) {
+    if (_platformMatches(platform)) {
+      return false;
+    }
+  }
+  return true;
+}
 
-// function _platformMatches(platform: ExtensionPlatform): boolean {
-//   if (platform.os == null && platform.arch == null) {
-//     return false;
-//   }
-//   if (platform.os === process.platform && platform.arch == null) {
-//     return true;
-//   }
-//   if (platform.arch === process.arch && platform.os == null) {
-//     return true;
-//   }
-//   return platform.arch === process.arch && platform.os === process.platform;
-// }
+function _platformMatches(platform: ExtensionPlatform): boolean {
+  if (platform.os == null && platform.arch == null) {
+    return false;
+  }
+  if (platform.os === process.platform && platform.arch == null) {
+    return true;
+  }
+  if (platform.arch === process.arch && platform.os == null) {
+    return true;
+  }
+  return platform.arch === process.arch && platform.os === process.platform;
+}
