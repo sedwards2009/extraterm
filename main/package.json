@@ -71,7 +71,7 @@
     "shelljs": "0.8.3",
     "shx": "^0.3.2",
     "typescript": "4.3.4",
-    "webfont": "^4.0.0"
+    "webfont": "^11.2.26"
   },
   "jshintConfig": {
     "esversion": 6
