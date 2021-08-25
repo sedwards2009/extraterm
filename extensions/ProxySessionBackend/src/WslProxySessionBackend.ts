@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as _ from 'lodash';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
-import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
+import { Logger, Pty, SessionConfiguration, SessionBackend, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
 
 import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
 import * as SourceDir from './SourceDir';

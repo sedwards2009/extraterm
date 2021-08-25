@@ -7,9 +7,8 @@ import * as child_process from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as _ from 'lodash';
-import { app } from 'electron';
 
-import { Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
+import { Logger, Pty, SessionConfiguration, SessionBackend, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
 import { ShellStringParser } from 'extraterm-shell-string-parser';
 
 import * as SourceDir from './SourceDir';
@@ -36,10 +35,7 @@ export class CygwinProxySessionBackend implements SessionBackend {
 
   defaultSessionConfigurations(): SessionConfiguration[] {
     // Find a default cygwin installation.
-    let cygwinDir = this._findCygwinInstallation();
-    if (cygwinDir === null) {
-      cygwinDir = this._findBabunCygwinInstallation();
-    }
+    const cygwinDir = this._findCygwinInstallation();
     if (cygwinDir === null) {
       return [];
     }
@@ -74,17 +70,6 @@ export class CygwinProxySessionBackend implements SessionBackend {
       }
     } catch(e) {
       this._log.info("Couldn't find a cygwin installation.");
-      return null;
-    }
-  }
-
-  private _findBabunCygwinInstallation(): string {
-    const cygwinDir = path.join(app.getPath('home'), ".babun/cygwin");
-    if (fs.existsSync(cygwinDir)) {
-      this._log.info("Found babun cygwin installation at " + cygwinDir);
-      return cygwinDir;
-    } else {
-      this._log.info("Couldn't find a Babun cygwin installation.");
       return null;
     }
   }
