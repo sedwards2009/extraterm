@@ -160,8 +160,7 @@ function main(): void {
     })
   });
 
-  const posixSourcePath = path.posix.join(...SourceDir.path.split(path.sep));
-  const styleSheet = createUiStyle(path.posix.join(posixSourcePath, "../resources/theme_ui/DarkTwo/"))
+  const styleSheet = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"))
                       .getApplicationStyleSheet();
   console.log(styleSheet);
 

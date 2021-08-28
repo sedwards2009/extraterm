@@ -126,8 +126,7 @@ class Main {
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-brands-400.ttf"));
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
 
-    const posixSourcePath = path.posix.join(...SourceDir.path.split(path.sep));
-    this.#uiStyle = createUiStyle(path.posix.join(posixSourcePath, "../resources/theme_ui/DarkTwo/"));
+    this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
     QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet());
 
     this.openWindow();
