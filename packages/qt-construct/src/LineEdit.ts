@@ -8,16 +8,20 @@ import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 
 export interface LineEditOptions extends WidgetOptions {
   text?: string;
+  onTextEdited?: (newText: string) => void;
 }
 
 export function LineEdit(options: LineEditOptions): QLineEdit {
-  const { text } = options;
+  const { text, onTextEdited } = options;
   const lineEdit = new QLineEdit();
 
   ApplyWidgetOptions(lineEdit, options);
 
   if (text != null) {
     lineEdit.setText(text);
+  }
+  if (onTextEdited !== undefined) {
+    lineEdit.addEventListener("textEdited", onTextEdited);
   }
   return lineEdit;
 }

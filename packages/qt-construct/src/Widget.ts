@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { FocusPolicy, NodeLayout, NodeWidget, QWidget, WidgetAttribute, WidgetEventTypes } from "@nodegui/nodegui";
+import { FocusPolicy, NodeLayout, NodeWidget, QWidget, WidgetAttribute, WidgetEventTypes, WindowType } from "@nodegui/nodegui";
 
 export interface WidgetOptions {
   attribute?: WidgetAttribute[];
@@ -16,10 +16,14 @@ export interface WidgetOptions {
   onEnter?: () => void;
   onLeave?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
+  windowFlag?: WindowType;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
-  const { attribute, enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, windowTitle } = options;
+  const {
+    attribute, enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, windowTitle, windowFlag
+  } = options;
+
   if (enabled !== undefined) {
     widget.setEnabled(enabled);
   }
@@ -51,6 +55,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (onLeave !== undefined) {
     widget.addEventListener(WidgetEventTypes.Leave, onLeave);
+  }
+  if (windowFlag !== undefined) {
+    widget.setWindowFlag(windowFlag, true);
   }
 }
 

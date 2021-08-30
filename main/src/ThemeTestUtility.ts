@@ -1,4 +1,4 @@
-import { Direction, QMainWindow, QWidget } from "@nodegui/nodegui";
+import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton, ScrollArea, SpinBox, TabWidget,
   Widget } from "qt-construct";
 import * as fs from "fs";
@@ -10,6 +10,12 @@ import { createUiStyle } from "./ui/styles/DarkTwo";
 let centralWidget: QWidget = null;
 
 function main(): void {
+  // console.log(`Style keys`);
+  // for (const key of QStyleFactory.keys()) {
+  //   console.log(`Style key: ${key}`);
+  // }
+  // QApplication.setStyle(QStyleFactory.create("Windows"));
+
   const win = new QMainWindow();
   win.setWindowTitle("Theme Test");
 

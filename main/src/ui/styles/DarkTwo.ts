@@ -201,6 +201,9 @@ const dropdownLinkHoverColor = textSelectedColor;
 const dropdownLinkHoverBg = backgroundSelectedColor;
 const dropdownBorder = baseBorderColor;
 
+const overlayBorderColor = backgroundHighlightColor;
+
+
 const navLinkPadding = "0.5em 0.75em 0.5em 0em";
 // Hack because padding-left doesn't seem to work for unselected list item.
 // See https://forum.qt.io/topic/87208/strange-stylesheet-behavior-with-qlistview-item/14
@@ -780,6 +783,25 @@ QScrollArea[cssClass~="settings-tab"] {
 QWidget[cssClass~="settings-tab"] {
   ${IncludeDefaultBackground()}
   border: none;
+}
+
+QWidget[cssClass~="list-picker"] {
+  ${IncludeDefaultBackground()}
+  border: 1px solid ${overlayBorderColor};
+  border-radius: ${borderRadius};
+  border-top-left-radius: 0px;
+  border-top-right-radius: 0px;
+}
+
+
+QTableView[cssClass~="list-picker"] {
+  border: none;
+
+  ${IncludeDefaultBackground()}
+  color: ${textColor};
+
+  selection-color: ${dropdownLinkHoverColor};
+  selection-background-color: ${dropdownLinkHoverBg};
 }
 `;
 }

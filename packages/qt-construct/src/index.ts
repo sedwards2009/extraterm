@@ -21,3 +21,4 @@ export { RadioButton, RadioButtonOptions } from "./RadioButton";
 export { TabBar, TabBarOptions } from "./TabBar";
 export { ToolButton, ToolButtonOptions} from "./ToolButton";
 export { Menu } from "./Menu";
+export { TableView, TableViewOptions } from "./TableView";

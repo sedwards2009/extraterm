@@ -226,7 +226,6 @@ class Main {
     return localHttpServer;
   }
 
-
   registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
     commands.registerCommand("extraterm:application.openCommandPalette", () => this.commandOpenCommandPalette());
@@ -258,7 +257,7 @@ class Main {
     const win = this.#extensionManager.getActiveWindow();
     // const tab = this.#extensionManager.getActiveTab();
     const tab = win.getTab(win.getCurrentTabIndex());
-    const commandPalette = new CommandPalette(win.getWidget());
+    const commandPalette = new CommandPalette(this.#extensionManager, this.#keybindingsIOManager);
     commandPalette.show(win, tab);
   }
 
