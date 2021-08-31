@@ -596,31 +596,31 @@
     node-fetch "^2.6.0"
     progress "^2.0.3"
 
-"@nodegui/nodegui@^0.35.0":
-  version "0.35.0"
-  resolved "https://registry.yarnpkg.com/@nodegui/nodegui/-/nodegui-0.35.0.tgz#263588fdcea774f804221c4b29ec024898f1915c"
-  integrity sha512-ApMCWGW3/afMuLey4aDADNuaI9YGhhR0YSoGvKhHE5pon9dnj/kMIsIjux7Q2iHBNA5dtXHZmw1qof8hrqo6rA==
+"@nodegui/nodegui@^0.37.3":
+  version "0.37.3"
+  resolved "https://registry.yarnpkg.com/@nodegui/nodegui/-/nodegui-0.37.3.tgz#05fa751594270f9fa0f8c68da66c62c378883b3b"
+  integrity sha512-B3WF9uHydiDdlzy9zFbrEI2Mrr0lyRYJj3pCbceyJkALxicsPGl2WGB7Ns2/7w6W6GK5aXdc+2FXhuR3y5u4ig==
   dependencies:
     "@nodegui/artifact-installer" "^1.1.0"
-    "@nodegui/qode" "^2.1.0"
-    cmake-js "^6.1.0"
+    "@nodegui/qode" "^16.4.0"
+    cmake-js "^6.2.1"
     cross-env "^7.0.3"
-    cuid "^2.1.6"
+    cuid "^2.1.8"
     manage-path "^2.0.0"
-    memoize-one "^5.1.1"
-    node-addon-api "^3.1.0"
+    memoize-one "^5.2.1"
+    node-addon-api "^4.0.0"
     postcss-nodegui-autoprefixer "0.0.7"
 
-"@nodegui/qode@^2.1.0":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@nodegui/qode/-/qode-2.1.1.tgz#156144d51fba4b3fa0ef425620ff6ec3726f3b44"
-  integrity sha512-pYeDIE0oWEtBzatnBQGg6eLCZmRijvbXqd0kzbtN+zkbcdzICPB+jd3Cuq+I37/EuahN+is/AI/C0gj9sDmSrg==
+"@nodegui/qode@^16.4.0":
+  version "16.4.0"
+  resolved "https://registry.yarnpkg.com/@nodegui/qode/-/qode-16.4.0.tgz#d18b9c569b51b131331729ea095402bc2e028c19"
+  integrity sha512-uNoTR9f02F/SmK+xzvlXJs/yuW0zYcuPZf99v4z7tPeugLukrPbE2MJfsq8edGNfWxu3d+pRwMN+UNYSq0dLgQ==
   dependencies:
-    env-paths "^2.2.0"
-    make-dir "^3.0.2"
+    env-paths "^2.2.1"
+    make-dir "^3.1.0"
     node-fetch "^2.6.1"
     progress "^2.0.3"
-    tar "^6.0.1"
+    tar "^6.1.6"
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -1402,6 +1402,13 @@ aws4@^1.8.0:
   version "1.11.0"
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.11.0.tgz#d61f46d83b2519250e2784daf5b09479a8b41c59"
   integrity sha512-xh1Rl34h6Fi1DC2WWKfxUTVqRsNnr6LsKz2+hfwDxQJWmrx8+c7ylaqBMcHfl1U1r2dsifOvKX3LQuLNZ+XSvA==
+
+axios@^0.21.1:
+  version "0.21.1"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.1.tgz#22563481962f4d6bde9a76d516ef0e5d3c09b2b8"
+  integrity sha512-dKQiRHxGD9PPRIUNIWvZhPTPpl1rf/OxTYKsqKUDjBwYylTvV7SjSHJb9ratfyzM6wCdLCOYLzs73qpg5c4iGA==
+  dependencies:
+    follow-redirects "^1.10.0"
 
 babel-code-frame@^6.26.0:
   version "6.26.0"
@@ -2299,6 +2306,27 @@ cmake-js@^6.1.0:
     which "^1.0.9"
     yargs "^3.6.0"
 
+cmake-js@^6.2.1:
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/cmake-js/-/cmake-js-6.2.1.tgz#3791b4a25c009be6368480afbbc657762f9deca1"
+  integrity sha512-wEpg0Z8SY6ihXTe+xosadh4PbASdWSM/locbLacWRYJCZfAjWLyOrd4RoVIeirLkfPxmG8GdNQA9tW/Rz5SfJA==
+  dependencies:
+    axios "^0.21.1"
+    debug "^4"
+    fs-extra "^5.0.0"
+    is-iojs "^1.0.1"
+    lodash "^4"
+    memory-stream "0"
+    npmlog "^1.2.0"
+    rc "^1.2.7"
+    semver "^5.0.3"
+    splitargs "0"
+    tar "^4"
+    unzipper "^0.8.13"
+    url-join "0"
+    which "^1.0.9"
+    yargs "^3.6.0"
+
 co-with-promise@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/co-with-promise/-/co-with-promise-4.6.0.tgz#413e7db6f5893a60b942cf492c4bec93db415ab7"
@@ -2593,7 +2621,7 @@ cubic2quad@^1.2.1:
   resolved "https://registry.yarnpkg.com/cubic2quad/-/cubic2quad-1.2.1.tgz#2442260b72c02ee4b6a2fe998fcc1c4073622286"
   integrity sha512-wT5Y7mO8abrV16gnssKdmIhIbA9wSkeMzhh27jAguKrV82i24wER0vL5TGhUJ9dbJNDcigoRZ0IAHFEEEI4THQ==
 
-cuid@^2.1.6:
+cuid@^2.1.8:
   version "2.1.8"
   resolved "https://registry.yarnpkg.com/cuid/-/cuid-2.1.8.tgz#cbb88f954171e0d5747606c0139fb65c5101eac0"
   integrity sha512-xiEMER6E7TlTPnDxrM4eRiC6TRgjNX9xzEZ5U/Se2YJKr7Mq4pJn/2XEHjl3STcSh96GmkHPcBXLES8M29wyyg==
@@ -3460,6 +3488,11 @@ fn-name@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/fn-name/-/fn-name-2.0.1.tgz#5214d7537a4d06a4a301c0cc262feb84188002e7"
   integrity sha1-UhTXU3pNBqSjAcDMJi/rhBiAAuc=
+
+follow-redirects@^1.10.0:
+  version "1.14.2"
+  resolved "https://registry.yarnpkg.com/follow-redirects/-/follow-redirects-1.14.2.tgz#cecb825047c00f5e66b142f90fed4f515dec789b"
+  integrity sha512-yLR6WaE2lbF0x4K2qE2p9PEXKLDjUjnR/xmjS3wHAYxtlsI9MLLBJUZirAHKzUZDGLxje7w/cXR49WOUo4rbsA==
 
 font-finder@^1.0.3:
   version "1.1.0"
@@ -5575,7 +5608,7 @@ make-dir@^2.0.0, make-dir@^2.1.0:
     pify "^4.0.1"
     semver "^5.6.0"
 
-make-dir@^3.0.0, make-dir@^3.0.2:
+make-dir@^3.0.0, make-dir@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"
   integrity sha512-g3FeP20LNwhALb/6Cz6Dd4F2ngze0jz7tbzrD2wAV+o9FeNHe4rL+yK2md0J/fiSf1sa1ADhXqi5+oVwOM/eGw==
@@ -5673,7 +5706,7 @@ mem@^4.0.0:
     mimic-fn "^2.0.0"
     p-is-promise "^2.0.0"
 
-memoize-one@^5.1.1:
+memoize-one@^5.2.1:
   version "5.2.1"
   resolved "https://registry.yarnpkg.com/memoize-one/-/memoize-one-5.2.1.tgz#8337aa3c4335581839ec01c3d594090cebe8f00e"
   integrity sha512-zYiwtZUcYyXKo/np96AGZAckk+FWWsUdJ3cHGGmld7+AhvcWmQyGCYUh1hc4Q/pkOhb65dQR/pqCyK0cOaHz4Q==
@@ -6007,10 +6040,15 @@ node-abi@2.21.0:
   dependencies:
     semver "^5.4.1"
 
-node-addon-api@^3.0.0, node-addon-api@^3.1.0:
+node-addon-api@^3.0.0:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-3.2.1.tgz#81325e0a2117789c0128dab65e7e38f07ceba161"
   integrity sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==
+
+node-addon-api@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.0.0.tgz#ac128f43eff7fac4b5f5ef2f39d6d7c2709efead"
+  integrity sha512-ALmRVBFzfwldBfk3SbKfl6+PVMXiCPKZBEfsJqB/EjXAMAI+MfFrEHR+GMRBuI162DihZ1QjEZ8ieYKuRCJ8Hg==
 
 node-fetch@^2.2.0, node-fetch@^2.6.0, node-fetch@^2.6.1:
   version "2.6.1"
@@ -6628,6 +6666,11 @@ picomatch@^2.2.1, picomatch@^2.2.3:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.0.tgz#f1f061de8f6a4bf022892e2d128234fb98302972"
   integrity sha512-lY1Q/PiJGC2zOv/z391WOTD+Z02bCgsFfvxoXXf6h7kv9o+WmsmzYqrAwY63sNgOxE4xEdq0WyUnXfKeBrSvYw==
+
+pid-cwd@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/pid-cwd/-/pid-cwd-1.2.0.tgz#c14c03d812b1d23f97aee27767957fc16272c979"
+  integrity sha512-8QQzIdBmy4bd2l1NKWON1X8flO5TQQRzU2uRDua/XaxSC0iJ+rgbDrlX76t0W3DaJ7OevTYpftyvQ6oMe3hclQ==
 
 pify@^2.0.0:
   version "2.3.0"
@@ -8042,10 +8085,10 @@ tar@^4:
     safe-buffer "^5.1.2"
     yallist "^3.0.3"
 
-tar@^6.0.1:
-  version "6.1.0"
-  resolved "https://registry.yarnpkg.com/tar/-/tar-6.1.0.tgz#d1724e9bcc04b977b18d5c573b333a2207229a83"
-  integrity sha512-DUCttfhsnLCjwoDoFcI+B2iJgYa93vBnDUATYEeRx6sntCTdN01VnqsIuTlALXla/LWooNg0yEGeB+Y8WdFxGA==
+tar@^6.1.6:
+  version "6.1.10"
+  resolved "https://registry.yarnpkg.com/tar/-/tar-6.1.10.tgz#8a320a74475fba54398fa136cd9883aa8ad11175"
+  integrity sha512-kvvfiVvjGMxeUNB6MyYv5z7vhfFRwbwCXJAeL0/lnbrttBVqcMOnpHUf0X42LrPMR8mMpgapkJMchFH4FSHzNA==
   dependencies:
     chownr "^2.0.0"
     fs-minipass "^2.0.0"
