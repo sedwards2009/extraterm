@@ -6,7 +6,7 @@
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Logger, log, getLogger } from "extraterm-logging";
 import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelIndex, ItemDataRole, QTableView,
-  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason
+  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, ItemFlag, AlignmentFlag
 } from "@nodegui/nodegui";
 import * as fuzzyjs from "fuzzyjs";
 import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
@@ -14,7 +14,8 @@ import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
 
 export enum FieldType {
   TEXT,
-  SHORTCUT_TEXT,
+  SECONDARY_TEXT,
+  SECONDARY_TEXT_RIGHT,
   ICON_NAME
 }
 
@@ -83,7 +84,8 @@ export class ListPicker {
     const verticalHeader = this.#tableView.verticalHeader();
     verticalHeader.hide();
 
-    this.#tableView.selectionModel().select(this.#contentModel.createIndex(0, 0), SelectionFlag.ClearAndSelect);
+    this.#tableView.selectionModel().select(this.#contentModel.createIndex(0, 0),
+      SelectionFlag.ClearAndSelect | SelectionFlag.Rows);
   }
 
   getWidget(): QWidget {
@@ -96,7 +98,8 @@ export class ListPicker {
 
   #handleTextEdited(newText: string): void {
     this.#contentModel.setSearch(newText);
-    this.#tableView.selectionModel().select(this.#contentModel.createIndex(0, 0), SelectionFlag.ClearAndSelect);
+    this.#tableView.selectionModel().select(this.#contentModel.createIndex(0, 0),
+      SelectionFlag.ClearAndSelect | SelectionFlag.Rows);
   }
 
   #handleClicked(index: QModelIndex): void {
@@ -145,7 +148,7 @@ export class ListPicker {
     selectedRowIndex = Math.max(0, selectedRowIndex);
     selectedRowIndex = Math.min(selectedRowIndex, this.#contentModel.rowCount()-1);
     const newIndex = this.#contentModel.createIndex(selectedRowIndex, 0);
-    selectionModel.select(newIndex, SelectionFlag.ClearAndSelect);
+    selectionModel.select(newIndex, SelectionFlag.ClearAndSelect | SelectionFlag.Rows);
     this.#tableView.scrollTo(newIndex);
 
     event.accept();
@@ -265,12 +268,24 @@ class ContentModel extends QAbstractTableModel {
   }
 
   columnCount(parent = new QModelIndex()): number {
-    return 1;
+    return this.#fieldTypes.length;
   }
 
   data(index: QModelIndex, role = ItemDataRole.DisplayRole): QVariant {
     if (role === ItemDataRole.DisplayRole) {
-      return new QVariant(this.#visibleEntries[index.row()].text);
+      const column = index.column();
+      switch (this.#fieldTypes[column]) {
+        case FieldType.TEXT:
+          return new QVariant(this.#visibleEntries[index.row()].text);
+        case FieldType.SECONDARY_TEXT:
+        case FieldType.SECONDARY_TEXT_RIGHT:
+          return new QVariant(this.#visibleEntries[index.row()].entry.fields[column]);
+      }
+    }
+    if (role === ItemDataRole.TextAlignmentRole) {
+      if (this.#fieldTypes[index.column()] === FieldType.SECONDARY_TEXT_RIGHT) {
+        return new QVariant(AlignmentFlag.AlignRight);
+      }
     }
     return new QVariant();
   }
