@@ -10,7 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import { QApplication, QFontDatabase } from "@nodegui/nodegui";
+import { QApplication, QFontDatabase, QStyleFactory } from "@nodegui/nodegui";
 
 import { Window } from "./Window";
 import { SESSION_CONFIG } from './config/Config';
@@ -127,6 +127,7 @@ class Main {
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
 
     this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
+    QApplication.setStyle(QStyleFactory.create("Fusion"));
     QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet());
 
     this.openWindow();
