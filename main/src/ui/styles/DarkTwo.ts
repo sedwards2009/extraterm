@@ -61,6 +61,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getTabIcon(name: string): QIcon {
       return this.getMenuIcon(name);
+    },
+    getCommandPaletteIcon(name: string): QIcon {
+      return this.getMenuIcon(name);
     }
   };
 }

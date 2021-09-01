@@ -10,6 +10,8 @@ import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelInd
 } from "@nodegui/nodegui";
 import * as fuzzyjs from "fuzzyjs";
 import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
+import { createIcon } from "../ui/Icons";
+import { UiStyle } from "./UiStyle";
 
 
 export enum FieldType {
@@ -29,6 +31,7 @@ export interface Entry {
 
 export class ListPicker {
   private _log: Logger = null;
+  #uiStyle: UiStyle = null;
   #widget: QWidget = null;
   #lineEdit: QLineEdit = null;
   #tableView: QTableView = null;
@@ -37,8 +40,9 @@ export class ListPicker {
   #selectedEventEmitter = new EventEmitter<string>();
   onSelected: Event<string> = null;
 
-  constructor() {
+  constructor(uiStyle: UiStyle) {
     this._log = getLogger("ListPicker", this);
+    this.#uiStyle = uiStyle;
     this.onSelected = this.#selectedEventEmitter.event;
     this.#createWidget();
   }
@@ -46,10 +50,11 @@ export class ListPicker {
   setEntries(fieldTypes: FieldType[], entries: Entry[]): void {
     this.#contentModel.setEntries(fieldTypes, entries);
     this.#handleTextEdited("");
+    this.#tableView.resizeColumnsToContents();
   }
 
   #createWidget(): void {
-    this.#contentModel = new ContentModel();
+    this.#contentModel = new ContentModel(this.#uiStyle);
     this.#widget = Widget({
       layout: BoxLayout({
         direction: Direction.TopToBottom,
@@ -183,14 +188,16 @@ function cmpScore(a: EntryMetadata, b: EntryMetadata): number {
 
 class ContentModel extends QAbstractTableModel {
   private _log: Logger = null;
+  #uiStyle: UiStyle = null;
   #allEntries: EntryMetadata[] = [];
   #fieldTypes: FieldType[] = [];
   #visibleEntries: EntryMetadata[] = [];
   #searchText: string = "";
 
-  constructor() {
+  constructor(uiStyle: UiStyle) {
     super();
     this._log = getLogger("ContentModel", this);
+    this.#uiStyle = uiStyle;
   }
 
   setSearch(searchText: string): void {
@@ -285,6 +292,18 @@ class ContentModel extends QAbstractTableModel {
     if (role === ItemDataRole.TextAlignmentRole) {
       if (this.#fieldTypes[index.column()] === FieldType.SECONDARY_TEXT_RIGHT) {
         return new QVariant(AlignmentFlag.AlignRight);
+      }
+    }
+    if (role === ItemDataRole.DecorationRole) {
+      if (this.#fieldTypes[index.column()] === FieldType.ICON_NAME) {
+        const column = index.column();
+        const iconName = this.#visibleEntries[index.row()].entry.fields[column];
+        if (iconName != null && iconName !== "") {
+          const icon = this.#uiStyle.getCommandPaletteIcon(iconName);
+          if (icon != null) {
+            return new QVariant(icon.native);
+          }
+        }
       }
     }
     return new QVariant();

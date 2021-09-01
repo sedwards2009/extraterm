@@ -10,11 +10,11 @@ import { createUiStyle } from "./ui/styles/DarkTwo";
 let centralWidget: QWidget = null;
 
 function main(): void {
-  // console.log(`Style keys`);
-  // for (const key of QStyleFactory.keys()) {
-  //   console.log(`Style key: ${key}`);
-  // }
-  // QApplication.setStyle(QStyleFactory.create("Windows"));
+  console.log(`Style keys`);
+  for (const key of QStyleFactory.keys()) {
+    console.log(`Style key: ${key}`);
+  }
+  QApplication.setStyle(QStyleFactory.create("Fusion"));
 
   const win = new QMainWindow();
   win.setWindowTitle("Theme Test");

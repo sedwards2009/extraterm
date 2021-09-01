@@ -7,6 +7,7 @@ import { QIcon } from "@nodegui/nodegui";
 
 export interface UiStyle {
   getApplicationStyleSheet(): string;
+  getCommandPaletteIcon(name: string): QIcon;
   getHamburgerMenuIcon(): QIcon;
   getHamburgerMenuIconHover(): QIcon;
   getMenuIcon(name: string): QIcon;

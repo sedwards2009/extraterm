@@ -13,18 +13,21 @@ import { Window } from "./Window";
 import { ExtensionManager } from "./InternalTypes";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { Entry, FieldType, ListPicker } from "./ui/ListPicker";
+import { UiStyle } from "./ui/UiStyle";
 
 
 export class CommandPalette {
   private _log: Logger = null;
+  #uiStyle: UiStyle = null;
 
   #extensionManager: ExtensionManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #listPicker: ListPicker = null;
   #popUp: QWidget = null;
 
-  constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager) {
+  constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
     this._log = getLogger("CommandPalette", this);
+    this.#uiStyle = uiStyle;
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
 
@@ -32,7 +35,7 @@ export class CommandPalette {
   }
 
   #createPopUp(): void {
-    this.#listPicker = new ListPicker();
+    this.#listPicker = new ListPicker(this.#uiStyle);
 
     this.#popUp = Widget({
       cssClass: ["list-picker"],
@@ -66,14 +69,14 @@ export class CommandPalette {
         id: command.command,
         searchText: command.title,
         fields: [
+          command.icon,
           command.title,
-
         ],
         // icon: command.icon
       };
     });
 
-    this.#listPicker.setEntries([FieldType.TEXT], entries);
+    this.#listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT], entries);
 
     const tabRect = window.getTabGlobalGeometry(tab);
 this._log.debug(`tabRect.left: ${tabRect.left()}, tabRect.top: ${tabRect.top()}, tabRect.width: ${tabRect.width()}, tabRect.height: ${tabRect.height()}`);

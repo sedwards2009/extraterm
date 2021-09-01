@@ -20,42 +20,43 @@ function main(): void {
 
   const win = new QMainWindow();
   win.setWindowTitle("List Picker Test");
-  const listPicker = new ListPicker();
 
-  listPicker.setEntries([FieldType.TEXT, FieldType.SECONDARY_TEXT_RIGHT],
+  const uiStyle = createUiStyle(path.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
+  const styleSheet = uiStyle.getApplicationStyleSheet();
+  const listPicker = new ListPicker(uiStyle);
+
+  listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT, FieldType.SECONDARY_TEXT_RIGHT],
     [
-      {id: "Apple", searchText: "Apple", fields: ["Apple", "Fruit"]},
-      {id: "Banana", searchText: "Banana", fields: ["Banana", "Fruit"]},
-      {id: "Blueberry", searchText: "Blueberry", fields: ["Blueberry", "Fruit"]},
-      {id: "Cabbage", searchText: "Cabbage", fields: ["Cabbage", "Vegetable"]},
-      {id: "Coconut", searchText: "Coconut", fields: ["Coconut", "Fruit"]},
-      {id: "Date", searchText: "Date", fields: ["Date", "Fruit"]},
-      {id: "Elderberry", searchText: "Elderberry", fields: ["Elderberry", "Fruit"]},
-      {id: "Fig", searchText: "Fig", fields: ["Fig", "Fruit"]},
-      {id: "Grape", searchText: "Grape", fields: ["Grape", "Fruit"]},
-      {id: "Hackberry", searchText: "Hackberry", fields: ["Hackberry", "Fruit"]},
-      {id: "Horseradish", searchText: "Horseradish", fields: ["Horseradish", "Vegetable"]},
-      {id: "Iyokan", searchText: "Iyokan", fields: ["Iyokan", "Fruit"]},
-      {id: "Jackfruit", searchText: "Jackfruit", fields: ["Jackfruit", "Fruit"]},
-      {id: "Kiwi", searchText: "Kiwi", fields: ["Kiwi", "Fruit"]},
-      {id: "Leek", searchText: "Leek", fields: ["Leek", "Vegetable"]},
-      {id: "Mustard", searchText: "Mustard", fields: ["Mustard", "Fruit"]},
-      {id: "Nutmeg", searchText: "Nutmeg", fields: ["Nutmeg", "Fruit"]},
-      {id: "Orange", searchText: "Orange", fields: ["Orange", "Fruit"]},
-      {id: "Pear", searchText: "Pear", fields: ["Pear", "Fruit"]},
-      {id: "Prune", searchText: "Prune", fields: ["Prune", "Fruit"]},
-      {id: "Quince", searchText: "Quince", fields: ["Quince", "Fruit"]},
-      {id: "Raspberry", searchText: "Raspberry", fields: ["Raspberry", "Fruit"]},
-      {id: "Strawberry", searchText: "Strawberry", fields: ["Strawberry", "Fruit"]},
-      {id: "Tangerine", searchText: "Tangerine", fields: ["Tangerine", "Fruit"]},
-      {id: "Watermelon", searchText: "Watermelon", fields: ["Watermelon", "Fruit"]},
+      {id: "Apple", searchText: "Apple", fields: ["fa-fish", "Apple", "Fruit"]},
+      {id: "Banana", searchText: "Banana", fields: ["", "Banana", "Fruit"]},
+      {id: "Blueberry", searchText: "Blueberry", fields: ["", "Blueberry", "Fruit"]},
+      {id: "Cabbage", searchText: "Cabbage", fields: ["", "Cabbage", "Vegetable"]},
+      {id: "Coconut", searchText: "Coconut", fields: ["", "Coconut", "Fruit"]},
+      {id: "Date", searchText: "Date", fields: ["", "Date", "Fruit"]},
+      {id: "Elderberry", searchText: "Elderberry", fields: ["", "Elderberry", "Fruit"]},
+      {id: "Fig", searchText: "Fig", fields: ["", "Fig", "Fruit"]},
+      {id: "Grape", searchText: "Grape", fields: ["", "Grape", "Fruit"]},
+      {id: "Hackberry", searchText: "Hackberry", fields: ["", "Hackberry", "Fruit"]},
+      {id: "Horseradish", searchText: "Horseradish", fields: ["", "Horseradish", "Vegetable"]},
+      {id: "Iyokan", searchText: "Iyokan", fields: ["", "Iyokan", "Fruit"]},
+      {id: "Jackfruit", searchText: "Jackfruit", fields: ["", "Jackfruit", "Fruit"]},
+      {id: "Kiwi", searchText: "Kiwi", fields: ["", "Kiwi", "Fruit"]},
+      {id: "Leek", searchText: "Leek", fields: ["", "Leek", "Vegetable"]},
+      {id: "Mustard", searchText: "Mustard", fields: ["", "Mustard", "Fruit"]},
+      {id: "Nutmeg", searchText: "Nutmeg", fields: ["", "Nutmeg", "Fruit"]},
+      {id: "Orange", searchText: "Orange", fields: ["", "Orange", "Fruit"]},
+      {id: "Pear", searchText: "Pear", fields: ["", "Pear", "Fruit"]},
+      {id: "Prune", searchText: "Prune", fields: ["", "Prune", "Fruit"]},
+      {id: "Quince", searchText: "Quince", fields: ["", "Quince", "Fruit"]},
+      {id: "Raspberry", searchText: "Raspberry", fields: ["", "Raspberry", "Fruit"]},
+      {id: "Strawberry", searchText: "Strawberry", fields: ["", "Strawberry", "Fruit"]},
+      {id: "Tangerine", searchText: "Tangerine", fields: ["", "Tangerine", "Fruit"]},
+      {id: "Watermelon", searchText: "Watermelon", fields: ["", "Watermelon", "Fruit"]},
     ]
   );
 
   centralWidget = listPicker.getWidget();
 
-  const styleSheet = createUiStyle(path.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"))
-                      .getApplicationStyleSheet();
   // console.log(styleSheet);
 
   win.resize(600, 800);
