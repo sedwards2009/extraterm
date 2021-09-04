@@ -3,8 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QBoxLayout, QWidget } from "@nodegui/nodegui";
+import { Direction, QBoxLayout, QLabel, QWidget, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, Label } from "qt-construct";
+import { UiStyle } from "./UiStyle";
 
 export interface CompactGroupOptions {
   children: (QWidget | string)[];
@@ -37,4 +38,29 @@ export function makeGroupLayout(...children: (QWidget | string)[]): QBoxLayout {
     contentsMargins: [0, 0, 0, 0],
     children: expandedChildren,
   });
+}
+
+export interface LinkLabelOptions {
+  text: string;
+  onLinkActivated: (url: string) => void;
+  uiStyle: UiStyle;
+}
+
+/**
+ * Create a QLabel which looks like a HTML link.
+ *
+ * Contents are rich text and the link responds to hover correctly.
+ */
+export function makeLinkLabel(options: LinkLabelOptions): QLabel {
+  const { onLinkActivated, text, uiStyle } = options;
+  const normalText = `${uiStyle.getLinkLabelCSS()}<a href="_">${text}</a>`;
+  const hoverText = `<span class="hover">${normalText}</span>`;
+  const label = Label({
+    text: normalText,
+    onLinkActivated,
+    textFormat: TextFormat.RichText,
+    onEnter: () => label.setText(hoverText),
+    onLeave: () => label.setText(normalText),
+  });
+  return label;
 }

@@ -67,6 +67,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getButtonIcon(name: string): QIcon {
       return this.getMenuIcon(name);
+    },
+    getLinkLabelCSS(): string {
+      return LinkLabelCSS();
     }
   };
 }
@@ -749,6 +752,20 @@ QWidget[cssClass~="window-background"] {
   background-color: ${level3Color};
 }
 `;
+}
+
+function LinkLabelCSS(): string {
+  return `<style>
+  A {
+    color: ${linkColor};
+    text-decoration: none;
+  }
+
+  span.hover A {
+    color: ${linkHoverColor};
+    text-decoration: ${linkHoverDecoration};
+  }
+  </style>`;
 }
 
 function ApplicationSpecificStyleSheet(): string {

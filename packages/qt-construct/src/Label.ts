@@ -10,13 +10,14 @@ export interface LabelOptions extends WidgetOptions {
   text?: string;
   textFormat?: TextFormat;
   wordWrap?: boolean;
+  onLinkActivated?: (url: string) => void;
 }
 
 export function Label(options: LabelOptions): QLabel {
   const label = new QLabel();
 
   ApplyWidgetOptions(label, options);
-  const { text, textFormat, wordWrap } = options;
+  const { onLinkActivated, text, textFormat, wordWrap } = options;
   if (textFormat !== undefined) {
     label.setTextFormat(textFormat);
   }
@@ -25,6 +26,9 @@ export function Label(options: LabelOptions): QLabel {
   }
   if (wordWrap !== undefined) {
     label.setWordWrap(wordWrap);
+  }
+  if (onLinkActivated !== undefined) {
+    label.addEventListener("linkActivated", onLinkActivated);
   }
 
   return label;

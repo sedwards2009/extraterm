@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QScrollArea, QWidget, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, Label, PushButton, ScrollArea, Widget } from "qt-construct";
+import { AlignmentFlag, Direction, QScrollArea, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
+import { BoxLayout, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { EventEmitter, Event } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
 
@@ -12,6 +12,12 @@ import { ExtensionMetadata } from "../extension/ExtensionMetadata";
 import { ExtensionManager } from "../InternalTypes";
 import { createHtmlIcon } from "../ui/Icons";
 import { UiStyle } from "../ui/UiStyle";
+import { makeLinkLabel } from "../ui/QtConstructExtra";
+
+enum SubPage {
+  ALL_EXTENSIONS = 0,
+  EXTENSION_DETAILS = 1
+}
 
 
 export class ExtensionsPage {
@@ -19,6 +25,7 @@ export class ExtensionsPage {
   #extensionManager: ExtensionManager = null;
   #uiStyle: UiStyle = null;
   #detailCards: ExtensionDetailCard[] = null;
+  #detailsStack: QStackedWidget = null;
 
   constructor(extensionManager: ExtensionManager, uiStyle: UiStyle) {
     this._log = getLogger("ExtensionsPage", this);
@@ -38,7 +45,34 @@ export class ExtensionsPage {
               text: `${createHtmlIcon("fa-puzzle-piece")}&nbsp;&nbsp;Extensions`,
               textFormat: TextFormat.RichText,
               cssClass: ["h2"]}),
-            ...this.#createCards()
+            this.#detailsStack = StackedWidget({
+              children:[
+                // All Extensions Cards
+                Widget({
+                  layout: BoxLayout({
+                    direction: Direction.TopToBottom,
+                    children: [
+                      ...this.#createCards()
+                    ]
+                  })
+                }),
+
+                // Extension Details
+                Widget({
+                  layout: BoxLayout({
+                    direction: Direction.TopToBottom,
+                    children: [
+                      makeLinkLabel({
+                        text: `${createHtmlIcon("fa-arrow-left")}&nbsp;All Extensions`,
+                        uiStyle: this.#uiStyle,
+                        onLinkActivated: (url: string): void => this.#handleBackLink()
+                      }),
+                      { widget: Widget({}), stretch: 1 }
+                    ]
+                  })
+                }),
+              ]
+            })
           ]
         })
       })
@@ -58,7 +92,11 @@ export class ExtensionsPage {
   }
 
   #handleDetailsClick(cardName: string): void {
-this._log.debug(`details clicked ${cardName}`);
+    this.#detailsStack.setCurrentIndex(SubPage.EXTENSION_DETAILS);
+  }
+
+  #handleBackLink(): void {
+    this.#detailsStack.setCurrentIndex(SubPage.ALL_EXTENSIONS);
   }
 }
 
