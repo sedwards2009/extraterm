@@ -430,7 +430,7 @@ class Main {
 
   commandOpenSettings(): void {
     if (this.#settingsTab == null) {
-      this.#settingsTab = new SettingsTab(this.#configDatabase, this.#uiStyle);
+      this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#uiStyle);
     }
     const win = this.#extensionManager.getActiveWindow();
     win.addTab(this.#settingsTab);

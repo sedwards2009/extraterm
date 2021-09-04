@@ -611,5 +611,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return 0;
   }
 
-
+  getAllExtensions(): ExtensionMetadata[] {
+    return [...this.#ipc.getExtensionMetadata()];
+  }
 }

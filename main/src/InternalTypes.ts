@@ -35,7 +35,7 @@ export interface ExtensionManager {
 //   startUp(): void;
 
 //   setSplitLayout(splitLayout: SplitLayout): void;
-//   getAllExtensions(): ExtensionMetadata[];
+  getAllExtensions(): ExtensionMetadata[];
 //   onStateChanged: ExtensionApi.Event<void>;
 //   isExtensionRunning(name: string):boolean;
 //   enableExtension(name: string): void;

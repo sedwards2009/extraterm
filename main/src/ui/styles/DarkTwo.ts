@@ -64,6 +64,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getCommandPaletteIcon(name: string): QIcon {
       return this.getMenuIcon(name);
+    },
+    getButtonIcon(name: string): QIcon {
+      return this.getMenuIcon(name);
     }
   };
 }
@@ -221,6 +224,14 @@ const tabBackgroundColorActive = level2Color;
 
 
 const settingsBgSelectedColor = lighten(backgroundColor, 8);
+
+// --- Extension Card related ---
+const componentPaddingVerticalCard = "1.5em";
+const componentPaddingHorizontal = "1.2em";
+const componentPaddingHorizontalCard = "1.8em";
+const borderRadius2x = "8px";
+const toolPanelBackgroundColor = level3Color;
+const packageCardBackgroundColor = lighten(toolPanelBackgroundColor, 8);
 
 
 function DarkTwoStyleSheet(resourceDirectory: string): string {
@@ -805,6 +816,13 @@ QTableView[cssClass~="list-picker"] {
 
   selection-color: ${dropdownLinkHoverColor};
   selection-background-color: ${dropdownLinkHoverBg};
+}
+
+QWidget[cssClass~="extension-page-card"] {
+  padding: ${componentPaddingVerticalCard} ${componentPaddingHorizontalCard} ${componentPaddingVerticalCard} ${componentPaddingHorizontalCard};
+  border-radius: ${borderRadius2x};
+  border: 1px solid ${baseBorderColor};
+  background-color: ${packageCardBackgroundColor};
 }
 `;
 }

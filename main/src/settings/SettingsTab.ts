@@ -14,18 +14,26 @@ import { GeneralConfig } from "../config/Config";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
 import { makeGroupLayout } from "../ui/QtConstructExtra";
+import { ExtensionsPage } from "./ExtensionsPage";
+import { ExtensionManager } from "../InternalTypes";
 
 
 export class SettingsTab implements Tab {
   private _log: Logger = null;
 
+  #configDatabase: ConfigDatabase = null;
+  #extensionManager: ExtensionManager = null;
+
+  #extensionsPage: ExtensionsPage = null;
   #contentWidget: QWidget = null;
   #contentLayout: QBoxLayout = null;
-  #configDatabase: ConfigDatabase = null;
 
-  constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle) {
+  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, uiStyle: UiStyle) {
     this._log = getLogger("SettingsTab", this);
     this.#configDatabase = configDatabase;
+    this.#extensionManager = extensionManager;
+
+    this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
     this.#createUI(uiStyle);
   }
 
@@ -67,7 +75,7 @@ export class SettingsTab implements Tab {
                 // ListWidgetItem({text: "Session Types"}),
                 // ListWidgetItem({text: "Keybindings"}),
                 // ListWidgetItem({text: "Frames"}),
-                // ListWidgetItem({text: "Extensions"}),
+                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-puzzle-piece"), text: "Extensions"}),
               ],
               currentRow: 0,
               onCurrentRowChanged: (row) => {
@@ -81,7 +89,8 @@ export class SettingsTab implements Tab {
               cssClass: ["settings-stack"],
               children: [
                 this.#createGeneralPage(),
-                this.#createAppearancePage()
+                this.#createAppearancePage(),
+                this.#extensionsPage.getPage(),
               ]}),
             stretch: 1,
           }
@@ -200,4 +209,5 @@ export class SettingsTab implements Tab {
       })
     });
   }
+
 }
