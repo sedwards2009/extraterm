@@ -41,9 +41,11 @@ export function makeGroupLayout(...children: (QWidget | string)[]): QBoxLayout {
 }
 
 export interface LinkLabelOptions {
+  onLinkActivated?: (url: string) => void;
+  openExternalLinks?: boolean;
   text: string;
-  onLinkActivated: (url: string) => void;
   uiStyle: UiStyle;
+  wordWrap?: boolean;
 }
 
 /**
@@ -52,15 +54,17 @@ export interface LinkLabelOptions {
  * Contents are rich text and the link responds to hover correctly.
  */
 export function makeLinkLabel(options: LinkLabelOptions): QLabel {
-  const { onLinkActivated, text, uiStyle } = options;
-  const normalText = `${uiStyle.getLinkLabelCSS()}<a href="_">${text}</a>`;
+  const { onLinkActivated, openExternalLinks, text, uiStyle, wordWrap } = options;
+  const normalText = `${uiStyle.getLinkLabelCSS()}${text}`;
   const hoverText = `<span class="hover">${normalText}</span>`;
   const label = Label({
     text: normalText,
     onLinkActivated,
+    openExternalLinks,
     textFormat: TextFormat.RichText,
     onEnter: () => label.setText(hoverText),
     onLeave: () => label.setText(normalText),
+    wordWrap
   });
   return label;
 }

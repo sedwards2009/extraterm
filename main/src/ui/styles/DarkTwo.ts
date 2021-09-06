@@ -70,6 +70,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getLinkLabelCSS(): string {
       return LinkLabelCSS();
+    },
+    getHTMLStyle(): string {
+      return HTMLCSS();
     }
   };
 }
@@ -765,6 +768,35 @@ function LinkLabelCSS(): string {
     color: ${linkHoverColor};
     text-decoration: ${linkHoverDecoration};
   }
+  </style>`;
+}
+
+function HTMLCSS(): string {
+  return `<style>
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    color: ${headingsColor};
+    padding-bottom: 0.4em;
+  } 
+  h1 {
+    font-size: ${Math.round(2 * fontSizeBase)}pt;
+  }
+  h2 {
+    font-size: ${Math.round(1.75 * fontSizeBase)}pt;
+  }
+  h3 {
+    font-size: ${Math.round(1.4 * fontSizeBase)}pt;
+  }
+  h4 {
+    font-size: ${Math.round(1.1 * fontSizeBase)}pt;
+  }
+  h5 {
+    font-size: ${fontSizeBase}pt;
+  }
+  h6 {
+    font-size: ${Math.round(0.8 * fontSizeBase)}pt;
+  }
+  
   </style>`;
 }
 

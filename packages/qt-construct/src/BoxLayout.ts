@@ -33,16 +33,18 @@ export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
   }
 
   for (const child of children) {
-    if (child instanceof NodeWidget) {
-      boxLayout.addWidget(child);
-    } else if (child instanceof NodeLayout) {
-      boxLayout.addLayout(child);
-    } else {
-      if (child.widget !== undefined) {
-        boxLayout.addWidget(child.widget, child.stretch === undefined ? 0 : child.stretch,
-          child.alignment === undefined ? 0 : child.alignment);
-      } else if (child.layout !== undefined) {
-        boxLayout.addLayout(child.layout, child.stretch === undefined ? 0 : child.stretch);
+    if (child) {
+      if (child instanceof NodeWidget) {
+        boxLayout.addWidget(child);
+      } else if (child instanceof NodeLayout) {
+        boxLayout.addLayout(child);
+      } else {
+        if (child.widget !== undefined) {
+          boxLayout.addWidget(child.widget, child.stretch === undefined ? 0 : child.stretch,
+            child.alignment === undefined ? 0 : child.alignment);
+        } else if (child.layout !== undefined) {
+          boxLayout.addLayout(child.layout, child.stretch === undefined ? 0 : child.stretch);
+        }
       }
     }
   }
