@@ -51,7 +51,7 @@ class FontMeasurement {
     font.setPixelSize(sizePx);
 
     const metrics = new QFontMetrics(font);
-    const charWidthPx = metrics.horizontalAdvance(sampleChars[0]);
+    const charWidthPx = this.#computeMaxCharWidthPx(metrics, sampleChars);
     const charHeightPx = metrics.height();
     // logFontMetrics(sampleChars[0], metrics);
 
@@ -70,15 +70,11 @@ class FontMeasurement {
       secondUnderlineY = Math.min(underlineY + 2 * underlineHeight, charHeightPx-1);
     }
 
-    let boldItalicWidthPx = charWidthPx;
     const boldFont = new QFont(family);
     boldFont.setPixelSize(sizePx);
     boldFont.setWeight(QFontWeight.Bold);
     const boldMetrics = new QFontMetrics(boldFont);
-    for (const sampleChar of sampleChars) {
-      const boldCharWidthPx = boldMetrics.horizontalAdvance(sampleChar);
-      boldItalicWidthPx = Math.max(boldItalicWidthPx, boldCharWidthPx);
-    }
+    const boldItalicWidthPx = this.#computeMaxCharWidthPx(boldMetrics, sampleChars);
 
     const curlyThickness = 1;
     const curlyHeight = 4;
@@ -109,6 +105,15 @@ class FontMeasurement {
       curlyThickness,
       curlyY,
     };
+  }
+
+  #computeMaxCharWidthPx(metrics: QFontMetrics, sampleChars: string[]): number {
+    let maxWidthPx = 0;
+    for (const sampleChar of sampleChars) {
+      const widthPx = metrics.boundingRect(sampleChar).width();
+      maxWidthPx = Math.max(maxWidthPx, widthPx);
+    }
+    return maxWidthPx;
   }
 }
 
