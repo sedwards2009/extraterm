@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QScrollArea, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QBoxLayout, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { EventEmitter, Event } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
@@ -17,6 +17,11 @@ import { makeLinkLabel } from "../ui/QtConstructExtra";
 enum SubPage {
   ALL_EXTENSIONS = 0,
   EXTENSION_DETAILS = 1
+}
+
+interface MenuPair {
+  context: string;
+  command: string;
 }
 
 
@@ -45,8 +50,14 @@ export class ExtensionsPage {
       children: [
         ScrollArea({
           cssClass: "settings-tab",
+          widgetResizable: true,
           widget: Widget({
             cssClass: "settings-tab",
+            sizePolicy: {
+              horizontal: QSizePolicyPolicy.MinimumExpanding,
+              vertical: QSizePolicyPolicy.Fixed,
+            },
+            maximumWidth: 600,
             layout: BoxLayout({
               direction: Direction.TopToBottom,
               children: [
@@ -56,13 +67,20 @@ export class ExtensionsPage {
                   cssClass: ["h2"]}),
                 // All Extensions Cards
                 Widget({
+                  sizePolicy: {
+                    horizontal: QSizePolicyPolicy.MinimumExpanding,
+                    vertical: QSizePolicyPolicy.Fixed,
+                  },
+                  maximumWidth: 600,
                   layout: BoxLayout({
                     direction: Direction.TopToBottom,
+                    contentsMargins: [0, 0, 0, 0],
                     children: [
                       ...this.#createCards()
                     ]
                   })
-                })
+                }),
+                { widget: Widget({}), stretch: 1 }
               ]
             })
           })
@@ -70,8 +88,14 @@ export class ExtensionsPage {
 
         this.#detailsScrollArea = ScrollArea({
           cssClass: "settings-tab",
+          widgetResizable: true,
           widget: Widget({
             cssClass: "settings-tab",
+            sizePolicy: {
+              horizontal: QSizePolicyPolicy.MinimumExpanding,
+              vertical: QSizePolicyPolicy.Fixed,
+            },
+            maximumWidth: 600,
             layout: this.#detailsPageLayout = BoxLayout({
               direction: Direction.TopToBottom,
               children: [
@@ -82,8 +106,13 @@ export class ExtensionsPage {
 
                 // Extension Details
                 Widget({
+                  sizePolicy: {
+                    horizontal: QSizePolicyPolicy.MinimumExpanding,
+                    vertical: QSizePolicyPolicy.Fixed,
+                  },
                   layout: this.#detailsContentsLayout = BoxLayout({
                     direction: Direction.TopToBottom,
+                    contentsMargins: [0, 0, 0, 0],
                     children: [
                       makeLinkLabel({
                         text: `<a href="_">${createHtmlIcon("fa-arrow-left")}&nbsp;All Extensions</a>`,
@@ -91,6 +120,10 @@ export class ExtensionsPage {
                         onLinkActivated: (url: string): void => this.#handleBackLink()
                       }),
                       this.#detailsStack = StackedWidget({
+                        sizePolicy: {
+                          horizontal: QSizePolicyPolicy.MinimumExpanding,
+                          vertical: QSizePolicyPolicy.Fixed,
+                        },
                         children: [...this.#createAllDetailsPages()]
                       }),
                       { widget: Widget({}), stretch: 1 }
@@ -207,6 +240,10 @@ class ExtensionDetailCard {
   #createWidget(showDetailsButton: boolean): QWidget {
     return Widget({
       cssClass: ["extension-page-card"],
+      sizePolicy: {
+        horizontal: QSizePolicyPolicy.MinimumExpanding,
+        vertical: QSizePolicyPolicy.Fixed,
+      },
       layout: BoxLayout({
         direction: Direction.TopToBottom,
         children: [
@@ -260,6 +297,7 @@ class ExtensionDetailCard {
 
   getDetailsWidget(): QWidget {
     this.#detailsWidget = Widget({
+      maximumWidth: 600,
       layout: BoxLayout({
         direction: Direction.TopToBottom,
         contentsMargins: [0, 0, 0, 0],
@@ -276,7 +314,16 @@ class ExtensionDetailCard {
           Label({
             text: this.#getContributionsHTML(),
             textFormat: TextFormat.RichText,
-          })
+            wordWrap: true,
+            sizePolicy: {
+              horizontal: QSizePolicyPolicy.MinimumExpanding,
+              vertical: QSizePolicyPolicy.Fixed,
+            },
+          }),
+          {
+            widget: Widget({}),
+            stretch: 1
+          },
         ]
       })
     });
@@ -291,29 +338,271 @@ class ExtensionDetailCard {
     parts.push(this.#uiStyle.getHTMLStyle());
     if (contributes.commands.length !== 0) {
       parts.push(`
-    <h4>Commands</h4>
-    <table class="width-100pc cols-1-1">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Command</th>
-        </tr>
-      </thead>
-      <tbody>
-`);
-      
+        <h4>Commands</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Command</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
       for(const command of contributes.commands) {
         parts.push(`
         <tr>
           <td>${command.title}</td>
           <td>${command.command}</td>
-        </tr>`);
+        </tr>
+        `);
       }
       parts.push(`
-      </tbody>
-    </table>
-`);
+          </tbody>
+        </table>
+      `);
     }
+
+    if (contributes.keybindings.length !== 0) {
+      parts.push(`
+        <h4>Keybindings</h4>
+        <table class="width-100pc" width="100%">
+          <thead>
+            <tr>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const keybindings of contributes.keybindings) {
+        parts.push(`
+          <tr>
+            <td>${keybindings.path}</td>
+          </tr>
+          `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    const menus = this.#getMenus();
+    if (menus.length !== 0) {
+      parts.push(`
+        <h4>Menus</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Context</th>
+              <th>Command</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const menuPair of menus) {
+        parts.push(`
+          <tr>
+            <td>${menuPair.context}</td>
+            <td>${menuPair.command}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.sessionBackends.length !== 0) {
+      parts.push(`
+        <h4>Session backends</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const backend of contributes.sessionBackends) {
+        parts.push(`
+          <tr>
+            <td>${backend.name}</td>
+            <td>${backend.type}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.sessionEditors.length !== 0) {
+      parts.push(`
+        <h4>Session editors</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Type</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const sessionEditor of contributes.sessionEditors) {
+        parts.push(`
+          <tr>
+            <td>${sessionEditor.name}</td>
+            <td>${sessionEditor.type}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.sessionSettings.length !== 0) {
+      parts.push(`
+        <h4>Session settings</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>ID</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const sessionSettings of contributes.sessionSettings) {
+        parts.push(`
+          <tr>
+            <td>${sessionSettings.name}</td>
+            <td>${sessionSettings.id}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.tabTitleWidgets.length !== 0) {
+      parts.push(`
+        <h4>Tab title widgets</h4>
+        <table class="width-100pc" width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const tabTitleWidget of contributes.tabTitleWidgets) {
+        parts.push(`
+          <tr>
+            <td>${tabTitleWidget.name}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.terminalBorderWidgets.length !== 0) {
+      parts.push(`
+        <h4>Terminal border widgets</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Border</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const terminalBorderWidget of contributes.terminalBorderWidgets) {
+        parts.push(`
+          <tr>
+            <td>${terminalBorderWidget.name}</td>
+            <td>${terminalBorderWidget.border}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.terminalThemeProviders.length !== 0) {
+      parts.push(`
+        <h4>Terminal themes</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Formats</th>
+            </tr>
+          </thead>
+          <tbody>
+        `);
+      for (const terminalThemeProvider of contributes.terminalThemeProviders) {
+        parts.push(`
+          <tr>
+            <td>${terminalThemeProvider.name}</td>
+            <td>${terminalThemeProvider.humanFormatNames.join(", ")}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.viewers.length !== 0) {
+      parts.push(`
+        <h4>Viewers</h4>
+        <table class="width-100pc cols-1-1" width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Mime-types</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const viewer of contributes.viewers) {
+        parts.push(`
+          <tr>
+            <td>${viewer.name}</td>
+            <td>${viewer.mimeTypes.join(", ")}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
     return parts.join("");
+  }
+
+  #getMenus(): MenuPair[] {
+    const menus = this.#extensionMetadata.contributes.menus;
+    return [
+      ...menus.commandPalette.map(m => ({ context: "Command palette", command: m.command })),
+      ...menus.contextMenu.map(m => ({ context: "Context menu", command: m.command })),
+      ...menus.newTerminal.map(m => ({ context: "New terminal", command: m.command })),
+      ...menus.terminalTab.map(m => ({ context: "Terminal tab", command: m.command })),
+    ];
   }
 }

@@ -228,6 +228,8 @@ const tabTextColor = textColorSubtle;
 const tabTextColorActive = textHighlightColor;
 const tabBackgroundColorActive = level2Color;
 
+const tableBorderColor = baseBorderColor;
+
 
 const settingsBgSelectedColor = lighten(backgroundColor, 8);
 
@@ -776,8 +778,8 @@ function HTMLCSS(): string {
   h1, h2, h3, h4, h5, h6 {
     font-weight: bold;
     color: ${headingsColor};
-    padding-bottom: 0.4em;
-  } 
+    line-height: 200%;
+  }
   h1 {
     font-size: ${Math.round(2 * fontSizeBase)}pt;
   }
@@ -796,7 +798,25 @@ function HTMLCSS(): string {
   h6 {
     font-size: ${Math.round(0.8 * fontSizeBase)}pt;
   }
-  
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th {
+    align: left;
+    text-align: left;
+    padding: 8px;
+
+    vertical-align: bottom;
+    border-bottom: 2px solid ${tableBorderColor};
+  }
+
+  td {
+    align: left;
+    text-align: left;
+    padding: 8px;
+  }
   </style>`;
 }
 

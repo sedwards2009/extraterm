@@ -3,7 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { FocusPolicy, NodeLayout, NodeWidget, QWidget, WidgetAttribute, WidgetEventTypes, WindowType } from "@nodegui/nodegui";
+import { FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget, WidgetAttribute, WidgetEventTypes, WindowType
+} from "@nodegui/nodegui";
 
 export interface WidgetOptions {
   attribute?: WidgetAttribute[];
@@ -17,11 +18,18 @@ export interface WidgetOptions {
   onLeave?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
   windowFlag?: WindowType;
+  sizePolicy?: {horizontal: QSizePolicyPolicy, vertical: QSizePolicyPolicy};
+  maximumHeight?: number;
+  maximumWidth?: number;
+  minimumHeight?: number;
+  minimumWidth?: number;
+  inlineStyle?: string;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
-    attribute, enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, windowTitle, windowFlag
+    attribute, enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, sizePolicy, windowTitle,
+    maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle
   } = options;
 
   if (enabled !== undefined) {
@@ -58,6 +66,24 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (windowFlag !== undefined) {
     widget.setWindowFlag(windowFlag, true);
+  }
+  if (maximumHeight !== undefined) {
+    widget.setMaximumHeight(maximumHeight);
+  }
+  if (maximumWidth !== undefined) {
+    widget.setMaximumWidth(maximumWidth);
+  }
+  if (minimumHeight !== undefined) {
+    widget.setMinimumHeight(minimumHeight);
+  }
+  if (minimumWidth !== undefined) {
+    widget.setMinimumWidth(minimumWidth);
+  }
+  if (sizePolicy !== undefined) {
+    widget.setSizePolicy(sizePolicy.horizontal, sizePolicy.vertical);
+  }
+  if (inlineStyle !== undefined ) {
+    widget.setInlineStyle(inlineStyle);
   }
 }
 
