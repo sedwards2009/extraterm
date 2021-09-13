@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
+import { AlignmentFlag, Direction, QBoxLayout, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat, TextInteractionFlag } from "@nodegui/nodegui";
+import { BoxLayout, Label, PushButton, ScrollArea, StackedWidget, TabWidget, Widget } from "qt-construct";
 import { EventEmitter, Event } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
 
@@ -12,7 +12,7 @@ import { ExtensionMetadata } from "../extension/ExtensionMetadata";
 import { ExtensionManager } from "../InternalTypes";
 import { createHtmlIcon } from "../ui/Icons";
 import { UiStyle } from "../ui/UiStyle";
-import { makeLinkLabel } from "../ui/QtConstructExtra";
+import { makeLinkLabel, makeSubTabBar } from "../ui/QtConstructExtra";
 
 enum SubPage {
   ALL_EXTENSIONS = 0,
@@ -296,6 +296,8 @@ class ExtensionDetailCard {
   }
 
   getDetailsWidget(): QWidget {
+    let detailsStack: QStackedWidget;
+
     this.#detailsWidget = Widget({
       maximumWidth: 600,
       layout: BoxLayout({
@@ -311,15 +313,41 @@ class ExtensionDetailCard {
             wordWrap: true
           }),
 
-          Label({
-            text: this.#getContributionsHTML(),
-            textFormat: TextFormat.RichText,
-            wordWrap: true,
-            sizePolicy: {
-              horizontal: QSizePolicyPolicy.MinimumExpanding,
-              vertical: QSizePolicyPolicy.Fixed,
+          makeSubTabBar({
+            tabs: ["Details", "Feature Contributions"],
+            onCurrentChanged: (index: number): void => {
+              detailsStack.setCurrentIndex(index);
             },
           }),
+
+          detailsStack = StackedWidget({
+            children: [
+              Label({
+                text: this.#extensionMetadata.description,
+                textFormat: TextFormat.RichText,
+                wordWrap: true,
+                alignment: AlignmentFlag.AlignTop | AlignmentFlag.AlignLeft,
+                textInteractionFlag: TextInteractionFlag.TextSelectableByMouse,
+                sizePolicy: {
+                  horizontal: QSizePolicyPolicy.MinimumExpanding,
+                  vertical: QSizePolicyPolicy.Fixed,
+                },
+              }),
+
+              Label({
+                text: this.#getContributionsHTML(),
+                textFormat: TextFormat.RichText,
+                wordWrap: true,
+                alignment: AlignmentFlag.AlignTop | AlignmentFlag.AlignLeft,
+                textInteractionFlag: TextInteractionFlag.TextSelectableByMouse,
+                sizePolicy: {
+                  horizontal: QSizePolicyPolicy.MinimumExpanding,
+                  vertical: QSizePolicyPolicy.Fixed,
+                },
+              })
+            ]
+          }),
+
           {
             widget: Widget({}),
             stretch: 1
@@ -339,7 +367,7 @@ class ExtensionDetailCard {
     if (contributes.commands.length !== 0) {
       parts.push(`
         <h4>Commands</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Title</th>
@@ -365,7 +393,7 @@ class ExtensionDetailCard {
     if (contributes.keybindings.length !== 0) {
       parts.push(`
         <h4>Keybindings</h4>
-        <table class="width-100pc" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Path</th>
@@ -390,7 +418,7 @@ class ExtensionDetailCard {
     if (menus.length !== 0) {
       parts.push(`
         <h4>Menus</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Context</th>
@@ -416,7 +444,7 @@ class ExtensionDetailCard {
     if (contributes.sessionBackends.length !== 0) {
       parts.push(`
         <h4>Session backends</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Name</th>
@@ -442,7 +470,7 @@ class ExtensionDetailCard {
     if (contributes.sessionEditors.length !== 0) {
       parts.push(`
         <h4>Session editors</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Name</th>
@@ -468,7 +496,7 @@ class ExtensionDetailCard {
     if (contributes.sessionSettings.length !== 0) {
       parts.push(`
         <h4>Session settings</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Name</th>
@@ -494,7 +522,7 @@ class ExtensionDetailCard {
     if (contributes.tabTitleWidgets.length !== 0) {
       parts.push(`
         <h4>Tab title widgets</h4>
-        <table class="width-100pc" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Name</th>
@@ -518,7 +546,7 @@ class ExtensionDetailCard {
     if (contributes.terminalBorderWidgets.length !== 0) {
       parts.push(`
         <h4>Terminal border widgets</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Name</th>
@@ -544,7 +572,7 @@ class ExtensionDetailCard {
     if (contributes.terminalThemeProviders.length !== 0) {
       parts.push(`
         <h4>Terminal themes</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Name</th>
@@ -570,7 +598,7 @@ class ExtensionDetailCard {
     if (contributes.viewers.length !== 0) {
       parts.push(`
         <h4>Viewers</h4>
-        <table class="width-100pc cols-1-1" width="100%">
+        <table width="100%">
           <thead>
             <tr>
               <th>Name</th>

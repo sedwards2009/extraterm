@@ -87,6 +87,8 @@ export class Window {
                 {widget:
                   this.#tabBar = TabBar({
                     expanding: false,
+                    cssClass: ["top-level"],
+                    tabs: [],
                     onCurrentChanged: (index: number) => {
                       this.#handleTabBarChanged(index);
                     },
@@ -304,7 +306,7 @@ export class Window {
   }
 
   getWidget(): QWidget {
-    return this.#windowWidget;  
+    return this.#windowWidget;
   }
 
   setCurrentTabIndex(index: number): void {

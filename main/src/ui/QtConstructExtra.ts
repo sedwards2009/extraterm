@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QBoxLayout, QLabel, QWidget, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, Label } from "qt-construct";
+import { Direction, QApplication, QBoxLayout, QLabel, QPushButton, QWidget, TextFormat } from "@nodegui/nodegui";
+import { BoxLayout, Label, PushButton, Widget } from "qt-construct";
 import { UiStyle } from "./UiStyle";
 
 export interface CompactGroupOptions {
@@ -67,4 +67,52 @@ export function makeLinkLabel(options: LinkLabelOptions): QLabel {
     wordWrap
   });
   return label;
+}
+
+export interface SubTabBarOptions {
+  onCurrentChanged?: (index: number) => void;
+  tabs: string[];
+}
+
+/**
+ * Make a tab bar for use inside page content.
+ */
+export function makeSubTabBar(options: SubTabBarOptions): QWidget {
+  const selectTab = (selectIndex: number) => {
+    for (const [index, tabWidget] of tabWidgets.entries()) {
+      const classes = tabWidget.property("cssClass").toStringList();
+      const newClasses = classes.filter(className => className !== "selected");
+      if (index === selectIndex) {
+        newClasses.push("selected");
+      }
+
+      tabWidget.setProperty("cssClass", newClasses);
+      const style = tabWidget.style();
+      style.unpolish(tabWidget);
+      style.polish(tabWidget);
+    }
+  };
+
+  const tabWidgets = options.tabs.map((label: string, index: number): QPushButton => {
+    return PushButton({
+      cssClass: ["subtabbar-tab"],
+      text: label,
+      onClicked: () => {
+        selectTab(index);
+        if (options.onCurrentChanged !== undefined) {
+          options.onCurrentChanged(index);
+        }
+      }
+    });
+  });
+  selectTab(0);
+
+  return Widget({
+    layout: BoxLayout({
+      direction: Direction.LeftToRight,
+      contentsMargins: [0, 0, 0, 0],
+      spacing: 0,
+      children: tabWidgets
+    })
+  });
 }

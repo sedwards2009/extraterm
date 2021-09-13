@@ -650,8 +650,13 @@ QScrollBar::add-line, QScrollBar::sub-line {
 }
 
 function QTabBarStyleSheet(resourceDirectory: string): string {
+  return TopLevelQTabBarStyleSheet(resourceDirectory) +
+    SubLevelQTabBarStyleSheet(resourceDirectory);
+}
+
+function TopLevelQTabBarStyleSheet(resourceDirectory: string): string {
   return `
-QTabBar::tab {
+QTabBar[cssClass~="top-level"]::tab {
   height: 1.6em;
   margin: 0px;
 
@@ -670,11 +675,11 @@ QTabBar::tab {
   border-bottom: 1px solid ${tabBorderColor};
 }
 
-QTabBar::tab:last, QTabBar::tab:only-one {
+QTabBar[cssClass~="top-level"]::tab:last, QTabBar[cssClass~="top-level"]::tab:only-one {
   border-right: 1px solid ${tabBorderColor};
 }
 
-QTabBar {
+QTabBar[cssClass~="top-level"] {
   qproperty-drawBase: 0;
 
   background-color: ${tabBackgroundColor};
@@ -683,7 +688,7 @@ QTabBar {
   margin: 0px;
 }
 
-QTabBar::tab:selected {
+QTabBar[cssClass~="top-level"]::tab:selected {
   color: ${tabTextColorActive};
   background-color: ${tabBackgroundColorActive};
 
@@ -691,19 +696,47 @@ QTabBar::tab:selected {
   border-bottom: 1px solid ${tabBackgroundColorActive};
 }
 
-QTabBar::close-button {
+QTabBar[cssClass~="top-level"]::close-button {
   background-color: transparent;
   border: 0px;
 
   image: url(${resourceDirectory}/close_normal.svg);
 }
 
-QTabBar::close-button:hover {
+QTabBar[cssClass~="top-level"]::close-button:hover {
   border-radius: ${borderRadius};
   background-color: ${buttonPrimaryBgColor};
   image: url(${resourceDirectory}/close_hover.svg);
 }
 
+`;
+}
+
+function SubLevelQTabBarStyleSheet(resourceDirectory: string): string {
+  return `
+QTabBar[cssClass~="sub-level"]::tab {
+  margin: 0px;
+  padding: 0px;
+  border: none;
+
+  color: ${toHex(tabTextColor)};
+  background-color: transparent;
+  text-align: left;
+  alignment: left;
+}
+
+QTabBar[cssClass~="sub-level"] {
+  qproperty-drawBase: 0;
+
+  background-color: transparent;
+  border: none;
+  margin: 0px;
+}
+
+QTabBar[cssClass~="sub-level"]::tab:selected {
+  color: ${tabTextColorActive};
+  text-decoration: underline;
+}
 `;
 }
 
@@ -892,6 +925,32 @@ QWidget[cssClass~="extension-page-card"] {
   border-radius: ${borderRadius2x};
   border: 1px solid ${baseBorderColor};
   background-color: ${packageCardBackgroundColor};
+}
+
+
+
+QPushButton[cssClass~="subtabbar-tab"] {
+  color: ${textColor};
+
+  font-size: ${Math.round(1.4 * fontSizeBase)}pt;
+  font-weight: bold;
+  padding: 0px;
+  padding-bottom: 0.4em;
+
+  text-align: left;
+  background-color: transparent;
+  border: none;
+  border-radius: 0px;
+}
+
+QPushButton[cssClass~="subtabbar-tab"]:hover {
+  text-decoration: underline;
+}
+
+QPushButton[cssClass~="subtabbar-tab"][cssClass~="selected"] {
+  color: ${headingsColor};
+  background-color: transparent;
+  text-decoration: underline;
 }
 `;
 }

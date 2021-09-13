@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QTabBar } from "@nodegui/nodegui";
+import { QIcon, QTabBar } from "@nodegui/nodegui";
 import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 
 export interface TabBarOptions extends WidgetOptions {
@@ -11,6 +11,12 @@ export interface TabBarOptions extends WidgetOptions {
   onCurrentChanged?: (index: number) => void;
   tabsClosable?: boolean;
   onTabCloseRequested?: (index: number) => void;
+  tabs: TabBarTabOptions[];
+}
+
+export interface TabBarTabOptions {
+  icon?: QIcon;
+  label: string;
 }
 
 export function TabBar(options: TabBarOptions): QTabBar {
@@ -18,7 +24,7 @@ export function TabBar(options: TabBarOptions): QTabBar {
 
   ApplyWidgetOptions(tabBar, options);
 
-  const { expanding, onCurrentChanged, onTabCloseRequested, tabsClosable } = options;
+  const { expanding, onCurrentChanged, onTabCloseRequested, tabsClosable, tabs } = options;
   if (expanding !== undefined) {
     tabBar.setExpanding(expanding);
   }
@@ -35,5 +41,9 @@ export function TabBar(options: TabBarOptions): QTabBar {
     tabBar.addEventListener("tabCloseRequested", onTabCloseRequested);
   }
 
+  for (const tabOptions of tabs) {
+    const { icon, label }  = tabOptions;
+    tabBar.addTab(icon == null ? new QIcon() : icon, label);
+  }
   return tabBar;
 }
