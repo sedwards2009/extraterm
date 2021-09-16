@@ -1,6 +1,4 @@
----
-title: Guide
----
+## Guide
 
 - [Getting Started](#getting-started)
   - [Installation](#installation)
@@ -41,7 +39,7 @@ Note: Keyboard shortcuts given in the documentation apply to the default Windows
 
 ## Installation
 
-Extraterm supports Linux, macOS, and Windows. The [download page](download.html) describes the different installation methods.
+Extraterm supports Linux, macOS, and Windows. The [download page](download.md) describes the different installation methods.
 
 
 -----------
