@@ -82,7 +82,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     this.#extensionPaths = extensionPaths;
     this.onDesiredStateChanged = this.#desiredStateChangeEventEmitter.event;
-    this.#ipc.setExtensionMetadata(this._scan(this.#extensionPaths));
+    this.#ipc.setExtensionMetadata(this.#scan(this.#extensionPaths));
 
     // Note: We are passing `applicationVersion` in instead of getting it from `ConfigDatabase` because
     // ConfigDatabase doesn't have a system config ready in time for us to read.
@@ -98,7 +98,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     // Merge in the explicitly enabled/disabled extensions from the config.
     if (activeExtensionsConfig != null) {
       for (const key of Object.keys(activeExtensionsConfig)) {
-        if (this._getExtensionMetadataByName(key) != null) {
+        if (this.#getExtensionMetadataByName(key) != null) {
           desiredState[key] = activeExtensionsConfig[key];
         }
       }
@@ -106,18 +106,18 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     for (const extensionName of Object.keys(desiredState)) {
       if (desiredState[extensionName]) {
-        this._startExtension(this._getExtensionMetadataByName(extensionName));
+        this.#startExtension(this.#getExtensionMetadataByName(extensionName));
       }
     }
 
     this.#ipc.setDesiredState(desiredState);
   }
 
-  private _scan(extensionPaths: string[]): ExtensionMetadata[] {
-    return _.flatten(extensionPaths.map(p => this._scanPath(p)));
+  #scan(extensionPaths: string[]): ExtensionMetadata[] {
+    return _.flatten(extensionPaths.map(p => this.#scanPath(p)));
   }
 
-  private _scanPath(extensionPath: string): ExtensionMetadata[] {
+  #scanPath(extensionPath: string): ExtensionMetadata[] {
     this._log.info(`Scanning '${extensionPath}' for extensions.`);
     if (fs.existsSync(extensionPath)) {
       const result: ExtensionMetadata[] = [];
@@ -127,7 +127,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
         if (fs.existsSync(packageJsonPath)) {
           const extensionInfoPath = path.join(extensionPath, item);
-          const extensionInfo = this._loadPackageJson(extensionInfoPath);
+          const extensionInfo = this.#loadPackageJson(extensionInfoPath);
           if (extensionInfo !== null) {
             result.push(extensionInfo);
             this._log.info(`Read extension metadata from '${extensionInfoPath}'.`);
@@ -144,14 +144,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
   }
 
-  private _loadPackageJson(extensionPath: string): ExtensionMetadata {
+  #loadPackageJson(extensionPath: string): ExtensionMetadata {
     const packageJsonPath = path.join(extensionPath, "package.json");
     const packageJsonString = fs.readFileSync(packageJsonPath, "utf8");
     try {
       const result = parsePackageJsonString(packageJsonString, extensionPath);
 
       const jsonTree = JSON.parse(packageJsonString);
-      const readmePath = this._getExtensionReadmePath(jsonTree, extensionPath);
+      const readmePath = this.#getExtensionReadmePath(jsonTree, extensionPath);
 
       return {...result, readmePath };
     } catch(ex) {
@@ -160,7 +160,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
   }
 
-  private _getExtensionReadmePath(packageJsonTree: any, extensionPath: string): string {
+  #getExtensionReadmePath(packageJsonTree: any, extensionPath: string): string {
     if (packageJsonTree.extratermReadme != null) {
       return path.join(extensionPath, packageJsonTree.extratermReadme);
     } else {
@@ -174,7 +174,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
   }
 
-  private _getExtensionMetadataByName(name: string): ExtensionMetadata {
+  #getExtensionMetadataByName(name: string): ExtensionMetadata {
     for (const extensionInfo of this.#ipc.getExtensionMetadata()) {
       if (extensionInfo.name === name) {
         return extensionInfo;
@@ -183,7 +183,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return null;
   }
 
-  private _startExtension(metadata: ExtensionMetadata): ActiveExtension {
+  #startExtension(metadata: ExtensionMetadata): ActiveExtension {
     let module = null;
     let publicApi = null;
     let contextImpl: ExtensionContextImpl = null;
@@ -192,7 +192,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, null, this.#applicationVersion);
     if (metadata.main != null) {
-      module = this._loadExtensionModule(metadata);
+      module = this.#loadExtensionModule(metadata);
       if (module == null) {
         return null;
       }
@@ -208,7 +208,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return activeExtension;
   }
 
-  private _loadExtensionModule(extension: ExtensionMetadata): any {
+  #loadExtensionModule(extension: ExtensionMetadata): any {
     const mainJsPath = path.join(extension.path, extension.main);
     try {
       const module = require(mainJsPath);
@@ -219,7 +219,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
   }
 
-  private _stopExtension(activeExtension: ActiveExtension): void {
+  #stopExtension(activeExtension: ActiveExtension): void {
     if (activeExtension.module != null) {
       try {
         const extratermModule = (<ExtensionApi.ExtensionModule> activeExtension.module);
@@ -244,24 +244,24 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   getExtensionContextByName(name: string): InternalTypes.InternalExtensionContext {
-    const extension = this._getActiveExtension(name);
+    const extension = this.#getActiveExtension(name);
     return extension != null ? extension.contextImpl : null;
   }
 
   enableExtension(name: string): void {
-    const metadata = this._getExtensionMetadataByName(name);
+    const metadata = this.#getExtensionMetadataByName(name);
     if (metadata == null) {
       this._log.warn(`Unable to find extensions metadata for name '${name}'.`);
       return;
     }
 
-    const activeExtension = this._getActiveExtension(name);
+    const activeExtension = this.#getActiveExtension(name);
     if (activeExtension != null) {
       this._log.warn(`Tried to enable active extension '${name}'.`);
       return;
     }
 
-    this._startExtension(metadata);
+    this.#startExtension(metadata);
 
     const generalConfig = this.#configDatabase.getGeneralConfigCopy();
     generalConfig.activeExtensions[metadata.name] = true;
@@ -274,7 +274,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     this.#desiredStateChangeEventEmitter.fire();
   }
 
-  private _getActiveExtension(name: string): ActiveExtension {
+  #getActiveExtension(name: string): ActiveExtension {
     for (const extension of this.#activeExtensions) {
       if (extension.metadata.name === name) {
         return extension;
@@ -284,19 +284,19 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   disableExtension(name: string): void {
-    const metadata = this._getExtensionMetadataByName(name);
+    const metadata = this.#getExtensionMetadataByName(name);
     if (metadata == null) {
       this._log.warn(`Unable to find extensions metadata for name '${name}'.`);
       return;
     }
 
-    const activeExtension = this._getActiveExtension(name);
+    const activeExtension = this.#getActiveExtension(name);
     if (activeExtension == null) {
       this._log.warn(`Tried to disable inactive extension '${name}'.`);
       return;
     }
 
-    this._stopExtension(activeExtension);
+    this.#stopExtension(activeExtension);
 
     const desiredState = {...this.#ipc.getDesiredState()};
     desiredState[metadata.name] = false;
@@ -313,17 +313,17 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#ipc.getDesiredState();
   }
 
-  private _getActiveBackendExtensions(): ActiveExtension[] {
+  #getActiveBackendExtensions(): ActiveExtension[] {
     return this.#activeExtensions.filter(ae => ae.contextImpl != null);
   }
 
   getSessionBackendContributions(): LoadedSessionBackendContribution[] {
-    return _.flatten(this._getActiveBackendExtensions().map(
+    return _.flatten(this.#getActiveBackendExtensions().map(
       ae => ae.contextImpl._internalBackend._sessionBackends));
   }
 
   getSessionBackend(type: string): ExtensionApi.SessionBackend {
-    for (const extension of this._getActiveBackendExtensions()) {
+    for (const extension of this.#getActiveBackendExtensions()) {
       for (const backend of extension.contextImpl._internalBackend._sessionBackends) {
         if (backend.sessionBackendMetadata.type === type) {
           return backend.sessionBackend;
@@ -334,15 +334,15 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
-    return _.flatten(this._getActiveBackendExtensions().map(
+    return _.flatten(this.#getActiveBackendExtensions().map(
       ae => ae.contextImpl._internalBackend._terminalThemeProviders));
   }
 
   hasCommand(command: string): boolean {
-    return this._getCommand(command) != null;
+    return this.#getCommand(command) != null;
   }
 
-  private _getExtensionNameFromCommand(command: string): string {
+  #getExtensionNameFromCommand(command: string): string {
     const parts = command.split(":");
     if (parts.length !== 2) {
       this._log.warn(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
@@ -356,9 +356,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return extensionName;
   }
 
-  private _getCommand(command: string) {
-    const extensionName = this._getExtensionNameFromCommand(command);
-    const ext = this._getActiveExtension(extensionName);
+  #getCommand(command: string) {
+    const extensionName = this.#getExtensionNameFromCommand(command);
+    const ext = this.#getActiveExtension(extensionName);
     if (ext == null) {
       return null;
     }
@@ -384,11 +384,11 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   /**
    * Execute a function with a different temporary extension context.
    */
-  private _executeFuncWithExtensionWindowState<R>(tempState: CommonExtensionWindowState, func: () => R): R {
+  #executeFuncWithExtensionWindowState<R>(tempState: CommonExtensionWindowState, func: () => R): R {
     const oldState = this.copyExtensionWindowState();
-    this._setExtensionWindowState(tempState);
+    this.#setExtensionWindowState(tempState);
     const result = func();
-    this._setExtensionWindowState(oldState);
+    this.#setExtensionWindowState(oldState);
     return result;
   }
 
@@ -430,14 +430,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
         if (commandFunc == null) {
           throw new Error(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
         }
-        return this._runCommandFunc(commandName, commandFunc, args);
+        return this.#runCommandFunc(commandName, commandFunc, args);
       }
     }
 
     throw new Error(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
   }
 
-  private _runCommandFunc(name: string, commandFunc: (args: any) => any, args: any): any {
+  #runCommandFunc(name: string, commandFunc: (args: any) => any, args: any): any {
     try {
       return commandFunc(args);
     } catch(ex) {
@@ -446,7 +446,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
   }
 
-  private _setExtensionWindowState(newState: CommonExtensionWindowState): void {
+  #setExtensionWindowState(newState: CommonExtensionWindowState): void {
     for (const key in newState) {
       this.#commonExtensionWindowState[key] = newState[key];
     }
@@ -503,7 +503,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       };
     }
 
-    const whenPredicate = options.when ? this._createWhenPredicate(context) : truePredicate;
+    const whenPredicate = options.when ? this.#createWhenPredicate(context) : truePredicate;
 
     const entries: ExtensionCommandContribution[] = [];
     for (const activeExtension  of this.#activeExtensions) {
@@ -518,7 +518,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
             const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
                                 commandEntry.commandContribution.command);
             if (customizer != null) {
-              this._executeFuncWithExtensionWindowState(context, () => {
+              this.#executeFuncWithExtensionWindowState(context, () => {
                 entries.push( {...commandEntry.commandContribution, ...customizer() });
               });
             } else {
@@ -528,12 +528,12 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
         }
       }
     }
-    this._sortCommandsInPlace(entries);
+    this.#sortCommandsInPlace(entries);
     return entries;
   }
 
-  private _createWhenPredicate(state: CommonExtensionWindowState): (ecc: CommandMenuEntry) => boolean {
-    const variables = this._createWhenVariables(state);
+  #createWhenPredicate(state: CommonExtensionWindowState): (ecc: CommandMenuEntry) => boolean {
+    const variables = this.#createWhenVariables(state);
     const bee = new BooleanExpressionEvaluator(variables);
     return (ecc: CommandMenuEntry): boolean => {
       if (ecc.commandContribution.when === "") {
@@ -543,7 +543,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     };
   }
 
-  private _createWhenVariables(state: CommonExtensionWindowState): WhenVariables {
+  #createWhenVariables(state: CommonExtensionWindowState): WhenVariables {
     const whenVariables: WhenVariables = {
       true: true,
       false: false,
@@ -571,17 +571,17 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
         const url = new URL(state.activeHyperlinkURL);
         whenVariables.hyperlinkProtocol = url.protocol;
         whenVariables.hyperlinkDomain = url.hostname;
-        whenVariables.hyperlinkFileExtension = this._getExtensionFromPath(url.pathname);
+        whenVariables.hyperlinkFileExtension = this.#getExtensionFromPath(url.pathname);
       } catch (e) {
         whenVariables.hyperlinkProtocol = "";
         whenVariables.hyperlinkDomain = "";
-        whenVariables.hyperlinkFileExtension = this._getExtensionFromPath(state.activeHyperlinkURL);
+        whenVariables.hyperlinkFileExtension = this.#getExtensionFromPath(state.activeHyperlinkURL);
       }
     }
     return whenVariables;
   }
 
-  private _getExtensionFromPath(path: string): string {
+  #getExtensionFromPath(path: string): string {
     const pathParts = path.split("/");
     const lastPathPart = pathParts[pathParts.length -1];
     if (lastPathPart.includes(".")) {
@@ -590,11 +590,11 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return "";
   }
 
-  private _sortCommandsInPlace(entries: ExtensionCommandContribution[]): void {
-    entries.sort(this._sortCompareFunc);
+  #sortCommandsInPlace(entries: ExtensionCommandContribution[]): void {
+    entries.sort(this.#sortCompareFunc);
   }
 
-  private _sortCompareFunc(a: ExtensionCommandContribution, b: ExtensionCommandContribution): number {
+  #sortCompareFunc(a: ExtensionCommandContribution, b: ExtensionCommandContribution): number {
     const aIndex = allCategories.indexOf(a.category);
     const bIndex = allCategories.indexOf(b.category);
     if (aIndex !== bIndex) {
