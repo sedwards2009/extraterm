@@ -215,7 +215,7 @@ export class LineImpl extends CharCellGrid implements Line {
   private _generalGetString(x: number, y: number, count?: number): string {
     const codePoints: number[] = [];
     const spaceCodePoint = " ".codePointAt(0);
-    const lastX = x + (count == null ? this.width : Math.min(this.width, count));
+    const lastX = Math.min(this.width, x + (count == null ? this.width : count));
 
     let isLastWide = false;
     for (let i=x; i<lastX; i++) {

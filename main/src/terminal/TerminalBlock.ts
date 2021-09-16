@@ -10,6 +10,7 @@ import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor 
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
+import { countCells, reverseString } from "extraterm-unicode-utilities";
 
 import { Block } from "./Block";
 import * as Term from "../emulator/Term";
@@ -17,12 +18,19 @@ import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 
 
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
+import XRegExp = require("xregexp");  // TODO Switch to ES modules
 
 
 enum SelectionMode {
   NORMAL,
   BLOCK
 };
+
+const WORD_SELECTION_REGEX = XRegExp("^[\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]+", "g");
+
+interface ExpandedMouseEventOptions extends MouseEventOptions {
+  nearestColumnEdge: number;
+}
 
 
 /**
@@ -43,6 +51,7 @@ export class TerminalBlock implements Block {
   #selectionStart: TerminalCoord = null;
   #selectionEnd: TerminalCoord = null;
   #selectionMode = SelectionMode.NORMAL;
+  #isWordSelection = false;
 
   #onSelectionChangedEventEmitter = new EventEmitter<void>();
   onSelectionChanged: Event<void>;
@@ -70,6 +79,9 @@ export class TerminalBlock implements Block {
     });
     widget.addEventListener(WidgetEventTypes.MouseButtonRelease, (nativeEvent) => {
       this.#handleMouseButtonRelease(new QMouseEvent(nativeEvent));
+    });
+    widget.addEventListener(WidgetEventTypes.MouseButtonDblClick, (nativeEvent) => {
+      this.#handleMouseDoubleClick(new QMouseEvent(nativeEvent));
     });
     widget.addEventListener(WidgetEventTypes.MouseMove, (nativeEvent) => {
       this.#handleMouseMove(new QMouseEvent(nativeEvent));
@@ -184,48 +196,51 @@ export class TerminalBlock implements Block {
 
     let selectionStart = this.#selectionStart;
     let selectionEnd = this.#selectionEnd;
-    if (selectionStart != null && selectionEnd != null) {
-      if ((selectionEnd.y < selectionStart.y) || (selectionEnd.y === selectionStart.y && selectionEnd.x < selectionStart.x)) {
-        selectionStart = this.#selectionEnd;
-        selectionEnd = this.#selectionStart;
-      }
 
-      const selectionColor = this.#terminalVisualConfig.terminalTheme.selectionBackgroundColor;
-      const selectionQColor = RGBAToQColor(new Color(selectionColor).toRGBA());
-      const firstRow = Math.max(topRenderRow, selectionStart.y);
-      const lastRow = Math.min(topRenderRow + heightRows + 1, selectionEnd.y + 1);
+    if (selectionStart == null || selectionEnd == null || terminalCoordEqual(selectionStart, selectionEnd)) {
+      return;
+    }
 
-      const emulatorWidth = this.#emulator.getDimensions().cols;
+    if ( ! terminalCoordLess(selectionStart, selectionEnd)) {
+      selectionStart = this.#selectionEnd;
+      selectionEnd = this.#selectionStart;
+    }
 
-      painter.setCompositionMode(CompositionMode.CompositionMode_Screen);
+    const selectionColor = this.#terminalVisualConfig.terminalTheme.selectionBackgroundColor;
+    const selectionQColor = RGBAToQColor(new Color(selectionColor).toRGBA());
+    const firstRow = Math.max(topRenderRow, selectionStart.y);
+    const lastRow = Math.min(topRenderRow + heightRows + 1, selectionEnd.y + 1);
 
-      for (let i=firstRow; i<lastRow; i++) {
-        if (i === selectionStart.y) {
-          if (selectionStart.y === selectionEnd.y) {
-            // Small selection contained within one row.
-            painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
-              (selectionEnd.x - selectionStart.x) * widthPx, heightPx, selectionQColor);
-          } else {
-            // Top row of the selection.
-            let rowLength = emulatorWidth;
-            if (i < this.#scrollback.length) {
-              rowLength = this.#scrollback[i].width;
-            }
-            painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
-              (rowLength - selectionStart.x) * widthPx, heightPx, selectionQColor);
-          }
+    const emulatorWidth = this.#emulator.getDimensions().cols;
+
+    painter.setCompositionMode(CompositionMode.CompositionMode_Screen);
+
+    for (let i=firstRow; i<lastRow; i++) {
+      if (i === selectionStart.y) {
+        if (selectionStart.y === selectionEnd.y) {
+          // Small selection contained within one row.
+          painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
+            (selectionEnd.x - selectionStart.x) * widthPx, heightPx, selectionQColor);
         } else {
-          if (i !== selectionEnd.y) {
-            // A row within a multi-row selection.
-            let rowLength = emulatorWidth;
-            if (i < this.#scrollback.length) {
-              rowLength = this.#scrollback[i].width;
-            }
-            painter.fillRect(0, i*heightPx, rowLength*widthPx, heightPx, selectionQColor);
-          } else {
-            // The last row of a multi-row selection.
-            painter.fillRect(0, i*heightPx, selectionEnd.x*widthPx, heightPx, selectionQColor);
+          // Top row of the selection.
+          let rowLength = emulatorWidth;
+          if (i < this.#scrollback.length) {
+            rowLength = this.#scrollback[i].width;
           }
+          painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
+            (rowLength - selectionStart.x) * widthPx, heightPx, selectionQColor);
+        }
+      } else {
+        if (i !== selectionEnd.y) {
+          // A row within a multi-row selection.
+          let rowLength = emulatorWidth;
+          if (i < this.#scrollback.length) {
+            rowLength = this.#scrollback[i].width;
+          }
+          painter.fillRect(0, i*heightPx, rowLength*widthPx, heightPx, selectionQColor);
+        } else {
+          // The last row of a multi-row selection.
+          painter.fillRect(0, i*heightPx, selectionEnd.x*widthPx, heightPx, selectionQColor);
         }
       }
     }
@@ -293,18 +308,22 @@ export class TerminalBlock implements Block {
         return;
       }
     }
-    this.#selectionStart = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
-    this.#selectionEnd = null;
+    this.#selectionStart = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
+    this.#selectionEnd = this.#selectionStart;
     this.#selectionMode = SelectionMode.NORMAL;
+    this.#isWordSelection = false;
 
     this.#widget.update();
   }
 
-  #qMouseEventToTermApi(event: QMouseEvent): MouseEventOptions {
-    const pos = this.#pixelToRowColumnEdge(event.x(), event.y());
-    const termEvent: MouseEventOptions = {
+  #qMouseEventToTermApi(event: QMouseEvent): ExpandedMouseEventOptions {
+    const pos = this.#pixelToCell(event.x(), event.y());
+    const columnEdgePos = this.#pixelToRowColumnEdge(event.x(), event.y());
+
+    const termEvent: ExpandedMouseEventOptions = {
       row: pos.y - this.#scrollback.length,
       column: pos.x,
+      nearestColumnEdge: columnEdgePos.x,
       leftButton: (event.buttons() & MouseButton.LeftButton) !== 0,
       middleButton: (event.buttons() & MouseButton.MiddleButton) !== 0,
       rightButton: (event.buttons() & MouseButton.RightButton) !== 0,
@@ -321,6 +340,12 @@ export class TerminalBlock implements Block {
     return { x: gridX, y: gridY };
   }
 
+  #pixelToCell(x: number, y: number): TerminalCoord {
+    const gridY = Math.floor(y / this.#terminalVisualConfig.fontMetrics.heightPx);
+    const gridX = Math.floor(x / this.#terminalVisualConfig.fontMetrics.widthPx);
+    return { x: gridX, y: gridY };
+  }
+
   #handleMouseButtonRelease(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
     if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseUp(termEvent)) {
@@ -330,6 +355,41 @@ export class TerminalBlock implements Block {
     this.#onSelectionChangedEventEmitter.fire();
   }
 
+  #handleMouseDoubleClick(event: QMouseEvent): void {
+    const termEvent = this.#qMouseEventToTermApi(event);
+    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseUp(termEvent)) {
+      return;
+    }
+    this.#isWordSelection = true;
+
+    this.#selectionStart = { x: this.#extendXWordLeft(termEvent), y: termEvent.row + this.#scrollback.length };
+    this.#selectionEnd = { x: this.#extendXWordRight(termEvent), y: termEvent.row + this.#scrollback.length };
+    this.#selectionMode = SelectionMode.NORMAL;
+
+    this.#widget.update();
+  }
+
+  #extendXWordRight(termEvent: MouseEventOptions): number {
+    const line = this.#getLine(termEvent.row + this.#scrollback.length);
+    const lineStringRight = line.getString(termEvent.column, 0);
+    const rightMatch = lineStringRight.match(WORD_SELECTION_REGEX);
+    if (rightMatch != null) {
+      return termEvent.column + countCells("" + rightMatch);
+    }
+    return termEvent.column;
+  }
+
+  #extendXWordLeft(termEvent: MouseEventOptions): number {
+    const line = this.#getLine(termEvent.row + this.#scrollback.length);
+    const lineStringLeft = reverseString(line.getString(0, 0, termEvent.column));
+    const leftMatch = lineStringLeft.match(WORD_SELECTION_REGEX);
+    if (leftMatch != null) {
+      const newX = termEvent.column - countCells("" + leftMatch);
+      return newX;
+    }
+    return termEvent.column;
+  }
+
   #handleMouseMove(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
     if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseMove(termEvent)) {
@@ -337,15 +397,27 @@ export class TerminalBlock implements Block {
     }
 
     if (this.#selectionStart == null) {
-      this.#selectionStart = { x: termEvent.column, y: termEvent.row  + this.#scrollback.length };
+      this.#selectionStart = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
+      this.#selectionEnd = this.#selectionStart;
     }
 
-    if (this.#selectionEnd != null || termEvent.column !== this.#selectionStart.x ||
-        termEvent.row !== this.#selectionStart.y) {
-
-      this.#selectionEnd = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
-      this.#widget.update();
+    if (termEvent.column === this.#selectionStart.x && termEvent.row === this.#selectionStart.y) {
+      return;
     }
+
+    if (this.#isWordSelection) {
+      const isBeforeSelection = terminalCoordLess({x: termEvent.column, y: termEvent.row + this.#scrollback.length},
+                                                  this.#selectionStart);
+      if (isBeforeSelection) {
+        this.#selectionEnd = { x: this.#extendXWordLeft(termEvent), y: termEvent.row + this.#scrollback.length };
+      } else {
+        this.#selectionEnd = { x: this.#extendXWordRight(termEvent), y: termEvent.row + this.#scrollback.length };
+      }
+    } else {
+      this.#selectionEnd = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
+    }
+
+    this.#widget.update();
   }
 
   getSelectionText(): string {
@@ -407,4 +479,19 @@ export class TerminalBlock implements Block {
     }
     return this.#emulator.lineAtRow(screenRow);
   }
+}
+
+
+function terminalCoordEqual(a: TerminalCoord, b: TerminalCoord): boolean {
+  return a.x === b.x && a.y === b.y;
+}
+
+function terminalCoordLess(a: TerminalCoord, b: TerminalCoord): boolean {
+  if (a.y < b.y) {
+    return true;
+  }
+  if (a.y === b.y) {
+    return a.x < b.x;
+  }
+  return false;
 }

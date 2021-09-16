@@ -113,6 +113,14 @@ test("LinkID overflow", () => {
   expect(grid.getLinkURLByID(grid.getLinkID(0, 0))).toEqual( { url: "https://extraterm.org/", group: "" });
 });
 
+test("getString()", () => {
+  const contents = "extraterm.org";
+  const grid = new LineImpl(contents.length, 1);
+  grid.setString(0, 0, contents);
+
+  expect(grid.getString(5, 0)).toBe("term.org");
+});
+
 function setCellsLink(grid: LineImpl, x: number, y: number, len: number, url: string): void {
   const linkID = grid.getOrCreateLinkIDForURL(url);
   for (let i=0; i<len; i++) {

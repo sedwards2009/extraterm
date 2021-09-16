@@ -43,6 +43,42 @@ export function countCodePoints(str: string): number {
   return c;
 }
 
+/**
+ * Count the number of cells required to display this string.
+ *
+ * This takes UTF16 surrogate pairs into account and full width characters.
+ */
+export function countCells(str: string): number {
+  const len = str.length;
+  let c = 0;
+  let i = 0;
+  while (i < len) {
+    const codePoint = str.codePointAt(i);
+    i += utf16LengthOfCodePoint(codePoint);
+    c++;
+    if (isWide(codePoint)) {
+      c++;
+    }
+  }
+  return c;
+}
+
+/**
+ * Reverse a string.
+ *
+ * This takes UTF16 surrogate pairs into account
+ */
+export function reverseString(str: string): string {
+  const codePoints = stringToCodePointArray(str);
+
+  for (let left=0, right=codePoints.length-1; left < right; left++, right--) {
+    const tmp = codePoints[left];
+    codePoints[left] = codePoints[right];
+    codePoints[right] = tmp;
+  }
+  return String.fromCodePoint(...codePoints);
+}
+
 export function isWide(codePoint: number): boolean {
   if (codePoint < 4352) {
     return false;
