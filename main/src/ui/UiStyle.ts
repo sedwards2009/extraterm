@@ -16,4 +16,6 @@ export interface UiStyle {
   getMenuIcon(name: string): QIcon;
   getSettingsMenuIcon(name: string): QIcon;
   getTabIcon(name: string): QIcon;
+  getTrafficLightRunningColor(): string;
+  getTrafficLightStoppedColor(): string;
 }

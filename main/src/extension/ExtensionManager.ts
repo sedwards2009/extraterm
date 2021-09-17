@@ -18,7 +18,6 @@ import { log } from "extraterm-logging";
 import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import * as SharedMap from "../shared_map/SharedMap";
 import * as InternalTypes from "../InternalTypes";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { CommandMenuEntry } from "../CommandsRegistry";
@@ -301,6 +300,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     this.#configDatabase.setGeneralConfig(generalConfig);
 
     this.#desiredStateChangeEventEmitter.fire();
+  }
+
+  isExtensionEnabled(name: string): boolean {
+    return this.#getActiveExtension(name) != null;
   }
 
   getDesiredState(): ExtensionDesiredState {

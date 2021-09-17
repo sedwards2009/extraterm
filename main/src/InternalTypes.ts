@@ -32,14 +32,14 @@ export interface CommandQueryOptions {
 }
 
 export interface ExtensionManager {
-//   startUp(): void;
-
-//   setSplitLayout(splitLayout: SplitLayout): void;
   getAllExtensions(): ExtensionMetadata[];
 //   onStateChanged: ExtensionApi.Event<void>;
+  onDesiredStateChanged: ExtensionApi.Event<void>;
+
 //   isExtensionRunning(name: string):boolean;
-//   enableExtension(name: string): void;
-//   disableExtension(name: string): void;
+  enableExtension(name: string): void;
+  disableExtension(name: string): void;
+  isExtensionEnabled(name: string): boolean;
 
 //   extensionUiUtils: ExtensionUiUtils;
 

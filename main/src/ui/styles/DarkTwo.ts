@@ -73,6 +73,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getHTMLStyle(): string {
       return HTMLCSS();
+    },
+    getTrafficLightRunningColor(): string {
+      return toHex(brandSuccess);
+    },
+    getTrafficLightStoppedColor(): string {
+      return toHex(brandDanger);
     }
   };
 }

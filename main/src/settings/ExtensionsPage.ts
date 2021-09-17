@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat, TextInteractionFlag } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QBoxLayout, QIcon, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat, TextInteractionFlag } from "@nodegui/nodegui";
 import { BoxLayout, Label, PushButton, ScrollArea, StackedWidget, TabWidget, Widget } from "qt-construct";
 import { EventEmitter, Event } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
@@ -142,7 +142,10 @@ export class ExtensionsPage {
   #createCards(): QWidget[] {
     const detailCards: ExtensionDetailCard[] = [];
     for (const emd of this.#extensionManager.getAllExtensions()) {
-      const card = new ExtensionDetailCard(this.#uiStyle, emd);
+      if (emd.isInternal) {
+        continue;
+      }
+      const card = new ExtensionDetailCard(this.#extensionManager, this.#uiStyle, emd);
       card.onDetailsClick((name: string): void => this.#handleDetailsClick(name));
       detailCards.push(card);
     }
@@ -220,6 +223,7 @@ export class ExtensionsPage {
 }
 
 class ExtensionDetailCard {
+  #extensionManager: ExtensionManager = null;
   #extensionMetadata: ExtensionMetadata = null;
   #uiStyle: UiStyle = null;
   #cardWidget: QWidget = null;
@@ -227,7 +231,8 @@ class ExtensionDetailCard {
   #onDetailsClickEventEmitter = new EventEmitter<string>();
   onDetailsClick: Event<string> = null;
 
-  constructor(uiStyle: UiStyle, extensionMetadata: ExtensionMetadata) {
+  constructor(extensionManager: ExtensionManager, uiStyle: UiStyle, extensionMetadata: ExtensionMetadata) {
+    this.#extensionManager = extensionManager;
     this.#extensionMetadata = extensionMetadata;
     this.#uiStyle = uiStyle;
     this.onDetailsClick = this.#onDetailsClickEventEmitter.event;
@@ -238,7 +243,10 @@ class ExtensionDetailCard {
   }
 
   #createWidget(showDetailsButton: boolean): QWidget {
-    return Widget({
+    let trafficLight: QLabel;
+    let enableDisableButton: QPushButton;
+
+    const result = Widget({
       cssClass: ["extension-page-card"],
       sizePolicy: {
         horizontal: QSizePolicyPolicy.MinimumExpanding,
@@ -275,10 +283,23 @@ class ExtensionDetailCard {
               },
               {
                 widget:
-                  PushButton({
-                    text: "Disable",
-                    icon: this.#uiStyle.getButtonIcon("fa-pause"),
-                    cssClass: ["small"]
+                  trafficLight = Label({
+                    text: "",
+                    textFormat: TextFormat.RichText,
+                  })
+              },
+              {
+                widget:
+                  enableDisableButton = PushButton({
+                    text: "",
+                    cssClass: ["small"],
+                    onClicked: () => {
+                      if (this.#extensionManager.isExtensionEnabled(this.#extensionMetadata.name)) {
+                        this.#extensionManager.disableExtension(this.#extensionMetadata.name);
+                      } else {
+                        this.#extensionManager.enableExtension(this.#extensionMetadata.name);
+                      }
+                    },
                   }),
                 stretch: 0,
                 alignment: AlignmentFlag.AlignRight
@@ -288,6 +309,28 @@ class ExtensionDetailCard {
         ]
       })
     });
+
+    const updateTrafficLight = () => {
+      let color: string;
+      let icon: QIcon;
+      let text: string;
+      if (this.#extensionManager.isExtensionEnabled(this.#extensionMetadata.name)) {
+        color = this.#uiStyle.getTrafficLightRunningColor();
+        text = "Disable";
+        icon = this.#uiStyle.getButtonIcon("fa-pause");
+      } else {
+        color  = this.#uiStyle.getTrafficLightStoppedColor();
+        text = "Enable";
+        icon = this.#uiStyle.getButtonIcon("fa-play");
+      }
+      trafficLight.setText(`<font color="${color}">${createHtmlIcon("fa-circle")}</font>`);
+      enableDisableButton.setIcon(icon);
+      enableDisableButton.setText(text);
+    };
+    this.#extensionManager.onDesiredStateChanged(updateTrafficLight);
+    updateTrafficLight();
+
+    return result;
   }
 
   getCardWidget(): QWidget {
