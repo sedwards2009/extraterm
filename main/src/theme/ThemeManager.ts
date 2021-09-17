@@ -318,7 +318,7 @@ export class ThemeManager {
 
   private _getTerminalThemeExtensionPaths(): string [] {
     const paths: string[] = [];
-    for (const extension of this.#extensionManager.getExtensionMetadata()) {
+    for (const extension of this.#extensionManager.getAllExtensions()) {
       for (const st of extension.contributes.terminalThemes) {
         paths.push(path.join(extension.path, st.path));
       }

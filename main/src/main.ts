@@ -83,7 +83,7 @@ class Main {
 
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
-    const extensionManager = this.setupExtensionManager(configDatabase, sharedMap, packageJson.version);
+    const extensionManager = this.setupExtensionManager(configDatabase, packageJson.version);
     this.#extensionManager = extensionManager;
 
     this.#keybindingsIOManager = this.setupKeybindingsManager(configDatabase, extensionManager);
@@ -154,7 +154,7 @@ class Main {
     this._log.info("Recording logs to ", logFilePath);
   }
 
-  setupExtensionManager(configDatabase: ConfigDatabase, sharedMap: SharedMap, applicationVersion: string): ExtensionManager {
+  setupExtensionManager(configDatabase: ConfigDatabase, applicationVersion: string): ExtensionManager {
     const extensionPaths = [path.join(__dirname, "../../extensions" )];
     const userExtensionDirectory = getUserExtensionDirectory();
     this._log.info(`User extension directory is: ${userExtensionDirectory}`);
@@ -162,7 +162,7 @@ class Main {
       extensionPaths.push(userExtensionDirectory);
     }
 
-    const extensionManager = new ExtensionManager(configDatabase, sharedMap, extensionPaths, applicationVersion);
+    const extensionManager = new ExtensionManager(configDatabase, extensionPaths, applicationVersion);
     extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
     return extensionManager;
   }

@@ -19,7 +19,6 @@ import { ExtensionContextImpl } from "./ExtensionContextImpl";
 import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import * as SharedMap from "../shared_map/SharedMap";
-import { ExtensionManagerIpc } from "./ExtensionManagerIpc";
 import * as InternalTypes from "../InternalTypes";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { CommandMenuEntry } from "../CommandsRegistry";
@@ -48,7 +47,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   private _log: Logger = null;
 
   #configDatabase: ConfigDatabase = null;
-  #ipc: ExtensionManagerIpc = null;
+
+  #extensionMetadata: ExtensionMetadata[] = [];
+  #desiredState: ExtensionDesiredState = null;
 
   #activeExtensions: ActiveExtension[] = [];
   #desiredStateChangeEventEmitter = new EventEmitter<void>();
@@ -66,23 +67,16 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     activeHyperlinkURL: null,
   };
 
-  constructor(configDatabase: ConfigDatabase, sharedMap: SharedMap.SharedMap, extensionPaths: string[],
+  constructor(configDatabase: ConfigDatabase, extensionPaths: string[],
       applicationVersion: string) {
 
     this._log = getLogger("ExtensionManager", this);
     this.#configDatabase = configDatabase;
 
-    this.#ipc = new ExtensionManagerIpc(sharedMap);
-    this.#ipc.onEnableExtension((name: string) => {
-      this.enableExtension(name);
-    });
-    this.#ipc.onDisableExtension((name: string) => {
-      this.disableExtension(name);
-    });
-
     this.#extensionPaths = extensionPaths;
     this.onDesiredStateChanged = this.#desiredStateChangeEventEmitter.event;
-    this.#ipc.setExtensionMetadata(this.#scan(this.#extensionPaths));
+
+    this.#extensionMetadata = this.#scan(this.#extensionPaths);
 
     // Note: We are passing `applicationVersion` in instead of getting it from `ConfigDatabase` because
     // ConfigDatabase doesn't have a system config ready in time for us to read.
@@ -91,7 +85,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): void {
     const desiredState: ExtensionDesiredState = {};
-    for (const extensionInfo of this.#ipc.getExtensionMetadata()) {
+    for (const extensionInfo of this.#extensionMetadata) {
       desiredState[extensionInfo.name] = startByDefault && InternalTypes.isSupportedOnThisPlatform(extensionInfo);;
     }
 
@@ -110,7 +104,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       }
     }
 
-    this.#ipc.setDesiredState(desiredState);
+    this.#desiredState = desiredState;
   }
 
   #scan(extensionPaths: string[]): ExtensionMetadata[] {
@@ -175,7 +169,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   #getExtensionMetadataByName(name: string): ExtensionMetadata {
-    for (const extensionInfo of this.#ipc.getExtensionMetadata()) {
+    for (const extensionInfo of this.#extensionMetadata) {
       if (extensionInfo.name === name) {
         return extensionInfo;
       }
@@ -235,11 +229,11 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
   }
 
-  getExtensionMetadata(): ExtensionMetadata[] {
-    return this.#ipc.getExtensionMetadata();
+  getAllExtensions(): ExtensionMetadata[] {
+    return this.#extensionMetadata;
   }
 
-  getActiveExtensionMetadata(): ExtensionMetadata[] {
+  getActiveExtensions(): ExtensionMetadata[] {
     return this.#activeExtensions.map(ae => ae.metadata);
   }
 
@@ -267,9 +261,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     generalConfig.activeExtensions[metadata.name] = true;
     this.#configDatabase.setGeneralConfig(generalConfig);
 
-    const desiredState = {...this.#ipc.getDesiredState()};
+    const desiredState = {...this.#desiredState};
     desiredState[metadata.name] = true;
-    this.#ipc.setDesiredState(desiredState);
+    this.#desiredState = desiredState;
 
     this.#desiredStateChangeEventEmitter.fire();
   }
@@ -298,9 +292,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     this.#stopExtension(activeExtension);
 
-    const desiredState = {...this.#ipc.getDesiredState()};
+    const desiredState = {...this.#desiredState};
     desiredState[metadata.name] = false;
-    this.#ipc.setDesiredState(desiredState);
+    this.#desiredState = desiredState;
 
     const generalConfig = this.#configDatabase.getGeneralConfigCopy();
     generalConfig.activeExtensions[metadata.name] = false;
@@ -310,7 +304,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   getDesiredState(): ExtensionDesiredState {
-    return this.#ipc.getDesiredState();
+    return this.#desiredState;
   }
 
   #getActiveBackendExtensions(): ActiveExtension[] {
@@ -609,9 +603,5 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return a.title < b.title ? -1 : 1;
     }
     return 0;
-  }
-
-  getAllExtensions(): ExtensionMetadata[] {
-    return [...this.#ipc.getExtensionMetadata()];
   }
 }

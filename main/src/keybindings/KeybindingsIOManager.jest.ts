@@ -20,7 +20,7 @@ test("Scan & Flatten", () => {
     keybindingsName: "pc-style"
   };
   configDatabase.setGeneralConfig(config);
-  const extensionManager = new ExtensionManager(configDatabase, sharedMap, ["../extensions"], "0.1.0");
+  const extensionManager = new ExtensionManager(configDatabase, ["../extensions"], "0.1.0");
   extensionManager.startUpExtensions({"default-keybindings": true}, false);
 
   const kbm = new KeybindingsIOManager(path.join(__dirname, "../../src/keybindings/test_files"),
