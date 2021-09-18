@@ -3,8 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QIcon, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat, TextInteractionFlag } from "@nodegui/nodegui";
-import { BoxLayout, Label, PushButton, ScrollArea, StackedWidget, TabWidget, Widget } from "qt-construct";
+import { AlignmentFlag, Direction, QBoxLayout, QIcon, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy,
+  QStackedWidget, QWidget, TextFormat, TextInteractionFlag } from "@nodegui/nodegui";
+import { BoxLayout, Frame, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { EventEmitter, Event } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
 
@@ -242,11 +243,12 @@ class ExtensionDetailCard {
     return this.#extensionMetadata.name;
   }
 
-  #createWidget(showDetailsButton: boolean): QWidget {
+  #createCardWidget(showDetailsButton: boolean): QWidget {
     let trafficLight: QLabel;
     let enableDisableButton: QPushButton;
+    const metadata = this.#extensionMetadata;
 
-    const result = Widget({
+    const result = Frame({
       cssClass: ["extension-page-card"],
       sizePolicy: {
         horizontal: QSizePolicyPolicy.MinimumExpanding,
@@ -257,10 +259,10 @@ class ExtensionDetailCard {
         children: [
           Label({
             cssClass: ["h3"],
-            text: `${this.#extensionMetadata.displayName || this.#extensionMetadata.name} ${this.#extensionMetadata.version}`,
+            text: `${metadata.displayName || metadata.name} ${metadata.version}`,
           }),
           Label({
-            text: this.#extensionMetadata.description,
+            text: metadata.description,
             wordWrap: true
           }),
 
@@ -273,7 +275,7 @@ class ExtensionDetailCard {
                   PushButton({
                     text: "Details",
                     cssClass: ["small"],
-                    onClicked: () => this.#onDetailsClickEventEmitter.fire(this.#extensionMetadata.name),
+                    onClicked: () => this.#onDetailsClickEventEmitter.fire(metadata.name),
                   }),
                 stretch: 0,
               },
@@ -294,10 +296,10 @@ class ExtensionDetailCard {
                     text: "",
                     cssClass: ["small"],
                     onClicked: () => {
-                      if (this.#extensionManager.isExtensionEnabled(this.#extensionMetadata.name)) {
-                        this.#extensionManager.disableExtension(this.#extensionMetadata.name);
+                      if (this.#extensionManager.isExtensionEnabled(metadata.name)) {
+                        this.#extensionManager.disableExtension(metadata.name);
                       } else {
-                        this.#extensionManager.enableExtension(this.#extensionMetadata.name);
+                        this.#extensionManager.enableExtension(metadata.name);
                       }
                     },
                   }),
@@ -314,7 +316,7 @@ class ExtensionDetailCard {
       let color: string;
       let icon: QIcon;
       let text: string;
-      if (this.#extensionManager.isExtensionEnabled(this.#extensionMetadata.name)) {
+      if (this.#extensionManager.isExtensionEnabled(metadata.name)) {
         color = this.#uiStyle.getTrafficLightRunningColor();
         text = "Disable";
         icon = this.#uiStyle.getButtonIcon("fa-pause");
@@ -334,12 +336,13 @@ class ExtensionDetailCard {
   }
 
   getCardWidget(): QWidget {
-    this.#cardWidget = this.#createWidget(true);
+    this.#cardWidget = this.#createCardWidget(true);
     return this.#cardWidget;
   }
 
   getDetailsWidget(): QWidget {
     let detailsStack: QStackedWidget;
+    const metadata = this.#extensionMetadata;
 
     this.#detailsWidget = Widget({
       maximumWidth: 600,
@@ -347,10 +350,10 @@ class ExtensionDetailCard {
         direction: Direction.TopToBottom,
         contentsMargins: [0, 0, 0, 0],
         children: [
-          this.#createWidget(false),
+          this.#createCardWidget(false),
 
-          this.#extensionMetadata.homepage && makeLinkLabel({
-            text: `${createHtmlIcon("fa-home")}&nbsp;Home page: <a href="${this.#extensionMetadata.homepage}">${this.#extensionMetadata.homepage}</a>`,
+          metadata.homepage && makeLinkLabel({
+            text: `${createHtmlIcon("fa-home")}&nbsp;Home page: <a href="${metadata.homepage}">${metadata.homepage}</a>`,
             uiStyle: this.#uiStyle,
             openExternalLinks: true,
             wordWrap: true
@@ -366,7 +369,7 @@ class ExtensionDetailCard {
           detailsStack = StackedWidget({
             children: [
               Label({
-                text: this.#extensionMetadata.description,
+                text: metadata.description,
                 textFormat: TextFormat.RichText,
                 wordWrap: true,
                 alignment: AlignmentFlag.AlignTop | AlignmentFlag.AlignLeft,

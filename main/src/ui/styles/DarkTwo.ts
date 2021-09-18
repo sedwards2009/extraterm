@@ -240,9 +240,9 @@ const tableBorderColor = baseBorderColor;
 const settingsBgSelectedColor = lighten(backgroundColor, 8);
 
 // --- Extension Card related ---
-const componentPaddingVerticalCard = "1.5em";
+const componentPaddingVerticalCard = "0.66em";
 const componentPaddingHorizontal = "1.2em";
-const componentPaddingHorizontalCard = "1.8em";
+const componentPaddingHorizontalCard = "0.66em";
 const borderRadius2x = "8px";
 const toolPanelBackgroundColor = level3Color;
 const packageCardBackgroundColor = lighten(toolPanelBackgroundColor, 8);
@@ -361,6 +361,8 @@ QLabel[cssClass~="h5"],
 QLabel[cssClass~="h6"] {
   font-weight: bold;
   color: ${headingsColor};
+  padding: 0px;
+  margin: 0px;
   padding-bottom: 0.4em;
 }
 
@@ -926,8 +928,9 @@ QTableView[cssClass~="list-picker"] {
   selection-background-color: ${dropdownLinkHoverBg};
 }
 
-QWidget[cssClass~="extension-page-card"] {
+QFrame[cssClass~="extension-page-card"] {
   padding: ${componentPaddingVerticalCard} ${componentPaddingHorizontalCard} ${componentPaddingVerticalCard} ${componentPaddingHorizontalCard};
+  margin: 0px;
   border-radius: ${borderRadius2x};
   border: 1px solid ${baseBorderColor};
   background-color: ${packageCardBackgroundColor};
