@@ -25,7 +25,7 @@ jobs:
           sudo apt-get install cmake make
           sudo apt-get install mesa-common-dev libglu1-mesa-dev
         displayName: "Install development packages"
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --immutable
         displayName: 'Yarn install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
@@ -57,7 +57,7 @@ jobs:
           versionSpec: $(nodeVersion)
       - script: yarn --version
         displayName: "yarn --version"
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --immutable
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
@@ -99,7 +99,7 @@ jobs:
       # So we set the yarn concurrency to 1.
       - script: yarn config set child-concurrency 1
         displayName: yarn child-concurrency=1
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --immutable
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
@@ -144,7 +144,7 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn install --frozen-lockfile
+      - script: yarn install --immutable
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
