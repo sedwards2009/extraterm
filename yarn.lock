@@ -7871,7 +7871,7 @@ fsevents@^2.1.2:
     lru-cache: ^4.1.3
     marked: ^0.8.2
     mime-types: ^2.1.21
-    nodegui-plugin-font-icon: ^0.1.3
+    nodegui-plugin-font-icon: ^0.1.4
     performance-now: 2.1.0
     qs: 6.3.2
     qt-construct: 0.1.0
@@ -8632,17 +8632,15 @@ modclean-patterns-default@latest:
   languageName: node
   linkType: hard
 
-"nodegui-plugin-font-icon@npm:^0.1.3":
-  version: 0.1.3
-  resolution: "nodegui-plugin-font-icon@npm:0.1.3"
+"nodegui-plugin-font-icon@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "nodegui-plugin-font-icon@npm:0.1.4"
   dependencies:
     "@nodegui/nodegui": ^0.38.0
     cmake-js: ^6.1.0
     cross-env: ^7.0.2
     node-addon-api: ^3.0.0
-  peerDependencies:
-    "@nodegui/nodegui": ^0.38.0
-  checksum: b9e8ae2d0ee48b75e40af529f7d15a6cfd4c02bcf81819863af214ad6f6979d3692dca2637859de3719619a5b1e7099ba58ed535a28e58cdde29aa12911cb484
+  checksum: 65b3282d930fa2ed718edd6a7dff5da1d675d2d1146ff979c6b5b8076c6158f27109c00aeb3c0219b8d7d12550f074baaf2a86a0853409a0f0caf8eca1803c06
   languageName: node
   linkType: hard
 
