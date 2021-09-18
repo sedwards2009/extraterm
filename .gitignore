@@ -17,3 +17,11 @@ coverage/
 packages/extraterm-lit-html/*
 !packages/extraterm-lit-html/package.json
 !packages/extraterm-lit-html/README.md
+
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

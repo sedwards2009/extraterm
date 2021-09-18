@@ -1,5 +1,5 @@
 {
-  "name": "extraterm",
+  "name": "main",
   "description": "A terminal",
   "author": "Simon Edwards",
   "license": "MIT",
@@ -70,7 +70,7 @@
     "performance-now": "2.1.0",
     "shelljs": "0.8.3",
     "shx": "^0.3.2",
-    "typescript": "4.3.4",
+    "typescript": "4.3.5",
     "webfont": "^11.2.26"
   },
   "jshintConfig": {

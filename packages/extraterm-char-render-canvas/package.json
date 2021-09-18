@@ -35,6 +35,6 @@
     "eslint-config-extraterm": "1.0.0",
     "jest": "26.6.3",
     "shx": "^0.3.2",
-    "typescript": "4.3.4"
+    "typescript": "4.3.5"
   }
 }
