@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QIcon, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy,
+import { AlignmentFlag, Direction, QIcon, QLabel, QPushButton, QSizePolicyPolicy,
   QStackedWidget, QWidget, TextFormat, TextInteractionFlag } from "@nodegui/nodegui";
 import { BoxLayout, Frame, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { EventEmitter, Event } from "extraterm-event-emitter";
@@ -34,11 +34,6 @@ export class ExtensionsPage {
   #topLevelStack: QStackedWidget = null;
   #detailsStack: QStackedWidget = null;
   #detailsStackMapping = new Map<string, number>();
-  #detailsPageLayout: QBoxLayout = null;
-
-  #detailsContentsLayout: QBoxLayout = null;
-
-  #detailsScrollArea: QScrollArea = null;
 
   constructor(extensionManager: ExtensionManager, uiStyle: UiStyle) {
     this._log = getLogger("ExtensionsPage", this);
@@ -87,7 +82,7 @@ export class ExtensionsPage {
           })
         }),
 
-        this.#detailsScrollArea = ScrollArea({
+        ScrollArea({
           cssClass: "settings-tab",
           widgetResizable: true,
           widget: Widget({
@@ -97,7 +92,7 @@ export class ExtensionsPage {
               vertical: QSizePolicyPolicy.Fixed,
             },
             maximumWidth: 600,
-            layout: this.#detailsPageLayout = BoxLayout({
+            layout: BoxLayout({
               direction: Direction.TopToBottom,
               children: [
                 Label({
@@ -111,7 +106,7 @@ export class ExtensionsPage {
                     horizontal: QSizePolicyPolicy.MinimumExpanding,
                     vertical: QSizePolicyPolicy.Fixed,
                   },
-                  layout: this.#detailsContentsLayout = BoxLayout({
+                  layout: BoxLayout({
                     direction: Direction.TopToBottom,
                     contentsMargins: [0, 0, 0, 0],
                     children: [
@@ -125,7 +120,7 @@ export class ExtensionsPage {
                           horizontal: QSizePolicyPolicy.MinimumExpanding,
                           vertical: QSizePolicyPolicy.Fixed,
                         },
-                        children: [...this.#createAllDetailsPages()]
+                        children: []
                       }),
                       { widget: Widget({}), stretch: 1 }
                     ]
@@ -155,14 +150,6 @@ export class ExtensionsPage {
     return this.#detailCards.map(card => card.getCardWidget());
   }
 
-  #createAllDetailsPages(): QWidget[] {
-    for (const [i, card] of this.#detailCards.entries()) {
-      this.#detailsStackMapping.set(card.getName(), i);
-    }
-
-    return this.#detailCards.map(card => card.getDetailsWidget());
-  }
-
   #handleDetailsClick(cardName: string): void {
     this.#showDetailsPage(cardName);
   }
@@ -175,42 +162,9 @@ export class ExtensionsPage {
         if (card.getName() === cardName) {
           const detailsWidget = card.getDetailsWidget();
           const count = this.#detailsStack.count();
-
-// detailsWidget.setMinimumSize(200, 400);
-
           this.#detailsStack.addWidget(detailsWidget);
-
           this.#detailsStackMapping.set(cardName, count);
           this.#detailsStack.setCurrentIndex(count);
-
-// this.#detailsStack.setMinimumSize(200, 400);
-
-// this.#detailsStack.updateGeometry();
-
-// detailsWidget.layout.update();
-// this._log.debug(`detailsWidget.minimumSize.height: ${detailsWidget.minimumSize().height()}`);
-
-// this.#detailsPageLayout.update();
-// this.#detailsContentsLayout.update();
-
-// const geo = this.#detailsStack.geometry();
-// this._log.debug(`#detailsStack.geo.height: ${geo.height()}`);
-
-// const minSize = this.#detailsStack.minimumSize();
-// this._log.debug(`#detailsStack.minimumSize ${minSize.height()}`);
-// this.#detailsStack.dumpObjectTree();
-// this._log.debug(`detailsWidget.minimumSize() ${detailsWidget.minimumSize().height()}`);
-
-// this.#detailsScrollArea.update();
-
-// this._log.debug(`this.#detailsScrollArea.viewport().height(): ${this.#detailsScrollArea.viewport().height()}`);
-// this.#detailsScrollArea.viewport().setMinimumSize(200, 400);
-// this.#detailsScrollArea.viewport().update();
-
-// this._log.debug(`this.#detailsScrollArea.height(): ${this.#detailsScrollArea.height()}`);
-
-// this.#detailsScrollArea.geometry().height()
-
         }
       }
     } else {
