@@ -19,16 +19,16 @@ jobs:
     pool:
       vmImage: 'Ubuntu-18.04'
     steps:
-      - displayName: "Install development packages"
-        script: |
+      - script: |
           sudo apt-get update
           sudo apt-get install pkg-config build-essential
           sudo apt-get install cmake make
           sudo apt-get install mesa-common-dev libglu1-mesa-dev
-      - displayName: 'Yarn install'
-        script: yarn install --immutable
-      - displayName: 'Finish package install'
-        script: yarn run finish-install
+        displayName: "Install development packages"
+      - script: yarn install --immutable
+        displayName: 'Yarn install'
+      - script: yarn run finish-install
+        displayName: 'Finish package install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run package-commands-zip --version=$(git describe --tags)
@@ -61,8 +61,8 @@ jobs:
         displayName: "yarn --version"
       - script: yarn install --immutable
         displayName: "yarn install"
-      - displayName: 'Finish package install'
-        script: yarn run finish-install
+      - script: yarn run finish-install
+        displayName: 'Finish package install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
