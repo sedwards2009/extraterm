@@ -79,7 +79,6 @@ export class CommandPalette {
     this.#listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT], entries);
 
     const tabRect = window.getTabGlobalGeometry(tab);
-this._log.debug(`tabRect.left: ${tabRect.left()}, tabRect.top: ${tabRect.top()}, tabRect.width: ${tabRect.width()}, tabRect.height: ${tabRect.height()}`);
 
     const width = 500;  // px TODO: make it respect DPI
     const leftOffset = (tabRect.width() - width ) /2;

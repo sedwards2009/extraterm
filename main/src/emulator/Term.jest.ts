@@ -157,7 +157,8 @@ describe.each([
 ])("Keyboard input keyPress()", (ev: MinimalKeyboardEvent, output: string) => {
 
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20 });
+    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: performanceNow});
     let collectedData = "";
     emulator.onData( (event: DataEvent): void => {
       collectedData = collectedData + event.data;
@@ -203,7 +204,8 @@ describe.each([
 ])("Keyboard input keyDown()", (ev: MinimalKeyboardEvent, output: string) => {
 
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20 });
+    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: performanceNow });
     let collectedData = "";
     emulator.onData( (event: DataEvent): void => {
       collectedData = collectedData + event.data;

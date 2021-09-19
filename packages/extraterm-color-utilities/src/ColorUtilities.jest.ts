@@ -11,7 +11,7 @@ describe.each([
   ["#1234567f", 0x1234567f, "#123456", "rgba(18,52,86,0.4980392156862745)"],
   ["#000001", 0x000001ff, "#000001", "rgba(0,0,1,1)"],
 
-])(`Parsing`, (input: number, rgba: number, hexString: string, rgbaString: string) => {
+])(`Parsing`, (input: string, rgba: number, hexString: string, rgbaString: string) => {
   test(`${input} to RGBA number`, done => {
     const color = new Color(input);
     expect(color.toRGBA()).toBe(rgba);

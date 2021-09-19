@@ -27,8 +27,8 @@
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.14.0",
-    "@types/jest": "23.3.13",
-    "jest": "26.6.3",
+    "@types/jest": "27.0.1",
+    "jest": "27.2.0",
     "shelljs": "0.8.3",
     "typescript": "4.3.5"
   }
