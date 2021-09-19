@@ -16,6 +16,7 @@
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
     "download-launcher-executable": "node build_scripts/download_launcher_executables.js v6",
     "download-deploy-tool": "node build_scripts/download_deploy_tool.js",
+    "finish-install": "cd node_modules/nodegui-plugin-font-icon && yarn run finish-install",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
     "package": "node build_scripts/build_packages.js",
@@ -63,6 +64,7 @@
     "fs-extra": "^10.0.0",
     "node-abi": "2.21.0",
     "node-gyp": "^8.2.0",
+    "nodegui-plugin-font-icon": "^0.1.6",
     "qode": "^0.1.0",
     "readdirp": "3.6.0"
   },
