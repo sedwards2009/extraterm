@@ -473,7 +473,7 @@ class Main {
       return;
     }
     const text = terminal.getSelectionText();
-    if (text == null) {
+    if (text == null || text === "") {
       return;
     }
     const clipboard = QApplication.clipboard();
