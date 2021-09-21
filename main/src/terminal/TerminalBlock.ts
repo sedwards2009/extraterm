@@ -4,9 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode } from "@nodegui/nodegui";
-import { getLogger, Logger } from "extraterm-logging";
+import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
-import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor } from "extraterm-char-render-canvas";
+import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -32,6 +32,9 @@ interface ExpandedMouseEventOptions extends MouseEventOptions {
   nearestColumnEdge: number;
 }
 
+interface ExtraFontSlice extends FontSlice {
+  codePointSet: Set<number>;
+}
 
 /**
  * Shows the contents of a terminal and can accept input.
@@ -43,6 +46,7 @@ export class TerminalBlock implements Block {
   #emulator: Term.Emulator = null;
   #onRenderDispose: Disposable =null;
   #terminalVisualConfig: TerminalVisualConfig = null;
+  #extraFontSlices: ExtraFontSlice[] = [];
   #fontAtlas: TextureFontAtlas = null;
   #heightPx = 1;
 
@@ -97,11 +101,52 @@ export class TerminalBlock implements Block {
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this.#terminalVisualConfig = terminalVisualConfig;
 
-    this.#fontAtlas = new TextureFontAtlas(this.#terminalVisualConfig.fontMetrics, [],
-      terminalVisualConfig.transparentBackground, terminalVisualConfig.screenWidthHintPx,
-      terminalVisualConfig.screenHeightHintPx);
+    this.#fontAtlas = new TextureFontAtlas(this.#terminalVisualConfig.fontMetrics,
+      this.#terminalVisualConfig.extraFontMetrics, terminalVisualConfig.transparentBackground,
+      terminalVisualConfig.screenWidthHintPx, terminalVisualConfig.screenHeightHintPx);
 
+    this.#extraFontSlices = this.#setupExtraFontSlices(terminalVisualConfig.extraFonts);
     this.#updateWidgetSize();
+  }
+
+  #setupExtraFontSlices(extraFonts: FontSlice[]): ExtraFontSlice[] {
+    if (extraFonts == null) {
+      return [];
+    }
+
+    return extraFonts.map(extraFont => {
+      let codePointSet: Set<number> = null;
+      if (extraFont.unicodeCodePoints != null) {
+        codePointSet = this.#createCodePointSet(extraFont.unicodeCodePoints);
+      }
+
+      if (extraFont.unicodeStart != null && extraFont.unicodeEnd != null) {
+        if (codePointSet == null) {
+          codePointSet = new Set();
+        }
+        for (let c = extraFont.unicodeStart; c <= extraFont.unicodeEnd; c++) {
+          codePointSet.add(c);
+        }
+      }
+
+      return { ...extraFont, codePointSet };
+    });
+  }
+
+  #createCodePointSet(unicodeCodePoints: (number | [number, number])[]): Set<number> {
+    const result = new Set<number>();
+    for (const codePoint of unicodeCodePoints) {
+      if (typeof codePoint === "number") {
+        result.add(codePoint);
+      } else {
+        const startCodePoint = codePoint[0];
+        const endCodePoint = codePoint[1];
+        for (let i=startCodePoint; i<=endCodePoint; i++) {
+          result.add(i);
+        }
+      }
+    }
+    return result;
   }
 
   #updateWidgetSize(): void {
@@ -268,11 +313,12 @@ export class TerminalBlock implements Block {
 
     for (const line of lines) {
       line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
+      this.#updateCharGridFlags(line);
 
       let px = 0;
       for (const column of normalizedCellIterator(line, 0, normalizedCell)) {
-        const codePoint = line.getCodePoint(column, 0);
-        const fontIndex = 0;
+        const codePoint = normalizedCell.codePoint;
+        const fontIndex = normalizedCell.extraFontFlag ? 1 : 0;
 
         let fgRGBA = line.getFgRGBA(column, 0);
         let bgRGBA = line.getBgRGBA(column, 0);
@@ -290,11 +336,35 @@ export class TerminalBlock implements Block {
         }
         fgRGBA |= 0x000000ff;
 
-        const glyph = this.#fontAtlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
-        painter.drawImage(px, y, qimage, glyph.xPixels, glyph.yPixels, glyph.widthPx, heightPx);
+        let glyph: TextureCachedGlyph;
+        if (normalizedCell.isLigature) {
+          glyph = this.#fontAtlas.loadCombiningCodePoints(normalizedCell.ligatureCodePoints, style,
+            fontIndex, fgRGBA, bgRGBA);
+        } else {
+          glyph = this.#fontAtlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
+        }
+        painter.drawImage(px, y, qimage, glyph.xPixels + normalizedCell.segment * glyph.widthPx, glyph.yPixels,
+          glyph.widthPx, heightPx);
         px += widthPx;
       }
       y += heightPx;
+    }
+  }
+
+  #updateCharGridFlags(line: Line): void {
+    const width = line.width;
+    const extraFontSlices = this.#extraFontSlices;
+    for (let i=0; i<width; i++) {
+      const codePoint = line.getCodePoint(i, 0);
+      let isExtra = false;
+      for (const fontSlice of extraFontSlices) {
+        if (fontSlice.codePointSet.has(codePoint)) {
+          line.setExtraFontsFlag(i, 0, true);
+          isExtra = true;
+          break;
+        }
+      }
+      line.setExtraFontsFlag(i, 0, isExtra);
     }
   }
 

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
-import { MonospaceFontMetrics } from "extraterm-char-render-canvas";
+import { FontSlice, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 import { ConfigCursorStyle } from "../config/Config";
 // import { LigatureMarker } from "extraterm-ace-terminal-renderer";
 import { FontInfo } from "../config/Config";
@@ -16,6 +16,8 @@ export interface TerminalVisualConfig {
   fontSizePx: number;
   // fontFilePath: string;
   fontMetrics: MonospaceFontMetrics;
+  extraFontMetrics: MonospaceFontMetrics[];
+  extraFonts: FontSlice[];
   palette: number[];
   terminalTheme: TerminalTheme;
   transparentBackground: boolean;

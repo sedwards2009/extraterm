@@ -3,7 +3,7 @@
  */
 export { CursorStyle } from "./CursorStyle";
 export { FontSlice } from "./FontSlice";
-export { computeFontMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
+export { computeFontMetrics, computeEmojiMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
 export { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
 export { Disposable } from "./Disposable";
 export { WebGLRenderer } from "./WebGLRenderer";

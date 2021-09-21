@@ -2,7 +2,7 @@
  * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
 
-import { QFont, QFontMetrics, QFontWeight } from "@nodegui/nodegui";
+import { QFont, QFontMetricsF, QFontWeight } from "@nodegui/nodegui";
 import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
 
@@ -19,9 +19,23 @@ export function computeFontMetrics(fontFamily: string, fontStyle: string, fontSi
 
   const fm = new FontMeasurement();
   metrics = fm.computeFontMetrics({ family: fontFamily, style: fontStyle, sizePx: fontSizePx, sampleChars });
-
   computeFontMetricsCache.set(cacheKey, metrics);
   return metrics;
+}
+
+export function computeEmojiMetrics(metrics: MonospaceFontMetrics, fontFamily: string,
+    fontSizePx: number): MonospaceFontMetrics {
+
+  const customMetrics = {
+    ...metrics,
+    fontFamily: fontFamily,
+    fontSizePx: fontSizePx,
+  };
+  const actualFontMetrics = computeFontMetrics(fontFamily, "", fontSizePx, ["\u{1f600}"]  /* Smile emoji */);
+  customMetrics.fontSizePx = actualFontMetrics.fontSizePx;
+  customMetrics.fillTextYOffset = actualFontMetrics.fillTextYOffset;
+
+  return customMetrics;
 }
 
 
@@ -50,16 +64,16 @@ class FontMeasurement {
     font.setStyleName(style);
     font.setPixelSize(sizePx);
 
-    const metrics = new QFontMetrics(font);
+    const metrics = new QFontMetricsF(font);
     const charWidthPx = this.#computeMaxCharWidthPx(metrics, sampleChars);
-    const charHeightPx = metrics.height();
+    const charHeightPx = Math.ceil(metrics.height());
     // logFontMetrics(sampleChars[0], metrics);
 
     const underlineHeight = 1;
     let underlineY = 0;
     let secondUnderlineY = 0;
-    const mBottomY = metrics.ascent();
-    const fillTextYOffset = metrics.ascent();
+    const mBottomY = Math.ceil(metrics.ascent());
+    const fillTextYOffset = Math.ceil(metrics.ascent());
 
     const clearanceUnderChar = charHeightPx - Math.round(mBottomY);
     if (clearanceUnderChar < 4) {
@@ -73,13 +87,13 @@ class FontMeasurement {
     const boldFont = new QFont(family);
     boldFont.setPixelSize(sizePx);
     boldFont.setWeight(QFontWeight.Bold);
-    const boldMetrics = new QFontMetrics(boldFont);
+    const boldMetrics = new QFontMetricsF(boldFont);
     const boldItalicWidthPx = this.#computeMaxCharWidthPx(boldMetrics, sampleChars);
 
     const curlyThickness = 1;
     const curlyHeight = 4;
     const curlyY = underlineY + curlyHeight/2;
-    const mTopY = metrics.ascent() - metrics.xHeight();
+    const mTopY = Math.ceil(metrics.ascent() - metrics.xHeight());
 
     return {
       fontSizePx: sizePx,
@@ -107,10 +121,10 @@ class FontMeasurement {
     };
   }
 
-  #computeMaxCharWidthPx(metrics: QFontMetrics, sampleChars: string[]): number {
+  #computeMaxCharWidthPx(metrics: QFontMetricsF, sampleChars: string[]): number {
     let maxWidthPx = 0;
     for (const sampleChar of sampleChars) {
-      const widthPx = metrics.boundingRect(sampleChar).width();
+      const widthPx = Math.ceil(metrics.boundingRect(sampleChar).width());
       maxWidthPx = Math.max(maxWidthPx, widthPx);
     }
     return maxWidthPx;

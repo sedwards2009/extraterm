@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Logger, log, getLogger } from "extraterm-logging";
-import { computeFontMetrics } from "extraterm-char-render-canvas";
+import { computeFontMetrics, computeEmojiMetrics, FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
@@ -229,12 +229,27 @@ export class Window {
     // }
     const transparentBackground = config.windowBackgroundMode !== "opaque";
     const fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, config.terminalFontSize);
+
+    const extraFonts: FontSlice[] = [
+      {
+        fontFamily: "twemoji",
+        fontSizePx: 16,
+        unicodeStart: 0x1f000,
+        unicodeEnd: 0x20000,
+        sampleChars: ["\u{1f600}"]  // Smile emoji
+      }
+    ];
+    const extraFontMetrics = extraFonts.map(
+      (extraFont) => computeEmojiMetrics(fontMetrics, extraFont.fontFamily, extraFont.fontSizePx));
+
     const terminalVisualConfig: TerminalVisualConfig = {
       cursorStyle: config.cursorStyle,
       cursorBlink: config.blinkingCursor,
       fontInfo,
       fontSizePx: config.terminalFontSize,
       fontMetrics,
+      extraFontMetrics,
+      extraFonts,
       palette: this.#extractPalette(terminalTheme, transparentBackground),
       terminalTheme,
       transparentBackground,

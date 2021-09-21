@@ -122,6 +122,7 @@ class Main {
     this.registerCommands(extensionManager);
     this.startUpSessions(configDatabase, extensionManager);
 
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/Twemoji.ttf"));
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/extraicons.ttf"));
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-brands-400.ttf"));
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
