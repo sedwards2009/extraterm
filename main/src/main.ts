@@ -240,6 +240,7 @@ class Main {
     commands.registerCommand("extraterm:terminal.scrollPageUp", () => this.commandTerminalScrollPageUp());
     commands.registerCommand("extraterm:terminal.pasteFromClipboard", () => this.commandPasteFromClipboard());
     commands.registerCommand("extraterm:terminal.copyToClipboard", () => this.commandCopyToClipboard());
+    commands.registerCommand("extraterm:terminal.resetVT", () => this.commandResetVT());
   }
 
   setupDesktopSupport(): void {
@@ -489,6 +490,14 @@ class Main {
     const clipboard = QApplication.clipboard();
     const text = clipboard.text();
     terminal.pasteText(text);
+  }
+
+  commandResetVT(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    if (terminal == null) {
+      return;
+    }
+    terminal.resetVT();
   }
 }
 

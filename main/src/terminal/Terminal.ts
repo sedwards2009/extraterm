@@ -267,6 +267,10 @@ export class Terminal implements Tab, Disposable {
     ]);
   }
 
+  resetVT(): void {
+    this.#emulator.reset();
+  }
+
   #handleVerticalScrollBarAction(): void {
     this.#atBottom = this.#verticalScrollBar.sliderPosition() > (this.#verticalScrollBar.maximum() - this.#marginPx);
   }
