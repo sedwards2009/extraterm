@@ -5,12 +5,12 @@
  */
 
 import { Direction, QBoxLayout, QScrollArea, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, ListWidget, ListWidgetItem, ScrollArea, SpinBox,
+import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, ListWidget, ListWidgetItem, PushButton, ScrollArea, SpinBox,
   StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Tab } from "../Tab";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import { GeneralConfig } from "../config/Config";
+import { ConfigCursorStyle, GeneralConfig } from "../config/Config";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
 import { makeGroupLayout } from "../ui/QtConstructExtra";
@@ -201,6 +201,34 @@ export class SettingsTab implements Tab {
                     },
                   }),
                   "pixels"
+                ),
+
+                "Cursor Style:",
+                makeGroupLayout(
+                  PushButton({
+                    text: "\u{2588}",
+                    cssClass: ["small"],
+                    checkable: true,
+                    autoExclusive: true,
+                    checked: generalConfig.cursorStyle === "block",
+                    onClicked: () => { update(config => config.cursorStyle = "block"); }
+                  }),
+                  PushButton({
+                    text: "\u{2582}",
+                    cssClass: ["small"],
+                    checkable: true,
+                    autoExclusive: true,
+                    checked: generalConfig.cursorStyle === "underscore",
+                    onClicked: () => { update(config => config.cursorStyle = "underscore"); }
+                  }),
+                  PushButton({
+                    text: "\u{2503}",
+                    cssClass: ["small"],
+                    checkable: true,
+                    autoExclusive: true,
+                    checked: generalConfig.cursorStyle === "beam",
+                    onClicked: () => { update(config => config.cursorStyle = "beam"); }
+                  }),
                 )
               ]
             })
@@ -209,5 +237,4 @@ export class SettingsTab implements Tab {
       })
     });
   }
-
 }

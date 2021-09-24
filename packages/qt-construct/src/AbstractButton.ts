@@ -9,12 +9,24 @@ import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 
 
 export interface AbstractButtonOptions extends WidgetOptions {
+  autoExclusive?: boolean;
+  checkable?: boolean;
+  checked?: boolean;
   icon?: QIcon;
 }
 
 export function ApplyAbstractButtonOptions(button: QAbstractButton<any>, options: AbstractButtonOptions): void {
   ApplyWidgetOptions(button, options);
-  const { icon } = options;
+  const { autoExclusive, checkable, checked, icon } = options;
+  if (autoExclusive !== undefined) {
+    button.setAutoExclusive(autoExclusive);
+  }
+  if (checkable !== undefined) {
+    button.setCheckable(checkable);
+  }
+  if (checked !== undefined) {
+    button.setChecked(checked);
+  }
   if (icon !== undefined) {
     button.setIcon(icon);
   }

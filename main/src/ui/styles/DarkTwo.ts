@@ -504,6 +504,11 @@ QPushButton[cssClass~="group-right"] {
   border-bottom-left-radius: 0px;
   border-left-width: 0px;
 }
+
+QPushButton:on {
+  color: ${textSelectedColor};
+  background-color: ${buttonDefaultBgSelectedColor};
+}
 `;
 }
 

@@ -269,7 +269,8 @@ export class Window {
     const newConfig = <GeneralConfig> event.newConfig;
 
     if (oldConfig.terminalFont === newConfig.terminalFont &&
-        oldConfig.terminalFontSize === newConfig.terminalFontSize) {
+        oldConfig.terminalFontSize === newConfig.terminalFontSize &&
+        oldConfig.cursorStyle === newConfig.cursorStyle) {
       return;
     }
 

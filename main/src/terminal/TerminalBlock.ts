@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode } from "@nodegui/nodegui";
+import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode, QPen } from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
-import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice } from "extraterm-char-render-canvas";
+import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice, CursorStyle } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -19,6 +19,7 @@ import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
 import XRegExp = require("xregexp");  // TODO Switch to ES modules
+import { ConfigCursorStyle } from "../config/Config";
 
 
 enum SelectionMode {
@@ -205,6 +206,8 @@ export class TerminalBlock implements Block {
     const painter = new QPainter(this.#widget);
     const emulatorDimensions = this.#emulator.getDimensions();
 
+    const cursorStyle = this.#terminalVisualConfig.cursorStyle;
+
     const bgRGBA = this.#terminalVisualConfig.palette[PALETTE_BG_INDEX];
     painter.fillRect(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(), RGBAToQColor(bgRGBA));
 
@@ -213,7 +216,9 @@ export class TerminalBlock implements Block {
     if (topRenderRow < scrollbackLength) {
       const lastRenderRow = Math.min(topRenderRow + heightRows, scrollbackLength);
       const lines = this.#scrollback.slice(topRenderRow, lastRenderRow);
-      this.#renderLines(painter, lines, topRenderRow * heightPx, false);
+      const startY = topRenderRow * heightPx;
+      this.#renderLines(painter, lines, startY, false);
+      this.#renderCursors(painter, lines, startY);
     }
 
     // Render any lines from the emulator screen
@@ -226,7 +231,9 @@ export class TerminalBlock implements Block {
         const line = this.#emulator.lineAtRow(i);
         lines.push(line);
       }
-      this.#renderLines(painter, lines, (screenTopRow + scrollbackLength) * heightPx, true);
+      const startY = (screenTopRow + scrollbackLength) * heightPx;
+      this.#renderLines(painter, lines, startY, cursorStyle === "block");
+      this.#renderCursors(painter, lines, startY);
     }
 
     this.#renderSelection(painter, topRenderRow, heightRows);
@@ -367,6 +374,83 @@ export class TerminalBlock implements Block {
       line.setExtraFontsFlag(i, 0, isExtra);
     }
   }
+
+  #renderCursors(painter: QPainter, lines: Line[], startY: number): void {
+    const cursorStyle = this.#configCursorStyleToRendererCursorStyle(this.#terminalVisualConfig.cursorStyle);
+    if (cursorStyle === CursorStyle.BLOCK) {
+      return;
+    }
+
+    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const cellHeightPx = metrics.heightPx;
+    const cellWidthPx = metrics.widthPx;
+
+    const cursorColor = RGBAToQColor(this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX]);
+    const pen = new QPen();
+    pen.setColor(cursorColor);
+    const outlinePenWidthPx = 1;
+    pen.setWidth(outlinePenWidthPx);
+    painter.setPen(pen);
+
+    let y = startY;
+    for (const line of lines) {
+      const width = line.width;
+      for (let i=0; i<width; i++) {
+        if (line.getStyle(i, 0) & STYLE_MASK_CURSOR) {
+          switch (cursorStyle) {
+            case CursorStyle.BLOCK_OUTLINE:
+              painter.drawRect(i * cellWidthPx + outlinePenWidthPx, y + outlinePenWidthPx,
+                cellWidthPx - 2 * outlinePenWidthPx, cellHeightPx - 2 * outlinePenWidthPx);
+              break;
+
+            case CursorStyle.UNDERLINE:
+              painter.fillRect(i * cellWidthPx, y + cellHeightPx-3, cellWidthPx, 3, cursorColor);
+              break;
+
+            case CursorStyle.UNDERLINE_OUTLINE:
+              painter.drawRect(i * cellWidthPx + outlinePenWidthPx, y + cellHeightPx - 2*outlinePenWidthPx,
+                cellWidthPx-outlinePenWidthPx, 2);
+              break;
+
+            case CursorStyle.BEAM:
+              painter.fillRect(i * cellWidthPx, y, 2, cellHeightPx, cursorColor);
+              break;
+
+            case CursorStyle.BEAM_OUTLINE:
+              painter.drawRect(i * cellWidthPx + outlinePenWidthPx,
+                y + outlinePenWidthPx, 2, cellHeightPx - outlinePenWidthPx);
+              break;
+
+            default:
+              break;
+          }
+        }
+      }
+      y += cellHeightPx;
+    }
+  }
+
+  #configCursorStyleToRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {
+    switch (configCursorStyle) {
+      case "block":
+        return CursorStyle.BLOCK;
+      case "underscore":
+        return CursorStyle.UNDERLINE;
+      case "beam":
+        return CursorStyle.BEAM;
+    }
+  }
+
+  // private _configCursorStyleToHollowRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {
+  //   switch (configCursorStyle) {
+  //     case "block":
+  //       return CursorStyle.BLOCK_OUTLINE;
+  //     case "underscore":
+  //       return CursorStyle.UNDERLINE_OUTLINE;
+  //     case "beam":
+  //       return CursorStyle.BEAM_OUTLINE;
+  //   }
+  // }
 
   #handleMouseButtonPress(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
