@@ -49,7 +49,7 @@ export interface ExtensionManager {
 
 //   getAllSessionTypes(): { name: string, type: string }[];
 
-//   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
+  getAllTerminalThemeFormats(): { name: string, formatName: string }[];
 //   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
 
 //   getActiveTab(): HTMLElement;

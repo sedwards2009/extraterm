@@ -14,12 +14,14 @@ import { createHtmlIcon } from "../ui/Icons";
 import { makeGroupLayout } from "../ui/QtConstructExtra";
 import { ThemeManager } from "../theme/ThemeManager";
 import { ThemeInfo } from "../theme/Theme";
+import { ExtensionManager } from "../InternalTypes";
 
 
 export class AppearancePage {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
   #themeManager: ThemeManager = null;
+  #extensionManager: ExtensionManager = null;
   #uiStyle: UiStyle = null;
 
   #terminalThemeCombo: QComboBox = null;
@@ -27,9 +29,12 @@ export class AppearancePage {
   #terminalThemeCommentSpacer: QLabel = null;
   #terminalThemeCommentLabel: QLabel = null;
 
-  constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager, uiStyle: UiStyle) {
+  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
+      uiStyle: UiStyle) {
+
     this._log = getLogger("AppearancePage", this);
     this.#configDatabase = configDatabase;
+    this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
     this.#uiStyle = uiStyle;
   }
@@ -98,6 +103,12 @@ export class AppearancePage {
                   cssClass: ["minor"],
                   textFormat: TextFormat.RichText,
                   wordWrap: true,
+                }),
+
+                "",
+                Label({
+                  cssClass: ["minor"],
+                  text: this.#formatTerminalThemeFormats()
                 }),
 
                 "Cursor Style:",
@@ -169,5 +180,10 @@ export class AppearancePage {
       this.#terminalThemeCommentLabel.hide();
       this.#terminalThemeCommentLabel.setText("");
     }
+  }
+
+  #formatTerminalThemeFormats(): string {
+    const formatNames = this.#extensionManager.getAllTerminalThemeFormats().map(pair => pair.formatName);
+    return `Supported theme formats: ${formatNames.join(", ")}`;
   }
 }

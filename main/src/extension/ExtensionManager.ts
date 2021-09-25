@@ -378,6 +378,18 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeTerminal;
   }
 
+  getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
+    const results = [];
+    for (const metadata of this.#extensionMetadata) {
+      for (const provider of metadata.contributes.terminalThemeProviders) {
+        for (const formatName of provider.humanFormatNames) {
+          results.push( { name: provider.name, formatName } );
+        }
+      }
+    }
+    return results;
+  }
+
   /**
    * Execute a function with a different temporary extension context.
    */

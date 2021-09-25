@@ -38,7 +38,8 @@ export class SettingsTab implements Tab {
     this.#themeManager = themeManager;
 
     this.#generalPage = new GeneralPage(uiStyle);
-    this.#appearancePage = new AppearancePage(this.#configDatabase, this.#themeManager, uiStyle);
+    this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
+      uiStyle);
     this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
     this.#createUI(uiStyle);
   }
