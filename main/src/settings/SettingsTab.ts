@@ -4,18 +4,17 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { Direction, QBoxLayout, QScrollArea, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, ListWidget, ListWidgetItem, PushButton, ScrollArea, SpinBox,
-  StackedWidget, Widget } from "qt-construct";
+import { Direction, QStackedWidget, QWidget } from "@nodegui/nodegui";
+import { BoxLayout, ListWidget, ListWidgetItem, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Tab } from "../Tab";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import { ConfigCursorStyle, GeneralConfig } from "../config/Config";
 import { UiStyle } from "../ui/UiStyle";
-import { createHtmlIcon } from "../ui/Icons";
-import { makeGroupLayout } from "../ui/QtConstructExtra";
+import { GeneralPage } from "./GeneralPage";
+import { AppearancePage } from "./AppearancePage";
 import { ExtensionsPage } from "./ExtensionsPage";
 import { ExtensionManager } from "../InternalTypes";
+import { ThemeManager } from "../theme/ThemeManager";
 
 
 export class SettingsTab implements Tab {
@@ -23,16 +22,23 @@ export class SettingsTab implements Tab {
 
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
+  #themeManager: ThemeManager = null;
 
+  #generalPage: GeneralPage = null;
+  #appearancePage: AppearancePage = null;
   #extensionsPage: ExtensionsPage = null;
   #contentWidget: QWidget = null;
-  #contentLayout: QBoxLayout = null;
 
-  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, uiStyle: UiStyle) {
+  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
+      uiStyle: UiStyle) {
+
     this._log = getLogger("SettingsTab", this);
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
+    this.#themeManager = themeManager;
 
+    this.#generalPage = new GeneralPage(uiStyle);
+    this.#appearancePage = new AppearancePage(this.#configDatabase, this.#themeManager, uiStyle);
     this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
     this.#createUI(uiStyle);
   }
@@ -88,152 +94,13 @@ export class SettingsTab implements Tab {
             stackedWidget = StackedWidget({
               cssClass: ["settings-stack"],
               children: [
-                this.#createGeneralPage(),
-                this.#createAppearancePage(),
+                this.#generalPage.getPage(),
+                this.#appearancePage.getPage(),
                 this.#extensionsPage.getPage(),
               ]}),
             stretch: 1,
           }
         ]
-      })
-    });
-  }
-
-  #createGeneralPage(): QScrollArea {
-    return ScrollArea({
-      cssClass: "settings-tab",
-
-      widget: Widget({
-        cssClass: "settings-tab",
-        layout: BoxLayout({
-          direction: Direction.TopToBottom,
-          children: [
-            Label({
-              text: `${createHtmlIcon("fa-sliders-h")}&nbsp;&nbsp;General Settings`,
-              textFormat: TextFormat.RichText,
-              cssClass: ["h2"]}),
-            GridLayout({
-              columns: 2,
-              children: [
-                "Show Tips:",
-                ComboBox({items: ["Every time", "Daily", "Never"]}),
-
-                "Max. Scrollback Lines:",
-                makeGroupLayout(
-                  SpinBox({
-                    minimum: 0,
-                    maximum: 10000,
-                    value: 1000
-                  }),
-                  "lines"
-                ),
-
-                "Max. Scrollback Frames:",
-                makeGroupLayout(
-                  SpinBox({
-                    minimum: 0,
-                    maximum: 10000,
-                    value: 1000
-                  }),
-                  "frames"
-                ),
-
-                "",
-                CheckBox({
-                  checkState: true,
-                  text: "Automatically copy selection to clipboard"
-                }),
-
-                "",
-                CheckBox({
-                  checkState: true,
-                  text: "Close the window after closing the last tab"
-                }),
-              ]
-            })
-          ]
-        })
-      })
-    });
-  }
-
-  #createAppearancePage(): QScrollArea {
-    const generalConfig = this.#configDatabase.getGeneralConfig();
-    const systemConfig = this.#configDatabase.getSystemConfig();
-
-    const allFonts = systemConfig.availableFonts;
-    const currentFontIndex = allFonts.map(f => f.id).indexOf( generalConfig.terminalFont);
-
-    const update = (mutator: (config: GeneralConfig) => void): void => {
-      const generalConfig = this.#configDatabase.getGeneralConfigCopy();
-      mutator(generalConfig);
-      this.#configDatabase.setGeneralConfig(generalConfig);
-    };
-
-    return ScrollArea({
-      cssClass: "settings-tab",
-      widget: Widget({
-        cssClass: "settings-tab",
-        layout: BoxLayout({
-          direction: Direction.TopToBottom,
-          children: [
-            Label({
-              text: `${createHtmlIcon("fa-paint-brush")}&nbsp;&nbsp;Appearance`,
-              textFormat: TextFormat.RichText,
-              cssClass: ["h2"]}),
-            GridLayout({
-              columns: 2,
-              children: [
-                "Font:",
-                ComboBox({
-                  currentIndex: currentFontIndex,
-                  items: allFonts.map((f): ComboBoxItem => ({ text: f.name, userData: f.id }))
-                }),
-
-                "Font Size:",
-                makeGroupLayout(
-                  SpinBox({
-                    minimum: 1,
-                    maximum: 1024,
-                    value: generalConfig.terminalFontSize,
-                    onValueChanged: (value: number) => {
-                      update((c) => c.terminalFontSize = value);
-                    },
-                  }),
-                  "pixels"
-                ),
-
-                "Cursor Style:",
-                makeGroupLayout(
-                  PushButton({
-                    text: "\u{2588}",
-                    cssClass: ["small"],
-                    checkable: true,
-                    autoExclusive: true,
-                    checked: generalConfig.cursorStyle === "block",
-                    onClicked: () => { update(config => config.cursorStyle = "block"); }
-                  }),
-                  PushButton({
-                    text: "\u{2582}",
-                    cssClass: ["small"],
-                    checkable: true,
-                    autoExclusive: true,
-                    checked: generalConfig.cursorStyle === "underscore",
-                    onClicked: () => { update(config => config.cursorStyle = "underscore"); }
-                  }),
-                  PushButton({
-                    text: "\u{2503}",
-                    cssClass: ["small"],
-                    checkable: true,
-                    autoExclusive: true,
-                    checked: generalConfig.cursorStyle === "beam",
-                    onClicked: () => { update(config => config.cursorStyle = "beam"); }
-                  }),
-                )
-              ]
-            })
-          ]}
-        )
       })
     });
   }

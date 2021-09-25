@@ -305,18 +305,18 @@ export class ThemeManager {
     this._log = getLogger("ThemeManagerImpl", this);
     this.#paths = paths;
     this.#extensionManager = mainExtensionManager;
-    this._updateThemesList();
+    this.#updateThemesList();
   }
 
   rescan(): void {
-    this._updateThemesList();
+    this.#updateThemesList();
   }
 
-  private _updateThemesList(): void {
-    this.#themes = this._scanThemePaths(this.#paths, this._getTerminalThemeExtensionPaths());
+  #updateThemesList(): void {
+    this.#themes = this.#scanThemePaths(this.#paths, this.#getTerminalThemeExtensionPaths());
   }
 
-  private _getTerminalThemeExtensionPaths(): string [] {
+  #getTerminalThemeExtensionPaths(): string [] {
     const paths: string[] = [];
     for (const extension of this.#extensionManager.getAllExtensions()) {
       for (const st of extension.contributes.terminalThemes) {
@@ -326,11 +326,11 @@ export class ThemeManager {
     return paths;
   }
 
-  private _scanThemePaths(paths: ThemeTypePaths, terminalThemePaths: string[]): Map<string, ThemeInfo> {
+  #scanThemePaths(paths: ThemeTypePaths, terminalThemePaths: string[]): Map<string, ThemeInfo> {
     let themesList: ThemeInfo[] = [];
 
     themesList = [...themesList,
-      ...this._scanThemesWithTerminalThemeProviders([...paths.terminal, ...terminalThemePaths]),
+      ...this.#scanThemesWithTerminalThemeProviders([...paths.terminal, ...terminalThemePaths]),
     ];
 
     const allThemes = new Map<string, ThemeInfo>();
@@ -341,7 +341,7 @@ export class ThemeManager {
     return allThemes;
   }
 
-  private _scanThemesWithTerminalThemeProviders(paths: string[]): ThemeInfo[] {
+  #scanThemesWithTerminalThemeProviders(paths: string[]): ThemeInfo[] {
     const result: ThemeInfo[] = [];
     for (const provider of this.#extensionManager.getTerminalThemeProviderContributions()) {
       for (const theme of provider.terminalThemeProvider.scanThemes(paths)) {
@@ -380,8 +380,8 @@ export class ThemeManager {
     return result;
   }
 
-  private _getTerminalThemeContentsFromInfo(terminalThemeInfo: ThemeInfo): TerminalTheme {
-    const paths = [...this.#paths.terminal, ...this._getTerminalThemeExtensionPaths()];
+  #getTerminalThemeContentsFromInfo(terminalThemeInfo: ThemeInfo): TerminalTheme {
+    const paths = [...this.#paths.terminal, ...this.#getTerminalThemeExtensionPaths()];
     for (const provider of this.#extensionManager.getTerminalThemeProviderContributions()) {
       if (provider.metadata.name === terminalThemeInfo.provider) {
         const parts = terminalThemeInfo.id.split(":");
@@ -399,12 +399,12 @@ export class ThemeManager {
     if (terminalThemeInfo == null) {
       return null;
     }
-    const contents = this._getTerminalThemeContentsFromInfo(terminalThemeInfo);
-    const completeTheme = this._mergeTerminalThemeDefaults(contents, DEFAULT_TERMINAL_THEME);
+    const contents = this.#getTerminalThemeContentsFromInfo(terminalThemeInfo);
+    const completeTheme = this.#mergeTerminalThemeDefaults(contents, DEFAULT_TERMINAL_THEME);
     return completeTheme;
   }
 
-  private _mergeTerminalThemeDefaults(terminalTheme: TerminalTheme, defaultTerminalTheme: TerminalTheme): TerminalTheme {
+  #mergeTerminalThemeDefaults(terminalTheme: TerminalTheme, defaultTerminalTheme: TerminalTheme): TerminalTheme {
     const keys = ["foregroundColor",
       "backgroundColor",
       "cursorForegroundColor",
