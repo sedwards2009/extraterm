@@ -3,7 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QComboBox, QIcon, QVariant } from "@nodegui/nodegui";
+import { QComboBox, QIcon, QVariant, WidgetEventTypes } from "@nodegui/nodegui";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 
 export interface ComboBoxItem {
   icon?: QIcon;
@@ -11,15 +12,17 @@ export interface ComboBoxItem {
   userData?: QVariant | string | number;
 }
 
-export interface ComboBoxOptions {
+export interface ComboBoxOptions extends WidgetOptions {
   id?: string;
   currentIndex?: number;
   items: (ComboBoxItem | string)[];
+  onActivated?: (index: number) => void;
 }
 
 export function ComboBox(options: ComboBoxOptions): QComboBox {
   const comboBox = new QComboBox();
-  const { id, items, currentIndex } = options;
+  ApplyWidgetOptions(comboBox, options);
+  const { id, items, currentIndex, onActivated } = options;
   if (id !== undefined) {
     comboBox.setObjectName(id);
   }
@@ -35,6 +38,9 @@ export function ComboBox(options: ComboBoxOptions): QComboBox {
 
   if (currentIndex !== undefined) {
     comboBox.setCurrentIndex(currentIndex);
+  }
+  if (onActivated !== undefined) {
+    comboBox.addEventListener("activated", onActivated);
   }
   return comboBox;
 }

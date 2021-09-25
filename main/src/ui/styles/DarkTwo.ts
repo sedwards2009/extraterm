@@ -403,6 +403,10 @@ QLabel[cssClass~="group-right"] {
   border-top-right-radius: ${borderRadius};
   border-bottom-right-radius: ${borderRadius};
 }
+
+QLabel[cssClass~="minor"] {
+  color: ${textMinorColor};
+}
 `;
 }
 

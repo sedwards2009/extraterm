@@ -270,7 +270,8 @@ export class Window {
 
     if (oldConfig.terminalFont === newConfig.terminalFont &&
         oldConfig.terminalFontSize === newConfig.terminalFontSize &&
-        oldConfig.cursorStyle === newConfig.cursorStyle) {
+        oldConfig.cursorStyle === newConfig.cursorStyle &&
+        oldConfig.themeTerminal === newConfig.themeTerminal) {
       return;
     }
 
