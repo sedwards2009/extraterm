@@ -43,6 +43,7 @@
     "marked": "^0.8.2",
     "mime-types": "^2.1.21",
     "nodegui-plugin-font-icon": "^0.1.6",
+    "open": "^8.2.1",
     "qs": "6.3.2",
     "qt-construct": "0.1.0",
     "smart-buffer": "4.0.2",

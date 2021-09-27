@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Direction, QComboBox, QLabel, QScrollArea, TextFormat } from "@nodegui/nodegui";
+import * as open from "open";
 import { BoxLayout, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
@@ -98,17 +99,32 @@ export class AppearancePage {
                   }
                 }),
 
+                "",
+                Label({
+                  cssClass: ["minor"],
+                  text: this.#formatTerminalThemeFormats()
+                }),
+
+                "",
+                makeGroupLayout(
+                  PushButton({
+                    text: "User themes",
+                    icon: this.#uiStyle.getButtonIcon("fa-folder-open"),
+                    cssClass: ["small"],
+                    onClicked: () => this.#handleTerminalThemeFolderClicked()
+                  }),
+                  PushButton({
+                    icon: this.#uiStyle.getButtonIcon("fa-sync-alt"),
+                    cssClass: ["small"],
+                    onClicked: () => this.#handleTerminalThemeScanClicked()
+                  }),
+                ),
+
                 this.#terminalThemeCommentSpacer = Label({}),
                 this.#terminalThemeCommentLabel = Label({
                   cssClass: ["minor"],
                   textFormat: TextFormat.RichText,
                   wordWrap: true,
-                }),
-
-                "",
-                Label({
-                  cssClass: ["minor"],
-                  text: this.#formatTerminalThemeFormats()
                 }),
 
                 "Cursor Style:",
@@ -185,5 +201,15 @@ export class AppearancePage {
   #formatTerminalThemeFormats(): string {
     const formatNames = this.#extensionManager.getAllTerminalThemeFormats().map(pair => pair.formatName);
     return `Supported theme formats: ${formatNames.join(", ")}`;
+  }
+
+  #handleTerminalThemeFolderClicked(): void {
+    const systemConfig = this.#configDatabase.getSystemConfig();
+    open(systemConfig.userTerminalThemeDirectory);
+  }
+
+  #handleTerminalThemeScanClicked(): void {
+    this.#themeManager.rescan();
+    this.#loadTerminalThemes();
   }
 }
