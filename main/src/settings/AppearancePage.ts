@@ -110,12 +110,12 @@ export class AppearancePage {
                   PushButton({
                     text: "User themes",
                     icon: this.#uiStyle.getButtonIcon("fa-folder-open"),
-                    cssClass: ["small"],
+                    cssClass: "small",
                     onClicked: () => this.#handleTerminalThemeFolderClicked()
                   }),
                   PushButton({
                     icon: this.#uiStyle.getButtonIcon("fa-sync-alt"),
-                    cssClass: ["small"],
+                    cssClass: "small",
                     onClicked: () => this.#handleTerminalThemeScanClicked()
                   }),
                 ),

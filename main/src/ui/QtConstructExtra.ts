@@ -17,20 +17,20 @@ export interface CompactGroupOptions {
  * Strings are turned into labels
  */
 export function makeGroupLayout(...children: (QWidget | string)[]): QBoxLayout {
-
   const expandedChildren: QWidget[] = children.map((c): QWidget => {
     if ((typeof c) === "string") {
-      return Label({text: <string>c, cssClass: ["group-middle"]});
+      return Label({text: <string>c});
     } else {
-      (<QWidget>c).setProperty("cssClass", ["group-middle"]);
       return <QWidget>c;
     }
   });
 
-  if (expandedChildren.length !== 0) {
-    expandedChildren[0].setProperty("cssClass", ["group-left"]);
-    expandedChildren[expandedChildren.length-1].setProperty("cssClass", ["group-right"]);
-  }
+  const lastIndex = expandedChildren.length - 1;
+  expandedChildren.forEach((child, index) => {
+    const clazz = index === 0 ? "group-left" : (index === lastIndex ? "group-right" : "group-middle");
+    const previousClasses = expandedChildren[0].property("cssClass").toStringList();
+    child.setProperty("cssClass", [...previousClasses, clazz]);
+  });
 
   return BoxLayout({
     direction: Direction.LeftToRight,

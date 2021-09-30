@@ -47,7 +47,7 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
     widget.setLayout(layout);
   }
   if (cssClass !== undefined) {
-    widget.setProperty("cssClass", cssClass);
+    widget.setProperty("cssClass", typeof cssClass === "string" ? [cssClass] : cssClass);
   }
   if (windowTitle !== undefined) {
     widget.setWindowTitle(windowTitle);
