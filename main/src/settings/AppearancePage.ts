@@ -5,7 +5,7 @@
  */
 import { Direction, QComboBox, QLabel, QScrollArea, TextFormat } from "@nodegui/nodegui";
 import * as open from "open";
-import { BoxLayout, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
+import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { ConfigDatabase } from "../config/ConfigDatabase";
@@ -85,6 +85,15 @@ export class AppearancePage {
                   }),
                   "pixels"
                 ),
+
+                "",
+                CheckBox({
+                  text: "Enable ligatures",
+                  checkState: generalConfig.terminalDisplayLigatures,
+                  onStateChanged: (state: number) => {
+                    update((c) => c.terminalDisplayLigatures = Boolean(state));
+                  }
+                }),
 
                 "Theme:",
                 this.#terminalThemeCombo = ComboBox({

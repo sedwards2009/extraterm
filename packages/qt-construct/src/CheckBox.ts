@@ -8,12 +8,13 @@ import { CheckState, QCheckBox } from "@nodegui/nodegui";
 export interface CheckBoxOptions {
   tristate?: boolean;
   checkState?: boolean | CheckState;
+  onStateChanged?: (state: number) => void;
   text?: string;
 }
 
 export function CheckBox(options: CheckBoxOptions): QCheckBox {
   const checkBox = new QCheckBox();
-  const { checkState, text, tristate } = options;
+  const { checkState, onStateChanged, text, tristate } = options;
   if (checkState !== undefined) {
     if (typeof checkState === "boolean") {
       checkBox.setCheckState(checkState ? CheckState.Checked : CheckState.Unchecked);
@@ -28,6 +29,10 @@ export function CheckBox(options: CheckBoxOptions): QCheckBox {
 
   if (text !== undefined) {
     checkBox.setText(text);
+  }
+
+  if (onStateChanged !== undefined) {
+    checkBox.addEventListener("stateChanged", onStateChanged);
   }
   return checkBox;
 }

@@ -32,6 +32,7 @@
     "extraterm-unicode-utilities": "1.0.0",
     "extraterm-uuid": "1.0.0",
     "file-type": "^7.6.0",
+    "font-finder": "1.1.0",
     "fontinfo": "0.3.0",
     "fuzzyjs": "^4.0.4",
     "get-stream": "^6.0.0",

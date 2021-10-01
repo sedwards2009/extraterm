@@ -5,6 +5,7 @@
  */
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { FontSlice, MonospaceFontMetrics } from "extraterm-char-render-canvas";
+import { LigatureMarker } from "../CachingLigatureMarker";
 import { ConfigCursorStyle } from "../config/Config";
 // import { LigatureMarker } from "extraterm-ace-terminal-renderer";
 import { FontInfo } from "../config/Config";
@@ -22,7 +23,7 @@ export interface TerminalVisualConfig {
   terminalTheme: TerminalTheme;
   transparentBackground: boolean;
   useLigatures: boolean;
-  // ligatureMarker: LigatureMarker;
+  ligatureMarker: LigatureMarker;
 
   screenWidthHintPx: number;
   screenHeightHintPx: number;

@@ -118,4 +118,5 @@ export interface FontInfo {
   family: string;
   style: string;
   id: string;
+  path: string;
 }

@@ -11,6 +11,7 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
   FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
+import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
@@ -23,7 +24,7 @@ import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
 import { UiStyle } from "./ui/UiStyle";
-import { createIcon } from "./ui/Icons";
+import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker";
 
 
 export class Window {
@@ -62,8 +63,10 @@ export class Window {
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
     this.onTabChange = this.#onTabChangeEventEmitter.event;
+  }
 
-    this.#terminalVisualConfig = this.#createTerminalVisualConfig();
+  async init(): Promise<void> {
+    this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
     this.#windowWidget = Widget({
@@ -105,7 +108,7 @@ export class Window {
                     contentsMargins: [0, 0, 0, 0],
                     spacing: 0,
                     children: [
-                      {widget: this.#createHamburgerMenu(uiStyle), stretch: 0}
+                      {widget: this.#createHamburgerMenu(this.#uiStyle), stretch: 0}
                     ]
                   })
                 }), stretch: 0}
@@ -215,18 +218,19 @@ export class Window {
     }
   }
 
-  #createTerminalVisualConfig(): TerminalVisualConfig {
+  async #createTerminalVisualConfig(): Promise<TerminalVisualConfig> {
     const config = this.#configDatabase.getGeneralConfig();
     const fontInfo = this.#getFontInfo(config.terminalFont);
     const terminalTheme = this.#themeManager.getTerminalTheme(config.themeTerminal);
 
-    // let ligatureMarker: LigatureMarker = null;
-    // if (config.terminalDisplayLigatures) {
-    //   const plainlLigatureMarker = await loadFontFile(fontFilePath);
-    //   if (plainlLigatureMarker != null) {
-    //     ligatureMarker = new CachingLigatureMarker(plainlLigatureMarker);
-    //   }
-    // }
+    let ligatureMarker: LigatureMarker = null;
+    if (config.terminalDisplayLigatures && fontInfo.path != null) {
+      const plainlLigatureMarker = await loadFontFile(fontInfo.path);
+      if (plainlLigatureMarker != null) {
+        ligatureMarker = new CachingLigatureMarker(plainlLigatureMarker);
+      }
+    }
+
     const transparentBackground = config.windowBackgroundMode !== "opaque";
     const fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, config.terminalFontSize);
 
@@ -254,14 +258,14 @@ export class Window {
       terminalTheme,
       transparentBackground,
       useLigatures: config.terminalDisplayLigatures,
-      // ligatureMarker: null,
+      ligatureMarker,
       screenHeightHintPx: 1024, // FIXME
       screenWidthHintPx: 1024,  // FIXME
     };
     return terminalVisualConfig;
   }
 
-  #handleConfigChangeEvent(event: ConfigChangeEvent): void {
+  async #handleConfigChangeEvent(event: ConfigChangeEvent): Promise<void> {
     if (event.key !== GENERAL_CONFIG) {
       return;
     }
@@ -271,11 +275,12 @@ export class Window {
     if (oldConfig.terminalFont === newConfig.terminalFont &&
         oldConfig.terminalFontSize === newConfig.terminalFontSize &&
         oldConfig.cursorStyle === newConfig.cursorStyle &&
-        oldConfig.themeTerminal === newConfig.themeTerminal) {
+        oldConfig.themeTerminal === newConfig.themeTerminal &&
+        oldConfig.terminalDisplayLigatures === newConfig.terminalDisplayLigatures) {
       return;
     }
 
-    this.#terminalVisualConfig = this.#createTerminalVisualConfig();
+    this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
     for (const tab of this.#tabs) {
       if (tab instanceof Terminal) {
         tab.setTerminalVisualConfig(this.#terminalVisualConfig);

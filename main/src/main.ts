@@ -65,7 +65,7 @@ class Main {
     this._log = getLogger("main", this);
   }
 
-  init(): void {
+  async init(): Promise<void> {
     setupAppData();
 
     const sharedMap = new SharedMap();
@@ -77,7 +77,7 @@ class Main {
 
     // this._log.startRecording();
 
-    installBundledFonts();
+    await installBundledFonts();
     const availableFonts = getFonts();
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
 
@@ -131,7 +131,7 @@ class Main {
     QApplication.setStyle(QStyleFactory.create("Fusion"));
     QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet());
 
-    this.openWindow();
+    await this.openWindow();
     this.commandNewTerminal({});
   }
 
@@ -405,9 +405,10 @@ class Main {
     createSessionCommands(sessionConfig);
   }
 
-  openWindow(): void {
+  async openWindow(): Promise<void> {
     const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
       this.#themeManager, this.#uiStyle);
+    await win.init();
 
     win.onTabCloseRequest((tab: Tab): void => {
       this.#closeTab(win, tab);

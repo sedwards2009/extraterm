@@ -317,10 +317,16 @@ export class TerminalBlock implements Block {
     };
 
     const palette = this.#terminalVisualConfig.palette;
+    const ligatureMarker = this.#terminalVisualConfig.ligatureMarker;
 
     for (const line of lines) {
       line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
       this.#updateCharGridFlags(line);
+
+      if (ligatureMarker != null) {
+        const text = line.getString(0, 0);
+        ligatureMarker.markLigaturesCharCellGridRow(line, 0, text);
+      }
 
       let px = 0;
       for (const column of normalizedCellIterator(line, 0, normalizedCell)) {
