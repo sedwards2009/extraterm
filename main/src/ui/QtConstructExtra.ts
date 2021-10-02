@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QApplication, QBoxLayout, QLabel, QPushButton, QWidget, TextFormat } from "@nodegui/nodegui";
+import { Direction, QBoxLayout, QLabel, QPushButton, QWidget, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, Label, PushButton, Widget } from "qt-construct";
 import { UiStyle } from "./UiStyle";
 
@@ -28,7 +28,7 @@ export function makeGroupLayout(...children: (QWidget | string)[]): QBoxLayout {
   const lastIndex = expandedChildren.length - 1;
   expandedChildren.forEach((child, index) => {
     const clazz = index === 0 ? "group-left" : (index === lastIndex ? "group-right" : "group-middle");
-    const previousClasses = expandedChildren[0].property("cssClass").toStringList();
+    const previousClasses = child.property("cssClass").toStringList();
     child.setProperty("cssClass", [...previousClasses, clazz]);
   });
 
