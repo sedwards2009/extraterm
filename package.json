@@ -59,7 +59,7 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "@nodegui/nodegui": "^0.39.1",
+    "@nodegui/nodegui": "^0.40.0",
     "@types/fs-extra": "^9.0.12",
     "fs-extra": "^10.0.0",
     "node-abi": "2.21.0",

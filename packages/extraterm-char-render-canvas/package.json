@@ -20,7 +20,7 @@
     "run": "false"
   },
   "dependencies": {
-    "@nodegui/nodegui": "^0.39.1",
+    "@nodegui/nodegui": "^0.40.0",
     "extraterm-char-cell-grid": "1.0.0",
     "extraterm-color-utilities": "1.0.0",
     "extraterm-data-structures": "1.0.0",
