@@ -8,7 +8,7 @@ import { BoxLayout, CheckBox, ComboBox, GridLayout, Label, ScrollArea, SpinBox, 
 import { getLogger, log, Logger } from "extraterm-logging";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
-import { makeGroupLayout } from "../ui/QtConstructExtra";
+import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
 
 
 export class GeneralPage {
@@ -35,7 +35,7 @@ export class GeneralPage {
               columns: 2,
               children: [
                 "Show Tips:",
-                ComboBox({items: ["Every time", "Daily", "Never"]}),
+                shrinkWrap(ComboBox({items: ["Every time", "Daily", "Never"]})),
 
                 "Max. Scrollback Lines:",
                 makeGroupLayout(

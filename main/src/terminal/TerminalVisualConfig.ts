@@ -7,7 +7,6 @@ import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { FontSlice, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 import { LigatureMarker } from "../CachingLigatureMarker";
 import { ConfigCursorStyle } from "../config/Config";
-// import { LigatureMarker } from "extraterm-ace-terminal-renderer";
 import { FontInfo } from "../config/Config";
 
 export interface TerminalVisualConfig {
@@ -15,7 +14,6 @@ export interface TerminalVisualConfig {
   cursorBlink: boolean;
   fontInfo: FontInfo;
   fontSizePx: number;
-  // fontFilePath: string;
   fontMetrics: MonospaceFontMetrics;
   extraFontMetrics: MonospaceFontMetrics[];
   extraFonts: FontSlice[];

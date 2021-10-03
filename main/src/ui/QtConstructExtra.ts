@@ -116,3 +116,18 @@ export function makeSubTabBar(options: SubTabBarOptions): QWidget {
     })
   });
 }
+
+/**
+ * Wrap a widget in a box layout and make use minimal space.
+ */
+export function shrinkWrap(widget: QWidget): QBoxLayout {
+  return BoxLayout({
+    direction: Direction.LeftToRight,
+    spacing: 0,
+    contentsMargins: [0, 0, 0, 0],
+    children: [
+      widget,
+      { widget: Widget({}), stretch: 1 }
+    ]
+  });
+}

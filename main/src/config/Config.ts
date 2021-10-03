@@ -7,7 +7,6 @@ import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { KeybindingsSet, LogicalKeybindingsName } from '../keybindings/KeybindingsTypes';
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
-export type GpuDriverWorkaround = "none" | "no_blend";
 export type MouseButtonAction = "none" | "context_menu" | "paste" | "paste_selection";
 export type ShowTipsStrEnum = "always" | "daily" | "never";
 export type TerminalMarginStyle = "none" | "thin" | "normal" | "thick";

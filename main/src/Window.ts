@@ -276,7 +276,8 @@ export class Window {
         oldConfig.terminalFontSize === newConfig.terminalFontSize &&
         oldConfig.cursorStyle === newConfig.cursorStyle &&
         oldConfig.themeTerminal === newConfig.themeTerminal &&
-        oldConfig.terminalDisplayLigatures === newConfig.terminalDisplayLigatures) {
+        oldConfig.terminalDisplayLigatures === newConfig.terminalDisplayLigatures &&
+        oldConfig.terminalMarginStyle === newConfig.terminalMarginStyle) {
       return;
     }
 

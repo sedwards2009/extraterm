@@ -9,10 +9,10 @@ import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushBut
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import { GeneralConfig } from "../config/Config";
+import { GeneralConfig, TerminalMarginStyle } from "../config/Config";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
-import { makeGroupLayout } from "../ui/QtConstructExtra";
+import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
 import { ThemeManager } from "../theme/ThemeManager";
 import { ThemeInfo } from "../theme/Theme";
 import { ExtensionManager } from "../InternalTypes";
@@ -53,6 +53,13 @@ export class AppearancePage {
       this.#configDatabase.setGeneralConfig(generalConfig);
     };
 
+    const marginSizes: TerminalMarginStyle[] = [
+      "none",
+      "thin",
+      "normal",
+      "thick"
+    ];
+
     const page = ScrollArea({
       cssClass: "settings-tab",
       widget: Widget({
@@ -68,10 +75,10 @@ export class AppearancePage {
               columns: 2,
               children: [
                 "Font:",
-                ComboBox({
+                shrinkWrap(ComboBox({
                   currentIndex: currentFontIndex,
                   items: allFonts.map((f): ComboBoxItem => ({ text: f.name, userData: f.id }))
-                }),
+                })),
 
                 "Font Size:",
                 makeGroupLayout(
@@ -96,16 +103,24 @@ export class AppearancePage {
                 }),
 
                 "Theme:",
-                this.#terminalThemeCombo = ComboBox({
-                  currentIndex: 0,
-                  items: [],
-                  onActivated: (index) => {
-                    const themeId = this.#terminalThemes[index].id;
-                    update(config => {
-                      config.themeTerminal = themeId;
-                    });
-                    this.#selectTerminalTheme(themeId);
-                  }
+                BoxLayout({
+                  direction: Direction.LeftToRight,
+                  spacing: 0,
+                  contentsMargins: [0, 0, 0, 0],
+                  children: [
+                    this.#terminalThemeCombo = ComboBox({
+                      currentIndex: 0,
+                      items: [],
+                      onActivated: (index) => {
+                        const themeId = this.#terminalThemes[index].id;
+                        update(config => {
+                          config.themeTerminal = themeId;
+                        });
+                        this.#selectTerminalTheme(themeId);
+                      }
+                    }),
+                    { widget: Widget({}), stretch: 1 }
+                  ]
                 }),
 
                 "",
@@ -144,7 +159,7 @@ export class AppearancePage {
                     checkable: true,
                     autoExclusive: true,
                     checked: generalConfig.cursorStyle === "block",
-                    onClicked: () => { update(config => config.cursorStyle = "block"); }
+                    onClicked: () => update(config => config.cursorStyle = "block")
                   }),
                   PushButton({
                     text: "\u{2582}",
@@ -152,7 +167,7 @@ export class AppearancePage {
                     checkable: true,
                     autoExclusive: true,
                     checked: generalConfig.cursorStyle === "underscore",
-                    onClicked: () => { update(config => config.cursorStyle = "underscore"); }
+                    onClicked: () => update(config => config.cursorStyle = "underscore")
                   }),
                   PushButton({
                     text: "\u{2503}",
@@ -160,9 +175,16 @@ export class AppearancePage {
                     checkable: true,
                     autoExclusive: true,
                     checked: generalConfig.cursorStyle === "beam",
-                    onClicked: () => { update(config => config.cursorStyle = "beam"); }
+                    onClicked: () => update(config => config.cursorStyle = "beam")
                   }),
-                )
+                ),
+
+                "Margin:",
+                shrinkWrap(ComboBox({
+                  currentIndex: marginSizes.indexOf(generalConfig.terminalMarginStyle),
+                  items: ["None", "Thin", "Normal", "Thick"],
+                  onActivated: (index) => update(config => config.terminalMarginStyle = marginSizes[index])
+                })),
               ]
             })
           ]}
