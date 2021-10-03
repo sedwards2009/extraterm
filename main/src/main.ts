@@ -128,7 +128,7 @@ class Main {
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
 
     this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
-    QApplication.setStyle(QStyleFactory.create("Fusion"));
+    QApplication.setStyle(QStyleFactory.create("Windows"));
     QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet());
 
     await this.openWindow();

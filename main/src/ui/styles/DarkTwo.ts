@@ -339,6 +339,7 @@ QComboBox QAbstractItemView {
   selection-background-color: #578af2;
   background-color: #3a404b;
   color: ${textHighlightColor};
+  border: 1px solid ${dropdownBorder};
 }
 
 QComboBox::down-arrow {
@@ -643,7 +644,13 @@ function QScrollBarStyleSheet(): string {
   return `
 QScrollBar {
   ${IncludeDefaultBackground()}
+  background-image: none;
 }
+
+QScrollBar::add-page, QScrollBar::sub-page {
+  background-image: none;
+}
+
 QScrollBar:vertical {
   ${IncludeDefaultBackground()}
   width: 0.5em;

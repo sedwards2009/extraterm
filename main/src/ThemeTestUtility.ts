@@ -14,7 +14,7 @@ function main(): void {
   for (const key of QStyleFactory.keys()) {
     console.log(`Style key: ${key}`);
   }
-  QApplication.setStyle(QStyleFactory.create("Fusion"));
+  QApplication.setStyle(QStyleFactory.create("Windows"));
 
   const win = new QMainWindow();
   win.setWindowTitle("Theme Test");
