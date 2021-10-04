@@ -65,10 +65,10 @@ export class Color {
       if (green === undefined) {
         // `red` is actually 32bit RGBA
         const rgba = <number> rgbaOrRedOrString;
-        this._red = (rgba & 0xff000000) >> 24;
-        this._green = (rgba & 0x00ff0000) >> 16;
-        this._blue = (rgba & 0x0000ff00) >> 8;
-        this._opacity = rgba & 0x000000ff;
+        this._red = (rgba >>> 24) & 0xff;
+        this._green = (rgba >>> 16) & 0xff;
+        this._blue = (rgba >>> 8) & 0xff;
+        this._opacity = rgba & 0xff;
 
       } else {
         const red = <number> rgbaOrRedOrString;
@@ -107,7 +107,7 @@ export class Color {
    * Return this color packed into a 32 bit number.
    */
   toRGBA(): number {
-    return (this._red << 24) | (this._green << 16) | (this._blue << 8) | this._opacity;
+    return ((this._red << 24) | (this._green << 16) | (this._blue << 8) | this._opacity) >>> 0;
   }
 
   /**

@@ -10,6 +10,7 @@ describe.each([
   ["#123456", 0x123456ff, "#123456", "rgba(18,52,86,1)"],
   ["#1234567f", 0x1234567f, "#123456", "rgba(18,52,86,0.4980392156862745)"],
   ["#000001", 0x000001ff, "#000001", "rgba(0,0,1,1)"],
+  ["#ffffff", 0xffffffff, "#ffffff", "rgba(255,255,255,1)"],
 
 ])(`Parsing`, (input: string, rgba: number, hexString: string, rgbaString: string) => {
   test(`${input} to RGBA number`, done => {

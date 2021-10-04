@@ -405,14 +405,16 @@ export class ThemeManager {
   }
 
   #mergeTerminalThemeDefaults(terminalTheme: TerminalTheme, defaultTerminalTheme: TerminalTheme): TerminalTheme {
-    const keys = ["foregroundColor",
+    const keys: Array<keyof TerminalTheme> = [
+      "foregroundColor",
       "backgroundColor",
       "cursorForegroundColor",
       "cursorBackgroundColor",
       "selectionBackgroundColor",
-      "findHighlightBackgroundColor"];
+      "findHighlightBackgroundColor"
+    ];
     for (let i=0; i<256; i++) {
-      keys.push("" + i);
+      keys.push(i);
     }
 
     const result: TerminalTheme = {};
