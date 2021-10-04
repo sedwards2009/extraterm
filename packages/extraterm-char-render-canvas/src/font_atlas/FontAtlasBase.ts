@@ -253,12 +253,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       font = this._extraQfonts[fontIndex-1];
     }
 
-    if (style & STYLE_MASK_BOLD) {
-      font.setWeight(QFontWeight.Bold);
-    }
-    if (style & STYLE_MASK_ITALIC) {
-      font.setItalic(true);
-    }
+    font.setWeight(style & STYLE_MASK_BOLD ? QFontWeight.Bold : QFontWeight.Normal);
+    font.setItalic((style & STYLE_MASK_ITALIC) !== 0);
 
     painter.setFont(font);
 
@@ -444,4 +440,3 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     this._nextEmptyCellY = 0;
   }
 }
-
