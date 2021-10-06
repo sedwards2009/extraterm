@@ -7,8 +7,9 @@
 import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import * as util from 'util';
+import * as opentype from 'opentype.js';
 import { QFontDatabase } from "@nodegui/nodegui";
-import { get as getFontDetails } from "font-finder";
 import { getLogger } from "extraterm-logging";
 import { PairKeyMap } from "extraterm-data-structures";
 
@@ -51,6 +52,7 @@ function getAllFontsDetails(): FontDescriptor[] {
   return fonts;
 }
 
+
 function indexFontPaths(fontDescriptors: FontDescriptor[]): PairKeyMap<string, string, string> {
   const mapping = new PairKeyMap<string, string, string>();
   for (const fontDescriptor of fontDescriptors) {
@@ -68,19 +70,21 @@ export function getFonts(): FontInfo[] {
   const db = new QFontDatabase();
   for (const family of db.families()) {
     for (const style of db.styles(family)) {
+      if (style !== "Regular" && style !== "Book") {
+        continue;
+      }
       let fontPath = fontFileMapping.get(family, style);
       if (fontPath == null) {
         fontPath = appFontMapping.get(family, style);
       }
 
       const fontInfo: FontInfo = {
-        name: `${family} ${style}`,
+        name: `${family}`,
         family,
         style,
-        id: `${family}-${style}`,
+        id: `${family}`,
         path: fontPath || null
       };
-
       result.push(fontInfo);
     }
   }
@@ -99,10 +103,20 @@ export async function installBundledFonts(): Promise<void> {
         const ttfPath = path.join(fontsDir, item);
 
         const fontDetails = await getFontDetails(ttfPath);
-        appFontMapping.set(fontDetails.name, fontDetails.style === "regular" ? "Book" : fontDetails.style, ttfPath);
+        appFontMapping.set(fontDetails.family, fontDetails.style, ttfPath);
 
         QFontDatabase.addApplicationFont(ttfPath);
       }
     }
   }
+}
+
+async function getFontDetails(ttfPath: string): Promise<{family: string; style: string;}> {
+  const font = await util.promisify<string, opentype.Font>(opentype.load as any)(ttfPath);
+  const family = font.tables.name.fontFamily?.en;
+  const style = font.tables.name.fontSubfamily?.en;
+  return {
+    family,
+    style
+  };
 }

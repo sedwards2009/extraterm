@@ -29,7 +29,7 @@ const USER_THEMES_DIR = "themes";
 const USER_SYNTAX_THEMES_DIR = "syntax";
 const USER_TERMINAL_THEMES_DIR = "terminal";
 
-const DEFAULT_TERMINALFONT = "Liga DejaVu Sans Mono-Book";
+const DEFAULT_TERMINALFONT = "Liga DejaVu Sans Mono";
 
 export const KEYBINDINGS_OSX: LogicalKeybindingsName = "macos-style";
 export const KEYBINDINGS_PC: LogicalKeybindingsName = "pc-style";
