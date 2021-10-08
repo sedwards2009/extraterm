@@ -225,9 +225,9 @@ export class Window {
 
     let ligatureMarker: LigatureMarker = null;
     if (config.terminalDisplayLigatures && fontInfo.path != null) {
-      const plainlLigatureMarker = await loadFontFile(fontInfo.path);
-      if (plainlLigatureMarker != null) {
-        ligatureMarker = new CachingLigatureMarker(plainlLigatureMarker);
+      const plainLigatureMarker = await loadFontFile(fontInfo.path);
+      if (plainLigatureMarker != null) {
+        ligatureMarker = new CachingLigatureMarker(plainLigatureMarker);
       }
     }
 

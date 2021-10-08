@@ -363,7 +363,7 @@ export class CharCellGrid {
       for (let i=0; i<width; i++) {
         const oldValue = this._dataView.getUint16(offset);
         const newValue = (oldValue & invMask) | (flagMask & flagsArray[i]);
-        this._dataView.setUint8(offset, newValue);
+        this._dataView.setUint16(offset, newValue);
         offset += CELL_SIZE_BYTES;
       }
     }
