@@ -9,7 +9,7 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
@@ -161,6 +161,7 @@ export class Window {
       return;
     }
 
+    const termKeybindingsMapping = this.#keybindingsIOManager.getCurrentKeybindingsMapping();
     let category = entries[0].category;
     for (const entry of entries) {
       if (entry.category !== category) {
@@ -174,6 +175,12 @@ export class Window {
         if (icon != null) {
           action.setIcon(icon);
         }
+      }
+
+      const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
+      if (shortcuts.length !== 0) {
+        const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+        action.setShortcut(new QKeySequence(shortcut));
       }
     }
   }
