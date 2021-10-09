@@ -13,7 +13,7 @@ import { KeybindingsFileInfo } from "../config/Config";
 import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsBinding, StackedKeybindingsSet,
   CustomKeybindingsSet } from "./KeybindingsTypes";
 import { ConfigChangeEvent, ConfigDatabase } from "../config/ConfigDatabase";
-import { MinimalKeyboardEvent, TermKeybindingsMapping } from "./KeybindingsManager";
+import { TermKeybindingsMapping } from "./KeybindingsManager";
 
 /**
  * Manages reading keybindings files and r/w keybinding customisation files.
@@ -71,12 +71,12 @@ export class KeybindingsIOManager {
     this.#termKeybindingsMapping = new TermKeybindingsMapping(flatSet, process.platform);
   }
 
-  #clearBaseCaches(): void {
-    this.#baseKeybindingsMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
+  getCurrentKeybindingsMapping(): TermKeybindingsMapping {
+    return this.#termKeybindingsMapping;
   }
 
-  mapEventToCommands(ev: MinimalKeyboardEvent): string[] {
-    return this.#termKeybindingsMapping.mapEventToCommands(ev);
+  #clearBaseCaches(): void {
+    this.#baseKeybindingsMap = new Map<LogicalKeybindingsName, KeybindingsSet>();
   }
 
   #getKeybindingsExtensionPaths(): string [] {

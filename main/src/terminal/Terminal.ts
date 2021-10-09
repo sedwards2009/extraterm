@@ -292,7 +292,7 @@ export class Terminal implements Tab, Disposable {
   #handleKeyPress(event: QKeyEvent): void {
     const ev = qKeyEventToMinimalKeyboardEvent(event);
 
-    const commands = this.#keybindingsIOManager.mapEventToCommands(ev);
+    const commands = this.#keybindingsIOManager.getCurrentKeybindingsMapping().mapEventToCommands(ev);
     const filteredCommands = this.#extensionManager.queryCommands({
       commands,
       when: true

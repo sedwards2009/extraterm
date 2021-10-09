@@ -61,22 +61,22 @@ export class CommandPalette {
       when: true
     });
 
-    // const termKeybindingsMapping = this.#keybindingsIOManager.getFlatKeybindingsSet();
+    const termKeybindingsMapping = this.#keybindingsIOManager.getCurrentKeybindingsMapping();
     const entries = commands.map((command): Entry => {
-    //   const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
-    //   const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+      const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(command.command);
+      const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
       return {
         id: command.command,
         searchText: command.title,
         fields: [
           command.icon,
           command.title,
+          shortcut
         ],
-        // icon: command.icon
       };
     });
 
-    this.#listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT], entries);
+    this.#listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT, FieldType.SECONDARY_TEXT_RIGHT], entries);
 
     const tabRect = window.getTabGlobalGeometry(tab);
 

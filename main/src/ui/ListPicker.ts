@@ -291,7 +291,7 @@ class ContentModel extends QAbstractTableModel {
     }
     if (role === ItemDataRole.TextAlignmentRole) {
       if (this.#fieldTypes[index.column()] === FieldType.SECONDARY_TEXT_RIGHT) {
-        return new QVariant(AlignmentFlag.AlignRight);
+        return new QVariant(AlignmentFlag.AlignRight | AlignmentFlag.AlignVCenter);
       }
     }
     if (role === ItemDataRole.DecorationRole) {
