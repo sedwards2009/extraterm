@@ -37,7 +37,7 @@ export class SettingsTab implements Tab {
     this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
 
-    this.#generalPage = new GeneralPage(uiStyle);
+    this.#generalPage = new GeneralPage(this.#configDatabase, uiStyle);
     this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
       uiStyle);
     this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);

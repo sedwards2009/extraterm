@@ -30,7 +30,7 @@ export function ComboBox(options: ComboBoxOptions): QComboBox {
   for (const item of items) {
     if (typeof item === "string") {
       comboBox.addItem(undefined, item, undefined);
-    } else {
+    } else if (item != null) {
       const userData = item.userData instanceof QVariant ? item.userData : new QVariant(item.userData);
       comboBox.addItem(item.icon, item.text, userData);
     }

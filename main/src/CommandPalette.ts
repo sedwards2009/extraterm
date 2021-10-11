@@ -5,9 +5,8 @@
  */
 import { Logger, log, getLogger } from "extraterm-logging";
 import { doLater } from "extraterm-later";
-import { Direction, QStackedWidget, QTabBar, QFrame, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  QDialog, FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, WindowType } from "@nodegui/nodegui";
-import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, LineEdit, Label } from "qt-construct";
+import { Direction, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
+import { BoxLayout, Widget, Label } from "qt-construct";
 import { Tab } from "./Tab";
 import { Window } from "./Window";
 import { ExtensionManager } from "./InternalTypes";

@@ -17,9 +17,14 @@ import {
 import {
   Direction,
   FocusPolicy,
+  KeyboardModifier,
+  MouseButton,
   Orientation,
+  QApplication,
   QBoxLayout,
+  QClipboardMode,
   QKeyEvent,
+  QMouseEvent,
   QScrollArea,
   QScrollBar,
   QWidget,
@@ -43,6 +48,7 @@ import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
 import { ExtensionManager } from "../extension/ExtensionManager";
 import { Color } from "extraterm-color-utilities";
 import { ConfigDatabase } from "../config/ConfigDatabase";
+import { MouseButtonAction } from "../config/Config";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -132,6 +138,9 @@ export class Terminal implements Tab, Disposable {
     this.#contentWidget.setFocusPolicy(FocusPolicy.ClickFocus);
     this.#contentWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
+    });
+    this.#contentWidget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
+      this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
     });
     this.#contentLayout = new QBoxLayout(Direction.TopToBottom, this.#contentWidget);
     this.#contentLayout.setSizeConstraint(SizeConstraint.SetMinimumSize);
@@ -306,6 +315,58 @@ export class Terminal implements Tab, Disposable {
     this.#contentWidget.setEventProcessed(true);
 
     this.#scrollToBottom();
+  }
+
+  #handleMouseButtonPress(mouseEvent: QMouseEvent): void {
+    const key = this.#mapEventToMouseButtonActionKey(mouseEvent);
+    if (key == null) {
+      return;
+    }
+
+    const generalConfig = this.#configDatabase.getGeneralConfig();
+    const action = <MouseButtonAction> generalConfig[key];
+
+    switch (action) {
+      case "context_menu":
+        this._log.debug("#handleMouseButtonPress() not implemented");
+        // if (this._terminalViewer !== null) {
+        //   ev.stopPropagation();
+        //   ev.preventDefault();
+        //   dispatchContextMenuRequest(this._terminalViewer, ev.x, ev.y);
+        // }
+        break;
+
+      case "paste":
+        mouseEvent.accept();
+        const text = QApplication.clipboard().text();
+        this.pasteText(text);
+        break;
+
+      case "paste_selection":
+        mouseEvent.accept();
+        const text2 = QApplication.clipboard().text(QClipboardMode.Selection);
+        this.pasteText(text2);
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  #mapEventToMouseButtonActionKey(ev: QMouseEvent): string {
+    const button = ev.button();
+    const isMiddleButton = button === MouseButton.MiddleButton;
+    const isRightButton = button === MouseButton.RightButton;
+    if ( ! isMiddleButton && ! isRightButton) {
+      return null;
+    }
+
+    const modifiers = ev.modifiers();
+    const buttonString = isMiddleButton ? "middle" : "right";
+    const isControl = modifiers & KeyboardModifier.ControlModifier;
+    const isShift = modifiers & KeyboardModifier.ShiftModifier
+    const modifierString = isControl ? "Control" : (isShift ? "Shift" : "");
+    return `${buttonString}MouseButton${modifierString}Action`;
   }
 
   setPty(pty: Pty): void {
