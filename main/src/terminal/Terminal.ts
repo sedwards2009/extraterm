@@ -49,6 +49,7 @@ import { ExtensionManager } from "../extension/ExtensionManager";
 import { Color } from "extraterm-color-utilities";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import { MouseButtonAction } from "../config/Config";
+import { computeFontMetrics } from "extraterm-char-render-canvas";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -200,7 +201,8 @@ export class Terminal implements Tab, Disposable {
       return null;
     }
 
-    const metrics = this.#terminalVisualConfig.fontMetrics;
+    const fontInfo = this.#terminalVisualConfig.fontInfo;
+    const metrics = computeFontMetrics(fontInfo.family, fontInfo.style, this.#terminalVisualConfig.fontSizePt);  // TODO: DPI scaling
     const maxViewportSize = this.#scrollArea.maximumViewportSize();
     const currentMargins = this.#scrollArea.viewportMargins();
 
@@ -364,7 +366,7 @@ export class Terminal implements Tab, Disposable {
     const modifiers = ev.modifiers();
     const buttonString = isMiddleButton ? "middle" : "right";
     const isControl = modifiers & KeyboardModifier.ControlModifier;
-    const isShift = modifiers & KeyboardModifier.ShiftModifier
+    const isShift = modifiers & KeyboardModifier.ShiftModifier;
     const modifierString = isControl ? "Control" : (isShift ? "Shift" : "");
     return `${buttonString}MouseButton${modifierString}Action`;
   }

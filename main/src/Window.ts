@@ -239,7 +239,6 @@ export class Window {
     }
 
     const transparentBackground = config.windowBackgroundMode !== "opaque";
-    const fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, config.terminalFontSize);
 
     const extraFonts: FontSlice[] = [
       {
@@ -250,16 +249,12 @@ export class Window {
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }
     ];
-    const extraFontMetrics = extraFonts.map(
-      (extraFont) => computeEmojiMetrics(fontMetrics, extraFont.fontFamily, extraFont.fontSizePx));
 
     const terminalVisualConfig: TerminalVisualConfig = {
       cursorStyle: config.cursorStyle,
       cursorBlink: config.blinkingCursor,
       fontInfo,
-      fontSizePx: config.terminalFontSize,
-      fontMetrics,
-      extraFontMetrics,
+      fontSizePt: config.terminalFontSize,
       extraFonts,
       palette: this.#extractPalette(terminalTheme, transparentBackground),
       terminalTheme,

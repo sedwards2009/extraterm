@@ -6,7 +6,7 @@
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode, QPen } from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
-import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice, CursorStyle } from "extraterm-char-render-canvas";
+import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice, CursorStyle, computeFontMetrics, computeEmojiMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -50,6 +50,8 @@ export class TerminalBlock implements Block {
   #extraFontSlices: ExtraFontSlice[] = [];
   #fontAtlas: TextureFontAtlas = null;
   #heightPx = 1;
+  #fontMetrics: MonospaceFontMetrics = null;
+  #extraFontMetrics: MonospaceFontMetrics[] = [];
 
   #scrollback: Line[] = [];
 
@@ -101,9 +103,24 @@ export class TerminalBlock implements Block {
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this.#terminalVisualConfig = terminalVisualConfig;
+    const fontInfo = terminalVisualConfig.fontInfo;
 
-    this.#fontAtlas = new TextureFontAtlas(this.#terminalVisualConfig.fontMetrics,
-      this.#terminalVisualConfig.extraFontMetrics, terminalVisualConfig.transparentBackground,
+    this.#fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, terminalVisualConfig.fontSizePt);
+    // TODO: ^ apply DPI scaling and proper mapping from Pt -> px
+
+    const extraFonts: FontSlice[] = [
+      {
+        fontFamily: "twemoji",
+        fontSizePx: 16,
+        unicodeStart: 0x1f000,
+        unicodeEnd: 0x20000,
+        sampleChars: ["\u{1f600}"]  // Smile emoji
+      }
+    ];
+    this.#extraFontMetrics = extraFonts.map(
+      (extraFont) => computeEmojiMetrics(this.#fontMetrics, extraFont.fontFamily, extraFont.fontSizePx));
+
+    this.#fontAtlas = new TextureFontAtlas(this.#fontMetrics, this.#extraFontMetrics, terminalVisualConfig.transparentBackground,
       terminalVisualConfig.screenWidthHintPx, terminalVisualConfig.screenHeightHintPx);
 
     this.#extraFontSlices = this.#setupExtraFontSlices(terminalVisualConfig.extraFonts);
@@ -155,7 +172,7 @@ export class TerminalBlock implements Block {
       return;
     }
 
-    const metrics = this.#terminalVisualConfig.fontMetrics;
+    const metrics = this.#fontMetrics;
     const dimensions = this.#emulator.getDimensions();
     const newHeightPx = (dimensions.materializedRows + this.#scrollback.length) * metrics.heightPx;
     if (newHeightPx === this.#heightPx) {
@@ -197,7 +214,7 @@ export class TerminalBlock implements Block {
   #handlePaintEvent(event: QPaintEvent): void {
     const paintRect = event.rect();
 
-    const metrics = this.#terminalVisualConfig.fontMetrics;
+    const metrics = this.#fontMetrics;
     const heightPx = metrics.heightPx;
 
     const topRenderRow = Math.floor(paintRect.top() / heightPx);
@@ -242,7 +259,7 @@ export class TerminalBlock implements Block {
   }
 
   #renderSelection(painter: QPainter, topRenderRow: number, heightRows: number): void {
-    const metrics = this.#terminalVisualConfig.fontMetrics;
+    const metrics = this.#fontMetrics;
     const heightPx = metrics.heightPx;
     const widthPx = metrics.widthPx;
 
@@ -302,7 +319,7 @@ export class TerminalBlock implements Block {
     const qimage = this.#fontAtlas.getQImage();
     let y = startY;
 
-    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const metrics= this.#fontMetrics;
     const heightPx = metrics.heightPx;
     const widthPx = metrics.widthPx;
 
@@ -387,7 +404,7 @@ export class TerminalBlock implements Block {
       return;
     }
 
-    const metrics= this.#terminalVisualConfig.fontMetrics;
+    const metrics= this.#fontMetrics;
     const cellHeightPx = metrics.heightPx;
     const cellWidthPx = metrics.widthPx;
 
@@ -495,14 +512,14 @@ export class TerminalBlock implements Block {
   }
 
   #pixelToRowColumnEdge(x: number, y: number): TerminalCoord {
-    const gridY = Math.floor(y / this.#terminalVisualConfig.fontMetrics.heightPx);
-    const gridX = Math.round(x / this.#terminalVisualConfig.fontMetrics.widthPx);
+    const gridY = Math.floor(y / this.#fontMetrics.heightPx);
+    const gridX = Math.round(x / this.#fontMetrics.widthPx);
     return { x: gridX, y: gridY };
   }
 
   #pixelToCell(x: number, y: number): TerminalCoord {
-    const gridY = Math.floor(y / this.#terminalVisualConfig.fontMetrics.heightPx);
-    const gridX = Math.floor(x / this.#terminalVisualConfig.fontMetrics.widthPx);
+    const gridY = Math.floor(y / this.#fontMetrics.heightPx);
+    const gridX = Math.floor(x / this.#fontMetrics.widthPx);
     return { x: gridX, y: gridY };
   }
 
