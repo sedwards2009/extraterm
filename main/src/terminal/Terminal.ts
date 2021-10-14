@@ -9,6 +9,7 @@ import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
 import { doLater } from "extraterm-later";
 import {
+  Commands,
   Disposable,
   Event,
   SessionConfiguration,
@@ -62,6 +63,10 @@ interface TerminalSize {
   bottomMargin: number;
 }
 
+const MINIMUM_FONT_SIZE = -3;
+const MAXIMUM_FONT_SIZE = 4;
+const FONT_ADJUSTMENT_ARRAY = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3];
+
 
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
@@ -96,6 +101,9 @@ export class Terminal implements Tab, Disposable {
 
   #sessionConfiguration: SessionConfiguration = null;
   #terminalVisualConfig: TerminalVisualConfig = null;
+  #originalTerminalVisualConfig: TerminalVisualConfig = null;
+
+  #fontSizeAdjustment = 0;
 
   environment = new TerminalEnvironmentImpl([
     { key: TerminalEnvironment.TERM_ROWS, value: "" },
@@ -106,6 +114,27 @@ export class Terminal implements Tab, Disposable {
     { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, value: "" },
     { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: "" },
   ]);
+
+  static registerCommands(extensionManager: ExtensionManager): void {
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+
+    commands.registerCommand("extraterm:terminal.scrollPageDown",
+      () => extensionManager.getActiveTerminal().scrollPageDown());
+    commands.registerCommand("extraterm:terminal.scrollPageUp",
+      () => extensionManager.getActiveTerminal().scrollPageUp());
+    commands.registerCommand("extraterm:terminal.pasteFromClipboard",
+      () => extensionManager.getActiveTerminal().commandPasteFromClipboard());
+    commands.registerCommand("extraterm:terminal.copyToClipboard",
+      () => extensionManager.getActiveTerminal().commandCopyToClipboard());
+    commands.registerCommand("extraterm:terminal.resetVT",
+      () => extensionManager.getActiveTerminal().commandResetVT());
+    commands.registerCommand("extraterm:terminal.increaseFontSize",
+      (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
+    commands.registerCommand("extraterm:terminal.decreaseFontSize",
+      (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
+    commands.registerCommand("extraterm:terminal.resetFontSize",
+      (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
+  }
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager) {
     this._log = getLogger("Terminal", this);
@@ -385,7 +414,36 @@ export class Terminal implements Tab, Disposable {
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
-    this.#terminalVisualConfig = terminalVisualConfig;
+    this.#originalTerminalVisualConfig = terminalVisualConfig;
+    this.#terminalVisualConfig = this.#computeEffectiveTerminalVisualConfig(terminalVisualConfig);
+    this.#applyTerminalVisualConfig(this.#terminalVisualConfig);
+  }
+
+  #setFontSizeAdjustment(delta: number): void {
+    const newAdjustment = Math.min(Math.max(this.#fontSizeAdjustment + delta, MINIMUM_FONT_SIZE), MAXIMUM_FONT_SIZE);
+    if (newAdjustment !== this.#fontSizeAdjustment) {
+      this.#fontSizeAdjustment = newAdjustment;
+      this.#terminalVisualConfig = this.#computeEffectiveTerminalVisualConfig(this.#originalTerminalVisualConfig);
+      this.#applyTerminalVisualConfig(this.#terminalVisualConfig);
+    }
+  }
+
+  #resetFontSizeAdjustment(): void {
+    if (this.#fontSizeAdjustment === 0) {
+      return;
+    }
+    this.#fontSizeAdjustment = 0;
+    this.#terminalVisualConfig = this.#computeEffectiveTerminalVisualConfig(this.#originalTerminalVisualConfig);
+    this.#applyTerminalVisualConfig(this.#terminalVisualConfig);
+  }
+
+  #computeEffectiveTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): TerminalVisualConfig {
+    const fontFactor = FONT_ADJUSTMENT_ARRAY[this.#fontSizeAdjustment-MINIMUM_FONT_SIZE];
+    const fontSizePt = Math.round(terminalVisualConfig.fontSizePt * fontFactor);
+    return {...terminalVisualConfig, fontSizePt };
+  }
+
+  #applyTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     for (const block of this.#blocks) {
       if (block instanceof TerminalBlock) {
         block.setTerminalVisualConfig(terminalVisualConfig);
@@ -541,4 +599,48 @@ export class Terminal implements Tab, Disposable {
       this.#pty.write(text);
     }
   }
+
+  commandCopyToClipboard(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    if (terminal == null) {
+      return;
+    }
+    const text = terminal.getSelectionText();
+    if (text == null || text === "") {
+      return;
+    }
+    const clipboard = QApplication.clipboard();
+    clipboard.setText(text);
+  }
+
+  commandPasteFromClipboard(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    if (terminal == null) {
+      return;
+    }
+    const clipboard = QApplication.clipboard();
+    const text = clipboard.text();
+    terminal.pasteText(text);
+  }
+
+  commandResetVT(): void {
+    const terminal = this.#extensionManager.getActiveTerminal();
+    if (terminal == null) {
+      return;
+    }
+    terminal.resetVT();
+  }
+
+  commandFontSizeIncrease(): void {
+    this.#setFontSizeAdjustment(1);
+  }
+
+  commandFontSizeDecrease(): void {
+    this.#setFontSizeAdjustment(-1);
+  }
+
+  commandFontSizeReset(): void {
+    this.#resetFontSizeAdjustment();
+  }
+
 }

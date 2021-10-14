@@ -236,11 +236,8 @@ class Main {
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
-    commands.registerCommand("extraterm:terminal.scrollPageDown", () => this.commandTerminalScrollPageDown());
-    commands.registerCommand("extraterm:terminal.scrollPageUp", () => this.commandTerminalScrollPageUp());
-    commands.registerCommand("extraterm:terminal.pasteFromClipboard", () => this.commandPasteFromClipboard());
-    commands.registerCommand("extraterm:terminal.copyToClipboard", () => this.commandCopyToClipboard());
-    commands.registerCommand("extraterm:terminal.resetVT", () => this.commandResetVT());
+
+    Terminal.registerCommands(extensionManager);
   }
 
   setupDesktopSupport(): void {
@@ -461,45 +458,12 @@ class Main {
     this.#closeTab(win, tab);
   }
 
-  commandTerminalScrollPageDown(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
-    terminal.scrollPageDown();
-  }
-
-  commandTerminalScrollPageUp(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
-    terminal.scrollPageUp();
-  }
-
   commandCopyToClipboard(): void {
     const terminal = this.#extensionManager.getActiveTerminal();
     if (terminal == null) {
       return;
     }
-    const text = terminal.getSelectionText();
-    if (text == null || text === "") {
-      return;
-    }
-    const clipboard = QApplication.clipboard();
-    clipboard.setText(text);
-  }
-
-  commandPasteFromClipboard(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
-    if (terminal == null) {
-      return;
-    }
-    const clipboard = QApplication.clipboard();
-    const text = clipboard.text();
-    terminal.pasteText(text);
-  }
-
-  commandResetVT(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
-    if (terminal == null) {
-      return;
-    }
-    terminal.resetVT();
+    terminal.commandCopyToClipboard();
   }
 }
 
