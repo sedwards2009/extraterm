@@ -235,7 +235,7 @@ export class Emulator implements EmulatorApi {
   private _params = new ControlSequenceParameters();
   private _blinkIntervalId: null | number = null;
   private lines: LineImpl[] = [];
-  private cursorBlink: boolean = true;
+  private cursorBlink: boolean = false;
   debug: boolean;
 
   private applicationModeCookie: string;
