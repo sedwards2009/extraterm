@@ -440,7 +440,8 @@ export class Terminal implements Tab, Disposable {
   #computeEffectiveTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): TerminalVisualConfig {
     const fontFactor = FONT_ADJUSTMENT_ARRAY[this.#fontSizeAdjustment-MINIMUM_FONT_SIZE];
     const fontSizePt = Math.round(terminalVisualConfig.fontSizePt * fontFactor);
-    return {...terminalVisualConfig, fontSizePt };
+    const fontSizePx = Math.round(terminalVisualConfig.fontSizePx * fontFactor);
+    return {...terminalVisualConfig, fontSizePt, fontSizePx };
   }
 
   #applyTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {

@@ -12,7 +12,7 @@
   "scripts": {
     "run": "qode main/dist/main.js",
     "run-theme-test": "qode main/dist/ThemeTestUtility.js",
-    "build": "wsrun --concurrency 2 --exclude-missing --stages build",
+    "build": "wsrun --concurrency 5 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
     "download-launcher-executable": "node build_scripts/download_launcher_executables.js v6",
     "download-deploy-tool": "node build_scripts/download_deploy_tool.js",

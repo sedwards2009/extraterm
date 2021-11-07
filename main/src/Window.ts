@@ -9,7 +9,7 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
@@ -34,8 +34,11 @@ export class Window {
   #keybindingsIOManager: KeybindingsIOManager = null;
 
   #windowWidget: QWidget = null;
+  #windowHandler: QWindow = null;
+  #screen: QScreen = null;
   #tabBar: QTabBar = null;
   #contentStack: QStackedWidget = null;
+  #lastConfigDpi = -1;
 
   #hamburgerMenuButton: QToolButton = null;
   #hamburgerMenu: QMenu = null;
@@ -66,7 +69,6 @@ export class Window {
   }
 
   async init(): Promise<void> {
-    this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
     this.#windowWidget = Widget({
@@ -119,7 +121,18 @@ export class Window {
         ]
       })
     });
+    this.#loadStyleSheet();
     this.#windowWidget.resize(800, 480);
+
+    this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
+  }
+
+  #loadStyleSheet(): void {
+    this.#windowWidget.setStyleSheet("");
+    this.#hamburgerMenu.setStyleSheet("");
+    const sheet = this.#uiStyle.getApplicationStyleSheet();
+    this.#windowWidget.setStyleSheet(sheet);
+    this.#hamburgerMenu.setStyleSheet(sheet);
   }
 
   #createHamburgerMenu(uiStyle: UiStyle): QToolButton {
@@ -250,11 +263,18 @@ export class Window {
       }
     ];
 
+    const screen = this.#windowWidget.isVisible() ? this.#windowWidget.windowHandle().screen() : QApplication.primaryScreen();
+    const dpi = screen.logicalDotsPerInch();
+    this.#lastConfigDpi = dpi;
+
+    const terminalFontSizePx = Math.round(this.#pointsToPx(config.terminalFontSize, dpi));
+
     const terminalVisualConfig: TerminalVisualConfig = {
       cursorStyle: config.cursorStyle,
       cursorBlink: config.blinkingCursor,
       fontInfo,
       fontSizePt: config.terminalFontSize,
+      fontSizePx: terminalFontSizePx,
       extraFonts,
       palette: this.#extractPalette(terminalTheme, transparentBackground),
       terminalTheme,
@@ -282,7 +302,10 @@ export class Window {
         oldConfig.terminalMarginStyle === newConfig.terminalMarginStyle) {
       return;
     }
+    await this.#updateTerminalVisualConfig();
+  }
 
+  async #updateTerminalVisualConfig(): Promise<void> {
     this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
     for (const tab of this.#tabs) {
       if (tab instanceof Terminal) {
@@ -312,6 +335,10 @@ export class Window {
     return result;
   }
 
+  #pointsToPx(point: number, dpi: number): number {
+    return point * dpi / 72;
+  }
+
   #getFontInfo(fontId: string): FontInfo {
     const systemConfig = this.#configDatabase.getSystemConfig();
     for (const fontInfo of systemConfig.availableFonts) {
@@ -324,6 +351,14 @@ export class Window {
 
   open(): void {
     this.#windowWidget.show();
+    this.#windowHandler = this.#windowWidget.windowHandle();
+    this.#screen = this.#windowHandler.screen();
+    this._log.debug(`screen.depth: ${this.#screen.depth()}`);
+    this._log.debug(`screen.logicalDotsPerInch: ${this.#screen.logicalDotsPerInch()}`);
+    this.#screen.addEventListener("logicalDotsPerInchChanged", (dpi: number) => {
+
+    });
+
   }
 
   isActiveWindow(): boolean {

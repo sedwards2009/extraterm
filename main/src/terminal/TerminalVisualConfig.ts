@@ -14,6 +14,7 @@ export interface TerminalVisualConfig {
   cursorBlink: boolean;
   fontInfo: FontInfo;
   fontSizePt: number;
+  fontSizePx: number;
   extraFonts: FontSlice[];
   palette: number[];
   terminalTheme: TerminalTheme;

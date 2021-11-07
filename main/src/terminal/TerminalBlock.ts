@@ -105,7 +105,7 @@ export class TerminalBlock implements Block {
     this.#terminalVisualConfig = terminalVisualConfig;
     const fontInfo = terminalVisualConfig.fontInfo;
 
-    this.#fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, terminalVisualConfig.fontSizePt);
+    this.#fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, terminalVisualConfig.fontSizePx);
     // TODO: ^ apply DPI scaling and proper mapping from Pt -> px
 
     const extraFonts: FontSlice[] = [

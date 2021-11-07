@@ -90,7 +90,7 @@ export class AppearancePage {
                       update((c) => c.terminalFontSize = value);
                     },
                   }),
-                  "pixels"
+                  "point"
                 ),
 
                 "",
