@@ -34,7 +34,7 @@ export class Window {
   #keybindingsIOManager: KeybindingsIOManager = null;
 
   #windowWidget: QWidget = null;
-  #windowHandler: QWindow = null;
+  #windowHandle: QWindow = null;
   #screen: QScreen = null;
   #tabBar: QTabBar = null;
   #contentStack: QStackedWidget = null;
@@ -63,6 +63,8 @@ export class Window {
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#themeManager = themeManager;
     this.#uiStyle = uiStyle;
+
+    this.#handleLogicalDpiChanged.bind(this);
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
     this.onTabChange = this.#onTabChangeEventEmitter.event;
@@ -351,14 +353,31 @@ export class Window {
 
   open(): void {
     this.#windowWidget.show();
-    this.#windowHandler = this.#windowWidget.windowHandle();
-    this.#screen = this.#windowHandler.screen();
-    this._log.debug(`screen.depth: ${this.#screen.depth()}`);
-    this._log.debug(`screen.logicalDotsPerInch: ${this.#screen.logicalDotsPerInch()}`);
-    this.#screen.addEventListener("logicalDotsPerInchChanged", (dpi: number) => {
 
+    this.#windowHandle = this.#windowWidget.windowHandle();
+    this.#windowHandle.addEventListener("screenChanged", (screen: QScreen) => {
+      this.#watchScreen(screen);
+
+      const newDpi = this.#screen.logicalDotsPerInch();
+      if (newDpi !== this.#lastConfigDpi) {
+        this.#updateTerminalVisualConfig();
+      }
     });
+  }
 
+  #handleLogicalDpiChanged(dpi: number): void {
+    if (dpi !== this.#lastConfigDpi) {
+      this.#updateTerminalVisualConfig();
+    }
+  }
+
+  #watchScreen(screen: QScreen): void {
+    if (this.#screen != null) {
+      this.#screen.removeEventListener("logicalDotsPerInchChanged",  this.#handleLogicalDpiChanged);
+    }
+
+    this.#screen = screen;
+    this.#screen.addEventListener("logicalDotsPerInchChanged",  this.#handleLogicalDpiChanged);
   }
 
   isActiveWindow(): boolean {
