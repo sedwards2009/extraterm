@@ -17,7 +17,7 @@ interface PlainLigatureMarker {
 export class CachingLigatureMarker implements LigatureMarker {
   private _log: Logger;
 
-  private _cache: lru.Cache<string, Uint16Array> = null;
+  private _cache: lru.Cache<string, Uint8Array> = null;
 
   constructor(private _marker: PlainLigatureMarker) {
     this._log = getLogger("CachingLigatureMarker", this);

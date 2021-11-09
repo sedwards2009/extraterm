@@ -269,21 +269,14 @@ class FontImpl implements Font {
     const glyphIds = this._findGlyphIdsInCharCellGridRow(grid, row);
 
     const width = grid.width;
-    const result = this._findInternal(glyphIds);
-    let i = 0;
-    for (const range of result.ranges) {
-      while (i < range[0]) {
-        grid.setLigature(i, row, 0);
-        i++;
-      }
-      const ligatureLength = range[1] - range[0];
-      grid.setLigature(range[0], row, ligatureLength);
-      i += ligatureLength;
+    for (let i=0; i<width; i++) {
+      grid.setLigature(i, row, 0);
     }
 
-    while (i < width) {
-      grid.setLigature(i, row, 0);
-      i++;
+    const result = this._findInternal(glyphIds);
+    for (const range of result.ranges) {
+      const ligatureLength = range[1] - range[0];
+      grid.setLigature(range[0], row, ligatureLength);
     }
   }
 
