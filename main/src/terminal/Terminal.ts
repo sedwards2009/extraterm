@@ -231,7 +231,7 @@ export class Terminal implements Tab, Disposable {
     }
 
     const fontInfo = this.#terminalVisualConfig.fontInfo;
-    const metrics = computeFontMetrics(fontInfo.family, fontInfo.style, this.#terminalVisualConfig.fontSizePt);  // TODO: DPI scaling
+    const metrics = computeFontMetrics(fontInfo.family, fontInfo.style, this.#terminalVisualConfig.fontSizePx);
     const maxViewportSize = this.#scrollArea.maximumViewportSize();
     const currentMargins = this.#scrollArea.viewportMargins();
 

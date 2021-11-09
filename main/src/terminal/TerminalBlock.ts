@@ -3,10 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode, QPen } from "@nodegui/nodegui";
+import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode,
+  QPen } from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
-import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice, CursorStyle, computeFontMetrics, computeEmojiMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
+import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice,
+  CursorStyle, computeFontMetrics, computeEmojiMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -106,7 +108,6 @@ export class TerminalBlock implements Block {
     const fontInfo = terminalVisualConfig.fontInfo;
 
     this.#fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, terminalVisualConfig.fontSizePx);
-    // TODO: ^ apply DPI scaling and proper mapping from Pt -> px
 
     const extraFonts: FontSlice[] = [
       {
