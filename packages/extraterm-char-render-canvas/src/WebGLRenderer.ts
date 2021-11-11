@@ -358,7 +358,8 @@ export class WebGLRenderer {
       codePoint: 0,
       extraFontFlag: false,
       isLigature: false,
-      ligatureCodePoints: null
+      ligatureCodePoints: null,
+      linkID: 0,
     };
 
     for (let j=0; j<cellGrid.height; j++) {

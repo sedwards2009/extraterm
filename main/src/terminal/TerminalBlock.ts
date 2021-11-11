@@ -9,7 +9,7 @@ import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice,
   CursorStyle, computeFontMetrics, computeEmojiMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
-import { STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
+import { STYLE_MASK_CURSOR, STYLE_MASK_HYPERLINK_HIGHLIGHT, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
@@ -65,6 +65,9 @@ export class TerminalBlock implements Block {
   #onSelectionChangedEventEmitter = new EventEmitter<void>();
   onSelectionChanged: Event<void>;
 
+  #hoveredURL: string = null;
+  #hoveredGroup: string = null;
+
   constructor() {
     this._log = getLogger("TerminalBlock", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
@@ -79,6 +82,7 @@ export class TerminalBlock implements Block {
     widget.setObjectName(this._log.getName());
 
     widget.setMaximumSize(16777215, this.#heightPx);
+    widget.setMouseTracking(true);
 
     widget.addEventListener(WidgetEventTypes.Paint, (nativeEvent) => {
       this.#handlePaintEvent(new QPaintEvent(nativeEvent));
@@ -271,7 +275,7 @@ export class TerminalBlock implements Block {
       return;
     }
 
-    if ( ! terminalCoordLess(selectionStart, selectionEnd)) {
+    if ( ! terminalCoordLessThan(selectionStart, selectionEnd)) {
       selectionStart = this.#selectionEnd;
       selectionEnd = this.#selectionStart;
     }
@@ -331,7 +335,8 @@ export class TerminalBlock implements Block {
       codePoint: 0,
       extraFontFlag: false,
       isLigature: false,
-      ligatureCodePoints: null
+      ligatureCodePoints: null,
+      linkID: 0,
     };
 
     const palette = this.#terminalVisualConfig.palette;
@@ -346,6 +351,11 @@ export class TerminalBlock implements Block {
         ligatureMarker.markLigaturesCharCellGridRow(line, 0, text);
       }
 
+      let hoverLinkID = 0;
+      if (this.#hoveredURL != null) {
+        hoverLinkID = line.getLinkIDByURL(this.#hoveredURL, this.#hoveredGroup);
+      }
+
       let px = 0;
       for (const column of normalizedCellIterator(line, 0, normalizedCell)) {
         const codePoint = normalizedCell.codePoint;
@@ -354,7 +364,7 @@ export class TerminalBlock implements Block {
         let fgRGBA = line.getFgRGBA(column, 0);
         let bgRGBA = line.getBgRGBA(column, 0);
 
-        const style = line.getStyle(column, 0);
+        let style = line.getStyle(column, 0);
         if ((style & STYLE_MASK_CURSOR) && renderCursor) {
           fgRGBA = bgRGBA;
           bgRGBA = cursorColor;
@@ -366,6 +376,10 @@ export class TerminalBlock implements Block {
           }
         }
         fgRGBA |= 0x000000ff;
+
+        if ((hoverLinkID !== 0) && (normalizedCell.linkID === hoverLinkID)) {
+          style |= STYLE_MASK_HYPERLINK_HIGHLIGHT;
+        }
 
         let glyph: TextureCachedGlyph;
         if (normalizedCell.isLigature) {
@@ -570,10 +584,42 @@ export class TerminalBlock implements Block {
 
   #handleMouseMove(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
+    // Try to feed the event to the emulator
     if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseMove(termEvent)) {
       return;
     }
 
+    if (termEvent.leftButton) {
+      this.#handleSelectionMouseMove(termEvent);
+      return;
+    }
+    this.#handleLinkMouseMove(termEvent);
+  }
+
+  #handleLinkMouseMove(termEvent: ExpandedMouseEventOptions): void {
+    const previousURL = this.#hoveredURL;
+    const previousGroup = this.#hoveredGroup;
+
+    const line = this.#getLine(termEvent.row + this.#scrollback.length);
+    let linkID = 0;
+    if (termEvent.column < line.width) {
+      linkID = line.getLinkID(termEvent.column, 0);
+    }
+
+    if (linkID === 0) {
+      this.#hoveredURL = null;
+      this.#hoveredGroup = null;
+    } else {
+      const { url, group } = line.getLinkURLByID(linkID);
+      this.#hoveredURL = url;
+      this.#hoveredGroup = group;
+    }
+    if (previousURL !== this.#hoveredURL || previousGroup !== this.#hoveredGroup) {
+      this.#widget.update();
+    }
+  }
+
+  #handleSelectionMouseMove(termEvent: ExpandedMouseEventOptions): void {
     if (this.#selectionStart == null) {
       this.#selectionStart = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
       this.#selectionEnd = this.#selectionStart;
@@ -584,7 +630,7 @@ export class TerminalBlock implements Block {
     }
 
     if (this.#isWordSelection) {
-      const isBeforeSelection = terminalCoordLess({x: termEvent.column, y: termEvent.row + this.#scrollback.length},
+      const isBeforeSelection = terminalCoordLessThan({x: termEvent.column, y: termEvent.row + this.#scrollback.length},
                                                   this.#selectionStart);
       if (isBeforeSelection) {
         this.#selectionEnd = { x: this.#extendXWordLeft(termEvent), y: termEvent.row + this.#scrollback.length };
@@ -594,7 +640,6 @@ export class TerminalBlock implements Block {
     } else {
       this.#selectionEnd = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
     }
-
     this.#widget.update();
   }
 
@@ -664,7 +709,7 @@ function terminalCoordEqual(a: TerminalCoord, b: TerminalCoord): boolean {
   return a.x === b.x && a.y === b.y;
 }
 
-function terminalCoordLess(a: TerminalCoord, b: TerminalCoord): boolean {
+function terminalCoordLessThan(a: TerminalCoord, b: TerminalCoord): boolean {
   if (a.y < b.y) {
     return true;
   }

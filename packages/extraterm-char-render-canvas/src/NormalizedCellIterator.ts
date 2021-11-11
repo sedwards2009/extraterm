@@ -14,6 +14,7 @@ export interface NormalizedCell {
 
   isLigature: boolean;
   ligatureCodePoints: number[];
+  linkID: number;
 }
 
 /**
@@ -38,6 +39,7 @@ export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number, res
     if (isLigature) {
       // Ligature case
       const extraFontFlag = (cellGrid.getFlags(x, row) & FLAG_MASK_EXTRA_FONT) !== 0;
+      const linkID = cellGrid.getLinkID(x, row);
 
       const ligatureCodePoints: number[] = [];
       for (let k=0; k<widthChars; k++) {
@@ -51,6 +53,7 @@ export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number, res
         result.extraFontFlag = extraFontFlag;
         result.isLigature = true;
         result.ligatureCodePoints = ligatureCodePoints;
+        result.linkID = linkID;
 
         yield x;
         x++;
@@ -59,6 +62,7 @@ export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number, res
       // Normal and wide character case
       const codePoint = cellGrid.getCodePoint(x, row);
       const extraFontFlag = (cellGrid.getFlags(x, row) & FLAG_MASK_EXTRA_FONT) !== 0;
+      const linkID = cellGrid.getLinkID(x, row);
       for (let k=0; k<widthChars; k++) {
         result.x = x;
         result.segment = k;
@@ -66,6 +70,7 @@ export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number, res
         result.extraFontFlag = extraFontFlag;
         result.isLigature = false;
         result.ligatureCodePoints = null;
+        result.linkID = linkID;
 
         yield x;
         x++;
