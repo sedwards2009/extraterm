@@ -3,7 +3,7 @@
   "displayName": "Open Link",
   "version": "1.0.0",
   "description": "",
-  "windowMain": "dist/OpenLink.js",
+  "main": "dist/OpenLink.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist data"
@@ -29,7 +29,6 @@
         }
       ]
     }
-
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.14.0",

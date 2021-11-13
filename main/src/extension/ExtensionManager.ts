@@ -183,7 +183,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     this._log.info(`Starting extension '${metadata.name}'`);
 
-    contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, null, this.#applicationVersion);
+    contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, this.#commonExtensionWindowState,
+      this.#applicationVersion);
     if (metadata.main != null) {
       module = this.#loadExtensionModule(metadata);
       if (module == null) {
@@ -390,17 +391,6 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return results;
   }
 
-  /**
-   * Execute a function with a different temporary extension context.
-   */
-  #executeFuncWithExtensionWindowState<R>(tempState: CommonExtensionWindowState, func: () => R): R {
-    const oldState = this.copyExtensionWindowState();
-    this.#setExtensionWindowState(tempState);
-    const result = func();
-    this.#setExtensionWindowState(oldState);
-    return result;
-  }
-
   copyExtensionWindowState(): CommonExtensionWindowState {
     return { ...this.#commonExtensionWindowState };
   }
@@ -444,6 +434,24 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
 
     throw new Error(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
+  }
+
+  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any {
+    let result: any = undefined;
+    this.#executeFuncWithExtensionWindowState(tempState, () => {
+      result = this.executeCommand(command, args);
+    });
+    return result;
+  }
+
+  /**
+   * Execute a function with a different temporary extension context.
+   */
+  #executeFuncWithExtensionWindowState(tempState: CommonExtensionWindowState, func: () => void,): any {
+    const oldState = this.copyExtensionWindowState();
+    this.#setExtensionWindowState(tempState);
+    func();
+    this.#setExtensionWindowState(oldState);
   }
 
   #runCommandFunc(name: string, commandFunc: (args: any) => any, args: any): any {
@@ -527,9 +535,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
             const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
                                 commandEntry.commandContribution.command);
             if (customizer != null) {
-              this.#executeFuncWithExtensionWindowState(context, () => {
-                entries.push( {...commandEntry.commandContribution, ...customizer() });
-              });
+              this.#executeFuncWithExtensionWindowState(context,
+                () => {
+                  entries.push({...commandEntry.commandContribution, ...customizer()});
+                });
             } else {
               entries.push(commandEntry.commandContribution);
             }

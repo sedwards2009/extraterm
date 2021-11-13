@@ -5,6 +5,10 @@
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { ClipboardImpl } from "./ClipboardImpl";
+import * as open from "open";
+import * as fs from "fs";
+import * as path from "path";
+
 
 export class ApplicationImpl implements ExtensionApi.Application {
 
@@ -20,11 +24,23 @@ export class ApplicationImpl implements ExtensionApi.Application {
   }
 
   openExternal(url: string): void {
-    // shell.openExternal(url);
+    if (url == null) {
+      return;
+    }
+    open(url);
   }
 
-  showItemInFileManager(path: string): void {
-    // shell.showItemInFolder(path);
+  showItemInFileManager(itemPath: string): void {
+    if (itemPath == null) {
+      return;
+    }
+
+    const stats = fs.statSync(itemPath);
+    let cleanPath = itemPath;
+    if (stats.isDirectory()) {
+      cleanPath = path.dirname(itemPath);
+    }
+    open(`file:/${cleanPath}`);
   }
 
   get isLinux(): boolean {

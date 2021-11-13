@@ -126,8 +126,7 @@ export class WindowProxy implements InternalWindow {
   }
 
   get activeHyperlinkURL(): string {
-    // return this.#commonExtensionState.activeHyperlinkURL;
-    return null;
+    return this.#commonExtensionState.activeHyperlinkURL;
   }
 
   get terminals(): ExtensionApi.Terminal[] {

@@ -51,6 +51,7 @@ import { Color } from "extraterm-color-utilities";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import { MouseButtonAction } from "../config/Config";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
+import { CommandQueryOptions } from "../InternalTypes";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -211,6 +212,9 @@ export class Terminal implements Tab, Disposable {
     terminalBlock.onSelectionChanged(() => {
       this.#onSelectionChangedEventEmitter.fire();
     });
+    terminalBlock.onHyperlinkClicked((url: string): void => {
+      this.#handleHyperlinkClick(url);
+    });
   }
 
   #handleResize(): void {
@@ -345,7 +349,9 @@ export class Terminal implements Tab, Disposable {
     event.accept();
     this.#contentWidget.setEventProcessed(true);
 
-    this.#scrollToBottom();
+    if (event.text() != "") {
+      this.#scrollToBottom();
+    }
   }
 
   #handleMouseButtonPress(mouseEvent: QMouseEvent): void {
@@ -464,6 +470,22 @@ export class Terminal implements Tab, Disposable {
     `);
 
     this.resizeEmulatorFromTerminalSize();
+  }
+
+  #handleHyperlinkClick(url: string): void {
+    const options: CommandQueryOptions = {
+      when: true,
+      categories: ["hyperlink"]
+    };
+    const contextWindowState = this.#extensionManager.copyExtensionWindowState();
+    contextWindowState.activeHyperlinkURL = url;
+    const entries = this.#extensionManager.queryCommandsWithExtensionWindowState(options, contextWindowState);
+    if (entries.length === 0) {
+      return;
+    }
+
+    const commandName = entries[0].command;
+    this.#extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
   }
 
   dispose(): void {

@@ -68,9 +68,13 @@ export class TerminalBlock implements Block {
   #hoveredURL: string = null;
   #hoveredGroup: string = null;
 
+  #onHyperlinkClickedEventEmitter = new EventEmitter<string>();
+  onHyperlinkClicked: Event<string>;
+
   constructor() {
     this._log = getLogger("TerminalBlock", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
+    this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
 
     this.#widget = this.#createWidget();
 
@@ -494,12 +498,25 @@ export class TerminalBlock implements Block {
     const termEvent = this.#qMouseEventToTermApi(event);
 
     if (termEvent.ctrlKey) {
+      // Hyperlink click
+      const line = this.#getLine(termEvent.row + this.#scrollback.length);
+      if (termEvent.column < line.width) {
+        const linkID = line.getLinkID(termEvent.column, 0);
+        if (linkID !== 0) {
+          const pair = line.getLinkURLByID(linkID);
+          if (pair != null) {
+            this.#onHyperlinkClickedEventEmitter.fire(pair.url);
+            return;
+          }
+        }
+      }
 
     } else {
       if (this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseDown(termEvent)) {
         return;
       }
     }
+
     this.#selectionStart = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
     this.#selectionEnd = this.#selectionStart;
     this.#selectionMode = SelectionMode.NORMAL;

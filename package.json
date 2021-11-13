@@ -46,6 +46,7 @@
       "extensions/ITermColorsTerminalThemeProvider",
       "extensions/UnixSessionBackend",
       "extensions/ProxySessionBackend",
+      "extensions/OpenLink",
       "extensions/WindowsConsoleSessionBackend"
     ],
     "nohoist": [
