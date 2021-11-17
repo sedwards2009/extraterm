@@ -456,6 +456,7 @@ export class Window {
     if (tab instanceof Terminal) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
       tabPlumbing.disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
+
         this.#updateContextMenu(this.#uiStyle);
         this.#contextMenu.popup(new QPoint(ev.x, ev.y));
       }));

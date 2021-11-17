@@ -40,6 +40,8 @@
     "packages": [
       "main",
       "packages/*",
+      "extensions/Autolink",
+      "extensions/CopyLink",
       "extensions/DefaultTerminalTheme",
       "extensions/CommunityTerminalThemes",
       "extensions/InternalCommands",

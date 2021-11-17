@@ -21,7 +21,7 @@ export interface CreateIconOptions extends CreateFontIconOptions {}
 export function createIcon(name: string, options?: CreateIconOptions): QIcon {
   const entry = allIcons[name];
   if (entry === undefined) {
-    _log.warn(`Unknown icon name ${name}`);
+    _log.warn(`Unknown icon name '${name}'`);
     return null;
   }
   return createFontIcon(fontSetMapping[entry.set], entry.string, options);
@@ -30,7 +30,7 @@ export function createIcon(name: string, options?: CreateIconOptions): QIcon {
 export function createHtmlIcon(name: string): string {
   const entry = allIcons[name];
   if (entry === undefined) {
-    _log.warn(`Unknown icon name ${name}`);
+    _log.warn(`Unknown icon name '${name}'`);
     return null;
   }
   return `<font face="${fontSetMapping[entry.set]}">${entry.string}</font>`;

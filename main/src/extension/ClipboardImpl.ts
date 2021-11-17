@@ -4,10 +4,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
+import { QApplication } from '@nodegui/nodegui';
 
 
 export class ClipboardImpl implements ExtensionApi.Clipboard {
   writeText(text: string): void {
-    // clipboardWrite(text);
+    const clipboard = QApplication.clipboard();
+    clipboard.setText(text);
   }
 }

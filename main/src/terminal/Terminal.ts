@@ -66,7 +66,7 @@ interface TerminalSize {
 
 export interface ContextMenuEvent {
   x: number;
-  y: number;  
+  y: number;
 }
 
 const MINIMUM_FONT_SIZE = -3;
@@ -149,7 +149,7 @@ export class Terminal implements Tab, Disposable {
     this._log = getLogger("Terminal", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
-    
+
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
@@ -223,6 +223,9 @@ export class Terminal implements Tab, Disposable {
     });
     terminalBlock.onHyperlinkClicked((url: string): void => {
       this.#handleHyperlinkClick(url);
+    });
+    terminalBlock.onHyperlinkHover((url: string): void => {
+      this.#handleHyperlinkHover(terminalBlock, url);
     });
   }
 
@@ -358,7 +361,7 @@ export class Terminal implements Tab, Disposable {
     event.accept();
     this.#contentWidget.setEventProcessed(true);
 
-    if (event.text() != "") {
+    if (event.text() !== "") {
       this.#scrollToBottom();
     }
   }
@@ -374,7 +377,6 @@ export class Terminal implements Tab, Disposable {
 
     switch (action) {
       case "context_menu":
-        this._log.debug("#handleMouseButtonPress() not implemented");
         mouseEvent.accept();
         this.#onContextMenuEventEmitter.fire({ x: mouseEvent.globalX() , y: mouseEvent.globalY() });
         break;
@@ -476,6 +478,10 @@ export class Terminal implements Tab, Disposable {
     `);
 
     this.resizeEmulatorFromTerminalSize();
+  }
+
+  #handleHyperlinkHover(terminalBlock: TerminalBlock, url: string): void {
+    this.#extensionManager.setActiveHyperlinkURL(url);
   }
 
   #handleHyperlinkClick(url: string): void {

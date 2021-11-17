@@ -72,10 +72,14 @@ export class TerminalBlock implements Block {
   #onHyperlinkClickedEventEmitter = new EventEmitter<string>();
   onHyperlinkClicked: Event<string>;
 
+  #onHyperlinkHoverEventEmitter = new EventEmitter<string>();
+  onHyperlinkHover: Event<string>;
+
   constructor() {
     this._log = getLogger("TerminalBlock", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
+    this.onHyperlinkHover = this.#onHyperlinkHoverEventEmitter.event;
 
     this.#widget = this.#createWidget();
 
@@ -637,6 +641,7 @@ export class TerminalBlock implements Block {
     }
     if (previousURL !== this.#hoveredURL || previousGroup !== this.#hoveredGroup) {
       this.#widget.update();
+      this.#onHyperlinkHoverEventEmitter.fire(this.#hoveredURL);
     }
   }
 

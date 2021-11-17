@@ -17,7 +17,7 @@
         "title": "Open Link",
         "category": "hyperlink",
         "order": 800,
-        "icon": "fas fa-external-link-alt",
+        "icon": "fa-external-link-alt",
         "when": "isHyperlink && (hyperlinkProtocol == 'http:' || hyperlinkProtocol == 'https:' || hyperlinkProtocol == 'ftp:' || hyperlinkProtocol == 'file:')"
       }
     ],

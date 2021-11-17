@@ -379,6 +379,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeTerminal;
   }
 
+  getActiveHyperlinkURL(): string {
+    return this.#commonExtensionWindowState.activeHyperlinkURL;
+  }
+
+  setActiveHyperlinkURL(url: string): void {
+    this.#commonExtensionWindowState.activeHyperlinkURL = url;
+  }
+
   getAllTerminalThemeFormats(): {name: string, formatName: string}[] {
     const results = [];
     for (const metadata of this.#extensionMetadata) {
