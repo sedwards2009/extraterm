@@ -4,7 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode,
-  QPen } from "@nodegui/nodegui";
+  QPen,
+  ContextMenuPolicy} from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice,
@@ -84,6 +85,7 @@ export class TerminalBlock implements Block {
   #createWidget(): QWidget {
     const widget = new QWidget();
     widget.setObjectName(this._log.getName());
+    widget.setContextMenuPolicy(ContextMenuPolicy.PreventContextMenu);
 
     widget.setMaximumSize(16777215, this.#heightPx);
     widget.setMouseTracking(true);
@@ -517,12 +519,14 @@ export class TerminalBlock implements Block {
       }
     }
 
-    this.#selectionStart = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
-    this.#selectionEnd = this.#selectionStart;
-    this.#selectionMode = SelectionMode.NORMAL;
-    this.#isWordSelection = false;
+    if (termEvent.leftButton) {
+      this.#selectionStart = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
+      this.#selectionEnd = this.#selectionStart;
+      this.#selectionMode = SelectionMode.NORMAL;
+      this.#isWordSelection = false;
 
-    this.#widget.update();
+      this.#widget.update();
+    }
   }
 
   #qMouseEventToTermApi(event: QMouseEvent): ExpandedMouseEventOptions {

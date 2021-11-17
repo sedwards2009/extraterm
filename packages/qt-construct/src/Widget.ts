@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget, WidgetAttribute, WidgetEventTypes, WindowType
+import { ContextMenuPolicy, FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget, WidgetAttribute, WidgetEventTypes, WindowType
 } from "@nodegui/nodegui";
 
 export interface WidgetOptions {
@@ -24,12 +24,14 @@ export interface WidgetOptions {
   minimumHeight?: number;
   minimumWidth?: number;
   inlineStyle?: string;
+  contextMenuPolicy?: ContextMenuPolicy.PreventContextMenu;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
-    attribute, enabled, id, cssClass, focusPolicy, layout, onEnter, onLeave, onKeyPress, sizePolicy, windowTitle,
-    maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle
+    attribute, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter,
+    onLeave, onKeyPress, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight,
+    minimumWidth, windowFlag, inlineStyle
   } = options;
 
   if (enabled !== undefined) {
@@ -84,6 +86,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (inlineStyle !== undefined ) {
     widget.setInlineStyle(inlineStyle);
+  }
+  if (contextMenuPolicy !== undefined) {
+    widget.setContextMenuPolicy(contextMenuPolicy);
   }
 }
 

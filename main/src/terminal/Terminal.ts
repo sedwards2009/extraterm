@@ -64,6 +64,11 @@ interface TerminalSize {
   bottomMargin: number;
 }
 
+export interface ContextMenuEvent {
+  x: number;
+  y: number;  
+}
+
 const MINIMUM_FONT_SIZE = -3;
 const MAXIMUM_FONT_SIZE = 4;
 const FONT_ADJUSTMENT_ARRAY = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3];
@@ -99,6 +104,9 @@ export class Terminal implements Tab, Disposable {
 
   #onSelectionChangedEventEmitter = new EventEmitter<void>();
   onSelectionChanged: Event<void>;
+
+  #onContextMenuEventEmitter = new EventEmitter<ContextMenuEvent>();
+  onContextMenu: Event<ContextMenuEvent>;
 
   #sessionConfiguration: SessionConfiguration = null;
   #terminalVisualConfig: TerminalVisualConfig = null;
@@ -140,7 +148,8 @@ export class Terminal implements Tab, Disposable {
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager) {
     this._log = getLogger("Terminal", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
-
+    this.onContextMenu = this.#onContextMenuEventEmitter.event;
+    
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
@@ -366,11 +375,8 @@ export class Terminal implements Tab, Disposable {
     switch (action) {
       case "context_menu":
         this._log.debug("#handleMouseButtonPress() not implemented");
-        // if (this._terminalViewer !== null) {
-        //   ev.stopPropagation();
-        //   ev.preventDefault();
-        //   dispatchContextMenuRequest(this._terminalViewer, ev.x, ev.y);
-        // }
+        mouseEvent.accept();
+        this.#onContextMenuEventEmitter.fire({ x: mouseEvent.globalX() , y: mouseEvent.globalY() });
         break;
 
       case "paste":

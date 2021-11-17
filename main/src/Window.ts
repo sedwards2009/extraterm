@@ -9,14 +9,14 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
 import { Tab } from "./Tab";
-import { Terminal } from "./terminal/Terminal";
+import { ContextMenuEvent, Terminal } from "./terminal/Terminal";
 import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig";
 import { ThemeManager } from "./theme/ThemeManager";
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
@@ -25,7 +25,13 @@ import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
 import { UiStyle } from "./ui/UiStyle";
 import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker";
+import { DisposableHolder } from "./utils/DisposableUtils";
 
+
+interface TabPlumbing {
+  tab: Tab;
+  disposableHolder: DisposableHolder;
+}
 
 export class Window {
   private _log: Logger = null;
@@ -43,7 +49,9 @@ export class Window {
   #hamburgerMenuButton: QToolButton = null;
   #hamburgerMenu: QMenu = null;
 
-  #tabs: Tab[] = [];
+  #contextMenu: QMenu = null;
+
+  #tabs: TabPlumbing[] = [];
   #terminalVisualConfig: TerminalVisualConfig = null;
   #themeManager: ThemeManager = null;
   #uiStyle: UiStyle = null;
@@ -76,6 +84,7 @@ export class Window {
     this.#windowWidget = Widget({
       windowTitle: "Extraterm Qt",
       focusPolicy: FocusPolicy.ClickFocus,
+      contextMenuPolicy: ContextMenuPolicy.PreventContextMenu,
       cssClass: ["window-background"],
       onKeyPress: (nativeEvent) => {
         this.#handleKeyPress(new QKeyEvent(nativeEvent));
@@ -126,6 +135,8 @@ export class Window {
     this.#loadStyleSheet();
     this.#windowWidget.resize(800, 480);
 
+    this.#initContextMenu();
+
     this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
   }
 
@@ -169,8 +180,12 @@ export class Window {
       when: true,
       windowMenu: true,
     };
+    this.#updateMenu(this.#hamburgerMenu, options, uiStyle);
+  }
 
-    this.#hamburgerMenu.clear();
+  #updateMenu(menu: QMenu, options: CommandQueryOptions, uiStyle: UiStyle): void {
+    menu.clear();
+
     const entries = this.#extensionManager.queryCommands(options);
     if (entries.length === 0) {
       return;
@@ -180,10 +195,11 @@ export class Window {
     let category = entries[0].category;
     for (const entry of entries) {
       if (entry.category !== category) {
-        this.#hamburgerMenu.addSeparator();
+        menu.addSeparator();
         category = entry.category;
       }
-      const action = this.#hamburgerMenu.addAction(entry.title);
+
+      const action = menu.addAction(entry.title);
       action.setData(new QVariant(entry.command));
       if (entry.icon != null) {
         const icon = uiStyle.getMenuIcon(entry.icon);
@@ -198,6 +214,25 @@ export class Window {
         action.setShortcut(new QKeySequence(shortcut));
       }
     }
+  }
+
+  #initContextMenu(): void {
+    this.#contextMenu = Menu({
+      attribute: [WidgetAttribute.WA_TranslucentBackground],
+      onTriggered: (nativeAction) => {
+        const action = new QAction(nativeAction);
+        this.#handleWindowMenuTriggered(action.data().toString());
+      }
+    });
+    this.#contextMenu.setNodeParent(this.getWidget());
+  }
+
+  #updateContextMenu(uiStyle: UiStyle): void {
+    const options: CommandQueryOptions = {
+      when: true,
+      contextMenu: true,
+    };
+    this.#updateMenu(this.#contextMenu, options, uiStyle);
   }
 
   #handleWindowMenuTriggered(commandName: string): void {
@@ -218,7 +253,7 @@ export class Window {
   }
 
   #handleTabBarCloseClicked(index: number): void {
-    this.#onTabCloseRequestEventEmitter.fire(this.#tabs[index]);
+    this.#onTabCloseRequestEventEmitter.fire(this.#tabs[index].tab);
   }
 
   #handleKeyPress(event: QKeyEvent): void {
@@ -310,8 +345,8 @@ export class Window {
   async #updateTerminalVisualConfig(): Promise<void> {
     this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
     for (const tab of this.#tabs) {
-      if (tab instanceof Terminal) {
-        tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+      if (tab.tab instanceof Terminal) {
+        tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
       }
     }
   }
@@ -390,13 +425,13 @@ export class Window {
 
   setCurrentTabIndex(index: number): void {
     const currentIndex = this.getCurrentTabIndex();
-    this.#tabs[currentIndex].unfocus();
+    this.#tabs[currentIndex].tab.unfocus();
 
     this.#tabBar.setCurrentIndex(index);
     this.#contentStack.setCurrentIndex(index);
-    this.#tabs[index].focus();
+    this.#tabs[index].tab.focus();
 
-    this.#onTabChangeEventEmitter.fire(this.#tabs[index]);
+    this.#onTabChangeEventEmitter.fire(this.#tabs[index].tab);
   }
 
   getCurrentTabIndex(): number {
@@ -408,18 +443,22 @@ export class Window {
   }
 
   getTab(index: number): Tab {
-    return this.#tabs[index];
+    return this.#tabs[index].tab;
   }
 
   addTab(tab: Tab): void {
-    if (this.#tabs.includes(tab)) {
+    if (this.#tabs.map(t => t.tab).includes(tab)) {
       return;
     }
-
-    this.#tabs.push(tab);
+    const tabPlumbing: TabPlumbing = {tab, disposableHolder: new DisposableHolder()};
+    this.#tabs.push(tabPlumbing);
 
     if (tab instanceof Terminal) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+      tabPlumbing.disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
+        this.#updateContextMenu(this.#uiStyle);
+        this.#contextMenu.popup(new QPoint(ev.x, ev.y));
+      }));
     }
 
     const header = tab.getTitle();
@@ -435,11 +474,12 @@ export class Window {
 
   removeTab(targetTab: Tab): boolean {
     for (const [index, tab] of this.#tabs.entries()) {
-      if (targetTab === tab) {
+      if (targetTab === tab.tab) {
         this.#tabBar.removeTab(index);
-        this.#contentStack.removeWidget(tab.getContents());
+        this.#contentStack.removeWidget(tab.tab.getContents());
         this.#tabs.splice(index, 1);
 
+        tab.disposableHolder.dispose();
         const newCurrentIndex = Math.max(0, index - 1);
         if (this.#tabs.length !== 0) {
           this.setCurrentTabIndex(newCurrentIndex);
@@ -452,7 +492,7 @@ export class Window {
   }
 
   focusTab(tab: Tab): void {
-    const index = this.#tabs.indexOf(tab);
+    const index = this.#tabs.map(t => t.tab).indexOf(tab);
     if (index === -1) {
       return;
     }
