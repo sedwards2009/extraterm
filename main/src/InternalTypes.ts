@@ -8,7 +8,7 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 // import { EtTerminal, LineRangeChange } from "../Terminal";
 // import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
-import { Terminal } from "./terminal/Terminal";
+import { LineRangeChange, Terminal } from "./terminal/Terminal";
 // import { EtViewerTab } from "../ViewerTab";
 // import { SupportsDialogStack } from "../SupportsDialogStack";
 // import { CommandsRegistry } from "./CommandsRegistry";
@@ -134,8 +134,8 @@ export interface InternalWindow extends ExtensionApi.Window {
 
   // terminalAppendedViewer(newTerminal: Terminal, viewer: ViewerElement): void;
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void;
-  terminalDidAppendScrollbackLines(terminal: Terminal, ev: ExtensionApi.LineRangeChange): void;
-  // terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
+  terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
+  terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
 }
 
 /**
@@ -151,7 +151,7 @@ export interface InternalExtensionContext extends ExtensionApi.ExtensionContext,
 
   _extensionManager: ExtensionManager;
   // commands: CommandsRegistry;
-  // _extensionMetadata: ExtensionMetadata;
+  _extensionMetadata: ExtensionMetadata;
   // _internalWindow: InternalWindow;
   _proxyFactory: ProxyFactory;
 

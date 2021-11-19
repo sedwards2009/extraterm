@@ -22,7 +22,7 @@ import * as InternalTypes from "../InternalTypes";
 import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { CommandMenuEntry } from "../CommandsRegistry";
 import { Window } from "../Window";
-import { Terminal } from "../terminal/Terminal";
+import { LineRangeChange, Terminal } from "../terminal/Terminal";
 
 
 interface ActiveExtension {
@@ -635,5 +635,36 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return a.title < b.title ? -1 : 1;
     }
     return 0;
+  }
+
+  newTerminalCreated(newTerminal: Terminal, allTerminals: Terminal[]): void {
+
+    // newTerminal.addEventListener(EtTerminal.EVENT_APPENDED_VIEWER, (ev: CustomEvent) => {
+    //   for (const extension of this._getActiveRenderExtensions()) {
+    //     extension.contextImpl._internalWindow.terminalAppendedViewer(newTerminal, ev.detail.viewer);
+    //   }
+    // });
+
+    newTerminal.environment.onChange((changeList: string[]) => {
+      for (const extension of this.#activeExtensions) {
+        extension.contextImpl._internalWindow.terminalEnvironmentChanged(newTerminal, changeList);
+      }
+    });
+
+    newTerminal.onDidAppendScrollbackLines((ev: LineRangeChange) => {
+      for (const activeExtension of this.#activeExtensions) {
+        activeExtension.contextImpl._internalWindow.terminalDidAppendScrollbackLines(newTerminal, ev);
+      }
+    });
+
+    newTerminal.onDidScreenChange((ev: LineRangeChange) => {
+      for (const activeExtension of this.#activeExtensions) {
+        activeExtension.contextImpl._internalWindow.terminalDidScreenChange(newTerminal, ev);
+      }
+    });
+
+    for (const activeExtension of this.#activeExtensions) {
+      activeExtension.contextImpl._internalWindow.newTerminalCreated(newTerminal, allTerminals);
+    }
   }
 }

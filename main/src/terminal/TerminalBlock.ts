@@ -40,6 +40,11 @@ interface ExtraFontSlice extends FontSlice {
   codePointSet: Set<number>;
 }
 
+export interface AppendScrollbackLinesDetail {
+  startLine: number;
+  endLine: number;
+}
+
 /**
  * Shows the contents of a terminal and can accept input.
  */
@@ -63,11 +68,8 @@ export class TerminalBlock implements Block {
   #selectionMode = SelectionMode.NORMAL;
   #isWordSelection = false;
 
-  #onSelectionChangedEventEmitter = new EventEmitter<void>();
-  onSelectionChanged: Event<void>;
-
-  #hoveredURL: string = null;
-  #hoveredGroup: string = null;
+  #onDidAppendScrollbackLinesEventEmitter = new EventEmitter<AppendScrollbackLinesDetail>();
+  onDidAppendScrollbackLines: Event<AppendScrollbackLinesDetail>;
 
   #onHyperlinkClickedEventEmitter = new EventEmitter<string>();
   onHyperlinkClicked: Event<string>;
@@ -75,11 +77,18 @@ export class TerminalBlock implements Block {
   #onHyperlinkHoverEventEmitter = new EventEmitter<string>();
   onHyperlinkHover: Event<string>;
 
+  #onSelectionChangedEventEmitter = new EventEmitter<void>();
+  onSelectionChanged: Event<void>;
+
+  #hoveredURL: string = null;
+  #hoveredGroup: string = null;
+
   constructor() {
     this._log = getLogger("TerminalBlock", this);
-    this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
+    this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
     this.onHyperlinkHover = this.#onHyperlinkHoverEventEmitter.event;
+    this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
 
     this.#widget = this.#createWidget();
 
@@ -208,19 +217,23 @@ export class TerminalBlock implements Block {
     }
 
     if (emulator !== null) {
-      this.#onRenderDispose = emulator.onRender(this.#renderEventHandler.bind(this));
+      this.#onRenderDispose = emulator.onRender(this.#handleRenderEvent.bind(this));
     }
 
     this.#emulator = emulator;
     this.#updateWidgetSize();
   }
 
-  #renderEventHandler(event: RenderEvent): void {
+  #handleRenderEvent(event: RenderEvent): void {
     this.#updateWidgetSize();
 
     if (event.scrollbackLines.length !== 0) {
-      this.#scrollback.splice(this.#scrollback.length, 0, ...event.scrollbackLines);
+      const startLine = this.#scrollback.length;
+      this.#scrollback.splice(startLine, 0, ...event.scrollbackLines);
       this.#updateWidgetSize();
+
+      const endLine = startLine + event.scrollbackLines.length;
+      this.#onDidAppendScrollbackLinesEventEmitter.fire({ startLine, endLine });
     }
 
     this.#widget.update();

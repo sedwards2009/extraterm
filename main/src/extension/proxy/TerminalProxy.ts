@@ -104,10 +104,9 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   getSessionSettings(name: string): Object {
-    // const settingsKey = `${this._internalExtensionContext._extensionMetadata.name}:${name}`;
-    // const settings = this._sessionConfigurationExtensions[settingsKey];
-    // return settings == null ? null : settings;
-    return null;
+    const settingsKey = `${this._internalExtensionContext._extensionMetadata.name}:${name}`;
+    const settings = this._sessionConfigurationExtensions[settingsKey];
+    return settings == null ? null : settings;
   }
 
   openTerminalBorderWidget(name: string): any {
@@ -240,18 +239,18 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
   }
 
   applyHyperlink(line: number, x: number, length: number, url: string): void {
-    // const emulator = this._terminal.getEmulator();
-    // const termLine = emulator.lineAtRow(line);
-    // const startColumn = termLine.mapStringIndexToColumn(0, x);
-    // const endColumn = termLine.mapStringIndexToColumn(0, x + length);
-    // const extensionName = this._internalExtensionContext._extensionMetadata.name;
-    // emulator.applyHyperlink(line, startColumn, endColumn - startColumn, url, extensionName);
+    const emulator = this._terminal.getEmulator();
+    const termLine = emulator.lineAtRow(line);
+    const startColumn = termLine.mapStringIndexToColumn(0, x);
+    const endColumn = termLine.mapStringIndexToColumn(0, x + length);
+    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    emulator.applyHyperlink(line, startColumn, endColumn - startColumn, url, extensionName);
   }
 
   removeHyperlinks(line: number): void {
-    // const emulator = this._terminal.getEmulator();
-    // const extensionName = this._internalExtensionContext._extensionMetadata.name;
-    // emulator.removeHyperlinks(line, extensionName);
+    const emulator = this._terminal.getEmulator();
+    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    emulator.removeHyperlinks(line, extensionName);
   }
 
   get width(): number {

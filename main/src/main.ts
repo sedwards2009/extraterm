@@ -290,7 +290,7 @@ class Main {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
     this.#windows[0].addTab(newTerminal);
-    this.#windows[0].focusTab(newTerminal);
+    newTerminal.setSessionConfiguration(sessionConfiguration);
 
     const extraEnv = {
       [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
@@ -308,12 +308,8 @@ class Main {
       sessionOptions.workingDirectory = workingDirectory;
     }
 
-    // newTerminal.setTerminalVisualConfig(this.#terminalVisualConfig);
-    // newTerminal.setSessionConfiguration(sessionConfiguration);
-
     // Set the default name of the terminal tab to the session name.
     // newTerminal.setTerminalTitle(sessionConfiguration.name);
-
 
     const pty = this.#ptyManager.createPty(sessionConfiguration, sessionOptions);
     pty.onExit(() => {
@@ -324,8 +320,8 @@ class Main {
     // this._setUpNewTerminalEventHandlers(newTerminal);
     // this._sendTabOpenedEvent();
 
-    // this.focusTab(newTerminal);
-    // this.#extensionManager.newTerminalCreated(newTerminal, this._getAllTerminals());
+    this.#windows[0].focusTab(newTerminal);
+    this.#extensionManager.newTerminalCreated(newTerminal, this.#windows[0].getTerminals());
   }
 
   #getSessionByUuid(sessionUuid: string): SessionConfiguration {

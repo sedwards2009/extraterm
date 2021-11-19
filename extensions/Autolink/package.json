@@ -3,7 +3,7 @@
   "displayName": "Autolink",
   "version": "1.0.0",
   "description": "",
-  "windowMain": "dist/Autolink.js",
+  "main": "dist/Autolink.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist",
@@ -11,8 +11,7 @@
   },
   "author": "",
   "license": "MIT",
-  "contributes": {
-  },
+  "contributes": {},
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.14.0",
     "@types/jest": "27.0.1",

@@ -40,7 +40,7 @@ const performanceNow = require('performance-now');
 import * as Term from "../emulator/Term";
 import { Tab } from "../Tab";
 import { Block } from "./Block";
-import { TerminalBlock } from "./TerminalBlock";
+import { AppendScrollbackLinesDetail, TerminalBlock } from "./TerminalBlock";
 import { Pty } from "../pty/Pty";
 import { TerminalEnvironmentImpl } from "./TerminalEnvironmentImpl";
 import { PALETTE_BG_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
@@ -52,6 +52,7 @@ import { ConfigDatabase } from "../config/ConfigDatabase";
 import { MouseButtonAction } from "../config/Config";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { CommandQueryOptions } from "../InternalTypes";
+import { ScreenChangeEvent } from "term-api";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -63,6 +64,13 @@ interface TerminalSize {
   rightMargin: number;
   bottomMargin: number;
 }
+
+export interface LineRangeChange {
+  terminalBlock: TerminalBlock;
+  startLine: number;
+  endLine: number;
+}
+
 
 export interface ContextMenuEvent {
   x: number;
@@ -108,6 +116,14 @@ export class Terminal implements Tab, Disposable {
   #onContextMenuEventEmitter = new EventEmitter<ContextMenuEvent>();
   onContextMenu: Event<ContextMenuEvent>;
 
+  #onDidAppendScrollbackLinesEventEmitter = new EventEmitter<LineRangeChange>();
+  onDidAppendScrollbackLines: Event<LineRangeChange>;
+
+  #onDidScreenChangeEventEmitter = new EventEmitter<LineRangeChange>();
+  onDidScreenChange: Event<LineRangeChange>;
+
+  #blockDidAppendScrollbackLinesDisposable: Disposable = null;
+
   #sessionConfiguration: SessionConfiguration = null;
   #terminalVisualConfig: TerminalVisualConfig = null;
   #originalTerminalVisualConfig: TerminalVisualConfig = null;
@@ -149,6 +165,8 @@ export class Terminal implements Tab, Disposable {
     this._log = getLogger("Terminal", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
+    this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
+    this.onDidScreenChange = this.#onDidScreenChangeEventEmitter.event;
 
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
@@ -215,9 +233,14 @@ export class Terminal implements Tab, Disposable {
 
     this.#contentLayout.addStretch(1);
 
+    this.#appendTerminalBlock();
+  }
+
+  #appendTerminalBlock(): void {
     const terminalBlock = new TerminalBlock();
     this.appendBlock(terminalBlock);
     terminalBlock.setEmulator(this.#emulator);
+
     terminalBlock.onSelectionChanged(() => {
       this.#onSelectionChangedEventEmitter.fire();
     });
@@ -227,6 +250,13 @@ export class Terminal implements Tab, Disposable {
     terminalBlock.onHyperlinkHover((url: string): void => {
       this.#handleHyperlinkHover(terminalBlock, url);
     });
+
+    this.#blockDidAppendScrollbackLinesDisposable = terminalBlock.onDidAppendScrollbackLines(
+      (e: AppendScrollbackLinesDetail) => {
+        this.#onDidAppendScrollbackLinesEventEmitter.fire({ ...e, terminalBlock: terminalBlock });
+      }
+    );
+
   }
 
   #handleResize(): void {
@@ -580,8 +610,7 @@ export class Terminal implements Tab, Disposable {
     emulator.debug = true;
     // emulator.onTitleChange(this._handleTitle.bind(this));
     emulator.onData(this.#handleTermData.bind(this));
-
-    // emulator.onScreenChange(this._handleScreenChange.bind(this));
+    emulator.onScreenChange(this.#handleScreenChange.bind(this));
 
     // Application mode handlers
     // const applicationModeHandler: TermApi.ApplicationModeHandler = {
@@ -596,6 +625,14 @@ export class Terminal implements Tab, Disposable {
     // }
     this.#emulator = emulator;
     // this._initDownloadApplicationModeHandler();
+  }
+
+  #handleScreenChange(event: TermApi.ScreenChangeEvent): void {
+    this.#onDidScreenChangeEventEmitter.fire({
+      terminalBlock: <TerminalBlock> this.#blocks[0],
+      startLine: event.refreshStartRow,
+      endLine: event.refreshEndRow,
+    });
   }
 
   #handleWriteBufferSize(event: TermApi.WriteBufferSizeEvent): void {

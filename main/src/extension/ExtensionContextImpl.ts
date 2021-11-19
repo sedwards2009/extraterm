@@ -8,7 +8,7 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 
 import { Logger, getLogger, log } from "extraterm-logging";
 import { Terminal } from "../terminal/Terminal";
-// import { ProxyFactoryImpl } from "./ProxyFactoryImpl";
+import { ProxyFactoryImpl } from "./proxy/ProxyFactoryImpl";
 import { ExtensionManager, InternalExtensionContext, InternalWindow, ProxyFactory } from "../InternalTypes";
 import { WindowProxy } from "./proxy/WindowProxy";
 import { ExtensionMetadata, ExtensionCommandContribution, ExtensionMenusContribution } from "./ExtensionMetadata";
@@ -48,7 +48,7 @@ export class ExtensionContextImpl implements InternalExtensionContext, Extension
 
     this._extensionManager = extensionManager;
     this._extensionMetadata = extensionMetadata;
-    // this._proxyFactory = new ProxyFactoryImpl(this);
+    this._proxyFactory = new ProxyFactoryImpl(this);
     this.application = new ApplicationImpl(applicationVersion);
     this.commands = new CommandsRegistry(this, extensionMetadata.name,
                                           extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);

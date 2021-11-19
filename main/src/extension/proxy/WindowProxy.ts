@@ -18,7 +18,7 @@ import { SessionSettingsEditorFactory, SessionConfiguration, ViewerMetadata, Vie
 // import { WorkspaceSessionSettingsRegistry } from "../WorkspaceSessionSettingsRegistry";
 import { TerminalProxy } from "./TerminalProxy";
 import { ExtensionTabContribution } from "../ExtensionMetadata";
-import { Terminal } from "../../terminal/Terminal";
+import { LineRangeChange, Terminal } from "../../terminal/Terminal";
 
 
 /**
@@ -85,34 +85,36 @@ export class WindowProxy implements InternalWindow {
     }
   }
 
-  terminalDidAppendScrollbackLines(terminal: Terminal, ev: ExtensionApi.LineRangeChange): void {
-    // if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
-    //   const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
-    //   if (proxy._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
-    //     const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.viewer);
-    //     proxy._onDidAppendScrollbackLinesEventEmitter.fire({
-    //       block,
-    //       startLine: ev.startLine,
-    //       endLine: ev.endLine
-    //     });
-    //   }
-    // }
+  terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void {
+    if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+      if (proxy._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
+        // const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.viewer);
+        // FIXME
+        proxy._onDidAppendScrollbackLinesEventEmitter.fire({
+          block: null,  // FIXME
+          startLine: ev.startLine,
+          endLine: ev.endLine
+        });
+      }
+    }
   }
 
-  terminalDidScreenChange(terminal: Terminal, ev: ExtensionApi.LineRangeChange): void {
-    // if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
-    //   const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
-    //   if (proxy._onDidScreenChangeEventEmitter.hasListeners()) {
-    //     const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.viewer);
-    //     if (ev.startLine !== -1 && ev.endLine !== -1) {
-    //       proxy._onDidScreenChangeEventEmitter.fire({
-    //         block,
-    //         startLine: ev.startLine,
-    //         endLine: ev.endLine
-    //       });
-    //     }
-    //   }
-    // }
+  terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void {
+    if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
+      const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
+      if (proxy._onDidScreenChangeEventEmitter.hasListeners()) {
+        //const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.viewer);
+        // FIXME
+        if (ev.startLine !== -1 && ev.endLine !== -1) {
+          proxy._onDidScreenChangeEventEmitter.fire({
+            block: null,  // FIXME
+            startLine: ev.startLine,
+            endLine: ev.endLine
+          });
+        }
+      }
+    }
   }
 
   get activeTerminal(): ExtensionApi.Terminal {

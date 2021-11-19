@@ -506,6 +506,16 @@ export class Window {
     const topLeftGlobal = this.#windowWidget.mapToGlobal(new QPoint(localGeometry.left(), localGeometry.top()));
     return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
   }
+
+  getTerminals(): Terminal[] {
+    const result: Terminal[] = [];
+    for (const tp of this.#tabs) {
+      if (tp.tab instanceof Terminal) {
+        result.push(tp.tab);
+      }
+    }
+    return result;
+  }
 }
 
 function cssHexColorToRGBA(cssColor: string): number {
