@@ -8,6 +8,7 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 // import { EtTerminal, LineRangeChange } from "../Terminal";
 // import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
+import { BlockFrame } from "./terminal/BlockFrame";
 import { LineRangeChange, Terminal } from "./terminal/Terminal";
 // import { EtViewerTab } from "../ViewerTab";
 // import { SupportsDialogStack } from "../SupportsDialogStack";
@@ -114,14 +115,14 @@ export interface ProxyFactory {
   getTerminalProxy(terminal: Terminal): ExtensionApi.Terminal;
   hasTerminalProxy(terminal: Terminal): boolean;
 
-//   getBlock(viewer: ViewerElement): ExtensionApi.Block;
-// }
+  getBlock(blockFrame: BlockFrame): ExtensionApi.Block;
+}
 
 // export interface ExtensionUiUtils {
 //   showNumberInput(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.NumberInputOptions): Promise<number | undefined>;
 //   showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 //   showOnCursorListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
-}
+//}
 
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;

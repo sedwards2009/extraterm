@@ -23,8 +23,8 @@ export class TerminalProxy implements ExtensionApi.Terminal {
 
   environment: TerminalEnvironmentProxy;
   screen: ExtensionApi.ScreenWithCursor;
-  private _sessionConfiguration: ExtensionApi.SessionConfiguration = null;
-  private _sessionConfigurationExtensions: Object = null;
+  #sessionConfiguration: ExtensionApi.SessionConfiguration = null;
+  #sessionConfigurationExtensions: Object = null;
 
   _onDidAppendBlockEventEmitter = new EventEmitter<ExtensionApi.Block>();
   onDidAppendBlock: ExtensionApi.Event<ExtensionApi.Block>;
@@ -44,9 +44,9 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this._onDidScreenChangeEventEmitter.event;
 
-    this._sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
-    this._sessionConfigurationExtensions = this._sessionConfiguration.extensions ?? {};
-    this._sessionConfiguration.extensions = null;
+    this.#sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
+    this.#sessionConfigurationExtensions = this.#sessionConfiguration.extensions ?? {};
+    this.#sessionConfiguration.extensions = null;
   }
 
   showOnCursorListPicker(options: ExtensionApi.ListPickerOptions): Promise<number> {
@@ -100,12 +100,12 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   get sessionConfiguration(): ExtensionApi.SessionConfiguration {
-    return this._sessionConfiguration;
+    return this.#sessionConfiguration;
   }
 
   getSessionSettings(name: string): Object {
     const settingsKey = `${this._internalExtensionContext._extensionMetadata.name}:${name}`;
-    const settings = this._sessionConfigurationExtensions[settingsKey];
+    const settings = this.#sessionConfigurationExtensions[settingsKey];
     return settings == null ? null : settings;
   }
 

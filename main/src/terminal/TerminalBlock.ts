@@ -14,6 +14,7 @@ import { STYLE_MASK_CURSOR, STYLE_MASK_HYPERLINK_HIGHLIGHT, STYLE_MASK_INVERSE }
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
+import { ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
 
 import { Block } from "./Block";
 import * as Term from "../emulator/Term";
@@ -83,12 +84,19 @@ export class TerminalBlock implements Block {
   #hoveredURL: string = null;
   #hoveredGroup: string = null;
 
+  #metadataChangedEventEmitter = new EventEmitter<void>();
+  onMetadataChanged: Event<void>;
+
+  #returnCode: string = null;
+  #commandLine: string = null;
+
   constructor() {
     this._log = getLogger("TerminalBlock", this);
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
     this.onHyperlinkHover = this.#onHyperlinkHoverEventEmitter.event;
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
+    this.onMetadataChanged = this.#metadataChangedEventEmitter.event;
 
     this.#widget = this.#createWidget();
 
@@ -192,13 +200,13 @@ export class TerminalBlock implements Block {
   }
 
   #updateWidgetSize(): void {
-    if (this.#emulator == null || this.#terminalVisualConfig == null) {
+    if (this.#terminalVisualConfig == null || this.#fontMetrics == null) {
       return;
     }
 
     const metrics = this.#fontMetrics;
-    const dimensions = this.#emulator.getDimensions();
-    const newHeightPx = (dimensions.materializedRows + this.#scrollback.length) * metrics.heightPx;
+    const materializedRows = this.#emulator != null ? this.#emulator.getDimensions().materializedRows : 0;
+    const newHeightPx = (materializedRows + this.#scrollback.length) * metrics.heightPx;
     if (newHeightPx === this.#heightPx) {
       return;
     }
@@ -249,8 +257,6 @@ export class TerminalBlock implements Block {
     const heightRows = Math.ceil(paintRect.height() / heightPx) + 1;
 
     const painter = new QPainter(this.#widget);
-    const emulatorDimensions = this.#emulator.getDimensions();
-
     const cursorStyle = this.#terminalVisualConfig.cursorStyle;
 
     const bgRGBA = this.#terminalVisualConfig.palette[PALETTE_BG_INDEX];
@@ -267,7 +273,8 @@ export class TerminalBlock implements Block {
     }
 
     // Render any lines from the emulator screen
-    if (topRenderRow + heightRows >= scrollbackLength) {
+    if (topRenderRow + heightRows >= scrollbackLength && this.#emulator != null) {
+      const emulatorDimensions = this.#emulator.getDimensions();
       const screenTopRow = Math.max(topRenderRow, scrollbackLength) - scrollbackLength;
       const screenLastRow = Math.min(topRenderRow + heightRows - scrollbackLength, emulatorDimensions.materializedRows);
 
@@ -741,6 +748,49 @@ export class TerminalBlock implements Block {
     }
     return this.#emulator.lineAtRow(screenRow);
   }
+
+  setCommandLine(commandLine: string): void {
+    this.#commandLine = commandLine;
+    this.#metadataChangedEventEmitter.fire();
+  }
+
+  setReturnCode(returnCode: string): void {
+    this.#returnCode = returnCode;
+    this.#metadataChangedEventEmitter.fire();
+  }
+
+  getMetadata(): ViewerMetadata {
+    const title = this.#commandLine !== null ? this.#commandLine : "Terminal Command";
+    const icon = this.#returnCode === "0" ? "fa-check" : "fa-times";
+
+    let posture = ViewerPosture.RUNNING;
+    switch(this.#returnCode) {
+      case null:
+        posture = ViewerPosture.RUNNING;
+        break;
+      case "0":
+        posture = ViewerPosture.SUCCESS;
+        break;
+      default:
+        posture = ViewerPosture.FAILURE;
+        break;
+    }
+
+    let toolTip: string = null;
+    if (this.#returnCode != null) {
+      toolTip = `Return code: ${this.#returnCode}`;
+    }
+
+    return {
+      title,
+      icon,
+      posture,
+      toolTip,
+      moveable: false,
+      deleteable: false
+    };
+  }
+
 }
 
 

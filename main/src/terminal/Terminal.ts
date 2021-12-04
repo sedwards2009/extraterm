@@ -7,6 +7,7 @@ import * as crypto from "crypto";
 import * as TermApi from "term-api";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
+import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { doLater } from "extraterm-later";
 import {
   Commands,
@@ -14,6 +15,8 @@ import {
   Event,
   SessionConfiguration,
   TerminalEnvironment,
+  ViewerMetadata,
+  ViewerPosture,
 } from "@extraterm/extraterm-extension-api";
 import {
   Direction,
@@ -49,10 +52,13 @@ import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
 import { ExtensionManager } from "../extension/ExtensionManager";
 import { Color } from "extraterm-color-utilities";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import { MouseButtonAction } from "../config/Config";
+import { CommandLineAction, MouseButtonAction } from "../config/Config";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { CommandQueryOptions } from "../InternalTypes";
 import { ScreenChangeEvent } from "term-api";
+import { BlockFrame } from "./BlockFrame";
+import { DecoratedFrame } from "./DecoratedFrame";
+import { SpacerFrame } from "./SpacerFrame";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -81,6 +87,16 @@ const MINIMUM_FONT_SIZE = -3;
 const MAXIMUM_FONT_SIZE = 4;
 const FONT_ADJUSTMENT_ARRAY = [0.6, 0.75, 0.89, 1, 1.2, 1.5, 2, 3];
 
+const DEBUG_APPLICATION_MODE = false;
+
+const enum ApplicationMode {
+  APPLICATION_MODE_NONE = 0,
+  APPLICATION_MODE_HTML = 1,
+  APPLICATION_MODE_OUTPUT_BRACKET_START = 2,
+  APPLICATION_MODE_OUTPUT_BRACKET_END = 3,
+  APPLICATION_MODE_REQUEST_FRAME = 4,
+  APPLICATION_MODE_SHOW_FILE = 5,
+}
 
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
@@ -104,7 +120,7 @@ export class Terminal implements Tab, Disposable {
   #atBottom = true; // True if the terminal is scrolled to the bottom and should
                     // automatically scroll to the end as new rows arrive.
 
-  #blocks: Block[] = [];
+  #blockFrames: BlockFrame[] = [];
   #contentLayout: QBoxLayout = null;
 
   onDispose: Event<void>;
@@ -129,6 +145,16 @@ export class Terminal implements Tab, Disposable {
   #originalTerminalVisualConfig: TerminalVisualConfig = null;
 
   #fontSizeAdjustment = 0;
+
+  private _htmlData: string = null;
+  // private _fileBroker: BulkFileBroker = null;
+  // private _downloadHandler: DownloadApplicationModeHandler = null;
+  private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+  private _bracketStyle: string = null;
+
+  // The command line string of the last command started.
+  private _lastCommandLine: string = null;
+
 
   environment = new TerminalEnvironmentImpl([
     { key: TerminalEnvironment.TERM_ROWS, value: "" },
@@ -233,13 +259,15 @@ export class Terminal implements Tab, Disposable {
 
     this.#contentLayout.addStretch(1);
 
-    this.#appendTerminalBlock();
+    this.#appendBlockFrame(this.#createTerminalBlock());
   }
 
-  #appendTerminalBlock(): void {
+  #createTerminalBlock(): BlockFrame {
     const terminalBlock = new TerminalBlock();
-    this.appendBlock(terminalBlock);
     terminalBlock.setEmulator(this.#emulator);
+    if (this.#terminalVisualConfig != null) {
+      terminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
+    }
 
     terminalBlock.onSelectionChanged(() => {
       this.#onSelectionChangedEventEmitter.fire();
@@ -257,6 +285,7 @@ export class Terminal implements Tab, Disposable {
       }
     );
 
+    return new SpacerFrame(terminalBlock);
   }
 
   #handleResize(): void {
@@ -489,7 +518,8 @@ export class Terminal implements Tab, Disposable {
   }
 
   #applyTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
-    for (const block of this.#blocks) {
+    for (const blockFrame of this.#blockFrames) {
+      const block = blockFrame.getBlock();
       if (block instanceof TerminalBlock) {
         block.setTerminalVisualConfig(terminalVisualConfig);
       }
@@ -548,9 +578,22 @@ export class Terminal implements Tab, Disposable {
     return this.#sessionConfiguration;
   }
 
-  appendBlock(block: Block): void {
-    this.#blocks.push(block);
-    this.#contentLayout.insertWidget(this.#blocks.length-1, block.getWidget());
+  #appendBlockFrame(blockFrame: BlockFrame): void {
+    this.#blockFrames.push(blockFrame);
+    this.#contentLayout.insertWidget(this.#blockFrames.length-1, blockFrame.getWidget());
+  }
+
+  #closeLastTerminalFrame(): void {
+    this.#emulator.moveRowsAboveCursorToScrollback();
+    this.#emulator.flushRenderQueue();
+
+    if (this.#blockFrames.length !== 0) {
+      const lastBlockFrame = this.#blockFrames[this.#blockFrames.length-1];
+      const lastTerminalBlock = lastBlockFrame.getBlock();
+      if (lastTerminalBlock instanceof TerminalBlock) {
+        lastTerminalBlock.setEmulator(null);
+      }
+    }
   }
 
   getTitle(): string {
@@ -613,12 +656,12 @@ export class Terminal implements Tab, Disposable {
     emulator.onScreenChange(this.#handleScreenChange.bind(this));
 
     // Application mode handlers
-    // const applicationModeHandler: TermApi.ApplicationModeHandler = {
-    //   start: this._handleApplicationModeStart.bind(this),
-    //   data: this._handleApplicationModeData.bind(this),
-    //   end: this._handleApplicationModeEnd.bind(this)
-    // };
-    // emulator.registerApplicationModeHandler(applicationModeHandler);
+    const applicationModeHandler: TermApi.ApplicationModeHandler = {
+      start: this._handleApplicationModeStart.bind(this),
+      data: this._handleApplicationModeData.bind(this),
+      end: this._handleApplicationModeEnd.bind(this)
+    };
+    emulator.registerApplicationModeHandler(applicationModeHandler);
     emulator.onWriteBufferSize(this.#handleWriteBufferSize.bind(this));
     // if (this._terminalVisualConfig != null) {
     //   emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
@@ -629,7 +672,7 @@ export class Terminal implements Tab, Disposable {
 
   #handleScreenChange(event: TermApi.ScreenChangeEvent): void {
     this.#onDidScreenChangeEventEmitter.fire({
-      terminalBlock: <TerminalBlock> this.#blocks[0],
+      terminalBlock: <TerminalBlock> this.#blockFrames[0].getBlock(),
       startLine: event.refreshStartRow,
       endLine: event.refreshEndRow,
     });
@@ -655,7 +698,7 @@ export class Terminal implements Tab, Disposable {
 
   getSelectionText(): string {
     let text: string = null;
-    for (const block of this.#blocks) {
+    for (const block of this.#blockFrames) {
       if (block instanceof TerminalBlock) {
         text = block.getSelectionText();
         if (text != null) {
@@ -713,6 +756,421 @@ export class Terminal implements Tab, Disposable {
 
   commandFontSizeReset(): void {
     this.#resetFontSizeAdjustment();
+  }
+  /**
+   * Handle when the embedded term.js enters start of application mode.
+   *
+   * @param {array} params The list of parameter which were specified in the
+   *     escape sequence.
+   */
+  private _handleApplicationModeStart(params: string[]): TermApi.ApplicationModeResponse {
+    if (DEBUG_APPLICATION_MODE) {
+      this._log.debug("application-mode started! ",params);
+    }
+
+    this._htmlData = "";
+
+    // Check security cookie
+    if (params.length === 0) {
+      this._log.warn("Received an application mode sequence with no parameters.");
+      return {action: TermApi.ApplicationModeResponseAction.ABORT};
+    }
+
+    if (params[0] !== this.#cookie) {
+      this._log.warn("Received the wrong cookie at the start of an application mode sequence.");
+      return {action: TermApi.ApplicationModeResponseAction.ABORT};
+    }
+
+    if (params.length === 1) {
+      // Normal HTML mode.
+      this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
+
+    } else if(params.length >= 2) {
+      switch ("" + params[1]) {
+        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
+          this._bracketStyle = params[2];
+          break;
+
+        case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
+          if (DEBUG_APPLICATION_MODE) {
+            this._log.debug("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
+          }
+          break;
+
+        case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+          this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
+          if (DEBUG_APPLICATION_MODE) {
+            this._log.debug("Starting APPLICATION_MODE_REQUEST_FRAME");
+          }
+          break;
+
+        // case "" + ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+        //   if (DEBUG_APPLICATION_MODE) {
+        //     this._log.debug("Starting APPLICATION_MODE_SHOW_FILE");
+        //   }
+        //   this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_FILE;
+        //   return this._downloadHandler.handleStart(params.slice(2));
+
+        default:
+          this._log.warn("Unrecognized application escape parameters.");
+          break;
+      }
+    }
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
+  }
+
+  /**
+   * Handle incoming data while in application mode.
+   *
+   * @param {string} data The new data.
+   */
+  private _handleApplicationModeData(data: string): TermApi.ApplicationModeResponse {
+    if (DEBUG_APPLICATION_MODE) {
+      this._log.debug("html-mode data!", data);
+    }
+    switch (this._applicationMode) {
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+      case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+        this._htmlData = this._htmlData + data;
+        break;
+
+      // case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+      //   return this._downloadHandler.handleData(data);
+
+      default:
+        break;
+    }
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
+  }
+
+  /**
+   * Handle the exit from application mode.
+   */
+  private _handleApplicationModeEnd(): TermApi.ApplicationModeResponse {
+    switch (this._applicationMode) {
+      case ApplicationMode.APPLICATION_MODE_HTML:
+        // el = this._getWindow().document.createElement("div");
+        // el.innerHTML = this._htmlData;
+        // this._appendElementToScrollArea(el);
+        break;
+
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
+        this._handleApplicationModeBracketStart();
+        break;
+
+      case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
+        this._handleApplicationModeBracketEnd();
+        break;
+
+      case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
+        this.handleRequestFrame(this._htmlData);
+        break;
+
+      // case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+      //   return this._downloadHandler.handleStop();
+
+      default:
+        break;
+    }
+    this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+
+    if (DEBUG_APPLICATION_MODE) {
+      this._log.debug("html-mode end!",this._htmlData);
+    }
+    this._htmlData = null;
+
+    return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
+  }
+
+  private _handleApplicationModeBracketStart(): void {
+    // for (const element of this._terminalCanvas.getViewerElements()) {
+    //   if ((EmbeddedViewer.is(element) && element.children.length === 0) || CommandPlaceHolder.is(element)) {
+    //     return;  // Don't open a new frame.
+    //   }
+    // }
+
+    // Fetch the command line.
+    let cleanCommandLine = this._htmlData;
+    if (this._bracketStyle === "bash") {
+      // Bash includes the history number. Remove it.
+      const trimmed = this._htmlData.trim();
+      cleanCommandLine = trimmed.slice(trimmed.indexOf(" ")).trim();
+    }
+
+    if (this._commandNeedsFrame(cleanCommandLine)) {
+      // Create and set up a new command-frame.
+      // const el = this._createEmbeddedViewerElement();
+      // const el = new DecoratedFrame(null);
+
+      // this._appendViewerElement(el);
+
+      this.#closeLastTerminalFrame();
+      const decoratedFrame = new DecoratedFrame(null);
+      const defaultMetadata: ViewerMetadata = {
+        title: cleanCommandLine,
+        posture: ViewerPosture.RUNNING,
+        icon: "fa-cog",
+        moveable: false,
+        deleteable: false,
+        toolTip: null
+      };
+      decoratedFrame.setDefaultMetadata(defaultMetadata);
+      this.#appendBlockFrame(decoratedFrame);
+
+      this.#appendBlockFrame(this.#createTerminalBlock());
+    } else {
+
+      this._moveCursorToFreshLine();
+      this.#emulator.moveRowsAboveCursorToScrollback();
+      this.#emulator.flushRenderQueue();
+this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
+
+      // this._lastCommandTerminalLine = this._terminalViewer.bookmarkCursorLine();
+      // this._lastCommandTerminalViewer = this._terminalViewer;
+    }
+    this._lastCommandLine = cleanCommandLine;
+
+    const command = cleanCommandLine.split(" ")[0];
+
+    this.environment.setList([
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, value: cleanCommandLine },
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: command },
+      { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
+    ]);
+  }
+
+  private _moveCursorToFreshLine(): void {
+    const dims = this.#emulator.getDimensions();
+    if (dims.cursorX !== 0 && this.#emulator.getLineText(dims.cursorY).trim() !== "") {
+      this.#emulator.newLine();
+      this.#emulator.carriageReturn();
+    }
+  }
+
+  private _commandNeedsFrame(commandLine: string, linesOfOutput=-1): boolean {
+    if (commandLine.trim() === "" || this.#configDatabase === null) {
+      return false;
+    }
+
+    const commandLineActions = this.#configDatabase.getCommandLineActionConfig() || [];
+    for (const cla of commandLineActions) {
+      if (this._commandLineActionMatches(commandLine, cla)) {
+        switch (cla.frameRule) {
+          case "always_frame":
+            return true;
+          case "never_frame":
+            return false;
+          case "frame_if_lines":
+            return linesOfOutput !== -1 && linesOfOutput > cla.frameRuleLines;
+        }
+      }
+    }
+
+    const generalConfig = this.#configDatabase.getGeneralConfig();
+    switch (generalConfig.frameRule) {
+      case "always_frame":
+        return true;
+      case "never_frame":
+        return false;
+      case "frame_if_lines":
+        return linesOfOutput !== -1 && linesOfOutput > generalConfig.frameRuleLines;
+    }
+  }
+
+  private _commandLineActionMatches(command: string, cla: DeepReadonly<CommandLineAction>): boolean {
+    const cleanCommandLine = command.trim();
+    const commandParts = command.trim().split(/\s+/);
+
+    if (cla.matchType === "name") {
+      const matcherParts = cla.match.split(/\s+/);
+      for (let i=0; i < matcherParts.length; i++) {
+        if (i >= commandParts.length) {
+          return false;
+        }
+        if (matcherParts[i] !== commandParts[i]) {
+          return false;
+        }
+      }
+      return true;
+    } else {
+      // regexp
+      return (new RegExp(cla.match)).test(cleanCommandLine);
+    }
+  }
+
+  private _handleApplicationModeBracketEnd(): void {
+    // this._terminalCanvas.enforceScrollbackLengthAfter( () => {
+    const returnCode = this._htmlData;
+    this.#closeLastEmbeddedViewer(returnCode);
+
+    const lastCommandLine = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE);
+    const lastCommand = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND);
+    const newVars = [
+      { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, value: "" },
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: "" },
+    ];
+    if (lastCommand != null) {
+      newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, value: lastCommandLine });
+      newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: lastCommand });
+    }
+    this.environment.setList(newVars);
+    // });
+  }
+
+  #closeLastEmbeddedViewer(returnCode: string): void {
+    const startFrame = this.#findEmptyDecoratedFrame();
+    if (startFrame != null) {
+      this.#frameWithExistingDecoratedFrame(startFrame, returnCode);
+    } else {
+      // this.#frameWithoutDecoratedFrame(returnCode);
+    }
+  }
+
+  #findEmptyDecoratedFrame(): DecoratedFrame {
+    const len = this.#blockFrames.length;
+    for (let i=len-1; i !==0; i--) {
+      const frame = this.#blockFrames[i];
+      if (frame instanceof DecoratedFrame && frame.getBlock() == null) {
+        return frame;
+      }
+    }
+    return null;
+  }
+
+  #findLastTerminalBlockFrame(): SpacerFrame {
+    const len = this.#blockFrames.length;
+    for (let i=len-1; i !==0; i--) {
+      const frame = this.#blockFrames[i];
+      if (frame instanceof SpacerFrame) {
+        const block = frame.getBlock();
+        if (block instanceof TerminalBlock) {
+          return frame;
+        }
+      }
+    }
+    return null;
+  }
+
+  #frameWithExistingDecoratedFrame(decoratedFrame: DecoratedFrame, returnCode: string): void {
+    const terminalBlockFrame = this.#findLastTerminalBlockFrame();
+    const terminalBlock = <TerminalBlock> terminalBlockFrame.getBlock();
+
+    this.#closeLastTerminalFrame();
+
+    terminalBlock.setCommandLine(this._lastCommandLine);
+    terminalBlock.setReturnCode(returnCode);
+    decoratedFrame.setBlock(terminalBlock);
+
+    const index = this.#blockFrames.indexOf(terminalBlockFrame);
+    this.#blockFrames.splice(index, 1);
+    this.#contentLayout.removeWidget(terminalBlockFrame.getWidget());
+    terminalBlockFrame.getWidget().setParent(null);
+
+    this.#appendBlockFrame(this.#createTerminalBlock());
+  }
+/*
+  #frameWithoutDecoratedFrame(returnCode: string): void {
+    const terminalBlock = this.#findLastTerminalBlock();
+
+    this._moveCursorToFreshLine();
+
+    const candidateMoveTextLines = this._lastCommandTerminalViewer.getTerminalLinesBetweenBookmarks(
+      this._lastCommandTerminalLine, this._terminalViewer.bookmarkCursorLine());
+    const commandShouldBeFramed = returnCode !== "0" || this._commandNeedsFrame(this._lastCommandLine, candidateMoveTextLines.length);
+    if ( ! commandShouldBeFramed) {
+      this._lastCommandLine = null;
+      this._lastCommandTerminalViewer = null;
+      return;
+    }
+
+    const viewerWithOutput = this._lastCommandTerminalViewer;
+
+    // Close off the current terminal viewer.
+    this._disconnectActiveTerminalViewer();
+
+    const moveTextLines = viewerWithOutput.getTerminalLinesToEnd(this._lastCommandTerminalLine);
+    if (candidateMoveTextLines != null && candidateMoveTextLines.length > 0) {
+      viewerWithOutput.deleteLines(this._lastCommandTerminalLine);
+    }
+    this._lastCommandTerminalViewer = null;
+
+    const newEmbeddedViewer = this._createEmbeddedViewerElement();
+    newEmbeddedViewer.className = "extraterm_output";
+    this._terminalCanvas.appendViewerElement(newEmbeddedViewer);
+
+    // Create a terminal viewer to display the output of the last command.
+    const outputTerminalViewer = this._createTerminalViewer();
+    newEmbeddedViewer.setViewerElement(outputTerminalViewer);
+    outputTerminalViewer.setReturnCode(returnCode);
+    outputTerminalViewer.setCommandLine(this._lastCommandLine);
+    outputTerminalViewer.setUseVPad(false);
+    if (candidateMoveTextLines !== null && candidateMoveTextLines.length > 0) {
+      outputTerminalViewer.setTerminalLines(moveTextLines);
+    }
+    outputTerminalViewer.setEditable(true);
+    this._emitDidAppendViewer(newEmbeddedViewer);
+
+    this._appendNewTerminalViewer();
+    this._refocus();
+
+    const activeTerminalViewer = this._terminalViewer;
+    this._terminalCanvas.updateSize(activeTerminalViewer);
+  }
+*/
+  private handleRequestFrame(frameId: string): void {
+    /*
+    if (this._frameFinder === null) {
+      return;
+    }
+
+    const bulkFileHandle = this._frameFinder(frameId);
+    if (bulkFileHandle === null) {
+      this.sendToPty("#error\n");
+      return;
+    }
+
+    const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
+    const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
+
+    if ("filename" in bulkFileHandle.metadata) {
+      uploadProgressBar.filename = <string> bulkFileHandle.metadata["filename"];
+    }
+
+    uploadProgressBar.total = bulkFileHandle.totalSize;
+    uploader.onUploadedChange(uploaded => {
+      uploadProgressBar.transferred = uploaded;
+    });
+
+    const inputFilterRegistration = this._registerInputStreamFilter((input: string): string => {
+      const ctrlCIndex = input.indexOf("\x03");
+      if (ctrlCIndex !== -1) {
+        // Abort the upload.
+        uploader.abort();
+        inputFilterRegistration.dispose();
+        return input.substr(ctrlCIndex + 1);
+      } else {
+        return "";
+      }
+    });
+
+    uploader.onFinished(() => {
+      this._containerElement.removeChild(uploadProgressBar);
+      inputFilterRegistration.dispose();
+      doLater(() => {
+        uploader.dispose();
+      });
+    });
+
+    uploadProgressBar.hide();
+    this._containerElement.appendChild(uploadProgressBar);
+    uploadProgressBar.show(200);  // Show after delay
+
+    uploader.upload();
+    */
   }
 
 }

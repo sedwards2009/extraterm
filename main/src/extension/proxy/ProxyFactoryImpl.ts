@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { BlockFrame } from "../../terminal/BlockFrame";
 import { InternalExtensionContext, ProxyFactory } from "../../InternalTypes";
 
 import { Terminal } from "../../terminal/Terminal";
@@ -13,7 +14,7 @@ import { TerminalProxy } from "./TerminalProxy";
 // import { TerminalTabProxy } from "./TerminalTabProxy";
 // import { ViewerElement } from "../viewers/ViewerElement";
 // import { ViewerTabProxy } from "./proxy/ViewerTabProxy";
-// import { BlockImpl } from "./BlockImpl";
+import { BlockImpl } from "./BlockImpl";
 
 /**
  * Each extension has its own instance of this. It holds and gathers all of
@@ -24,8 +25,8 @@ export class ProxyFactoryImpl implements ProxyFactory {
 
   // private _terminalTabProxyMap = new Map<EtTerminal, ExtensionApi.Tab>();
   // private _viewerTabProxyMap = new Map<EtViewerTab, ExtensionApi.Tab>();
-  private _terminalProxyMap = new Map<Terminal, ExtensionApi.Terminal>();
-  // private _blockMap = new Map<ViewerElement, ExtensionApi.Block>();
+  #terminalProxyMap = new Map<Terminal, ExtensionApi.Terminal>();
+  private _blockMap = new Map<BlockFrame, ExtensionApi.Block>();
 
   constructor(private _internalExtensionContext: InternalExtensionContext) {
   }
@@ -62,34 +63,34 @@ export class ProxyFactoryImpl implements ProxyFactory {
     if (terminal == null) {
       return null;
     }
-    if ( ! this._terminalProxyMap.has(terminal)) {
+    if ( ! this.#terminalProxyMap.has(terminal)) {
       const proxy = new TerminalProxy(this._internalExtensionContext, terminal);
       terminal.onDispose(() => {
-        this._terminalProxyMap.delete(terminal);
+        this.#terminalProxyMap.delete(terminal);
       });
-      this._terminalProxyMap.set(terminal, proxy);
+      this.#terminalProxyMap.set(terminal, proxy);
     }
-    return this._terminalProxyMap.get(terminal);
+    return this.#terminalProxyMap.get(terminal);
   }
 
   hasTerminalProxy(terminal: Terminal): boolean {
-    return this._terminalProxyMap.has(terminal);
+    return this.#terminalProxyMap.has(terminal);
   }
 
-  // getBlock(viewer: ViewerElement): ExtensionApi.Block {
-  //   if (viewer == null) {
-  //     return null;
-  //   }
-  //   if ( ! this._blockMap.has(viewer)) {
-  //     const block = new BlockImpl(this._internalExtensionContext, viewer);
-  //     if (block === null) {
-  //       return null;
-  //     }
-  //     viewer.onDispose(() => {
-  //       this._blockMap.delete(viewer);
-  //     });
-  //     this._blockMap.set(viewer, block);
-  //   }
-  //   return this._blockMap.get(viewer);
-  // }
+  getBlock(viewer: BlockFrame): ExtensionApi.Block {
+    if (viewer == null) {
+      return null;
+    }
+    if ( ! this._blockMap.has(viewer)) {
+      const block = new BlockImpl(this._internalExtensionContext, viewer);
+      if (block === null) {
+        return null;
+      }
+      // viewer.onDispose(() => {
+      //   this._blockMap.delete(viewer);
+      // });
+      this._blockMap.set(viewer, block);
+    }
+    return this._blockMap.get(viewer);
+  }
 }

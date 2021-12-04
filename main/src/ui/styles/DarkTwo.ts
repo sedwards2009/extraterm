@@ -813,7 +813,16 @@ QWidget[cssClass~="background"] {
 QWidget[cssClass~="window-background"] {
   background-color: ${level3Color};
 }
+
+QWidget[cssClass~="frame"] {
+  background-color: #ff00ff;
+}
+
+QWidget[cssClass~="decorated-frame"] {
+  background-color: #ffff00;
+}
 `;
+
 }
 
 function LinkLabelCSS(): string {

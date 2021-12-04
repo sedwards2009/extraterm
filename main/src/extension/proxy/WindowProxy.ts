@@ -89,7 +89,7 @@ export class WindowProxy implements InternalWindow {
     if (this.#internalExtensionContext._proxyFactory.hasTerminalProxy(terminal)) {
       const proxy = <TerminalProxy> this.#internalExtensionContext._proxyFactory.getTerminalProxy(terminal);
       if (proxy._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
-        // const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.viewer);
+        // const block = this.#internalExtensionContext._proxyFactory.getBlock(ev.terminalBlock);
         // FIXME
         proxy._onDidAppendScrollbackLinesEventEmitter.fire({
           block: null,  // FIXME
