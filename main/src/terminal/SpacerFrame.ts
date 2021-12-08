@@ -3,11 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QWidget } from "@nodegui/nodegui";
+import { Direction, QBoxLayout, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Block } from "./Block";
 import { BlockFrame } from "./BlockFrame";
+import { UiStyle } from "../ui/UiStyle";
 
 /**
  * A frame around a Block.
@@ -17,19 +18,31 @@ import { BlockFrame } from "./BlockFrame";
  * with title bar and surrounding visible frame.
  */
 export class SpacerFrame implements BlockFrame {
+  private _log: Logger = null;
+  #uiStyle: UiStyle = null;
+
   #block: Block = null;
   #widget: QWidget = null;
+  #layout: QBoxLayout = null;
 
-  constructor(block: Block) {
-    this.#block = block;
+  constructor(uiStyle: UiStyle) {
+    this._log = getLogger("SpacerFrame", this);
+    this.#uiStyle = uiStyle;
+
+    const leftRightMargin = this.#uiStyle.getFrameMarginLeftRightPx();
 
     this.#widget = Widget({
+      id: this._log.getName(),
       cssClass: "frame",
-      layout: BoxLayout({
+      layout: this.#layout = BoxLayout({
         direction: Direction.TopToBottom,
-        contentsMargins: [10, 5, 10, 5],
+        contentsMargins: [
+          leftRightMargin,
+          0,
+          leftRightMargin,
+          0
+        ],
         children: [
-          block.getWidget()
         ]
       })
     });
@@ -39,8 +52,19 @@ export class SpacerFrame implements BlockFrame {
     return this.#block;
   }
 
+  setBlock(block: Block): void {
+    if (this.#block != null) {
+      this.#layout.removeWidget(this.#block.getWidget());
+      this.#block.getWidget().setParent(null);
+    }
+    this.#block = block;
+    if (block != null) {
+      this.#layout.addWidget(block.getWidget());
+      block.getWidget().setParent(this.#widget);
+    }
+  }
+
   getWidget(): QWidget {
     return this.#widget;
-    // return this.#block.getWidget();
   }
 }

@@ -3,13 +3,24 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QIcon, QLabel, QWidget } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QBoxLayout, QIcon, QLabel, QResizeEvent, QSizePolicyPolicy, QWidget } from "@nodegui/nodegui";
 import { Disposable, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
 import { BoxLayout, Label, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Block } from "./Block";
 import { BlockFrame } from "./BlockFrame";
 import { createHtmlIcon } from "../ui/Icons";
+import { UiStyle } from "../ui/UiStyle";
+import { repolish, setCssClasses } from "../ui/QtConstructExtra";
+
+const POSTURE_MAPPING = {
+  [ViewerPosture.NEUTRAL]: "posture-neutral",
+  [ViewerPosture.FAILURE]: "posture-failure",
+  [ViewerPosture.RUNNING]: "posture-running",
+  [ViewerPosture.SUCCESS]: "posture-success"
+};
+
+
 
 /**
  * A frame around a Block.
@@ -19,30 +30,64 @@ import { createHtmlIcon } from "../ui/Icons";
  * with title bar and surrounding visible frame.
  */
 export class DecoratedFrame implements BlockFrame {
+  private _log: Logger = null;
+  #uiStyle: UiStyle = null;
+
   #block: Block = null;
   #widget: QWidget = null;
-  #layout: QBoxLayout = null;
+  #headerWidget: QWidget = null;
 
   #defaultMetadata: ViewerMetadata = null;
   #titleLabel: QLabel = null;
   #iconText: QLabel = null;
 
   #onMetadataChangedDisposable: Disposable = null;
+  #widthPx = -1;
 
-  constructor(block: Block) {
-    this.#block = block;
+  constructor(uiStyle: UiStyle) {
+    this._log = getLogger("DecoratedFrame", this);
+    this.#uiStyle = uiStyle;
 
     this.#widget = Widget({
+      id: this._log.getName(),
       cssClass: "decorated-frame",
-      layout: this.#layout = BoxLayout({
-        direction: Direction.TopToBottom,
-        contentsMargins: [10, 5, 10, 5],
-        children: [
-          this.#createHeader(),
-          block?.getWidget()
-        ]
-      })
+      onLayoutRequest: () => this.#layout(),
+      onResize: (ev) => this.#handleResize(ev),
+      sizePolicy: {
+        vertical: QSizePolicyPolicy.Fixed,
+        horizontal: QSizePolicyPolicy.Expanding
+      }
     });
+    this.#headerWidget = this.#createHeader();
+    this.#headerWidget.setParent(this.#widget);
+  }
+
+  #layout(): void {
+    const headerSizeHint = this.#headerWidget.sizeHint();
+    this.#headerWidget.setGeometry(0, 0, this.#widthPx, headerSizeHint.height());
+
+    const leftRightMarginPx = this.#uiStyle.getFrameMarginLeftRightPx();
+
+    let totalHeight = headerSizeHint.height();
+    if (this.#block != null) {
+      const blockWidget = this.#block.getWidget();
+      const blockSizeHint = blockWidget.maximumSize();
+      totalHeight += blockSizeHint.height();
+      totalHeight += this.#uiStyle.getDecoratedFrameMarginBottomPx();
+      blockWidget.setGeometry(leftRightMarginPx, headerSizeHint.height(),
+        this.#widthPx - 2 * leftRightMarginPx, blockSizeHint.height());
+    }
+
+    this.#widget.setFixedHeight(totalHeight);
+    this.#widget.setMinimumHeight(totalHeight);
+    this.#widget.updateGeometry();
+  }
+
+  #handleResize(ev): void {
+    const resizeEvent = new QResizeEvent(ev);
+this._log.debug(`resizeEvent, oldSize.w: ${resizeEvent.oldSize().width()}, oldSize.h: ${resizeEvent.oldSize().height()}, size.w: ${resizeEvent.size().width()}, size.h: ${resizeEvent.size().height()}`);
+    this.#widthPx = resizeEvent.size().width();
+    this.#layout();
   }
 
   getBlock(): Block {
@@ -54,11 +99,18 @@ export class DecoratedFrame implements BlockFrame {
       this.#onMetadataChangedDisposable.dispose();
       this.#onMetadataChangedDisposable = null;
     }
+    if (this.#block != null) {
+      this.#block.getWidget().setParent(null);
+    }
 
     this.#block = block;
     this.#onMetadataChangedDisposable = block.onMetadataChanged(() => this.#handleMetadataChanged());
     this.#updateHeaderFromMetadata(this.#getMetadata());
-    this.#layout.addWidget(block.getWidget());
+
+    const blockWidget = this.#block.getWidget();
+    blockWidget.setParent(this.#widget);
+    blockWidget.show();
+    this.#layout();
   }
 
   getWidget(): QWidget {
@@ -92,21 +144,35 @@ export class DecoratedFrame implements BlockFrame {
 
   #createHeader(): QWidget {
     return Widget({
+      id: "DecoratedFrame-header",
       cssClass: "decorated-frame-header",
       layout: BoxLayout({
         direction: Direction.LeftToRight,
         contentsMargins: [0, 0, 0, 0],
         children: [
-          { widget: this.#iconText = Label({text: ""}), stretch: 0 },
-          { widget: this.#titleLabel = Label({text: ""}), stretch: 1, alignment: AlignmentFlag.AlignLeft }
+          {
+            widget: this.#iconText = Label({cssClass: "icon", text: ""}),
+            stretch: 0
+          },
+          {
+            widget: this.#titleLabel = Label({cssClass: "command-line", text: "command-line"}),
+            stretch: 1,
+            alignment: AlignmentFlag.AlignLeft
+          }
         ]
       })
     });
   }
 
   #updateHeaderFromMetadata(metadata: ViewerMetadata): void {
+    setCssClasses(this.#widget, ["decorated-frame", POSTURE_MAPPING[metadata.posture]]);
+    setCssClasses(this.#headerWidget, ["decorated-frame-header", POSTURE_MAPPING[metadata.posture]]);
+
     this.#titleLabel.setText(metadata.title);
     this.#iconText.setText(createHtmlIcon(metadata.icon));
+
+    repolish(this.#titleLabel);
+    repolish(this.#iconText);
   }
 
   #handleMetadataChanged(): void {

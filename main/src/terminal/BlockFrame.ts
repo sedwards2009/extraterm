@@ -16,5 +16,7 @@ import { Block } from "./Block";
  */
 export interface BlockFrame {
   getBlock(): Block;
+  setBlock(block: Block): void;
+
   getWidget(): QWidget;
 }

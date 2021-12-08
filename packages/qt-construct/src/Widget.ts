@@ -15,8 +15,10 @@ export interface WidgetOptions {
   windowTitle?: string;
   focusPolicy?: FocusPolicy;
   onEnter?: () => void;
+  onLayoutRequest?: () => void;
   onLeave?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
+  onResize?: (native /* NativeQEvent */) => void;
   windowFlag?: WindowType;
   sizePolicy?: {horizontal: QSizePolicyPolicy, vertical: QSizePolicyPolicy};
   maximumHeight?: number;
@@ -29,9 +31,9 @@ export interface WidgetOptions {
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
-    attribute, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter,
-    onLeave, onKeyPress, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight,
-    minimumWidth, windowFlag, inlineStyle
+    attribute, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter, onLayoutRequest, onLeave,
+    onKeyPress, onResize, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
+    windowFlag, inlineStyle
   } = options;
 
   if (enabled !== undefined) {
@@ -63,8 +65,14 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   if (onEnter !== undefined) {
     widget.addEventListener(WidgetEventTypes.Enter, onEnter);
   }
+  if (onLayoutRequest !== undefined) {
+    widget.addEventListener(WidgetEventTypes.LayoutRequest, onLayoutRequest);
+  }
   if (onLeave !== undefined) {
     widget.addEventListener(WidgetEventTypes.Leave, onLeave);
+  }
+  if (onResize !== undefined) {
+    widget.addEventListener(WidgetEventTypes.Resize, onResize);
   }
   if (windowFlag !== undefined) {
     widget.setWindowFlag(windowFlag, true);

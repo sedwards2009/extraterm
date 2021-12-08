@@ -79,6 +79,15 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getTrafficLightStoppedColor(): string {
       return toHex(brandDanger);
+    },
+    getFrameMarginLeftRightPx(): number {
+      return 4;
+    },
+    getDecoratedFrameMarginTopPx(): number {
+      return 0;
+    },
+    getDecoratedFrameMarginBottomPx(): number {
+      return 4;
     }
   };
 }
@@ -813,14 +822,6 @@ QWidget[cssClass~="background"] {
 QWidget[cssClass~="window-background"] {
   background-color: ${level3Color};
 }
-
-QWidget[cssClass~="frame"] {
-  background-color: #ff00ff;
-}
-
-QWidget[cssClass~="decorated-frame"] {
-  background-color: #ffff00;
-}
 `;
 
 }
@@ -985,6 +986,72 @@ QPushButton[cssClass~="subtabbar-tab"][cssClass~="selected"] {
   color: ${headingsColor};
   background-color: transparent;
   text-decoration: underline;
+}
+
+${DecoratedFrameStyleSheet()}
+`;
+}
+
+function DecoratedFrameStyleSheet(): string {
+  const borderWidth = "1px";
+
+  return `
+QWidget[cssClass~="frame"] {
+}
+
+QWidget[cssClass~="decorated-frame"] {
+  border-radius: ${borderRadius};
+}
+
+QWidget[cssClass~="decorated-frame"][cssClass~="posture-neutral"] {
+  border: ${borderWidth} solid ${baseBorderColor};
+}
+QWidget[cssClass~="decorated-frame"][cssClass~="posture-failure"] {
+  border: ${borderWidth} solid ${brandDanger};
+}
+QWidget[cssClass~="decorated-frame"][cssClass~="posture-running"] {
+  border: ${borderWidth} solid ${baseBorderColor};
+}
+QWidget[cssClass~="decorated-frame"][cssClass~="posture-success"] {
+  border: ${borderWidth} solid ${brandPrimary};
+}
+
+QWidget[cssClass~="decorated-frame-header"] {
+  border-radius: ${borderRadius};
+  background-color: ${level1Color};
+}
+QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-neutral"] {
+  border: ${borderWidth} solid ${baseBorderColor};
+}
+QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-failure"] {
+  border: ${borderWidth} solid ${brandDanger};
+  border-bottom: 0px solid transparent;
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-running"] {
+  border: ${borderWidth} solid ${baseBorderColor};
+}
+QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-success"] {
+  border: ${borderWidth} solid ${brandPrimary};
+  border-bottom: 0px solid transparent;
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+QWidget[cssClass~="decorated-frame-header"] > QLabel[cssClass~="icon"] {
+  padding-left: 2px;
+}
+
+QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-success"] > QLabel[cssClass~="icon"] {
+  color: ${brandPrimary};
+}
+
+QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-failure"] > QLabel[cssClass~="icon"] {
+  color: ${brandDanger};
+}
+QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-failure"] > QLabel[cssClass~="command-line"] {
+  color: ${brandDanger};
 }
 `;
 }

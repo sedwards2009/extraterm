@@ -18,4 +18,7 @@ export interface UiStyle {
   getTabIcon(name: string): QIcon;
   getTrafficLightRunningColor(): string;
   getTrafficLightStoppedColor(): string;
+  getFrameMarginLeftRightPx(): number;
+  getDecoratedFrameMarginTopPx(): number;
+  getDecoratedFrameMarginBottomPx(): number;
 }

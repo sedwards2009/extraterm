@@ -285,7 +285,8 @@ class Main {
     //   }
     // }
 
-    const newTerminal = new Terminal(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager);
+    const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
+      this.#keybindingsIOManager);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });

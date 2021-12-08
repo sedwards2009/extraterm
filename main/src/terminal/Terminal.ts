@@ -59,6 +59,7 @@ import { ScreenChangeEvent } from "term-api";
 import { BlockFrame } from "./BlockFrame";
 import { DecoratedFrame } from "./DecoratedFrame";
 import { SpacerFrame } from "./SpacerFrame";
+import { UiStyle } from "../ui/UiStyle";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -101,6 +102,7 @@ const enum ApplicationMode {
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
 
+  #uiStyle: UiStyle = null;
   #configDatabase: ConfigDatabase = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #extensionManager: ExtensionManager = null;
@@ -187,7 +189,9 @@ export class Terminal implements Tab, Disposable {
       (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
   }
 
-  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager) {
+  constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,
+      keybindingsIOManager: KeybindingsIOManager) {
+
     this._log = getLogger("Terminal", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
@@ -197,6 +201,7 @@ export class Terminal implements Tab, Disposable {
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
+    this.#uiStyle = uiStyle;
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
@@ -285,7 +290,9 @@ export class Terminal implements Tab, Disposable {
       }
     );
 
-    return new SpacerFrame(terminalBlock);
+    const spacerFrame = new SpacerFrame(this.#uiStyle);
+    spacerFrame.setBlock(terminalBlock);
+    return spacerFrame;
   }
 
   #handleResize(): void {
@@ -331,7 +338,7 @@ export class Terminal implements Tab, Disposable {
     const maxContentHeight = maxViewportHeight - spacing - spacing;
 
     const maxViewportWidth = maxViewportSize.width() + currentMargins.left + currentMargins.right;
-    const maxContentWidth = maxViewportWidth - spacing - spacing;
+    const maxContentWidth = maxViewportWidth - spacing - spacing - 2 * this.#uiStyle.getFrameMarginLeftRightPx();
 
     const columns = Math.floor(maxContentWidth / metrics.widthPx);
     const rows = Math.floor(maxContentHeight / metrics.heightPx);
@@ -908,7 +915,7 @@ export class Terminal implements Tab, Disposable {
       // this._appendViewerElement(el);
 
       this.#closeLastTerminalFrame();
-      const decoratedFrame = new DecoratedFrame(null);
+      const decoratedFrame = new DecoratedFrame(this.#uiStyle);
       const defaultMetadata: ViewerMetadata = {
         title: cleanCommandLine,
         posture: ViewerPosture.RUNNING,
@@ -1061,14 +1068,16 @@ this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
 
     this.#closeLastTerminalFrame();
 
-    terminalBlock.setCommandLine(this._lastCommandLine);
-    terminalBlock.setReturnCode(returnCode);
-    decoratedFrame.setBlock(terminalBlock);
+    this.#contentLayout.removeWidget(terminalBlockFrame.getWidget());
+    terminalBlockFrame.getWidget().setParent(null);
+    terminalBlockFrame.setBlock(null);
 
     const index = this.#blockFrames.indexOf(terminalBlockFrame);
     this.#blockFrames.splice(index, 1);
-    this.#contentLayout.removeWidget(terminalBlockFrame.getWidget());
-    terminalBlockFrame.getWidget().setParent(null);
+
+    terminalBlock.setCommandLine(this._lastCommandLine);
+    terminalBlock.setReturnCode(returnCode);
+    decoratedFrame.setBlock(terminalBlock);
 
     this.#appendBlockFrame(this.#createTerminalBlock());
   }
