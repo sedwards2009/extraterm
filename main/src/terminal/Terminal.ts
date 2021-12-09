@@ -179,6 +179,10 @@ export class Terminal implements Tab, Disposable {
       () => extensionManager.getActiveTerminal().commandPasteFromClipboard());
     commands.registerCommand("extraterm:terminal.copyToClipboard",
       () => extensionManager.getActiveTerminal().commandCopyToClipboard());
+    commands.registerCommand("extraterm:terminal.goToNextFrame",
+      () => extensionManager.getActiveTerminal().commandGoToNextFrame());
+    commands.registerCommand("extraterm:terminal.goToPreviousFrame",
+      () => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
     commands.registerCommand("extraterm:terminal.resetVT",
       () => extensionManager.getActiveTerminal().commandResetVT());
     commands.registerCommand("extraterm:terminal.increaseFontSize",
@@ -733,11 +737,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   commandCopyToClipboard(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
-    if (terminal == null) {
-      return;
-    }
-    const text = terminal.getSelectionText();
+    const text = this.getSelectionText();
     if (text == null || text === "") {
       return;
     }
@@ -745,22 +745,37 @@ export class Terminal implements Tab, Disposable {
     clipboard.setText(text);
   }
 
-  commandPasteFromClipboard(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
-    if (terminal == null) {
-      return;
+  commandGoToNextFrame(): void {
+    const viewportTop = this.#verticalScrollBar.value();
+    for (const bf of this.#blockFrames) {
+      const geo = bf.getWidget().geometry();
+      if (geo.top() > viewportTop) {
+        this.#verticalScrollBar.setValue(geo.top());
+        return;
+      }
     }
+  }
+
+  commandGoToPreviousFrame(): void {
+    const viewportTop = this.#verticalScrollBar.value();
+    for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
+      const bf = this.#blockFrames[i];
+      const geo = bf.getWidget().geometry();
+      if (geo.top() < viewportTop) {
+        this.#verticalScrollBar.setValue(geo.top());
+        return;
+      }
+    }
+  }
+
+  commandPasteFromClipboard(): void {
     const clipboard = QApplication.clipboard();
     const text = clipboard.text();
-    terminal.pasteText(text);
+    this.pasteText(text);
   }
 
   commandResetVT(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
-    if (terminal == null) {
-      return;
-    }
-    terminal.resetVT();
+    this.resetVT();
   }
 
   commandFontSizeIncrease(): void {
