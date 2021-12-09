@@ -21,7 +21,6 @@ const POSTURE_MAPPING = {
 };
 
 
-
 /**
  * A frame around a Block.
  *
@@ -43,6 +42,7 @@ export class DecoratedFrame implements BlockFrame {
 
   #onMetadataChangedDisposable: Disposable = null;
   #widthPx = -1;
+  #viewportTopPx = 0;
 
   constructor(uiStyle: UiStyle) {
     this._log = getLogger("DecoratedFrame", this);
@@ -64,8 +64,6 @@ export class DecoratedFrame implements BlockFrame {
 
   #layout(): void {
     const headerSizeHint = this.#headerWidget.sizeHint();
-    this.#headerWidget.setGeometry(0, 0, this.#widthPx, headerSizeHint.height());
-
     const leftRightMarginPx = this.#uiStyle.getFrameMarginLeftRightPx();
 
     let totalHeight = headerSizeHint.height();
@@ -77,6 +75,10 @@ export class DecoratedFrame implements BlockFrame {
       blockWidget.setGeometry(leftRightMarginPx, headerSizeHint.height(),
         this.#widthPx - 2 * leftRightMarginPx, blockSizeHint.height());
     }
+
+    const headerHeight = headerSizeHint.height();
+    const headerY = Math.max(0, Math.min(this.#viewportTopPx, totalHeight - headerHeight));
+    this.#headerWidget.setGeometry(0, headerY, this.#widthPx, headerHeight);
 
     this.#widget.setFixedHeight(totalHeight);
     this.#widget.setMinimumHeight(totalHeight);
@@ -111,6 +113,7 @@ this._log.debug(`resizeEvent, oldSize.w: ${resizeEvent.oldSize().width()}, oldSi
     blockWidget.setParent(this.#widget);
     blockWidget.show();
     this.#layout();
+    this.#headerWidget.raise();
   }
 
   getWidget(): QWidget {
@@ -177,5 +180,13 @@ this._log.debug(`resizeEvent, oldSize.w: ${resizeEvent.oldSize().width()}, oldSi
 
   #handleMetadataChanged(): void {
     this.#updateHeaderFromMetadata(this.#getMetadata());
+  }
+
+  setViewportTop(relativeTopPx: number): void {
+    if (relativeTopPx === this.#viewportTopPx) {
+      return;
+    }
+    this.#viewportTopPx = relativeTopPx;
+    this.#layout();
   }
 }

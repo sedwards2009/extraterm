@@ -260,6 +260,10 @@ export class Terminal implements Tab, Disposable {
       this.#handleVerticalScrollBarAction();
     });
 
+    this.#verticalScrollBar.addEventListener("valueChanged", () => {
+      this.#handleVerticalScrollBarChanged();
+    });
+
     this.#scrollArea.setVerticalScrollBar(this.#verticalScrollBar);
 
     this.#contentLayout.addStretch(1);
@@ -297,6 +301,7 @@ export class Terminal implements Tab, Disposable {
 
   #handleResize(): void {
     this.resizeEmulatorFromTerminalSize();
+    this.#updateViewportTopOnFrames();
   }
 
   focus(): void {
@@ -397,10 +402,15 @@ export class Terminal implements Tab, Disposable {
     this.#atBottom = this.#verticalScrollBar.sliderPosition() > (this.#verticalScrollBar.maximum() - this.#marginPx);
   }
 
+  #handleVerticalScrollBarChanged(): void {
+    this.#updateViewportTopOnFrames();
+  }
+
   #handleVerticalScrollBarRangeChanged(): void {
     if (this.#atBottom) {
       this.#verticalScrollBar.setSliderPosition(this.#verticalScrollBar.maximum());
     }
+    this.#updateViewportTopOnFrames();
   }
 
   #scrollToBottom(): void {
@@ -664,9 +674,9 @@ export class Terminal implements Tab, Disposable {
 
     // Application mode handlers
     const applicationModeHandler: TermApi.ApplicationModeHandler = {
-      start: this._handleApplicationModeStart.bind(this),
-      data: this._handleApplicationModeData.bind(this),
-      end: this._handleApplicationModeEnd.bind(this)
+      start: this.#handleApplicationModeStart.bind(this),
+      data: this.#handleApplicationModeData.bind(this),
+      end: this.#handleApplicationModeEnd.bind(this)
     };
     emulator.registerApplicationModeHandler(applicationModeHandler);
     emulator.onWriteBufferSize(this.#handleWriteBufferSize.bind(this));
@@ -764,13 +774,24 @@ export class Terminal implements Tab, Disposable {
   commandFontSizeReset(): void {
     this.#resetFontSizeAdjustment();
   }
+
+  #updateViewportTopOnFrames(): void {
+    const value = this.#verticalScrollBar.value();
+    for (const bf of this.#blockFrames) {
+      const widget = bf.getWidget();
+      const geo = widget.geometry();
+      const offset = value - geo.top();
+      bf.setViewportTop(offset);
+    }
+  }
+
   /**
    * Handle when the embedded term.js enters start of application mode.
    *
    * @param {array} params The list of parameter which were specified in the
    *     escape sequence.
    */
-  private _handleApplicationModeStart(params: string[]): TermApi.ApplicationModeResponse {
+  #handleApplicationModeStart(params: string[]): TermApi.ApplicationModeResponse {
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("application-mode started! ",params);
     }
@@ -833,7 +854,7 @@ export class Terminal implements Tab, Disposable {
    *
    * @param {string} data The new data.
    */
-  private _handleApplicationModeData(data: string): TermApi.ApplicationModeResponse {
+  #handleApplicationModeData(data: string): TermApi.ApplicationModeResponse {
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("html-mode data!", data);
     }
@@ -856,7 +877,7 @@ export class Terminal implements Tab, Disposable {
   /**
    * Handle the exit from application mode.
    */
-  private _handleApplicationModeEnd(): TermApi.ApplicationModeResponse {
+  #handleApplicationModeEnd(): TermApi.ApplicationModeResponse {
     switch (this._applicationMode) {
       case ApplicationMode.APPLICATION_MODE_HTML:
         // el = this._getWindow().document.createElement("div");
@@ -865,11 +886,11 @@ export class Terminal implements Tab, Disposable {
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-        this._handleApplicationModeBracketStart();
+        this.#handleApplicationModeBracketStart();
         break;
 
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-        this._handleApplicationModeBracketEnd();
+        this.#handleApplicationModeBracketEnd();
         break;
 
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
@@ -892,7 +913,7 @@ export class Terminal implements Tab, Disposable {
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
 
-  private _handleApplicationModeBracketStart(): void {
+  #handleApplicationModeBracketStart(): void {
     // for (const element of this._terminalCanvas.getViewerElements()) {
     //   if ((EmbeddedViewer.is(element) && element.children.length === 0) || CommandPlaceHolder.is(element)) {
     //     return;  // Don't open a new frame.
@@ -907,7 +928,7 @@ export class Terminal implements Tab, Disposable {
       cleanCommandLine = trimmed.slice(trimmed.indexOf(" ")).trim();
     }
 
-    if (this._commandNeedsFrame(cleanCommandLine)) {
+    if (this.#commandNeedsFrame(cleanCommandLine)) {
       // Create and set up a new command-frame.
       // const el = this._createEmbeddedViewerElement();
       // const el = new DecoratedFrame(null);
@@ -930,7 +951,7 @@ export class Terminal implements Tab, Disposable {
       this.#appendBlockFrame(this.#createTerminalBlock());
     } else {
 
-      this._moveCursorToFreshLine();
+      this.#moveCursorToFreshLine();
       this.#emulator.moveRowsAboveCursorToScrollback();
       this.#emulator.flushRenderQueue();
 this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
@@ -949,7 +970,7 @@ this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
     ]);
   }
 
-  private _moveCursorToFreshLine(): void {
+  #moveCursorToFreshLine(): void {
     const dims = this.#emulator.getDimensions();
     if (dims.cursorX !== 0 && this.#emulator.getLineText(dims.cursorY).trim() !== "") {
       this.#emulator.newLine();
@@ -957,14 +978,14 @@ this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
     }
   }
 
-  private _commandNeedsFrame(commandLine: string, linesOfOutput=-1): boolean {
+  #commandNeedsFrame(commandLine: string, linesOfOutput=-1): boolean {
     if (commandLine.trim() === "" || this.#configDatabase === null) {
       return false;
     }
 
     const commandLineActions = this.#configDatabase.getCommandLineActionConfig() || [];
     for (const cla of commandLineActions) {
-      if (this._commandLineActionMatches(commandLine, cla)) {
+      if (this.#commandLineActionMatches(commandLine, cla)) {
         switch (cla.frameRule) {
           case "always_frame":
             return true;
@@ -987,7 +1008,7 @@ this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
     }
   }
 
-  private _commandLineActionMatches(command: string, cla: DeepReadonly<CommandLineAction>): boolean {
+  #commandLineActionMatches(command: string, cla: DeepReadonly<CommandLineAction>): boolean {
     const cleanCommandLine = command.trim();
     const commandParts = command.trim().split(/\s+/);
 
@@ -1008,7 +1029,7 @@ this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
     }
   }
 
-  private _handleApplicationModeBracketEnd(): void {
+  #handleApplicationModeBracketEnd(): void {
     // this._terminalCanvas.enforceScrollbackLengthAfter( () => {
     const returnCode = this._htmlData;
     this.#closeLastEmbeddedViewer(returnCode);

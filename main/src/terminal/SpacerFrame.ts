@@ -67,4 +67,8 @@ export class SpacerFrame implements BlockFrame {
   getWidget(): QWidget {
     return this.#widget;
   }
+
+  setViewportTop(relativeTopPx: number): void {
+    //no-op
+  }
 }
