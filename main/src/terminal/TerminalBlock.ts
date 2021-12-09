@@ -315,7 +315,7 @@ export class TerminalBlock implements Block {
     const firstRow = Math.max(topRenderRow, selectionStart.y);
     const lastRow = Math.min(topRenderRow + heightRows + 1, selectionEnd.y + 1);
 
-    const emulatorWidth = this.#emulator.getDimensions().cols;
+    const emulatorWidth = this.#emulator?.getDimensions().cols ?? 0;
 
     painter.setCompositionMode(CompositionMode.CompositionMode_Screen);
 
