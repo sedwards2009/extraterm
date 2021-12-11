@@ -1805,6 +1805,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"autolink@workspace:extensions/Autolink":
+  version: 0.0.0-use.local
+  resolution: "autolink@workspace:extensions/Autolink"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.14.0
+    "@types/jest": 27.0.1
+    jest: 27.2.0
+    shelljs: 0.8.3
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
+
 "ava-init@npm:^0.2.0":
   version: 0.2.1
   resolution: "ava-init@npm:0.2.1"
@@ -3320,6 +3332,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"copy-link@workspace:extensions/CopyLink":
+  version: 0.0.0-use.local
+  resolution: "copy-link@workspace:extensions/CopyLink"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.14.0
+    shelljs: 0.8.3
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
+
 "core-assert@npm:^0.2.0":
   version: 0.2.1
   resolution: "core-assert@npm:0.2.1"
@@ -4628,6 +4650,7 @@ __metadata:
     qode: ^0.1.0
     readdirp: 3.6.0
     shelljs: 0.8.4
+    source-map-support: ^0.5.21
     wsrun: 5.2.0
   dependenciesMeta:
     node-pty:
@@ -7684,7 +7707,7 @@ fsevents@^2.3.2:
     shelljs: 0.8.3
     shx: ^0.3.2
     smart-buffer: 4.0.2
-    source-map-support: ^0.3.2
+    source-map-support: ^0.5.21
     term-api: 1.0.0
     term-api-lineimpl: 1.0.0
     typescript: 4.3.5
@@ -8719,6 +8742,16 @@ fsevents@^2.3.2:
   checksum: 97aedde610ef561f05853609d6a5b720ec1e123f867bdac1b38b5aeb3bc90ed60209678c75a5f0f9821aa793c720b6d17aabfb956e26ab115ee9b81d6e56bdf7
   languageName: node
   linkType: hard
+
+"open-link@workspace:extensions/OpenLink":
+  version: 0.0.0-use.local
+  resolution: "open-link@workspace:extensions/OpenLink"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.14.0
+    shelljs: 0.8.3
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
 
 "open@npm:^8.2.1":
   version: 8.2.1
@@ -10478,15 +10511,6 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
-"source-map-support@npm:^0.3.2":
-  version: 0.3.3
-  resolution: "source-map-support@npm:0.3.3"
-  dependencies:
-    source-map: 0.1.32
-  checksum: 25a623c051a23e034eeb1b6044449cb4754ab9998afd25b1bf554d7a455d9f5383cf83fed6f85740babe4ed2edf3677c5e1baa2ca79657c396f1d4725095e5f2
-  languageName: node
-  linkType: hard
-
 "source-map-support@npm:^0.4.15":
   version: 0.4.18
   resolution: "source-map-support@npm:0.4.18"
@@ -10506,19 +10530,20 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
+"source-map-support@npm:^0.5.21":
+  version: 0.5.21
+  resolution: "source-map-support@npm:0.5.21"
+  dependencies:
+    buffer-from: ^1.0.0
+    source-map: ^0.6.0
+  checksum: 43e98d700d79af1d36f859bdb7318e601dfc918c7ba2e98456118ebc4c4872b327773e5a1df09b0524e9e5063bb18f0934538eace60cca2710d1fa687645d137
+  languageName: node
+  linkType: hard
+
 "source-map-url@npm:^0.4.0":
   version: 0.4.1
   resolution: "source-map-url@npm:0.4.1"
   checksum: 64c5c2c77aff815a6e61a4120c309ae4cac01298d9bcbb3deb1b46a4dd4c46d4a1eaeda79ec9f684766ae80e8dc86367b89326ce9dd2b89947bd9291fc1ac08c
-  languageName: node
-  linkType: hard
-
-"source-map@npm:0.1.32":
-  version: 0.1.32
-  resolution: "source-map@npm:0.1.32"
-  dependencies:
-    amdefine: ">=0.0.4"
-  checksum: e59947d780134650b19ad28eb5cbe8a5ef8c3ca2c5281bbf21c33ed9a12eb009f3732bb31eedddd0ef113aa77e04945f12fd8c7f12d5cb527f9cd8896a887df3
   languageName: node
   linkType: hard
 

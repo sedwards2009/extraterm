@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as SourceMapSupport from "source-map-support";
+import "source-map-support/register";
 import * as SourceDir from './SourceDir';
 import * as os from "os";
 import * as fs from "fs";
