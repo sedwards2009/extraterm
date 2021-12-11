@@ -42,7 +42,6 @@ const performanceNow = require('performance-now');
 
 import * as Term from "../emulator/Term";
 import { Tab } from "../Tab";
-import { Block } from "./Block";
 import { AppendScrollbackLinesDetail, TerminalBlock } from "./TerminalBlock";
 import { Pty } from "../pty/Pty";
 import { TerminalEnvironmentImpl } from "./TerminalEnvironmentImpl";
@@ -74,10 +73,10 @@ interface TerminalSize {
 
 export interface LineRangeChange {
   terminalBlock: TerminalBlock;
+  blockFrame: BlockFrame;
   startLine: number;
   endLine: number;
 }
-
 
 export interface ContextMenuEvent {
   x: number;
@@ -294,7 +293,11 @@ export class Terminal implements Tab, Disposable {
 
     this.#blockDidAppendScrollbackLinesDisposable = terminalBlock.onDidAppendScrollbackLines(
       (e: AppendScrollbackLinesDetail) => {
-        this.#onDidAppendScrollbackLinesEventEmitter.fire({ ...e, terminalBlock: terminalBlock });
+        this.#onDidAppendScrollbackLinesEventEmitter.fire({
+          ...e,
+          blockFrame: spacerFrame,
+          terminalBlock
+        });
       }
     );
 
@@ -692,8 +695,10 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleScreenChange(event: TermApi.ScreenChangeEvent): void {
+    const blockFrame = this.#findLastBareTerminalBlockFrame();
     this.#onDidScreenChangeEventEmitter.fire({
-      terminalBlock: <TerminalBlock> this.#blockFrames[0].getBlock(),
+      blockFrame,
+      terminalBlock: <TerminalBlock> blockFrame.getBlock(),
       startLine: event.refreshStartRow,
       endLine: event.refreshEndRow,
     });
@@ -1084,9 +1089,9 @@ this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
     return null;
   }
 
-  #findLastTerminalBlockFrame(): SpacerFrame {
+  #findLastBareTerminalBlockFrame(): SpacerFrame {
     const len = this.#blockFrames.length;
-    for (let i=len-1; i !==0; i--) {
+    for (let i=len-1; i >= 0; i--) {
       const frame = this.#blockFrames[i];
       if (frame instanceof SpacerFrame) {
         const block = frame.getBlock();
@@ -1099,7 +1104,7 @@ this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
   }
 
   #frameWithExistingDecoratedFrame(decoratedFrame: DecoratedFrame, returnCode: string): void {
-    const terminalBlockFrame = this.#findLastTerminalBlockFrame();
+    const terminalBlockFrame = this.#findLastBareTerminalBlockFrame();
     const terminalBlock = <TerminalBlock> terminalBlockFrame.getBlock();
 
     this.#closeLastTerminalFrame();
