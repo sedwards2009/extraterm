@@ -790,26 +790,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:^0.38.0":
-  version: 0.38.0
-  resolution: "@nodegui/nodegui@npm:0.38.0"
-  dependencies:
-    "@nodegui/artifact-installer": ^1.1.0
-    "@nodegui/qode": ^16.4.0
-    cmake-js: ^6.2.1
-    cross-env: ^7.0.3
-    cuid: ^2.1.8
-    manage-path: ^2.0.0
-    memoize-one: ^5.2.1
-    node-addon-api: ^4.0.0
-    postcss: ^7.0.17
-    postcss-nodegui-autoprefixer: 0.0.7
-  bin:
-    qode: scripts/qode.js
-  checksum: bebb91e1d520f055a83f5fe91e3e46fd684c902b7c02ecb66249e6d17db4fdf2680568cc9d3d8bee0a78d1065c9deaf211fa259d97341f9e7e836f7840274c63
-  languageName: node
-  linkType: hard
-
 "@nodegui/nodegui@npm:^0.43.0":
   version: 0.43.0
   resolution: "@nodegui/nodegui@npm:0.43.0"
@@ -4654,7 +4634,7 @@ __metadata:
     node-abi: 2.21.0
     node-gyp: ^8.2.0
     node-pty: 0.10.0-beta19
-    nodegui-plugin-font-icon: ^0.1.6
+    nodegui-plugin-font-icon: ^0.1.7
     qode: ^0.1.0
     readdirp: 3.6.0
     shelljs: 0.8.4
@@ -7706,7 +7686,7 @@ fsevents@^2.3.2:
     lru-cache: ^4.1.3
     marked: ^0.8.2
     mime-types: ^2.1.21
-    nodegui-plugin-font-icon: ^0.1.6
+    nodegui-plugin-font-icon: ^0.1.7
     open: ^8.2.1
     opentype.js: ^1.3.1
     performance-now: 2.1.0
@@ -8436,15 +8416,15 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
-"nodegui-plugin-font-icon@npm:^0.1.6":
-  version: 0.1.6
-  resolution: "nodegui-plugin-font-icon@npm:0.1.6"
+"nodegui-plugin-font-icon@npm:^0.1.7":
+  version: 0.1.7
+  resolution: "nodegui-plugin-font-icon@npm:0.1.7"
   dependencies:
-    "@nodegui/nodegui": ^0.38.0
+    "@nodegui/nodegui": ^0.43.0
     cmake-js: ^6.1.0
     cross-env: ^7.0.2
     node-addon-api: ^3.0.0
-  checksum: 59c07a5d4073a99e275bce1088faf520c90c7070e71fab95e66caf72fa366bc820538705e70b4904ce5aef6fcf52297bcb134b0c727e346a5d651df437fa1521
+  checksum: 472c3c75123c6fee1a483cb3d2fb09bc37cdd4691e32f9764a1d96a76840669c979e0f135d5565ddf7e07c26ad4950b5a86083b7f98a680695ce01d160c51bc2
   languageName: node
   linkType: hard
 
