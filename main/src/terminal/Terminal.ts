@@ -974,8 +974,6 @@ export class Terminal implements Tab, Disposable {
       this.#moveCursorToFreshLine();
       this.#emulator.moveRowsAboveCursorToScrollback();
       this.#emulator.flushRenderQueue();
-this._log.debug(`_handleApplicationModeBracketStart() other frame branch`);
-
       // this._lastCommandTerminalLine = this._terminalViewer.bookmarkCursorLine();
       // this._lastCommandTerminalViewer = this._terminalViewer;
     }
