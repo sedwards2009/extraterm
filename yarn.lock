@@ -810,9 +810,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:^0.40.0":
-  version: 0.40.1
-  resolution: "@nodegui/nodegui@npm:0.40.1"
+"@nodegui/nodegui@npm:^0.43.0":
+  version: 0.43.0
+  resolution: "@nodegui/nodegui@npm:0.43.0"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/qode": ^16.4.0
@@ -826,7 +826,7 @@ __metadata:
     postcss-nodegui-autoprefixer: 0.0.7
   bin:
     qode: scripts/qode.js
-  checksum: b16d689b21c6c63df13d2b97e5cf5d05c2702f334ac598c3d4de5c7f813350fbf579bb4a08876348fad0b0dd747e5d15d0cf3d1d54570725cdef7281bd249da9
+  checksum: f2af01e0db0fcc7ab1c8d77bc399b2c62deb561ef287d16445c0e515968fad1986d9889f543cfef780018dcea8c29520bcbc5051f9db3252acc4ca9edbe74205
   languageName: node
   linkType: hard
 
@@ -4448,7 +4448,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-char-render-canvas@workspace:packages/extraterm-char-render-canvas"
   dependencies:
-    "@nodegui/nodegui": ^0.40.0
+    "@nodegui/nodegui": ^0.43.0
     "@types/node": ^14.14.37
     eslint: 7.19.0
     eslint-config-extraterm: 1.0.0
@@ -4636,7 +4636,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm@workspace:."
   dependencies:
-    "@nodegui/nodegui": ^0.40.0
+    "@nodegui/nodegui": ^0.43.0
     "@types/fs-extra": ^9.0.12
     "@yarnpkg/lockfile": ^1.1.0
     fs-extra: ^10.0.0
@@ -9575,7 +9575,7 @@ fsevents@^2.3.2:
   version: 0.0.0-use.local
   resolution: "qt-construct@workspace:packages/qt-construct"
   dependencies:
-    "@nodegui/nodegui": ^0.40.0
+    "@nodegui/nodegui": ^0.43.0
     eslint: 7.19.0
     eslint-config-extraterm: 1.0.0
     shelljs: 0.8.3
