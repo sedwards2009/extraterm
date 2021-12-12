@@ -7,14 +7,14 @@ require('shelljs/global');
 const sh = require('shelljs');
 const fs = require('fs');
 const path = require('path');
-const command = require('commander');
+const { Command } = require('commander');
 
 sh.config.fatal = true;
 
 async function main() {
-  const parsedArgs = new command.Command("extraterm");
-  parsedArgs.option('--version [app version]', 'Application version to use', null)
-    .parse(process.argv);
+  const parsedArgs = new Command("extraterm");
+  parsedArgs.option('--use-version [app version]', 'Application version to use', null);
+  parsedArgs.parse(process.argv);
 
   if ( ! test('-f', './package.json')) {
     echo("This script was called from the wrong directory.");
@@ -31,7 +31,7 @@ async function main() {
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
 
-  let version = parsedArgs.version == null ? packageData.version : parsedArgs.version;
+  let version = parsedArgs.useVersion == null ? packageData.version : parsedArgs.useVersion;
   if (version[0] === "v") {
     version = version.slice(1);
   }

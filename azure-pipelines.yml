@@ -31,7 +31,7 @@ jobs:
         displayName: 'Finish package install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
-      - script: yarn run package-commands-zip --version=$(git describe --tags)
+      - script: yarn run package-commands-zip --use-version=$(git describe --tags)
         displayName: 'Run yarn package-commands-zip'
       - task: CopyFiles@2
         inputs:

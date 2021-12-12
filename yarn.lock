@@ -3232,6 +3232,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^8.3.0":
+  version: 8.3.0
+  resolution: "commander@npm:8.3.0"
+  checksum: 0f82321821fc27b83bd409510bb9deeebcfa799ff0bf5d102128b500b7af22872c0c92cb6a0ebc5a4cf19c6b550fba9cedfa7329d18c6442a625f851377bacf0
+  languageName: node
+  linkType: hard
+
 "common-path-prefix@npm:^1.0.0":
   version: 1.0.0
   resolution: "common-path-prefix@npm:1.0.0"
@@ -4639,6 +4646,7 @@ __metadata:
     "@nodegui/nodegui": ^0.43.0
     "@types/fs-extra": ^9.0.12
     "@yarnpkg/lockfile": ^1.1.0
+    commander: ^8.3.0
     fs-extra: ^10.0.0
     git-repo-info: ^1.4.1
     jest: 27.2.0

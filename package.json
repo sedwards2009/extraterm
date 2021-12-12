@@ -64,6 +64,7 @@
   "dependencies": {
     "@nodegui/nodegui": "^0.43.0",
     "@types/fs-extra": "^9.0.12",
+    "commander": "^8.3.0",
     "fs-extra": "^10.0.0",
     "node-abi": "2.21.0",
     "node-gyp": "^8.2.0",
