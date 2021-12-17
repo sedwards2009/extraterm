@@ -523,6 +523,17 @@ QPushButton:on {
   color: ${textSelectedColor};
   background-color: ${buttonDefaultBgSelectedColor};
 }
+
+QPushButton[cssClass~="microtool"] {
+  background-color: transparent;
+
+  width: 1.5em;
+  height: 1.5em;
+
+  padding: 0px;
+  margin: 0px;
+  border: 0px;
+}
 `;
 }
 

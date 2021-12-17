@@ -9,6 +9,7 @@ import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 export interface StackedWidgetOptions extends WidgetOptions {
   children: QWidget[];
   currentIndex?: number;
+  onCurrentChanged?: (index: number) => void;
 }
 
 export function StackedWidget(options: StackedWidgetOptions): QStackedWidget {
@@ -16,9 +17,13 @@ export function StackedWidget(options: StackedWidgetOptions): QStackedWidget {
 
   ApplyWidgetOptions(stackedWidget, options);
 
-  const { children, currentIndex } = options;
+  const { children, currentIndex, onCurrentChanged } = options;
   for (const child of children) {
     stackedWidget.addWidget(child);
+  }
+
+  if (onCurrentChanged !== undefined) {
+    stackedWidget.addEventListener("currentChanged", onCurrentChanged);
   }
 
   if (currentIndex !== undefined) {

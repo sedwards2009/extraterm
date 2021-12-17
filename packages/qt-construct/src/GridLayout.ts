@@ -15,11 +15,20 @@ export interface GridLayoutItem {
 export interface GridLayoutOptions {
   columns: number;
   children: (QWidget| string | NodeLayout<any> | GridLayoutItem)[];
+  contentsMargins?: [number, number, number, number];
+  spacing?: number;
 }
 
 export function GridLayout(options: GridLayoutOptions): QGridLayout {
-  const { columns, children } = options;
+  const { columns, contentsMargins, children, spacing } = options;
   const gridLayout = new QGridLayout();
+
+  if (contentsMargins !== undefined) {
+    gridLayout.setContentsMargins(...contentsMargins);
+  }
+  if (spacing !== undefined) {
+    gridLayout.setSpacing(spacing);
+  }
 
   let col = 0;
   for (let i=0; i<children.length; i++) {

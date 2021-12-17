@@ -41,8 +41,6 @@ export interface GeneralConfig {
 
   windowConfiguration?: WindowConfiguration;
 
-  frameByDefault?: boolean;
-
   frameRule?: FrameRule;
   frameRuleLines?: number;
 

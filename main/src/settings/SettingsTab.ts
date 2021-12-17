@@ -13,6 +13,7 @@ import { UiStyle } from "../ui/UiStyle";
 import { GeneralPage } from "./GeneralPage";
 import { AppearancePage } from "./AppearancePage";
 import { ExtensionsPage } from "./ExtensionsPage";
+import { FramesPage } from "./FramesPage";
 import { ExtensionManager } from "../InternalTypes";
 import { ThemeManager } from "../theme/ThemeManager";
 
@@ -26,7 +27,9 @@ export class SettingsTab implements Tab {
 
   #generalPage: GeneralPage = null;
   #appearancePage: AppearancePage = null;
+  #framesPage: FramesPage = null;
   #extensionsPage: ExtensionsPage = null;
+
   #contentWidget: QWidget = null;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
@@ -40,6 +43,7 @@ export class SettingsTab implements Tab {
     this.#generalPage = new GeneralPage(this.#configDatabase, uiStyle);
     this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
       uiStyle);
+    this.#framesPage = new FramesPage(configDatabase, uiStyle);
     this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
     this.#createUI(uiStyle);
   }
@@ -81,7 +85,7 @@ export class SettingsTab implements Tab {
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-paint-brush"), text: "Appearance"}),
                 // ListWidgetItem({text: "Session Types"}),
                 // ListWidgetItem({text: "Keybindings"}),
-                // ListWidgetItem({text: "Frames"}),
+                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-window-maximize"), text: "Frames"}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-puzzle-piece"), text: "Extensions"}),
               ],
               currentRow: 0,
@@ -97,8 +101,10 @@ export class SettingsTab implements Tab {
               children: [
                 this.#generalPage.getPage(),
                 this.#appearancePage.getPage(),
+                this.#framesPage.getPage(),
                 this.#extensionsPage.getPage(),
-              ]}),
+              ]
+            }),
             stretch: 1,
           }
         ]

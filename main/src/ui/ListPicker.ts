@@ -10,7 +10,6 @@ import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelInd
 } from "@nodegui/nodegui";
 import * as fuzzyjs from "fuzzyjs";
 import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
-import { createIcon } from "../ui/Icons";
 import { UiStyle } from "./UiStyle";
 
 

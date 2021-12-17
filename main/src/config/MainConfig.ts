@@ -188,7 +188,6 @@ function sanitizeGeneralConfig(configDatabase: ConfigDatabase, themeManager: The
   sanitizeField(generalConfig, "blinkingCursor", false);
 
   sanitizeStringEnumField(generalConfig, "cursorStyle", configCursorStyles, "block");
-  sanitizeField(generalConfig, "frameByDefault", true);
   sanitizeStringEnumField(generalConfig, "frameRule", frameRules, "frame_if_lines");
   sanitizeField(generalConfig, "frameRuleLines", 10);
 
