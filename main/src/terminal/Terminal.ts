@@ -154,8 +154,9 @@ export class Terminal implements Tab, Disposable {
   private _bracketStyle: string = null;
 
   // The command line string of the last command started.
-  private _lastCommandLine: string = null;
-
+  #lastCommandLine: string = null;
+  #lastCommandTerminalLine = -1;
+  #lastCommandTerminalViewer: SpacerFrame =null;
 
   environment = new TerminalEnvironmentImpl([
     { key: TerminalEnvironment.TERM_ROWS, value: "" },
@@ -271,12 +272,14 @@ export class Terminal implements Tab, Disposable {
 
     this.#contentLayout.addStretch(1);
 
-    this.#appendBlockFrame(this.#createTerminalBlock());
+    this.#appendBlockFrame(this.#createFramedTerminalBlock());
   }
 
-  #createTerminalBlock(): BlockFrame {
+  #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator): TerminalBlock {
     const terminalBlock = new TerminalBlock();
-    terminalBlock.setEmulator(this.#emulator);
+    if (emulator != null) {
+      terminalBlock.setEmulator(emulator);
+    }
     if (this.#terminalVisualConfig != null) {
       terminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
     }
@@ -295,13 +298,17 @@ export class Terminal implements Tab, Disposable {
       (e: AppendScrollbackLinesDetail) => {
         this.#onDidAppendScrollbackLinesEventEmitter.fire({
           ...e,
-          blockFrame: spacerFrame,
+          blockFrame: frame,
           terminalBlock
         });
       }
     );
+    return terminalBlock;
+  }
 
+  #createFramedTerminalBlock(): BlockFrame {
     const spacerFrame = new SpacerFrame(this.#uiStyle);
+    const terminalBlock = this.#createTerminalBlock(spacerFrame, this.#emulator);
     spacerFrame.setBlock(terminalBlock);
     return spacerFrame;
   }
@@ -949,12 +956,6 @@ export class Terminal implements Tab, Disposable {
     }
 
     if (this.#commandNeedsFrame(cleanCommandLine)) {
-      // Create and set up a new command-frame.
-      // const el = this._createEmbeddedViewerElement();
-      // const el = new DecoratedFrame(null);
-
-      // this._appendViewerElement(el);
-
       this.#closeLastTerminalFrame();
       const decoratedFrame = new DecoratedFrame(this.#uiStyle);
       const defaultMetadata: ViewerMetadata = {
@@ -968,16 +969,17 @@ export class Terminal implements Tab, Disposable {
       decoratedFrame.setDefaultMetadata(defaultMetadata);
       this.#appendBlockFrame(decoratedFrame);
 
-      this.#appendBlockFrame(this.#createTerminalBlock());
+      this.#appendBlockFrame(this.#createFramedTerminalBlock());
     } else {
-
       this.#moveCursorToFreshLine();
       this.#emulator.moveRowsAboveCursorToScrollback();
       this.#emulator.flushRenderQueue();
-      // this._lastCommandTerminalLine = this._terminalViewer.bookmarkCursorLine();
-      // this._lastCommandTerminalViewer = this._terminalViewer;
+
+      this.#lastCommandTerminalViewer = this.#findLastBareTerminalBlockFrame();
+      this.#lastCommandTerminalLine = (<TerminalBlock>this.#lastCommandTerminalViewer.getBlock())
+                                        .getScrollbackLength();
     }
-    this._lastCommandLine = cleanCommandLine;
+    this.#lastCommandLine = cleanCommandLine;
 
     const command = cleanCommandLine.split(" ")[0];
 
@@ -1072,7 +1074,7 @@ export class Terminal implements Tab, Disposable {
     if (startFrame != null) {
       this.#frameWithExistingDecoratedFrame(startFrame, returnCode);
     } else {
-      // this.#frameWithoutDecoratedFrame(returnCode);
+      this.#frameWithoutDecoratedFrame(returnCode);
     }
   }
 
@@ -1114,61 +1116,46 @@ export class Terminal implements Tab, Disposable {
     const index = this.#blockFrames.indexOf(terminalBlockFrame);
     this.#blockFrames.splice(index, 1);
 
-    terminalBlock.setCommandLine(this._lastCommandLine);
+    terminalBlock.setCommandLine(this.#lastCommandLine);
     terminalBlock.setReturnCode(returnCode);
     decoratedFrame.setBlock(terminalBlock);
 
-    this.#appendBlockFrame(this.#createTerminalBlock());
+    this.#appendBlockFrame(this.#createFramedTerminalBlock());
   }
-/*
+
   #frameWithoutDecoratedFrame(returnCode: string): void {
-    const terminalBlock = this.#findLastTerminalBlock();
+    this.#moveCursorToFreshLine();
 
-    this._moveCursorToFreshLine();
+    const activeTerminalBlock = <TerminalBlock> this.#lastCommandTerminalViewer.getBlock();
+    const scrollbackOutputLength = activeTerminalBlock.getScrollbackLength() - this.#lastCommandTerminalLine;
+    const effectiveScreenLength = this.#emulator.getCursorRow();
 
-    const candidateMoveTextLines = this._lastCommandTerminalViewer.getTerminalLinesBetweenBookmarks(
-      this._lastCommandTerminalLine, this._terminalViewer.bookmarkCursorLine());
-    const commandShouldBeFramed = returnCode !== "0" || this._commandNeedsFrame(this._lastCommandLine, candidateMoveTextLines.length);
+    const commandShouldBeFramed = returnCode !== "0" || this.#commandNeedsFrame(this.#lastCommandLine,
+      scrollbackOutputLength + effectiveScreenLength);
     if ( ! commandShouldBeFramed) {
-      this._lastCommandLine = null;
-      this._lastCommandTerminalViewer = null;
+      this.#lastCommandLine = null;
+      this.#lastCommandTerminalViewer = null;
       return;
     }
 
-    const viewerWithOutput = this._lastCommandTerminalViewer;
+    this.#closeLastTerminalFrame();
 
-    // Close off the current terminal viewer.
-    this._disconnectActiveTerminalViewer();
+    const decoratedFrame = new DecoratedFrame(this.#uiStyle);
+    const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null);
+    decoratedFrame.setBlock(newTerminalBlock);
 
-    const moveTextLines = viewerWithOutput.getTerminalLinesToEnd(this._lastCommandTerminalLine);
-    if (candidateMoveTextLines != null && candidateMoveTextLines.length > 0) {
-      viewerWithOutput.deleteLines(this._lastCommandTerminalLine);
-    }
-    this._lastCommandTerminalViewer = null;
+    const scrollbackLines = activeTerminalBlock.takeScrollbackFrom(this.#lastCommandTerminalLine);
+    newTerminalBlock.setScrollbackLines(scrollbackLines);
+    newTerminalBlock.setReturnCode(returnCode);
+    newTerminalBlock.setCommandLine(this.#lastCommandLine);
 
-    const newEmbeddedViewer = this._createEmbeddedViewerElement();
-    newEmbeddedViewer.className = "extraterm_output";
-    this._terminalCanvas.appendViewerElement(newEmbeddedViewer);
+    this.#appendBlockFrame(decoratedFrame);
 
-    // Create a terminal viewer to display the output of the last command.
-    const outputTerminalViewer = this._createTerminalViewer();
-    newEmbeddedViewer.setViewerElement(outputTerminalViewer);
-    outputTerminalViewer.setReturnCode(returnCode);
-    outputTerminalViewer.setCommandLine(this._lastCommandLine);
-    outputTerminalViewer.setUseVPad(false);
-    if (candidateMoveTextLines !== null && candidateMoveTextLines.length > 0) {
-      outputTerminalViewer.setTerminalLines(moveTextLines);
-    }
-    outputTerminalViewer.setEditable(true);
-    this._emitDidAppendViewer(newEmbeddedViewer);
+    this.#appendBlockFrame(this.#createFramedTerminalBlock());
 
-    this._appendNewTerminalViewer();
-    this._refocus();
-
-    const activeTerminalViewer = this._terminalViewer;
-    this._terminalCanvas.updateSize(activeTerminalViewer);
+    this.#lastCommandTerminalViewer = null;
   }
-*/
+
   private handleRequestFrame(frameId: string): void {
     /*
     if (this._frameFinder === null) {

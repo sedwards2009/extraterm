@@ -134,6 +134,24 @@ export class TerminalBlock implements Block {
     return this.#widget;
   }
 
+  getScrollbackLength(): number {
+    return this.#scrollback.length;
+  }
+
+  takeScrollbackFrom(startLine: number): Line[] {
+    const result = this.#scrollback.slice(startLine);
+    this.#scrollback.splice(startLine);
+    this.#updateWidgetSize();
+    this.#widget.update();
+    return result;
+  }
+
+  setScrollbackLines(scrollbackLines: Line[]): void {
+    this.#scrollback = scrollbackLines;
+    this.#updateWidgetSize();
+    this.#widget.update();
+  }
+
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this.#terminalVisualConfig = terminalVisualConfig;
     const fontInfo = terminalVisualConfig.fontInfo;
