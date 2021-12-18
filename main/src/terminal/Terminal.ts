@@ -610,6 +610,9 @@ export class Terminal implements Tab, Disposable {
   }
 
   #appendBlockFrame(blockFrame: BlockFrame): void {
+    if (blockFrame instanceof DecoratedFrame) {
+      blockFrame.onCloseClicked((frame) => this.#handleBlockCloseClicked(frame));
+    }
     this.#blockFrames.push(blockFrame);
     this.#contentLayout.insertWidget(this.#blockFrames.length-1, blockFrame.getWidget());
   }
@@ -625,6 +628,10 @@ export class Terminal implements Tab, Disposable {
         lastTerminalBlock.setEmulator(null);
       }
     }
+  }
+
+  #handleBlockCloseClicked(frame: BlockFrame): void {
+    this.deleteFrame(frame);
   }
 
   getTitle(): string {
@@ -746,6 +753,14 @@ export class Terminal implements Tab, Disposable {
     if (this.#pty != null) {
       this.#pty.write(text);
     }
+  }
+
+  deleteFrame(frame: BlockFrame): void {
+    const index = this.#blockFrames.indexOf(frame);
+    frame.getWidget().setParent(null);
+    this.#blockFrames.splice(index, 1);
+    this.#contentWidget.update();
+    this.#contentWidget.setFocus();
   }
 
   commandCopyToClipboard(): void {

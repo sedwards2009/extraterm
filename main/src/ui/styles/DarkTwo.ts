@@ -7,7 +7,7 @@ import { QIcon } from "@nodegui/nodegui";
 import { alpha, blue, change, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate, toHex } from "khroma";
 import { createIcon } from "../Icons";
 
-import { UiStyle } from "../UiStyle";
+import { IconPair, UiStyle } from "../UiStyle";
 
 
 export function createUiStyle(resourceDirectory: string): UiStyle {
@@ -67,6 +67,31 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getButtonIcon(name: string): QIcon {
       return this.getMenuIcon(name);
+    },
+    getToolbarButtonIconPair(name: string): IconPair {
+      const normalColor = toRgba(textColor);
+      const normalIcon = createIcon(name, {
+        normalOnRgba: normalColor,
+        selectedOnRgba: normalColor,
+        activeOnRgba: normalColor,
+
+        normalOffRgba: normalColor,
+        selectedOffRgba: normalColor,
+        activeOffRgba: normalColor,
+      });
+
+      const hoverColor = toRgba(textHighlightColor);
+      const hoverIcon = createIcon(name, {
+        normalOnRgba: hoverColor,
+        selectedOnRgba: hoverColor,
+        activeOnRgba: hoverColor,
+
+        normalOffRgba: hoverColor,
+        selectedOffRgba: hoverColor,
+        activeOffRgba: hoverColor,
+      });
+
+      return { normal: normalIcon, hover: hoverIcon };
     },
     getLinkLabelCSS(): string {
       return LinkLabelCSS();
@@ -1063,6 +1088,19 @@ QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-failure"] > QLabe
 }
 QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-failure"] > QLabel[cssClass~="command-line"] {
   color: ${brandDanger};
+}
+
+QWidget[cssClass~="decorated-frame-header"] > QPushButton[cssClass~="small"] {
+  border: 0px transparent;
+  border-radius: 0px;
+  padding: 0px;
+  margin-top: 1px;
+  margin-right: 2px;
+  height: 1em;
+}
+
+QWidget[cssClass~="decorated-frame-header"] > QPushButton[cssClass~="small"]:hover {
+  background-color: transparent;
 }
 `;
 }

@@ -3,9 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QBoxLayout, QIcon, QLabel, QResizeEvent, QSizePolicyPolicy, QWidget } from "@nodegui/nodegui";
+import { Event, EventEmitter } from "extraterm-event-emitter";
+import { AlignmentFlag, Direction, QLabel, QPushButton, QResizeEvent, QSizePolicyPolicy,
+  QWidget } from "@nodegui/nodegui";
 import { Disposable, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, Label, Widget } from "qt-construct";
+import { BoxLayout, Label, PushButton, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Block } from "./Block";
 import { BlockFrame } from "./BlockFrame";
@@ -43,10 +45,15 @@ export class DecoratedFrame implements BlockFrame {
   #onMetadataChangedDisposable: Disposable = null;
   #widthPx = -1;
   #viewportTopPx = 0;
+  #closeButton: QPushButton = null;
+
+  #onCloseClickedEventEmitter = new EventEmitter<BlockFrame>();
+  onCloseClicked: Event<BlockFrame> = null;
 
   constructor(uiStyle: UiStyle) {
     this._log = getLogger("DecoratedFrame", this);
     this.#uiStyle = uiStyle;
+    this.onCloseClicked = this.#onCloseClickedEventEmitter.event;
 
     this.#widget = Widget({
       id: this._log.getName(),
@@ -87,7 +94,6 @@ export class DecoratedFrame implements BlockFrame {
 
   #handleResize(ev): void {
     const resizeEvent = new QResizeEvent(ev);
-this._log.debug(`resizeEvent, oldSize.w: ${resizeEvent.oldSize().width()}, oldSize.h: ${resizeEvent.oldSize().height()}, size.w: ${resizeEvent.size().width()}, size.h: ${resizeEvent.size().height()}`);
     this.#widthPx = resizeEvent.size().width();
     this.#layout();
   }
@@ -146,6 +152,8 @@ this._log.debug(`resizeEvent, oldSize.w: ${resizeEvent.oldSize().width()}, oldSi
   }
 
   #createHeader(): QWidget {
+    const closeButtonIcons = this.#uiStyle.getToolbarButtonIconPair("fa-times-circle");
+
     return Widget({
       id: "DecoratedFrame-header",
       cssClass: "decorated-frame-header",
@@ -161,6 +169,22 @@ this._log.debug(`resizeEvent, oldSize.w: ${resizeEvent.oldSize().width()}, oldSi
             widget: this.#titleLabel = Label({cssClass: "command-line", text: "command-line"}),
             stretch: 1,
             alignment: AlignmentFlag.AlignLeft
+          },
+          {
+            widget: this.#closeButton = PushButton({
+              cssClass: "small",
+              icon: closeButtonIcons.normal,
+              onClicked: () => {
+                this.#onCloseClickedEventEmitter.fire(this);
+              },
+              onEnter: () => {
+                this.#closeButton.setIcon(closeButtonIcons.hover);
+              },
+              onLeave: () => {
+                this.#closeButton.setIcon(closeButtonIcons.normal);
+              },
+            }),
+            stretch: 0
           }
         ]
       })
