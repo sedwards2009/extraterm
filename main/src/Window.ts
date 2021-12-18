@@ -149,17 +149,16 @@ export class Window {
   }
 
   #createHamburgerMenu(uiStyle: UiStyle): QToolButton {
-    const hamburgerMenuIcon = uiStyle.getHamburgerMenuIcon();
-    const hamburgerMenuIconHover = uiStyle.getHamburgerMenuIconHover();
+    const iconPair = uiStyle.getToolbarButtonIconPair("fa-bars");
 
     this.#hamburgerMenuButton = ToolButton({
-      icon: hamburgerMenuIcon,
+      icon: iconPair.normal,
       popupMode: ToolButtonPopupMode.InstantPopup,
       onEnter: () => {
-        this.#hamburgerMenuButton.setIcon(hamburgerMenuIconHover);
+        this.#hamburgerMenuButton.setIcon(iconPair.hover);
       },
       onLeave: () => {
-        this.#hamburgerMenuButton.setIcon(hamburgerMenuIcon);
+        this.#hamburgerMenuButton.setIcon(iconPair.normal);
       },
       menu: this.#hamburgerMenu = Menu({
         attribute: [WidgetAttribute.WA_TranslucentBackground],

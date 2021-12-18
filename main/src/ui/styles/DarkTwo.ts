@@ -15,20 +15,6 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     getApplicationStyleSheet(): string {
       return DarkTwoStyleSheet(resourceDirectory);
     },
-    getHamburgerMenuIcon(): QIcon {
-      const normalColor = toRgba(textColor);
-      return createIcon("fa-bars", {
-        normalOnRgba: normalColor,
-        normalOffRgba: normalColor,
-      });
-    },
-    getHamburgerMenuIconHover(): QIcon {
-      const hoverColor = toRgba(textHighlightColor);
-      return createIcon("fa-bars", {
-        normalOnRgba: hoverColor,
-        normalOffRgba: hoverColor,
-      });
-    },
     getMenuIcon(name: string): QIcon {
       const normalColor = toRgba(textColor);
       const hoverColor = toRgba(dropdownLinkHoverColor);
