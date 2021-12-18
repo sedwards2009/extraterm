@@ -171,6 +171,8 @@ export class Terminal implements Tab, Disposable {
   static registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
 
+    commands.registerCommand("extraterm:terminal.deleteLastFrame",
+      () => extensionManager.getActiveTerminal().commandDeleteLastFrame());
     commands.registerCommand("extraterm:terminal.scrollPageDown",
       () => extensionManager.getActiveTerminal().scrollPageDown());
     commands.registerCommand("extraterm:terminal.scrollPageUp",
@@ -770,6 +772,16 @@ export class Terminal implements Tab, Disposable {
     }
     const clipboard = QApplication.clipboard();
     clipboard.setText(text);
+  }
+
+  commandDeleteLastFrame(): void {
+    for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
+      const bf = this.#blockFrames[i];
+      if (bf instanceof DecoratedFrame) {
+        this.deleteFrame(bf);
+        return;
+      }
+    }
   }
 
   commandGoToNextFrame(): void {
