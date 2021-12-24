@@ -27,13 +27,14 @@ export interface WidgetOptions {
   minimumWidth?: number;
   inlineStyle?: string;
   contextMenuPolicy?: ContextMenuPolicy.PreventContextMenu;
+  toolTip?: string;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
     attribute, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter, onLayoutRequest, onLeave,
     onKeyPress, onResize, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
-    windowFlag, inlineStyle
+    windowFlag, inlineStyle, toolTip
   } = options;
 
   if (enabled !== undefined) {
@@ -97,6 +98,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (contextMenuPolicy !== undefined) {
     widget.setContextMenuPolicy(contextMenuPolicy);
+  }
+  if (toolTip !== undefined) {
+    widget.setToolTip(toolTip);
   }
 }
 

@@ -23,6 +23,7 @@ import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { CommandMenuEntry } from "../CommandsRegistry";
 import { Window } from "../Window";
 import { LineRangeChange, Terminal } from "../terminal/Terminal";
+import { InternalSessionEditor } from "../InternalTypes";
 
 
 interface ActiveExtension {
@@ -330,6 +331,46 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
     return null;
   }
+
+  getAllSessionTypes(): { name: string, type: string }[] {
+    return _.flatten(
+      this.#activeExtensions.map(activeExtension => {
+        if (activeExtension.metadata.contributes.sessionEditors != null) {
+          return activeExtension.metadata.contributes.sessionEditors.map(se => ({name: se.name, type: se.type}));
+        } else {
+          return [];
+        }
+      })
+    );
+  }
+
+  createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor {
+    const seExtensions = this.#activeExtensions.filter(ae => ae.metadata.contributes.sessionEditors.length !==0);
+    for (const extension of seExtensions) {
+      const editor = extension.contextImpl._internalWindow.createSessionEditor(sessionType, sessionConfiguration);
+      if (editor != null) {
+        return editor;
+      }
+    }
+
+    this._log.warn(`Unable to find SessionEditor for session type '${sessionType}'.`);
+    return null;
+  }
+
+  // createSessionSettingsEditors(sessionType: string,
+  //     sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[] {
+
+  //   const ssExtensions = this._getActiveRenderExtensions().filter(ae => ae.metadata.contributes.sessionSettings != null);
+  //   let settingsEditors: InternalSessionSettingsEditor[] = [];
+  //   for (const extension of ssExtensions) {
+  //     const newSettingsEditors = extension.contextImpl._internalWindow.createSessionSettingsEditors(sessionType,
+  //       sessionConfiguration);
+  //     if (newSettingsEditors != null) {
+  //       settingsEditors = [...settingsEditors, ...newSettingsEditors];
+  //     }
+  //   }
+  //   return settingsEditors;
+  // }
 
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
     return _.flatten(this.#getActiveBackendExtensions().map(

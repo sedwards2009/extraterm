@@ -16,6 +16,7 @@ import { ExtensionsPage } from "./ExtensionsPage";
 import { FramesPage } from "./FramesPage";
 import { ExtensionManager } from "../InternalTypes";
 import { ThemeManager } from "../theme/ThemeManager";
+import { SessionTypesPage } from "./SessionTypesPage";
 
 
 export class SettingsTab implements Tab {
@@ -27,6 +28,7 @@ export class SettingsTab implements Tab {
 
   #generalPage: GeneralPage = null;
   #appearancePage: AppearancePage = null;
+  #sessionTypesPage: SessionTypesPage = null;
   #framesPage: FramesPage = null;
   #extensionsPage: ExtensionsPage = null;
 
@@ -43,6 +45,7 @@ export class SettingsTab implements Tab {
     this.#generalPage = new GeneralPage(this.#configDatabase, uiStyle);
     this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
       uiStyle);
+    this.#sessionTypesPage = new SessionTypesPage(this.#configDatabase, this.#extensionManager, uiStyle);
     this.#framesPage = new FramesPage(configDatabase, uiStyle);
     this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
     this.#createUI(uiStyle);
@@ -83,7 +86,7 @@ export class SettingsTab implements Tab {
               items: [
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-sliders-h"), text: "General", selected: true}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-paint-brush"), text: "Appearance"}),
-                // ListWidgetItem({text: "Session Types"}),
+                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-terminal"), text: "Session Types"}),
                 // ListWidgetItem({text: "Keybindings"}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-window-maximize"), text: "Frames"}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-puzzle-piece"), text: "Extensions"}),
@@ -101,6 +104,7 @@ export class SettingsTab implements Tab {
               children: [
                 this.#generalPage.getPage(),
                 this.#appearancePage.getPage(),
+                this.#sessionTypesPage.getPage(),
                 this.#framesPage.getPage(),
                 this.#extensionsPage.getPage(),
               ]

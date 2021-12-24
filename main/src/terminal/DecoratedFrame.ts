@@ -7,13 +7,14 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { AlignmentFlag, Direction, QLabel, QPushButton, QResizeEvent, QSizePolicyPolicy,
   QWidget } from "@nodegui/nodegui";
 import { Disposable, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, Label, PushButton, Widget } from "qt-construct";
+import { BoxLayout, Label, PushButton, repolish, setCssClasses, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Block } from "./Block";
 import { BlockFrame } from "./BlockFrame";
 import { createHtmlIcon } from "../ui/Icons";
 import { UiStyle } from "../ui/UiStyle";
-import { repolish, setCssClasses } from "../ui/QtConstructExtra";
+import { HoverPushButton } from "../ui/QtConstructExtra";
+
 
 const POSTURE_MAPPING = {
   [ViewerPosture.NEUTRAL]: "posture-neutral",
@@ -152,8 +153,6 @@ export class DecoratedFrame implements BlockFrame {
   }
 
   #createHeader(): QWidget {
-    const closeButtonIcons = this.#uiStyle.getToolbarButtonIconPair("fa-times-circle");
-
     return Widget({
       id: "DecoratedFrame-header",
       cssClass: "decorated-frame-header",
@@ -171,17 +170,11 @@ export class DecoratedFrame implements BlockFrame {
             alignment: AlignmentFlag.AlignLeft
           },
           {
-            widget: this.#closeButton = PushButton({
+            widget: this.#closeButton = HoverPushButton({
               cssClass: "small",
-              icon: closeButtonIcons.normal,
+              iconPair: this.#uiStyle.getToolbarButtonIconPair("fa-times-circle"),
               onClicked: () => {
                 this.#onCloseClickedEventEmitter.fire(this);
-              },
-              onEnter: () => {
-                this.#closeButton.setIcon(closeButtonIcons.hover);
-              },
-              onLeave: () => {
-                this.#closeButton.setIcon(closeButtonIcons.normal);
               },
             }),
             stretch: 0

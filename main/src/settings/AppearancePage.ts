@@ -70,7 +70,8 @@ export class AppearancePage {
             Label({
               text: `${createHtmlIcon("fa-paint-brush")}&nbsp;&nbsp;Appearance`,
               textFormat: TextFormat.RichText,
-              cssClass: ["h2"]}),
+              cssClass: ["h2"]
+            }),
             GridLayout({
               columns: 2,
               children: [

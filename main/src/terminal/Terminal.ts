@@ -274,7 +274,9 @@ export class Terminal implements Tab, Disposable {
 
     this.#contentLayout.addStretch(1);
 
-    this.#appendBlockFrame(this.#createFramedTerminalBlock());
+    this.#lastCommandTerminalViewer = this.#createFramedTerminalBlock();
+    this.#appendBlockFrame(this.#lastCommandTerminalViewer);
+
   }
 
   #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator): TerminalBlock {
@@ -308,7 +310,7 @@ export class Terminal implements Tab, Disposable {
     return terminalBlock;
   }
 
-  #createFramedTerminalBlock(): BlockFrame {
+  #createFramedTerminalBlock(): SpacerFrame {
     const spacerFrame = new SpacerFrame(this.#uiStyle);
     const terminalBlock = this.#createTerminalBlock(spacerFrame, this.#emulator);
     spacerFrame.setBlock(terminalBlock);
@@ -1026,7 +1028,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #commandNeedsFrame(commandLine: string, linesOfOutput=-1): boolean {
-    if (commandLine.trim() === "" || this.#configDatabase === null) {
+    if (commandLine == null || commandLine.trim() === "" || this.#configDatabase === null) {
       return false;
     }
 

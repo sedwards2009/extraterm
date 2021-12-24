@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { NodeWidget } from "@nodegui/nodegui";
 
 // import { EtTerminal, LineRangeChange } from "../Terminal";
 // import { ViewerElement } from "../viewers/ViewerElement";
@@ -48,10 +49,8 @@ export interface ExtensionManager {
 
 //   findViewerElementTagByMimeType(mimeType: string): string;
 
-//   getAllSessionTypes(): { name: string, type: string }[];
-
+  getAllSessionTypes(): { name: string, type: string }[];
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
-//   getAllSyntaxThemeFormats(): { name: string, formatName: string }[];
 
 //   getActiveTab(): HTMLElement;
 //   getActiveTerminal(): EtTerminal;
@@ -78,7 +77,7 @@ export interface ExtensionManager {
 //   commandRegistrationChanged(): void;
 
 //   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
-//   createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionEditor;
+   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
 //   createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
 
 //   setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void;
@@ -126,7 +125,7 @@ export interface ProxyFactory {
 
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
-  // createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
+  createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
   // createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionSettingsEditor[];
   getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
@@ -186,14 +185,13 @@ export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSetti
 //   _init(): void;
 }
 
-// export interface SessionConfigurationChange {
-//   sessionConfiguration: SessionConfiguration;
-// }
+export interface SessionConfigurationChange {
+  sessionConfiguration: ExtensionApi.SessionConfiguration;
+}
 
 export interface InternalSessionEditor extends ExtensionApi.SessionEditorBase {
-//   onSessionConfigurationChanged: ExtensionApi.Event<SessionConfigurationChange>;
-//   _getExtensionContainerElement(): ExtensionContainerElement;
-//   _init(): void;
+   onSessionConfigurationChanged: ExtensionApi.Event<SessionConfigurationChange>;
+   _getWidget(): NodeWidget<any>;
 }
 
 export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {

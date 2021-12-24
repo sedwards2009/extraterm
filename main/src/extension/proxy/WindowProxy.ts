@@ -19,6 +19,7 @@ import { SessionSettingsEditorFactory, SessionConfiguration, ViewerMetadata, Vie
 import { TerminalProxy } from "./TerminalProxy";
 import { ExtensionTabContribution } from "../ExtensionMetadata";
 import { LineRangeChange, Terminal } from "../../terminal/Terminal";
+import { WorkspaceSessionEditorRegistry } from "../WorkspaceSessionEditorRegistry";
 
 
 /**
@@ -34,7 +35,7 @@ export class WindowProxy implements InternalWindow {
   #internalExtensionContext: InternalExtensionContext = null;
   #commonExtensionState: CommonExtensionWindowState = null;
 
-  // #windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
+  #windowSessionEditorRegistry: WorkspaceSessionEditorRegistry = null;
   // #windowSessionSettingsRegistry: WorkspaceSessionSettingsRegistry = null;
   // #windowViewerRegistry: WorkspaceViewerRegistry = null;
   #terminalBorderWidgetFactoryMap = new Map<string, ExtensionApi.TerminalBorderWidgetFactory>();
@@ -45,12 +46,12 @@ export class WindowProxy implements InternalWindow {
   #allTerminals: Terminal[] = [];
 
   constructor(internalExtensionContext: InternalExtensionContext, commonExtensionState: CommonExtensionWindowState) {
-    this._log = getLogger("WorkspaceProxy", this);
+    this._log = getLogger("WindowProxy", this);
     this.#internalExtensionContext = internalExtensionContext;
-    this. #commonExtensionState = commonExtensionState;
+    this.#commonExtensionState = commonExtensionState;
 
     this.onDidCreateTerminal = this.#onDidCreateTerminalEventEmitter.event;
-    // this.#windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this.#internalExtensionContext);
+    this.#windowSessionEditorRegistry = new WorkspaceSessionEditorRegistry(this.#internalExtensionContext);
     // this.#windowSessionSettingsRegistry = new WorkspaceSessionSettingsRegistry(this.#internalExtensionContext);
     // this.#windowViewerRegistry = new WorkspaceViewerRegistry(this.#internalExtensionContext);
   }
@@ -147,11 +148,11 @@ export class WindowProxy implements InternalWindow {
 
   // ---- Session Editors ----
   registerSessionEditor(type: string, factory: ExtensionApi.SessionEditorFactory): void {
-    // this.#windowSessionEditorRegistry.registerSessionEditor(type, factory);
+    this.#windowSessionEditorRegistry.registerSessionEditor(type, factory);
   }
 
   createSessionEditor(sessionType: string, sessionConfiguration: SessionConfiguration): any { //InternalSessionEditor {
-    // return this.#windowSessionEditorRegistry.createSessionEditor(sessionType, sessionConfiguration);
+    return this.#windowSessionEditorRegistry.createSessionEditor(sessionType, sessionConfiguration);
   }
 
   // ---- Tab Title Widgets ----

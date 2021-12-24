@@ -79,6 +79,31 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
       return { normal: normalIcon, hover: hoverIcon };
     },
+    getBorderlessButtonIconPair(name: string): IconPair {
+      const normalColor = toRgba(textColor);
+      const normalIcon = createIcon(name, {
+        normalOnRgba: normalColor,
+        selectedOnRgba: normalColor,
+        activeOnRgba: normalColor,
+
+        normalOffRgba: normalColor,
+        selectedOffRgba: normalColor,
+        activeOffRgba: normalColor,
+      });
+
+      const hoverColor = toRgba(backgroundColor);
+      const hoverIcon = createIcon(name, {
+        normalOnRgba: hoverColor,
+        selectedOnRgba: hoverColor,
+        activeOnRgba: hoverColor,
+
+        normalOffRgba: hoverColor,
+        selectedOffRgba: hoverColor,
+        activeOffRgba: hoverColor,
+      });
+
+      return { normal: normalIcon, hover: hoverIcon };
+    },
     getLinkLabelCSS(): string {
       return LinkLabelCSS();
     },
@@ -325,12 +350,12 @@ QCheckBox::indicator:pressed {
 function QComboBoxStyleSheet(resourceDirectory: string): string {
   return `
 QComboBox {
-  background-color: #353b45;
-  color: #9da5b4;
+  background-color: ${inputBackgroundColor};
+  color: ${textColor};
 
   padding: 0.25em 0.5em;
 
-  border: 1px solid #181a1f;
+  border: ${inputBorderWidth} solid ${inputBorderColor};
   border-radius: ${borderRadius};
 
   selection-color: #d7dae0;
@@ -338,12 +363,11 @@ QComboBox {
 }
 
 QComboBox:hover, QComboBox:on {
-/* color: #d7dae0; */
   color: ${textHighlightColor};
-  background-color: #3a404b;
 }
+
 QComboBox:focus {
-  border-color: #578af2;
+  border-color: ${accentColor};
 }
 
 QComboBox::drop-down {
@@ -369,6 +393,11 @@ QComboBox::down-arrow {
 QComboBox::down-arrow:hover {
   image: url(${resourceDirectory}/combobox_arrow_hover.svg);
 }
+
+QComboBox[cssClass~="warning"] {
+  border: ${inputBorderWidth} solid ${brandWarning};
+}
+
 `;
 }
 
@@ -439,6 +468,13 @@ QLineEdit, QSpinBox {
   padding: ${inputPaddingVertical} ${inputPaddingHorizontal};
   border: ${inputBorderWidth} solid ${inputBorderColor};
   border-radius: ${borderRadius};
+}
+
+QLineEdit[cssClass~="warning"], QSpinBox[cssClass~="warning"] {
+  border: ${inputBorderWidth} solid ${brandWarning};
+}
+QLineEdit[cssClass~="warning"]:focus, QSpinBox[cssClass~="warning"]:focus {
+  border: ${inputBorderWidth} solid ${brandWarning};
 }
 
 QLineEdit:hover, QSpinBox:hover {
@@ -976,7 +1012,7 @@ QTableView[cssClass~="list-picker"] {
   selection-background-color: ${dropdownLinkHoverBg};
 }
 
-QFrame[cssClass~="extension-page-card"] {
+QFrame[cssClass~="card"] {
   padding: ${componentPaddingVerticalCard} ${componentPaddingHorizontalCard} ${componentPaddingVerticalCard} ${componentPaddingHorizontalCard};
   margin: 0px;
   border-radius: ${borderRadius2x};

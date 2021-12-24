@@ -23,3 +23,4 @@ export { ToolButton, ToolButtonOptions} from "./ToolButton";
 export { Menu } from "./Menu";
 export { TableView, TableViewOptions } from "./TableView";
 export { Frame, FrameOptions } from "./Frame";
+export { setCssClasses, repolish } from "./Utilities";

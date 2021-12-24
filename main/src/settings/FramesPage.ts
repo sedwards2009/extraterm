@@ -10,7 +10,7 @@ import { BoxLayout, CheckBox, ComboBox, Frame, GridLayout, Label, LineEdit, Push
 import { createHtmlIcon, createIcon } from "../ui/Icons";
 import { UiStyle } from "../ui/UiStyle";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
+import { HoverPushButton, makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
 import { CommandLineAction, CommandLineActionMatchType, FrameRule } from "../config/Config";
 
 const frameActionOptions: {id: FrameRule, name: string}[] = [
@@ -31,7 +31,7 @@ export class FramesPage {
   #cardIdCounter = 0;
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle) {
-    this._log = getLogger("ExtensionsPage", this);
+    this._log = getLogger("FramesPage", this);
     this.#configDatabase = configDatabase;
     this.#uiStyle = uiStyle;
   }
@@ -272,7 +272,7 @@ class FrameRuleConfigCard {
     let titleLabel: QLabel = null;
 
     this.#widget = Frame({
-      cssClass: ["extension-page-card"],
+      cssClass: ["card"],
       sizePolicy: {
         horizontal: QSizePolicyPolicy.MinimumExpanding,
         vertical: QSizePolicyPolicy.Fixed,
@@ -297,9 +297,9 @@ class FrameRuleConfigCard {
                   stretch: 1
                 },
                 {
-                  widget: PushButton({
+                  widget: HoverPushButton({
                     cssClass: ["microtool", "danger"],
-                    icon: options.uiStyle.getButtonIcon("fa-times"),
+                    iconPair: options.uiStyle.getBorderlessButtonIconPair("fa-times"),
                     onClicked: options.onDeleteClicked
                   }),
                   stretch: 0

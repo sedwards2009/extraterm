@@ -4,21 +4,13 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QRadioButton } from "@nodegui/nodegui";
+import { AbstractButtonOptions, ApplyAbstractButtonOptions } from "./AbstractButton";
 
-export interface RadioButtonOptions {
-  text?: string;
-  checked?: boolean;
+export interface RadioButtonOptions extends AbstractButtonOptions {
 }
 
 export function RadioButton(options: RadioButtonOptions): QRadioButton {
   const radioButton = new QRadioButton();
-  const { checked, text } = options;
-
-  if (text !== undefined) {
-    radioButton.setText(text);
-  }
-  if (checked !== undefined) {
-    radioButton.setChecked(checked);
-  }
+  ApplyAbstractButtonOptions(radioButton, options);
   return radioButton;
 }

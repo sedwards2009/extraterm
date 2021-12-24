@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Direction, QBoxLayout, QLabel, QPushButton, QWidget, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, Label, PushButton, Widget } from "qt-construct";
-import { UiStyle } from "./UiStyle";
+import { BoxLayout, Label, PushButton, PushButtonOptions, Widget } from "qt-construct";
+import { IconPair, UiStyle } from "./UiStyle";
 
 export interface CompactGroupOptions {
   children: (QWidget | string)[];
@@ -132,19 +132,30 @@ export function shrinkWrap(widget: QWidget): QBoxLayout {
   });
 }
 
-/**
- * Set the CSS classes on a widget and update
- */
-export function setCssClasses(widget: QWidget, classes: string[]): void {
-  widget.setProperty("cssClass", classes);
-  repolish(widget);
+interface HoverPushButtonOptions extends PushButtonOptions {
+  iconPair: IconPair;
 }
 
-/**
- * Force Qt to reapply styles to a widget
- */
-export function repolish(widget: QWidget): void {
-  const style = widget.style();
-  style.unpolish(widget);
-  style.polish(widget);
+export function HoverPushButton(options: HoverPushButtonOptions): QPushButton {
+  const { onEnter, onLeave, iconPair } = options;
+  let button: QPushButton = null;
+
+  const refinedOptions = { ...options,
+    icon: options.iconPair.normal,
+    onEnter: () => {
+      button.setIcon(iconPair.hover);
+      if (onEnter !== undefined) {
+        onEnter();
+      }
+    },
+    onLeave: () => {
+      button.setIcon(iconPair.normal);
+      if (onLeave !== undefined) {
+        onLeave();
+      }
+    }
+  };
+
+  button = PushButton(refinedOptions);
+  return button;
 }

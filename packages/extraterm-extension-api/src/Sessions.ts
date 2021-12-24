@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event } from "extraterm-event-emitter";
+import { NodeWidget, QLabel } from "@nodegui/nodegui";
 
 
 /**
@@ -56,19 +57,13 @@ export interface SessionConfiguration {
  * Extensions which implement Session Editors are given an instance of this.
  */
 export interface SessionEditorBase {
-  /**
-   * Container element under which this editor's DOM contents can be placed.
-   */
-  readonly containerElement: HTMLElement;
-
   setSessionConfiguration(sessionConfiguration: SessionConfiguration): void;
-
   readonly sessionConfiguration: SessionConfiguration;
 }
 
 
 export interface SessionEditorFactory {
-  (sessionEditorBase: SessionEditorBase): any;
+  (sessionEditorBase: SessionEditorBase): NodeWidget<any>;
 }
 
 /**

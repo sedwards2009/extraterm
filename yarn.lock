@@ -523,6 +523,8 @@ __metadata:
     shx: ^0.3.2
     typedoc: ^0.22.3
     typescript: 4.3.5
+  peerDependencies:
+    "@nodegui/nodegui": ^0.43.0
   languageName: unknown
   linkType: soft
 
@@ -995,6 +997,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 7ee8de5cff33e10fee1b94145e47636abbb1d5bc4408c0bc734e2140a6480e15abbedb4fd468d7bca83a455ed49d26f7290cd1970adb73ddbf83df13e79c13f5
+  languageName: node
+  linkType: hard
+
+"@types/fs-extra@npm:^5.0.2":
+  version: 5.1.0
+  resolution: "@types/fs-extra@npm:5.1.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: 9b4abc891ad0dc3baa77b0ebcf91dff8e7a5936aa037de0bd6ded399ab38b5896be1ee02b5c0a18c0915cfc40ab590a915709e6f2beef8f6f7e16fd3759e469a
   languageName: node
   linkType: hard
 
@@ -11647,6 +11658,22 @@ fsevents@^2.3.2:
     extraterm-event-emitter: 1.0.0
     lodash: ^4.17.19
     node-pty: 0.10.0-beta19
+    shx: ^0.3.2
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
+
+"unix-session-editor@workspace:extensions/UnixSessionEditor":
+  version: 0.0.0-use.local
+  resolution: "unix-session-editor@workspace:extensions/UnixSessionEditor"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.14.0
+    "@types/fs-extra": ^5.0.2
+    "@types/node": ^14.14.37
+    eslint: 7.19.0
+    eslint-config-extraterm: 1.0.0
+    fs-extra: ^5.0.0
+    lodash: ^4.17.19
     shx: ^0.3.2
     typescript: 4.3.5
   languageName: unknown

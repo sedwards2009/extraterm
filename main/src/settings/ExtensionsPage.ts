@@ -203,7 +203,7 @@ class ExtensionDetailCard {
     const metadata = this.#extensionMetadata;
 
     const result = Frame({
-      cssClass: ["extension-page-card"],
+      cssClass: ["card"],
       sizePolicy: {
         horizontal: QSizePolicyPolicy.MinimumExpanding,
         vertical: QSizePolicyPolicy.Fixed,

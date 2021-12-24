@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { AlignmentFlag, Direction, NodeLayout, NodeWidget, QBoxLayout, QWidget } from "@nodegui/nodegui";
+import { Label } from "./Label";
 
 
 export interface BoxLayoutItem {
@@ -15,7 +16,7 @@ export interface BoxLayoutItem {
 
 export interface BoxLayoutOptions {
   direction: Direction;
-  children: (NodeWidget<any> | BoxLayoutItem | NodeLayout<any>)[];
+  children: (NodeWidget<any> | string | BoxLayoutItem | NodeLayout<any>)[];
   spacing?: number;
   contentsMargins?: [number, number, number, number];
 }
@@ -34,11 +35,14 @@ export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
 
   for (const child of children) {
     if (child) {
-      if (child instanceof NodeWidget) {
+      if ((typeof child) === "string") {
+        const kid = Label({text: <string> child});
+        boxLayout.addWidget(kid);
+      } else if (child instanceof NodeWidget) {
         boxLayout.addWidget(child);
       } else if (child instanceof NodeLayout) {
         boxLayout.addLayout(child);
-      } else {
+      } else if (isBoxLayoutItem(child)) {
         if (child.widget !== undefined) {
           boxLayout.addWidget(child.widget, child.stretch === undefined ? 0 : child.stretch,
             child.alignment === undefined ? 0 : child.alignment);
@@ -50,4 +54,8 @@ export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
   }
 
   return boxLayout;
+}
+
+function isBoxLayoutItem(item:any): item is BoxLayoutItem {
+  return typeof item === "object" && (item.widget !== undefined || item.layout !== undefined);
 }

@@ -47,6 +47,7 @@
       "extensions/InternalCommands",
       "extensions/ITermColorsTerminalThemeProvider",
       "extensions/UnixSessionBackend",
+      "extensions/UnixSessionEditor",
       "extensions/ProxySessionBackend",
       "extensions/OpenLink",
       "extensions/WindowsConsoleSessionBackend"
