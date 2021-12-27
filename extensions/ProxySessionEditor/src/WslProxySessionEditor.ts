@@ -7,7 +7,8 @@ import * as _ from "lodash";
 import * as child_process from "child_process";
 
 import { Logger, SessionConfiguration, SessionEditorBase } from "@extraterm/extraterm-extension-api";
-import { WslProxySessionEditorUi } from "./WslProxySessionEditorUi";
+import { Direction, NodeWidget, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";
+import { BoxLayout, ComboBox, GridLayout, LineEdit, RadioButton, setCssClasses, Widget } from "qt-construct";
 
 
 interface WslProxySessionConfiguration extends SessionConfiguration {
@@ -21,54 +22,8 @@ export function init(): void {
   readDistributionsSpawn();
 }
 
-export function wslProxySessionEditorFactory(log: Logger, sessionEditorBase: SessionEditorBase): any {
-  const ui = new WslProxySessionEditorUi();
-  const debouncedDataChanged = _.debounce(dataChanged.bind(null, sessionEditorBase, ui), 500);
-
-  const component = ui.$mount();
-  ui.$watch("$data", debouncedDataChanged, { deep: true, immediate: false } );
-
-  const config = <WslProxySessionConfiguration> sessionEditorBase.sessionConfiguration;
-  loadConfig(ui, config);
-
-  sessionEditorBase.containerElement.appendChild(component.$el);
-}
-
-function loadConfig(ui: WslProxySessionEditorUi, config: WslProxySessionConfiguration): void {
-  let fixedConfig = config;
-  if (config.shell == null) {
-    fixedConfig = {
-      uuid: config.uuid,
-      name: config.name,
-      useDefaultShell: true,
-      shell: "",
-      args: "",
-      initialDirectory: "",
-      distribution: "",
-    };
-  }
-
-  ui.name = fixedConfig.name;
-  ui.useDefaultShell = fixedConfig.useDefaultShell ? 1 :0;
-  ui.shell = fixedConfig.shell;
-  ui.etcShells = [...etcShells];
-  ui.distribution = fixedConfig.distribution == null ? "" : fixedConfig.distribution;
-  ui.distributions = [...distributions];
-  ui.args = fixedConfig.args;
-  ui.initialDirectory = fixedConfig.initialDirectory || "";
-}
-
-function dataChanged(sessionEditorBase: SessionEditorBase, ui: WslProxySessionEditorUi): void {
-  const config = <WslProxySessionConfiguration> sessionEditorBase.sessionConfiguration;
-
-  config.name = ui.name;
-  config.useDefaultShell = ui.useDefaultShell === 1;
-  config.shell = ui.shell;
-  config.args = ui.args;
-  config.initialDirectory = ui.initialDirectory;
-  config.distribution = ui.distribution;
-
-  sessionEditorBase.setSessionConfiguration(config);
+export function wslProxySessionEditorFactory(log: Logger, sessionEditorBase: SessionEditorBase): NodeWidget<any> {
+  return new EditorUi(sessionEditorBase).getWidget();
 }
 
 let etcShells: string[] = [];
@@ -120,4 +75,138 @@ function splitDistributions(text: string): void {
     result.push(parts[0].trim());
   }
   distributions = result;
+}
+const DEFAULT_DISTRO = "<Default>";
+
+class EditorUi {
+
+  #widget: QWidget = null;
+  #defaultShellRadioButton: QRadioButton = null;
+  #otherRadioButton: QRadioButton = null;
+  #otherShellComboBox: QComboBox = null;
+  #initialDirectoryLineEdit: QLineEdit = null;
+
+  #sessionEditorBase: SessionEditorBase = null;
+  #config: WslProxySessionConfiguration = null;
+
+  constructor(sessionEditorBase: SessionEditorBase) {
+    this.#sessionEditorBase = sessionEditorBase;
+    this.#config = <WslProxySessionConfiguration> sessionEditorBase.sessionConfiguration;
+
+    this.#config.args = this.#config.args ?? "";
+    this.#config.initialDirectory = this.#config.initialDirectory ?? "";
+    this.#config.distribution = this.#config.distribution ?? "";
+    this.#config.useDefaultShell = this.#config.useDefaultShell ?? true;
+    this.#config.shell = this.#config.shell ?? "";
+
+    const otherShellItems = etcShells.includes(this.#config.shell) ? etcShells : [this.#config.shell, ...etcShells];
+
+    this.#widget = Widget({
+      layout: GridLayout({
+        columns: 2,
+        contentsMargins: [0, 0, 0, 0],
+        children: [
+          "Name:",
+          LineEdit({
+            text: this.#config.name,
+            onTextEdited: (text: string) => {
+              this.#config.name = text;
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+
+          "Distribution:",
+          ComboBox({
+            currentIndex: distributions.indexOf(this.#config.distribution),
+            items: [DEFAULT_DISTRO, ...distributions.slice(1)],
+            onCurrentTextChanged: (newText: string): void => {
+              if (newText === DEFAULT_DISTRO) {
+                this.#config.distribution = "";
+              } else {
+                this.#config.distribution = newText;
+              }
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+
+          "Shell:",
+          this.#defaultShellRadioButton = RadioButton({
+            checked: this.#config.useDefaultShell,
+            text: "Default login shell",
+            onClicked: (): void => {
+              this.#updateShellRadio(true);
+            }
+          }),
+
+          "",
+          Widget({
+            layout: BoxLayout({
+              direction: Direction.LeftToRight,
+              contentsMargins: [0, 0, 0, 0],
+              children: [
+                {
+                  widget:
+                    this.#otherRadioButton = RadioButton({
+                      checked: ! this.#config.useDefaultShell,
+                      text: "Other",
+                      onClicked: (): void => {
+                        this.#updateShellRadio(false);
+                      }
+                    })
+                },
+                {
+                  widget:
+                  this.#otherShellComboBox = ComboBox({
+                    enabled: ! this.#config.useDefaultShell,
+                    currentIndex: otherShellItems.indexOf(this.#config.shell),
+                    editable: true,
+                    items: otherShellItems,
+                    onCurrentTextChanged: (newText: string): void => {
+                      this.#config.shell = newText;
+                      sessionEditorBase.setSessionConfiguration(this.#config);
+                    }
+                  }),
+                  stretch: 1
+                }
+              ]
+            })
+          }),
+
+          "Arguments:",
+          LineEdit({
+            text: this.#config.args,
+            onTextEdited: (text: string) => {
+              this.#config.args = text;
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+
+          "Initial Directory:",
+          this.#initialDirectoryLineEdit = LineEdit({
+            text: this.#config.initialDirectory,
+            onTextEdited: (text: string) => {
+              this.#config.initialDirectory = text;
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+        ]
+      })
+    });
+  }
+
+  getWidget(): QWidget {
+    return this.#widget;
+  }
+
+  #updateShellRadio(useDefault: boolean): void {
+    this.#defaultShellRadioButton.setChecked(useDefault);
+    this.#otherRadioButton.setChecked(!useDefault);
+    this.#otherShellComboBox.setEnabled(!useDefault);
+    if (useDefault) {
+      setCssClasses(this.#otherShellComboBox, []);
+    }
+
+    this.#config.useDefaultShell = useDefault;
+    this.#sessionEditorBase.setSessionConfiguration(this.#config);
+  }
 }

@@ -9538,6 +9538,22 @@ fsevents@^2.3.2:
   languageName: unknown
   linkType: soft
 
+"proxy-session-editor@workspace:extensions/ProxySessionEditor":
+  version: 0.0.0-use.local
+  resolution: "proxy-session-editor@workspace:extensions/ProxySessionEditor"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.14.0
+    "@types/fs-extra": ^5.0.2
+    "@types/node": ^14.14.37
+    eslint: 7.19.0
+    eslint-config-extraterm: 1.0.0
+    fs-extra: ^5.0.0
+    lodash: ^4.17.19
+    shx: ^0.3.2
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
+
 "pseudomap@npm:^1.0.2":
   version: 1.0.2
   resolution: "pseudomap@npm:1.0.2"
@@ -12075,6 +12091,22 @@ fsevents@^2.3.2:
     lodash: ^4.17.19
     node-pty: 0.10.0-beta19
     pid-cwd: ^1.2.0
+    shx: ^0.3.2
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
+
+"windows-console-session-editor@workspace:extensions/WindowsConsoleSessionEditor":
+  version: 0.0.0-use.local
+  resolution: "windows-console-session-editor@workspace:extensions/WindowsConsoleSessionEditor"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.14.0
+    "@types/fs-extra": ^5.0.2
+    "@types/node": ^14.14.37
+    eslint: 7.19.0
+    eslint-config-extraterm: 1.0.0
+    fs-extra: ^5.0.0
+    qt-construct: 0.1.0
     shx: ^0.3.2
     typescript: 4.3.5
   languageName: unknown

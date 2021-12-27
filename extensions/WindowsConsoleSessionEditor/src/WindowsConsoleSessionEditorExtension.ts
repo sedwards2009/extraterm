@@ -1,15 +1,15 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as path from 'path';
-import * as _ from 'lodash';
 import * as fse from 'fs-extra';
 import * as constants from 'constants';
 
-import {ExtensionContext, Logger, SessionConfiguration, SessionEditorBase} from '@extraterm/extraterm-extension-api';
-import {WindowsConsoleSessionEditorUi} from './WindowsConsoleSessionEditorUi';
+import { ExtensionContext, Logger, SessionConfiguration, SessionEditorBase } from '@extraterm/extraterm-extension-api';
+import { NodeWidget, QComboBox, QLineEdit, QWidget } from "@nodegui/nodegui";
+import { ComboBox, GridLayout, LineEdit, setCssClasses, Widget } from "qt-construct";
 
 
 let log: Logger = null;
@@ -18,68 +18,19 @@ interface WindowsConsoleSessionConfiguration extends SessionConfiguration {
   exe?: string;
 }
 
+let commands: string[] = [];
+
 export function activate(context: ExtensionContext): any {
   log = context.logger;
   context.window.registerSessionEditor("windows-console", SessionEditorFactory);
+
+  initializeAvailableExes().then(availableCommands => {
+    commands = availableCommands;
+  });
 }
 
-function SessionEditorFactory(sessionEditorBase: SessionEditorBase): void {
-  const ui = new WindowsConsoleSessionEditorUi();
-  const debouncedDataChanged = _.debounce(dataChanged.bind(null, sessionEditorBase, ui), 500);
-
-  const component = ui.$mount();
-  ui.$watch('$data', debouncedDataChanged, { deep: true, immediate: false } );
-
-  const config = <WindowsConsoleSessionConfiguration> sessionEditorBase.sessionConfiguration;
-  loadConfig(ui, config);
-
-  sessionEditorBase.containerElement.appendChild(component.$el);
-
-  initializeAvailableExes(ui);
-}
-
-function loadConfig(ui: WindowsConsoleSessionEditorUi, config: WindowsConsoleSessionConfiguration): void {
-  let fixedConfig = config;
-  if (config.exe == null) {
-    fixedConfig = {
-      uuid: config.uuid,
-      name: config.name,
-      exe: "cmd.exe",
-      args: "",
-      initialDirectory: "",
-    };
-  }
-
-  ui.name = fixedConfig.name;
-  ui.exe = fixedConfig.exe;
-  ui.args = fixedConfig.args;
-  ui.initialDirectory = fixedConfig.initialDirectory || "";
-}
-
-function dataChanged(sessionEditorBase: SessionEditorBase, ui: WindowsConsoleSessionEditorUi): void {
-  const config = <WindowsConsoleSessionConfiguration> sessionEditorBase.sessionConfiguration;
-  config.name = ui.name;
-  config.exe = ui.exe;
-  config.args = ui.args;
-  config.initialDirectory = ui.initialDirectory;
-
-  checkExeField(ui);
-  checkInitialDirectory(ui);
-  sessionEditorBase.setSessionConfiguration(config);
-}
-
-function checkExeField(ui: WindowsConsoleSessionEditorUi): void {
-  if (ui.exe !== "") {
-    const exePath = ui.exe;
-
-    checkExe(exePath).then(resultMsg => {
-      if (exePath === ui.exe) {
-        ui.exeErrorMsg = resultMsg;
-      }
-    });
-  } else {
-    ui.exeErrorMsg = "";
-  }
+function SessionEditorFactory(sessionEditorBase: SessionEditorBase): NodeWidget<any> {
+  return new EditorUi(sessionEditorBase).getWidget();
 }
 
 async function checkExe(exe: string): Promise<string> {
@@ -118,7 +69,7 @@ async function checkExecutablePath(exePath: string): Promise<string> {
   return "";
 }
 
-async function initializeAvailableExes(ui: WindowsConsoleSessionEditorUi): Promise<void> {
+async function initializeAvailableExes(): Promise<string[]> {
   const availableExes: string[] = [];
   for (const exePath of ["cmd.exe", "powershell.exe", "pwsh.exe"]) {
     const errorMsg = await checkExe(exePath);
@@ -126,39 +77,162 @@ async function initializeAvailableExes(ui: WindowsConsoleSessionEditorUi): Promi
       availableExes.push(exePath);
     }
   }
-  ui.availableExes = availableExes;
+  return availableExes;
 }
 
-function checkInitialDirectory(ui: WindowsConsoleSessionEditorUi): void {
-  if (ui.initialDirectory !== "") {
-    const initialDirectory = ui.initialDirectory;
 
-    checkDirectoryPath(initialDirectory).then(resultMsg => {
-      if (initialDirectory === ui.initialDirectory) {
-        ui.initialDirectoryErrorMsg = resultMsg;
-      }
+class EditorUi {
+
+  #widget: QWidget = null;
+  #commandComboBox: QComboBox = null;
+  #initialDirectoryLineEdit: QLineEdit = null;
+  #config: WindowsConsoleSessionConfiguration = null;
+
+  constructor(sessionEditorBase: SessionEditorBase) {
+    this.#config = <WindowsConsoleSessionConfiguration> sessionEditorBase.sessionConfiguration;
+
+    this.#config.args = this.#config.args ?? "";
+    this.#config.initialDirectory = this.#config.initialDirectory ?? "";
+    this.#config.exe = this.#config.exe ?? "cmd.exe";
+
+    const commandItems = commands.includes(this.#config.exe) ? commands : [this.#config.exe, ...commands];
+
+    this.#widget = Widget({
+      layout: GridLayout({
+        columns: 2,
+        contentsMargins: [0, 0, 0, 0],
+        children: [
+          "Name:",
+          LineEdit({
+            text: this.#config.name,
+            onTextEdited: (text: string) => {
+              this.#config.name = text;
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+
+          "Command:",
+          this.#commandComboBox = ComboBox({
+            currentIndex: commandItems.indexOf(this.#config.exe),
+            editable: true,
+            items: commandItems,
+            onCurrentTextChanged: (newText: string): void => {
+              this.#config.exe = newText;
+              this.#checkShellPath(this.#config);
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+
+          "Arguments:",
+          LineEdit({
+            text: this.#config.args,
+            onTextEdited: (text: string) => {
+              this.#config.args = text;
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+
+          "Initial Directory:",
+          this.#initialDirectoryLineEdit = LineEdit({
+            text: this.#config.initialDirectory,
+            onTextEdited: (text: string) => {
+              this.#config.initialDirectory = text;
+              this.#checkInitialDirectory(this.#config);
+              sessionEditorBase.setSessionConfiguration(this.#config);
+            }
+          }),
+        ]
+      })
     });
-  } else {
-    ui.initialDirectoryErrorMsg = "";
-  }
-}
 
-async function checkDirectoryPath(exePath: string): Promise<string> {
-  try {
-    const metadata = await fse.stat(exePath);
-    if ( ! metadata.isDirectory()) {
-      return "Path isn't a directory";
-    }
-
-    await fse.access(exePath, fse.constants.R_OK);
-  } catch(err) {
-    if (err.errno === -constants.ENOENT || err.code === "ENOENT") {
-      return "Path doesn't exist";
-    }
-    if (err.errno === -constants.EACCES) {
-      return "Path isn't readable";
-    }
-    return `errno: ${err.errno}, err.code: ${err.code}`;
+    this.#checkShellPath(this.#config);
+    this.#checkInitialDirectory(this.#config);
   }
-  return "";
+
+  getWidget(): QWidget {
+    return this.#widget;
+  }
+
+  async #checkShellPath(config: WindowsConsoleSessionConfiguration): Promise<void> {
+    const shellPath = config.exe;
+
+    if (path.isAbsolute(shellPath)) {
+      const resultMsg = await this.#checkExecutablePath(shellPath);
+      if (shellPath === config.exe) {
+        this.#commandComboBox.setToolTip(resultMsg);
+        setCssClasses(this.#commandComboBox, resultMsg === null ? [] : ["warning"]);
+      }
+    } else {
+      const searchPaths: string[] = process.env.PATH.split(";");
+      let resultMsg: string = null;
+      for (const p of searchPaths) {
+        const testPath = path.join(p, shellPath);
+        resultMsg = await this.#checkExecutablePath(testPath);
+        if (resultMsg == null) {
+          this.#commandComboBox.setToolTip("");
+          setCssClasses(this.#commandComboBox, []);
+          return;
+        }
+      }
+
+      this.#commandComboBox.setToolTip(resultMsg);
+      setCssClasses(this.#commandComboBox, ["warning"]);
+    }
+  }
+
+  #checkInitialDirectory(config: WindowsConsoleSessionConfiguration): void {
+    if (config.initialDirectory !== "") {
+      const initialDirectory = config.initialDirectory;
+
+      this.#checkDirectoryPath(initialDirectory).then(resultMsg => {
+        if (initialDirectory === config.initialDirectory) {
+          this.#initialDirectoryLineEdit.setToolTip(resultMsg);
+          setCssClasses(this.#initialDirectoryLineEdit, resultMsg === null ? [] : ["warning"]);
+        }
+      });
+    } else {
+      this.#initialDirectoryLineEdit.setToolTip(null);
+      setCssClasses(this.#initialDirectoryLineEdit, []);
+    }
+  }
+
+  async #checkExecutablePath(exePath: string): Promise<string> {
+    try {
+      const metadata = await fse.stat(exePath);
+      if ( ! metadata.isFile()) {
+        return "Path isn't a file";
+      }
+
+      await fse.access(exePath, fse.constants.X_OK);
+    } catch(err) {
+      if (err.errno === -constants.ENOENT) {
+        return "Path doesn't exist";
+      }
+      if (err.errno === -constants.EACCES) {
+        return "Path isn't executable";
+      }
+      return "errno: " +  err.errno + ", err.code: " + err.code;
+    }
+    return null;
+  }
+
+  async #checkDirectoryPath(exePath: string): Promise<string> {
+    try {
+      const metadata = await fse.stat(exePath);
+      if ( ! metadata.isDirectory()) {
+        return "Path isn't a directory";
+      }
+
+      await fse.access(exePath, fse.constants.R_OK);
+    } catch(err) {
+      if (err.errno === -constants.ENOENT) {
+        return "Path doesn't exist";
+      }
+      if (err.errno === -constants.EACCES) {
+        return "Path isn't readable";
+      }
+      return "errno: " +  err.errno + ", err.code: " + err.code;
+    }
+    return "";
+  }
 }

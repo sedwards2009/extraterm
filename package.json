@@ -49,8 +49,10 @@
       "extensions/UnixSessionBackend",
       "extensions/UnixSessionEditor",
       "extensions/ProxySessionBackend",
+      "extensions/ProxySessionEditor",
       "extensions/OpenLink",
-      "extensions/WindowsConsoleSessionBackend"
+      "extensions/WindowsConsoleSessionBackend",
+      "extensions/WindowsConsoleSessionEditor"
     ],
     "nohoist": [
       "**/chai",
