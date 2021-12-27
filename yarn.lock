@@ -524,7 +524,7 @@ __metadata:
     typedoc: ^0.22.3
     typescript: 4.3.5
   peerDependencies:
-    "@nodegui/nodegui": ^0.43.0
+    "@nodegui/nodegui": ^0.44.0
   languageName: unknown
   linkType: soft
 
@@ -809,6 +809,26 @@ __metadata:
   bin:
     qode: scripts/qode.js
   checksum: f2af01e0db0fcc7ab1c8d77bc399b2c62deb561ef287d16445c0e515968fad1986d9889f543cfef780018dcea8c29520bcbc5051f9db3252acc4ca9edbe74205
+  languageName: node
+  linkType: hard
+
+"@nodegui/nodegui@npm:^0.44.0":
+  version: 0.44.0
+  resolution: "@nodegui/nodegui@npm:0.44.0"
+  dependencies:
+    "@nodegui/artifact-installer": ^1.1.0
+    "@nodegui/qode": ^16.4.0
+    cmake-js: ^6.2.1
+    cross-env: ^7.0.3
+    cuid: ^2.1.8
+    manage-path: ^2.0.0
+    memoize-one: ^5.2.1
+    node-addon-api: ^4.0.0
+    postcss: ^7.0.17
+    postcss-nodegui-autoprefixer: 0.0.7
+  bin:
+    qode: scripts/qode.js
+  checksum: 9e9d1f597df72f5af1e4f2f86547161bc3f4baeaca408b1e13453129e6f955dae653a8bdd8fe9ec8bb80e3f6e7ce58b328298ae9200f829fdba234686509a715
   languageName: node
   linkType: hard
 
@@ -4446,7 +4466,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-char-render-canvas@workspace:packages/extraterm-char-render-canvas"
   dependencies:
-    "@nodegui/nodegui": ^0.43.0
+    "@nodegui/nodegui": ^0.44.0
     "@types/node": ^14.14.37
     eslint: 7.19.0
     eslint-config-extraterm: 1.0.0
@@ -4634,7 +4654,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm@workspace:."
   dependencies:
-    "@nodegui/nodegui": ^0.43.0
+    "@nodegui/nodegui": ^0.44.0
     "@types/fs-extra": ^9.0.12
     "@yarnpkg/lockfile": ^1.1.0
     commander: ^8.3.0
@@ -9574,7 +9594,7 @@ fsevents@^2.3.2:
   version: 0.0.0-use.local
   resolution: "qt-construct@workspace:packages/qt-construct"
   dependencies:
-    "@nodegui/nodegui": ^0.43.0
+    "@nodegui/nodegui": ^0.44.0
     eslint: 7.19.0
     eslint-config-extraterm: 1.0.0
     shelljs: 0.8.3
@@ -11674,6 +11694,7 @@ fsevents@^2.3.2:
     eslint-config-extraterm: 1.0.0
     fs-extra: ^5.0.0
     lodash: ^4.17.19
+    qt-construct: 0.1.0
     shx: ^0.3.2
     typescript: 4.3.5
   languageName: unknown
