@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,6 +7,8 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { BlockFrame } from "../../terminal/BlockFrame";
 
 import { InternalExtensionContext } from "../../InternalTypes";
+import { TerminalBlock } from "../../terminal/TerminalBlock";
+import { TerminalOutputDetailsProxy } from "./TerminalOutputDetailsProxy";
 // import { ViewerElement } from "../viewers/ViewerElement";
 // import { EmbeddedViewer } from "../viewers/EmbeddedViewer";
 // import { TerminalViewer } from "../viewers/TerminalAceViewer";
@@ -20,15 +22,25 @@ import { InternalExtensionContext } from "../../InternalTypes";
 
 export class BlockImpl implements ExtensionApi.Block {
 
-  private _type: string = null;
-  private _details: any = null;
+  #type: string = null;
+  #details: any = null;
+  #internalExtensionContext: InternalExtensionContext = null;
+  #blockFrame: BlockFrame = null;
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _blockFrame: BlockFrame) {
+  constructor(internalExtensionContext: InternalExtensionContext, blockFrame: BlockFrame) {
+    this.#internalExtensionContext = internalExtensionContext;
+    this.#blockFrame = blockFrame;
   }
 
   private _init(): void {
-    if (this._type != null) {
+    if (this.#type != null) {
       return;
+    }
+
+    const block = this.#blockFrame.getBlock();
+    if (block instanceof TerminalBlock) {
+      this.#details = new TerminalOutputDetailsProxy(this.#internalExtensionContext, block);
+      this.#type = ExtensionApi.TerminalOutputType;
     }
 
     // let insideViewer = this._viewer;
@@ -49,12 +61,12 @@ export class BlockImpl implements ExtensionApi.Block {
 
   get type(): string {
     this._init();
-    return this._type;
+    return this.#type;
   }
 
   get details(): any {
     this._init();
-    return this._details;
+    return this.#details;
   }
 
   get tab(): ExtensionApi.Tab {

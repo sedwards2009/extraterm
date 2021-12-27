@@ -54,6 +54,9 @@ export class TerminalBlock implements Block {
 
   #widget: QWidget = null;
   #emulator: Term.Emulator = null;
+
+  #columns = 0;
+
   #onRenderDispose: Disposable =null;
   #terminalVisualConfig: TerminalVisualConfig = null;
   #extraFontSlices: ExtraFontSlice[] = [];
@@ -138,6 +141,14 @@ export class TerminalBlock implements Block {
     return this.#scrollback.length;
   }
 
+  getEmulator(): Term.Emulator {
+    return this.#emulator;
+  }
+
+  hasSelection(): boolean {
+    return this.#selectionStart != null && this.#selectionEnd != null;
+  }
+
   takeScrollbackFrom(startLine: number): Line[] {
     const result = this.#scrollback.slice(startLine);
     this.#scrollback.splice(startLine);
@@ -175,6 +186,69 @@ export class TerminalBlock implements Block {
 
     this.#extraFontSlices = this.#setupExtraFontSlices(terminalVisualConfig.extraFonts);
     this.#updateWidgetSize();
+  }
+
+  getScreenWidth(): number {
+    return this.#columns;
+  }
+
+  getScrollbackLineText(lineNumber: number): string {
+    const line = this.#scrollback[lineNumber];
+    if (line == null) {
+      return null;
+    }
+    return line.getString(0, 0);
+  }
+
+  applyScrollbackHyperlink(lineNumber: number, x: number, length: number, url: string, group: string=""): void {
+    const line = this.#scrollback[lineNumber];
+    const startColumn = line.mapStringIndexToColumn(0, x);
+    const endColumn = line.mapStringIndexToColumn(0, x + length);
+
+    this.#applyHyperlinkAtTextCoordinates(lineNumber, startColumn, endColumn - startColumn,
+      url, group);
+    this.#widget.update();
+  }
+
+  #applyHyperlinkAtTextCoordinates(row: number, column: number, length: number, url: string, group: string=""): void {
+    const line = this.#scrollback[row];
+    const linkID = line.getOrCreateLinkIDForURL(url, group);
+    for (let i = 0; i < length; i++) {
+      line.setLinkID(column + i, 0, linkID);
+    }
+  }
+
+  removeHyperlinks(lineNumber: number, group: string=""): boolean {
+    const line = this.#scrollback[lineNumber];
+    const width = line.width;
+    let didRemove = false;
+    if (group === "") {
+      for (let i=0; i<width; i++) {
+        const linkID = line.getLinkID(i, 0);
+        if (linkID !== 0) {
+          line.setLinkID(i, 0, 0);
+          didRemove = true;
+        }
+      }
+
+    } else {
+      const targetLinkIDs = line.getAllLinkIDs(group);
+      if (targetLinkIDs.length !== 0) {
+        for (let i=0; i<width; i++) {
+          const linkID = line.getLinkID(i, 0);
+          if (targetLinkIDs.includes(linkID)) {
+            line.setLinkID(i, 0, 0);
+            didRemove = true;
+          }
+        }
+      }
+    }
+
+    if (didRemove) {
+      this.#widget.update();
+    }
+
+    return didRemove;
   }
 
   #setupExtraFontSlices(extraFonts: FontSlice[]): ExtraFontSlice[] {
@@ -223,7 +297,12 @@ export class TerminalBlock implements Block {
     }
 
     const metrics = this.#fontMetrics;
-    const materializedRows = this.#emulator != null ? this.#emulator.getDimensions().materializedRows : 0;
+    let materializedRows = 0;
+    if (this.#emulator != null) {
+      const dims = this.#emulator.getDimensions();
+      materializedRows = dims.materializedRows;
+      this.#columns = dims.cols;
+    }
     const newHeightPx = (materializedRows + this.#scrollback.length) * metrics.heightPx;
     if (newHeightPx === this.#heightPx) {
       return;
