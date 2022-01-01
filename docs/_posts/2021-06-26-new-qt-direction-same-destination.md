@@ -1,6 +1,6 @@
 ---
 title: New Qt Direction, Same Destination
-date: 2021-05-01 21:30:00 +0100
+date: 2021-06-26 21:30:00 +0100
 categories: news
 ---
 
