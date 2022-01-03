@@ -31,8 +31,7 @@
   },
   "resolutions": {
     "@types/node": "14.14.37",
-    "typescript": "4.3.5",
-    "node-abi": "2.21.0"
+    "typescript": "4.3.5"
   },
   "private": true,
   "workspaces": {
@@ -55,11 +54,8 @@
     ],
     "nohoist": [
       "**/chai",
-      "**/lit-html",
-      "**/mocha",
       "**/reflect-metadata",
-      "**/@types/jest",
-      "**/@types/mocha"
+      "**/@types/jest"
     ]
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
@@ -68,11 +64,8 @@
     "@types/fs-extra": "^9.0.12",
     "commander": "^8.3.0",
     "fs-extra": "^10.0.0",
-    "node-abi": "2.21.0",
-    "node-gyp": "^8.2.0",
     "nodegui-plugin-font-icon": "^0.1.20",
     "qode": "^0.1.0",
-    "readdirp": "3.6.0",
     "source-map-support": "^0.5.21"
   },
   "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
