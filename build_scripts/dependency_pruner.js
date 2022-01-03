@@ -7,7 +7,7 @@
 require('shelljs/global');
 const fs = require('fs');
 const path = require('path');
-const lockfile = require('@yarnpkg/lockfile');
+const lockfileParser = require('@yarnpkg/parsers');
 
 /**
  * Prune away yarn development dependencies
@@ -15,10 +15,10 @@ const lockfile = require('@yarnpkg/lockfile');
  * Prunes development dependencies from a node project with help from
  * yarn's lock file.
  *
- * @param sourceRootPath Path to the source code root directory which contains
- *                       the root package.json file and the yarn.lock file.
- * @param targetPath     Path to the target directory which contains the built
- *                       project whose dependencies need to be pruned.
+ * @param {string} sourceRootPath Path to the source code root directory which contains
+ *                                the root package.json file and the yarn.lock file.
+ * @param {string} targetPath     Path to the target directory which contains the built
+ *                                project whose dependencies need to be pruned.
  */
 function pruneDevDependencies(sourceRootPath, targetPath) {
   echo("");
@@ -71,22 +71,57 @@ function pruneDevDependencies(sourceRootPath, targetPath) {
 
 exports.pruneDevDependencies = pruneDevDependencies;
 
-function readYarnLock(sourceRootPath) {
-  let file = fs.readFileSync(path.join(sourceRootPath, 'yarn.lock'), 'utf8');
-  let json = lockfile.parse(file);
-  return json;
+
+/**
+ * @typedef { {[depName: string]: Yarn2LockDep; } Yarn2Lock
+ */
+
+/**
+ * @typedef {Object} Yarn2LockDep
+ * @param {string} version
+ * @param {{ [depName: string]: string; }=} dependencies
+ * @param {{ [depName: string]: string; }=} optionalDependencies
 }
 
+/**
+ * @param {string} sourceRootPath
+ * @return {Yarn2Lock}
+ */
+function readYarnLock(sourceRootPath) {
+  const fileContents = fs.readFileSync(path.join(sourceRootPath, 'yarn.lock'), 'utf8');
+  const contents = lockfileParser.parseSyml(fileContents);
+
+  for (const key of Object.getOwnPropertyNames(contents)) {
+    const parts = key.split(', ');
+    if (parts.length > 1) {
+      for (const p of parts) {
+        contents[p] = contents[key];
+      }
+      // delete contents[key];
+    }
+  }
+echo(`typeof contents: ${typeof contents}`);
+echo(`Array.isArray(): ${Array.isArray(contents)}`);
+  return contents;
+}
+
+/**
+ * @param {string} pkgPath
+ */
 function readPackageJson(pkgPath) {
   const pkgString = fs.readFileSync(pkgPath, "utf8");
   return JSON.parse(pkgString);
 }
 
-//  interface Dependency {
-//    package: string;
-//    version: string;
-//  }
+/**
+ * @typedef {Object} Dependency
+ * @property {string} package
+ * @property {string} version
+*/
 
+/**
+ * @return {Dependency[]}
+ */
 function objectToDependencyList(dependencies) {
   const result = [];
   for (const key in dependencies) {
@@ -95,7 +130,11 @@ function objectToDependencyList(dependencies) {
   return result;
 }
 
-function readPrimaryDependencies(pkgPath) /*: Dependency[] */ {
+/**
+ * @param {string} pkgPath
+ * @return {Dependency[]}
+ */
+function readPrimaryDependencies(pkgPath) {
   const pkg = readPackageJson(pkgPath);
   let deps = objectToDependencyList(pkg.dependencies);
   if (pkg.optionalDependencies !== undefined) {
@@ -104,7 +143,11 @@ function readPrimaryDependencies(pkgPath) /*: Dependency[] */ {
   return deps;
 }
 
-function findPrimaryDependencies(sourceRootPath) /*: Dependency[] */ {
+/**
+ * @param {string} sourceRootPath
+ * @return {Dependency[]}
+ */
+function findPrimaryDependencies(sourceRootPath) {
   const pkg = readPackageJson(path.join(sourceRootPath, "package.json"));
 
   if (pkg.workspaces == null) {
@@ -123,10 +166,15 @@ function findPrimaryDependencies(sourceRootPath) /*: Dependency[] */ {
   return depsList;
 }
 
+/**
+ * @param {Yarn2Lock} yarnLock
+ * @param { {[key: string]: number} } useCount
+ * @param {Dependency} dependency
+ */
 function markUsedDependency(yarnLock, useCount, dependency) {
-  const depString = dependency.package + "@" + dependency.version;
+  const depString = `${dependency.package}@npm:${dependency.version}`;
 
-  const yarnDep = yarnLock.object[depString];
+  const yarnDep = yarnLock[depString];
   if (yarnDep == null) {
     echo(`Warning: Couldn't find ${depString} in yarn.lock to mark. Skipping.`);
   } else {
@@ -148,12 +196,20 @@ function markUsedDependency(yarnLock, useCount, dependency) {
   }
 }
 
+/**
+ * @param {Yarn2Lock} yarnLock
+ * @param { {[key: string]: number} } useCount
+ * @param {Dependency[]} depsList
+ */
 function markUsedDependencyList(yarnLock, useCount, depsList) {
   for (const dep of depsList) {
     markUsedDependency(yarnLock, useCount, dep);
   }
 }
 
+/**
+ * @param {string} sourceRootPath
+ */
 function computeKeepAndPrunePackages(sourceRootPath) {
   const yarnLock = readYarnLock(sourceRootPath);
   const depsList = findPrimaryDependencies(sourceRootPath);
@@ -168,10 +224,16 @@ function computeKeepAndPrunePackages(sourceRootPath) {
 
   const keep = [];
   const prune = [];
-  for (const key in yarnLock.object) {
-    const yarnDep = yarnLock.object[key];
-    const parts = key.split(/@/g)
+  for (const key of Object.getOwnPropertyNames(yarnLock)) {
+    const yarnDep = yarnLock[key];
+
+    if (yarnDep == null) {
+      continue;
+    }
+
+    const parts = key.split(/@/g);
     const packageName = parts.slice(0, -1).join("@");
+
     const useKey = packageName + "@" + yarnDep.version;
     if (useCount[useKey] == null) {
       prune.push( { package: packageName, version: yarnDep.version } );

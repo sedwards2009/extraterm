@@ -1292,10 +1292,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@yarnpkg/lockfile@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@yarnpkg/lockfile@npm:1.1.0"
-  checksum: 05b881b4866a3546861fee756e6d3812776ea47fa6eb7098f983d6d0eefa02e12b66c3fff931574120f196286a7ad4879ce02743c8bb2be36c6a576c7852083a
+"@yarnpkg/parsers@npm:2.5.0-rc.7":
+  version: 2.5.0-rc.7
+  resolution: "@yarnpkg/parsers@npm:2.5.0-rc.7"
+  dependencies:
+    js-yaml: ^3.10.0
+    tslib: ^1.13.0
+  checksum: da12bd6f0a3d121e5369d20fdbbd5caed89e3b8bfebc907aa7b5022b326c7788ef033ed8b60b8e2267116a70d445f2bccb44b5a96e4fac5dec4d7d69bfd99462
   languageName: node
   linkType: hard
 
@@ -4619,7 +4622,7 @@ __metadata:
   dependencies:
     "@nodegui/nodegui": ^0.45.4
     "@types/fs-extra": ^9.0.12
-    "@yarnpkg/lockfile": ^1.1.0
+    "@yarnpkg/parsers": 2.5.0-rc.7
     commander: ^8.3.0
     fs-extra: ^10.0.0
     git-repo-info: ^1.4.1
@@ -11338,7 +11341,7 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
-"tslib@npm:^1.8.0, tslib@npm:^1.8.1":
+"tslib@npm:^1.13.0, tslib@npm:^1.8.0, tslib@npm:^1.8.1":
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
   checksum: dbe628ef87f66691d5d2959b3e41b9ca0045c3ee3c7c7b906cc1e328b39f199bb1ad9e671c39025bd56122ac57dfbf7385a94843b1cc07c60a4db74795829acd
