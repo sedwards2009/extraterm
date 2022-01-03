@@ -70,7 +70,7 @@
     "fs-extra": "^10.0.0",
     "node-abi": "2.21.0",
     "node-gyp": "^8.2.0",
-    "nodegui-plugin-font-icon": "^0.1.17",
+    "nodegui-plugin-font-icon": "^0.1.18",
     "qode": "^0.1.0",
     "readdirp": "3.6.0",
     "source-map-support": "^0.5.21"
