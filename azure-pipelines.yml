@@ -28,8 +28,6 @@ jobs:
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
       - script: yarn install --immutable
         displayName: 'Yarn install'
-      - script: yarn run finish-install
-        displayName: 'Finish package install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run package-commands-zip --use-version=$(git describe --tags)
@@ -63,8 +61,6 @@ jobs:
         displayName: "yarn --version"
       - script: yarn install --immutable
         displayName: "yarn install"
-      - script: yarn run finish-install
-        displayName: 'Finish package install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
