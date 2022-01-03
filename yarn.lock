@@ -4607,6 +4607,7 @@ __metadata:
     node-pty: 0.10.0-beta19
     nodegui-plugin-font-icon: ^0.1.20
     qode: ^0.1.0
+    readdirp: 3.6.0
     shelljs: 0.8.4
     source-map-support: ^0.5.21
     wsrun: 5.2.0
@@ -9148,7 +9149,7 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
-"picomatch@npm:^2.0.4, picomatch@npm:^2.2.3":
+"picomatch@npm:^2.0.4, picomatch@npm:^2.2.1, picomatch@npm:^2.2.3":
   version: 2.3.1
   resolution: "picomatch@npm:2.3.1"
   checksum: 050c865ce81119c4822c45d3c84f1ced46f93a0126febae20737bd05ca20589c564d6e9226977df859ed5e03dc73f02584a2b0faad36e896936238238b0446cf
@@ -9716,6 +9717,15 @@ fsevents@^2.3.2:
     string_decoder: ~0.10.x
     util-deprecate: ~1.0.1
   checksum: 3b06e8fb911e2f5918e85e001f59e7c9f4572963d7b1b458489abe7ec2ddfbb68a775ab5915ac33cb31dff3480caf2a9f64c0e6dbe89a69c008e35bc68a074fa
+  languageName: node
+  linkType: hard
+
+"readdirp@npm:3.6.0":
+  version: 3.6.0
+  resolution: "readdirp@npm:3.6.0"
+  dependencies:
+    picomatch: ^2.2.1
+  checksum: 1ced032e6e45670b6d7352d71d21ce7edf7b9b928494dcaba6f11fba63180d9da6cd7061ebc34175ffda6ff529f481818c962952004d273178acd70f7059b320
   languageName: node
   linkType: hard
 
