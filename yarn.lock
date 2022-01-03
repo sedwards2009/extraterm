@@ -4607,7 +4607,7 @@ __metadata:
     node-abi: 2.21.0
     node-gyp: ^8.2.0
     node-pty: 0.10.0-beta19
-    nodegui-plugin-font-icon: ^0.1.19
+    nodegui-plugin-font-icon: ^0.1.20
     qode: ^0.1.0
     readdirp: 3.6.0
     shelljs: 0.8.4
@@ -7643,7 +7643,7 @@ fsevents@^2.3.2:
     lru-cache: ^4.1.3
     marked: ^0.8.2
     mime-types: ^2.1.21
-    nodegui-plugin-font-icon: ^0.1.19
+    nodegui-plugin-font-icon: ^0.1.20
     open: ^8.2.1
     opentype.js: ^1.3.1
     performance-now: 2.1.0
@@ -8375,15 +8375,15 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
-"nodegui-plugin-font-icon@npm:^0.1.19":
-  version: 0.1.19
-  resolution: "nodegui-plugin-font-icon@npm:0.1.19"
+"nodegui-plugin-font-icon@npm:^0.1.20":
+  version: 0.1.20
+  resolution: "nodegui-plugin-font-icon@npm:0.1.20"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/nodegui": ^0.45.4
     node-addon-api: ^3.0.0
     tar: ^6.0.1
-  checksum: 541b1e61ab1ea19907716e119a49f9603db279c7039397763c0a01be1892be263ee946b070d878829291fb72982f1ff5feda86e3b32077c461b871b35e4d5a11
+  checksum: e8114e026823ae88c9d528a6537f250da3a81262746217a31aa6076cdcb67ee7795376ef2ed2085e51e93bb4bd13e1bc97216572de37d104759b6b63e1650148
   languageName: node
   linkType: hard
 
