@@ -22,7 +22,6 @@ import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 
 
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
-import XRegExp = require("xregexp");  // TODO Switch to ES modules
 import { ConfigCursorStyle } from "../config/Config";
 
 
@@ -31,7 +30,7 @@ enum SelectionMode {
   BLOCK
 };
 
-const WORD_SELECTION_REGEX = XRegExp("^[\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]+", "g");
+const WORD_SELECTION_REGEX = new RegExp("^[\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Pc}\\$_@~?&=%#/:\\\\.-]+", "ug");
 
 interface ExpandedMouseEventOptions extends MouseEventOptions {
   nearestColumnEdge: number;
