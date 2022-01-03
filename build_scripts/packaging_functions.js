@@ -39,6 +39,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
   dependencyPruner.pruneDevDependencies(SRC_DIR, versionedOutputDir);
   pruneNodeModules(versionedOutputDir, platform);
   // pruneTwemoji(versionedOutputDir, platform);
+  pruneListFontsJsonExe(versionedOutputDir, platform);
 
   addLauncher(versionedOutputDir, platform);
 
