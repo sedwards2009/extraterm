@@ -43,7 +43,11 @@ async function makePackage({ arch, platform, version, outputDir }) {
 
   addLauncher(versionedOutputDir, platform);
 
-  runDeployQt(SRC_DIR, versionedOutputDir);
+  if (platform === "linux") {
+    runLinuxDeployQt(SRC_DIR, versionedOutputDir);
+  } else if (platform === "win32") {
+    runWindowsDeployQt(SRC_DIR, versionedOutputDir);
+  }
 
   log("Zipping up the package");
 
@@ -265,7 +269,7 @@ exports.createOutputDirName = createOutputDirName;
  * @param {string} srcDir
  * @param {string} versionedOutputDir
  */
-function runDeployQt(srcDir, versionedOutputDir) {
+function runLinuxDeployQt(srcDir, versionedOutputDir) {
   echo("");
   echo("---------------------------------------------------------------------------");
   echo("Deploy Qt");
@@ -291,14 +295,61 @@ function runDeployQt(srcDir, versionedOutputDir) {
   echo(deployCommand);
   exec(deployCommand, { env: {...process.env, LD_LIBRARY_PATH} });
 
-  const qodeJson = {
-    distPath: "main/dist/main.js"
-  };
-  fs.writeFileSync("qode.json", JSON.stringify(qodeJson), {encoding: "utf8"});
+  writeQodeJson(versionedOutputDir);
+
   // TODO: Strip the library .so and qode files
 
   rm(`AppRun`);
   rm("-rf", path.join(versionedOutputDir, "./node_modules/@nodegui/nodegui/miniqt"));
+
+  cd(prevDir);
+}
+
+/**
+ * @param {string} versionedOutputDir
+ */
+function writeQodeJson(versionedOutputDir) {
+  const qodeJson = {
+    distPath: "main/dist/main.js"
+  };
+  fs.writeFileSync(path.join(versionedOutputDir, "qode.json"), JSON.stringify(qodeJson), {encoding: "utf8"});
+}
+
+/**
+ * @param {string} srcDir
+ * @param {string} versionedOutputDir
+ */
+ function runWindowsDeployQt(srcDir, versionedOutputDir) {
+  echo("");
+  echo("---------------------------------------------------------------------------");
+  echo("Deploy Qt");
+  echo("");
+
+  const prevDir = pwd();
+  cd(versionedOutputDir);
+
+  const qtHome = qtConfig.qtHome;
+  const winDeployQtBin = path.resolve(qtHome, "bin", "windeployqt.exe");
+  process.env.PATH=`${path.resolve(qtHome, "bin")};${process.env.PATH}`;
+
+  mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode.exe"), versionedOutputDir);
+
+  const nodeBinaryModules = ls("**/*.node");
+
+  const deployCommand = [
+      winDeployQtBin,
+      '--verbose=2',
+      '--release',
+      '--no-translations',
+      '--compiler-runtime',
+      `--dir=${versionedOutputDir}`,
+      'qode.exe',
+      ...nodeBinaryModules
+    ].join(" ");
+  echo(deployCommand);
+  exec(deployCommand, { env: process.env });
+
+  writeQodeJson(versionedOutputDir);
 
   cd(prevDir);
 }

@@ -84,7 +84,6 @@ jobs:
 
   - job: package_windows
     displayName: "Build Windows packages"
-    condition: ${{False}}
     pool:
       vmImage: 'vs2017-win2016'
     steps:

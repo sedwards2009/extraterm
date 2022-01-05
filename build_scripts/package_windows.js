@@ -18,23 +18,23 @@ async function main() {
   parsedArgs.option('--version [app version]', 'Application version to use', null)
     .parse(process.argv);
 
+  const options = parsedArgs.opts();
+
   if ( ! test('-f', './package.json')) {
     echo("This script was called from the wrong directory.");
     return;
   }
-  const SRC_DIR = "" + pwd();
-  const BUILD_TMP_DIR = path.join(SRC_DIR, 'build_tmp');
-  if (test('-d', BUILD_TMP_DIR)) {
-    rm('-rf', BUILD_TMP_DIR);
+  const srcDir = "" + pwd();
+  const buildTmpDir = path.join(srcDir, 'build_tmp');
+  if (test('-d', buildTmpDir)) {
+    rm('-rf', buildTmpDir);
   }
-  mkdir(BUILD_TMP_DIR);
+  mkdir(buildTmpDir);
 
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
 
-  const electronVersion = packageData.devDependencies['electron'];
-
-  let version = parsedArgs.version == null ? packageData.version : parsedArgs.version;
+  let version = options.version == null ? packageData.version : options.version;
   if (version[0] === "v") {
     version = version.slice(1);
   }
@@ -42,15 +42,14 @@ async function main() {
   await packaging_functions.makePackage({
     arch: "x64",
     platform: "win32",
-    electronVersion,
     version,
-    outputDir: BUILD_TMP_DIR,
+    outputDir: buildTmpDir,
     replaceModuleDirs: false
   });
 
   await makeNsis({
       version,
-      outputDir: BUILD_TMP_DIR,
+      outputDir: buildTmpDir,
       useDocker: false
   });
 
