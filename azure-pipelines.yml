@@ -85,7 +85,7 @@ jobs:
   - job: package_windows
     displayName: "Build Windows packages"
     pool:
-      vmImage: 'vs2017-win2016'
+      vmImage: 'windows-latest'
     steps:
       - script: choco install nsis -y
         displayName: "install nsis"
