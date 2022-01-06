@@ -20,9 +20,11 @@ const readdirp = require('readdirp');
  * @return {void}
  */
 function copySourceTree(sourceDir, destDir, ignoreRegExp) {
-  const temp = tempdir();
+  // We don't use tempdir() or similar, instead we use a dir next to the source tree.
+  // In some environments a temp dir will be on a different filesystem and that will
+  // fail the `mv()` at the end of this function.
+  const tempPath = path.join(sourceDir, `../extraterm-build-${uuid.createUuid()}`);
 
-  const tempPath = path.join(temp, `extraterm-build-${uuid.createUuid()}`);
   mkdir(tempPath);
   echo(`Using tmp dir ${tempPath} during source tree copy.`);
 
@@ -34,7 +36,6 @@ function copySourceTree(sourceDir, destDir, ignoreRegExp) {
   };
 
   fsExtra.copySync(sourceDir, tempPath, {filter: ignoreFunc});
-
   mv(tempPath, destDir);
 }
 exports.copySourceTree = copySourceTree;
@@ -112,6 +113,10 @@ function pathMatchWhitelist(whitelist, testPath) {
 
 exports.pruneDependencyWithWhitelist = pruneDependencyWithWhitelist;
 
+/**
+ * @param {string} directoryPath
+ * @return {void}
+ */
 async function pruneEmptyDirectories(directoryPath) {
   const dirEntries = await readdirp.promise(directoryPath, { type: "directories", depth: 1 });
   for (const dirEntry of dirEntries) {

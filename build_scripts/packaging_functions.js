@@ -14,7 +14,9 @@ const qtConfig = require("@nodegui/nodegui/config/qtConfig");
 
 async function makePackage({ arch, platform, version, outputDir }) {
   log("");
-  const SRC_DIR = "" + pwd();
+  const srcDir = "" + pwd();
+
+  echo(`Making package from '${srcDir}' to output '${outputDir}'`);
 
   fixNodeModulesSubProjects();
 
@@ -26,8 +28,8 @@ async function makePackage({ arch, platform, version, outputDir }) {
     rm('-rf', versionedOutputDir);
   }
 
-  echo("Copying source tree to versioned directory...");
-  utilities.copySourceTree(SRC_DIR, versionedOutputDir, ignoreRegExp);
+  echo("Copying source tree to versioned directory");
+  utilities.copySourceTree(srcDir, versionedOutputDir, ignoreRegExp);
 
   const thisCD = pwd();
   cd(outputDir);
@@ -36,7 +38,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
 
   hoistSubprojectsModules(versionedOutputDir, platform);
 
-  dependencyPruner.pruneDevDependencies(SRC_DIR, versionedOutputDir);
+  dependencyPruner.pruneDevDependencies(srcDir, versionedOutputDir);
   pruneNodeModules(versionedOutputDir, platform);
   // pruneTwemoji(versionedOutputDir, platform);
   pruneListFontsJsonExe(versionedOutputDir, platform);
@@ -44,15 +46,15 @@ async function makePackage({ arch, platform, version, outputDir }) {
   addLauncher(versionedOutputDir, platform);
 
   if (platform === "linux") {
-    runLinuxDeployQt(SRC_DIR, versionedOutputDir);
+    runLinuxDeployQt(srcDir, versionedOutputDir);
   } else if (platform === "win32") {
-    runWindowsDeployQt(SRC_DIR, versionedOutputDir);
+    runWindowsDeployQt(srcDir, versionedOutputDir);
   }
 
   log("Zipping up the package");
 
   if (platform === "linux") {
-    cp(path.join(SRC_DIR, "main/resources/extraterm.desktop"), versionedOutputDir);
+    cp(path.join(srcDir, "main/resources/extraterm.desktop"), versionedOutputDir);
   }
 
   const linkOption = process.platform === "win32" ? "" : " -y";
