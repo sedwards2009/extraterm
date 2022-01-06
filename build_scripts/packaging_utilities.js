@@ -10,6 +10,7 @@ const os = require('os');
 const uuid = require('extraterm-uuid');
 const readdirp = require('readdirp');
 
+const log = console.log.bind(console);
 
 /**
  * Copy a source tree.
@@ -29,7 +30,7 @@ function copySourceTree(sourceDir, destDir, ignoreRegExp) {
   echo(`Using tmp dir ${tempPath} during source tree copy.`);
 
   const ignoreFunc = function ignoreFunc(rawFilePath) {
-    const filePath = rawFilePath.substr(sourceDir.length);
+    const filePath = rawFilePath.substr(sourceDir.length).replaceAll("\\", "/");
     const result = ignoreRegExp.some( (exp) => exp.test(filePath));
     // log(`ignoreFunc filePath: ${filePath} => ${(!result) ? "COPY" : "IGNORE" }`);
     return ! result;
@@ -148,4 +149,3 @@ async function materializeSymlinks(directoryPath) {
 }
 
 exports.materializeSymlinks = materializeSymlinks;
-

@@ -88,7 +88,7 @@ function makeNsis( { version, outputDir, useDocker } ) {
 
 !define MUI_ABORTWARNING # This will warn the user if they exit from the installer.
 !define MUI_INSTFILESPAGE_COLORS "3db54a 000000"
-!define MUI_ICON "${windowsBuildDirName}\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico"
+!define MUI_ICON "${windowsBuildDirName}\\main\\resources\\logo\\extraterm_small_logo.ico"
 
 !insertmacro MUI_PAGE_WELCOME # Welcome to the installer page.
 !insertmacro MUI_PAGE_DIRECTORY # In which folder install page.
