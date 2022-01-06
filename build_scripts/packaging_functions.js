@@ -50,6 +50,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
   } else if (platform === "win32") {
     runWindowsDeployQt(srcDir, versionedOutputDir);
   }
+  rm("-rf", path.join(versionedOutputDir, "./node_modules/@nodegui/nodegui/miniqt"));
 
   log("Zipping up the package");
 
@@ -302,7 +303,6 @@ function runLinuxDeployQt(srcDir, versionedOutputDir) {
   // TODO: Strip the library .so and qode files
 
   rm(`AppRun`);
-  rm("-rf", path.join(versionedOutputDir, "./node_modules/@nodegui/nodegui/miniqt"));
 
   cd(prevDir);
 }
