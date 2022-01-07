@@ -4604,6 +4604,7 @@ __metadata:
     git-repo-info: ^1.4.1
     jest: 27.2.0
     modclean: 3.0.0-beta.1
+    node-gyp: ^8.2.0
     node-pty: 0.10.0-beta19
     nodegui-plugin-font-icon: ^0.1.21
     qode: ^0.1.0
@@ -8321,7 +8322,7 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:latest":
+"node-gyp@npm:^8.2.0, node-gyp@npm:latest":
   version: 8.4.1
   resolution: "node-gyp@npm:8.4.1"
   dependencies:
