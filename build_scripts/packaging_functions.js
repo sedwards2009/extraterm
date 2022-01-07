@@ -291,7 +291,7 @@ function runLinuxDeployQt(srcDir, versionedOutputDir) {
 
   mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode"), versionedOutputDir);
 
-  const nodeBinaryModules = ls("**/*.node");
+  const nodeBinaryModules = ls("**/*.node").filter(m => ! m.endsWith("pty.node"));
 
   const deployCommand = [path.resolve(srcDir, `downloads/linux-x64/linuxdeployqt-x86_64.AppImage`),
                         `qode`,
@@ -341,7 +341,7 @@ function writeQodeJson(versionedOutputDir) {
 
   mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode.exe"), versionedOutputDir);
 
-  const nodeBinaryModules = ls("**/*.node");
+  const nodeBinaryModules = ls("**/*.node").filter(m => ! m.endsWith("pty.node"));
 
   const deployCommand = [
       winDeployQtBin,
