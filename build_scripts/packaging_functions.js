@@ -12,6 +12,11 @@ const utilities = require('./packaging_utilities');
 
 const qtConfig = require("@nodegui/nodegui/config/qtConfig");
 
+const APP_NAME = "extratermqt";
+const APP_TITLE = "ExtratermQt";
+exports.APP_NAME = APP_NAME;
+exports.APP_TITLE = APP_TITLE;
+
 async function makePackage({ arch, platform, version, outputDir }) {
   log("");
   const srcDir = "" + pwd();
@@ -55,7 +60,7 @@ async function makePackage({ arch, platform, version, outputDir }) {
   log("Zipping up the package");
 
   if (platform === "linux") {
-    cp(path.join(srcDir, "main/resources/extraterm.desktop"), versionedOutputDir);
+    cp(path.join(srcDir, "main/resources/extraterm.desktop"), path.join(versionedOutputDir, `${APP_NAME}.desktop`));
   }
 
   const linkOption = process.platform === "win32" ? "" : " -y";
@@ -113,12 +118,12 @@ function addLauncher(versionedOutputDir, platform) {
 
   if (platform === "win32") {
     const launcherPath = path.join(downloadsDirPath, "win32-x64/extraterm-launcher.exe");
-    mv(launcherPath, path.join(versionedOutputDir, "extraterm.exe"));
+    mv(launcherPath, path.join(versionedOutputDir, `${APP_NAME}.exe`));
   }
 
   if (platform === "darwin") {
     const launcherPath = path.join(downloadsDirPath, "darwin-x64/extraterm-launcher");
-    const launcherDestPath = path.join(versionedOutputDir, "Extraterm.app/Contents/MacOS/Extraterm");
+    const launcherDestPath = path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS/Extraterm`);
     mv(launcherPath, launcherDestPath);
     chmod('a+x', launcherDestPath);
   }
@@ -252,7 +257,7 @@ function pruneNodePty() {
 }
 
 function createOutputDirName({version, platform, arch}) {
-  return "extraterm-" + version + "-" + platform + "-" + arch;
+  return `${APP_NAME}-${version}-${platform}-${arch}`;
 }
 
 function fixNodeModulesSubProjects() {

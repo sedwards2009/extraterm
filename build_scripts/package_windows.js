@@ -13,6 +13,10 @@ sh.config.fatal = true;
 
 const packaging_functions = require('./packaging_functions');
 
+const APP_NAME = packaging_functions.APP_NAME;
+const APP_TITLE = packaging_functions.APP_TITLE;
+
+
 async function main() {
   const parsedArgs = new command.Command("extraterm");
   parsedArgs.option('--version [app version]', 'Application version to use', null)
@@ -69,7 +73,7 @@ function makeNsis( { version, outputDir, useDocker } ) {
   echo("Building NSIS based installer for Windows");
   echo("---------------------------------------------------");
 
-  const windowsBuildDirName = `extraterm-${version}-win32-x64`;
+  const windowsBuildDirName = `${APP_NAME}-${version}-win32-x64`;
   const versionSplit = version.split(".");
   const majorVersion = versionSplit[0];
   const minorVersion = versionSplit[1];
@@ -79,7 +83,7 @@ function makeNsis( { version, outputDir, useDocker } ) {
 !include "MUI2.nsh"
 !include "FileFunc.nsh"
 
-!define APPNAME "Extraterm"
+!define APPNAME "${APP_TITLE}"
 !define DESCRIPTION "Terminal emulator"
 !define COMPANYNAME "extraterm.org"
 !define VERSIONMAJOR ${majorVersion}
@@ -100,24 +104,24 @@ function makeNsis( { version, outputDir, useDocker } ) {
 
 !insertmacro MUI_LANGUAGE "English"
 
-Name "Extraterm"
+Name "${APP_TITLE}"
 BrandingText " "
-OutFile "extraterm-setup-${version}.exe"
-InstallDir "$PROGRAMFILES64\\Extraterm"
-InstallDirRegKey HKLM "Software\\Extraterm" "InstallLocation"
+OutFile "${APP_NAME}-setup-${version}.exe"
+InstallDir "$PROGRAMFILES64\\${APP_TITLE}"
+InstallDirRegKey HKLM "Software\\${APP_TITLE}" "InstallLocation"
 
 ShowInstDetails show # This will always show the installation details.
 
-Section "Extraterm"
+Section "${APP_TITLE}"
 SetOutPath $INSTDIR
 File /r "${windowsBuildDirName}\\*"
 
 WriteUninstaller "$INSTDIR\\Uninstall.exe"
 
-createShortCut "$SMPROGRAMS\\Extraterm.lnk" "$INSTDIR\\extraterm.exe" "" "$INSTDIR\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico"
+createShortCut "$SMPROGRAMS\\${APP_TITLE}.lnk" "$INSTDIR\\${APP_NAME}.exe" "" "$INSTDIR\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico"
 
-WriteRegStr HKLM "Software\\Extraterm" "InstallLocation" "$\\"$INSTDIR$\\""
-WriteRegStr HKLM "Software\\Extraterm" "Version" "${version}"
+WriteRegStr HKLM "Software\\${APP_TITLE}" "InstallLocation" "$\\"$INSTDIR$\\""
+WriteRegStr HKLM "Software\\${APP_TITLE}" "Version" "${version}"
 
 # Registry information for add/remove programs
 WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "DisplayName" "\${APPNAME} - \${DESCRIPTION}"
@@ -141,30 +145,30 @@ IntFmt $0 "0x%08X" $0
 WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "EstimatedSize" "\$0"
 
 # Set up Windows Explorer menu items
-WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm" "" 'Open in Extraterm'
-WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm\\command" "" '"$INSTDIR\\extraterm.exe" "%V"'
-WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm" "icon" '$INSTDIR\\extraterm.exe'
+WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\${APP_NAME}" "" 'Open in ${APP_TITLE}'
+WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\${APP_NAME}\\command" "" '"$INSTDIR\\${APP_NAME}.exe" "%V"'
+WriteRegStr HKCU "Software\\Classes\\directory\\Background\\shell\\${APP_NAME}" "icon" '$INSTDIR\\${APP_NAME}.exe'
 
-WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm" "" 'Open in Extraterm'
-WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm\\command" "" '"$INSTDIR\\extraterm.exe" "%V"'
-WriteRegStr HKCU "Software\\Classes\\directory\\shell\\extraterm" "icon" '$INSTDIR\\extraterm.exe'
+WriteRegStr HKCU "Software\\Classes\\directory\\shell\\${APP_NAME}" "" 'Open in ${APP_TITLE}'
+WriteRegStr HKCU "Software\\Classes\\directory\\shell\\${APP_NAME}\\command" "" '"$INSTDIR\\${APP_NAME}.exe" "%V"'
+WriteRegStr HKCU "Software\\Classes\\directory\\shell\\${APP_NAME}" "icon" '$INSTDIR\\${APP_NAME}.exe'
 
 SectionEnd
 
 
 Section "Uninstall"
 # Remove Start Menu launcher
-Delete "$SMPROGRAMS\\Extraterm.lnk"
+Delete "$SMPROGRAMS\\${APP_TITLE}.lnk"
 
 Delete "$INSTDIR\\*.*"
 Delete "$INSTDIR\\Uninstall.exe"
 RMDir /r "$INSTDIR"
 
 DeleteRegKey HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}"
-DeleteRegKey HKLM "Software\\Extraterm"
+DeleteRegKey HKLM "Software\\${APP_TITLE}"
 
-DeleteRegKey HKCU "Software\\Classes\\directory\\Background\\shell\\extraterm"
-DeleteRegKey HKCU "Software\\Classes\\directory\\shell\\extraterm"
+DeleteRegKey HKCU "Software\\Classes\\directory\\Background\\shell\\${APP_NAME}"
+DeleteRegKey HKCU "Software\\Classes\\directory\\shell\\${APP_NAME}"
 
 SectionEnd
 `;

@@ -3,13 +3,13 @@
 Categories=System;TerminalEmulator;
 Comment[en_US]=Command line access
 Comment=Command line access
-Exec=bash -c '"$(dirname "%k")/extraterm"'
+Exec=bash -c '"$(dirname "%k")/extratermqt"'
 GenericName[en_US]=Terminal
 GenericName=Terminal
 Icon=utilities-terminal
 MimeType=
-Name[en_US]=Extraterm
-Name=Extraterm
+Name[en_US]=ExtratermQt
+Name=ExtratermQt
 Terminal=false
 Type=Application
 X-DBUS-ServiceName=
