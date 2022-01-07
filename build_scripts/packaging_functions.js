@@ -111,7 +111,7 @@ function addLauncher(versionedOutputDir, platform) {
 
   if (platform === "linux") {
     const launcherPath = path.join(downloadsDirPath, "linux-x64/extraterm-launcher");
-    const launcherDestPath = path.join(versionedOutputDir, "extraterm");
+    const launcherDestPath = path.join(versionedOutputDir, APP_NAME);
     mv(launcherPath, launcherDestPath);
     chmod('a+x', launcherDestPath);
   }

@@ -20,7 +20,7 @@ import { PersistentConfigDatabase } from "./PersistentConfigDatabase";
 import { ConfigChangeEvent, ConfigDatabase } from "./ConfigDatabase";
 import { ThemeManager } from "../theme/ThemeManager";
 
-export const EXTRATERM_CONFIG_DIR = "extraterm-qt";
+export const EXTRATERM_CONFIG_DIR = "extratermqt";
 const PATHS_CONFIG_FILENAME = "application_paths.json";
 const PATHS_USER_SETTINGS_KEY = "userSettingsPath";
 

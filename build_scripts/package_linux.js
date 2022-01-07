@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -13,6 +13,9 @@ const command = require('commander');
 sh.config.fatal = true;
 
 const packaging_functions = require('./packaging_functions');
+
+const APP_NAME = packaging_functions.APP_NAME;
+const APP_TITLE = packaging_functions.APP_TITLE;
 
 async function main() {
   const parsedArgs = new command.Command("extraterm");
@@ -67,14 +70,14 @@ main().catch(ex => {
 function makeDeb({version, buildDir}) {
   // Move the files into position
   const outputDirName = packaging_functions.createOutputDirName({version, platform: "linux", arch: "x64"});
-  const debTmp = path.join(buildDir, `extraterm_${version}_amd64`);
+  const debTmp = path.join(buildDir, `${APP_NAME}_${version}_amd64`);
   mkdir("-p", path.join(debTmp, "opt"));
-  mv(path.join(buildDir, outputDirName), path.join(debTmp, "opt", "extraterm"));
+  mv(path.join(buildDir, outputDirName), path.join(debTmp, "opt", APP_NAME));
 
   // Set up special Debian control files
   const debianDir = path.join(debTmp, "DEBIAN");
   mkdir("-p", debianDir);
-  const controlFile = `Package: extraterm
+  const controlFile = `Package: ${APP_NAME}
 Architecture: amd64
 Maintainer: Simon Edwards
 Priority: optional
@@ -82,22 +85,22 @@ Version: ${version}
 Description: The swiss army chainsaw of terminal emulators
 `;
   fs.writeFileSync(path.join(debianDir, "control"), controlFile, {encoding: "utf-8"});
-  fs.writeFileSync(path.join(debianDir,"conffiles"), "", {encoding: "utf-8"});
+  fs.writeFileSync(path.join(debianDir, "conffiles"), "", {encoding: "utf-8"});
 
   // Write `.desktop` file
   const appsDir = path.join(debTmp, "usr", "share", "applications");
   mkdir("-p", appsDir);
 
   const desktopFile = `[Desktop Entry]
-Name=Extraterm
-Exec=/opt/extraterm/extraterm
+Name=${APP_TITLE}
+Exec=/opt/${APP_NAME}/${APP_NAME}
 Terminal=false
 Type=Application
 Comment=The swiss army chainsaw of terminal emulators
 Categories=System;TerminalEmulator;X-GNOME-Utilities;
-Icon=extraterm
+Icon=${APP_NAME}
 `;
-  fs.writeFileSync(path.join(appsDir, "extraterm.desktop"), desktopFile, {encoding: "utf-8"});
+  fs.writeFileSync(path.join(appsDir, `${APP_NAME}.desktop`), desktopFile, {encoding: "utf-8"});
 
   cp("-r", "build_scripts/resources/linux/icons", path.join(debTmp, "usr", "share"));
 
