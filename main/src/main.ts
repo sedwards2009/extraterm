@@ -35,6 +35,7 @@ import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHand
 import { createUiStyle } from "./ui/styles/DarkTwo";
 import { UiStyle } from "./ui/UiStyle";
 import { CommandPalette } from "./CommandPalette";
+import { PingHandler } from "./local_http_server/PingHandler";
 
 
 const LOG_FILENAME = "extraterm.log";
@@ -224,6 +225,8 @@ class Main {
     bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
     const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
     localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
+    const pingHandler = new PingHandler();
+    localHttpServer.registerRequestHandler("ping", pingHandler);
 
     return localHttpServer;
   }
