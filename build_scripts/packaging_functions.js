@@ -358,5 +358,9 @@ function writeQodeJson(versionedOutputDir) {
 
   writeQodeJson(versionedOutputDir);
 
+  const editBinCommand = ["editbin.exe", "/SUBSYSTEM:WINDOWS", "qode.exe"].join(" ");
+  echo(editBinCommand);
+  exec(editBinCommand);
+
   cd(prevDir);
 }
