@@ -118,7 +118,7 @@ File /r "${windowsBuildDirName}\\*"
 
 WriteUninstaller "$INSTDIR\\Uninstall.exe"
 
-createShortCut "$SMPROGRAMS\\${APP_TITLE}.lnk" "$INSTDIR\\${APP_NAME}.exe" "" "$INSTDIR\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico"
+createShortCut "$SMPROGRAMS\\${APP_TITLE}.lnk" "$INSTDIR\\${APP_NAME}.exe" "" "$INSTDIR\\main\\resources\\logo\\extraterm_small_logo.ico"
 
 WriteRegStr HKLM "Software\\${APP_TITLE}" "InstallLocation" "$\\"$INSTDIR$\\""
 WriteRegStr HKLM "Software\\${APP_TITLE}" "Version" "${version}"
@@ -128,7 +128,7 @@ WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${AP
 WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "UninstallString" "$\\"$INSTDIR\\uninstall.exe$\\""
 WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "QuietUninstallString" "$\\"$INSTDIR\\uninstall.exe$\\" /S"
 WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "InstallLocation" "$\\"$INSTDIR$\\""
-WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "DisplayIcon" "$\\"$INSTDIR\\resources\\app\\extraterm\\resources\\logo\\extraterm_small_logo.ico$\\""
+WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "DisplayIcon" "$\\"$INSTDIR\\main\\resources\\logo\\extraterm_small_logo.ico$\\""
 WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "Publisher" "\${COMPANYNAME}"
 
 WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${APPNAME}" "DisplayVersion" "\${VERSIONMAJOR}.\${VERSIONMINOR}.\${VERSIONBUILD}"
