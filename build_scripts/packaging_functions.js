@@ -358,7 +358,7 @@ function writeQodeJson(versionedOutputDir) {
 
   writeQodeJson(versionedOutputDir);
 
-  patchQode("qode.exe");
+  patchQode.switchToGuiSubsystem("qode.exe");
 
   cd(prevDir);
 }
