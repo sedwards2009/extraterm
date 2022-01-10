@@ -9,7 +9,7 @@ const fs = require('fs');
 const dependencyPruner = require('./dependency_pruner');
 const log = console.log.bind(console);
 const utilities = require('./packaging_utilities');
-
+const patchQode = require('./patch_qode');
 const qtConfig = require("@nodegui/nodegui/config/qtConfig");
 
 const APP_NAME = "extratermqt";
@@ -358,9 +358,7 @@ function writeQodeJson(versionedOutputDir) {
 
   writeQodeJson(versionedOutputDir);
 
-  const editBinCommand = ["editbin.exe", "/SUBSYSTEM:WINDOWS", "qode.exe"].join(" ");
-  echo(editBinCommand);
-  exec(editBinCommand);
+  patchQode("qode.exe");
 
   cd(prevDir);
 }
