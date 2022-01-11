@@ -65,5 +65,6 @@ function switchToGuiSubsystem(filePath) {
   console.log(`Found a valid ${imageFormat} executable file`);
   const subsystemOffset = optionalHeaderOffset + 68; // From https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#optional-header-windows-specific-fields-image-only
   switchIfCui(fd, subsystemOffset);
+  fs.closeSync(fd);
 }
 exports.switchToGuiSubsystem = switchToGuiSubsystem;
