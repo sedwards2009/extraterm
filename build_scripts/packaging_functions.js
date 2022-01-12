@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -11,6 +11,8 @@ const log = console.log.bind(console);
 const utilities = require('./packaging_utilities');
 const patchQode = require('./patch_qode');
 const qtConfig = require("@nodegui/nodegui/config/qtConfig");
+const { mv, echo } = require('shelljs');
+const { version } = require('os');
 
 const APP_NAME = "extratermqt";
 const APP_TITLE = "ExtratermQt";
@@ -48,12 +50,18 @@ async function makePackage({ arch, platform, version, outputDir }) {
   // pruneTwemoji(versionedOutputDir, platform);
   pruneListFontsJsonExe(versionedOutputDir, platform);
 
-  addLauncher(versionedOutputDir, platform);
 
   if (platform === "linux") {
+    addLauncher(versionedOutputDir, platform);
     runLinuxDeployQt(srcDir, versionedOutputDir);
   } else if (platform === "win32") {
+    addLauncher(versionedOutputDir, platform);
     runWindowsDeployQt(srcDir, versionedOutputDir);
+  } else if (platform === "darwin") {
+    organizeMacOSBundle(versionedOutputDir, version);
+    addLauncher(versionedOutputDir, platform);
+
+    runMacOSDeployQt(srcDir, versionedOutputDir);
   }
   rm("-rf", path.join(versionedOutputDir, "./node_modules/@nodegui/nodegui/miniqt"));
 
@@ -107,9 +115,9 @@ const ignoreRegExp = [
 function addLauncher(versionedOutputDir, platform) {
   echo(`Inserting launcher executable`);
 
-  const downloadsDirPath = path.join(versionedOutputDir, "downloads");
-
+  let downloadsDirPath = null;
   if (platform === "linux") {
+    downloadsDirPath = path.join(versionedOutputDir, "downloads");
     const launcherPath = path.join(downloadsDirPath, "linux-x64/extraterm-launcher");
     const launcherDestPath = path.join(versionedOutputDir, APP_NAME);
     mv(launcherPath, launcherDestPath);
@@ -117,16 +125,19 @@ function addLauncher(versionedOutputDir, platform) {
   }
 
   if (platform === "win32") {
-    const launcherPath = path.join(downloadsDirPath, "win32-x64/extraterm-launcher.exe");
+    downloadsDirPath = path.join(versionedOutputDir, "downloads");
+    const launcherPath = path.join(downloadsDirPath, "win32-x64", "extraterm-launcher.exe");
     mv(launcherPath, path.join(versionedOutputDir, `${APP_NAME}.exe`));
   }
 
   if (platform === "darwin") {
+    downloadsDirPath = path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/downloads`);
     const launcherPath = path.join(downloadsDirPath, "darwin-x64/extraterm-launcher");
-    const launcherDestPath = path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS/Extraterm`);
+    const launcherDestPath = path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS/${APP_TITLE}`);
     mv(launcherPath, launcherDestPath);
     chmod('a+x', launcherDestPath);
   }
+
   rm('-rf', downloadsDirPath);
 }
 
@@ -326,7 +337,7 @@ function writeQodeJson(versionedOutputDir) {
  * @param {string} srcDir
  * @param {string} versionedOutputDir
  */
- function runWindowsDeployQt(srcDir, versionedOutputDir) {
+function runWindowsDeployQt(srcDir, versionedOutputDir) {
   echo("");
   echo("---------------------------------------------------------------------------");
   echo("Deploy Qt");
@@ -359,6 +370,104 @@ function writeQodeJson(versionedOutputDir) {
   writeQodeJson(versionedOutputDir);
 
   patchQode.switchToGuiSubsystem("qode.exe");
+
+  cd(prevDir);
+}
+
+/**
+ * @param {string} versionedOutputDir
+ * @param {string} version
+ */
+function organizeMacOSBundle(versionedOutputDir, version) {
+  const tmpResourcesDir  = path.join(versionedOutputDir, "../Resources");
+  echo(`mv(${versionedOutputDir},${tmpResourcesDir})`);
+  mv(versionedOutputDir, tmpResourcesDir);
+  const contentsPath = path.join(versionedOutputDir, `${APP_TITLE}.app`, `Contents`);
+  echo(`mkdir(${contentsPath})`);
+  mkdir('-p', contentsPath);
+  echo(`mv(${tmpResourcesDir}, ${contentsPath})`);
+  mv(tmpResourcesDir, contentsPath + "/");
+  mkdir('-p', path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS`));
+
+  mv(path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/main/resources/logo/extraterm_small_logo.icns`),
+    path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/extraterm.icns`));
+
+  const plistContents = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>CFBundleDisplayName</key>
+    <string>${APP_TITLE}</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>en</string>
+    <key>CFBundleExecutable</key>
+    <string>${APP_TITLE}</string>
+    <key>CFBundleIdentifier</key>
+    <string>org.extraterm.${APP_NAME}</string>
+    <key>CFBundleIconFile</key>
+    <string>extraterm.icns</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>${APP_TITLE}</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>${version}</string>
+    <key>CFBundleVersion</key>
+    <string>${version}</string>
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+      <string>MacOSX</string>
+    </array>
+    <key>LSMinimumSystemVersion</key>
+    <string>10.15</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2022 Simon Edwards</string>
+    <key>NSHighResolutionCapable</key>
+    <string>True</string>
+  </dict>
+</plist>
+`;
+  fs.writeFileSync(path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Info.plist`), plistContents,
+    {encoding: 'utf8'});
+}
+
+/**
+ * @param {string} srcDir
+ * @param {string} versionedOutputDir
+ */
+function runMacOSDeployQt(srcDir, versionedOutputDir) {
+  echo("");
+  echo("---------------------------------------------------------------------------");
+  echo("Deploy Qt");
+  echo("");
+
+  const prevDir = pwd();
+  cd(versionedOutputDir);
+
+  const qtHome = qtConfig.qtHome;
+  const macDeployQtBin = path.resolve(qtHome, "bin", "macdeployqt");
+  process.env.PATH=`${path.resolve(qtHome, "bin")};${process.env.PATH}`;
+
+  mv(path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/node_modules/@nodegui/qode/binaries/qode`),
+    path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS/qode`));
+
+  const nodeBinaryModules = ls("**/*.node");
+
+  const deployCommand = [
+      macDeployQtBin,
+      `${APP_TITLE}.app`,
+      '-verbose=2',
+      `-libpath=${APP_TITLE}.app/Contents/Resources/node_modules/@nodegui/nodegui/miniqt/5.14.1/clang_64`,
+      `-executable=${APP_TITLE}.app/Contents/MacOS/qode`,
+      ...nodeBinaryModules.map(b => `-executable=${b}`)
+    ].join(" ");
+  echo(deployCommand);
+  exec(deployCommand, { env: process.env });
+  
+  // The libraries in here were copied by `macdeployqt`
+  rm('-rf', path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/node_modules/@nodegui/nodegui/miniqt`));
 
   cd(prevDir);
 }

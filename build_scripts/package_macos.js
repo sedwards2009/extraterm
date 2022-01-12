@@ -1,6 +1,6 @@
 
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2021 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -14,28 +14,30 @@ sh.config.fatal = true;
 
 const packaging_functions = require('./packaging_functions');
 
+const APP_NAME = packaging_functions.APP_NAME;
+const APP_TITLE = packaging_functions.APP_TITLE;
+
 async function main() {
   const parsedArgs = new command.Command("extraterm");
   parsedArgs.option('--version [app version]', 'Application version to use', null)
     .parse(process.argv);
+  const options = parsedArgs.opts();
 
   if ( ! test('-f', './package.json')) {
     echo("This script was called from the wrong directory.");
     return;
   }
-  const SRC_DIR = "" + pwd();
-  const BUILD_TMP_DIR = path.join(SRC_DIR, 'build_tmp');
-  if (test('-d', BUILD_TMP_DIR)) {
-    rm('-rf', BUILD_TMP_DIR);
+  const srcDir = "" + pwd();
+  const buildTmpDir = path.join(srcDir, 'build_tmp');
+  if (test('-d', buildTmpDir)) {
+    rm('-rf', buildTmpDir);
   }
-  mkdir(BUILD_TMP_DIR);
+  mkdir(buildTmpDir);
 
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
 
-  const electronVersion = packageData.devDependencies['electron'];
-
-  let version = parsedArgs.version == null ? packageData.version : parsedArgs.version;
+  let version = options.version == null ? packageData.version : options.version;
   if (version[0] === "v") {
     version = version.slice(1);
   }
@@ -43,15 +45,14 @@ async function main() {
   await packaging_functions.makePackage({
     arch: "x64",
     platform: "darwin",
-    electronVersion,
     version,
-    outputDir: BUILD_TMP_DIR,
+    outputDir: buildTmpDir,
     replaceModuleDirs: false
   });
 
   await makeDmg({
       version,
-      outputDir: BUILD_TMP_DIR,
+      outputDir: buildTmpDir,
       useDocker: false
   });
 
@@ -65,10 +66,10 @@ function makeDmg( { version, outputDir, useDocker } ) {
   echo("Building dmg file for macOS");
   echo("---------------------------------------------------");
 
-  const BUILD_TMP_DIR = outputDir;
-  const SRC_DIR = "" + pwd();
+  const buildTmpDir = outputDir;
+  const srcDir = "" + pwd();
 
-  const darwinPath = path.join(BUILD_TMP_DIR, `extraterm-${version}-darwin-x64`);
+  const darwinPath = path.join(buildTmpDir, `${APP_NAME}-${version}-darwin-x64`);
   for (const f of ls(darwinPath)) {
     if ( ! f.endsWith(".app")) {
       echo(`Deleting ${f}`);
@@ -76,17 +77,17 @@ function makeDmg( { version, outputDir, useDocker } ) {
     }
   }
 
-  cp(path.join(SRC_DIR, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
-  cp(path.join(SRC_DIR, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
-  mkdir(path.join(darwinPath,".background"));
-  cp(path.join(SRC_DIR, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
+  cp(path.join(srcDir, "build_scripts/resources/macos/.DS_Store"), path.join(darwinPath, ".DS_Store"));
+  cp(path.join(srcDir, "build_scripts/resources/macos/.VolumeIcon.icns"), path.join(darwinPath, ".VolumeIcon.icns"));
+  mkdir(path.join(darwinPath, ".background"));
+  cp(path.join(srcDir, "build_scripts/resources/macos/.background/extraterm_background.png"), path.join(darwinPath, ".background/extraterm_background.png"));
 
   ln("-s", "/Applications", path.join(darwinPath, "Applications"));
 
   if (useDocker) {
-    exec(`docker run --rm -v "${BUILD_TMP_DIR}:/files" sporsh/create-dmg Extraterm /files/extraterm-${version}-darwin-x64/ /files/extraterm_${version}.dmg`);
+    exec(`docker run --rm -v "${buildTmpDir}:/files" sporsh/create-dmg ${APP_TITLE} /files/${APP_NAME}-${version}-darwin-x64/ /files/${APP_NAME}_${version}.dmg`);
   } else {
-    exec(`hdiutil create -volname Extraterm -srcfolder ${darwinPath} -ov -format UDZO ${BUILD_TMP_DIR}/extraterm_${version}.dmg`);
+    exec(`hdiutil create -volname ${APP_TITLE} -srcfolder ${darwinPath} -ov -format UDZO ${buildTmpDir}/${APP_NAME}_${version}.dmg`);
   }
 
   return true;
