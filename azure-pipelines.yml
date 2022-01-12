@@ -132,7 +132,6 @@ jobs:
 
   - job: package_macos
     displayName: "Build macOS packages"
-    condition: ${{False}}
     pool:
       vmImage: 'macOS-10.14'
     steps:
