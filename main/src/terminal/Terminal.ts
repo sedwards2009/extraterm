@@ -742,7 +742,8 @@ export class Terminal implements Tab, Disposable {
 
   getSelectionText(): string {
     let text: string = null;
-    for (const block of this.#blockFrames) {
+    for (const frame of this.#blockFrames) {
+      const block = frame.getBlock();
       if (block instanceof TerminalBlock) {
         text = block.getSelectionText();
         if (text != null) {
