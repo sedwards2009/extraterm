@@ -19,7 +19,7 @@ import {CheckboxMenuItem} from './gui/CheckboxMenuItem';
 import { CommandPalette } from "./command/CommandPalette";
 import { EVENT_CONTEXT_MENU_REQUEST, ContextMenuType, EVENT_HYPERLINK_CLICK, HyperlinkEventDetail } from './command/CommandUtils';
 
-import {ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo} from '../Config';
+import { ConfigDatabase, injectConfigDatabase, ConfigKey, SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, ConfigChangeEvent, FontInfo, MouseButtonAction } from '../Config';
 import {DropDown} from './gui/DropDown';
 import {EmbeddedViewer} from './viewers/EmbeddedViewer';
 import {ExtensionManagerImpl} from './extension/ExtensionManager';
@@ -123,7 +123,7 @@ export async function asyncStartUp(closeSplash: () => void, windowUrl: string): 
   startUpMainMenu();
   startUpCommandPalette();
   startUpApplicationContextMenu();
-  startUpWindowEvents();
+  startUpWindowEvents(configDatabase, mainWebUi);
 
   dpiWatcher.onChange(newDpi => handleDpiChange(newDpi));
 
@@ -417,7 +417,20 @@ function startUpMainMenu(): void {
   });
 }
 
-function startUpWindowEvents(): void {
+
+function mapEventToMouseButtonActionKey(ev: MouseEvent): string {
+  const isMiddleButton = ev.buttons === 4;
+  const isRightButton = (ev.buttons & 2) !== 0;
+  if ( ! isMiddleButton && ! isRightButton) {
+    return null;
+  }
+
+  const buttonString = isMiddleButton ? "middle" : "right";
+  const modifierString = ev.ctrlKey ? "Control" : (ev.shiftKey ? "Shift" : "");
+  return `${buttonString}MouseButton${modifierString}Action`;
+}
+
+function startUpWindowEvents(configDatabase: ConfigDatabase, mainWebUi: MainWebUi): void {
   // Make sure something sensible is focussed if only the window gets the focus.
   window.addEventListener('focus', (ev: FocusEvent) => {
     if (ev.target === window) {
@@ -427,7 +440,12 @@ function startUpWindowEvents(): void {
 
   window.document.addEventListener('mousedown', (ev: MouseEvent) => {
     if (ev.which === 2) {
-      WebIpc.clipboardReadRequest();
+      const key = mapEventToMouseButtonActionKey(ev);
+      const generalConfig = configDatabase.getConfig("general");
+      const action = <MouseButtonAction> generalConfig[key];
+      if (action === 'paste') {
+        WebIpc.clipboardReadRequest();
+      }
 
       // This is needed to stop the autoscroll blob from appearing on Windows.
       ev.preventDefault();
