@@ -1181,9 +1181,9 @@ export class Terminal implements Tab, Disposable {
 
     this.#appendBlockFrame(decoratedFrame);
 
-    this.#appendBlockFrame(this.#createFramedTerminalBlock());
-
-    this.#lastCommandTerminalViewer = null;
+    const latestTerminalBlock = this.#createFramedTerminalBlock();
+    this.#appendBlockFrame(latestTerminalBlock);
+    this.#lastCommandTerminalViewer = latestTerminalBlock;
   }
 
   private handleRequestFrame(frameId: string): void {
