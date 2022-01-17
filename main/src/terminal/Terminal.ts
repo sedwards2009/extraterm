@@ -1163,8 +1163,6 @@ export class Terminal implements Tab, Disposable {
     const commandShouldBeFramed = returnCode !== "0" || this.#commandNeedsFrame(this.#lastCommandLine,
       scrollbackOutputLength + effectiveScreenLength);
     if ( ! commandShouldBeFramed) {
-      this.#lastCommandLine = null;
-      this.#lastCommandTerminalViewer = null;
       return;
     }
 
