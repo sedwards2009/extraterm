@@ -248,6 +248,8 @@ const buttonDangerColor = textColor;
 const buttonDangerBgColor = backgroundDangerColor;
 const buttonDangerBorderColor =  darken(buttonDangerBgColor, 5);
 
+//-------------------------------------------------------------------------
+// Inputs
 const inputFontSize = "1.2em";
 const inputBackgroundColor = darken(backgroundColor, 6);
 const inputBorderColor = baseBorderColor;
@@ -279,6 +281,9 @@ const tabTextColor = textColorSubtle;
 const tabTextColorActive = textHighlightColor;
 const tabBackgroundColorActive = level2Color;
 
+//-------------------------------------------------------------------------
+// Tables
+const tableCellPaddingVertical = "0.5em";
 const tableBorderColor = baseBorderColor;
 
 
@@ -457,6 +462,39 @@ QLabel[cssClass~="group-right"] {
 QLabel[cssClass~="minor"] {
   color: ${textMinorColor};
 }
+
+QLabel[cssClass~="keycap"] {
+  font-size: ${fontSizeSmall}pt;
+
+  color: #333333;
+  border: 1px solid #cccccc;
+  border-bottom: 2px solid #cccccc;
+  border-radius: 4px;
+
+  background-color: #f7f7f7;
+  padding: 0 5px 0 5px;
+}
+
+QLabel[cssClass~="table-header"] {
+  border: 2px solid ${tableBorderColor};
+  border-top: 0px;
+  border-left: 0px;
+  border-right: 0px;
+
+  padding-top: ${tableCellPaddingVertical};
+  padding-bottom: ${tableCellPaddingVertical};
+}
+
+QLabel[cssClass~="table-item"], QWidget[cssClass~="table-item"] {
+  border: 1px solid ${tableBorderColor};
+  border-top: 0px;
+  border-left: 0px;
+  border-right: 0px;
+
+  padding-top: ${tableCellPaddingVertical};
+  padding-bottom: ${tableCellPaddingVertical};
+}
+
 `;
 }
 

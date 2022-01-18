@@ -7,7 +7,7 @@ export { TabWidget, TabWidgetOptions } from "./TabWidget";
 export { CheckBox, CheckBoxOptions } from "./CheckBox";
 export { ComboBox, ComboBoxOptions, ComboBoxItem } from "./ComboBox";
 export { SpinBox, SpinBoxOptions } from "./SpinBox";
-export { GridLayout, GridLayoutOptions } from "./GridLayout";
+export { GridLayout, GridLayoutChild, GridLayoutOptions } from "./GridLayout";
 export { Label, LabelOptions } from "./Label";
 export { ScrollArea, ScrollAreaOptions } from "./ScrollArea";
 export { Widget, WidgetOptions } from "./Widget";

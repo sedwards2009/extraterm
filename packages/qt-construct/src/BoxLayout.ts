@@ -18,7 +18,7 @@ export interface BoxLayoutOptions {
   direction: Direction;
   children: (NodeWidget<any> | string | BoxLayoutItem | NodeLayout<any>)[];
   spacing?: number;
-  contentsMargins?: [number, number, number, number];
+  contentsMargins?: [number, number, number, number] | number;
 }
 
 export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
@@ -30,7 +30,11 @@ export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
   }
 
   if (contentsMargins !== undefined) {
-    boxLayout.setContentsMargins(...contentsMargins);
+    if (typeof contentsMargins === "number") {
+      boxLayout.setContentsMargins(contentsMargins, contentsMargins, contentsMargins, contentsMargins);
+    } else {
+      boxLayout.setContentsMargins(...contentsMargins);
+    }
   }
 
   for (const child of children) {

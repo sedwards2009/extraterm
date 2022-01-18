@@ -3,13 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-export type LogicalKeybindingsName = "pc-style" | "pc-style-emacs" | "macos-style" | "macos-style-emacs";
+export type LogicalKeybindingsName = "pc-style" | "macos-style";
 
 export const AllLogicalKeybindingsNames: LogicalKeybindingsName[] = [
   "pc-style",
-  "pc-style-emacs",
   "macos-style",
-  "macos-style-emacs"
 ];
 
 /**

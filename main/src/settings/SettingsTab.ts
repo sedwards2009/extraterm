@@ -17,6 +17,8 @@ import { FramesPage } from "./FramesPage";
 import { ExtensionManager } from "../InternalTypes";
 import { ThemeManager } from "../theme/ThemeManager";
 import { SessionTypesPage } from "./SessionTypesPage";
+import { KeybindingsPage } from "./keybindings/KeybindingsPage";
+import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
 
 
 export class SettingsTab implements Tab {
@@ -25,27 +27,31 @@ export class SettingsTab implements Tab {
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
   #themeManager: ThemeManager = null;
+  #keybindingsIOManager: KeybindingsIOManager = null;
 
   #generalPage: GeneralPage = null;
   #appearancePage: AppearancePage = null;
   #sessionTypesPage: SessionTypesPage = null;
+  #keybindingsPage: KeybindingsPage = null;
   #framesPage: FramesPage = null;
   #extensionsPage: ExtensionsPage = null;
-
   #contentWidget: QWidget = null;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
-      uiStyle: UiStyle) {
+    keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
 
     this._log = getLogger("SettingsTab", this);
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
+    this.#keybindingsIOManager = keybindingsIOManager;
 
     this.#generalPage = new GeneralPage(this.#configDatabase, uiStyle);
     this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
       uiStyle);
     this.#sessionTypesPage = new SessionTypesPage(this.#configDatabase, this.#extensionManager, uiStyle);
+    this.#keybindingsPage = new KeybindingsPage(this.#configDatabase, this.#extensionManager,
+      this.#keybindingsIOManager, uiStyle);
     this.#framesPage = new FramesPage(configDatabase, uiStyle);
     this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
     this.#createUI(uiStyle);
@@ -87,7 +93,7 @@ export class SettingsTab implements Tab {
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-sliders-h"), text: "General", selected: true}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-paint-brush"), text: "Appearance"}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-terminal"), text: "Session Types"}),
-                // ListWidgetItem({text: "Keybindings"}),
+                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-keyboard"), text: "Keybindings"}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-window-maximize"), text: "Frames"}),
                 ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-puzzle-piece"), text: "Extensions"}),
               ],
@@ -105,6 +111,7 @@ export class SettingsTab implements Tab {
                 this.#generalPage.getPage(),
                 this.#appearancePage.getPage(),
                 this.#sessionTypesPage.getPage(),
+                this.#keybindingsPage.getPage(),
                 this.#framesPage.getPage(),
                 this.#extensionsPage.getPage(),
               ]

@@ -431,7 +431,7 @@ class Main {
   commandOpenSettings(): void {
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#themeManager,
-        this.#uiStyle);
+        this.#keybindingsIOManager, this.#uiStyle);
     }
     const win = this.#extensionManager.getActiveWindow();
     win.addTab(this.#settingsTab);

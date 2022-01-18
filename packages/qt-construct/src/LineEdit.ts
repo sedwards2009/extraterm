@@ -9,16 +9,20 @@ import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
 export interface LineEditOptions extends WidgetOptions {
   text?: string;
   onTextEdited?: (newText: string) => void;
+  placeholderText?: string;
 }
 
 export function LineEdit(options: LineEditOptions): QLineEdit {
-  const { text, onTextEdited } = options;
+  const { placeholderText, text, onTextEdited } = options;
   const lineEdit = new QLineEdit();
 
   ApplyWidgetOptions(lineEdit, options);
 
   if (text != null) {
     lineEdit.setText(text);
+  }
+  if (placeholderText != null) {
+    lineEdit.setPlaceholderText(placeholderText);
   }
   if (onTextEdited !== undefined) {
     lineEdit.addEventListener("textEdited", onTextEdited);

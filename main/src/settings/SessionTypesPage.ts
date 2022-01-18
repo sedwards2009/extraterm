@@ -4,17 +4,15 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
-import { Direction, QBoxLayout, QComboBox, QFrame, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
-import * as open from "open";
-import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, Frame, GridLayout, Label, PushButton, ScrollArea, SpinBox,
-  StackedWidget,
-  Widget } from "qt-construct";
+import { Direction, QBoxLayout, QFrame, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget,
+  TextFormat
+} from "@nodegui/nodegui";
+import { BoxLayout, Frame, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import { GeneralConfig } from "../config/Config";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
-import { HoverPushButton, makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
+import { HoverPushButton } from "../ui/QtConstructExtra";
 import { ExtensionManager, SessionConfigurationChange } from "../InternalTypes";
 import { createUuid } from "extraterm-uuid";
 
@@ -56,6 +54,7 @@ export class SessionTypesPage {
           horizontal: QSizePolicyPolicy.MinimumExpanding,
           vertical: QSizePolicyPolicy.MinimumExpanding,
         },
+        maximumWidth: 600,
         layout: BoxLayout({
           direction: Direction.TopToBottom,
           children: [

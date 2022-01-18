@@ -11,10 +11,12 @@ export interface WidgetOptions {
   enabled?: boolean;
   id?: string;
   layout?: NodeLayout<any>;
+  contentsMargins?: [number, number, number, number] | number;
   cssClass?: string | string[];
   windowTitle?: string;
   focusPolicy?: FocusPolicy;
   onEnter?: () => void;
+  onFocusOut?: () => void;
   onLayoutRequest?: () => void;
   onLeave?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
@@ -32,9 +34,9 @@ export interface WidgetOptions {
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
-    attribute, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter, onLayoutRequest, onLeave,
-    onKeyPress, onResize, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
-    windowFlag, inlineStyle, toolTip
+    attribute, contentsMargins, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter, onFocusOut,
+    onLayoutRequest, onLeave, onKeyPress, onResize, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight,
+    minimumWidth, windowFlag, inlineStyle, toolTip
   } = options;
 
   if (enabled !== undefined) {
@@ -66,6 +68,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   if (onEnter !== undefined) {
     widget.addEventListener(WidgetEventTypes.Enter, onEnter);
   }
+  if (onFocusOut !== undefined) {
+    widget.addEventListener(WidgetEventTypes.FocusOut, onFocusOut);
+  }
   if (onLayoutRequest !== undefined) {
     widget.addEventListener(WidgetEventTypes.LayoutRequest, onLayoutRequest);
   }
@@ -74,6 +79,13 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (onResize !== undefined) {
     widget.addEventListener(WidgetEventTypes.Resize, onResize);
+  }
+  if (contentsMargins !== undefined) {
+    if (typeof contentsMargins === "number") {
+      widget.setContentsMargins(contentsMargins, contentsMargins, contentsMargins, contentsMargins);
+    } else {
+      widget.setContentsMargins(...contentsMargins);
+    }
   }
   if (windowFlag !== undefined) {
     widget.setWindowFlag(windowFlag, true);

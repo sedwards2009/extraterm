@@ -12,15 +12,19 @@ export interface GridLayoutItem {
   colSpan?: number;
 }
 
+export type GridLayoutChild = QWidget | string | NodeLayout<any> | GridLayoutItem;
+
 export interface GridLayoutOptions {
   columns: number;
-  children: (QWidget| string | NodeLayout<any> | GridLayoutItem)[];
+  children: GridLayoutChild[];
   contentsMargins?: [number, number, number, number];
   spacing?: number;
+  columnsMinimumWidth?: (number | undefined)[];
+  columnsStretch?: (number | undefined)[];
 }
 
 export function GridLayout(options: GridLayoutOptions): QGridLayout {
-  const { columns, contentsMargins, children, spacing } = options;
+  const { children, columns, contentsMargins, columnsMinimumWidth, columnsStretch, spacing } = options;
   const gridLayout = new QGridLayout();
 
   if (contentsMargins !== undefined) {
@@ -55,6 +59,24 @@ export function GridLayout(options: GridLayoutOptions): QGridLayout {
       gridLayout.addWidget(kid, row, column);
     }
     col++;
+  }
+
+  if (columnsMinimumWidth !== undefined) {
+    for (let i=0; i<columnsMinimumWidth.length; i++) {
+      const width = columnsMinimumWidth[i];
+      if (width !== undefined) {
+        gridLayout.setColumnMinimumWidth(i, width);
+      }
+    }
+  }
+
+  if (columnsStretch !== undefined) {
+    for (let i=0; i<columnsStretch.length; i++) {
+      const stretch = columnsStretch[i];
+      if (stretch !== undefined) {
+        gridLayout.setColumnStretch(i, stretch);
+      }
+    }
   }
 
   return gridLayout;

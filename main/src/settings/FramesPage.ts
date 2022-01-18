@@ -64,6 +64,7 @@ export class FramesPage {
           horizontal: QSizePolicyPolicy.MinimumExpanding,
           vertical: QSizePolicyPolicy.MinimumExpanding,
         },
+        maximumWidth: 600,
         layout: BoxLayout({
           direction: Direction.TopToBottom,
           children: [
