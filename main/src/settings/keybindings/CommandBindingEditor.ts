@@ -11,9 +11,11 @@ import { UiStyle } from "../../ui/UiStyle";
 import { HoverPushButton } from "../../ui/QtConstructExtra";
 import { CommandKeybindingInfo } from "./CommandKeybindingInfo";
 import { KeyRecord } from "./KeyRecord";
+import { Category } from "../../extension/ExtensionMetadata";
 
 
 export class CommandBindingEditor {
+  #category: Category;
   #label: QLabel = null;
   #editor: QStackedWidget = null;
   #bindingInfo: CommandKeybindingInfo = null;
@@ -29,13 +31,15 @@ export class CommandBindingEditor {
   #uiStyle: UiStyle = null;
   private _log: Logger;
 
+  #isVisible = true;
   #isWritingBindingInfo = false;
 
-  constructor(bindingInfo: CommandKeybindingInfo, uiStyle: UiStyle) {
+  constructor(bindingInfo: CommandKeybindingInfo, uiStyle: UiStyle, category: Category) {
     this._log = getLogger("CommandBindingEditor", this);
 
     this.#bindingInfo = bindingInfo;
     this.#uiStyle = uiStyle;
+    this.#category = category;
 
     this.#label = Label({
       cssClass: ["table-item"],
@@ -87,6 +91,14 @@ export class CommandBindingEditor {
 
   getEditor(): QWidget {
     return this.#editor;
+  }
+
+  getCategory(): Category {
+    return this.#category;
+  }
+
+  isVisible(): boolean {
+    return this.#isVisible;
   }
 
   #getPlusButton(): QPushButton {
@@ -152,6 +164,7 @@ export class CommandBindingEditor {
       (keyStroke) => keyStroke.formatHumanReadable().toLowerCase().includes(text));
     const visible = text === "" || keyStrokeMatch || this.#bindingInfo.commandTitle.toLowerCase().includes(text);
 
+    this.#isVisible = visible;
     this.#label.setVisible(visible);
     this.#editor.setVisible(visible);
   }

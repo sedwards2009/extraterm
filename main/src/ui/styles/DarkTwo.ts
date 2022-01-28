@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -289,6 +289,20 @@ const tableBorderColor = baseBorderColor;
 
 const settingsBgSelectedColor = lighten(backgroundColor, 8);
 
+//-------------------------------------------------------------------------
+// Badge
+const badgeFontWeight = "bold";
+const badgeFontRatio = 0.6;
+const badgeFontSize = `${Math.round(fontSizeBase * badgeFontRatio)}em`;
+const badgeVerticalPadding = "0.1em";
+const badgeHorizontalPadding = "0.1em";
+// const badgeLineHeight:             1 !default;
+const badgeBorderRadius = "0.5em";
+const badgeBackgroundColor = lighten(backgroundHighlightColor, 6);
+const badgeColor = textHighlightColor;
+// const badgeVerticalAlign:          1/$badge-font-ratio * $badge-vertical-padding !default;
+
+
 // --- Extension Card related ---
 const componentPaddingVerticalCard = "0.66em";
 const componentPaddingHorizontal = "1.2em";
@@ -495,6 +509,15 @@ QLabel[cssClass~="table-item"], QWidget[cssClass~="table-item"] {
   padding-bottom: ${tableCellPaddingVertical};
 }
 
+QLabel[cssClass~="badge"] {
+  padding: ${badgeVerticalPadding} ${badgeHorizontalPadding} ${badgeVerticalPadding} ${badgeHorizontalPadding};
+  font-size: ${badgeFontSize};
+  font-weight: ${badgeFontWeight};
+  color: ${badgeColor};
+
+  background-color: ${badgeBackgroundColor};
+  border-radius: ${badgeBorderRadius};
+}
 `;
 }
 

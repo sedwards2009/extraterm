@@ -30,17 +30,21 @@ export interface WidgetOptions {
   inlineStyle?: string;
   contextMenuPolicy?: ContextMenuPolicy.PreventContextMenu;
   toolTip?: string;
+  visible?: boolean;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter, onFocusOut,
     onLayoutRequest, onLeave, onKeyPress, onResize, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight,
-    minimumWidth, windowFlag, inlineStyle, toolTip
+    minimumWidth, windowFlag, inlineStyle, toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
     widget.setEnabled(enabled);
+  }
+  if (visible !== undefined) {
+    widget.setVisible(visible);
   }
   if (attribute !== undefined) {
     for (const attr of attribute) {

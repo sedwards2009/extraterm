@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QLineEdit, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
+import { Direction, QLabel, QLineEdit, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, ComboBox, GridLayout, GridLayoutChild, Label, LineEdit, PushButton, ScrollArea, StackedWidget,
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
@@ -48,6 +48,15 @@ const categoryNames = {
   "viewer": "Viewer Tabs"
 };
 
+interface CategoryInfo {
+  category: Category;
+  title: string;
+  commandLabel?: QLabel;
+  countPillLabel?: QLabel;
+  keyLabel?: QLabel;
+  commandBindingEditorList: CommandBindingEditor[];
+}
+
 
 const PAGE_WIDTH_PX = 600;
 
@@ -64,6 +73,8 @@ export class KeybindingsPage {
   #commandKeybindingsMapping: Map<string, CommandKeybindingInfo> = null;
   #recordLineEdit: KeyRecord = null;
   #isSuppressWrites = false;
+
+  #categoryInfoList: CategoryInfo[] = [];
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
       keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
@@ -235,7 +246,9 @@ export class KeybindingsPage {
     return result;
   }
 
-  #updateKeybindingInfos(bindingsID: LogicalKeybindingsName, result: Map<string, CommandKeybindingInfo>, ): void {
+  #updateKeybindingInfos(bindingsID: LogicalKeybindingsName,
+      commandKeybindingInfoMap: Map<string, CommandKeybindingInfo>): void {
+
     const stacked = this.#keybindingsIOManager.getStackedKeybindings(bindingsID);
     const baseKeybindingsSet = stacked.keybindingsSet;
     const customKeybindingsSet = stacked.customKeybindingsSet;
@@ -265,7 +278,7 @@ export class KeybindingsPage {
         customBindings = customMapping.get(commandContribution.command);
       }
 
-      const commandKeybindingInfo = result.get(commandContribution.command);
+      const commandKeybindingInfo = commandKeybindingInfoMap.get(commandContribution.command);
       commandKeybindingInfo.baseKeybindingsList = baseBindings;
       commandKeybindingInfo.customKeybindingsList = customBindings;
     }
@@ -273,6 +286,9 @@ export class KeybindingsPage {
   }
 
   #onKeybindingInfoChanged(command: string): void {
+    if (this.#isSuppressWrites) {
+      return;
+    }
     const newCustomKeybindingsSet = this.#getCustomKeybindingsSet();
     this.#keybindingsIOManager.updateCustomKeybindingsFile(newCustomKeybindingsSet);
   }
@@ -308,30 +324,54 @@ export class KeybindingsPage {
 
     const categoryToCommandContribsMapping = this.#buildCommandsByCategory();
 
-    const children: GridLayoutChild[] = [];
     for (const category of categories) {
+      this.#categoryInfoList.push({
+        category,
+        title: categoryNames[category],
+        commandBindingEditorList: []
+      });
+    }
+
+    const children: GridLayoutChild[] = [];
+    for (const categoryInfo of this.#categoryInfoList) {
       children.push({
-        widget: Label({
-          cssClass: ["h2"],
-          text: categoryNames[category]
+        layout: BoxLayout({
+          contentsMargins: 0,
+          direction: Direction.LeftToRight,
+          children: [
+            Label({
+              cssClass: ["h2"],
+              text: categoryInfo.title
+            }),
+            categoryInfo.countPillLabel = Label({
+              cssClass: ["badge"],
+              text: "",
+              visible: false
+            }),
+          ]
         }),
         colSpan: 2
       });
 
-      children.push(Label({
+      categoryInfo.commandLabel = Label({
         cssClass: ["table-header"],
         text: "Command"
-      }));
-      children.push(Label({
+      });
+      children.push(categoryInfo.commandLabel);
+
+      categoryInfo.keyLabel = Label({
         cssClass: ["table-header"],
         text: "Key"
-      }));
+      });
+      children.push(categoryInfo.keyLabel);
 
-      const commandContribList = categoryToCommandContribsMapping.get(category) ?? [];
+      const commandContribList = categoryToCommandContribsMapping.get(categoryInfo.category) ?? [];
       for (const commandContrib of commandContribList) {
         const bindingInfo = this.#commandKeybindingsMapping.get(commandContrib.command);
-        const commandBindingEditor = new CommandBindingEditor(bindingInfo, this.#uiStyle);
+        const commandBindingEditor = new CommandBindingEditor(bindingInfo, this.#uiStyle, categoryInfo.category);
         this.#commandBindingEditorMap.set(commandContrib.command, commandBindingEditor);
+
+        categoryInfo.commandBindingEditorList.push(commandBindingEditor);
 
         children.push(commandBindingEditor.getLabel());
         children.push(commandBindingEditor.getEditor());
@@ -371,8 +411,30 @@ export class KeybindingsPage {
 
   #setSearchText(text: string): void {
     const lowerText = text.toLowerCase();
-    for (const value of this.#commandBindingEditorMap.values()) {
-      value.setSearchText(lowerText);
+
+    const categoryCount = new Map<Category, number>();
+    for (const editor of this.#commandBindingEditorMap.values()) {
+      editor.setSearchText(lowerText);
+      const category = editor.getCategory();
+      if (!categoryCount.has(category)) {
+        categoryCount.set(category, 0);
+      }
+      if (editor.isVisible()) {
+        categoryCount.set(category, categoryCount.get(category) + 1);
+      }
+    }
+
+    for (const categoryInfo of this.#categoryInfoList) {
+      const count = categoryCount.get(categoryInfo.category) ?? 0;
+      categoryInfo.commandLabel.setVisible(count !== 0);
+      categoryInfo.keyLabel.setVisible(count !== 0);
+
+      if (lowerText === "") {
+        categoryInfo.countPillLabel.setVisible(false);
+      } else {
+        categoryInfo.countPillLabel.setText(`${count} / ${categoryInfo.commandBindingEditorList.length}`);
+        categoryInfo.countPillLabel.setVisible(true);
+      }
     }
   }
 }
