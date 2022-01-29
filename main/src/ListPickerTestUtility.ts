@@ -3,11 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Logger, log, getLogger } from "extraterm-logging";
-import { Direction, QMainWindow, QWidget } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton, ScrollArea, SpinBox, TabWidget,
-  Widget } from "qt-construct";
-import * as fs from "fs";
+import { QApplication, QMainWindow, QWidget } from "@nodegui/nodegui";
 import * as path from "path";
 import * as SourceDir from './SourceDir';
 
@@ -22,7 +18,8 @@ function main(): void {
   win.setWindowTitle("List Picker Test");
 
   const uiStyle = createUiStyle(path.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
-  const styleSheet = uiStyle.getApplicationStyleSheet();
+
+  const styleSheet = uiStyle.getApplicationStyleSheet(1, QApplication.primaryScreen().logicalDotsPerInch());
   const listPicker = new ListPicker(uiStyle);
 
   listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT, FieldType.SECONDARY_TEXT_RIGHT],

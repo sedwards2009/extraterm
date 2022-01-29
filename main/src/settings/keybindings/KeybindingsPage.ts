@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QLabel, QLineEdit, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QLabel, QLineEdit, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, ComboBox, GridLayout, GridLayoutChild, Label, LineEdit, PushButton, ScrollArea, StackedWidget,
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
@@ -343,11 +343,18 @@ export class KeybindingsPage {
               cssClass: ["h2"],
               text: categoryInfo.title
             }),
-            categoryInfo.countPillLabel = Label({
-              cssClass: ["badge"],
-              text: "",
-              visible: false
-            }),
+            {
+              widget: categoryInfo.countPillLabel = Label({
+                cssClass: ["badge", "h2-line"],
+                text: "",
+                visible: false,
+                sizePolicy: {
+                  vertical: QSizePolicyPolicy.Fixed,
+                  horizontal: QSizePolicyPolicy.Fixed
+                }
+              }),
+              alignment: AlignmentFlag.AlignVCenter
+            }
           ]
         }),
         colSpan: 2

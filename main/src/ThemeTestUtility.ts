@@ -1,13 +1,31 @@
-import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget } from "@nodegui/nodegui";
+import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit } from "@nodegui/nodegui";
 import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton, ScrollArea, SpinBox, TabWidget,
+  TextEdit,
   Widget } from "qt-construct";
 import * as fs from "fs";
 import * as path from "path";
 import * as SourceDir from './SourceDir';
 
 import { createUiStyle } from "./ui/styles/DarkTwo";
+import { shrinkWrap } from "./ui/QtConstructExtra";
 
 let centralWidget: QWidget = null;
+
+const uiScalePercentOptions: {id: number, name: string}[] = [
+  { id: 25, name: "25%"},
+  { id: 50, name: "50%"},
+  { id: 65, name: "65%"},
+  { id: 80, name: "80%"},
+  { id: 90, name: "90%"},
+  { id: 100, name: "100%"},
+  { id: 110, name: "110%"},
+  { id: 120, name: "120%"},
+  { id: 150, name: "150%"},
+  { id: 175, name: "175%"},
+  { id: 200, name: "200%"},
+  { id: 250, name: "250%"},
+  { id: 300, name: "300%"},
+];
 
 function main(): void {
   console.log(`Style keys`);
@@ -18,6 +36,17 @@ function main(): void {
 
   const win = new QMainWindow();
   win.setWindowTitle("Theme Test");
+
+  let guiScale = 1;
+  function applyStyleSheet(): void {
+    const styleSheet = uiStyle.getApplicationStyleSheet(guiScale, dpi);
+    console.log(styleSheet);
+    stylesheetEdit.setText(styleSheet);
+    topWidget.setStyleSheet(styleSheet);
+  }
+
+
+  let stylesheetEdit: QTextEdit = null;
 
   centralWidget = ScrollArea({
     widgetResizable: true,
@@ -33,6 +62,7 @@ function main(): void {
           Label({text: "H5 Heading", cssClass: "h5"}),
           Label({text: "H6 Heading", cssClass: "h6"}),
           Label({text: "Plain QLabel text"}),
+          shrinkWrap(Label({cssClass: ["badge"], text: "Default Badge"})),
 
           PushButton({text: "Default button"}),
           PushButton({text: "Success button", cssClass: "success"}),
@@ -166,14 +196,61 @@ function main(): void {
     })
   });
 
-  const styleSheet = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"))
-                      .getApplicationStyleSheet();
-  console.log(styleSheet);
+  const topWidget = Widget({
+    cssClass: "background",
+    layout: BoxLayout({
+      direction: Direction.LeftToRight,
+      children: [
+        centralWidget,
 
-  win.resize(600, 800);
-  centralWidget.setStyleSheet(styleSheet);
+        BoxLayout({
+          direction: Direction.TopToBottom,
+          children: [
+            {
+              widget: stylesheetEdit = TextEdit({
+              plainText: "",
+              }),
+              stretch: 1
+            },
 
-  win.setCentralWidget(centralWidget);
+            {
+              layout: BoxLayout({
+                direction: Direction.LeftToRight,
+                children: [
+                  PushButton({
+                    text: "Apply Stylesheet",
+                    onClicked: () => {
+                      topWidget.setStyleSheet(stylesheetEdit.toPlainText());
+                    }
+                  }),
+                  {
+                    widget: ComboBox({
+                      items: uiScalePercentOptions.map(percent => percent.name),
+                      currentIndex: 5,
+                      onActivated: (index: number) => {
+                        guiScale = uiScalePercentOptions[index].id / 100;
+                        applyStyleSheet();
+                      }
+                    }),
+                    stretch: 0
+                  },
+                ]
+              }),
+              stretch: 0
+            }
+          ]
+        })
+      ]
+    })
+  });
+
+  const dpi = QApplication.primaryScreen().logicalDotsPerInch();
+  const uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
+
+  applyStyleSheet();
+
+  win.resize(1200, 800);
+  win.setCentralWidget(topWidget);
   win.show();
 
   (global as any).win = win;

@@ -130,7 +130,8 @@ class Main {
 
     this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
     QApplication.setStyle(QStyleFactory.create("Windows"));
-    QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet());
+    const dpi = QApplication.primaryScreen().logicalDotsPerInch();
+    QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet(1, dpi));
 
     await this.openWindow();
     this.commandNewTerminal({});

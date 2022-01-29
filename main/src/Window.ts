@@ -143,7 +143,7 @@ export class Window {
   #loadStyleSheet(): void {
     this.#windowWidget.setStyleSheet("");
     this.#hamburgerMenu.setStyleSheet("");
-    const sheet = this.#uiStyle.getApplicationStyleSheet();
+    const sheet = this.#uiStyle.getApplicationStyleSheet(1, this.#getWindowDpi());
     this.#windowWidget.setStyleSheet(sheet);
     this.#hamburgerMenu.setStyleSheet(sheet);
   }
@@ -299,11 +299,8 @@ export class Window {
       }
     ];
 
-    const screen = this.#windowWidget.isVisible() ? this.#windowWidget.windowHandle().screen() : QApplication.primaryScreen();
-    const dpi = screen.logicalDotsPerInch();
-    this.#lastConfigDpi = dpi;
-
-    const terminalFontSizePx = Math.round(this.#pointsToPx(config.terminalFontSize, dpi));
+    this.#lastConfigDpi = this.#getWindowDpi();
+    const terminalFontSizePx = Math.round(this.#pointsToPx(config.terminalFontSize, this.#lastConfigDpi));
 
     const terminalVisualConfig: TerminalVisualConfig = {
       cursorStyle: config.cursorStyle,
@@ -321,6 +318,12 @@ export class Window {
       screenWidthHintPx: 1024,  // FIXME
     };
     return terminalVisualConfig;
+  }
+
+  #getWindowDpi(): number {
+    const window = this.#windowWidget;
+    const screen = window.isVisible() ? window.windowHandle().screen() : QApplication.primaryScreen();
+    return screen.logicalDotsPerInch();
   }
 
   async #handleConfigChangeEvent(event: ConfigChangeEvent): Promise<void> {
@@ -391,11 +394,7 @@ export class Window {
     this.#windowHandle = this.#windowWidget.windowHandle();
     this.#windowHandle.addEventListener("screenChanged", (screen: QScreen) => {
       this.#watchScreen(screen);
-
-      const newDpi = this.#screen.logicalDotsPerInch();
-      if (newDpi !== this.#lastConfigDpi) {
-        this.#updateTerminalVisualConfig();
-      }
+      this.#handleLogicalDpiChanged(this.#screen.logicalDotsPerInch());
     });
   }
 
