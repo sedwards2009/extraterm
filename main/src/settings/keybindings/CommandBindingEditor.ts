@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QBoxLayout, QLabel, QPushButton, QSizePolicyPolicy, QStackedWidget, QWidget
+import { Direction, QBoxLayout, QLabel, QPushButton, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat
 } from "@nodegui/nodegui";
 import { BoxLayout, Label, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
@@ -12,6 +12,9 @@ import { HoverPushButton } from "../../ui/QtConstructExtra";
 import { CommandKeybindingInfo } from "./CommandKeybindingInfo";
 import { KeyRecord } from "./KeyRecord";
 import { Category } from "../../extension/ExtensionMetadata";
+import { createHtmlIcon } from "../../ui/Icons";
+import { TermKeyStroke } from "../../keybindings/KeybindingsManager";
+import { Emulator, Platform } from "../../emulator/Term";
 
 
 export class CommandBindingEditor {
@@ -169,7 +172,7 @@ export class CommandBindingEditor {
     this.#editor.setVisible(visible);
   }
 
-  #keycapLabelMap = new Map<string, { widget: QWidget, layout: QBoxLayout }>();
+  #keycapLabelMap = new Map<string, { widget: QWidget, layout: QBoxLayout, warningLabel: QLabel }>();
 
   #syncUI(): void {
     const plusButton = this.#getPlusButton();
@@ -201,11 +204,21 @@ export class CommandBindingEditor {
 
         if (!this.#keycapLabelMap.has(text)) {
           let layout: QBoxLayout = null;
+          let warningLabel: QLabel = null;
           const widget = Widget({
             layout: layout = BoxLayout({
               direction: Direction.LeftToRight,
               contentsMargins: [0, 0, 0, 0],
               children: [
+                {
+                  widget: warningLabel = Label({
+                    text: createHtmlIcon("fa-exclamation-triangle"),
+                    textFormat: TextFormat.RichText,
+                    visible: false,
+                    toolTip: "This may override the terminal emulation"
+                  }),
+                  stretch: 0
+                },
                 {
                   widget: Label({
                     sizePolicy: {
@@ -248,18 +261,18 @@ export class CommandBindingEditor {
             })
           });
 
-          this.#keycapLabelMap.set(text, {widget, layout});
+          this.#keycapLabelMap.set(text, {widget, layout, warningLabel});
         }
 
+        const labelPair = this.#keycapLabelMap.get(text);
         if (i === 0) {
           if (customKeyStrokeList != null) {
             this.#topItemLayout.addWidget(revertButton);
             revertButton.show();
           }
 
-          const labelPair = this.#keycapLabelMap.get(text);
           this.#topItemLayout.addWidget(labelPair.widget);
-          labelPair.layout.setStretch(2, 0);
+          labelPair.layout.setStretch(3, 0);
 
           this.#topItemLayout.addWidget(plusButton);
           plusButton.show();
@@ -267,10 +280,10 @@ export class CommandBindingEditor {
           this.#topItemLayout.addWidget(spacerWidget, 1);
           spacerWidget.show();
         } else {
-          const labelPair = this.#keycapLabelMap.get(text);
           this.#boxLayout.addWidget(labelPair.widget);
-          labelPair.layout.setStretch(2, 1);
+          labelPair.layout.setStretch(3, 1);
         }
+        labelPair.warningLabel.setVisible(this.#isTermConflict(keyStroke));
       }
 
       if (currentKeyStrokeList.length === 0) {
@@ -285,5 +298,14 @@ export class CommandBindingEditor {
         spacerWidget.show();
       }
     }
+  }
+
+  #isTermConflict(keybinding: TermKeyStroke): boolean {
+    const excludedCategories: Category[] = ["application", "window", "terminal", "viewer"];
+    if (excludedCategories.indexOf(this.#category) === -1) {
+      return false;
+    }
+
+    return Emulator.isKeySupported(<Platform> process.platform, keybinding);
   }
 }
