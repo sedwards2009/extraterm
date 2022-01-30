@@ -13,8 +13,8 @@ import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-
 import { QApplication, QFontDatabase, QStyleFactory } from "@nodegui/nodegui";
 
 import { Window } from "./Window";
-import { SESSION_CONFIG } from './config/Config';
-import { ConfigDatabase } from "./config/ConfigDatabase";
+import { GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG } from './config/Config';
+import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
 import { ExtensionCommandContribution } from './extension/ExtensionMetadata';
 import { DisposableHolder } from "./utils/DisposableUtils";
 import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
@@ -130,8 +130,22 @@ class Main {
 
     this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
     QApplication.setStyle(QStyleFactory.create("Windows"));
+
     const dpi = QApplication.primaryScreen().logicalDotsPerInch();
-    QApplication.instance().setStyleSheet(this.#uiStyle.getApplicationStyleSheet(1, dpi));
+    const qApplication = QApplication.instance();
+    qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(generalConfig.uiScalePercent / 100, dpi));
+
+    configDatabase.onChange((e: ConfigChangeEvent) => {
+      if (e.key !== GENERAL_CONFIG) {
+        return;
+      }
+      const oldConfig = <GeneralConfig> e.oldConfig;
+      const newConfig = <GeneralConfig> e.newConfig;
+      if (oldConfig ?? oldConfig.uiScalePercent !== newConfig.uiScalePercent) {
+        const dpi = QApplication.primaryScreen().logicalDotsPerInch();
+        qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(1, dpi));
+      }
+    });
 
     await this.openWindow();
     this.commandNewTerminal({});

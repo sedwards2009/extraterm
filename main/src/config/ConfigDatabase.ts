@@ -46,12 +46,12 @@ export class ConfigDatabase {
 
   start(): void {
     this.#sharedMap.onChange((ev: SharedMap.ChangeEvent) => {
-      this._handleApplicationConfigChange(ev);
-      this._handleExtensionConfigChange(ev);
+      this.#handleApplicationConfigChange(ev);
+      this.#handleExtensionConfigChange(ev);
     });
   }
 
-  private _handleApplicationConfigChange(ev: SharedMap.ChangeEvent): void {
+  #handleApplicationConfigChange(ev: SharedMap.ChangeEvent): void {
     if (ev.type !== SharedMap.ChangeType.CHANGED || ev.namespace !== SHARED_MAP_CONFIG_NAMESPACE) {
       return;
     }
@@ -63,7 +63,7 @@ export class ConfigDatabase {
     });
   }
 
-  private _handleExtensionConfigChange(ev: SharedMap.ChangeEvent): void {
+  #handleExtensionConfigChange(ev: SharedMap.ChangeEvent): void {
     if (ev.namespace !== SHARED_MAP_EXTENSION_CONFIG_NAMESPACE) {
       return;
     }

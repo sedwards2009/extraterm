@@ -25,6 +25,7 @@ export class GeneralPage {
   getPage(): QScrollArea {
     return ScrollArea({
       cssClass: "settings-tab",
+      widgetResizable: true,
 
       widget: Widget({
         cssClass: "settings-tab",
@@ -93,7 +94,8 @@ export class GeneralPage {
                 "Right + Control:",
                 this.#makeMouseOption("rightMouseButtonControlAction"),
               ]
-            })
+            }),
+            {stretch: 1, widget: Widget({}) }
           ]
         })
       })

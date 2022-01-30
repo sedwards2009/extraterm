@@ -18,6 +18,23 @@ import { ThemeInfo } from "../theme/Theme";
 import { ExtensionManager } from "../InternalTypes";
 
 
+const uiScalePercentOptions: {id: number, name: string}[] = [
+  { id: 25, name: "25%"},
+  { id: 50, name: "50%"},
+  { id: 65, name: "65%"},
+  { id: 80, name: "80%"},
+  { id: 90, name: "90%"},
+  { id: 100, name: "100%"},
+  { id: 110, name: "110%"},
+  { id: 120, name: "120%"},
+  { id: 150, name: "150%"},
+  { id: 175, name: "175%"},
+  { id: 200, name: "200%"},
+  { id: 250, name: "250%"},
+  { id: 300, name: "300%"},
+];
+
+
 export class AppearancePage {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
@@ -62,6 +79,8 @@ export class AppearancePage {
 
     const page = ScrollArea({
       cssClass: "settings-tab",
+      widgetResizable: true,
+
       widget: Widget({
         cssClass: "settings-tab",
         layout: BoxLayout({
@@ -75,6 +94,9 @@ export class AppearancePage {
             GridLayout({
               columns: 2,
               children: [
+
+                {widget: Label({text: "Terminal", cssClass: "h3"}), colSpan: 2},
+
                 "Font:",
                 shrinkWrap(ComboBox({
                   currentIndex: currentFontIndex,
@@ -184,10 +206,24 @@ export class AppearancePage {
                 shrinkWrap(ComboBox({
                   currentIndex: marginSizes.indexOf(generalConfig.terminalMarginStyle),
                   items: ["None", "Thin", "Normal", "Thick"],
-                  onActivated: (index) => update(config => config.terminalMarginStyle = marginSizes[index])
+                  onActivated: (index) => {
+                    update(config => config.terminalMarginStyle = marginSizes[index]);
+                  }
                 })),
+
+                {widget: Label({text: "Interface", cssClass: "h3"}), colSpan: 2},
+
+                "Zoom:",
+                shrinkWrap(ComboBox({
+                  currentIndex: uiScalePercentOptions.map(option => option.id).indexOf(generalConfig.uiScalePercent),
+                  items: uiScalePercentOptions.map(option => option.name),
+                  onActivated: (index) => {
+                    update(config => config.uiScalePercent = uiScalePercentOptions[index].id);
+                  }
+                }))
               ]
-            })
+            }),
+            {stretch: 1, widget: Widget({}) }
           ]}
         )
       })

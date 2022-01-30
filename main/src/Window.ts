@@ -9,7 +9,7 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QStyleFactory } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
@@ -132,7 +132,7 @@ export class Window {
         ]
       })
     });
-    this.#loadStyleSheet();
+    this.#loadStyleSheet(this.#configDatabase.getGeneralConfig().uiScalePercent/100);
     this.#windowWidget.resize(800, 480);
 
     this.#initContextMenu();
@@ -140,10 +140,10 @@ export class Window {
     this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
   }
 
-  #loadStyleSheet(): void {
+  #loadStyleSheet(uiScale: number): void {
     this.#windowWidget.setStyleSheet("");
     this.#hamburgerMenu.setStyleSheet("");
-    const sheet = this.#uiStyle.getApplicationStyleSheet(1, this.#getWindowDpi());
+    const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.#getWindowDpi());
     this.#windowWidget.setStyleSheet(sheet);
     this.#hamburgerMenu.setStyleSheet(sheet);
   }
@@ -332,6 +332,10 @@ export class Window {
     }
     const oldConfig = <GeneralConfig> event.oldConfig;
     const newConfig = <GeneralConfig> event.newConfig;
+
+    if (oldConfig.uiScalePercent !== newConfig.uiScalePercent) {
+      this.#loadStyleSheet(newConfig.uiScalePercent / 100);
+    }
 
     if (oldConfig.terminalFont === newConfig.terminalFont &&
         oldConfig.terminalFontSize === newConfig.terminalFontSize &&
