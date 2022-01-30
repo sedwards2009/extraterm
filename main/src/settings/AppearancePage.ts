@@ -62,7 +62,7 @@ export class AppearancePage {
     const systemConfig = this.#configDatabase.getSystemConfig();
 
     const allFonts = systemConfig.availableFonts;
-    const currentFontIndex = allFonts.map(f => f.id).indexOf( generalConfig.terminalFont);
+    const currentFontIndex = allFonts.map(f => f.id).indexOf(generalConfig.terminalFont);
 
     const update = (mutator: (config: GeneralConfig) => void): void => {
       const generalConfig = this.#configDatabase.getGeneralConfigCopy();
@@ -100,7 +100,10 @@ export class AppearancePage {
                 "Font:",
                 shrinkWrap(ComboBox({
                   currentIndex: currentFontIndex,
-                  items: allFonts.map((f): ComboBoxItem => ({ text: f.name, userData: f.id }))
+                  items: allFonts.map((f): ComboBoxItem => ({ text: f.name, userData: f.id })),
+                  onActivated: (index: number) => {
+                    update(c => c.terminalFont = allFonts[index].id);
+                  }
                 })),
 
                 "Font Size:",
