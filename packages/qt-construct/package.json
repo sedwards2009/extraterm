@@ -17,7 +17,7 @@
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
   "dependencies": {
-    "@nodegui/nodegui": "^0.45.4"
+    "@nodegui/nodegui": "^0.46.0"
   },
   "devDependencies": {
     "eslint": "7.19.0",
