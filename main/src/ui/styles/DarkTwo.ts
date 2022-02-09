@@ -507,6 +507,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     buttonDefaultBgSelectedColor,
     textColor)}
 
+  ${AtomButtonVariant('QPushButton[cssClass~="plain"]', buttonDefaultBgColor)}
   ${AtomButtonVariant('QPushButton[cssClass~="primary"]', buttonPrimaryBgColor)}
   ${AtomButtonVariant('QPushButton[cssClass~="success"]', buttonSuccessBgColor)}
   ${AtomButtonVariant('QPushButton[cssClass~="info"]', buttonInfoBgColor)}
@@ -548,6 +549,18 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     padding: 0px;
     margin: 0px;
     border: 0px;
+  }
+
+  QPushButton[cssClass~="window-control"] {
+    background-color: transparent;
+
+    width: 1.5em;
+    height: 1.5em;
+
+    padding: 0px;
+    margin: 0px;
+    border: 0px;
+    border-radius: 0px;
   }
   `;
     }

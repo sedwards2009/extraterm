@@ -1,19 +1,20 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Logger, log, getLogger } from "extraterm-logging";
-import { computeFontMetrics, computeEmojiMetrics, FontSlice } from "extraterm-char-render-canvas";
+import { FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QStyleFactory } from "@nodegui/nodegui";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
+  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 
-import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config";
+import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
 import { Tab } from "./Tab";
 import { ContextMenuEvent, Terminal } from "./terminal/Terminal";
@@ -26,6 +27,8 @@ import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilitie
 import { UiStyle } from "./ui/UiStyle";
 import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker";
 import { DisposableHolder } from "./utils/DisposableUtils";
+import { HoverPushButton } from "./ui/QtConstructExtra";
+import { BorderlessWindowSupport } from "./BorderlessWindowSupport";
 
 
 interface TabPlumbing {
@@ -40,8 +43,13 @@ export class Window {
   #keybindingsIOManager: KeybindingsIOManager = null;
 
   #windowWidget: QWidget = null;
+  #borderlessWindowSupport: BorderlessWindowSupport = null;
   #windowHandle: QWindow = null;
   #screen: QScreen = null;
+  #topLayout: QBoxLayout = null;
+  #tabRowWidget: QWidget = null;
+  #tabBarLayout: QBoxLayout = null;
+  #topBar: QWidget = null;
   #tabBar: QTabBar = null;
   #contentStack: QStackedWidget = null;
   #lastConfigDpi = -1;
@@ -79,6 +87,7 @@ export class Window {
   }
 
   async init(): Promise<void> {
+    const generalConfig = this.#configDatabase.getGeneralConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
     this.#windowWidget = Widget({
@@ -89,19 +98,20 @@ export class Window {
       onKeyPress: (nativeEvent) => {
         this.#handleKeyPress(new QKeyEvent(nativeEvent));
       },
-      layout: BoxLayout({
+      mouseTracking: true,
+      layout: this.#topLayout = BoxLayout({
         direction: Direction.TopToBottom,
-        contentsMargins: [0, 11, 0, 0],
+        contentsMargins: 0,
         spacing: 0,
         children: [
-          Widget({
+          this.#tabRowWidget = Widget({
             layout: BoxLayout({
               direction: Direction.LeftToRight,
               contentsMargins: [0, 0, 0, 0],
               spacing: 0,
               children: [
-                {widget:
-                  this.#tabBar = TabBar({
+                {
+                  widget: this.#tabBar = TabBar({
                     expanding: false,
                     cssClass: ["top-level"],
                     tabs: [],
@@ -112,19 +122,32 @@ export class Window {
                     onTabCloseRequested: (index: number) => {
                       this.#handleTabBarCloseClicked(index);
                     },
-                  }), stretch: 1},
+                  }),
+                  stretch: 0
+                },
 
-                {widget: Widget({
-                  cssClass: ["tabbar-gap"],
-                  layout: BoxLayout({
-                    direction: Direction.LeftToRight,
-                    contentsMargins: [0, 0, 0, 0],
-                    spacing: 0,
-                    children: [
-                      {widget: this.#createHamburgerMenu(this.#uiStyle), stretch: 0}
-                    ]
-                  })
-                }), stretch: 0}
+                {
+                  widget: Widget({
+                    cssClass: ["tabbar-gap"],
+                    layout: this.#tabBarLayout = BoxLayout({
+                      direction: Direction.LeftToRight,
+                      contentsMargins: [0, 0, 0, 0],
+                      spacing: 0,
+                      children: [
+                        {
+                          widget: this.#createDragAreaWidget(),
+                          stretch: 1
+                        },
+                        {
+                          widget: this.#createHamburgerMenu(this.#uiStyle),
+                          stretch: 0,
+                          alignment: AlignmentFlag.AlignTop
+                        },
+                      ]
+                    })
+                  }),
+                  stretch: 1
+                }
               ]
             })
           }),
@@ -132,7 +155,11 @@ export class Window {
         ]
       })
     });
-    this.#loadStyleSheet(this.#configDatabase.getGeneralConfig().uiScalePercent/100);
+
+    this.#borderlessWindowSupport = new BorderlessWindowSupport(this.#windowWidget);
+    this.#setWindowFrame(generalConfig.titleBarStyle);
+
+    this.#loadStyleSheet(generalConfig.uiScalePercent/100);
     this.#windowWidget.resize(800, 480);
 
     this.#initContextMenu();
@@ -146,6 +173,120 @@ export class Window {
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.#getWindowDpi());
     this.#windowWidget.setStyleSheet(sheet);
     this.#hamburgerMenu.setStyleSheet(sheet);
+  }
+
+  #createDragAreaWidget(): QWidget {
+    return Widget({
+      onMouseButtonPress: (ev) => {
+        this.#windowWidget.windowHandle().startSystemMove();
+      },
+    });
+  }
+
+  #createTopBar(): QWidget {
+    return Widget({
+      contentsMargins: 0,
+      layout: BoxLayout({
+        direction: Direction.LeftToRight,
+        spacing: 0,
+        contentsMargins: 0,
+        children: [
+          {
+            widget: Widget({
+              minimumHeight: 11,
+              minimumWidth: 16,
+              onMouseButtonPress: (ev) => {
+                this.#windowWidget.windowHandle().startSystemMove();
+              }
+            }),
+            stretch: 1
+          },
+          {
+            widget: HoverPushButton({
+              cssClass: ["window-control", "plain"],
+              iconPair: this.#uiStyle.getToolbarButtonIconPair("extraicons-minimize"),
+              sizePolicy: {
+                horizontal: QSizePolicyPolicy.Fixed,
+                vertical: QSizePolicyPolicy.Fixed,
+              },
+              onClicked: () => {
+                this.#windowWidget.showMinimized();
+              },
+            }),
+            stretch: 0
+          },
+          {
+            widget: HoverPushButton({
+              cssClass: ["window-control", "plain"],
+              iconPair: this.#uiStyle.getToolbarButtonIconPair("extraicons-maximize"),
+              sizePolicy: {
+                horizontal: QSizePolicyPolicy.Fixed,
+                vertical: QSizePolicyPolicy.Fixed,
+              },
+              onClicked: () => {
+                if (this.#windowWidget.isMaximized()) {
+                  this.#windowWidget.showNormal();
+                } else {
+                  this.#windowWidget.showMaximized();
+                }
+              }
+            }),
+            stretch: 0
+          },
+          {
+            widget: HoverPushButton({
+              cssClass: ["window-control", "danger"],
+              iconPair: this.#uiStyle.getToolbarButtonIconPair("fa-times"),
+              sizePolicy: {
+                horizontal: QSizePolicyPolicy.Fixed,
+                vertical: QSizePolicyPolicy.Fixed,
+              },
+              onClicked: () => {
+                this.close();
+              }
+            }),
+            stretch: 0
+          },
+        ]
+      })
+    });
+  }
+
+  #setWindowFrame(titleBarStyle: TitleBarStyle): void {
+    switch(titleBarStyle) {
+      case "native":
+        this.#windowWidget.setContentsMargins(0, 8, 0, 0);
+        this.#borderlessWindowSupport.disable();
+        if (this.#topBar != null) {
+          this.#topBar.setParent(null);
+        }
+        break;
+
+      case "theme":
+        this.#windowWidget.setContentsMargins(0, 0, 0, 0);
+        this.#borderlessWindowSupport.enable();
+
+        if (this.#topBar == null) {
+          this.#topBar = this.#createTopBar();
+        }
+        this.#topBar.setParent(null);
+
+        this.#topLayout.insertWidget(0, this.#topBar, 0);
+
+        break;
+
+      case "compact":
+        this.#windowWidget.setContentsMargins(0, 0, 0, 0);
+        this.#borderlessWindowSupport.enable();
+
+        if (this.#topBar == null) {
+          this.#topBar = this.#createTopBar();
+        }
+        this.#topBar.setParent(null);
+
+        this.#tabBarLayout.addWidget(this.#topBar, 0, AlignmentFlag.AlignTop);
+        break;
+    }
   }
 
   #createHamburgerMenu(uiStyle: UiStyle): QToolButton {
@@ -337,15 +478,18 @@ export class Window {
       this.#loadStyleSheet(newConfig.uiScalePercent / 100);
     }
 
-    if (oldConfig.terminalFont === newConfig.terminalFont &&
+    if (!(oldConfig.terminalFont === newConfig.terminalFont &&
         oldConfig.terminalFontSize === newConfig.terminalFontSize &&
         oldConfig.cursorStyle === newConfig.cursorStyle &&
         oldConfig.themeTerminal === newConfig.themeTerminal &&
         oldConfig.terminalDisplayLigatures === newConfig.terminalDisplayLigatures &&
-        oldConfig.terminalMarginStyle === newConfig.terminalMarginStyle) {
-      return;
+        oldConfig.terminalMarginStyle === newConfig.terminalMarginStyle)) {
+      await this.#updateTerminalVisualConfig();
     }
-    await this.#updateTerminalVisualConfig();
+
+    if (oldConfig.titleBarStyle !== newConfig.titleBarStyle) {
+      this.#setWindowFrame(newConfig.titleBarStyle);
+    }
   }
 
   async #updateTerminalVisualConfig(): Promise<void> {
@@ -400,6 +544,15 @@ export class Window {
       this.#watchScreen(screen);
       this.#handleLogicalDpiChanged(this.#screen.logicalDotsPerInch());
     });
+  }
+
+  close(): void {
+
+    // Terminate any running terminal tabs.
+
+
+
+    this.#windowWidget.close();
   }
 
   #handleLogicalDpiChanged(dpi: number): void {

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ContextMenuPolicy, FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget, WidgetAttribute, WidgetEventTypes, WindowType
+import { ContextMenuPolicy, CursorShape, FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget, WidgetAttribute, WidgetEventTypes, WindowType
 } from "@nodegui/nodegui";
 
 export interface WidgetOptions {
@@ -13,13 +13,17 @@ export interface WidgetOptions {
   layout?: NodeLayout<any>;
   contentsMargins?: [number, number, number, number] | number;
   cssClass?: string | string[];
+  cursor?: CursorShape,
   windowTitle?: string;
   focusPolicy?: FocusPolicy;
+  mouseTracking?: boolean;
   onEnter?: () => void;
   onFocusOut?: () => void;
   onLayoutRequest?: () => void;
   onLeave?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
+  onMouseButtonPress?: (nativeEvent /* NativeQEvent */) => void;
+  onMouseMove?: (nativeEvent /* NativeQEvent */) => void;
   onResize?: (native /* NativeQEvent */) => void;
   windowFlag?: WindowType;
   sizePolicy?: {horizontal: QSizePolicyPolicy, vertical: QSizePolicyPolicy};
@@ -35,9 +39,9 @@ export interface WidgetOptions {
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
-    attribute, contentsMargins, contextMenuPolicy, enabled, id, cssClass, focusPolicy, layout, onEnter, onFocusOut,
-    onLayoutRequest, onLeave, onKeyPress, onResize, sizePolicy, windowTitle, maximumHeight, maximumWidth, minimumHeight,
-    minimumWidth, windowFlag, inlineStyle, toolTip, visible
+    attribute, contentsMargins, contextMenuPolicy, cursor, enabled, id, cssClass, focusPolicy, layout, mouseTracking,
+    onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onResize, sizePolicy,
+    windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle, toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
@@ -54,6 +58,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   if (id !== undefined) {
     widget.setObjectName(id);
   }
+  if (cursor !== undefined) {
+    widget.setCursor(cursor);
+  }
   if (layout !== undefined) {
     widget.setLayout(layout);
   }
@@ -65,6 +72,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (focusPolicy !== undefined) {
     widget.setFocusPolicy(focusPolicy);
+  }
+  if (mouseTracking !== undefined) {
+    widget.setMouseTracking(mouseTracking);
   }
   if (onKeyPress !== undefined) {
     widget.addEventListener(WidgetEventTypes.KeyPress, onKeyPress);
@@ -80,6 +90,12 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (onLeave !== undefined) {
     widget.addEventListener(WidgetEventTypes.Leave, onLeave);
+  }
+  if (onMouseButtonPress !== undefined) {
+    widget.addEventListener(WidgetEventTypes.MouseButtonPress, onMouseButtonPress);
+  }
+  if (onMouseMove !== undefined) {
+    widget.addEventListener(WidgetEventTypes.MouseMove, onMouseMove);
   }
   if (onResize !== undefined) {
     widget.addEventListener(WidgetEventTypes.Resize, onResize);

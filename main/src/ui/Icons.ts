@@ -46,6 +46,8 @@ interface IconMetadataSet {
 }
 
 const allIcons: IconMetadataSet = {
+  "extraicons-maximize": {string: "\u{ea01}", set: "extraicons"},
+  "extraicons-minimize": {string: "\u{ea02}", set: "extraicons"},
   "extraicons-pocketknife": {string: "\u{ea09}", set: "extraicons"},
 
   // Note: The rest of this table below is generated with

@@ -3,13 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { NodeLayout, NodeWidget, QGridLayout, QWidget } from "@nodegui/nodegui";
+import { AlignmentFlag, NodeLayout, NodeWidget, QGridLayout, QWidget } from "@nodegui/nodegui";
 import { Label } from "./Label";
 
 export interface GridLayoutItem {
   widget?: QWidget;
   layout?: NodeLayout<any>;
   colSpan?: number;
+  alignment?: AlignmentFlag;
 }
 
 export type GridLayoutChild = QWidget | string | NodeLayout<any> | GridLayoutItem;
@@ -49,7 +50,8 @@ export function GridLayout(options: GridLayoutOptions): QGridLayout {
     } else if (isGridLayoutItem(candidate)) {
       const colSpan = candidate.colSpan ?? 1;
       if (candidate.widget !== undefined) {
-        gridLayout.addWidget(candidate.widget, row, column, 1, colSpan);
+        const alignment = candidate.alignment ?? AlignmentFlag.AlignLeft;
+        gridLayout.addWidget(candidate.widget, row, column, 1, colSpan, alignment);
       } else if (candidate.layout !== undefined) {
         gridLayout.addLayout(candidate.layout, row, column, 1, colSpan);
       }

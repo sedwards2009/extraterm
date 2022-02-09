@@ -9,7 +9,7 @@ import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushBut
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { ConfigDatabase } from "../config/ConfigDatabase";
-import { GeneralConfig, TerminalMarginStyle } from "../config/Config";
+import { GeneralConfig, TerminalMarginStyle, TitleBarStyle } from "../config/Config";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
 import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
@@ -34,6 +34,11 @@ const uiScalePercentOptions: {id: number, name: string}[] = [
   { id: 300, name: "300%"},
 ];
 
+const titleBarOptions: {id: TitleBarStyle, name: string}[] = [
+  { id: "native", name: "Native" },
+  { id: "theme", name: "Theme" },
+  { id: "compact", name: "Compact Theme" },
+];
 
 export class AppearancePage {
   private _log: Logger = null;
@@ -223,7 +228,16 @@ export class AppearancePage {
                   onActivated: (index) => {
                     update(config => config.uiScalePercent = uiScalePercentOptions[index].id);
                   }
-                }))
+                })),
+
+                "Window Title Bar:",
+                shrinkWrap(ComboBox({
+                  currentIndex: titleBarOptions.map(option => option.id).indexOf(generalConfig.titleBarStyle),
+                  items: titleBarOptions.map(item => item.name),
+                  onActivated: (index) => {
+                    update(config => config.titleBarStyle = titleBarOptions[index].id);
+                  }
+                })),
               ]
             }),
             {stretch: 1, widget: Widget({}) }
