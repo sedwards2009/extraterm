@@ -547,10 +547,10 @@ export class Window {
   }
 
   close(): void {
-
     // Terminate any running terminal tabs.
-
-
+    for (const tab of this.#tabs) {
+      this.removeTab(tab.tab);
+    }
 
     this.#windowWidget.close();
   }
