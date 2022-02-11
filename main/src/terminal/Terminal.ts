@@ -289,7 +289,7 @@ export class Terminal implements Tab, Disposable {
     }
 
     terminalBlock.onSelectionChanged(() => {
-      this.#onSelectionChangedEventEmitter.fire();
+      this.#handleSelectionChanged(terminalBlock);
     });
     terminalBlock.onHyperlinkClicked((url: string): void => {
       this.#handleHyperlinkClick(url);
@@ -308,6 +308,16 @@ export class Terminal implements Tab, Disposable {
       }
     );
     return terminalBlock;
+  }
+
+  #handleSelectionChanged(terminalBlock: TerminalBlock): void {
+    for (const blockFrame of this.#blockFrames) {
+      const block = blockFrame.getBlock();
+      if (block instanceof TerminalBlock && block !== terminalBlock) {
+        block.clearSelection();
+      }
+    }
+    this.#onSelectionChangedEventEmitter.fire();
   }
 
   #createFramedTerminalBlock(): SpacerFrame {
@@ -744,7 +754,7 @@ export class Terminal implements Tab, Disposable {
     let text: string = null;
     for (const frame of this.#blockFrames) {
       const block = frame.getBlock();
-      if (block instanceof TerminalBlock) {
+      if (block instanceof TerminalBlock && block.hasSelection()) {
         text = block.getSelectionText();
         if (text != null) {
           return text;

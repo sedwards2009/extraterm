@@ -148,6 +148,15 @@ export class TerminalBlock implements Block {
     return this.#selectionStart != null && this.#selectionEnd != null;
   }
 
+  clearSelection(): void {
+    if (!this.hasSelection()) {
+      return;
+    }
+    this.#selectionStart = null;
+    this.#selectionEnd = null;
+    this.#widget.update();
+  }
+
   takeScrollbackFrom(startLine: number): Line[] {
     const result = this.#scrollback.slice(startLine);
     this.#scrollback.splice(startLine);
@@ -644,6 +653,8 @@ export class TerminalBlock implements Block {
       this.#selectionEnd = this.#selectionStart;
       this.#selectionMode = SelectionMode.NORMAL;
       this.#isWordSelection = false;
+
+      this.#onSelectionChangedEventEmitter.fire();
 
       this.#widget.update();
     }
