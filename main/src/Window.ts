@@ -157,6 +157,7 @@ export class Window {
     });
 
     this.#borderlessWindowSupport = new BorderlessWindowSupport(this.#windowWidget);
+    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, this.#hamburgerMenuButton);
     this.#setWindowFrame(generalConfig.titleBarStyle);
 
     this.#loadStyleSheet(generalConfig.uiScalePercent/100);
@@ -184,7 +185,11 @@ export class Window {
   }
 
   #createTopBar(): QWidget {
-    return Widget({
+    let minimizeButton: QWidget = null;
+    let maximizeButton: QWidget = null;
+    let closeButton: QWidget = null;
+
+    const topBarWidget = Widget({
       contentsMargins: 0,
       layout: BoxLayout({
         direction: Direction.LeftToRight,
@@ -202,7 +207,7 @@ export class Window {
             stretch: 1
           },
           {
-            widget: HoverPushButton({
+            widget: minimizeButton = HoverPushButton({
               cssClass: ["window-control", "plain"],
               iconPair: this.#uiStyle.getToolbarButtonIconPair("extraicons-minimize"),
               sizePolicy: {
@@ -216,7 +221,7 @@ export class Window {
             stretch: 0
           },
           {
-            widget: HoverPushButton({
+            widget: maximizeButton = HoverPushButton({
               cssClass: ["window-control", "plain"],
               iconPair: this.#uiStyle.getToolbarButtonIconPair("extraicons-maximize"),
               sizePolicy: {
@@ -234,7 +239,7 @@ export class Window {
             stretch: 0
           },
           {
-            widget: HoverPushButton({
+            widget: closeButton = HoverPushButton({
               cssClass: ["window-control", "danger"],
               iconPair: this.#uiStyle.getToolbarButtonIconPair("fa-times"),
               sizePolicy: {
@@ -250,6 +255,12 @@ export class Window {
         ]
       })
     });
+
+    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, minimizeButton);
+    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, maximizeButton);
+    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, closeButton);
+
+    return topBarWidget;
   }
 
   #setWindowFrame(titleBarStyle: TitleBarStyle): void {

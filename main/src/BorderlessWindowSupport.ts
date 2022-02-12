@@ -3,10 +3,15 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { CursorShape, Edge, QMouseEvent, QWidget, WidgetEventTypes, WindowState, WindowType } from "@nodegui/nodegui";
+import { CursorShape, Edge, QMouseEvent, QPoint, QWidget, WidgetEventTypes, WindowState, WindowType } from "@nodegui/nodegui";
 import { Logger, log, getLogger } from "extraterm-logging";
 
-const RESIZE_BORDER_SIZE = 8;
+const RESIZE_BORDER_SIZE = 4;
+
+interface Decoration {
+  topWidget: QWidget;
+  decorationWidget: QWidget;
+}
 
 
 export class BorderlessWindowSupport {
@@ -17,12 +22,20 @@ export class BorderlessWindowSupport {
   #boundOnMouseButtonPress: (nativeEvent) => void = null;
   #boundOnMouseMove: (nativeEvent) => void = null;
   #isCursorChanged = false;
+  #decorationList: Decoration[] = [];
 
   constructor(windowWidget: QWidget) {
     this._log = getLogger("BorderlessWindowSupport", this);
     this.#windowWidget = windowWidget;
     this.#boundOnMouseButtonPress = this.#onMouseButtonPress.bind(this);
     this.#boundOnMouseMove = this.#onMouseMove.bind(this);
+  }
+
+  registerDecoration(topWidget: QWidget, widget: QWidget): void {
+    this.#decorationList.push({
+      topWidget: topWidget,
+      decorationWidget: widget
+    });
   }
 
   enable(): void {
@@ -67,8 +80,12 @@ export class BorderlessWindowSupport {
     }
 
     const event = new QMouseEvent(nativeEvent);
-    // this._log.debug(`onMouseButtonPress (${event.x()}, ${event.y()})`);
-    const edge = this.#hitTestEdge(event.x(), event.y());
+    const x = event.x();
+    const y = event.y();
+    if (this.#hitTestDecorations(x, y)) {
+      return;
+    }
+    const edge = this.#hitTestEdge(x, y);
     if (edge === 0) {
       return;
     }
@@ -103,39 +120,64 @@ export class BorderlessWindowSupport {
     }
 
     const event = new QMouseEvent(nativeEvent);
-    // this._log.debug(`onMouseMove (${event.x()}, ${event.y()})`);
-    const edge = this.#hitTestEdge(event.x(), event.y());
-    switch (edge) {
-      case Edge.LeftEdge:
-      case Edge.RightEdge:
-        this.#windowWidget.setCursor(CursorShape.SizeHorCursor);
-        this.#isCursorChanged = true;
-        break;
+    const x = event.x();
+    const y = event.y();
+    if (!this.#hitTestDecorations(x, y)) {
+      const edge = this.#hitTestEdge(x, y);
+      switch (edge) {
+        case Edge.LeftEdge:
+        case Edge.RightEdge:
+          this.#windowWidget.setCursor(CursorShape.SizeHorCursor);
+          this.#isCursorChanged = true;
+          return;
 
-      case Edge.TopEdge | Edge.LeftEdge:
-      case Edge.BottomEdge | Edge.RightEdge:
-        this.#windowWidget.setCursor(CursorShape.SizeFDiagCursor);
-        this.#isCursorChanged = true;
-        break;
+        case Edge.TopEdge | Edge.LeftEdge:
+        case Edge.BottomEdge | Edge.RightEdge:
+          this.#windowWidget.setCursor(CursorShape.SizeFDiagCursor);
+          this.#isCursorChanged = true;
+          return;
 
-      case Edge.TopEdge | Edge.RightEdge:
-      case Edge.BottomEdge | Edge.LeftEdge:
-        this.#windowWidget.setCursor(CursorShape.SizeBDiagCursor);
-        this.#isCursorChanged = true;
-        break;
+        case Edge.TopEdge | Edge.RightEdge:
+        case Edge.BottomEdge | Edge.LeftEdge:
+          this.#windowWidget.setCursor(CursorShape.SizeBDiagCursor);
+          this.#isCursorChanged = true;
+          return;
 
-      case Edge.TopEdge:
-      case Edge.BottomEdge:
-        this.#windowWidget.setCursor(CursorShape.SizeVerCursor);
-        this.#isCursorChanged = true;
-        break;
+        case Edge.TopEdge:
+        case Edge.BottomEdge:
+          this.#windowWidget.setCursor(CursorShape.SizeVerCursor);
+          this.#isCursorChanged = true;
+          return;
 
-      default:
-        if (this.#isCursorChanged) {
-          this.#windowWidget.setCursor(CursorShape.ArrowCursor);
-          this.#isCursorChanged = false;
-        }
-        break;
+        default:
+          break;
+      }
     }
+
+    if (this.#isCursorChanged) {
+      this.#windowWidget.setCursor(CursorShape.ArrowCursor);
+      this.#isCursorChanged = false;
+    }
+  }
+
+  #hitTestDecorations(x: number, y: number): boolean {
+    for (const decoration of this.#decorationList) {
+      const width = decoration.decorationWidget.width();
+      const height = decoration.decorationWidget.height();
+
+      const topLeftPoint = new QPoint(0, 0);
+      const topLeftPointWinRel = decoration.decorationWidget.mapTo(decoration.topWidget, topLeftPoint);
+      if (x < topLeftPointWinRel.x() || y < topLeftPointWinRel.y()) {
+        continue;
+      }
+
+      const bottomRightPoint = new QPoint(width, height);
+      const bottomRightPointWinRel = decoration.decorationWidget.mapTo(decoration.topWidget, bottomRightPoint);
+      if (x > bottomRightPointWinRel.x() || y > bottomRightPointWinRel.y()) {
+        continue;
+      }
+      return true;
+    }
+    return false;
   }
 }
