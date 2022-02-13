@@ -1,35 +1,24 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QIcon, QMenu, QToolButton, ToolButtonPopupMode } from "@nodegui/nodegui";
-import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
+import { AbstractButtonOptions, ApplyAbstractButtonOptions } from "./AbstractButton";
 
 
-export interface ToolButtonOptions extends WidgetOptions {
+export interface ToolButtonOptions extends AbstractButtonOptions {
   icon?: QIcon;
   popupMode?: ToolButtonPopupMode;
-  text?: string;
-  onClicked?: () => void;
   menu?: QMenu;
 }
 
 export function ToolButton(options: ToolButtonOptions): QToolButton {
   const toolButton = new QToolButton();
 
-  ApplyWidgetOptions(toolButton, options);
-  const { text, icon, onClicked, menu, popupMode }  = options;
+  ApplyAbstractButtonOptions(toolButton, options);
 
-  if (text !== undefined) {
-    toolButton.setText(text);
-  }
-  if (onClicked !== undefined) {
-    toolButton.addEventListener("clicked", onClicked);
-  }
-  if (icon !== undefined) {
-    toolButton.setIcon(icon);
-  }
+  const { menu, popupMode }  = options;
   if (popupMode !== undefined) {
     toolButton.setPopupMode(popupMode);
   }

@@ -406,7 +406,7 @@ class Main {
       }
     };
 
-    configDatabase.onChange(event => {
+    configDatabase.onChange((event: ConfigChangeEvent) => {
       if (event.key === SESSION_CONFIG) {
         disposables.dispose();
         createSessionCommands(event.newConfig);

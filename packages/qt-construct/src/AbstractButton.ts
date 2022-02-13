@@ -16,11 +16,13 @@ export interface AbstractButtonOptions extends WidgetOptions {
   text?: string;
   onClicked?: (checked: boolean) => void;
   onToggled?: (checked: boolean) => void;
+  onPressed?: () => void;
+  onReleased?: () => void;
 }
 
 export function ApplyAbstractButtonOptions(button: QAbstractButton<any>, options: AbstractButtonOptions): void {
   ApplyWidgetOptions(button, options);
-  const { autoExclusive, checkable, checked, icon, onClicked, onToggled, text } = options;
+  const { autoExclusive, checkable, checked, icon, onClicked, onPressed, onReleased, onToggled, text } = options;
   if (autoExclusive !== undefined) {
     button.setAutoExclusive(autoExclusive);
   }
@@ -41,5 +43,11 @@ export function ApplyAbstractButtonOptions(button: QAbstractButton<any>, options
   }
   if (onToggled !== undefined) {
     button.addEventListener("toggled", onToggled);
+  }
+  if (onPressed !== undefined) {
+    button.addEventListener("pressed", onPressed);
+  }
+  if (onReleased !== undefined) {
+    button.addEventListener("released", onReleased);
   }
 }

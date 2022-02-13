@@ -312,6 +312,9 @@ export class Window {
       onLeave: () => {
         this.#hamburgerMenuButton.setIcon(iconPair.normal);
       },
+      onMouseButtonPress: () => {
+        this.#updateHamburgerMenu(uiStyle);
+      },
       menu: this.#hamburgerMenu = Menu({
         attribute: [WidgetAttribute.WA_TranslucentBackground],
         onTriggered: (nativeAction) => {

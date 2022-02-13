@@ -153,7 +153,7 @@ export class ConfigDatabase {
     if (_.isEqual(oldConfig, newConfig)) {
       return;
     }
-    this.#sharedMap.set(SHARED_MAP_CONFIG_NAMESPACE, key, newConfig);
+    this.#sharedMap.set(SHARED_MAP_CONFIG_NAMESPACE, key, _.cloneDeep(newConfig));
     this.#onChangeEventEmitter.fire({ key, oldConfig, newConfig });
   }
 }
