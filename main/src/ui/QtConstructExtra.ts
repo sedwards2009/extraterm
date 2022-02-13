@@ -36,7 +36,10 @@ export function makeGroupLayout(...children: (QWidget | string)[]): QBoxLayout {
     direction: Direction.LeftToRight,
     spacing: 0,
     contentsMargins: [0, 0, 0, 0],
-    children: expandedChildren,
+    children: [...expandedChildren, {
+      widget: Widget({}),
+      stretch: 1
+    }]
   });
 }
 
