@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -36,6 +36,9 @@ export class SettingsTab implements Tab {
   #framesPage: FramesPage = null;
   #extensionsPage: ExtensionsPage = null;
   #contentWidget: QWidget = null;
+
+  #pageToStackMapping = new Map<number, number>();
+  #stackedWidgetCount = 0;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
     keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
@@ -79,6 +82,15 @@ export class SettingsTab implements Tab {
   #createUI(uiStyle: UiStyle): void {
     let stackedWidget: QStackedWidget = null;
 
+    const showPage = (row: number): void => {
+      if (!this.#pageToStackMapping.has(row)) {
+        stackedWidget.addWidget(this.#createPage(row));
+        this.#pageToStackMapping.set(row, this.#stackedWidgetCount);
+        this.#stackedWidgetCount++;
+      }
+      stackedWidget.setCurrentIndex(this.#pageToStackMapping.get(row));
+    };
+
     this.#contentWidget = Widget({
       cssClass: "background",
       layout: BoxLayout({
@@ -99,7 +111,7 @@ export class SettingsTab implements Tab {
               ],
               currentRow: 0,
               onCurrentRowChanged: (row) => {
-                stackedWidget.setCurrentIndex(row);
+                showPage(row);
               }
             }),
             stretch: 0,
@@ -107,19 +119,30 @@ export class SettingsTab implements Tab {
           {widget:
             stackedWidget = StackedWidget({
               cssClass: ["settings-stack"],
-              children: [
-                this.#generalPage.getPage(),
-                this.#appearancePage.getPage(),
-                this.#sessionTypesPage.getPage(),
-                this.#keybindingsPage.getPage(),
-                this.#framesPage.getPage(),
-                this.#extensionsPage.getPage(),
-              ]
+              children: []
             }),
             stretch: 1,
           }
         ]
       })
     });
+    showPage(0);
+  }
+
+  #createPage(index: number): QWidget {
+    switch (index) {
+      case 0:
+        return this.#generalPage.getPage();
+      case 1:
+        return this.#appearancePage.getPage();
+      case 2:
+        return this.#sessionTypesPage.getPage();
+      case 3:
+        return this.#keybindingsPage.getPage();
+      case 4:
+        return this.#framesPage.getPage();
+      default:
+        return this.#extensionsPage.getPage();
+    }
   }
 }
