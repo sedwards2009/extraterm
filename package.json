@@ -41,6 +41,7 @@
       "extensions/Autolink",
       "extensions/CopyLink",
       "extensions/DefaultTerminalTheme",
+      "extensions/DirectoryCommands",
       "extensions/CommunityTerminalThemes",
       "extensions/InternalCommands",
       "extensions/ITermColorsTerminalThemeProvider",

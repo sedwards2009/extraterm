@@ -3,7 +3,7 @@
   "displayName": "Directory Commands",
   "version": "1.0.0",
   "description": "Commands related to the current directory",
-  "windowMain": "dist/DirectoryCommandsExtension.js",
+  "main": "dist/DirectoryCommandsExtension.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist"
@@ -19,7 +19,7 @@
         "when": "terminalFocus"
       },
       {
-        "command": "directory-commands:copyDirectoryInFileManager",
+        "command": "directory-commands:openDirectoryInFileManager",
         "title": "Open Directory in File Manager",
         "category": "terminal",
         "when": "terminalFocus"

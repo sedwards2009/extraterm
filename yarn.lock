@@ -3773,6 +3773,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"directory-commands@workspace:extensions/DirectoryCommands":
+  version: 0.0.0-use.local
+  resolution: "directory-commands@workspace:extensions/DirectoryCommands"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
+
 "doctrine@npm:0.7.2":
   version: 0.7.2
   resolution: "doctrine@npm:0.7.2"

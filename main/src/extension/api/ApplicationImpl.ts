@@ -36,10 +36,10 @@ export class ApplicationImpl implements ExtensionApi.Application {
 
     const stats = fs.statSync(itemPath);
     let cleanPath = itemPath;
-    if (stats.isDirectory()) {
+    if (!stats.isDirectory()) {
       cleanPath = path.dirname(itemPath);
     }
-    open(`file:/${cleanPath}`);
+    open(cleanPath);
   }
 
   get isLinux(): boolean {

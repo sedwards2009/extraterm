@@ -20,13 +20,14 @@ export function activate(_context: ExtensionContext): any {
 
   context.commands.registerCommand("directory-commands:copyDirectoryToClipboard", copyDirectoryCommand,
     copyDirectoryTitleFunc);
-  context.commands.registerCommand("directory-commands:copyDirectoryInFileManager", copyDirectoryInFileManagerCommand,
-    copyDirectoryInFileManagerFunc);
+  context.commands.registerCommand("directory-commands:openDirectoryInFileManager", openDirectoryInFileManagerCommand,
+    openDirectoryInFileManagerFunc);
 }
 
 async function copyDirectoryCommand(): Promise<void> {
-  const cwd = await context.window.activeTerminal.getWorkingDirectory();
+  const cwd = await context.activeTerminal.getWorkingDirectory();
   if (cwd == null) {
+    log.warn("No cwd to copy in openDirectoryInFileManagerCommand()");
     return;
   }
 
@@ -37,15 +38,16 @@ function copyDirectoryTitleFunc(): CustomizedCommand {
   return { title: context.application.isMacOS ? "Copy Folder Path to Clipboard" : "Copy Directory Path to Clipboard" };
 }
 
-async function copyDirectoryInFileManagerCommand(): Promise<void> {
-  const cwd = await context.window.activeTerminal.getWorkingDirectory();
+async function openDirectoryInFileManagerCommand(): Promise<void> {
+  const cwd = await context.activeTerminal.getWorkingDirectory();
   if (cwd == null) {
+    log.warn("No cwd to open in openDirectoryInFileManagerCommand()");
     return;
   }
 
   context.application.showItemInFileManager(cwd);
 }
 
-function copyDirectoryInFileManagerFunc(): CustomizedCommand {
+function openDirectoryInFileManagerFunc(): CustomizedCommand {
   return { title: context.application.isMacOS ? "Open Folder in Finder" : "Open Directory in File Manager" };
 }
