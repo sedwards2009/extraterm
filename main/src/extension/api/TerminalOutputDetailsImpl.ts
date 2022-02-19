@@ -1,26 +1,26 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { TerminalBlock } from "main/src/terminal/TerminalBlock";
-import { InternalExtensionContext } from "../../InternalTypes";
+import { ExtensionMetadata } from "../ExtensionMetadata";
 
 
-export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDetails {
+export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDetails {
 
   #scrollback: ExtensionApi.Screen = null;
   #terminalBlock: TerminalBlock = null;
-  #internalExtensionContext: InternalExtensionContext = null;
+  #extensionMetadata: ExtensionMetadata;
 
-  constructor(internalExtensionContext: InternalExtensionContext, terminalBlock: TerminalBlock) {
-    this.#internalExtensionContext = internalExtensionContext;
+  constructor(extensionMetadata: ExtensionMetadata, terminalBlock: TerminalBlock) {
+    this.#extensionMetadata = extensionMetadata;
     this.#terminalBlock = terminalBlock;
-    // this._terminalViewer.onDispose(this._handleTerminalViewerDispose.bind(this));
+    // this._terminalViewer.onDispose(this.#handleTerminalViewerDispose.bind(this));
   }
 
-  private _handleTerminalViewerDispose(): void {
+  #handleTerminalViewerDispose(): void {
     this.#terminalBlock = null;
   }
 
@@ -41,7 +41,7 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
 
   get scrollback(): ExtensionApi.Screen {
     if (this.#scrollback == null) {
-      this.#scrollback = new ScrollbackProxy(this.#internalExtensionContext, this.#terminalBlock);
+      this.#scrollback = new ScrollbackImpl(this.#extensionMetadata, this.#terminalBlock);
     }
     return this.#scrollback;
   }
@@ -75,11 +75,13 @@ export class TerminalOutputDetailsProxy implements ExtensionApi.TerminalOutputDe
   }
 }
 
-class ScrollbackProxy implements ExtensionApi.Screen {
+class ScrollbackImpl implements ExtensionApi.Screen {
 
+  #extensionMetadata: ExtensionMetadata;
   #terminalBlock: TerminalBlock = null;
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, terminalViewer: TerminalBlock) {
+  constructor(extensionMetadata: ExtensionMetadata, terminalViewer: TerminalBlock) {
+    this.#extensionMetadata = extensionMetadata;
     this.#terminalBlock = terminalViewer;
   }
 
@@ -96,12 +98,12 @@ class ScrollbackProxy implements ExtensionApi.Screen {
   }
 
   applyHyperlink(line: number, x: number, length: number, url: string): void {
-    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    const extensionName = this.#extensionMetadata.name;
     this.#terminalBlock.applyScrollbackHyperlink(line, x, length, url, extensionName);
   }
 
   removeHyperlinks(line: number): void {
-    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    const extensionName = this.#extensionMetadata.name;
     this.#terminalBlock.removeHyperlinks(line, extensionName);
   }
 }

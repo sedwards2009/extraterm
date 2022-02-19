@@ -169,7 +169,7 @@ export class Terminal implements Tab, Disposable {
   ]);
 
   static registerCommands(extensionManager: ExtensionManager): void {
-    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
 
     commands.registerCommand("extraterm:terminal.deleteLastFrame",
       () => extensionManager.getActiveTerminal().commandDeleteLastFrame());

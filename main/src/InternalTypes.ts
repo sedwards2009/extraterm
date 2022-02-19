@@ -5,10 +5,13 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { NodeWidget } from "@nodegui/nodegui";
+import { CommandsRegistry } from "./CommandsRegistry";
+import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./extension/ExtensionManagerTypes";
 
 // import { EtTerminal, LineRangeChange } from "../Terminal";
 // import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
+import { WorkspaceSessionEditorRegistry } from "./extension/WorkspaceSessionEditorRegistry";
 import { BlockFrame } from "./terminal/BlockFrame";
 import { LineRangeChange, Terminal } from "./terminal/Terminal";
 // import { EtViewerTab } from "../ViewerTab";
@@ -20,6 +23,8 @@ import { LineRangeChange, Terminal } from "./terminal/Terminal";
 // import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 // import { ExtensionContainerElement } from "./ExtensionContainerElement";
 // import { SplitLayout } from "../SplitLayout";
+import { Window } from "./Window";
+
 
 export interface CommandQueryOptions {
   categories?: Category[];
@@ -34,7 +39,14 @@ export interface CommandQueryOptions {
 }
 
 export interface ExtensionManager {
+
+  getActiveWindow(): Window;
+  getActiveTerminal(): Terminal;
+  getActiveHyperlinkURL(): string;
+
   getAllExtensions(): ExtensionMetadata[];
+  getAllWindows(): Window[];
+
 //   onStateChanged: ExtensionApi.Event<void>;
   onDesiredStateChanged: ExtensionApi.Event<void>;
 
@@ -84,20 +96,6 @@ export interface ExtensionManager {
 //   getViewerTabDisplay(): ViewerTabDisplay;
 }
 
-// export interface AcceptsExtensionManager {
-//   setExtensionManager(extensionManager: ExtensionManager): void;
-// }
-
-// export function injectExtensionManager(instance: any, extensionManager: ExtensionManager): void {
-//   if (isAcceptsExtensionManager(instance)) {
-//     instance.setExtensionManager(extensionManager);
-//   }
-// }
-
-// export function isAcceptsExtensionManager(instance: any): instance is AcceptsExtensionManager {
-//   return (<AcceptsExtensionManager> instance).setExtensionManager !== undefined;
-// }
-
 // /**
 //  * Interface for something which can display ViewerElements in tabs.
 //  */
@@ -138,6 +136,15 @@ export interface InternalWindow extends ExtensionApi.Window {
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
 }
 
+export interface CommandMenuEntry {
+  commandContribution: ExtensionCommandContribution;
+  contextMenu: boolean;
+  commandPalette: boolean;
+  newTerminal: boolean;
+  terminalTab: boolean;
+  windowMenu: boolean;
+}
+
 /**
  * Holds internal accounting needed to support an Extension.
  *
@@ -145,23 +152,45 @@ export interface InternalWindow extends ExtensionApi.Window {
  * Extension and all the different things it may have registered and
  * provided.
  */
-export interface InternalExtensionContext extends ExtensionApi.ExtensionContext, ExtensionApi.Disposable {
-   // Note: Most of these fields start with `_` to signal to any extension
-   // developers that these fields are internal.
+export interface InternalExtensionContext extends ExtensionApi.Disposable {
 
-  _extensionManager: ExtensionManager;
-  // commands: CommandsRegistry;
-  _extensionMetadata: ExtensionMetadata;
+  // _extensionManager: ExtensionManager;
+  commands: CommandsRegistry;
+  sessionEditorRegistry: WorkspaceSessionEditorRegistry;
+
+  // _extensionMetadata: ExtensionMetadata;
   // _internalWindow: InternalWindow;
-  _proxyFactory: ProxyFactory;
+  // _proxyFactory: ProxyFactory;
 
   // _findViewerElementTagByMimeType(mimeType: string): string;
-  _registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
-  _setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean);
+  // _registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
+
+  // createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
+
+  getActiveTerminal(): ExtensionApi.Terminal;
+  getActiveHyperlinkURL(): string;
+  getActiveWindow(): ExtensionApi.Window;
+  getAllTerminals(): ExtensionApi.Terminal[];
+  getExtensionContext(): ExtensionApi.ExtensionContext;
+  getSessionBackends(): LoadedSessionBackendContribution[];
+  getTerminalThemeProviders(): LoadedTerminalThemeProviderContribution[];
+
+  onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
+
+  registerSessionBackend(name: string, backend: ExtensionApi.SessionBackend): void;
+  registerTerminalThemeProvider(name: string, provider: ExtensionApi.TerminalThemeProvider): void;
+
+  setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void;
   // _debugRegisteredCommands(): void;
 
   // _registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void;
   // _createTabTitleWidgets(terminal: EtTerminal): HTMLElement[];
+
+  newTerminalCreated(window: Window, newTerminal: Terminal): void;
+  newWindowCreated(window: Window, allWindows: Window[]): void;
+  terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void;
+  terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
+  terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
 }
 
 // export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorderWidget {

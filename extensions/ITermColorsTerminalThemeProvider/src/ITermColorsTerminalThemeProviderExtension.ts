@@ -94,5 +94,5 @@ function to2DigitHex(value: number): string {
 
 export function activate(context: ExtensionContext): any {
   context.logger.debug("ITermColorTerminalThemeProvider activating");
-  context.backend.registerTerminalThemeProvider("iTermColors", new ItermColorTerminalThemeProvider(context.logger));
+  context.windows.registerTerminalThemeProvider("iTermColors", new ItermColorTerminalThemeProvider(context.logger));
 }

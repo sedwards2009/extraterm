@@ -1,9 +1,9 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ExtensionApi from '@extraterm/extraterm-extension-api';
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { ClipboardImpl } from "./ClipboardImpl";
 import * as open from "open";
 import * as fs from "fs";
@@ -11,7 +11,6 @@ import * as path from "path";
 
 
 export class ApplicationImpl implements ExtensionApi.Application {
-
   #clipboard = new ClipboardImpl();
   #version = "";
 

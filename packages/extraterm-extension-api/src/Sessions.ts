@@ -1,10 +1,17 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event } from "extraterm-event-emitter";
-import { NodeWidget, QLabel } from "@nodegui/nodegui";
+import { NodeWidget } from "@nodegui/nodegui";
+
+
+export interface Sessions {
+  registerSessionBackend(name: string, backend: SessionBackend): void;
+  registerSessionEditor(type: string, factory: SessionEditorFactory): void;
+  registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void;
+}
 
 
 /**

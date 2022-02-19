@@ -1,14 +1,15 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { BlockFrame } from "../../terminal/BlockFrame";
 
-import { InternalExtensionContext } from "../../InternalTypes";
 import { TerminalBlock } from "../../terminal/TerminalBlock";
-import { TerminalOutputDetailsProxy } from "./TerminalOutputDetailsProxy";
+import { TerminalOutputDetailsImpl } from "./TerminalOutputDetailsImpl";
+import { ExtensionMetadata } from "../ExtensionMetadata";
+
 // import { ViewerElement } from "../viewers/ViewerElement";
 // import { EmbeddedViewer } from "../viewers/EmbeddedViewer";
 // import { TerminalViewer } from "../viewers/TerminalAceViewer";
@@ -24,22 +25,22 @@ export class BlockImpl implements ExtensionApi.Block {
 
   #type: string = null;
   #details: any = null;
-  #internalExtensionContext: InternalExtensionContext = null;
+  #extensionMetadata: ExtensionMetadata;
   #blockFrame: BlockFrame = null;
 
-  constructor(internalExtensionContext: InternalExtensionContext, blockFrame: BlockFrame) {
-    this.#internalExtensionContext = internalExtensionContext;
+  constructor(extensionMetadata: ExtensionMetadata, blockFrame: BlockFrame) {
+    this.#extensionMetadata = extensionMetadata;
     this.#blockFrame = blockFrame;
   }
 
-  private _init(): void {
+  #init(): void {
     if (this.#type != null) {
       return;
     }
 
     const block = this.#blockFrame.getBlock();
     if (block instanceof TerminalBlock) {
-      this.#details = new TerminalOutputDetailsProxy(this.#internalExtensionContext, block);
+      this.#details = new TerminalOutputDetailsImpl(this.#extensionMetadata, block);
       this.#type = ExtensionApi.TerminalOutputType;
     }
 
@@ -60,12 +61,12 @@ export class BlockImpl implements ExtensionApi.Block {
   }
 
   get type(): string {
-    this._init();
+    this.#init();
     return this.#type;
   }
 
   get details(): any {
-    this._init();
+    this.#init();
     return this.#details;
   }
 

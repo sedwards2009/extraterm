@@ -20,14 +20,14 @@ let context: ExtensionContext = null;
 export function activate(_context: ExtensionContext): any {
   context = _context;
   log = context.logger;
-  for (const terminal of context.window.terminals) {
+  for (const terminal of context.terminals.terminals) {
     terminal.onDidAppendScrollbackLines(scanAndLinkScrollback);
     terminal.onDidScreenChange((ev: LineRangeChange) => {
       scanAndLinkScreen(terminal, ev);
     });
   }
 
-  context.window.onDidCreateTerminal((newTerminal: Terminal) => {
+  context.terminals.onDidCreateTerminal((newTerminal: Terminal) => {
     newTerminal.onDidAppendScrollbackLines(scanAndLinkScrollback);
     newTerminal.onDidScreenChange((ev: LineRangeChange) => {
       scanAndLinkScreen(newTerminal, ev);

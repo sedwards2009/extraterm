@@ -12,6 +12,15 @@ import { Block } from "./Block";
 import { ScreenWithCursor } from "./Screen";
 
 
+// TODO: Rename this file to Terminals.ts
+
+export interface Terminals {
+  readonly terminals: Terminal[];
+
+  readonly onDidCreateTerminal: Event<Terminal>;
+  // onWillDestroyTerminal: Event<Terminal>;
+}
+
 export interface OnCursorListPickerOptions {
   /**
    * The list of text items to display.
@@ -198,8 +207,8 @@ export interface TerminalBorderWidget {
 
   readonly isOpen: boolean;
 
-  onDidOpen: Event<void>;
-  onDidClose: Event<void>;
+  readonly onDidOpen: Event<void>;
+  readonly onDidClose: Event<void>;
 }
 
 export interface TerminalBorderWidgetFactory {

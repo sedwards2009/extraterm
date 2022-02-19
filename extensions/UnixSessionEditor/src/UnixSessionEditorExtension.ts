@@ -23,7 +23,7 @@ let etcShells: string[] = [];
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  context.window.registerSessionEditor("unix", SessionEditorFactory);
+  context.sessions.registerSessionEditor("unix", SessionEditorFactory);
 
   readEtcShells().then(result => {
     etcShells = result;

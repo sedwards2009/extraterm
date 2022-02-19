@@ -1,8 +1,9 @@
 /*
- * Copyright 2020-2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020-2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+
 import * as _ from "lodash";
 
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
@@ -11,22 +12,26 @@ import { log, Logger, getLogger } from "extraterm-logging";
 
 import { Terminal, EXTRATERM_COOKIE_ENV } from "../../terminal/Terminal";
 import { InternalExtensionContext } from "../../InternalTypes";
+import { ExtensionMetadata } from "../ExtensionMetadata";
 // import { ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
 
 
-
-export class TerminalProxy implements ExtensionApi.Terminal {
+export class TerminalImpl implements ExtensionApi.Terminal {
   private _log: Logger = null;
   viewerType: "terminal-output";
-  private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
-  private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
+  // private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
+  // private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
 
-  environment: TerminalEnvironmentProxy;
+  environment: TerminalEnvironmentImpl;
   screen: ExtensionApi.ScreenWithCursor;
   #sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   #sessionConfigurationExtensions: Object = null;
 
-  _onDidAppendBlockEventEmitter = new EventEmitter<ExtensionApi.Block>();
+  #internalExtensionContext: InternalExtensionContext;
+  #extensionMetadata: ExtensionMetadata;
+  #terminal: Terminal;
+
+  #onDidAppendBlockEventEmitter = new EventEmitter<ExtensionApi.Block>();
   onDidAppendBlock: ExtensionApi.Event<ExtensionApi.Block>;
 
   onDidAppendScrollbackLines: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
@@ -35,16 +40,23 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   onDidScreenChange: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
   _onDidScreenChangeEventEmitter = new EventEmitter<ExtensionApi.LineRangeChange>();
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: Terminal) {
+  constructor(internalExtensionContext: InternalExtensionContext, extensionMetadata: ExtensionMetadata,
+      terminal: Terminal) {
+
     this._log = getLogger("TerminalProxy", this);
-    this._terminal.onDispose(this._handleTerminalDispose.bind(this));
-    this.environment = new TerminalEnvironmentProxy(this._terminal);
-    this.screen = new ScreenProxy(this._internalExtensionContext, this._terminal);
-    this.onDidAppendBlock = this._onDidAppendBlockEventEmitter.event;
+
+    this.#terminal = terminal;
+    this.#internalExtensionContext = internalExtensionContext;
+    this.#extensionMetadata = extensionMetadata;
+
+    this.#terminal.onDispose(this.#handleTerminalDispose.bind(this));
+    this.environment = new TerminalEnvironmentImpl(this.#terminal);
+    this.screen = new ScreenProxy(this.#extensionMetadata, this.#terminal);
+    this.onDidAppendBlock = this.#onDidAppendBlockEventEmitter.event;
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this._onDidScreenChangeEventEmitter.event;
 
-    this.#sessionConfiguration = _.cloneDeep(this._terminal.getSessionConfiguration());
+    this.#sessionConfiguration = _.cloneDeep(this.#terminal.getSessionConfiguration());
     this.#sessionConfigurationExtensions = this.#sessionConfiguration.extensions ?? {};
     this.#sessionConfiguration.extensions = null;
   }
@@ -56,19 +68,19 @@ export class TerminalProxy implements ExtensionApi.Terminal {
     return null;
   }
 
-  private _handleTerminalDispose(): void {
-    this._terminal = null;
+  #handleTerminalDispose(): void {
+    this.#terminal = null;
     this.environment.dispose();
   }
 
-  private _checkIsAlive(): void {
+  #checkIsAlive(): void {
     if ( ! this.isAlive) {
       throw new Error("Terminal is no longer alive and cannot be used.");
     }
   }
 
   get isAlive(): boolean {
-    return this._terminal != null;
+    return this.#terminal != null;
   }
 
   get tab(): ExtensionApi.Tab {
@@ -78,8 +90,8 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   type(text: string): void {
-    this._checkIsAlive();
-    this._terminal.sendToPty(text);
+    this.#checkIsAlive();
+    this.#terminal.sendToPty(text);
   }
 
   get blocks(): ExtensionApi.Block[] {
@@ -90,12 +102,12 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   get extratermCookieValue(): string {
-    this._checkIsAlive();
-    return this._terminal.getExtratermCookieValue();
+    this.#checkIsAlive();
+    return this.#terminal.getExtratermCookieValue();
   }
 
   get extratermCookieName(): string {
-    this._checkIsAlive();
+    this.#checkIsAlive();
     return EXTRATERM_COOKIE_ENV;
   }
 
@@ -104,7 +116,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   }
 
   getSessionSettings(name: string): Object {
-    const settingsKey = `${this._internalExtensionContext._extensionMetadata.name}:${name}`;
+    const settingsKey = `${this.#extensionMetadata.name}:${name}`;
     const settings = this.#sessionConfigurationExtensions[settingsKey];
     return settings == null ? null : settings;
   }
@@ -156,7 +168,7 @@ export class TerminalProxy implements ExtensionApi.Terminal {
   // }
 
   async getWorkingDirectory(): Promise<string | null> {
-    const pty = this._terminal.getPty();
+    const pty = this.#terminal.getPty();
     if (pty == null) {
       return null;
     }
@@ -177,96 +189,104 @@ interface TabTitleWidgetInfo {
 }
 
 
-class TerminalEnvironmentProxy implements ExtensionApi.TerminalEnvironment {
+class TerminalEnvironmentImpl implements ExtensionApi.TerminalEnvironment {
   onChange: ExtensionApi.Event<string[]>;
   _onChangeEventEmitter = new EventEmitter<string[]>();
+  #terminal: Terminal;
 
-  constructor(private _terminal: Terminal) {
+  constructor(terminal: Terminal) {
+    this.#terminal = terminal;
     this.onChange = this._onChangeEventEmitter.event;
   }
 
-  private _checkIsAlive(): void {
-    if (this._terminal == null) {
+  #checkIsAlive(): void {
+    if (this.#terminal == null) {
       throw new Error("Terminal environment is no longer alive and cannot be used.");
     }
   }
 
   dispose(): void {
-    this._terminal = null;
+    this.#terminal = null;
     this._onChangeEventEmitter.dispose();
   }
 
   get(key: string): string {
-    this._checkIsAlive();
-    return this._terminal.environment.get(key);
+    this.#checkIsAlive();
+    return this.#terminal.environment.get(key);
   }
 
   has(key: string): boolean {
-    this._checkIsAlive();
-    return this._terminal.environment.has(key);
+    this.#checkIsAlive();
+    return this.#terminal.environment.has(key);
   }
 
   set(key: string, value: string): void {
-    this._checkIsAlive();
-    this._terminal.environment.set(key, value);
+    this.#checkIsAlive();
+    this.#terminal.environment.set(key, value);
   }
 
   setList(list: {key: string, value: string}[]): void {
-    this._checkIsAlive();
-    this._terminal.environment.setList(list);
+    this.#checkIsAlive();
+    this.#terminal.environment.setList(list);
   }
 
   [Symbol.iterator](): IterableIterator<[string, string]> {
-    this._checkIsAlive();
+    this.#checkIsAlive();
     return this.entries();
   }
 
   entries(): IterableIterator<[string, string]> {
-    this._checkIsAlive();
-    return this._terminal.environment.entries();
+    this.#checkIsAlive();
+    return this.#terminal.environment.entries();
   }
 }
 
 
 class ScreenProxy implements ExtensionApi.ScreenWithCursor {
+  #terminal: Terminal;
+  #extensionMetadata: ExtensionMetadata;
 
-  constructor(private _internalExtensionContext: InternalExtensionContext, private _terminal: Terminal) {
+  constructor(extensionMetadata: ExtensionMetadata,
+      terminal: Terminal) {
+
+    this.#terminal = terminal;
+    this.#extensionMetadata = extensionMetadata;
   }
 
   getLineText(line: number): string {
-    const str = this._terminal.getEmulator().getLineText(line);
+    const str = this.#terminal.getEmulator().getLineText(line);
     return str == null ? "" : str;
   }
 
   applyHyperlink(line: number, x: number, length: number, url: string): void {
-    const emulator = this._terminal.getEmulator();
+    const emulator = this.#terminal.getEmulator();
     const termLine = emulator.lineAtRow(line);
     const startColumn = termLine.mapStringIndexToColumn(0, x);
     const endColumn = termLine.mapStringIndexToColumn(0, x + length);
-    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    const extensionName = this.#extensionMetadata.name;
     emulator.applyHyperlink(line, startColumn, endColumn - startColumn, url, extensionName);
   }
 
   removeHyperlinks(line: number): void {
-    const emulator = this._terminal.getEmulator();
-    const extensionName = this._internalExtensionContext._extensionMetadata.name;
+    const emulator = this.#terminal.getEmulator();
+    const extensionName = this.#extensionMetadata.name;
     emulator.removeHyperlinks(line, extensionName);
   }
 
   get width(): number {
-    return this._terminal.getEmulator().size().columns;
+    return this.#terminal.getEmulator().size().columns;
   }
 
   get height(): number {
-    return this._terminal.getEmulator().size().rows;
+    return this.#terminal.getEmulator().size().rows;
   }
 
   get cursorLine(): number {
-    return this._terminal.getEmulator().getCursorRow();
+    return this.#terminal.getEmulator().getCursorRow();
   }
 
   get cursorX(): number {
-    const cursorX = this._terminal.getEmulator().getDimensions().cursorX;
+    const cursorX = this.#terminal.getEmulator().getDimensions().cursorX;
     return cursorX;
   }
 }

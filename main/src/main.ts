@@ -247,7 +247,7 @@ class Main {
   }
 
   registerCommands(extensionManager: ExtensionManager): void {
-    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
+    const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
     commands.registerCommand("extraterm:application.openCommandPalette", () => this.commandOpenCommandPalette());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openSettings", () => this.commandOpenSettings());
@@ -303,12 +303,14 @@ class Main {
     //   }
     // }
 
+    const window = this.#windows[0];
+
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsIOManager);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
-    this.#windows[0].addTab(newTerminal);
+    window.addTab(newTerminal);
     newTerminal.setSessionConfiguration(sessionConfiguration);
 
     const extraEnv = {
@@ -339,8 +341,8 @@ class Main {
     // this._setUpNewTerminalEventHandlers(newTerminal);
     // this._sendTabOpenedEvent();
 
-    this.#windows[0].focusTab(newTerminal);
-    this.#extensionManager.newTerminalCreated(newTerminal, this.#windows[0].getTerminals());
+    window.focusTab(newTerminal);
+    this.#extensionManager.newTerminalCreated(window, newTerminal);
   }
 
   #getSessionByUuid(sessionUuid: string): SessionConfiguration {
@@ -397,12 +399,12 @@ class Main {
           when: "",
           icon: "fa-plus",
         };
-        disposables.add(extensionContext._registerCommandContribution(contrib));
+        disposables.add(extensionContext.commands.registerCommandContribution(contrib));
 
-        extensionContext._setCommandMenu(command, "contextMenu", false);
-        extensionContext._setCommandMenu(command, "commandPalette", true);
-        extensionContext._setCommandMenu(command, "newTerminal", true);
-        extensionContext._setCommandMenu(command, "windowMenu", true);
+        extensionContext.setCommandMenu(command, "contextMenu", false);
+        extensionContext.setCommandMenu(command, "commandPalette", true);
+        extensionContext.setCommandMenu(command, "newTerminal", true);
+        extensionContext.setCommandMenu(command, "windowMenu", true);
       }
     };
 
@@ -432,6 +434,7 @@ class Main {
 
     this.#windows.push(win);
     win.open();
+    this.#extensionManager.newWindowCreated(win, this.#windows);
   }
 
   #closeTab(win: Window, tab: Tab): void {

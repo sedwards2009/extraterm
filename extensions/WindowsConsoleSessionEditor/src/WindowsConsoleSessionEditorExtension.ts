@@ -22,7 +22,7 @@ let commands: string[] = [];
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  context.window.registerSessionEditor("windows-console", SessionEditorFactory);
+  context.sessions.registerSessionEditor("windows-console", SessionEditorFactory);
 
   initializeAvailableExes().then(availableCommands => {
     commands = availableCommands;

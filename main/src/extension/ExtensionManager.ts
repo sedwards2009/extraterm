@@ -15,7 +15,7 @@ import { ExtensionMetadata, ExtensionDesiredState, ExtensionCommandContribution,
 import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
-import { ExtensionContextImpl } from "./ExtensionContextImpl";
+import { ExtensionContextImpl } from "./api/ExtensionContextImpl";
 import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import * as InternalTypes from "../InternalTypes";
@@ -23,13 +23,14 @@ import { CommonExtensionWindowState } from "./CommonExtensionState";
 import { CommandMenuEntry } from "../CommandsRegistry";
 import { Window } from "../Window";
 import { LineRangeChange, Terminal } from "../terminal/Terminal";
-import { InternalSessionEditor } from "../InternalTypes";
+import { InternalExtensionContext, InternalSessionEditor } from "../InternalTypes";
+import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl";
 
 
 interface ActiveExtension {
   metadata: ExtensionMetadata;
   publicApi: any;
-  contextImpl: ExtensionContextImpl;
+  internalExtensionContext: InternalExtensionContext;
   module: any;
 }
 
@@ -66,6 +67,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     // isInputFieldFocus: false,
     activeHyperlinkURL: null,
   };
+
+  #allWindows: Window[] = [];
 
   constructor(configDatabase: ConfigDatabase, extensionPaths: string[],
       applicationVersion: string) {
@@ -180,25 +183,25 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #startExtension(metadata: ExtensionMetadata): ActiveExtension {
     let module = null;
     let publicApi = null;
-    let contextImpl: ExtensionContextImpl = null;
 
     this._log.info(`Starting extension '${metadata.name}'`);
 
-    contextImpl = new ExtensionContextImpl(this, metadata, this.#configDatabase, this.#commonExtensionWindowState,
+    const internalExtensionContext = new InternalExtensionContextImpl(this, metadata, this.#configDatabase, /* this.#commonExtensionWindowState, */
       this.#applicationVersion);
+
     if (metadata.main != null) {
       module = this.#loadExtensionModule(metadata);
       if (module == null) {
         return null;
       }
       try {
-        publicApi = (<ExtensionApi.ExtensionModule> module).activate(contextImpl);
+        publicApi = (<ExtensionApi.ExtensionModule> module).activate(internalExtensionContext.getExtensionContext());
       } catch(ex) {
         this._log.warn(`Exception occurred while activating extension ${metadata.name}. ${ex}`);
         return null;
       }
     }
-    const activeExtension: ActiveExtension = {metadata, publicApi, contextImpl, module};
+    const activeExtension: ActiveExtension = {metadata, publicApi, internalExtensionContext, module};
     this.#activeExtensions.push(activeExtension);
     return activeExtension;
   }
@@ -226,7 +229,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       }
     }
 
-    activeExtension.contextImpl.dispose();
+    activeExtension.internalExtensionContext.dispose();
     this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
   }
 
@@ -240,7 +243,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   getExtensionContextByName(name: string): InternalTypes.InternalExtensionContext {
     const extension = this.#getActiveExtension(name);
-    return extension != null ? extension.contextImpl : null;
+    return extension != null ? extension.internalExtensionContext : null;
   }
 
   enableExtension(name: string): void {
@@ -313,17 +316,17 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   #getActiveBackendExtensions(): ActiveExtension[] {
-    return this.#activeExtensions.filter(ae => ae.contextImpl != null);
+    return this.#activeExtensions.filter(ae => ae.internalExtensionContext != null);
   }
 
   getSessionBackendContributions(): LoadedSessionBackendContribution[] {
     return _.flatten(this.#getActiveBackendExtensions().map(
-      ae => ae.contextImpl._internalBackend._sessionBackends));
+      ae => ae.internalExtensionContext.getSessionBackends()));
   }
 
   getSessionBackend(type: string): ExtensionApi.SessionBackend {
     for (const extension of this.#getActiveBackendExtensions()) {
-      for (const backend of extension.contextImpl._internalBackend._sessionBackends) {
+      for (const backend of extension.internalExtensionContext.getSessionBackends()) {
         if (backend.sessionBackendMetadata.type === type) {
           return backend.sessionBackend;
         }
@@ -347,7 +350,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor {
     const seExtensions = this.#activeExtensions.filter(ae => ae.metadata.contributes.sessionEditors.length !==0);
     for (const extension of seExtensions) {
-      const editor = extension.contextImpl._internalWindow.createSessionEditor(sessionType, sessionConfiguration);
+      const editor = extension.internalExtensionContext.sessionEditorRegistry.createSessionEditor(sessionType, sessionConfiguration);
       if (editor != null) {
         return editor;
       }
@@ -374,7 +377,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   getTerminalThemeProviderContributions(): LoadedTerminalThemeProviderContribution[] {
     return _.flatten(this.#getActiveBackendExtensions().map(
-      ae => ae.contextImpl._internalBackend._terminalThemeProviders));
+      ae => ae.internalExtensionContext.getTerminalThemeProviders()));
   }
 
   hasCommand(command: string): boolean {
@@ -401,7 +404,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     if (ext == null) {
       return null;
     }
-    return ext.contextImpl.commands.getCommandFunction(command);
+    return ext.internalExtensionContext.commands.getCommandFunction(command);
   }
 
   setActiveWindow(window: Window): void {
@@ -474,7 +477,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     for (const ext of this.#activeExtensions) {
       if (ext.metadata.name === extensionName) {
-        const commandFunc = ext.contextImpl.commands.getCommandFunction(commandName);
+        const commandFunc = ext.internalExtensionContext.commands.getCommandFunction(commandName);
         if (commandFunc == null) {
           throw new Error(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
         }
@@ -573,7 +576,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     const entries: ExtensionCommandContribution[] = [];
     for (const activeExtension  of this.#activeExtensions) {
-      for (const [command, commandEntryList] of activeExtension.contextImpl.commands._commandToMenuEntryMap) {
+      for (const [command, commandEntryList] of activeExtension.internalExtensionContext.commands.getCommandToMenuEntryMap()) {
         for (const commandEntry of commandEntryList) {
           if (commandPredicate(commandEntry) && commandPalettePredicate(commandEntry) &&
               contextMenuPredicate(commandEntry) && newTerminalMenuPredicate(commandEntry) &&
@@ -581,7 +584,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
               categoryPredicate(commandEntry) &&
               whenPredicate(commandEntry)) {
 
-            const customizer = activeExtension.contextImpl.commands.getFunctionCustomizer(
+            const customizer = activeExtension.internalExtensionContext.commands.getFunctionCustomizer(
                                 commandEntry.commandContribution.command);
             if (customizer != null) {
               this.#executeFuncWithExtensionWindowState(context,
@@ -678,7 +681,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return 0;
   }
 
-  newTerminalCreated(newTerminal: Terminal, allTerminals: Terminal[]): void {
+  newTerminalCreated(window: Window, newTerminal: Terminal): void {
 
     // newTerminal.addEventListener(EtTerminal.EVENT_APPENDED_VIEWER, (ev: CustomEvent) => {
     //   for (const extension of this._getActiveRenderExtensions()) {
@@ -688,24 +691,35 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     newTerminal.environment.onChange((changeList: string[]) => {
       for (const extension of this.#activeExtensions) {
-        extension.contextImpl._internalWindow.terminalEnvironmentChanged(newTerminal, changeList);
+        extension.internalExtensionContext.terminalEnvironmentChanged(newTerminal, changeList);
       }
     });
 
     newTerminal.onDidAppendScrollbackLines((ev: LineRangeChange) => {
       for (const activeExtension of this.#activeExtensions) {
-        activeExtension.contextImpl._internalWindow.terminalDidAppendScrollbackLines(newTerminal, ev);
+        activeExtension.internalExtensionContext.terminalDidAppendScrollbackLines(newTerminal, ev);
       }
     });
 
     newTerminal.onDidScreenChange((ev: LineRangeChange) => {
       for (const activeExtension of this.#activeExtensions) {
-        activeExtension.contextImpl._internalWindow.terminalDidScreenChange(newTerminal, ev);
+        activeExtension.internalExtensionContext.terminalDidScreenChange(newTerminal, ev);
       }
     });
 
     for (const activeExtension of this.#activeExtensions) {
-      activeExtension.contextImpl._internalWindow.newTerminalCreated(newTerminal, allTerminals);
+      activeExtension.internalExtensionContext.newTerminalCreated(window, newTerminal);
     }
+  }
+
+  newWindowCreated(window: Window, allWindows: Window[]): void {
+    this.#allWindows = allWindows;
+    for (const activeExtension of this.#activeExtensions) {
+      activeExtension.internalExtensionContext.newWindowCreated(window, allWindows);
+    }
+  }
+
+  getAllWindows(): Window[] {
+    return this.#allWindows;
   }
 }

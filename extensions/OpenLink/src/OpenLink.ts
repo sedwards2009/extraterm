@@ -16,7 +16,7 @@ export function activate(_context: ExtensionContext): any {
 }
 
 function commandNameFunc(): CustomizedCommand {
-  let text = context.window.activeHyperlinkURL;
+  let text = context.activeHyperlinkURL;
   try {
     const url = new URL(text);
     if (url.protocol === "file:") {
@@ -46,5 +46,5 @@ function shortenURL(url: string): string {
 }
 
 function openLinkCommand(): void {
-  context.application.openExternal(context.window.activeHyperlinkURL);
+  context.application.openExternal(context.activeHyperlinkURL);
 }

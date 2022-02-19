@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -166,5 +166,5 @@ class WindowsConsoleBackend implements SessionBackend {
 }
 
 export function activate(context: ExtensionContext): any {
-  context.backend.registerSessionBackend("Windows Console", new WindowsConsoleBackend(context.logger));
+  context.sessions.registerSessionBackend("Windows Console", new WindowsConsoleBackend(context.logger));
 }

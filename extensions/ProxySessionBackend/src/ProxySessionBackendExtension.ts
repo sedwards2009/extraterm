@@ -8,6 +8,6 @@ import { CygwinProxySessionBackend } from './CygwinProxySessionBackend';
 import { WslProxySessionBackend } from './WslProxySessionBackend';
 
 export function activate(context: ExtensionContext): any {
-  context.backend.registerSessionBackend("Cygwin", new CygwinProxySessionBackend(context.logger));
-  context.backend.registerSessionBackend("Windows Subsystem for Linux", new WslProxySessionBackend(context.logger));
+  context.sessions.registerSessionBackend("Cygwin", new CygwinProxySessionBackend(context.logger));
+  context.sessions.registerSessionBackend("Windows Subsystem for Linux", new WslProxySessionBackend(context.logger));
 }

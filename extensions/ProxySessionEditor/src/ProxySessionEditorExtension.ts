@@ -11,5 +11,5 @@ export function activate(context: ExtensionContext): any {
   context.logger.info("ProxySessionEditorExtension activate");
 
   wslInit();
-  context.window.registerSessionEditor("wsl", wslProxySessionEditorFactory.bind(null, context.logger));
+  context.sessions.registerSessionEditor("wsl", wslProxySessionEditorFactory.bind(null, context.logger));
 }

@@ -16,7 +16,7 @@ export function activate(_context: ExtensionContext): any {
 }
 
 function commandNameFunc(): CustomizedCommand {
-  if (getProtocol(context.window.activeHyperlinkURL) === "file:") {
+  if (getProtocol(context.activeHyperlinkURL) === "file:") {
     return {
       title: `Copy Path`
     }
@@ -28,7 +28,7 @@ function commandNameFunc(): CustomizedCommand {
 }
 
 function copyLinkCommand(): void {
-  let text = context.window.activeHyperlinkURL;
+  let text = context.activeHyperlinkURL;
   try {
     const url = new URL(text);
     if (url.protocol === "file:") {
