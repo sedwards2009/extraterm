@@ -14,7 +14,7 @@
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.14.0",
+    "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/node": "^14.14.37",
     "eslint": "7.19.0",
     "eslint-config-extraterm": "1.0.0",

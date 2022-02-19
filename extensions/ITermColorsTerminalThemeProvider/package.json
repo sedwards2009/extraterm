@@ -20,7 +20,7 @@
     "plist": "^3.0.1"
   },
   "devDependencies": {
-    "@extraterm/extraterm-extension-api": "0.14.0",
+    "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/jest": "27.0.1",
     "eslint": "7.19.0",
     "eslint-config-extraterm": "1.0.0",
