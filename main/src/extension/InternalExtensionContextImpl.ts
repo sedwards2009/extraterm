@@ -21,6 +21,7 @@ import { Block } from "../terminal/Block";
 import { BlockImpl } from "./api/BlockImpl";
 import { BlockFrame } from "../terminal/BlockFrame";
 import { Window } from "../Window";
+import { WindowImpl } from "./api/WindowImpl";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -65,8 +66,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   getActiveWindow(): ExtensionApi.Window {
-    return null;
-    // TODO: return this.wrapWindow(this.#extensionManager.getActiveWindow());
+    return this.wrapWindow(this.#extensionManager.getActiveWindow());
   }
 
   newWindowCreated(window: Window, allWindows: Window[]): void {
@@ -194,7 +194,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     }
   }
 
-  #terminalWrapMap = new Map<Terminal, TerminalImpl>();
+  #terminalWrapMap = new WeakMap<Terminal, TerminalImpl>();
 
   hasTerminalProxy(terminal: Terminal): boolean {
     return this.#terminalWrapMap.has(terminal);
@@ -211,7 +211,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     return this.#terminalWrapMap.get(terminal);
   }
 
-  #blockWrapMap = new Map<BlockFrame, BlockImpl>();
+  #blockWrapMap = new WeakMap<BlockFrame, BlockImpl>();
 
   hasBlockProxy(block: BlockFrame): boolean {
     return this.#blockWrapMap.has(block);
@@ -226,5 +226,15 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       this.#blockWrapMap.set(blockFrame, wrappedBlock);
     }
     return this.#blockWrapMap.get(blockFrame);
+  }
+
+  #windowWrapMap = new WeakMap<Window, WindowImpl>();
+
+  wrapWindow(window: Window): WindowImpl {
+    if (!this.#windowWrapMap.has(window)) {
+      const wrappedWindow = new WindowImpl(this, this.#extensionMetadata, window);
+      this.#windowWrapMap.set(window, wrappedWindow);
+    }
+    return this.#windowWrapMap.get(window);
   }
 }

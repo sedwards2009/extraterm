@@ -1341,6 +1341,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"about@workspace:extensions/About":
+  version: 0.0.0-use.local
+  resolution: "about@workspace:extensions/About"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    "@types/node": ^14.14.37
+    eslint: 7.19.0
+    eslint-config-extraterm: 1.0.0
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
+
 "acorn-globals@npm:^6.0.0":
   version: 6.0.0
   resolution: "acorn-globals@npm:6.0.0"

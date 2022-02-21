@@ -38,6 +38,7 @@
     "packages": [
       "main",
       "packages/*",
+      "extensions/About",
       "extensions/Autolink",
       "extensions/CopyLink",
       "extensions/DefaultTerminalTheme",

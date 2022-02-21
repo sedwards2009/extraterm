@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -63,13 +63,6 @@ export interface ExtensionManager {
 
   getAllSessionTypes(): { name: string, type: string }[];
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
-
-//   getActiveTab(): HTMLElement;
-//   getActiveTerminal(): EtTerminal;
-//   getActiveTabContent(): HTMLElement;
-//   getActiveTabWidget(): TabWidget;
-//   getActiveTextEditor(): TextEditor;
-//   isInputFieldFocus(): boolean;
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
 //   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
@@ -191,6 +184,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void;
   terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
+  wrapTerminal(terminal: Terminal): ExtensionApi.Terminal;
 }
 
 // export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorderWidget {

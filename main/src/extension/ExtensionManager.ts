@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -15,7 +15,6 @@ import { ExtensionMetadata, ExtensionDesiredState, ExtensionCommandContribution,
 import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
-import { ExtensionContextImpl } from "./api/ExtensionContextImpl";
 import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import * as InternalTypes from "../InternalTypes";
