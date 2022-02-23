@@ -355,7 +355,7 @@ export class Window {
 
       const action = menu.addAction(entry.title);
       action.setData(new QVariant(entry.command));
-      if (entry.icon != null) {
+      if (entry.icon != null && entry.icon !== "") {
         const icon = uiStyle.getMenuIcon(entry.icon);
         if (icon != null) {
           action.setIcon(icon);

@@ -762,27 +762,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:^0.45.4":
-  version: 0.45.4
-  resolution: "@nodegui/nodegui@npm:0.45.4"
-  dependencies:
-    "@nodegui/artifact-installer": ^1.1.0
-    "@nodegui/qode": ^16.4.0
-    cmake-js: ^6.2.1
-    cross-env: ^7.0.3
-    cuid: ^2.1.8
-    manage-path: ^2.0.0
-    memoize-one: ^5.2.1
-    node-addon-api: ^4.0.0
-    postcss: ^7.0.17
-    postcss-nodegui-autoprefixer: 0.0.7
-    tar: ^6.0.1
-  bin:
-    qode: scripts/qode.js
-  checksum: 7b2c7c2a63fabf069296402a152f00cf0815cd6507e537a5ae6439126ad47da0867bff5e75baaec045211e02ef91c2f0d013640a030992894ee5677e8b78c3fc
-  languageName: node
-  linkType: hard
-
 "@nodegui/nodegui@npm:^0.46.0":
   version: 0.46.0
   resolution: "@nodegui/nodegui@npm:0.46.0"
@@ -4648,7 +4627,7 @@ __metadata:
     modclean: 3.0.0-beta.1
     node-gyp: ^8.2.0
     node-pty: 0.10.0-beta19
-    nodegui-plugin-font-icon: ^0.1.21
+    nodegui-plugin-font-icon: ^0.2.0
     qode: ^0.1.0
     readdirp: 3.6.0
     shelljs: 0.8.4
@@ -7684,7 +7663,7 @@ fsevents@^2.3.2:
     lru-cache: ^4.1.3
     marked: ^0.8.2
     mime-types: ^2.1.21
-    nodegui-plugin-font-icon: ^0.1.21
+    nodegui-plugin-font-icon: ^0.2.0
     open: ^8.2.1
     opentype.js: ^1.3.1
     performance-now: 2.1.0
@@ -8407,15 +8386,15 @@ fsevents@^2.3.2:
   languageName: node
   linkType: hard
 
-"nodegui-plugin-font-icon@npm:^0.1.21":
-  version: 0.1.21
-  resolution: "nodegui-plugin-font-icon@npm:0.1.21"
+"nodegui-plugin-font-icon@npm:^0.2.0":
+  version: 0.2.0
+  resolution: "nodegui-plugin-font-icon@npm:0.2.0"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
-    "@nodegui/nodegui": ^0.45.4
+    "@nodegui/nodegui": ^0.46.0
     node-addon-api: ^3.0.0
     tar: ^6.0.1
-  checksum: 71029e9b54839ee53f88b49f6d012aa7b76183fbb4e440dcceb989ef4e7a78d6c3c7ab1b0930bac899c90c55af10956fbf99cc64db3ceafc84e6b3c15478c29b
+  checksum: ba86d2657b6935be3200bb718e0fe8598fcd6292bc8d1fc4859d8cb528de9454caa7e3501a5734bb3f80709a1ae884e036b52103492eb953559e04f883f00ca7
   languageName: node
   linkType: hard
 

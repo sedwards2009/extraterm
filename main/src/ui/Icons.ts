@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -19,12 +19,26 @@ const fontSetMapping = {
 export interface CreateIconOptions extends CreateFontIconOptions {}
 
 export function createIcon(name: string, options?: CreateIconOptions): QIcon {
-  const entry = allIcons[name];
+  let rotation = 0;
+  let parts = name.split(" ");
+  if (parts.length !== 1) {
+    for (const angle of [90, 180, 270]) {
+      const keyword = `fa-rotate-${angle}`;
+      if (parts.includes(keyword)) {
+        rotation = angle;
+        parts = parts.filter(p => p !== keyword);
+      }
+    }
+  }
+  const cleanName = parts[0];
+  const cleanOptions = rotation === 0 ? options : {...options, rotation };
+
+  const entry = allIcons[cleanName];
   if (entry === undefined) {
-    _log.warn(`Unknown icon name '${name}'`);
+    _log.warn(`Unknown icon name '${cleanName}'`);
     return null;
   }
-  return createFontIcon(fontSetMapping[entry.set], entry.string, options);
+  return createFontIcon(fontSetMapping[entry.set], entry.string, cleanOptions);
 }
 
 export function createHtmlIcon(name: string): string {
