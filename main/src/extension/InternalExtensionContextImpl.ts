@@ -20,8 +20,10 @@ import { TerminalImpl } from "./api/TerminalImpl";
 import { Block } from "../terminal/Block";
 import { BlockImpl } from "./api/BlockImpl";
 import { BlockFrame } from "../terminal/BlockFrame";
+import { TabImpl } from "./api/TabImpl";
 import { Window } from "../Window";
 import { WindowImpl } from "./api/WindowImpl";
+import { Tab } from "../Tab";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -154,6 +156,10 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     }
   }
 
+  async showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number> {
+    throw new Error("Method not implemented.");
+  }
+
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void {
     if (this.hasTerminalProxy(terminal)) {
       const wrapper = this.wrapTerminal(terminal);
@@ -236,5 +242,15 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       this.#windowWrapMap.set(window, wrappedWindow);
     }
     return this.#windowWrapMap.get(window);
+  }
+
+  #tabWrapMap = new WeakMap<Tab, TabImpl>();
+
+  wrapTab(tab: Tab): TabImpl {
+    if (!this.#tabWrapMap.has(tab)) {
+      const wrappedTab = new TabImpl(this, tab);
+      this.#tabWrapMap.set(tab, wrappedTab);
+    }
+    return this.#tabWrapMap.get(tab);
   }
 }

@@ -84,9 +84,8 @@ export class TerminalImpl implements ExtensionApi.Terminal {
   }
 
   get tab(): ExtensionApi.Tab {
-    // this._checkIsAlive();
-    // return this._internalExtensionContext._proxyFactory.getTabProxy(this._terminal);
-    return null;
+    this.#checkIsAlive();
+    return this.#internalExtensionContext.wrapTab(this.#terminal);
   }
 
   type(text: string): void {

@@ -12,6 +12,7 @@ import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContributi
 // import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
 import { WorkspaceSessionEditorRegistry } from "./extension/WorkspaceSessionEditorRegistry";
+import { Tab } from "./Tab";
 import { BlockFrame } from "./terminal/BlockFrame";
 import { LineRangeChange, Terminal } from "./terminal/Terminal";
 // import { EtViewerTab } from "../ViewerTab";
@@ -181,9 +182,13 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
 
   newTerminalCreated(window: Window, newTerminal: Terminal): void;
   newWindowCreated(window: Window, allWindows: Window[]): void;
+
+  showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
+
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void;
   terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
+  wrapTab(tab: Tab): ExtensionApi.Tab;
   wrapTerminal(terminal: Terminal): ExtensionApi.Terminal;
 }
 

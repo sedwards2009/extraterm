@@ -273,7 +273,6 @@ class Main {
 
   commandOpenCommandPalette(): void {
     const win = this.#extensionManager.getActiveWindow();
-    // const tab = this.#extensionManager.getActiveTab();
     const tab = win.getTab(win.getCurrentTabIndex());
     const commandPalette = new CommandPalette(this.#extensionManager, this.#keybindingsIOManager, this.#uiStyle);
     commandPalette.show(win, tab);
