@@ -5,9 +5,10 @@
  */
 import { QIcon } from "@nodegui/nodegui";
 import { alpha, blue, change, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate, toHex } from "khroma";
-import { createIcon } from "../Icons";
 
+import { createIcon } from "../Icons";
 import { IconPair, UiStyle } from "../UiStyle";
+
 
 function toRgba(color: string): number {
   return (red(color) << 24) | (green(color) << 16) | (blue(color) << 8) | 0xff;
@@ -22,9 +23,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   let styleTextHighlightColor = "";
   let styleBrandSuccess = "";
   let styleBrandDanger = "";
+  const base100PercentFontSize = 9;
 
   function DarkTwoStyleSheet(resourceDirectory: string, guiScale: number, dpi: number): string {
-    const base100PercentFontSize = 9;
     const fontSizeBase = Math.round(base100PercentFontSize * guiScale);
     const fontSizeSmall = Math.round(fontSizeBase * 0.9);
 
@@ -96,7 +97,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     //  Buttons
     const componentBackgroundColor = textColorSubtle;
 
-    const componentPaddingVertical = "1em";
+    const componentPaddingVertical = `${emToPx(1)}px`;
 
     const borderRadius = "4px";
     const borderRadiusSmall = "3px";
@@ -148,11 +149,11 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
     //-------------------------------------------------------------------------
     // Inputs
-    const inputFontSize = "1.2em";
+    const inputFontSize = `${emToPx(1.2)}px`;
     const inputBackgroundColor = darken(backgroundColor, 6);
     const inputBorderColor = baseBorderColor;
-    const inputPaddingVertical = "0.25em";
-    const inputPaddingHorizontal = "0.5em";
+    const inputPaddingVertical = `${emToPx(0.25)}px`;
+    const inputPaddingHorizontal = `${emToPx(0.5)}px`;
     const inputBorderWidth = "1px";
     const inputActiveBgColor = mix(accentBgColor, inputBackgroundColor, 10);
 
@@ -167,11 +168,10 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
     const overlayBorderColor = backgroundHighlightColor;
 
-
-    const navLinkPadding = "0.5em 0.75em 0.5em 0em";
+    const navLinkPadding = `${emToPx(0.5)}px ${emToPx(0.75)}px ${emToPx(0.5)}px ${emToPx(0)}px`;
     // Hack because padding-left doesn't seem to work for unselected list item.
     // See https://forum.qt.io/topic/87208/strange-stylesheet-behavior-with-qlistview-item/14
-    const navLinkPaddingLeft = "0.5em";
+    const navLinkPaddingLeft = `${emToPx(0.5)}px`;
 
     const tabBorderColor = baseBorderColor;
     const tabBackgroundColor = level3Color;
@@ -182,7 +182,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
     //-------------------------------------------------------------------------
     // Tables
-    const tableCellPaddingVertical = "0.5em";
+    const tableCellPaddingVertical = `${emToPx(0.5)}px`;
     const tableBorderColor = baseBorderColor;
 
 
@@ -193,24 +193,28 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     const badgeFontWeight = "bold";
     const badgeFontRatio = 0.6;
     const badgeFontSize = `${Math.round(fontSizeBase * badgeFontRatio)}em`;
-    const badgeVerticalPadding = "0.1em";
-    const badgeHorizontalPadding = "0.1em";
+    const badgeVerticalPadding = `${emToPx(0.1)}px`;
+    const badgeHorizontalPadding = `${emToPx(0.1)}px`;
     // const badgeLineHeight:             1 !default;
-    const badgeBorderRadius = "0.5em";
+    const badgeBorderRadius = `${emToPx(0.5)}px`;
     const badgeBackgroundColor = lighten(backgroundHighlightColor, 6);
     const badgeColor = textHighlightColor;
     // const badgeVerticalAlign:          1/$badge-font-ratio * $badge-vertical-padding !default;
 
     // --- Extension Card related ---
-    const componentPaddingVerticalCard = "0.66em";
-    const componentPaddingHorizontal = "1.2em";
-    const componentPaddingHorizontalCard = "0.66em";
+    const componentPaddingVerticalCard = `${emToPx(0.66)}px`;
+    const componentPaddingHorizontal = `${emToPx(1.2)}px`;
+    const componentPaddingHorizontalCard = `${emToPx(0.66)}px`;
     const borderRadius2x = "8px";
     const toolPanelBackgroundColor = level3Color;
     const packageCardBackgroundColor = lighten(toolPanelBackgroundColor, 8);
 
     function ptToPx(points: number): number {
-      return points * dpi / 72;
+      return Math.round(points * dpi / 72);
+    }
+
+    function emToPx(em: number): number {
+      return ptToPx(em * base100PercentFontSize * guiScale);
     }
 
     function BodyStyleSheet(): string {
@@ -232,8 +236,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
       return `
   QCheckBox::indicator {
     border-radius: ${borderRadius};
-    width: 1em;
-    height: 1em;
+    width: ${emToPx(1)}px;
+    height: ${emToPx(1)}px;
 
     background-color: ${componentBackgroundColor};
   }
@@ -255,7 +259,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     background-color: ${inputBackgroundColor};
     color: ${textColor};
 
-    padding: 0.25em 0.5em;
+    padding: ${emToPx(0.25)}px ${emToPx(0.5)}px;
 
     border: ${inputBorderWidth} solid ${inputBorderColor};
     border-radius: ${borderRadius};
@@ -495,8 +499,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     font-weight: ${buttonFontWeight};
     font-size: ${buttonFontSize}pt;
 
-    padding: 0.6em 0.6em;
-    min-height: 1.4em;
+    padding: ${emToPx(0.6)}px ${emToPx(0.6)}px;
+    min-height: ${emToPx(1.4)}px;
     border-radius: ${borderRadius};
     border: ${btnBorder};
   }
@@ -516,7 +520,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
   QPushButton[cssClass~="small"] {
     font-size: ${buttonFontSizeSmall}pt;
-    padding: 0.3em 0.5em;
+    padding: ${emToPx(0.3)}px ${emToPx(0.5)}px;
   }
 
   QPushButton[cssClass~="group-left"] {
@@ -543,8 +547,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QPushButton[cssClass~="microtool"] {
     background-color: transparent;
 
-    width: 1.5em;
-    height: 1.5em;
+    width: ${emToPx(1.5)}px;
+    height: ${emToPx(1.5)}px;
 
     padding: 0px;
     margin: 0px;
@@ -554,8 +558,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QPushButton[cssClass~="window-control"] {
     background-color: transparent;
 
-    width: 1.5em;
-    height: 1.5em;
+    width: ${emToPx(1.5)}px;
+    height: ${emToPx(1.5)}px;
 
     padding: 0px;
     margin: 0px;
@@ -642,11 +646,11 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     font-weight: normal;
     color: ${textColor};
     background-color: ${dropdownBgColor};
-    padding: 1px 0px 0px 1.25em;
+    padding: ${emToPx(0.2)}px ${emToPx(1.25)}px ${emToPx(0.2)}px ${emToPx(1.25)}px;
   }
 
   QMenu::icon {
-    padding-left: 2.5em;
+    padding-left: ${emToPx(2.5)}px;
   }
 
   QMenu::item:selected {
@@ -658,8 +662,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     height: 1px;
     color: ${textColor};
     background-color: ${textColor};
-    margin-top: 0.3em;
-    margin-bottom: 0.3em;
+    margin-top: ${emToPx(0.3)}px;
+    margin-bottom: ${emToPx(0.3)}px;
   }
   `;
     }
@@ -667,9 +671,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     function QRadioButtonStyleSheet(resourceDirectory: string): string {
       return `
   QRadioButton::indicator {
-    width: 1em;
-    height: 1em;
-    border-radius: 0.49em;
+    width: ${emToPx(1)}px;
+    height: ${emToPx(1)}px;
+    border-radius: ${emToPx(0.5)}px;
     background-color: ${componentBackgroundColor};
   }
 
@@ -701,10 +705,10 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
   QScrollBar:vertical {
     ${IncludeDefaultBackground()}
-    width: 0.5em;
+    width: ${emToPx(0.5)}px;
   }
   QScrollBar::handle {
-    border-radius: 0.2em;
+    border-radius: ${emToPx(0.2)}px;
     background-color: #4b5362;
   }
   QScrollBar::handle:hover {
@@ -729,13 +733,13 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     function TopLevelQTabBarStyleSheet(resourceDirectory: string): string {
       return `
   QTabBar[cssClass~="top-level"]::tab {
-    height: 1.6em;
+    height: ${emToPx(2.4)}px;
     margin: 0px;
 
     padding-top: 0px;
     padding-bottom: 1px;
-    padding-left: 0.666em;
-    padding-right: 0.666em;
+    padding-left: ${emToPx(0.666) + 1}px;
+    padding-right: ${emToPx(0.666)}px;
 
     border-radius: 0px;
 
@@ -764,6 +768,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     color: ${tabTextColorActive};
     background-color: ${tabBackgroundColorActive};
 
+    padding-left: ${emToPx(0.666)}px;
     border-left: 2px solid ${accentColor};
     border-bottom: 1px solid ${tabBackgroundColorActive};
   }
@@ -1011,7 +1016,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     font-size: ${Math.round(1.4 * fontSizeBase)}pt;
     font-weight: bold;
     padding: 0px;
-    padding-bottom: 0.4em;
+    padding-bottom: ${emToPx(0.4)}px;
 
     text-align: left;
     background-color: transparent;
@@ -1101,7 +1106,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     padding: 0px;
     margin-top: 1px;
     margin-right: 2px;
-    height: 1em;
+    height: ${emToPx(1)}px;
   }
 
   QWidget[cssClass~="decorated-frame-header"] > QPushButton[cssClass~="small"]:hover {
@@ -1130,6 +1135,19 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   return {
     getApplicationStyleSheet(guiScale: number, dpi: number): string {
       return DarkTwoStyleSheet(resourceDirectory, guiScale, dpi);
+    },
+    getMenuIconSize(guiScale: number, dpi: number): number {
+      function ptToPx(points: number): number {
+        return Math.round(points * dpi / 72);
+      }
+
+      function emToPx(em: number): number {
+        return ptToPx(em * base100PercentFontSize * guiScale);
+      }
+      return emToPx(1.2);
+    },
+    getButtonIconSize(guiScale: number, dpi: number): number {
+      return this.getMenuIconSize(guiScale, dpi);
     },
     getMenuIcon(name: string): QIcon {
       const normalColor = toRgba(styleTextColor);

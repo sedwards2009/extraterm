@@ -12,6 +12,8 @@ export interface IconPair {
 
 export interface UiStyle {
   getApplicationStyleSheet(guiScale: number, dpi: number): string;
+  getMenuIconSize(guiScale: number, dpi: number): number;
+  getButtonIconSize(guiScale: number, dpi: number): number;
   getButtonIcon(name: string): QIcon;
   getCommandPaletteIcon(name: string): QIcon;
   getToolbarButtonIconPair(name: string): IconPair;

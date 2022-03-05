@@ -171,7 +171,7 @@ export class Window {
   #loadStyleSheet(uiScale: number): void {
     this.#windowWidget.setStyleSheet("");
     this.#hamburgerMenu.setStyleSheet("");
-    const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.#getWindowDpi());
+    const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
     this.#windowWidget.setStyleSheet(sheet);
     this.#hamburgerMenu.setStyleSheet(sheet);
   }
@@ -454,7 +454,7 @@ export class Window {
       }
     ];
 
-    this.#lastConfigDpi = this.#getWindowDpi();
+    this.#lastConfigDpi = this.getDpi();
     const terminalFontSizePx = Math.round(this.#pointsToPx(config.terminalFontSize, this.#lastConfigDpi));
 
     const terminalVisualConfig: TerminalVisualConfig = {
@@ -475,7 +475,7 @@ export class Window {
     return terminalVisualConfig;
   }
 
-  #getWindowDpi(): number {
+  getDpi(): number {
     const window = this.#windowWidget;
     const screen = window.isVisible() ? window.windowHandle().screen() : QApplication.primaryScreen();
     return screen.logicalDotsPerInch();

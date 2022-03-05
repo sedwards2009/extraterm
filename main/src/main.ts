@@ -10,7 +10,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import { QApplication, QFontDatabase, QStyleFactory } from "@nodegui/nodegui";
+import { QApplication, QFontDatabase, QStyleFactory, QStylePixelMetric } from "@nodegui/nodegui";
+import { StyleTweaker } from "nodegui-plugin-style-tweaker";
 
 import { Window } from "./Window";
 import { GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG } from './config/Config';
@@ -61,6 +62,8 @@ class Main {
   #uiStyle: UiStyle = null;
 
   #settingsTab: SettingsTab = null;
+
+  #tweakerStyle: StyleTweaker = null;
 
   constructor() {
     this._log = getLogger("main", this);
@@ -129,11 +132,8 @@ class Main {
     QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
 
     this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
-    QApplication.setStyle(QStyleFactory.create("Windows"));
 
-    const dpi = QApplication.primaryScreen().logicalDotsPerInch();
-    const qApplication = QApplication.instance();
-    qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(generalConfig.uiScalePercent / 100, dpi));
+    this.#setApplicationStyle(generalConfig.uiScalePercent);
 
     configDatabase.onChange((e: ConfigChangeEvent) => {
       if (e.key !== GENERAL_CONFIG) {
@@ -142,14 +142,32 @@ class Main {
       const oldConfig = <GeneralConfig> e.oldConfig;
       const newConfig = <GeneralConfig> e.newConfig;
       if (oldConfig ?? oldConfig.uiScalePercent !== newConfig.uiScalePercent) {
-        const dpi = QApplication.primaryScreen().logicalDotsPerInch();
-        qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(1, dpi));
+        this.#setApplicationStyle(newConfig.uiScalePercent);
       }
     });
 
     await this.openWindow();
     this.commandNewTerminal({});
   }
+
+  #setApplicationStyle(uiScalePercent: number): void {
+    let dpi = Math.min(0, ...this.#windows.map(w => w.getDpi()));
+    dpi = dpi === 0 ? QApplication.primaryScreen().logicalDotsPerInch() : dpi;
+
+    const qApplication = QApplication.instance();
+    qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(uiScalePercent / 100, dpi));
+    this.#tweakerStyle = new StyleTweaker("Windows");
+
+    const iconSize = this.#uiStyle.getMenuIconSize(uiScalePercent / 100, dpi);
+    const buttonIconSize = this.#uiStyle.getButtonIconSize(uiScalePercent / 100, dpi);
+    this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_SmallIconSize, iconSize);
+    this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_ToolBarIconSize, iconSize);
+    this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_ButtonIconSize, buttonIconSize);
+    this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_TabCloseIndicatorHeight, iconSize);
+    this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_TabCloseIndicatorWidth, iconSize);
+
+    QApplication.setStyle(this.#tweakerStyle);
+  };
 
   setupLogging(): void {
     const logFilePath = path.join(getUserSettingsDirectory(), LOG_FILENAME);
