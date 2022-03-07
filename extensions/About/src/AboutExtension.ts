@@ -5,7 +5,7 @@
  */
 
 import { ExtensionContext, ExtensionTab, Logger } from '@extraterm/extraterm-extension-api';
-import { QLabel, TextFormat } from '@nodegui/nodegui';
+import { AlignmentFlag, QLabel, TextFormat } from '@nodegui/nodegui';
 
 let log: Logger = null;
 let context: ExtensionContext = null;
@@ -30,16 +30,23 @@ function aboutCommand(): void {
   aboutTab.icon = "fa-lightbulb";
 
   const contents = new QLabel();
+  contents.setAlignment(AlignmentFlag.AlignTop | AlignmentFlag.AlignLeft);
   contents.setTextFormat(TextFormat.RichText);
   contents.setWordWrap(true);
   contents.setOpenExternalLinks(true);
+
+  const isHiDPI = context.activeWindow.style.dpi >= 144;
+  const imageFilename = isHiDPI ? "extraterm_main_logo_532x397.png" : "extraterm_main_logo_266x193.png";
+  const imageWidth = isHiDPI ? 532 : 266;
+
   contents.setText(
-  `<style>
+  `${context.activeWindow.style.htmlStyleTag}
+  <style>
   #logo {
     float: left;
   }
   </style>
-  <img id="logo" src="${context.extensionPath}/resources/extraterm_main_logo_512x367.png" width="512" height="367">
+  <img id="logo" src="${context.extensionPath}/resources/${imageFilename}" width="${imageWidth}">
   <h1>Extraterm</h1>
   <h3>version ${context.application.version}</h3>
   <p>Copyright &copy; 2015-2022 Simon Edwards &lt;simon@simonzone.com&gt;</p>

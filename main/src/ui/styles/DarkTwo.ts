@@ -18,7 +18,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   let styleTextColor = "";
   let styleDropdownLinkHoverColor = "";
   let StyleLinkLabelCSS;
-  let StyleHTMLCSS;
+  let StyleHTMLStyleTag;
   let styleBackgroundColor = "";
   let styleTextHighlightColor = "";
   let styleBrandSuccess = "";
@@ -885,12 +885,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     }
     StyleLinkLabelCSS = LinkLabelCSS;
 
-    function HTMLCSS(): string {
+    StyleHTMLStyleTag = function(): string {
       return `<style>
     h1, h2, h3, h4, h5, h6 {
       font-weight: bold;
       color: ${headingsColor};
-      line-height: 200%;
+      line-height: 120%;
     }
     h1 {
       font-size: ${Math.round(2 * fontSizeBase)}pt;
@@ -929,9 +929,13 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
       text-align: left;
       padding: 8px;
     }
-    </style>`;
+
+    a {
+      color: ${linkColor};
+      text-decoration: none;
     }
-    StyleHTMLCSS = HTMLCSS;
+    </style>`;
+    };
 
     function ApplicationSpecificStyleSheet(): string {
       return `
@@ -1241,8 +1245,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     getLinkLabelCSS(): string {
       return StyleLinkLabelCSS();
     },
-    getHTMLStyle(): string {
-      return StyleHTMLCSS();
+    getHTMLStyleTag(): string {
+      return StyleHTMLStyleTag();
     },
     getTrafficLightRunningColor(): string {
       return toHex(styleBrandSuccess);

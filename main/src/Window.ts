@@ -685,6 +685,10 @@ export class Window {
     }
     return result;
   }
+
+  getHtmlStyleTag(): string {
+    return this.#uiStyle.getHTMLStyleTag();
+  }
 }
 
 function cssHexColorToRGBA(cssColor: string): number {

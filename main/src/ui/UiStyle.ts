@@ -18,7 +18,7 @@ export interface UiStyle {
   getCommandPaletteIcon(name: string): QIcon;
   getToolbarButtonIconPair(name: string): IconPair;
   getBorderlessButtonIconPair(name: string): IconPair;
-  getHTMLStyle(): string;
+  getHTMLStyleTag(): string;
   getLinkLabelCSS(): string;
   getMenuIcon(name: string): QIcon;
   getSettingsMenuIcon(name: string): QIcon;

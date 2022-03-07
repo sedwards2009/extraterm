@@ -363,7 +363,7 @@ class ExtensionDetailCard {
     const parts: string[] =[];
     const contributes = this.#extensionMetadata.contributes;
 
-    parts.push(this.#uiStyle.getHTMLStyle());
+    parts.push(this.#uiStyle.getHTMLStyleTag());
     if (contributes.commands.length !== 0) {
       parts.push(`
         <h4>Commands</h4>

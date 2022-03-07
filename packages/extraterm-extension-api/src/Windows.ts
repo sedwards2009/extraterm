@@ -9,6 +9,7 @@ import { Terminal, TerminalBorderWidgetFactory } from "./Terminal";
 import { TerminalThemeProvider } from "./TerminalTheme";
 import { Event } from "extraterm-event-emitter";
 import { QWidget } from "@nodegui/nodegui";
+import { Style } from "./Style";
 
 
 export interface Windows {
@@ -82,4 +83,6 @@ export interface Window {
    * Extension tabs are defined and named in the extension's `package.json`.
    */
   createExtensionTab(name: string): ExtensionTab;
+
+  readonly style: Style;
 }

@@ -35,6 +35,7 @@ export class ExtensionTabBridge implements Tab {
     });
     this.#containerWidget = Widget({
       contentsMargins: 0,
+      cssClass: "background",
       layout: this.#containerLayout = BoxLayout({
         direction: Direction.TopToBottom,
         spacing: 0,

@@ -31,6 +31,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
   #extensionContext: ExtensionContextImpl;
   #extensionManager: ExtensionManager;
+  #configDatabase: ConfigDatabase;
 
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
@@ -48,6 +49,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
     this._log = getLogger(`InternalExtensionContextImpl (${extensionMetadata.name})`);
 
+    this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#extensionMetadata = extensionMetadata;
 
@@ -238,7 +240,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
   wrapWindow(window: Window): WindowImpl {
     if (!this.#windowWrapMap.has(window)) {
-      const wrappedWindow = new WindowImpl(this, this.#extensionMetadata, window);
+      const wrappedWindow = new WindowImpl(this, this.#extensionMetadata, window, this.#configDatabase);
       this.#windowWrapMap.set(window, wrappedWindow);
     }
     return this.#windowWrapMap.get(window);
