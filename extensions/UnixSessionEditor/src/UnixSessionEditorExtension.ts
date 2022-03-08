@@ -59,6 +59,7 @@ class EditorUi {
     const otherShellItems = etcShells.includes(this.#config.shell) ? etcShells : [this.#config.shell, ...etcShells];
 
     this.#widget = Widget({
+      contentsMargins: 0,
       layout: GridLayout({
         columns: 2,
         contentsMargins: [0, 0, 0, 0],

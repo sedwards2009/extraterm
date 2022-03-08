@@ -4,14 +4,19 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { getLogger, Logger } from "extraterm-logging";
-import { Direction, QBoxLayout, QLabel, QScrollArea, QSizePolicyPolicy, QSpinBox, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, Frame, GridLayout, Label, LineEdit, PushButton, ScrollArea, SpinBox, StackedWidget, Widget } from "qt-construct";
+import {
+  Direction, QBoxLayout, QLabel, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat
+} from "@nodegui/nodegui";
+import {
+  BoxLayout, ComboBox, Frame, GridLayout, Label, LineEdit, PushButton, ScrollArea, SpinBox, StackedWidget, Widget
+} from "qt-construct";
 
-import { createHtmlIcon, createIcon } from "../ui/Icons";
+import { createHtmlIcon } from "../ui/Icons";
 import { UiStyle } from "../ui/UiStyle";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import { HoverPushButton, makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
 import { CommandLineAction, CommandLineActionMatchType, FrameRule } from "../config/Config";
+
 
 const frameActionOptions: {id: FrameRule, name: string}[] = [
   { id: "always_frame", name: "Always frame command output" },

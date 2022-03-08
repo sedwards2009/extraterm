@@ -394,6 +394,7 @@ export class KeybindingsPage {
     }
 
     return Widget({
+      contentsMargins: 0,
       layout: GridLayout({
         contentsMargins: [0, 0, 0, 0],
         columns: 2,

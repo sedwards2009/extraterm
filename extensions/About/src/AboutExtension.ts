@@ -65,11 +65,3 @@ function aboutCommand(): void {
   });
   aboutTab.open();
 }
-
-// function handleClick(ev: MouseEvent): void {
-//   ev.preventDefault();
-//   if ((<HTMLElement> ev.target).tagName === "A") {
-//     const href = (<HTMLAnchorElement> ev.target).href;
-//     context.application.openExternal(href);
-//   }
-// }

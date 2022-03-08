@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Direction, QComboBox, QLabel, QScrollArea, TextFormat } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QComboBox, QLabel, QScrollArea, TextFormat } from "@nodegui/nodegui";
 import * as open from "open";
 import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
