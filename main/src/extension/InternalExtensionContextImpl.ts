@@ -24,6 +24,7 @@ import { TabImpl } from "./api/TabImpl";
 import { Window } from "../Window";
 import { WindowImpl } from "./api/WindowImpl";
 import { Tab } from "../Tab";
+import { WorkspaceSessionSettingsEditorRegistry } from "./WorkspaceSessionSettingsEditorRegistry";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -35,6 +36,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
+  sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
 
   #extensionMetadata: ExtensionMetadata;
 
@@ -58,6 +60,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     this.commands = new CommandsRegistry(extensionManager, extensionMetadata.name,
       extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
     this.sessionEditorRegistry = new WorkspaceSessionEditorRegistry(extensionMetadata);
+    this.sessionSettingsEditorRegistry = new WorkspaceSessionSettingsEditorRegistry(extensionMetadata);
     this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, applicationVersion);
   }
 

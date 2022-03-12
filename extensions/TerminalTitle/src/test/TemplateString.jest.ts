@@ -9,56 +9,58 @@ import "jest";
 import { Segment, TemplateString, TextSegment, FieldSegment } from "../TemplateString";
 
 
-describe.each([
+const args: [string, Segment[]][] = [
     ["foo", [{ type: "text", text: "foo", startColumn: 0, endColumn: 3 }]],
     ["foo:bar", [{ type: "text", text: "foo:bar", startColumn: 0, endColumn: 7 }]],
     ["foo\\$bar", [{ type: "text", text: "foo$bar", startColumn: 0, endColumn: 8 }]],
-    ["$foo: ", [{ type: "text", text: "$foo: " }]],
+    ["$foo: ", [{ type: "text", text: "$foo: ", startColumn: 0, endColumn: 5 }]],
 
     ["foo${TERM:TITLE}", [
       { type: "text", text: "foo", startColumn: 0, endColumn: 3 },
-      { type: "field", namespace: "TERM", key: "TITLE", startColumn: 3, endColumn: 16 }
+      { type: "field", namespace: "TERM", key: "TITLE", startColumn: 3, endColumn: 16, text: "", error: "" }
     ]],
 
     ["foo ${TERM:TITLE} bar", [
-      { type: "text", text: "foo " },
-      { type: "field", namespace: "TERM", key: "TITLE", startColumn: 4, endColumn: 17},
-      { type: "text", text: " bar" },
+      { type: "text", text: "foo ", startColumn: 0, endColumn: 4 },
+      { type: "field", namespace: "TERM", key: "TITLE", startColumn: 4, endColumn: 17, text: "", error: "" },
+      { type: "text", text: " bar", startColumn: 17, endColumn: 21 },
     ]],
 
     ["${TERM:TITLE}", [
-      { type: "field", namespace: "TERM", key: "TITLE"}
+      { type: "field", namespace: "TERM", key: "TITLE", text: "", error: "", startColumn: 0, endColumn: 13 }
     ]],
 
     ["${TERM:ROWS}x${TERM:COLUMNS}", [
-      { type: "field", namespace: "TERM", key: "ROWS"},
-      { type: "text", text: "x" },
-      { type: "field", namespace: "TERM", key: "COLUMNS"},
+      { type: "field", namespace: "TERM", key: "ROWS", text: "", error: "", startColumn: 0, endColumn: 12 },
+      { type: "text", text: "x", startColumn: 12, endColumn: 13 },
+      { type: "field", namespace: "TERM", key: "COLUMNS", text: "", error: "", startColumn: 13, endColumn: 28 },
     ]],
 
     ["${awe:fa far linux} ${TERM:TITLE}", [
-      { type: "field", namespace: "awe", key: "fa far linux"},
-      { type: "text", text: " " },
-      { type: "field", namespace: "TERM", key: "TITLE"},
+      { type: "field", namespace: "awe", key: "fa far linux", text: "", error: "", startColumn: 0, endColumn: 19 },
+      { type: "text", text: " ", startColumn: 19, endColumn: 20 },
+      { type: "field", namespace: "TERM", key: "TITLE", text: "", error: "", startColumn: 20, endColumn: 33 },
     ]],
 
     ["foo ${TERMTITLE} bar", [
-      { type: "text", text: "foo " },
-      { type: "error", text: "TERMTITLE"},
-      { type: "text", text: " bar" },
+      { type: "text", text: "foo ", startColumn: 0, endColumn: 4 },
+      { type: "error", text: "TERMTITLE", error: "", startColumn: 4, endColumn: 16 },
+      { type: "text", text: " bar", startColumn: 16, endColumn: 20 },
     ]],
 
     ["foo ${TERM:} bar", [
-      { type: "text", text: "foo " },
-      { type: "error", text: "TERM:"},
-      { type: "text", text: " bar" },
+      { type: "text", text: "foo ", startColumn: 0, endColumn: 4 },
+      { type: "error", text: "TERM:", error: "", startColumn: 4, endColumn: 12 },
+      { type: "text", text: " bar", startColumn: 12, endColumn: 16 },
     ]],
 
     ["foo ${TER", [
-      { type: "text", text: "foo " },
-      { type: "error", text: "TER"},
+      { type: "text", text: "foo ", startColumn: 0, endColumn: 4 },
+      { type: "error", text: "TER", error: "", startColumn: 4, endColumn: 9 },
     ]],
-])("Test", (input: string, output: Segment[]) => {
+];
+
+describe.each(args)("Test", (input: string, output: Segment[]) => {
 
   test(`parse ${input}`, () => {
     const ts = new TemplateString();

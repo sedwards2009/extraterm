@@ -1,14 +1,14 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment, SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
-import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
+// import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
 import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
-import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
-import { setupTerminalTitleSessionSettings, Settings } from './TerminalTitleSessionSettings';
+// import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
+import { createTerminalTitleSessionSettings, Settings } from './TerminalTitleSessionSettings';
 
 let log: Logger = null;
 
@@ -22,15 +22,15 @@ const terminalToTemplateMap = new WeakMap<Terminal, TabTitleData>();
 
 export function activate(context: ExtensionContext): any {
   log = context.logger;
-  context.commands.registerCommand("terminal-title:editTitle", commandEditTitle.bind(null, context));
-  context.window.registerTabTitleWidget("title", tabTitleWidgetFactory);
-  context.window.registerTerminalBorderWidget("edit-title", terminalBorderWidgetFactory.bind(null, context));
-  context.window.registerSessionSettingsEditor("title", sessionSettingsEditorFactory);
+  // context.commands.registerCommand("terminal-title:editTitle", commandEditTitle.bind(null, context));
+  // context.registerTabTitleWidget("title", tabTitleWidgetFactory);
+  // context.registerTerminalBorderWidget("edit-title", terminalBorderWidgetFactory.bind(null, context));
+  context.sessions.registerSessionSettingsEditor("title", createTerminalTitleSessionSettings);
 }
-
+/*
 function commandEditTitle(context: ExtensionContext): void {
   const terminalTitleEditorWidget = <TerminalTitleEditorWidget>
-    context.window.activeTerminal.openTerminalBorderWidget("edit-title");
+    context.activeTerminal.openTerminalBorderWidget("edit-title");
   terminalTitleEditorWidget.focus();
 }
 
@@ -65,7 +65,4 @@ function terminalBorderWidgetFactory(context: ExtensionContext, terminal: Termin
   return new TerminalTitleEditorWidget(context, terminal, widget, tabTitleData.templateString,
     tabTitleData.updateTitleFunc);
 }
-
-function sessionSettingsEditorFactory(sessionSettingsEditorBase: SessionSettingsEditorBase): any {
-  setupTerminalTitleSessionSettings(sessionSettingsEditorBase);
-}
+*/

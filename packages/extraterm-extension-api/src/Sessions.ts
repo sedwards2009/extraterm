@@ -172,16 +172,10 @@ export interface Pty {
  *
  */
 export interface SessionSettingsEditorBase {
-  /**
-   * Container element under which this session settings editor's contents can be placed.
-   */
-  readonly containerElement: HTMLElement;
-
   setSettings(settings: Object): void;
-
   readonly settings: Object;
 }
 
 export interface SessionSettingsEditorFactory {
-  (sessionSettingsEditorBase: SessionSettingsEditorBase): void;
+  (sessionSettingsEditorBase: SessionSettingsEditorBase): NodeWidget<any>;
 }

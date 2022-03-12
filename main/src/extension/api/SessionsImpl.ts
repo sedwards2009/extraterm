@@ -24,6 +24,6 @@ export class SessionsImpl implements ExtensionApi.Sessions {
   }
 
   registerSessionSettingsEditor(id: string, factory: ExtensionApi.SessionSettingsEditorFactory): void {
-    throw new Error("Method not implemented.");
+    this.#internalExtensionContext.sessionSettingsEditorRegistry.registerSessionSettingsEditor(id, factory);
   }
 }

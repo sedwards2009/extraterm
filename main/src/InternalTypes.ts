@@ -12,6 +12,7 @@ import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContributi
 // import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
 import { WorkspaceSessionEditorRegistry } from "./extension/WorkspaceSessionEditorRegistry";
+import { WorkspaceSessionSettingsEditorRegistry } from "./extension/WorkspaceSessionSettingsEditorRegistry";
 import { Tab } from "./Tab";
 import { BlockFrame } from "./terminal/BlockFrame";
 import { LineRangeChange, Terminal } from "./terminal/Terminal";
@@ -84,7 +85,7 @@ export interface ExtensionManager {
 
 //   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
    createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
-//   createSessionSettingsEditors(sessionType: string, sessionConfiguration: SessionConfiguration): InternalSessionSettingsEditor[];
+   createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionSettingsEditor[];
 
 //   setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void;
 //   getViewerTabDisplay(): ViewerTabDisplay;
@@ -151,6 +152,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   // _extensionManager: ExtensionManager;
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
+  sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
 
   // _extensionMetadata: ExtensionMetadata;
   // _internalWindow: InternalWindow;
@@ -201,16 +203,15 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
 
 // }
 
-// export interface SessionSettingsChange {
-//   settingsConfigKey: string;
-//   settings: Object;
-// }
+export interface SessionSettingsChange {
+  settingsConfigKey: string;
+  settings: Object;
+}
 
 export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
-//   name: string;
-//   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
-//   _getExtensionContainerElement(): ExtensionContainerElement;
-//   _init(): void;
+   name: string;
+   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
+  _getWidget(): NodeWidget<any>;
 }
 
 export interface SessionConfigurationChange {

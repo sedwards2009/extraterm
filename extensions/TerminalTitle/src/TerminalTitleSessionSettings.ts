@@ -1,20 +1,22 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { SessionSettingsEditorBase, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
-import { TemplateString, Segment } from './TemplateString';
-import { TemplateEditorComponent } from "./TemplateEditorComponent";
+
+import { TemplateString } from './TemplateString';
 import { IconFormatter } from './IconFormatter';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
+import { NodeWidget } from '@nodegui/nodegui';
+import { TemplateEditor } from './TemplateEditor';
 
 
 export interface Settings {
   template?: string;
 }
 
-export function setupTerminalTitleSessionSettings(sessionSettingsEditorBase: SessionSettingsEditorBase) {
+export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: SessionSettingsEditorBase): NodeWidget<any> {
   const templateString = new TemplateString();
 
   const terminalEnvironment = new Map<string, string>();
@@ -31,29 +33,17 @@ export function setupTerminalTitleSessionSettings(sessionSettingsEditorBase: Ses
   templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminalEnvironment));
   templateString.addFormatter("icon", new IconFormatter());
 
-  const ui = new TemplateEditorComponent();
-  const component = ui.$mount();
   const settings = <Settings> sessionSettingsEditorBase.settings;
-
   if (settings.template == null) {
-    settings.template = "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
+    settings.template = "${icon:fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
     sessionSettingsEditorBase.setSettings(settings);
   }
-
   templateString.setTemplateString(settings.template);
 
-  sessionSettingsEditorBase.containerElement.appendChild(component.$el);
-
-  ui.template = templateString.getTemplateString();
-  ui.segments = templateString.getSegments();
-  ui.segmentHtml = templateString.getSegmentHtmlList();
-
-  ui.$on("template-change", (template: string) => {
+  const templateEditor = new TemplateEditor(templateString);
+  templateEditor.onTemplateChanged((template: string) => {
     settings.template = template;
     sessionSettingsEditorBase.setSettings(settings);
-
-    templateString.setTemplateString(template);
-    ui.segments = templateString.getSegments();
-    ui.segmentHtml = templateString.getSegmentHtmlList();
   });
+  return templateEditor.getWidget();
 }

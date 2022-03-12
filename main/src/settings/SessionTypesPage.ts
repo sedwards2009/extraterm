@@ -12,7 +12,7 @@ import { getLogger, log, Logger } from "extraterm-logging";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
-import { HoverPushButton } from "../ui/QtConstructExtra";
+import { HoverPushButton, makeSubTabBar } from "../ui/QtConstructExtra";
 import { ExtensionManager, SessionConfigurationChange } from "../InternalTypes";
 import { createUuid } from "extraterm-uuid";
 
@@ -274,7 +274,8 @@ class SessionTypeCard {
           }),
 
           Label({text: this.#getTypeName()}),
-          editor._getWidget()
+          editor._getWidget(),
+          ...this.#getExtraSettings()
         ]
       })
     });
@@ -300,5 +301,26 @@ class SessionTypeCard {
 
   getWidget(): QWidget {
     return this.#widget;
+  }
+
+  #getExtraSettings(): QWidget[] {
+    const settingEditors = this.#extensionManager.createSessionSettingsEditors(this.#sessionConfig.type,
+      this.#sessionConfig);
+    if (settingEditors.length === 0) {
+      return [];
+    }
+
+    const editorStack = StackedWidget({
+      children: settingEditors.map(se => se._getWidget())
+    });
+
+    const tabBar = makeSubTabBar({
+      tabs: settingEditors.map(se => se.name),
+      onCurrentChanged: (index: number): void => {
+        editorStack.setCurrentIndex(index);
+      },
+    });
+
+    return [tabBar, editorStack];
   }
 }
