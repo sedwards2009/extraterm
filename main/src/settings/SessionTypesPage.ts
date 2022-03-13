@@ -7,13 +7,14 @@ import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 import { Direction, QBoxLayout, QFrame, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget,
   TextFormat
 } from "@nodegui/nodegui";
+import * as _ from 'lodash';
 import { BoxLayout, Frame, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import { UiStyle } from "../ui/UiStyle";
 import { createHtmlIcon } from "../ui/Icons";
 import { HoverPushButton, makeSubTabBar } from "../ui/QtConstructExtra";
-import { ExtensionManager, SessionConfigurationChange } from "../InternalTypes";
+import { ExtensionManager, SessionConfigurationChange, SessionSettingsChange } from "../InternalTypes";
 import { createUuid } from "extraterm-uuid";
 
 
@@ -195,23 +196,30 @@ interface SessionTypeCardOptions {
 
 
 class SessionTypeCard {
+  private _log: Logger = null;
   #widget: QFrame = null;
   #extensionManager: ExtensionManager = null;
   #sessionConfig: SessionConfiguration = null;
+  #extensionsConfig: Object = null;
   #controlsStackedWidget: QStackedWidget = null;
   #isDefault = false;
+  #onConfigChanged: (sessionConfig: SessionConfiguration) => void = null;
 
   constructor(options: SessionTypeCardOptions) {
+    this._log = getLogger("SessionTypeCard", this);
     this.#extensionManager = options.extensionManager;
-    this.#sessionConfig = options.sessionConfig;
+    this.#sessionConfig = _.cloneDeep(options.sessionConfig);
+    this.#extensionsConfig = options.sessionConfig.extensions ?? {};
     this.#isDefault = options.isDefault;
-    const onConfigChanged = options.onConfigChanged;
+    this.#onConfigChanged = options.onConfigChanged;
 
     let nameLabel: QLabel = null;
 
     const editor = this.#extensionManager.createSessionEditor(this.#sessionConfig.type, this.#sessionConfig);
     editor.onSessionConfigurationChanged((ev: SessionConfigurationChange) => {
-      onConfigChanged(ev.sessionConfiguration);
+      this.#sessionConfig = _.cloneDeep(ev.sessionConfiguration);
+      this.#sessionConfig.extensions = this.#extensionsConfig;
+      this.#onConfigChanged(this.#sessionConfig);
       nameLabel.setText(ev.sessionConfiguration.name);
     });
 
@@ -308,6 +316,14 @@ class SessionTypeCard {
       this.#sessionConfig);
     if (settingEditors.length === 0) {
       return [];
+    }
+
+    for (const se of settingEditors) {
+      se.onSettingsChanged((change: SessionSettingsChange) => {
+        this.#extensionsConfig[change.settingsConfigKey] = _.cloneDeep(change.settings);
+        this.#sessionConfig.extensions = this.#extensionsConfig;
+        this.#onConfigChanged(this.#sessionConfig);
+      });
     }
 
     const editorStack = StackedWidget({

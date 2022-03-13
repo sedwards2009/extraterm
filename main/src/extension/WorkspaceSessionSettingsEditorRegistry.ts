@@ -67,9 +67,8 @@ export class WorkspaceSessionSettingsEditorRegistry {
         settings = {};
       }
 
-      //,
-
-      const editorBase = new SessionSettingsEditorBaseImpl(sessionSettingsMetadata.name, settings, factory);
+      const editorBase = new SessionSettingsEditorBaseImpl(sessionSettingsMetadata.name, settingsConfigKey, settings,
+        factory);
       result.push(editorBase);
     }
     return result;
@@ -78,6 +77,7 @@ export class WorkspaceSessionSettingsEditorRegistry {
 
 export class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEditor {
   #name: string;
+  #key: string;
   #settings: object;
 
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
@@ -85,8 +85,9 @@ export class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEdi
 
   #widget: NodeWidget<any> = null;
 
-  constructor(name: string, settings: Object, factory: ExtensionApi.SessionSettingsEditorFactory) {
+  constructor(name: string, key: string, settings: Object, factory: ExtensionApi.SessionSettingsEditorFactory) {
     this.#name = name;
+    this.#key = key;
     this.#settings = settings;
     this.onSettingsChanged = this.#onSettingsChangedEventEmitter.event;
     this.#widget = factory.call(null, this);
@@ -105,9 +106,10 @@ export class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEdi
   }
 
   setSettings(settings: Object): void {
-    // this.#sessionConfiguration = sessionConfiguration;
-    // this.#onSettingsConfigurationChangedEventEmitter.fire({
-    //   sessionConfiguration: _.cloneDeep(sessionConfiguration)
-    // });
+    this.#settings = settings;
+    this.#onSettingsChangedEventEmitter.fire({
+      settingsConfigKey: this.#key,
+      settings: _.cloneDeep(settings)
+    });
   }
 }
