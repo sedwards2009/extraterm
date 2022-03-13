@@ -817,6 +817,20 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   `;
     }
 
+    function QToolButtonVariant(name: string, color: string): string {
+      const _textColor = contrast(color, "#ffffff", hsl(0, 0, 0.2));
+      return `
+  QToolButton[cssClass~="${name}"] {
+    color: ${_textColor};
+    background-color: ${color};
+  }
+  QToolButton[cssClass~="${name}"]:hover {
+    color: ${_textColor};
+    background-color: ${lighten(color, 3)};
+  }
+`;
+    }
+
     function QToolButtonStyleSheet(): string {
       return `
   QToolButton {
@@ -831,6 +845,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     color: ${textHighlightColor};
     background-color: ${buttonDefaultBgHoverColor};
   }
+  ${QToolButtonVariant("primary", buttonPrimaryBgColor)}
+  ${QToolButtonVariant("success", buttonSuccessBgColor)}
+  ${QToolButtonVariant("info", buttonInfoBgColor)}
+  ${QToolButtonVariant("warning", buttonWarningBgColor)}
+  ${QToolButtonVariant("danger", buttonDangerBgColor)}
+
 
   QToolButton::menu-arrow {
     image: none;

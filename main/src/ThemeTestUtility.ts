@@ -1,6 +1,7 @@
 import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit } from "@nodegui/nodegui";
 import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton, ScrollArea, SpinBox, TabWidget,
   TextEdit,
+  ToolButton,
   Widget } from "qt-construct";
 import * as fs from "fs";
 import * as path from "path";
@@ -81,6 +82,12 @@ function main(): void {
           PushButton({text: "Small Info button", cssClass: ["small", "info"]}),
           PushButton({text: "Small Warning button", cssClass: ["small", "warning"]}),
           PushButton({text: "Small Danger button", cssClass: ["small", "danger"]}),
+
+          ToolButton({text: "QToolButton Default"}),
+          ToolButton({text: "QToolButton Success", cssClass: ["success"]}),
+          ToolButton({text: "QToolButton Info", cssClass: ["info"]}),
+          ToolButton({text: "QToolButton Warning", cssClass: ["warning"]}),
+          ToolButton({text: "QToolButton Danger", cssClass: ["danger"]}),
 
           LineEdit({text: "Some text input"}),
 
