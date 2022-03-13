@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TabTitleWidget, TerminalEnvironment, SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
+import { NodeWidget } from '@nodegui/nodegui';
 // import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
 import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
@@ -25,7 +26,11 @@ export function activate(context: ExtensionContext): any {
   // context.commands.registerCommand("terminal-title:editTitle", commandEditTitle.bind(null, context));
   // context.registerTabTitleWidget("title", tabTitleWidgetFactory);
   // context.registerTerminalBorderWidget("edit-title", terminalBorderWidgetFactory.bind(null, context));
-  context.sessions.registerSessionSettingsEditor("title", createTerminalTitleSessionSettings);
+  context.sessions.registerSessionSettingsEditor("title",
+    (sessionSettingsEditorBase: SessionSettingsEditorBase): NodeWidget<any> => {
+      return createTerminalTitleSessionSettings(sessionSettingsEditorBase, log);
+    }
+  );
 }
 /*
 function commandEditTitle(context: ExtensionContext): void {

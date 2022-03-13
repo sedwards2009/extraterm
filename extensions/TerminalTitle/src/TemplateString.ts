@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -42,63 +42,62 @@ export interface FieldFormatter {
 
 export class TemplateString {
 
-  private _template: string = null;
-  _segments: Segment[] = null;
-
-  private _formatterMap = new Map<string, FieldFormatter>();
+  #template: string = null;
+  #segments: Segment[] = null;
+  #formatterMap = new Map<string, FieldFormatter>();
 
   getTemplateString(): string {
-    return this._template;
+    return this.#template;
   }
-  
+
   setTemplateString(template: string): void {
-    this._template = template;
-    this._segments = this._parse(template);
+    this.#template = template;
+    this.#segments = this.#parse(template);
   }
 
   addFormatter(namespace: string, formatter: FieldFormatter): void {
-    this._formatterMap.set(namespace.toLowerCase(), formatter);
+    this.#formatterMap.set(namespace.toLowerCase(), formatter);
   }
 
   getSegments(): Segment[] {
-    return this._segments;
+    return this.#segments;
   }
 
-  private _tokenIndex = 0;
-  private _tokens: Token[];
-  
-  private _parse(template: string): Segment[] {
-    this._tokens = lex(template);
-    this._tokenIndex = 0;
+  #tokenIndex = 0;
+  #tokens: Token[];
+
+  #parse(template: string): Segment[] {
+    this.#tokens = lex(template);
+    this.#tokenIndex = 0;
 
     let result: Segment[] = [];
-    while (this._peekTokenType() !== TokenType.EOF) {
-      result = [...result, ...this._processTextStateTokens()];
-      result = [...result, ...this._processFieldStateTokens()];
+    while (this.#peekTokenType() !== TokenType.EOF) {
+      result = [...result, ...this.#processTextStateTokens()];
+      result = [...result, ...this.#processFieldStateTokens()];
     }
 
-    this._correctColumns(result);
-    this._detectErrors(result);
+    this.#correctColumns(result);
+    this.#detectErrors(result);
 
     return result;
   }
 
-  private _peekTokenType(): TokenType {
-    return this._tokens.length === this._tokenIndex ? TokenType.EOF : this._tokens[this._tokenIndex].type;
+  #peekTokenType(): TokenType {
+    return this.#tokens.length === this.#tokenIndex ? TokenType.EOF : this.#tokens[this.#tokenIndex].type;
   }
 
-  private _takeToken(): Token {
-    this._tokenIndex++;
-    return this._tokens[this._tokenIndex-1];
+  #takeToken(): Token {
+    this.#tokenIndex++;
+    return this.#tokens[this.#tokenIndex-1];
   }
 
-  private _processTextStateTokens(): Segment[] {
+  #processTextStateTokens(): Segment[] {
     const textTokens = [TokenType.STRING, TokenType.ESCAPE_DOLLAR];
 
     const textSegment: TextSegment = { text: "", type: "text", startColumn: 0, endColumn: 0 };
 
-    while (textTokens.indexOf(this._peekTokenType()) !== -1) {
-      const token = this._takeToken();
+    while (textTokens.indexOf(this.#peekTokenType()) !== -1) {
+      const token = this.#takeToken();
       if (token.type === TokenType.STRING) {
         textSegment.text += token.text;
         textSegment.endColumn += token.text.length;
@@ -111,19 +110,19 @@ export class TemplateString {
     return textSegment.text.length !== 0 ? [textSegment] : [];
   }
 
-  private _processFieldStateTokens(): Segment[] {
-    if (this._peekTokenType() === TokenType.EOF) {
+  #processFieldStateTokens(): Segment[] {
+    if (this.#peekTokenType() === TokenType.EOF) {
       return [];
     }
 
-    if (this._checkFieldTokens()) {
-      return [this._processCompleteField()];
+    if (this.#checkFieldTokens()) {
+      return [this.#processCompleteField()];
     } else {
-      return [this._processBadField()];
+      return [this.#processBadField()];
     }
   }
 
-  private _checkFieldTokens(): boolean {
+  #checkFieldTokens(): boolean {
     const fieldTokenTypeList = [
       TokenType.OPEN_BRACKET,
       TokenType.SYMBOL,
@@ -132,25 +131,25 @@ export class TemplateString {
       TokenType.CLOSE_BRACKET
     ];
 
-    const startIndex = this._tokenIndex;
+    const startIndex = this.#tokenIndex;
     let pass = true;
     for (const type of fieldTokenTypeList) {
-      if (this._peekTokenType() !== type) {
+      if (this.#peekTokenType() !== type) {
         pass = false;
         break;
       }
-      this._takeToken();
+      this.#takeToken();
     }
-    this._tokenIndex = startIndex;
+    this.#tokenIndex = startIndex;
     return pass;
   }
 
-  private _processCompleteField(): Segment {
-    this._takeToken();                        // TokenType.OPEN_BRACKET
-    const namespace = this._takeToken().text; // TokenType.SYMBOL
-    this._takeToken();                        // TokenType.COLON
-    const key = this._takeToken().text;       // TokenType.SYMBOL
-    this._takeToken();                        // TokenType.CLOSE_BRACKET
+  #processCompleteField(): Segment {
+    this.#takeToken();                        // TokenType.OPEN_BRACKET
+    const namespace = this.#takeToken().text; // TokenType.SYMBOL
+    this.#takeToken();                        // TokenType.COLON
+    const key = this.#takeToken().text;       // TokenType.SYMBOL
+    this.#takeToken();                        // TokenType.CLOSE_BRACKET
     const fieldSegment: FieldSegment = {
       type: "field",
       namespace: namespace,
@@ -163,12 +162,12 @@ export class TemplateString {
     return fieldSegment;
   }
 
-  private _processBadField(): Segment {
+  #processBadField(): Segment {
     const nonFieldTypes = [TokenType.STRING, TokenType.ESCAPE_DOLLAR, TokenType.EOF];
 
     let badInput = "";
-    while (nonFieldTypes.indexOf(this._peekTokenType()) === -1) {
-      const token = this._takeToken();
+    while (nonFieldTypes.indexOf(this.#peekTokenType()) === -1) {
+      const token = this.#takeToken();
       badInput += token.text;
     }
     const errorSegment: ErrorSegment = {
@@ -181,7 +180,7 @@ export class TemplateString {
     return errorSegment;
   }
 
-  private _correctColumns(segments: Segment[]): void {
+  #correctColumns(segments: Segment[]): void {
     let i = 0;
     for (const segment of segments) {
       segment.startColumn = i;
@@ -190,11 +189,11 @@ export class TemplateString {
     }
   }
 
-  private _detectErrors(segments: Segment[]): void {
+  #detectErrors(segments: Segment[]): void {
     for (const segment of segments) {
       if (segment.type === "field") {
         const namespace = segment.namespace.toLowerCase();
-        const formatter = this._formatterMap.get(namespace);
+        const formatter = this.#formatterMap.get(namespace);
         if (formatter == null) {
           segment.error = `Unknown field '${segment.namespace}:${segment.key}'`;
         } else {
@@ -206,7 +205,7 @@ export class TemplateString {
   }
 
   getSegmentHtmlList(): string[] {
-    return this._segments.map(segment => this.formatSegment(segment));
+    return this.#segments.map(segment => this.formatSegment(segment));
   }
 
   formatHtml(): string {
@@ -219,7 +218,7 @@ export class TemplateString {
         return he.encode(segment.text);
       case "field":
         const namespace = segment.namespace.toLowerCase();
-        const formatter = this._formatterMap.get(namespace);
+        const formatter = this.#formatterMap.get(namespace);
         if (formatter == null) {
           return "";
         }

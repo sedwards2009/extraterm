@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { SessionSettingsEditorBase, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
+import { Logger, SessionSettingsEditorBase, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 
 import { TemplateString } from './TemplateString';
 import { IconFormatter } from './IconFormatter';
@@ -16,7 +16,9 @@ export interface Settings {
   template?: string;
 }
 
-export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: SessionSettingsEditorBase): NodeWidget<any> {
+export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: SessionSettingsEditorBase,
+    log: Logger): NodeWidget<any> {
+
   const templateString = new TemplateString();
 
   const terminalEnvironment = new Map<string, string>();
@@ -40,7 +42,7 @@ export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: Se
   }
   templateString.setTemplateString(settings.template);
 
-  const templateEditor = new TemplateEditor(templateString);
+  const templateEditor = new TemplateEditor(templateString, log);
   templateEditor.onTemplateChanged((template: string) => {
     settings.template = template;
     sessionSettingsEditorBase.setSettings(settings);

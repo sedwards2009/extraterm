@@ -3,28 +3,30 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
+import { Event, Logger, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import { Direction, QAction, QBoxLayout, QLineEdit, QPoint, QPushButton, QVariant, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
 import { BoxLayout, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 
-import { TemplateString } from './TemplateString';
+import { Segment, TemplateString } from './TemplateString';
+import { TitlePreview } from './TitlePreview';
 
 
 export class TemplateEditor {
 
   #widget: QWidget;
   #templateString: TemplateString;
+  #titlePreview: TitlePreview = null;
+
   #onTemplateChangedEventEmitter = new EventEmitter<string>();
   onTemplateChanged: Event<string> = null;
 
   #templateLineEdit: QLineEdit = null;
 
-  constructor(templateString: TemplateString) {
+  constructor(templateString: TemplateString, log: Logger) {
     this.onTemplateChanged = this.#onTemplateChangedEventEmitter.event;
     this.#templateString = templateString;
 
-    let previewLayout: QBoxLayout = null;
     let iconButton: QPushButton = null;
 
     const fieldList = [
@@ -52,6 +54,11 @@ export class TemplateEditor {
       this.#insertText("${icon:" + iconName +"}");
       iconPopup.hide();
     });
+    this.#titlePreview = new TitlePreview(this.#templateString, log);
+    this.#titlePreview.onSegmentClicked((segment: Segment): void => {
+      this.#templateLineEdit.setSelection(segment.startColumn, segment.endColumn - segment.startColumn);
+      this.#templateLineEdit.setFocus();
+    });
 
     this.#widget = Widget({
       contentsMargins: 0,
@@ -64,8 +71,10 @@ export class TemplateEditor {
               direction: Direction.LeftToRight,
               children: [
                 this.#templateLineEdit = LineEdit({
-                  text: templateString.getTemplateString()
-
+                  text: templateString.getTemplateString(),
+                  onTextEdited: (newText: string) => {
+                    this.#templateStringChanged();
+                  }
                 }),
                 {
                   layout: BoxLayout({
@@ -99,12 +108,7 @@ export class TemplateEditor {
               ]
             })
           },
-          {
-            layout: previewLayout = BoxLayout({
-              direction: Direction.LeftToRight,
-              children: []
-            })
-          }
+          this.#titlePreview.getWidget()
         ]
       })
     });
@@ -115,7 +119,14 @@ export class TemplateEditor {
 
   #insertText(text: string): void {
     this.#templateLineEdit.insert(text);
-    // this.#onTemplateChangedEventEmitter.fire(templateString);
+    this.#templateStringChanged();
+  }
+
+  #templateStringChanged(): void {
+    const string = this.#templateLineEdit.text();
+    this.#templateString.setTemplateString(string);
+    this.#titlePreview.templateStringUpdated();
+    this.#onTemplateChangedEventEmitter.fire(string);
   }
 
   #createIconPopup(iconSelectedFunc: (iconName: string) => void): QWidget {

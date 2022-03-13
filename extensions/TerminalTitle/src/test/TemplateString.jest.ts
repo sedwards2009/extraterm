@@ -65,10 +65,10 @@ describe.each(args)("Test", (input: string, output: Segment[]) => {
   test(`parse ${input}`, () => {
     const ts = new TemplateString();
     ts.setTemplateString(input);
-    expect(ts._segments.length).toBe(output.length);
+    expect(ts.getSegments().length).toBe(output.length);
 
-    for (let i=0; i<ts._segments.length; i++) {
-      const seg = ts._segments[i];
+    for (let i=0; i<ts.getSegments().length; i++) {
+      const seg = ts.getSegments()[i];
       const outSeg = output[i];
       expect(seg.type).toBe(outSeg.type);
 
