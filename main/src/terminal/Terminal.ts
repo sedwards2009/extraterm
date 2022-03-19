@@ -739,7 +739,7 @@ export class Terminal implements Tab, Disposable {
     });
 
     emulator.debug = true;
-    // emulator.onTitleChange(this._handleTitle.bind(this));
+    emulator.onTitleChange(this.#handleTitle.bind(this));
     emulator.onData(this.#handleTermData.bind(this));
     emulator.onScreenChange(this.#handleScreenChange.bind(this));
 
@@ -772,6 +772,10 @@ export class Terminal implements Tab, Disposable {
     if (this.#pty != null) {
       this.#pty.permittedDataSize(event.status.bufferSize);
     }
+  }
+
+  #handleTitle(ev: TermApi.TitleChangeEvent): void {
+    this.environment.set(TerminalEnvironment.TERM_TITLE, ev.title);
   }
 
   #handleTermData(event: TermApi.DataEvent): void {
