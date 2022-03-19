@@ -24,6 +24,7 @@ import { Window } from "../Window";
 import { LineRangeChange, Terminal } from "../terminal/Terminal";
 import { InternalExtensionContext, InternalSessionEditor, InternalSessionSettingsEditor } from "../InternalTypes";
 import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl";
+import { NodeWidget, QLabel } from "@nodegui/nodegui";
 
 
 interface ActiveExtension {
@@ -344,6 +345,19 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
         }
       })
     );
+  }
+
+  createTabTitleWidgets(terminal: Terminal): QLabel[] {
+    const ttExtensions = this.#activeExtensions.filter(ae => ae.metadata.contributes.tabTitleWidgets != null);
+    let tabTitleWidgets: QLabel[] = [];
+    for (const extension of ttExtensions) {
+      const wrappedTerminal = extension.internalExtensionContext.wrapTerminal(terminal);
+      const newTabTitleWidgets = extension.internalExtensionContext.tabTitleWidgetRegistry.createTabTitleWidgets(wrappedTerminal);
+      if (newTabTitleWidgets != null) {
+        tabTitleWidgets = [...tabTitleWidgets, ...newTabTitleWidgets];
+      }
+    }
+    return tabTitleWidgets;
   }
 
   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor {

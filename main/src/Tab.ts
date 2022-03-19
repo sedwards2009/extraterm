@@ -9,6 +9,8 @@ export interface Tab {
   getIconName(): string;
   getTitle(): string;
   getContents(): QWidget;
+  getTabWidget(): QWidget;
+  setIsCurrent(isCurrent: boolean): void;
   focus(): void;
   unfocus(): void;
 }

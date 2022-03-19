@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,8 +9,8 @@ import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
 import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { doLater } from "extraterm-later";
+import { BoxLayout, Label, repolish, Widget } from "qt-construct";
 import {
-  Commands,
   Disposable,
   Event,
   SessionConfiguration,
@@ -28,9 +28,11 @@ import {
   QBoxLayout,
   QClipboardMode,
   QKeyEvent,
+  QLabel,
   QMouseEvent,
   QScrollArea,
   QScrollBar,
+  QSizePolicyPolicy,
   QWidget,
   ScrollBarPolicy,
   Shape,
@@ -54,7 +56,6 @@ import { ConfigDatabase } from "../config/ConfigDatabase";
 import { CommandLineAction, MouseButtonAction } from "../config/Config";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { CommandQueryOptions } from "../InternalTypes";
-import { ScreenChangeEvent } from "term-api";
 import { BlockFrame } from "./BlockFrame";
 import { DecoratedFrame } from "./DecoratedFrame";
 import { SpacerFrame } from "./SpacerFrame";
@@ -116,6 +117,8 @@ export class Terminal implements Tab, Disposable {
 
   #scrollArea: QScrollArea = null;
   #contentWidget: QWidget = null;
+  #tabTitleWidget: QWidget = null;
+  #tabTitleLabelWidgets: QLabel[] = null;
   #marginPx = 11;
   #verticalScrollBar: QScrollBar = null;
   #atBottom = true; // True if the terminal is scrolled to the bottom and should
@@ -276,7 +279,24 @@ export class Terminal implements Tab, Disposable {
 
     this.#lastCommandTerminalViewer = this.#createFramedTerminalBlock();
     this.#appendBlockFrame(this.#lastCommandTerminalViewer);
+  }
 
+  #createTabTitleWidget(): void {
+    this.#tabTitleLabelWidgets = this.#extensionManager.createTabTitleWidgets(this);
+    this.#tabTitleWidget = Widget({
+      cssClass: ["tab-title"],
+      contentsMargins: 0,
+      sizePolicy: {
+        horizontal: QSizePolicyPolicy.Expanding,
+        vertical: QSizePolicyPolicy.Fixed,
+      },
+      layout: BoxLayout({
+        contentsMargins: 0,
+        spacing: 0,
+        direction: Direction.LeftToRight,
+        children: this.#tabTitleLabelWidgets
+      })
+    });
   }
 
   #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator): TerminalBlock {
@@ -330,6 +350,15 @@ export class Terminal implements Tab, Disposable {
   #handleResize(): void {
     this.resizeEmulatorFromTerminalSize();
     this.#updateViewportTopOnFrames();
+  }
+
+  setIsCurrent(isCurrent: boolean): void {
+    if (this.#tabTitleLabelWidgets != null) {
+      for (const labelWidget of this.#tabTitleLabelWidgets) {
+        labelWidget.setProperty("cssClass", isCurrent ? ["tab-title", "tab-title-selected"] : ["tab-title"]);
+        repolish(labelWidget);
+      }
+    }
   }
 
   focus(): void {
@@ -649,7 +678,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   getTitle(): string {
-    return "Terminal";
+    return null;
   }
 
   getIconName(): string {
@@ -658,6 +687,13 @@ export class Terminal implements Tab, Disposable {
 
   getContents(): QWidget {
     return this.#scrollArea;
+  }
+
+  getTabWidget(): QWidget {
+    if (this.#tabTitleWidget == null) {
+      this.#createTabTitleWidget();
+    }
+    return this.#tabTitleWidget;
   }
 
   getPty(): Pty {

@@ -179,6 +179,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
     const tabTextColorActive = textHighlightColor;
     const tabBackgroundColorActive = level2Color;
+    const tabInsideWidthEm = 18;
+    const tabOuterWidthEm = tabInsideWidthEm + 3;
 
     //-------------------------------------------------------------------------
     // Tables
@@ -736,11 +738,9 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     height: ${emToPx(2.4)}px;
     margin: 0px;
 
-    padding-top: 0px;
-    padding-bottom: 1px;
-    padding-left: ${emToPx(0.666) + 1}px;
-    padding-right: ${emToPx(0.666)}px;
+    width: ${emToPx(tabOuterWidthEm)}px;
 
+    padding-left: 1px;
     border-radius: 0px;
 
     color: ${toHex(tabTextColor)};
@@ -768,7 +768,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     color: ${tabTextColorActive};
     background-color: ${tabBackgroundColorActive};
 
-    padding-left: ${emToPx(0.666)}px;
+    padding-left: 0px;
     border-left: 2px solid ${accentColor};
     border-bottom: 1px solid ${tabBackgroundColorActive};
   }
@@ -886,7 +886,16 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QWidget[cssClass~="window-background"] {
     background-color: ${level3Color};
   }
-  `;
+
+  QWidget[cssClass~="tab-title"] {
+    min-width: ${emToPx(tabInsideWidthEm)}px;
+    margin-left: ${emToPx(0.666)}px;
+  }
+
+  QWidget[cssClass~="tab-title-selected"] {
+    color: ${tabTextColorActive};
+  }
+    `;
 
     }
 

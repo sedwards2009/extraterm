@@ -1,18 +1,16 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import { QLabel } from "@nodegui/nodegui";
 import { Terminal } from "./Terminal";
 import { ListPickerOptions } from "./ListPickerOptions";
 
-export interface TabTitleWidget {
-  getContainerElement(): HTMLElement;
-}
 
 export interface TabTitleWidgetFactory {
-  (terminal: Terminal, widget: TabTitleWidget): any;
+  (terminal: Terminal): QLabel;
 }
 
 export interface Tab {

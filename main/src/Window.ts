@@ -9,10 +9,11 @@ import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QIcon, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
-  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag } from "@nodegui/nodegui";
-import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget } from "qt-construct";
+  FocusPolicy, QKeyEvent, WidgetAttribute, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
+  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat } from "@nodegui/nodegui";
+import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
+import { escape } from "he";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
@@ -29,11 +30,13 @@ import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker";
 import { DisposableHolder } from "./utils/DisposableUtils";
 import { HoverPushButton } from "./ui/QtConstructExtra";
 import { BorderlessWindowSupport } from "./BorderlessWindowSupport";
+import { createHtmlIcon } from "./ui/Icons";
 
 
 interface TabPlumbing {
   tab: Tab;
   disposableHolder: DisposableHolder;
+  titleWidget: QLabel;
 }
 
 export class Window {
@@ -596,6 +599,16 @@ export class Window {
     const currentIndex = this.getCurrentTabIndex();
     this.#tabs[currentIndex].tab.unfocus();
 
+    for (let i=0; i<this.#tabs.length; i++) {
+      const tabPlumbing =  this.#tabs[i];
+      const isCurrent = i === index;
+      if (tabPlumbing.titleWidget != null) {
+        tabPlumbing.titleWidget.setProperty("cssClass", isCurrent ? ["tab-title", "tab-title-selected"] : ["tab-title"]);
+        repolish(tabPlumbing.titleWidget);
+      }
+      tabPlumbing.tab.setIsCurrent(isCurrent);
+    }
+
     this.#tabBar.setCurrentIndex(index);
     this.#contentStack.setCurrentIndex(index);
     this.#tabs[index].tab.focus();
@@ -619,7 +632,7 @@ export class Window {
     if (this.#tabs.map(t => t.tab).includes(tab)) {
       return;
     }
-    const tabPlumbing: TabPlumbing = {tab, disposableHolder: new DisposableHolder()};
+    const tabPlumbing: TabPlumbing = { tab, disposableHolder: new DisposableHolder(), titleWidget: null };
     this.#tabs.push(tabPlumbing);
 
     if (tab instanceof Terminal) {
@@ -631,13 +644,23 @@ export class Window {
       }));
     }
 
-    const header = tab.getTitle();
-    const iconName = tab.getIconName();
-    let icon: QIcon = null;
-    if (iconName != null) {
-      icon = this.#uiStyle.getTabIcon(iconName);
+    let tabTitleWidget = tab.getTabWidget();
+    if (tabTitleWidget == null) {
+      const iconName = tab.getIconName();
+      const iconHtml = iconName != null ? createHtmlIcon(iconName) + "  " : "";
+      const titleHtml = `${iconHtml}${escape(tab.getTitle() ?? "")}`;
+      const tabTitleLabel = Label({
+        cssClass: ["tab-title"],
+        contentsMargins: 0,
+        text: titleHtml,
+        textFormat: TextFormat.RichText
+      });
+      tabTitleWidget = tabTitleLabel;
+      tabPlumbing.titleWidget = tabTitleLabel;
     }
-    this.#tabBar.addTab(icon, header);
+
+    const index = this.#tabBar.addTab(null, "");
+    this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, tabTitleWidget);
 
     this.#contentStack.addWidget(tab.getContents());
   }

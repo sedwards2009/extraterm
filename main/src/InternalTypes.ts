@@ -13,6 +13,8 @@ import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContributi
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
 import { WorkspaceSessionEditorRegistry } from "./extension/WorkspaceSessionEditorRegistry";
 import { WorkspaceSessionSettingsEditorRegistry } from "./extension/WorkspaceSessionSettingsEditorRegistry";
+import { TabTitleWidgetRegistry } from "./extension/TabTitleWidgetRegistry";
+
 import { Tab } from "./Tab";
 import { BlockFrame } from "./terminal/BlockFrame";
 import { LineRangeChange, Terminal } from "./terminal/Terminal";
@@ -83,7 +85,7 @@ export interface ExtensionManager {
 //   onCommandsChanged: ExtensionApi.Event<void>;
 //   commandRegistrationChanged(): void;
 
-//   createNewTerminalTabTitleWidgets(terminal: EtTerminal);
+   createTabTitleWidgets(terminal: Terminal): NodeWidget<any>[];
    createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
    createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionSettingsEditor[];
 
@@ -153,6 +155,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
   sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
+  tabTitleWidgetRegistry: TabTitleWidgetRegistry;
 
   // _extensionMetadata: ExtensionMetadata;
   // _internalWindow: InternalWindow;

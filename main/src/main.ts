@@ -327,8 +327,8 @@ class Main {
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
-    window.addTab(newTerminal);
     newTerminal.setSessionConfiguration(sessionConfiguration);
+    window.addTab(newTerminal);
 
     const extraEnv = {
       [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),

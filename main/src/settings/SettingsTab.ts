@@ -68,8 +68,15 @@ export class SettingsTab implements Tab {
     return "extraicons-pocketknife";
   }
 
+  getTabWidget(): QWidget {
+    return null;
+  }
+
   getContents(): QWidget {
     return this.#contentWidget;
+  }
+
+  setIsCurrent(isCurrent: boolean): void {
   }
 
   focus(): void {

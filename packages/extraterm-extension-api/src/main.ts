@@ -10,7 +10,7 @@ export { TerminalEnvironment } from "./TerminalEnvironment";
 export {
   Terminal, LineRangeChange, TerminalBorderWidget, TerminalBorderWidgetFactory, OnCursorListPickerOptions, Terminals
 } from "./Terminal";
-export { Tab, NumberInputOptions, TabTitleWidget, TabTitleWidgetFactory } from "./Tab";
+export { Tab, NumberInputOptions, TabTitleWidgetFactory } from "./Tab";
 export { CustomizedCommand, Commands } from "./Commands";
 export { BulkFileMetadata, BulkFileState, BulkFileHandle } from "./BulkFiles";
 export { ListPickerOptions } from "./ListPickerOptions";

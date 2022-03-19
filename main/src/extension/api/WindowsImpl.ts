@@ -15,7 +15,7 @@ export class WindowsImpl implements ExtensionApi.Windows {
   }
 
   registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void {
-    throw new Error("Method not implemented.");
+    this.#internalExtensionContext.tabTitleWidgetRegistry.registerTabTitleWidget(name, factory);
   }
 
   registerTerminalBorderWidget(name: string, factory: ExtensionApi.TerminalBorderWidgetFactory): void {

@@ -25,6 +25,7 @@ import { Window } from "../Window";
 import { WindowImpl } from "./api/WindowImpl";
 import { Tab } from "../Tab";
 import { WorkspaceSessionSettingsEditorRegistry } from "./WorkspaceSessionSettingsEditorRegistry";
+import { TabTitleWidgetRegistry } from "./TabTitleWidgetRegistry";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -37,6 +38,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
   sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
+  tabTitleWidgetRegistry: TabTitleWidgetRegistry;
 
   #extensionMetadata: ExtensionMetadata;
 
@@ -61,6 +63,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
     this.sessionEditorRegistry = new WorkspaceSessionEditorRegistry(extensionMetadata);
     this.sessionSettingsEditorRegistry = new WorkspaceSessionSettingsEditorRegistry(extensionMetadata);
+    this.tabTitleWidgetRegistry = new TabTitleWidgetRegistry(extensionMetadata);
     this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, applicationVersion);
   }
 
@@ -166,7 +169,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void {
-    if (this.hasTerminalProxy(terminal)) {
+    if (this.hasTerminalWrap(terminal)) {
       const wrapper = this.wrapTerminal(terminal);
       if (wrapper.environment._onChangeEventEmitter.hasListeners()) {
         wrapper.environment._onChangeEventEmitter.fire(changeList);
@@ -175,7 +178,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void {
-    if (this.hasTerminalProxy(terminal)) {
+    if (this.hasTerminalWrap(terminal)) {
       const wrapper = this.wrapTerminal(terminal);
       if (wrapper._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
         const block = this.wrapBlock(ev.blockFrame);
@@ -190,7 +193,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void {
-    if (this.hasTerminalProxy(terminal)) {
+    if (this.hasTerminalWrap(terminal)) {
       const wrapper = this.wrapTerminal(terminal);
       if (wrapper._onDidScreenChangeEventEmitter.hasListeners()) {
         const block = this.wrapBlock(ev.blockFrame);
@@ -207,7 +210,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
   #terminalWrapMap = new WeakMap<Terminal, TerminalImpl>();
 
-  hasTerminalProxy(terminal: Terminal): boolean {
+  hasTerminalWrap(terminal: Terminal): boolean {
     return this.#terminalWrapMap.has(terminal);
   }
 

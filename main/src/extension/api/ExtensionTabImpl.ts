@@ -52,6 +52,10 @@ export class ExtensionTabBridge implements Tab {
     return this.title;
   }
 
+  getTabWidget(): QWidget {
+    return null;
+  }
+
   getContents(): QWidget {
     return this.#containerWidget;
   }
@@ -67,6 +71,9 @@ export class ExtensionTabBridge implements Tab {
     }
     this.#containerLayout.addWidget(contentWidget);
     this.#extensionWidget = contentWidget;
+  }
+
+  setIsCurrent(isCurrent: boolean): void {
   }
 
   focus(): void {
