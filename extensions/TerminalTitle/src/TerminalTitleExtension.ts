@@ -6,8 +6,8 @@
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalEnvironment, SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
 import { NodeWidget, QLabel, QSizePolicyPolicy, TextFormat } from '@nodegui/nodegui';
 import { Label } from 'qt-construct';
+import { HtmlIconFormatter } from './HtmlIconFormatter';
 // import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
-import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
 // import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
@@ -45,7 +45,7 @@ function tabTitleWidgetFactory(terminal: Terminal): QLabel {
   const templateString = new TemplateString();
   templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
   templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminal.environment));
-  templateString.addFormatter("icon", new IconFormatter());
+  templateString.addFormatter("icon", new HtmlIconFormatter(terminal.tab.window.style));
 
   const settings = <Settings> terminal.getSessionSettings("title");
   const template = settings?.template ?? "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
@@ -69,9 +69,7 @@ function tabTitleWidgetFactory(terminal: Terminal): QLabel {
 }
 
 function updateTitleFunc(widget: QLabel, templateString: TemplateString): void {
-  log.debug(`updateTitleFunc() ${templateString.formatHtml()}`);
   widget.setText(templateString.formatHtml());
-  // widget.updateGeometry();
 }
 /*
 function terminalBorderWidgetFactory(context: ExtensionContext, terminal: Terminal, widget: TerminalBorderWidget): any {

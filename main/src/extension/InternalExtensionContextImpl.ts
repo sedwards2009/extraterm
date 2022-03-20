@@ -62,7 +62,8 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     this.commands = new CommandsRegistry(extensionManager, extensionMetadata.name,
       extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
     this.sessionEditorRegistry = new WorkspaceSessionEditorRegistry(extensionMetadata);
-    this.sessionSettingsEditorRegistry = new WorkspaceSessionSettingsEditorRegistry(extensionMetadata);
+    this.sessionSettingsEditorRegistry = new WorkspaceSessionSettingsEditorRegistry(this.#configDatabase,
+      extensionMetadata);
     this.tabTitleWidgetRegistry = new TabTitleWidgetRegistry(extensionMetadata);
     this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, applicationVersion);
   }
@@ -113,6 +114,11 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     for (const entry of entryList) {
       entry[menuType] = on;
     }
+  }
+
+  getWindowForTab(tab: Tab): ExtensionApi.Window {
+    const window = this.#extensionManager.getWindowForTab(tab);
+    return this.wrapWindow(window);
   }
 
   dispose(): void {

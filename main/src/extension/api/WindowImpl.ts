@@ -23,7 +23,7 @@ export class WindowImpl implements ExtensionApi.Window {
 
     this.#internalExtensionContext = internalExtensionContext;
     this.#window = window;
-    this.#style = new StyleImpl(window, configDatabase);
+    this.#style = new StyleImpl(configDatabase, window);
   }
 
   get terminals(): ExtensionApi.Terminal[] {

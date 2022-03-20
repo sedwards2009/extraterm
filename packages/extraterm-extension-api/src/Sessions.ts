@@ -5,6 +5,7 @@
  */
 import { Event } from "extraterm-event-emitter";
 import { NodeWidget } from "@nodegui/nodegui";
+import { Style } from "./Style";
 
 
 export interface Sessions {
@@ -174,6 +175,7 @@ export interface Pty {
 export interface SessionSettingsEditorBase {
   setSettings(settings: Object): void;
   readonly settings: Object;
+  readonly style: Style;
 }
 
 export interface SessionSettingsEditorFactory {

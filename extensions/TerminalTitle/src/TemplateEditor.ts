@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, Logger, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
+import { Event, Logger, Style, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import { Direction, QAction, QBoxLayout, QLineEdit, QPoint, QPushButton, QVariant, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
 import { BoxLayout, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -15,6 +15,7 @@ import { TitlePreview } from './TitlePreview';
 export class TemplateEditor {
 
   #widget: QWidget;
+  #style: Style;
   #templateString: TemplateString;
   #titlePreview: TitlePreview = null;
 
@@ -23,9 +24,10 @@ export class TemplateEditor {
 
   #templateLineEdit: QLineEdit = null;
 
-  constructor(templateString: TemplateString, log: Logger) {
+  constructor(templateString: TemplateString, style: Style, log: Logger) {
     this.onTemplateChanged = this.#onTemplateChangedEventEmitter.event;
     this.#templateString = templateString;
+    this.#style = style;
 
     let iconButton: QPushButton = null;
 
@@ -182,9 +184,11 @@ export class TemplateEditor {
       rows.push(BoxLayout({
         direction: Direction.LeftToRight,
         spacing: 0,
+        contentsMargins: 0,
         children: iconList.slice(y*ICONS_PER_ROW, (y+1)*ICONS_PER_ROW).map(
           iconName => ToolButton({
-            text: iconName,
+            toolTip: "${icon:" + iconName + "}",
+            icon: this.#style.createQIcon(<any> iconName),
             onClicked: () => {
               iconSelectedFunc(iconName);
             }
@@ -201,6 +205,7 @@ export class TemplateEditor {
       layout: BoxLayout({
         direction: Direction.TopToBottom,
         spacing: 0,
+        contentsMargins: 0,
         children: rows
       })
     });

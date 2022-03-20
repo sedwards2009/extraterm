@@ -19,6 +19,7 @@ import { ThemeManager } from "../theme/ThemeManager";
 import { SessionTypesPage } from "./SessionTypesPage";
 import { KeybindingsPage } from "./keybindings/KeybindingsPage";
 import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
+import { Window } from "../Window";
 
 
 export class SettingsTab implements Tab {
@@ -41,7 +42,7 @@ export class SettingsTab implements Tab {
   #stackedWidgetCount = 0;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
-    keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
+    keybindingsIOManager: KeybindingsIOManager, window: Window, uiStyle: UiStyle) {
 
     this._log = getLogger("SettingsTab", this);
     this.#configDatabase = configDatabase;
@@ -52,7 +53,7 @@ export class SettingsTab implements Tab {
     this.#generalPage = new GeneralPage(this.#configDatabase, uiStyle);
     this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
       uiStyle);
-    this.#sessionTypesPage = new SessionTypesPage(this.#configDatabase, this.#extensionManager, uiStyle);
+    this.#sessionTypesPage = new SessionTypesPage(this.#configDatabase, this.#extensionManager, window, uiStyle);
     this.#keybindingsPage = new KeybindingsPage(this.#configDatabase, this.#extensionManager,
       this.#keybindingsIOManager, uiStyle);
     this.#framesPage = new FramesPage(configDatabase, uiStyle);

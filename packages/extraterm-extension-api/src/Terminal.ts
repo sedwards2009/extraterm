@@ -107,7 +107,7 @@ export interface Terminal {
   readonly onDidAppendScrollbackLines: Event<LineRangeChange>;
 
   /**
-   * Get the tab which holds this terminal.
+   * The tab which holds this terminal
    */
   readonly tab: Tab;
 

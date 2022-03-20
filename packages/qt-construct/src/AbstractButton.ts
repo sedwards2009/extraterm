@@ -32,7 +32,7 @@ export function ApplyAbstractButtonOptions(button: QAbstractButton<any>, options
   if (checked !== undefined) {
     button.setChecked(checked);
   }
-  if (icon !== undefined) {
+  if (icon != null) {
     button.setIcon(icon);
   }
   if (text !== undefined) {

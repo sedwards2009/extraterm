@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -16,6 +16,7 @@ import { createHtmlIcon } from "../ui/Icons";
 import { HoverPushButton, makeSubTabBar } from "../ui/QtConstructExtra";
 import { ExtensionManager, SessionConfigurationChange, SessionSettingsChange } from "../InternalTypes";
 import { createUuid } from "extraterm-uuid";
+import { Window } from "../Window";
 
 
 export class SessionTypesPage {
@@ -24,6 +25,7 @@ export class SessionTypesPage {
 
   #extensionManager: ExtensionManager = null;
   #uiStyle: UiStyle = null;
+  #window: Window = null;
 
   #sessionsLayout: QBoxLayout = null;
   #page: QScrollArea = null;
@@ -34,11 +36,12 @@ export class SessionTypesPage {
   #sessionConfig: SessionConfiguration[] = null;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
-      uiStyle: UiStyle) {
+      window: Window, uiStyle: UiStyle) {
 
     this._log = getLogger("SessionTypesPage", this);
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
+    this.#window = window;
     this.#uiStyle = uiStyle;
 
     this.#sessionConfig = this.#configDatabase.getSessionConfigCopy();
@@ -114,7 +117,8 @@ export class SessionTypesPage {
       onDeleteClicked: () => {
         this.#deleteCard(id);
       },
-      isDefault
+      isDefault,
+      window: this.#window
     });
     this.#cardStack.push({id, card});
 
@@ -192,6 +196,7 @@ interface SessionTypeCardOptions {
   onMoveUpClicked: () => void;
   onDeleteClicked: () => void;
   isDefault: boolean;
+  window: Window;
 }
 
 
@@ -201,6 +206,7 @@ class SessionTypeCard {
   #extensionManager: ExtensionManager = null;
   #sessionConfig: SessionConfiguration = null;
   #extensionsConfig: Object = null;
+  #window: Window = null;
   #controlsStackedWidget: QStackedWidget = null;
   #isDefault = false;
   #onConfigChanged: (sessionConfig: SessionConfiguration) => void = null;
@@ -210,6 +216,7 @@ class SessionTypeCard {
     this.#extensionManager = options.extensionManager;
     this.#sessionConfig = _.cloneDeep(options.sessionConfig);
     this.#extensionsConfig = options.sessionConfig.extensions ?? {};
+    this.#window = options.window;
     this.#isDefault = options.isDefault;
     this.#onConfigChanged = options.onConfigChanged;
 
@@ -313,7 +320,7 @@ class SessionTypeCard {
 
   #getExtraSettings(): QWidget[] {
     const settingEditors = this.#extensionManager.createSessionSettingsEditors(this.#sessionConfig.type,
-      this.#sessionConfig);
+      this.#sessionConfig, this.#window);
     if (settingEditors.length === 0) {
       return [];
     }

@@ -4,16 +4,17 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { createHtmlIcon } from "../../ui/Icons";
 import { ConfigDatabase } from "../../config/ConfigDatabase";
 import { Window } from "../../Window";
+import { QIcon } from "@nodegui/nodegui";
 
 
 export class StyleImpl implements ExtensionApi.Style {
-
-  #window: Window;
   #configDatabase: ConfigDatabase;
+  #window: Window;
 
-  constructor(window: Window, configDatabase: ConfigDatabase) {
+  constructor(configDatabase: ConfigDatabase, window: Window) {
     this.#configDatabase = configDatabase;
     this.#window = window;
   }
@@ -23,12 +24,20 @@ export class StyleImpl implements ExtensionApi.Style {
   }
 
   get htmlStyleTag(): string {
-    return this.#window.getHtmlStyleTag();
+    return this.#window.getUiStyle().getHTMLStyleTag();
   }
 
   emToPx(em: number): number {
     const dpi = this.#window.getDpi();
     const generalConfig = this.#configDatabase.getGeneralConfig();
     return Math.round(em * 9 * (generalConfig.uiScalePercent / 100) * dpi / 72);
+  }
+
+  createHtmlIcon(name: ExtensionApi.IconName): string {
+    return createHtmlIcon(name);
+  }
+
+  createQIcon(name: ExtensionApi.IconName | ExtensionApi.ModifiedIconName): QIcon {
+    return this.#window.getUiStyle().getButtonIcon(name);
   }
 }

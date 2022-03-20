@@ -709,8 +709,8 @@ export class Window {
     return result;
   }
 
-  getHtmlStyleTag(): string {
-    return this.#uiStyle.getHTMLStyleTag();
+  getUiStyle(): UiStyle {
+    return this.#uiStyle;
   }
 }
 

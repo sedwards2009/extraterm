@@ -464,13 +464,13 @@ class Main {
   }
 
   commandOpenSettings(): void {
+    const window = this.#extensionManager.getActiveWindow();
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#themeManager,
-        this.#keybindingsIOManager, this.#uiStyle);
+        this.#keybindingsIOManager, window, this.#uiStyle);
     }
-    const win = this.#extensionManager.getActiveWindow();
-    win.addTab(this.#settingsTab);
-    win.focusTab(this.#settingsTab);
+    window.addTab(this.#settingsTab);
+    window.focusTab(this.#settingsTab);
   }
 
   commandFocusTabLeft(): void {

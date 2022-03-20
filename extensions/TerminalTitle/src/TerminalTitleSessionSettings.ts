@@ -33,7 +33,7 @@ export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: Se
 
   templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminalEnvironment));
   templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminalEnvironment));
-  templateString.addFormatter("icon", new IconFormatter());
+  templateString.addFormatter("icon", new IconFormatter(sessionSettingsEditorBase.style));
 
   const settings = <Settings> sessionSettingsEditorBase.settings;
   if (settings.template == null) {
@@ -42,7 +42,7 @@ export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: Se
   }
   templateString.setTemplateString(settings.template);
 
-  const templateEditor = new TemplateEditor(templateString, log);
+  const templateEditor = new TemplateEditor(templateString, sessionSettingsEditorBase.style, log);
   templateEditor.onTemplateChanged((template: string) => {
     settings.template = template;
     sessionSettingsEditorBase.setSettings(settings);

@@ -35,4 +35,7 @@ export class TabImpl implements ExtensionApi.Tab {
     return true;
   }
 
+  get window(): ExtensionApi.Window {
+    return this.#internalExtensionContext.getWindowForTab(this.#tab);
+  }
 }

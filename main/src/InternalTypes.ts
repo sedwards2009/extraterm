@@ -50,6 +50,7 @@ export interface ExtensionManager {
 
   getAllExtensions(): ExtensionMetadata[];
   getAllWindows(): Window[];
+  getWindowForTab(tab: Tab): Window;
 
 //   onStateChanged: ExtensionApi.Event<void>;
   onDesiredStateChanged: ExtensionApi.Event<void>;
@@ -85,9 +86,10 @@ export interface ExtensionManager {
 //   onCommandsChanged: ExtensionApi.Event<void>;
 //   commandRegistrationChanged(): void;
 
-   createTabTitleWidgets(terminal: Terminal): NodeWidget<any>[];
-   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
-   createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionSettingsEditor[];
+  createTabTitleWidgets(terminal: Terminal): NodeWidget<any>[];
+  createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
+  createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration,
+    window: Window): InternalSessionSettingsEditor[];
 
 //   setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void;
 //   getViewerTabDisplay(): ViewerTabDisplay;
@@ -173,6 +175,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   getExtensionContext(): ExtensionApi.ExtensionContext;
   getSessionBackends(): LoadedSessionBackendContribution[];
   getTerminalThemeProviders(): LoadedTerminalThemeProviderContribution[];
+  getWindowForTab(tab: Tab): ExtensionApi.Window;
 
   onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
 

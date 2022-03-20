@@ -7,7 +7,7 @@ import { Style } from '@extraterm/extraterm-extension-api';
 import { FieldFormatter, FormatResult } from "./TemplateString";
 
 
-export class IconFormatter implements FieldFormatter {
+export class HtmlIconFormatter implements FieldFormatter {
   #style: Style;
 
   constructor(style: Style) {
@@ -15,7 +15,7 @@ export class IconFormatter implements FieldFormatter {
   }
 
   format(key: string): FormatResult {
-    return { icon: this.#style.createQIcon(<any> key) };
+    return { html: this.#style.createHtmlIcon(<any> key) };
   }
 
   getErrorMessage(key: string): string {

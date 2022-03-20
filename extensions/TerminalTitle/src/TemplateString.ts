@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { QIcon } from "@nodegui/nodegui";
 import he = require("he");
 
 
@@ -35,8 +36,14 @@ export interface ErrorSegment {
 
 export type Segment = TextSegment | FieldSegment | ErrorSegment;
 
+export interface FormatResult {
+  text?: string;
+  html?: string;
+  icon?: QIcon;
+}
+
 export interface FieldFormatter {
-  formatHtml(key: string): string;
+  format(key: string): FormatResult;
   getErrorMessage(key: string): string;
 }
 
@@ -205,26 +212,29 @@ export class TemplateString {
   }
 
   getSegmentHtmlList(): string[] {
-    return this.#segments.map(segment => this.formatSegment(segment));
+    return this.#segments.map(segment => {
+      const result = this.formatSegment(segment);
+      return result.html != null ? result.html : (he.encode(result.text) ?? "");
+    });
   }
 
   formatHtml(): string {
     return this.getSegmentHtmlList().join("");
   }
 
-  formatSegment(segment: Segment): string {
+  formatSegment(segment: Segment): FormatResult {
     switch (segment.type) {
       case "text":
-        return he.encode(segment.text);
+        return { text: segment.text };
       case "field":
         const namespace = segment.namespace.toLowerCase();
         const formatter = this.#formatterMap.get(namespace);
         if (formatter == null) {
-          return "";
+          return { text: "" };
         }
-        return formatter.formatHtml(segment.key);
+        return formatter.format(segment.key);
       case "error":
-        return "";
+        return { text: "" };
     }
   }
 }

@@ -24,7 +24,8 @@ import { Window } from "../Window";
 import { LineRangeChange, Terminal } from "../terminal/Terminal";
 import { InternalExtensionContext, InternalSessionEditor, InternalSessionSettingsEditor } from "../InternalTypes";
 import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl";
-import { NodeWidget, QLabel } from "@nodegui/nodegui";
+import { QLabel } from "@nodegui/nodegui";
+import { Tab } from "../Tab";
 
 
 interface ActiveExtension {
@@ -374,13 +375,13 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   createSessionSettingsEditors(sessionType: string,
-      sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionSettingsEditor[] {
+      sessionConfiguration: ExtensionApi.SessionConfiguration, window: Window): InternalSessionSettingsEditor[] {
 
     const ssExtensions = this.#activeExtensions.filter(ae => ae.metadata.contributes.sessionSettings != null);
     let settingsEditors: InternalSessionSettingsEditor[] = [];
     for (const extension of ssExtensions) {
-      const newSettingsEditors = extension.internalExtensionContext.sessionSettingsEditorRegistry.createSessionSettingsEditors(sessionType,
-        sessionConfiguration);
+      const newSettingsEditors = extension.internalExtensionContext.sessionSettingsEditorRegistry
+        .createSessionSettingsEditors(sessionType, sessionConfiguration, window);
       if (newSettingsEditors != null) {
         settingsEditors = [...settingsEditors, ...newSettingsEditors];
       }
@@ -454,6 +455,19 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       }
     }
     return results;
+  }
+
+  getWindowForTab(tab: Tab): Window {
+    for (const window of this.#allWindows) {
+      const tabCount = window.getTabCount();
+      for (let i=0; i<tabCount; i++) {
+        const windowTab = window.getTab(i);
+        if (windowTab === tab) {
+          return window;
+        }
+      }
+    }
+    return null;
   }
 
   copyExtensionWindowState(): CommonExtensionWindowState {

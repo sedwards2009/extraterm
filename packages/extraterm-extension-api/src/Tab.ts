@@ -7,6 +7,7 @@
 import { QLabel } from "@nodegui/nodegui";
 import { Terminal } from "./Terminal";
 import { ListPickerOptions } from "./ListPickerOptions";
+import { Window } from "./Windows";
 
 
 export interface TabTitleWidgetFactory {
@@ -56,6 +57,13 @@ export interface Tab {
    * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
    */
   readonly isAlive: boolean;
+
+  /**
+   * Get the window holding this tab
+   *
+   * Note: Tabs can move between windows.
+   */
+  readonly window: Window;
 }
 
 export interface NumberInputOptions {

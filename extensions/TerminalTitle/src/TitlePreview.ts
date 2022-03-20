@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event, Logger } from '@extraterm/extraterm-extension-api';
-import { Direction, QBoxLayout, QWidget } from "@nodegui/nodegui";
+import { Direction, QBoxLayout, QIcon, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 
@@ -55,8 +55,19 @@ export class TitlePreview {
 
     const newChildren: QWidget[] = [];
     for (const segment of this.#templateString.getSegments()) {
+
+      const formatResult = this.#templateString.formatSegment(segment);
+      let icon: QIcon = null;
+      let text: string = null;
+      if (formatResult.icon != null) {
+        icon = formatResult.icon;
+      } else {
+        text = formatResult.text;
+      }
+
       const segmentWidget = ToolButton({
-        text: segment.type === "error" ? segment.text : this.#templateString.formatSegment(segment),
+        text: segment.type === "error" ? segment.text : text,
+        icon,
         cssClass: segment.type === "error" ? ["danger"] : [],
         toolTip: segment.text,
         onClicked: () => {
