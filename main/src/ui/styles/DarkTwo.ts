@@ -507,6 +507,10 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     border: ${btnBorder};
   }
 
+  QPushButton::menu-indicator {
+    width: 0px;
+  }
+
   ${AtomButtonBG("QPushButton",
     buttonDefaultBgColor,
     buttonDefaultBgHoverColor,
