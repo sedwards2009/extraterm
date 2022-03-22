@@ -4,8 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event, Logger, Style, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
-import { Direction, QAction, QBoxLayout, QLineEdit, QPoint, QPushButton, QVariant, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
-import { BoxLayout, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
+import { Direction, QAction, QLineEdit, QPoint, QPushButton, QSizePolicyPolicy, QVariant, QWidget, WidgetAttribute,
+  WindowType } from "@nodegui/nodegui";
+import { BoxLayout, GridLayout, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 
 import { Segment, TemplateString } from './TemplateString';
@@ -179,34 +180,54 @@ export class TemplateEditor {
       "fa-usb",
     ];
 
-    const rows: QBoxLayout[] = [];
-    for (let y=0; y < iconList.length/ICONS_PER_ROW; y++) {
-      rows.push(BoxLayout({
-        direction: Direction.LeftToRight,
-        spacing: 0,
-        contentsMargins: 0,
-        children: iconList.slice(y*ICONS_PER_ROW, (y+1)*ICONS_PER_ROW).map(
-          iconName => ToolButton({
-            toolTip: "${icon:" + iconName + "}",
-            icon: this.#style.createQIcon(<any> iconName),
-            onClicked: () => {
-              iconSelectedFunc(iconName);
-            }
-          })
-        )
-      }));
-    }
+    const buttonStyleSheet = `
+QPushButton[cssClass~="terminal-title"] {
+  background-color: transparent;
+  border: 0px;
+  border-radius: 0px;
+}
+QPushButton[cssClass~="terminal-title"]:hover {
+  background-color: ${this.#style.palette.backgroundSelected};
+}
+`;
 
     const iconPopup = Widget({
       cssClass: ["window-background"],
       windowFlag: WindowType.Popup,
       contentsMargins: 0,
       attribute: [WidgetAttribute.WA_WindowPropagation, WidgetAttribute.WA_X11NetWmWindowTypePopupMenu],
-      layout: BoxLayout({
-        direction: Direction.TopToBottom,
+      sizePolicy: {
+        vertical: QSizePolicyPolicy.Minimum,
+        horizontal: QSizePolicyPolicy.Minimum,
+      },
+      layout: GridLayout({
+        columns: ICONS_PER_ROW,
         spacing: 0,
-        contentsMargins: 0,
-        children: rows
+        contentsMargins: [0, 0, 0, 0],
+        children: iconList.map(iconName => {
+          const icon = this.#style.createQIcon(<any> iconName);
+          const hoverIcon = this.#style.createQIcon(<any> iconName, this.#style.palette.textHighlight);
+          const pb = PushButton({
+            cssClass: ["terminal-title"],
+            toolTip: "${icon:" + iconName + "}",
+            icon,
+            sizePolicy: {
+              vertical: QSizePolicyPolicy.Minimum,
+              horizontal: QSizePolicyPolicy.Minimum,
+            },
+            onClicked: () => {
+              iconSelectedFunc(iconName);
+            },
+            onEnter: () => {
+              pb.setIcon(hoverIcon);
+            },
+            onLeave: () => {
+              pb.setIcon(icon);
+            }
+          });
+          pb.setStyleSheet(buttonStyleSheet);
+          return pb;
+        }),
       })
     });
     return iconPopup;

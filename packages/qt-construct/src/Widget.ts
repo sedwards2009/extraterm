@@ -35,13 +35,15 @@ export interface WidgetOptions {
   contextMenuPolicy?: ContextMenuPolicy.PreventContextMenu;
   toolTip?: string;
   visible?: boolean;
+  styleSheet?: string;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, id, cssClass, focusPolicy, layout, mouseTracking,
     onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onResize, sizePolicy,
-    windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle, toolTip, visible
+    styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle, toolTip,
+    visible
   } = options;
 
   if (enabled !== undefined) {
@@ -133,6 +135,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (toolTip !== undefined) {
     widget.setToolTip(toolTip);
+  }
+  if (styleSheet !== undefined) {
+    widget.setStyleSheet(styleSheet);
   }
 }
 

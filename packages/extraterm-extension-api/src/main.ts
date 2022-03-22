@@ -25,4 +25,4 @@ export { Block, FindStartPosition, FindOptions, TerminalOutputDetails, TerminalO
   TextViewerType } from "./Block";
 export { Screen, ScreenChange, ScreenWithCursor } from "./Screen";
 export { ExtensionTab, Window, Windows } from "./Windows";
-export { Style, IconName, IconModification, IconRotation, ModifiedIconName } from "./Style";
+export { Style, IconName, IconModification, IconRotation, ModifiedIconName, Palette } from "./Style";

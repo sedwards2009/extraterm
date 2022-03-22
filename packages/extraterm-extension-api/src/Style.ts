@@ -1505,7 +1505,19 @@ export interface Style {
    * Create a QIcon from Extraterm's standard icon set
    *
    * @param name Name of the icon.
+   * @param color (Optional) foreground color.
    * @return The QIcon or null if the icon name wasn't valid.
    */
-  createQIcon(name: IconName | ModifiedIconName): QIcon;
+  createQIcon(name: IconName | ModifiedIconName, colorRGB?: string): QIcon;
+
+  readonly palette: Palette;
+}
+
+export interface Palette {
+  text: string;
+  textHighlight: string;
+  background: string;
+  backgroundSelected: string;
+  link: string;
+  linkHover: string;
 }

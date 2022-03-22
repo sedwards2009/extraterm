@@ -28,4 +28,12 @@ export interface UiStyle {
   getFrameMarginLeftRightPx(): number;
   getDecoratedFrameMarginTopPx(): number;
   getDecoratedFrameMarginBottomPx(): number;
+  getIcon(name: string, color: string): QIcon;
+
+  getTextColor(): string;
+  getTextHighlightColor(): string;
+  getBackgroundColor(): string;
+  getBackgroundSelectedColor(): string;
+  getLinkColor(): string;
+  getLinkHoverColor(): string;
 }

@@ -8,11 +8,13 @@ import { createHtmlIcon } from "../../ui/Icons";
 import { ConfigDatabase } from "../../config/ConfigDatabase";
 import { Window } from "../../Window";
 import { QIcon } from "@nodegui/nodegui";
+import { UiStyle } from "../../ui/UiStyle";
 
 
 export class StyleImpl implements ExtensionApi.Style {
   #configDatabase: ConfigDatabase;
   #window: Window;
+  #palette: ExtensionApi.Palette = null;
 
   constructor(configDatabase: ConfigDatabase, window: Window) {
     this.#configDatabase = configDatabase;
@@ -37,7 +39,41 @@ export class StyleImpl implements ExtensionApi.Style {
     return createHtmlIcon(name);
   }
 
-  createQIcon(name: ExtensionApi.IconName | ExtensionApi.ModifiedIconName): QIcon {
-    return this.#window.getUiStyle().getButtonIcon(name);
+  createQIcon(name: ExtensionApi.IconName | ExtensionApi.ModifiedIconName, colorRGB?: string): QIcon {
+    return this.#window.getUiStyle().getIcon(name, colorRGB === undefined ? this.palette.text : colorRGB);
   }
+
+  get palette(): ExtensionApi.Palette {
+    if (this.#palette == null) {
+      this.#palette = new PaletteImpl(this.#window.getUiStyle());
+    }
+    return this.#palette;
+  }
+}
+
+class PaletteImpl implements ExtensionApi.Palette {
+  #uiStyle: UiStyle;
+
+  constructor(uiStyle: UiStyle) {
+    this.#uiStyle = uiStyle;
+  }
+  get text(): string {
+    return this.#uiStyle.getTextColor();
+  }
+  get textHighlight(): string {
+    return this.#uiStyle.getTextHighlightColor();
+  }
+  get background(): string {
+    return this.#uiStyle.getBackgroundColor();
+  }
+  get backgroundSelected(): string {
+    return this.#uiStyle.getBackgroundSelectedColor();
+  }
+  get link(): string {
+    return this.#uiStyle.getLinkColor();
+  }
+  get linkHover(): string {
+    return this.#uiStyle.getLinkHoverColor();
+  }
+
 }

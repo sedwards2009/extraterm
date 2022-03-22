@@ -20,9 +20,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   let StyleLinkLabelCSS;
   let StyleHTMLStyleTag;
   let styleBackgroundColor = "";
+  let styleBackgroundSelectedColor = "";
   let styleTextHighlightColor = "";
+  let styleLinkColor = "";
   let styleBrandSuccess = "";
   let styleBrandDanger = "";
+  let styleLinkHoverColor = "";
   const base100PercentFontSize = 9;
 
   function DarkTwoStyleSheet(resourceDirectory: string, guiScale: number, dpi: number): string {
@@ -55,6 +58,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     const backgroundColor = uiBg;
     styleBackgroundColor = backgroundColor;
     const backgroundSelectedColor = accentBgColor;
+    styleBackgroundSelectedColor = backgroundSelectedColor;
 
     // const textColorSubtle = "rgba(157, 165, 180, 0.6)";
 
@@ -88,8 +92,10 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
     // Global textual link color.
     const linkColor = brandPrimary;
+    styleLinkColor = linkColor;
     // Link hover color set via `darken()` function.
     const linkHoverColor = darken(linkColor, 15);
+    styleLinkHoverColor = linkHoverColor;
     // Link hover decoration.
     const linkHoverDecoration = "underline";
 
@@ -156,8 +162,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     const inputPaddingHorizontal = `${emToPx(0.5)}px`;
     const inputBorderWidth = "1px";
     const inputActiveBgColor = mix(accentBgColor, inputBackgroundColor, 10);
-
-    const btnBorder = `1px solid ${buttonDefaultBorderColor}`;
+    const btnBorderWidthPx = emToPx(0.1);
+    const btnBorder = `${btnBorderWidthPx}px solid ${buttonDefaultBorderColor}`;
 
     const groupTextBgColor = buttonDefaultBgColor;
     const dropdownBgColor = level3Color;
@@ -543,6 +549,11 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
     border-left-width: 0px;
+  }
+
+  QPushButton[cssClass~="group-right"]:focus, QPushButton[cssClass~="group-middle"]:focus {
+    border-left-width: ${btnBorderWidthPx}px;
+    padding-left: ${emToPx(0.6) - btnBorderWidthPx}px;
   }
 
   QPushButton:on {
@@ -1186,6 +1197,19 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     getButtonIconSize(guiScale: number, dpi: number): number {
       return this.getMenuIconSize(guiScale, dpi);
     },
+    getIcon(name: string, color: string): QIcon {
+      const normalColor = toRgba(color);
+
+      return createIcon(name, {
+        normalOnRgba: normalColor,
+        selectedOnRgba: normalColor,
+        activeOnRgba: normalColor,
+
+        normalOffRgba: normalColor,
+        selectedOffRgba: normalColor,
+        activeOffRgba: normalColor,
+      });
+    },
     getMenuIcon(name: string): QIcon {
       const normalColor = toRgba(styleTextColor);
       const hoverColor = toRgba(styleDropdownLinkHoverColor);
@@ -1295,6 +1319,24 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getDecoratedFrameMarginBottomPx(): number {
       return 4;
+    },
+    getTextColor(): string {
+      return styleTextColor;
+    },
+    getTextHighlightColor(): string {
+      return styleTextHighlightColor;
+    },
+    getBackgroundColor(): string {
+      return styleBackgroundColor;
+    },
+    getBackgroundSelectedColor(): string {
+      return styleBackgroundSelectedColor;
+    },
+    getLinkColor(): string {
+      return styleLinkColor;
+    },
+    getLinkHoverColor(): string {
+      return styleLinkHoverColor;
     }
   };
 }
