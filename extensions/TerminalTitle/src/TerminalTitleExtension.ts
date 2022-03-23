@@ -48,7 +48,7 @@ function tabTitleWidgetFactory(terminal: Terminal): QLabel {
   templateString.addFormatter("icon", new HtmlIconFormatter(terminal.tab.window.style));
 
   const settings = <Settings> terminal.getSessionSettings("title");
-  const template = settings?.template ?? "${icon:fas fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
+  const template = settings?.template ?? "${icon:fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
   templateString.setTemplateString(template);
 
   const widget = Label({

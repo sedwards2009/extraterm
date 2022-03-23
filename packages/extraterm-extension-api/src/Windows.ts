@@ -61,7 +61,7 @@ export interface ExtensionTab {
    * Extraterm ships with the free Font Awesome 5 icons. Icons and thier
    * names can be found at https://fontawesome.com/icons?d=gallery&p=2&m=free
    * The value for `icon` should be that shown in the `class` attribute in
-   * the icon example HTML. For example: `fas fa-bolt` or 'far fa-lightbulb'.
+   * the icon example HTML. For example: `fa-bolt` or 'fa-lightbulb'.
    */
   icon: string;
 
