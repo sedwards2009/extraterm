@@ -904,7 +904,6 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
   QWidget[cssClass~="tab-title"] {
     min-width: ${emToPx(tabInsideWidthEm)}px;
-    margin-left: ${emToPx(0.666)}px;
   }
 
   QWidget[cssClass~="tab-title-selected"] {

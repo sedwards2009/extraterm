@@ -285,7 +285,7 @@ export class Terminal implements Tab, Disposable {
     this.#tabTitleLabelWidgets = this.#extensionManager.createTabTitleWidgets(this);
     this.#tabTitleWidget = Widget({
       cssClass: ["tab-title"],
-      contentsMargins: 0,
+      contentsMargins: [8, 0, 0, 0],
       sizePolicy: {
         horizontal: QSizePolicyPolicy.Expanding,
         vertical: QSizePolicyPolicy.Fixed,
