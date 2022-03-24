@@ -10,7 +10,7 @@ import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
   FocusPolicy, QKeyEvent, WidgetAttribute, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
-  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat } from "@nodegui/nodegui";
+  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat, QMouseEvent, MouseButton } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import { escape } from "he";
@@ -125,6 +125,9 @@ export class Window {
                     onTabCloseRequested: (index: number) => {
                       this.#handleTabBarCloseClicked(index);
                     },
+                    onMouseButtonPress: (nativeEvent) => {
+                      this.#handleTabMouseButtonPress(new QMouseEvent(nativeEvent));
+                    }
                   }),
                   stretch: 0
                 },
@@ -402,6 +405,23 @@ export class Window {
     });
   }
 
+  #handleTabMouseButtonPress(ev: QMouseEvent): void {
+    const isContextMenu = ev.button() === MouseButton.RightButton;
+    if (!isContextMenu) {
+      return;
+    }
+
+    const tabIndex = this.#tabBar.tabAt(new QPoint(ev.x(), ev.y()));
+    this.setCurrentTabIndex(tabIndex);
+
+    const options: CommandQueryOptions = {
+      when: true,
+      terminalTitleMenu: true,
+    };
+    this.#updateMenu(this.#contextMenu, options, this.#uiStyle);
+    this.#contextMenu.popup(new QPoint(ev.globalX(), ev.globalY()));
+  }
+
   #handleTabBarChanged(index: number): void {
     if (index < 0 || index >= this.#tabs.length) {
       return;
@@ -638,7 +658,6 @@ export class Window {
     if (tab instanceof Terminal) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
       tabPlumbing.disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
-
         this.#updateContextMenu(this.#uiStyle);
         this.#contextMenu.popup(new QPoint(ev.x, ev.y));
       }));
