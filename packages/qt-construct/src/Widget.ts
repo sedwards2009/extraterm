@@ -1,49 +1,50 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ContextMenuPolicy, CursorShape, FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget, WidgetAttribute, WidgetEventTypes, WindowType
+import { ContextMenuPolicy, CursorShape, FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget,
+  WidgetAttribute, WidgetEventTypes, WindowType
 } from "@nodegui/nodegui";
 
 export interface WidgetOptions {
   attribute?: WidgetAttribute[];
-  enabled?: boolean;
-  id?: string;
-  layout?: NodeLayout<any>;
   contentsMargins?: [number, number, number, number] | number;
+  contextMenuPolicy?: ContextMenuPolicy.PreventContextMenu;
   cssClass?: string | string[];
   cursor?: CursorShape,
-  windowTitle?: string;
+  enabled?: boolean;
   focusPolicy?: FocusPolicy;
-  mouseTracking?: boolean;
-  onEnter?: () => void;
-  onFocusOut?: () => void;
-  onLayoutRequest?: () => void;
-  onLeave?: () => void;
-  onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
-  onMouseButtonPress?: (nativeEvent /* NativeQEvent */) => void;
-  onMouseMove?: (nativeEvent /* NativeQEvent */) => void;
-  onResize?: (native /* NativeQEvent */) => void;
-  windowFlag?: WindowType;
-  sizePolicy?: {horizontal: QSizePolicyPolicy, vertical: QSizePolicyPolicy};
+  inlineStyle?: string;
+  layout?: NodeLayout<any>;
   maximumHeight?: number;
   maximumWidth?: number;
   minimumHeight?: number;
   minimumWidth?: number;
-  inlineStyle?: string;
-  contextMenuPolicy?: ContextMenuPolicy.PreventContextMenu;
+  mouseTracking?: boolean;
+  objectName?: string;
+  onEnter?: () => void;
+  onFocusOut?: () => void;
+  onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
+  onLayoutRequest?: () => void;
+  onLeave?: () => void;
+  onMouseButtonPress?: (nativeEvent /* NativeQEvent */) => void;
+  onMouseMove?: (nativeEvent /* NativeQEvent */) => void;
+  onResize?: (native /* NativeQEvent */) => void;
+  sizePolicy?: {horizontal: QSizePolicyPolicy, vertical: QSizePolicyPolicy};
+  styleSheet?: string;
   toolTip?: string;
   visible?: boolean;
-  styleSheet?: string;
+  windowFlag?: WindowType;
+  windowTitle?: string;
 }
 
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
-    attribute, contentsMargins, contextMenuPolicy, cursor, enabled, id, cssClass, focusPolicy, layout, mouseTracking,
-    onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onResize, sizePolicy,
-    styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle, toolTip,
-    visible
+    attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
+    objectName, onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onResize,
+    sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag,
+    inlineStyle, toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
@@ -57,8 +58,8 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
       widget.setAttribute(attr, true);
     }
   }
-  if (id !== undefined) {
-    widget.setObjectName(id);
+  if (objectName !== undefined) {
+    widget.setObjectName(objectName);
   }
   if (cursor !== undefined) {
     widget.setCursor(cursor);

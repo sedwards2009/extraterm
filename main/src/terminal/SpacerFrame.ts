@@ -32,7 +32,7 @@ export class SpacerFrame implements BlockFrame {
     const leftRightMargin = this.#uiStyle.getFrameMarginLeftRightPx();
 
     this.#widget = Widget({
-      id: this._log.getName(),
+      objectName: this._log.getName(),
       cssClass: "frame",
       layout: this.#layout = BoxLayout({
         direction: Direction.TopToBottom,

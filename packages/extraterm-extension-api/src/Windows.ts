@@ -28,10 +28,7 @@ export interface Windows {
  */
 export interface ExtensionTab {
   /**
-   * Container element under which this editor's DOM contents can be placed.
-   *
-   * The CSS specified in the extension's `package.json` will be automatically
-   * applied to the contents of this element.
+   * Assign a QWidget to this property to set the contexts of the tab.
    */
   contentWidget: QWidget;
 

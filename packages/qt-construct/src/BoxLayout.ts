@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, NodeLayout, NodeWidget, QBoxLayout, QWidget } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, NodeLayout, NodeWidget, QBoxLayout, QWidget, SizeConstraint } from "@nodegui/nodegui";
 import { Label } from "./Label";
 
 
@@ -17,16 +17,21 @@ export interface BoxLayoutItem {
 export interface BoxLayoutOptions {
   direction: Direction;
   children: (NodeWidget<any> | string | BoxLayoutItem | NodeLayout<any>)[];
+  sizeConstraint?: SizeConstraint,
   spacing?: number;
   contentsMargins?: [number, number, number, number] | number;
 }
 
 export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
-  const { children, contentsMargins, direction, spacing } = options;
+  const { children, contentsMargins, direction, sizeConstraint, spacing } = options;
 
   const boxLayout = new QBoxLayout(direction);
   if (spacing !== undefined) {
     boxLayout.setSpacing(spacing);
+  }
+
+  if (sizeConstraint !== undefined) {
+    boxLayout.setSizeConstraint(sizeConstraint);
   }
 
   if (contentsMargins !== undefined) {

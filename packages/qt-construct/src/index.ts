@@ -25,3 +25,4 @@ export { TableView, TableViewOptions } from "./TableView";
 export { Frame, FrameOptions } from "./Frame";
 export { setCssClasses, repolish } from "./Utilities";
 export { TextEdit, TextEditOptions } from "./TextEdit";
+export { ScrollBar, ScrollBarOptions } from "./ScrollBar";

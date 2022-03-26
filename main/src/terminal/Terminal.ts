@@ -9,7 +9,7 @@ import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
 import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { doLater } from "extraterm-later";
-import { BoxLayout, Label, repolish, Widget } from "qt-construct";
+import { BoxLayout, Label, repolish, ScrollArea, ScrollBar, Widget } from "qt-construct";
 import {
   Disposable,
   Event,
@@ -223,28 +223,42 @@ export class Terminal implements Tab, Disposable {
   }
 
   #createUi() : void {
-    this.#scrollArea = new QScrollArea();
-    this.#scrollArea.setWidgetResizable(true);
-    this.#scrollArea.setFrameShape(Shape.NoFrame);
-    this.#scrollArea.setVerticalScrollBarPolicy(ScrollBarPolicy.ScrollBarAlwaysOn);
-    this.#scrollArea.addEventListener(WidgetEventTypes.Resize, () => {
-      this.#handleResize();
+    this.#scrollArea = ScrollArea({
+      widgetResizable: true,
+      frameShape: Shape.NoFrame,
+      verticalScrollBarPolicy: ScrollBarPolicy.ScrollBarAlwaysOn,
+      onResize: () => {
+        this.#handleResize();
+      },
+      widget: this.#contentWidget = Widget({
+        objectName: "content",
+        focusPolicy: FocusPolicy.ClickFocus,
+        onKeyPress: (nativeEvent) => {
+          this.#handleKeyPress(new QKeyEvent(nativeEvent));
+        },
+        onMouseButtonPress: (nativeEvent) => {
+          this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
+        },
+        layout: this.#contentLayout = BoxLayout({
+          direction: Direction.TopToBottom,
+          sizeConstraint: SizeConstraint.SetMinimumSize,
+          contentsMargins: 0,
+          children: []
+        })
+      }),
+      verticalScrollBar: this.#verticalScrollBar = ScrollBar({
+        orientation: Orientation.Vertical,
+        onRangeChanged: (min: number, max: number) => {
+          this.#handleVerticalScrollBarRangeChanged();
+        },
+        onActionTriggered: (action: number) => {
+          this.#handleVerticalScrollBarAction();
+        },
+        onValueChanged: () => {
+          this.#handleVerticalScrollBarChanged();
+        }
+      })
     });
-
-    this.#contentWidget = new QWidget();
-    this.#contentWidget.setObjectName("content");
-    this.#contentWidget.setFocusPolicy(FocusPolicy.ClickFocus);
-    this.#contentWidget.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
-      this.#handleKeyPress(new QKeyEvent(nativeEvent));
-    });
-    this.#contentWidget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
-      this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
-    });
-    this.#contentLayout = new QBoxLayout(Direction.TopToBottom, this.#contentWidget);
-    this.#contentLayout.setSizeConstraint(SizeConstraint.SetMinimumSize);
-    this.#contentLayout.setContentsMargins(0, 0, 0, 0);
-
-    this.#scrollArea.setWidget(this.#contentWidget);
 
     this.#scrollArea.viewport().setObjectName("viewport");
 
@@ -258,22 +272,6 @@ export class Terminal implements Tab, Disposable {
       }
     `);
     this.#scrollArea.viewport().hide();
-
-    this.#verticalScrollBar = new QScrollBar();
-    this.#verticalScrollBar.setOrientation(Orientation.Vertical);
-    this.#verticalScrollBar.addEventListener("rangeChanged", (min: number, max: number) => {
-      this.#handleVerticalScrollBarRangeChanged();
-    });
-
-    this.#verticalScrollBar.addEventListener("actionTriggered", (action: number) => {
-      this.#handleVerticalScrollBarAction();
-    });
-
-    this.#verticalScrollBar.addEventListener("valueChanged", () => {
-      this.#handleVerticalScrollBarChanged();
-    });
-
-    this.#scrollArea.setVerticalScrollBar(this.#verticalScrollBar);
 
     this.#contentLayout.addStretch(1);
 

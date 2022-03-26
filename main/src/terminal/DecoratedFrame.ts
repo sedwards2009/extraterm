@@ -57,7 +57,7 @@ export class DecoratedFrame implements BlockFrame {
     this.onCloseClicked = this.#onCloseClickedEventEmitter.event;
 
     this.#widget = Widget({
-      id: this._log.getName(),
+      objectName: this._log.getName(),
       cssClass: "decorated-frame",
       onLayoutRequest: () => this.#layout(),
       onResize: (ev) => this.#handleResize(ev),
@@ -154,7 +154,7 @@ export class DecoratedFrame implements BlockFrame {
 
   #createHeader(): QWidget {
     return Widget({
-      id: "DecoratedFrame-header",
+      objectName: "DecoratedFrame-header",
       cssClass: "decorated-frame-header",
       layout: BoxLayout({
         direction: Direction.LeftToRight,
