@@ -15,7 +15,10 @@ export class HtmlIconFormatter implements FieldFormatter {
   }
 
   format(key: string): FormatResult {
-    return { html: this.#style.createHtmlIcon(<any> key) ?? "???" };
+    return {
+      html: this.#style.createHtmlIcon(<any> key) ?? "???",
+      iconName: key
+    };
   }
 
   getErrorMessage(key: string): string {

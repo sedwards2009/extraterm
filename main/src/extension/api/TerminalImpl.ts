@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
+import { Direction, QWidget } from "@nodegui/nodegui";
 import * as _ from "lodash";
 
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
@@ -12,15 +13,17 @@ import { log, Logger, getLogger } from "extraterm-logging";
 
 import { Terminal, EXTRATERM_COOKIE_ENV } from "../../terminal/Terminal";
 import { InternalExtensionContext } from "../../InternalTypes";
-import { ExtensionMetadata } from "../ExtensionMetadata";
+import { BorderDirection, ExtensionMetadata, ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
+import { BoxLayout, Widget } from "qt-construct";
+
 // import { ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
 
 
 export class TerminalImpl implements ExtensionApi.Terminal {
   private _log: Logger = null;
   viewerType: "terminal-output";
-  // private _terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
-  // private _tabTitleWidgets = new Map<string, TabTitleWidgetInfo>(); // FIXME
+  #terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
+  // #tabTitleWidgets = new Map<string, ExtensionApi.TerminalBorderWidget>();
 
   environment: TerminalEnvironmentImpl;
   screen: ExtensionApi.ScreenWithCursor;
@@ -120,51 +123,44 @@ export class TerminalImpl implements ExtensionApi.Terminal {
     return settings == null ? null : settings;
   }
 
-  openTerminalBorderWidget(name: string): any {
-/*
-    this._checkIsAlive();
-    if (this._terminalBorderWidgets.has(name)) {
-      const { extensionContainerElement, terminalBorderWidget, factoryResult } = this._terminalBorderWidgets.get(name);
-      const data = this._findTerminalBorderWidgetMetadata(name);
-      this._terminal.appendElementToBorder(extensionContainerElement, data.border);
-      terminalBorderWidget._handleOpen();
-      return factoryResult;
-    }
+  createTerminalBorderWidget(name: string): ExtensionApi.TerminalBorderWidget {
+    this.#checkIsAlive();
+    // if (this.#terminalBorderWidgets.has(name)) {
+    //   const terminalBorderWidget = this.#terminalBorderWidgets.get(name);
+    //   const data = this.#findTerminalBorderWidgetMetadata(name);
+    //   this.#terminal.appendWidgetToBorder(extensionContainerElement, data.border);
+    //   terminalBorderWidget._handleOpen();
+    //   return factoryResult;
+    // }
+    const data = this.#findTerminalBorderWidgetMetadata(name);
 
-    const factory = this._internalExtensionContext._internalWindow.getTerminalBorderWidgetFactory(name);
-    if (factory == null) {
-      this._internalExtensionContext.logger.warn(
-        `Unknown terminal border widget '${name}' given to createTerminalBorderWidget().`);
-      return null;
-    }
+    const terminalBorderWidget = new TerminalBorderWidgetImpl(this.#terminal, data.border);
+    return terminalBorderWidget;
 
-    const data = this._findTerminalBorderWidgetMetadata(name);
-    const extensionContainerElement = <ExtensionContainerElement> document.createElement(ExtensionContainerElement.TAG_NAME);
-    extensionContainerElement._setExtensionContext(this._internalExtensionContext);
-    extensionContainerElement._setExtensionCss(data.css);
+    // this.#terminal.appendWidgetToBorder(extensionContainerElement, data.border);
 
-    this._terminal.appendElementToBorder(extensionContainerElement, data.border);
-    const terminalBorderWidget = new TerminalBorderWidgetImpl(extensionContainerElement, () => {
-      this._terminal.removeElementFromBorder(extensionContainerElement);
-      terminalBorderWidget._handleClose();
-    });
-    const factoryResult = factory(this, terminalBorderWidget);
-    this._terminalBorderWidgets.set(name, { extensionContainerElement: extensionContainerElement, terminalBorderWidget,
-      factoryResult });
-    terminalBorderWidget._handleOpen();
-    return factoryResult;
-*/
+    // const terminalBorderWidget = new TerminalBorderWidgetContainer(
+    //   () => {
+    //   this._terminal.removeElementFromBorder(extensionContainerElement);
+    //   terminalBorderWidget._handleClose();
+    // }
+    // );
+    // const factoryResult = factory(this, terminalBorderWidget);
+    // this._terminalBorderWidgets.set(name, { extensionContainerElement: extensionContainerElement, terminalBorderWidget,
+    //   factoryResult });
+    // terminalBorderWidget._handleOpen();
+    // return factoryResult;
   }
 
-  // private _findTerminalBorderWidgetMetadata(name: string): ExtensionTerminalBorderContribution {
-  //   const borderWidgetMeta = this._internalExtensionContext._extensionMetadata.contributes.terminalBorderWidgets;
-  //   for (const data of borderWidgetMeta) {
-  //     if (data.name === name) {
-  //       return data;
-  //     }
-  //   }
-  //   return null;
-  // }
+  #findTerminalBorderWidgetMetadata(name: string): ExtensionTerminalBorderContribution {
+    const borderWidgetMeta = this.#extensionMetadata.contributes.terminalBorderWidgets;
+    for (const data of borderWidgetMeta) {
+      if (data.name === name) {
+        return data;
+      }
+    }
+    return null;
+  }
 
   async getWorkingDirectory(): Promise<string | null> {
     const pty = this.#terminal.getPty();
@@ -175,15 +171,10 @@ export class TerminalImpl implements ExtensionApi.Terminal {
   }
 }
 
+
 interface TerminalBorderWidgetInfo {
   // extensionContainerElement: ExtensionContainerElement;
   // terminalBorderWidget: InternalTerminalBorderWidget;
-  factoryResult: unknown;
-}
-
-interface TabTitleWidgetInfo {
-  // extensionContainerElement: ExtensionContainerElement;
-  // tabTitleWidget: InternalTabTitleWidget;
   factoryResult: unknown;
 }
 
@@ -290,40 +281,58 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
   }
 }
 
-/*
-class TerminalBorderWidgetImpl implements InternalTerminalBorderWidget {
 
-  private _open = false;
-  private _onDidOpenEventEmitter = new EventEmitter<void>();
-  onDidOpen: ExtensionApi.Event<void>;
-  private _onDidCloseEventEmitter = new EventEmitter<void>();
-  onDidClose: ExtensionApi.Event<void>;
+class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget {
+  #terminal: Terminal = null;
+  #border: BorderDirection = "north";
 
-  constructor(private _extensionContainerElement: ExtensionContainerElement, private _close: () => void) {
-    this.onDidOpen = this._onDidOpenEventEmitter.event;
-    this.onDidClose = this._onDidCloseEventEmitter.event;
+  #open = false;
+  #contentWidget: QWidget = null;
+
+  constructor(terminal: Terminal, border: BorderDirection) {
+    this.#terminal = terminal;
+    this.#border = border;
   }
 
-  get containerElement(): HTMLElement {
-    return this._extensionContainerElement.getContainerElement();
+  get contentWidget(): QWidget {
+    return this.#contentWidget;
+  }
+
+  set contentWidget(widget: QWidget) {
+    if (widget === this.#contentWidget) {
+      return;
+    }
+
+    if (this.#open && this.#contentWidget != null) {
+      this.#terminal.removeBorderWidget(this.#contentWidget, this.#border);
+    }
+
+    this.#contentWidget = widget;
+    if (this.#open) {
+      this.#terminal.appendBorderWidget(widget, this.#border);
+    }
   }
 
   get isOpen(): boolean {
-    return this._open;
+    return this.#open;
   }
 
-  _handleOpen(): void {
-    this._open = true;
-    this._onDidOpenEventEmitter.fire(undefined);
-  }
+  open(): void {
+    if (this.#contentWidget == null || this.#open) {
+      return;
+    }
 
-  _handleClose(): void {
-    this._open = false;
-    this._onDidCloseEventEmitter.fire(undefined);
+    this.#terminal.appendBorderWidget(this.#contentWidget, this.#border);
+    this.#open = true;
   }
 
   close(): void {
-    this._close();
+    if (!this.#open || this.#contentWidget == null) {
+      this.#open = false;
+      return;
+    }
+
+    this.#terminal.removeBorderWidget(this.#contentWidget, this.#border);
+    this.#open = false;
   }
 }
-*/

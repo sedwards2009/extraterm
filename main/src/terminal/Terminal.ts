@@ -9,7 +9,7 @@ import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
 import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { doLater } from "extraterm-later";
-import { BoxLayout, Label, repolish, ScrollArea, ScrollBar, Widget } from "qt-construct";
+import { BoxLayout, repolish, ScrollArea, ScrollBar, Widget } from "qt-construct";
 import {
   Disposable,
   Event,
@@ -37,8 +37,7 @@ import {
   ScrollBarPolicy,
   Shape,
   SizeConstraint,
-  SliderAction,
-  WidgetEventTypes,
+  SliderAction
 } from "@nodegui/nodegui";
 const performanceNow = require('performance-now');
 
@@ -60,6 +59,7 @@ import { BlockFrame } from "./BlockFrame";
 import { DecoratedFrame } from "./DecoratedFrame";
 import { SpacerFrame } from "./SpacerFrame";
 import { UiStyle } from "../ui/UiStyle";
+import { BorderDirection } from "../extension/ExtensionMetadata";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -115,8 +115,15 @@ export class Terminal implements Tab, Disposable {
   #columns = -1;
   #rows = -1;
 
+  #topContents: QWidget = null;
   #scrollArea: QScrollArea = null;
   #contentWidget: QWidget = null;
+  #borderWidgetLayout: {north: QBoxLayout, south: QBoxLayout, east: QBoxLayout, west: QBoxLayout} = {
+    north: null,
+    south: null,
+    east: null,
+    west: null
+  };
   #tabTitleWidget: QWidget = null;
   #tabTitleLabelWidgets: QLabel[] = null;
   #marginPx = 11;
@@ -223,40 +230,101 @@ export class Terminal implements Tab, Disposable {
   }
 
   #createUi() : void {
-    this.#scrollArea = ScrollArea({
-      widgetResizable: true,
-      frameShape: Shape.NoFrame,
-      verticalScrollBarPolicy: ScrollBarPolicy.ScrollBarAlwaysOn,
-      onResize: () => {
-        this.#handleResize();
-      },
-      widget: this.#contentWidget = Widget({
-        objectName: "content",
-        focusPolicy: FocusPolicy.ClickFocus,
-        onKeyPress: (nativeEvent) => {
-          this.#handleKeyPress(new QKeyEvent(nativeEvent));
-        },
-        onMouseButtonPress: (nativeEvent) => {
-          this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
-        },
-        layout: this.#contentLayout = BoxLayout({
-          direction: Direction.TopToBottom,
-          sizeConstraint: SizeConstraint.SetMinimumSize,
-          contentsMargins: 0,
-          children: []
-        })
-      }),
-      verticalScrollBar: this.#verticalScrollBar = ScrollBar({
-        orientation: Orientation.Vertical,
-        onRangeChanged: (min: number, max: number) => {
-          this.#handleVerticalScrollBarRangeChanged();
-        },
-        onActionTriggered: (action: number) => {
-          this.#handleVerticalScrollBarAction();
-        },
-        onValueChanged: () => {
-          this.#handleVerticalScrollBarChanged();
-        }
+    this.#topContents = Widget({
+      contentsMargins: 0,
+      layout: BoxLayout({
+        direction: Direction.LeftToRight,
+        contentsMargins: 0,
+        spacing: 0,
+
+        children: [
+          Widget({
+            contentsMargins: 0,
+            layout: this.#borderWidgetLayout.west = BoxLayout({
+              direction: Direction.LeftToRight,
+              contentsMargins: 0,
+              spacing: 0,
+              children: []
+            })
+          }),
+
+          // Middle vertical stack of north-border, main contents, south-border
+          {
+            layout: BoxLayout({
+              direction: Direction.TopToBottom,
+              contentsMargins: 0,
+              spacing: 1,
+              children: [
+                Widget({
+                  contentsMargins: 0,
+                  layout: this.#borderWidgetLayout.north = BoxLayout({
+                    direction: Direction.TopToBottom,
+                    contentsMargins: 0,
+                    spacing: 1,
+                    children: []
+                  })
+                }),
+
+                this.#scrollArea = ScrollArea({
+                  widgetResizable: true,
+                  frameShape: Shape.NoFrame,
+                  verticalScrollBarPolicy: ScrollBarPolicy.ScrollBarAlwaysOn,
+                  onResize: () => {
+                    this.#handleResize();
+                  },
+                  widget: this.#contentWidget = Widget({
+                    objectName: "content",
+                    focusPolicy: FocusPolicy.ClickFocus,
+                    onKeyPress: (nativeEvent) => {
+                      this.#handleKeyPress(new QKeyEvent(nativeEvent));
+                    },
+                    onMouseButtonPress: (nativeEvent) => {
+                      this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
+                    },
+                    layout: this.#contentLayout = BoxLayout({
+                      direction: Direction.TopToBottom,
+                      sizeConstraint: SizeConstraint.SetMinimumSize,
+                      contentsMargins: 0,
+                      children: []
+                    })
+                  }),
+                  verticalScrollBar: this.#verticalScrollBar = ScrollBar({
+                    orientation: Orientation.Vertical,
+                    onRangeChanged: (min: number, max: number) => {
+                      this.#handleVerticalScrollBarRangeChanged();
+                    },
+                    onActionTriggered: (action: number) => {
+                      this.#handleVerticalScrollBarAction();
+                    },
+                    onValueChanged: () => {
+                      this.#handleVerticalScrollBarChanged();
+                    }
+                  })
+                }),
+
+                Widget({
+                  contentsMargins: 0,
+                  layout: this.#borderWidgetLayout.south = BoxLayout({
+                    direction: Direction.TopToBottom,
+                    contentsMargins: 0,
+                    spacing: 0,
+                    children: []
+                  })
+                }),
+              ]
+            })
+          },
+
+          Widget({
+            contentsMargins: 0,
+            layout: this.#borderWidgetLayout.east = BoxLayout({
+              direction: Direction.LeftToRight,
+              contentsMargins: 0,
+              spacing: 0,
+              children: []
+            })
+          })
+        ]
       })
     });
 
@@ -684,7 +752,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   getContents(): QWidget {
-    return this.#scrollArea;
+    return this.#topContents;
   }
 
   getTabWidget(): QWidget {
@@ -1230,6 +1298,17 @@ export class Terminal implements Tab, Disposable {
     const latestTerminalBlock = this.#createFramedTerminalBlock();
     this.#appendBlockFrame(latestTerminalBlock);
     this.#lastCommandTerminalViewer = latestTerminalBlock;
+  }
+
+  appendBorderWidget(widget: QWidget, border: BorderDirection): void {
+    this.#borderWidgetLayout[border].addWidget(widget);
+    widget.show();
+  }
+
+  removeBorderWidget(widget: QWidget, border: BorderDirection): void {
+    widget.hide();
+    this.#borderWidgetLayout[border].removeWidget(widget);
+    widget.setParent(null);
   }
 
   private handleRequestFrame(frameId: string): void {

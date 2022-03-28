@@ -33,7 +33,7 @@
         "command": "terminal-title:editTitle",
         "title": "Edit Title",
         "category": "terminal",
-        "icon": "fas fa-pen",
+        "icon": "fa-pen",
         "when": "terminalFocus"
       }
     ],

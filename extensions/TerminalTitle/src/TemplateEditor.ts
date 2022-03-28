@@ -57,7 +57,7 @@ export class TemplateEditor {
       this.#insertText("${icon:" + iconName +"}");
       iconPopup.hide();
     });
-    this.#titlePreview = new TitlePreview(this.#templateString, log);
+    this.#titlePreview = new TitlePreview(this.#templateString, this.#style, log);
     this.#titlePreview.onSegmentClicked((segment: Segment): void => {
       this.#templateLineEdit.setSelection(segment.startColumn, segment.endColumn - segment.startColumn);
       this.#templateLineEdit.setFocus();
@@ -68,6 +68,7 @@ export class TemplateEditor {
 
       layout: BoxLayout({
         direction: Direction.TopToBottom,
+        contentsMargins: 0,
         children: [
           {
             layout: BoxLayout({
@@ -82,6 +83,7 @@ export class TemplateEditor {
                 {
                   layout: BoxLayout({
                     direction: Direction.LeftToRight,
+                    contentsMargins: 0,
                     spacing: 0,
                     children: [
                       PushButton({
@@ -118,6 +120,15 @@ export class TemplateEditor {
   }
   getWidget(): QWidget {
     return this.#widget;
+  }
+
+  setTemplateText(text: string): void {
+    this.#templateLineEdit.setText(text);
+    this.#templateStringChanged();
+  }
+
+  focus(): void {
+    this.#templateLineEdit.setFocus();
   }
 
   #insertText(text: string): void {

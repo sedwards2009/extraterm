@@ -18,10 +18,6 @@ export class WindowsImpl implements ExtensionApi.Windows {
     this.#internalExtensionContext.tabTitleWidgetRegistry.registerTabTitleWidget(name, factory);
   }
 
-  registerTerminalBorderWidget(name: string, factory: ExtensionApi.TerminalBorderWidgetFactory): void {
-    throw new Error("Method not implemented.");
-  }
-
   registerTerminalThemeProvider(name: string, provider: ExtensionApi.TerminalThemeProvider): void {
     this.#internalExtensionContext.registerTerminalThemeProvider(name, provider);
   }

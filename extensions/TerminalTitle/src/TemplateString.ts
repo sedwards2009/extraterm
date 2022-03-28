@@ -39,7 +39,7 @@ export type Segment = TextSegment | FieldSegment | ErrorSegment;
 export interface FormatResult {
   text?: string;
   html?: string;
-  icon?: QIcon;
+  iconName?: string;
 }
 
 export interface FieldFormatter {

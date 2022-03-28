@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { QWidget } from "@nodegui/nodegui";
 import { Event } from "extraterm-event-emitter";
 
 import { Tab } from "./Tab";
@@ -122,7 +123,7 @@ export interface Terminal {
    */
   readonly extratermCookieName: string;
 
-  openTerminalBorderWidget(name: string): any;
+  createTerminalBorderWidget(name: string): TerminalBorderWidget;
 
   readonly environment: TerminalEnvironment;
 
@@ -201,16 +202,10 @@ export interface LineRangeChange {
 }
 
 export interface TerminalBorderWidget {
-  readonly containerElement: HTMLElement;
+  contentWidget: QWidget;
 
+  open(): void;
   close(): void;
 
   readonly isOpen: boolean;
-
-  readonly onDidOpen: Event<void>;
-  readonly onDidClose: Event<void>;
-}
-
-export interface TerminalBorderWidgetFactory {
-  (terminal: Terminal, widget: TerminalBorderWidget): any;
 }

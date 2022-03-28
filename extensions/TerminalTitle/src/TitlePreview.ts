@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event, Logger } from '@extraterm/extraterm-extension-api';
+import { Event, Logger, Style } from '@extraterm/extraterm-extension-api';
 import { Direction, QBoxLayout, QIcon, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -13,6 +13,7 @@ import { Segment, TemplateString } from './TemplateString';
 
 export class TitlePreview {
   #log: Logger = null;
+  #style: Style = null;
 
   #templateString: TemplateString = null;
   #widget: QWidget = null;
@@ -23,8 +24,9 @@ export class TitlePreview {
 
   #children: QWidget[] = [];
 
-  constructor(templateString: TemplateString, log: Logger) {
+  constructor(templateString: TemplateString, style: Style, log: Logger) {
     this.#templateString = templateString;
+    this.#style = style;
     this.#log = log;
     this.onSegmentClicked = this.#onSegmentClickedEventEmitter.event;
 
@@ -57,17 +59,17 @@ export class TitlePreview {
     for (const segment of this.#templateString.getSegments()) {
 
       const formatResult = this.#templateString.formatSegment(segment);
-      let icon: QIcon = null;
+      let iconName: string = null;
       let text: string = null;
-      if (formatResult.icon != null) {
-        icon = formatResult.icon;
+      if (formatResult.iconName != null) {
+        iconName = formatResult.iconName;
       } else {
         text = formatResult.text;
       }
 
       const segmentWidget = ToolButton({
         text: segment.type === "error" ? segment.text : text,
-        icon,
+        icon: iconName != null ? this.#style.createQIcon(<any> iconName) : null,
         cssClass: segment.type === "error" ? ["danger"] : [],
         toolTip: segment.text,
         onClicked: () => {

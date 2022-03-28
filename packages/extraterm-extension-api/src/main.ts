@@ -8,7 +8,7 @@ export { Disposable, Event } from "extraterm-event-emitter";
 export { Logger } from "./Logger";
 export { TerminalEnvironment } from "./TerminalEnvironment";
 export {
-  Terminal, LineRangeChange, TerminalBorderWidget, TerminalBorderWidgetFactory, OnCursorListPickerOptions, Terminals
+  Terminal, LineRangeChange, TerminalBorderWidget, OnCursorListPickerOptions, Terminals
 } from "./Terminal";
 export { Tab, NumberInputOptions, TabTitleWidgetFactory } from "./Tab";
 export { CustomizedCommand, Commands } from "./Commands";

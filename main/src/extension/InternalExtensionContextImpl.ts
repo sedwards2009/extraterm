@@ -7,7 +7,7 @@ import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 import { Logger, getLogger, log } from "extraterm-logging";
 
-import { CommandMenuEntry, ExtensionManager, InternalExtensionContext, InternalSessionEditor } from "../InternalTypes";
+import { ExtensionManager, InternalExtensionContext } from "../InternalTypes";
 import { ExtensionMetadata, ExtensionCommandContribution, ExtensionMenusContribution } from "./ExtensionMetadata";
 import { ConfigDatabase } from "../config/ConfigDatabase";
 import { ExtensionContextImpl } from "./api/ExtensionContextImpl";

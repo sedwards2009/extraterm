@@ -5,7 +5,7 @@
  */
 import { Block } from "./Block";
 import { TabTitleWidgetFactory } from "./Tab";
-import { Terminal, TerminalBorderWidgetFactory } from "./Terminal";
+import { Terminal } from "./Terminal";
 import { TerminalThemeProvider } from "./TerminalTheme";
 import { Event } from "extraterm-event-emitter";
 import { QWidget } from "@nodegui/nodegui";
@@ -14,8 +14,6 @@ import { Style } from "./Style";
 
 export interface Windows {
   registerTabTitleWidget(name: string, factory: TabTitleWidgetFactory): void;
-
-  registerTerminalBorderWidget(name: string, factory: TerminalBorderWidgetFactory): void; // FIXME: this should go away
   registerTerminalThemeProvider(name: string, provider: TerminalThemeProvider): void;
 }
 

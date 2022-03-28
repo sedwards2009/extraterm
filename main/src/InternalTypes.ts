@@ -119,12 +119,12 @@ export interface ProxyFactory {
 //   showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 //   showOnCursorListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
 //}
-
+/*
 export interface InternalWindow extends ExtensionApi.Window {
   findViewerElementTagByMimeType(mimeType: string): string;
   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
   // createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionSettingsEditor[];
-  getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
+  // getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
 
   newTerminalCreated(newTerminal: Terminal, allTerminals: Terminal[]): void;
   terminalDestroyed(deadTerminal: Terminal, allTerminals: Terminal[]): void;
@@ -134,7 +134,8 @@ export interface InternalWindow extends ExtensionApi.Window {
   terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
 }
-
+*/
+/*
 export interface CommandMenuEntry {
   commandContribution: ExtensionCommandContribution;
   contextMenu: boolean;
@@ -143,7 +144,7 @@ export interface CommandMenuEntry {
   terminalTab: boolean;
   windowMenu: boolean;
 }
-
+*/
 /**
  * Holds internal accounting needed to support an Extension.
  *

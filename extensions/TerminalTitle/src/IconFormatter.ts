@@ -15,7 +15,7 @@ export class IconFormatter implements FieldFormatter {
   }
 
   format(key: string): FormatResult {
-    return { icon: this.#style.createQIcon(<any> key) };
+    return { iconName: key };
   }
 
   getErrorMessage(key: string): string {
