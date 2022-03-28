@@ -670,7 +670,7 @@ export class Window {
       const titleHtml = `${iconHtml}${escape(tab.getTitle() ?? "")}`;
       const tabTitleLabel = Label({
         cssClass: ["tab-title"],
-        contentsMargins: 0,
+        contentsMargins: [8, 0, 0, 0],
         text: titleHtml,
         textFormat: TextFormat.RichText
       });
