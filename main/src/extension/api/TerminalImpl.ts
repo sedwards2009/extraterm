@@ -305,6 +305,7 @@ class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget {
 
     if (this.#open && this.#contentWidget != null) {
       this.#terminal.removeBorderWidget(this.#contentWidget, this.#border);
+      this.#terminal.focus();
     }
 
     this.#contentWidget = widget;
@@ -334,5 +335,6 @@ class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget {
 
     this.#terminal.removeBorderWidget(this.#contentWidget, this.#border);
     this.#open = false;
+    this.#terminal.focus();
   }
 }
