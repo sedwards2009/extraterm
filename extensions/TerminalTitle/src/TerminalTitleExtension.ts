@@ -6,13 +6,12 @@
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalEnvironment, SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
 import { NodeWidget, QLabel, QSizePolicyPolicy, TextFormat } from '@nodegui/nodegui';
 import { Label } from 'qt-construct';
-import { HtmlIconFormatter } from './HtmlIconFormatter';
-// import { TerminalTitleEditorWidget} from "./TerminalTitleEditorWidget";
+import { IconFormatter } from './IconFormatter';
 import { TemplateString } from './TemplateString';
 import { TerminalBorderEditor } from './TerminalBorderEditor';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
-// import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
 import { createTerminalTitleSessionSettings, Settings } from './TerminalTitleSessionSettings';
+
 
 let log: Logger = null;
 
@@ -62,7 +61,7 @@ function tabTitleWidgetFactory(terminal: Terminal): QLabel {
   const templateString = new TemplateString();
   templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminal.environment));
   templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminal.environment));
-  templateString.addFormatter("icon", new HtmlIconFormatter(terminal.tab.window.style));
+  templateString.addFormatter("icon", new IconFormatter(terminal.tab.window.style));
 
   const settings = <Settings> terminal.getSessionSettings("title");
   const template = settings?.template ?? "${icon:fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";

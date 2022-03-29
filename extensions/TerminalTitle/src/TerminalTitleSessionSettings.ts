@@ -7,10 +7,9 @@ import { NodeWidget } from '@nodegui/nodegui';
 import { Logger, SessionSettingsEditorBase, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 
 import { TemplateString } from './TemplateString';
-import { IconFormatter } from './IconFormatter';
 import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
 import { TemplateEditor } from './TemplateEditor';
-import { HtmlIconFormatter } from './HtmlIconFormatter';
+import { IconFormatter } from './IconFormatter';
 
 
 export interface Settings {
@@ -34,7 +33,7 @@ export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: Se
 
   templateString.addFormatter("term", new TerminalEnvironmentFormatter("term", terminalEnvironment));
   templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminalEnvironment));
-  templateString.addFormatter("icon", new HtmlIconFormatter(sessionSettingsEditorBase.style));
+  templateString.addFormatter("icon", new IconFormatter(sessionSettingsEditorBase.style));
 
   const settings = <Settings> sessionSettingsEditorBase.settings;
   if (settings.template == null) {
