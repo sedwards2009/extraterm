@@ -36,6 +36,12 @@ export class TerminalBorderEditor {
     this.#templateEditor.onTemplateChanged((template: string) => {
       this.#onTemplateChangedEventEmitter.fire(template);
     });
+    this.#templateEditor.onAccept(() => {
+      this.#handleOk();
+    });
+    this.#templateEditor.onCancel(() => {
+      this.#handleCancel();
+    });
 
     this.#widget = Widget({
       cssClass: ["background"],
@@ -54,7 +60,7 @@ export class TerminalBorderEditor {
                     cssClass: ["small", "success", "group-left"],
                     icon: style.createQIcon("fa-check", style.palette.textHighlight),
                     onClicked: () => {
-                      this.#onDoneEventEmitter.fire();
+                      this.#handleOk();
                     }
                   }),
                   alignment: AlignmentFlag.AlignTop
@@ -64,8 +70,7 @@ export class TerminalBorderEditor {
                     cssClass: ["small", "danger", "group-right"],
                     icon: style.createQIcon("fa-times", style.palette.textHighlight),
                     onClicked: () => {
-                      this.#templateEditor.setTemplateText(this.#originalString);
-                      this.#onDoneEventEmitter.fire();
+                      this.#handleCancel();
                     }
                   }),
                   alignment: AlignmentFlag.AlignTop
@@ -77,6 +82,15 @@ export class TerminalBorderEditor {
         ]
       })
     });
+  }
+
+  #handleOk(): void {
+    this.#onDoneEventEmitter.fire();
+  }
+
+  #handleCancel(): void {
+    this.#templateEditor.setTemplateText(this.#originalString);
+    this.#onDoneEventEmitter.fire();
   }
 
   prepareToOpen(): void {

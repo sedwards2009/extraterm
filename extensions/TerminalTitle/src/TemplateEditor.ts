@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event, Logger, Style, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
-import { Direction, QAction, QLineEdit, QPoint, QPushButton, QSizePolicyPolicy, QVariant, QWidget, WidgetAttribute,
+import { Direction, Key, QAction, QKeyEvent, QLineEdit, QPoint, QPushButton, QSizePolicyPolicy, QVariant, QWidget, WidgetAttribute,
   WindowType } from "@nodegui/nodegui";
 import { BoxLayout, GridLayout, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -20,12 +20,20 @@ export class TemplateEditor {
   #templateString: TemplateString;
   #titlePreview: TitlePreview = null;
 
+  #onAcceptEventEmitter = new EventEmitter<void>();
+  onAccept: Event<void> = null;
+
+  #onCancelEventEmitter = new EventEmitter<void>();
+  onCancel: Event<void> = null;
+
   #onTemplateChangedEventEmitter = new EventEmitter<string>();
   onTemplateChanged: Event<string> = null;
 
   #templateLineEdit: QLineEdit = null;
 
   constructor(templateString: TemplateString, style: Style, log: Logger) {
+    this.onAccept = this.#onAcceptEventEmitter.event;
+    this.onCancel = this.#onCancelEventEmitter.event;
     this.onTemplateChanged = this.#onTemplateChangedEventEmitter.event;
     this.#templateString = templateString;
     this.#style = style;
@@ -78,7 +86,9 @@ export class TemplateEditor {
                   text: templateString.getTemplateString(),
                   onTextEdited: (newText: string) => {
                     this.#templateStringChanged();
-                  }
+                  },
+                  onKeyPress: this.#onKeyPress.bind(this),
+
                 }),
                 {
                   layout: BoxLayout({
@@ -118,6 +128,25 @@ export class TemplateEditor {
       })
     });
   }
+
+  #onKeyPress(nativeEvent): void {
+    const event = new QKeyEvent(nativeEvent);
+
+    const key = event.key();
+    if(key !== Key.Key_Escape && key !== Key.Key_Enter && key !== Key.Key_Return) {
+      return;
+    }
+
+    event.accept();
+    this.#templateLineEdit.setEventProcessed(true);
+
+    if(key === Key.Key_Escape) {
+      this.#onCancelEventEmitter.fire();
+    } else {
+      this.#onAcceptEventEmitter.fire();
+    }
+  }
+
   getWidget(): QWidget {
     return this.#widget;
   }
