@@ -4,9 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event, Logger, Style, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
-import { Direction, Key, QAction, QKeyEvent, QLineEdit, QPoint, QPushButton, QSizePolicyPolicy, QVariant, QWidget, WidgetAttribute,
+import { Direction, Key, QAction, QKeyEvent, QLineEdit, QPoint, QPushButton, QSizePolicyPolicy, QVariant, QWidget, TextFormat, WidgetAttribute,
   WindowType } from "@nodegui/nodegui";
-import { BoxLayout, GridLayout, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
+import { BoxLayout, GridLayout, Label, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 
 import { Segment, TemplateString } from './TemplateString';
@@ -74,13 +74,18 @@ export class TemplateEditor {
     this.#widget = Widget({
       contentsMargins: 0,
 
-      layout: BoxLayout({
-        direction: Direction.TopToBottom,
+      layout: GridLayout({
+        columns: 2,
         contentsMargins: 0,
         children: [
+          Label({
+            textFormat: TextFormat.RichText,
+            text: this.#style.createHtmlIcon("fa-pencil-alt")
+          }),
           {
             layout: BoxLayout({
               direction: Direction.LeftToRight,
+              contentsMargins: 0,
               children: [
                 this.#templateLineEdit = LineEdit({
                   text: templateString.getTemplateString(),
@@ -123,6 +128,9 @@ export class TemplateEditor {
               ]
             })
           },
+          Widget({
+            contentsMargins: 0
+          }),
           this.#titlePreview.getWidget()
         ]
       })

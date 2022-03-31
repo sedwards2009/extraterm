@@ -18,7 +18,7 @@ export type GridLayoutChild = QWidget | string | NodeLayout<any> | GridLayoutIte
 export interface GridLayoutOptions {
   columns: number;
   children: GridLayoutChild[];
-  contentsMargins?: [number, number, number, number];
+  contentsMargins?: [number, number, number, number] | number;
   spacing?: number;
   columnsMinimumWidth?: (number | undefined)[];
   columnsStretch?: (number | undefined)[];
@@ -29,7 +29,11 @@ export function GridLayout(options: GridLayoutOptions): QGridLayout {
   const gridLayout = new QGridLayout();
 
   if (contentsMargins !== undefined) {
-    gridLayout.setContentsMargins(...contentsMargins);
+    if (typeof contentsMargins === "number") {
+      gridLayout.setContentsMargins(contentsMargins, contentsMargins, contentsMargins, contentsMargins);
+    } else {
+      gridLayout.setContentsMargins(...contentsMargins);
+    }
   }
   if (spacing !== undefined) {
     gridLayout.setSpacing(spacing);

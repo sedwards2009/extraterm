@@ -253,7 +253,7 @@ export class Terminal implements Tab, Disposable {
             layout: BoxLayout({
               direction: Direction.TopToBottom,
               contentsMargins: 0,
-              spacing: 1,
+              spacing: 0,
               children: [
                 Widget({
                   contentsMargins: 0,

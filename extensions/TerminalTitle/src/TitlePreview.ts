@@ -35,6 +35,7 @@ export class TitlePreview {
       layout: this.#childrenLayout = BoxLayout({
         direction: Direction.LeftToRight,
         spacing: 0,
+        contentsMargins: 0,
         children: []
       })
     });
