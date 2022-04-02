@@ -13,7 +13,7 @@ const args: [string, Segment[]][] = [
     ["foo", [{ type: "text", text: "foo", startColumn: 0, endColumn: 3 }]],
     ["foo:bar", [{ type: "text", text: "foo:bar", startColumn: 0, endColumn: 7 }]],
     ["foo\\$bar", [{ type: "text", text: "foo$bar", startColumn: 0, endColumn: 8 }]],
-    ["$foo: ", [{ type: "text", text: "$foo: ", startColumn: 0, endColumn: 5 }]],
+    ["$foo: ", [{ type: "text", text: "$foo: ", startColumn: 0, endColumn: 6 }]],
 
     ["foo${TERM:TITLE}", [
       { type: "text", text: "foo", startColumn: 0, endColumn: 3 },
