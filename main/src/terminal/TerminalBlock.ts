@@ -808,7 +808,7 @@ export class TerminalBlock implements Block {
       selectionEnd = this.#selectionStart;
     }
 
-    const firstRow = selectionStart.y;
+    const firstRow = Math.max(selectionStart.y, 0);
     const lastRow = selectionEnd.y + 1;
 
     const lineText: string[] = [];
@@ -842,6 +842,9 @@ export class TerminalBlock implements Block {
   }
 
   #getLine(row: number): Line {
+    if (row < 0) {
+      return null;
+    }
     if (row < this.#scrollback.length) {
       return this.#scrollback[row];
     }
