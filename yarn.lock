@@ -503,7 +503,7 @@ __metadata:
     typedoc: ^0.22.3
     typescript: 4.3.5
   peerDependencies:
-    "@nodegui/nodegui": ^0.47.0
+    "@nodegui/nodegui": ^0.48.0
   languageName: unknown
   linkType: soft
 
@@ -795,9 +795,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:^0.47.0":
-  version: 0.47.0
-  resolution: "@nodegui/nodegui@npm:0.47.0"
+"@nodegui/nodegui@npm:^0.48.0":
+  version: 0.48.0
+  resolution: "@nodegui/nodegui@npm:0.48.0"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/qode": ^16.4.0
@@ -812,7 +812,7 @@ __metadata:
     tar: ^6.0.1
   bin:
     qode: scripts/qode.js
-  checksum: 6a144c55dd654063b88f39001eed3f0eb79b57fd298849035282cc10d0ce7db6ab5a2ccf1697211b681fbc4c61ec09054680c7d84c9241d79b49575bb68a3da3
+  checksum: e62e7784d71cb7e3c60c6978e2588a0252e38abf809557f48cafbad221199c50ea16f7b1ced6597a1d560bdf4e23206f0ed6c5d0be481ecaaac489a30aa16360
   languageName: node
   linkType: hard
 
@@ -1035,6 +1035,13 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: d076bb61f45d0fc42dee496ef8b1c2f8742e15d5e47e90e20d0243386e426c04d4efd408a48875ab432f7960b4ce3414db20ed0fbbfc7bcc89d84e574f6e045a
+  languageName: node
+  linkType: hard
+
+"@types/he@npm:^1.1.1":
+  version: 1.1.2
+  resolution: "@types/he@npm:1.1.2"
+  checksum: 71e9786c35330a2003a7692d5dc4f70946e4c45486f84d7a5792360c6c234cd34bf53421856de40a2c4bead9c21a805c309d72d012467f46bb2cce0571a9ba08
   languageName: node
   linkType: hard
 
@@ -4467,7 +4474,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-char-render-canvas@workspace:packages/extraterm-char-render-canvas"
   dependencies:
-    "@nodegui/nodegui": ^0.47.0
+    "@nodegui/nodegui": ^0.48.0
     "@types/node": ^14.14.37
     eslint: 7.19.0
     eslint-config-extraterm: 1.0.0
@@ -4655,7 +4662,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm@workspace:."
   dependencies:
-    "@nodegui/nodegui": ^0.47.0
+    "@nodegui/nodegui": ^0.48.0
     "@types/fs-extra": ^9.0.12
     "@yarnpkg/parsers": 2.5.0-rc.7
     commander: ^8.3.0
@@ -5537,6 +5544,15 @@ fsevents@^2.3.2:
   dependencies:
     is-stream: ^1.0.1
   checksum: bcd78059c2925d76af0cde33e0523578feffb52c1d9934e19ea0e8bc16427310be476282e567baf46b7e50a5256b0a527b3cac9e8d88e312f43d4440cd45a151
+  languageName: node
+  linkType: hard
+
+"he@npm:1.2.0, he@npm:^1.2.0":
+  version: 1.2.0
+  resolution: "he@npm:1.2.0"
+  bin:
+    he: bin/he
+  checksum: 3d4d6babccccd79c5c5a3f929a68af33360d6445587d628087f39a965079d84f18ce9c3d3f917ee1e3978916fc833bb8b29377c3b403f919426f91bc6965e7a7
   languageName: node
   linkType: hard
 
@@ -7662,6 +7678,7 @@ fsevents@^2.3.2:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     "@types/dompurify": ^2.0.1
+    "@types/he": ^1.1.1
     "@types/lodash": ^4.14.121
     "@types/lru-cache": ^4.1.0
     "@types/marked": ^0.7.3
@@ -7694,6 +7711,7 @@ fsevents@^2.3.2:
     fuzzyjs: ^4.0.4
     get-stream: ^6.0.0
     get-uri: 2.0.1
+    he: ^1.2.0
     jest: 27.2.0
     json-to-ast: 2.1.0
     khroma: ^1.4.1
@@ -8494,7 +8512,7 @@ fsevents@^2.3.2:
   resolution: "nodegui-plugin-font-icon@npm:0.2.2"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
-    "@nodegui/nodegui": ^0.47.0
+    "@nodegui/nodegui": ^0.48.0
     node-addon-api: ^3.0.0
     tar: ^6.0.1
   checksum: e1e6c9b13630908df4ebc5d70d72ca541e7639398c6fe75d13dd9751621a0a348b30a16e915954db5fb3e9e4e06f30884a38a90a7c673efee2f6bfae65a67ed4
@@ -8506,7 +8524,7 @@ fsevents@^2.3.2:
   resolution: "nodegui-plugin-style-tweaker@npm:0.1.2"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
-    "@nodegui/nodegui": ^0.47.0
+    "@nodegui/nodegui": ^0.48.0
     node-addon-api: ^3.0.0
     tar: ^6.0.1
   checksum: 8b8679b3ffbd32e4de64b181b473669e5a99e13625ba9d602fec6b3532a2e3a50ff2fcbbd00fb759626987d8b95a6f708e425147c43821347f0165fa7948fabc
@@ -9651,7 +9669,7 @@ fsevents@^2.3.2:
   version: 0.0.0-use.local
   resolution: "qt-construct@workspace:packages/qt-construct"
   dependencies:
-    "@nodegui/nodegui": ^0.47.0
+    "@nodegui/nodegui": ^0.48.0
     eslint: 7.19.0
     eslint-config-extraterm: 1.0.0
     shelljs: 0.8.3
@@ -11246,6 +11264,23 @@ fsevents@^2.3.2:
   checksum: ce3d2cd3a438c4a9453947aa664581519173ea40e77e2534d08c088ee6dda449eabdbe0a76d2a516b8b73c33262fedd10d5270ccf7576ae316e3db170ce6562f
   languageName: node
   linkType: hard
+
+"terminal-title@workspace:extensions/TerminalTitle":
+  version: 0.0.0-use.local
+  resolution: "terminal-title@workspace:extensions/TerminalTitle"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    "@types/jest": 27.0.1
+    "@types/node": ^14.14.37
+    eslint: 7.19.0
+    eslint-config-extraterm: 1.0.0
+    he: 1.2.0
+    jest: 27.2.0
+    qt-construct: 0.1.0
+    shx: ^0.3.2
+    typescript: 4.3.5
+  languageName: unknown
+  linkType: soft
 
 "test-exclude@npm:^5.1.0":
   version: 5.2.3
