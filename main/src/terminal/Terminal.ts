@@ -556,11 +556,12 @@ export class Terminal implements Tab, Disposable {
       return;
     }
 
-    this.#emulator.keyDown(ev);
+    const emulatorHandled = this.#emulator.keyDown(ev);
+
     event.accept();
     this.#contentWidget.setEventProcessed(true);
 
-    if (event.text() !== "") {
+    if (emulatorHandled) {
       this.#scrollToBottom();
     }
   }
