@@ -267,6 +267,7 @@ class Main {
   registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
     commands.registerCommand("extraterm:application.openCommandPalette", () => this.commandOpenCommandPalette());
+    commands.registerCommand("extraterm:application.newWindow", () => this.commandNewWindow());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openSettings", () => this.commandOpenSettings());
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
@@ -296,6 +297,10 @@ class Main {
     commandPalette.show(win, tab);
   }
 
+  commandNewWindow(): void {
+    this.openWindow();
+  }
+
   commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): void {
     let sessionConfiguration: SessionConfiguration = this.#configDatabase.getSessionConfig()[0];
     if (args.sessionUuid != null) {
@@ -320,7 +325,7 @@ class Main {
     //   }
     // }
 
-    const window = this.#windows[0];
+    const window = this.#extensionManager.getActiveWindow() ?? this.#windows[0];
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsIOManager);
@@ -468,6 +473,13 @@ class Main {
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#themeManager,
         this.#keybindingsIOManager, window, this.#uiStyle);
+    }
+    for (const win of this.#windows) {
+      if (win.hasTab(this.#settingsTab)) {
+        win.focus();
+        win.focusTab(this.#settingsTab);
+        return;
+      }
     }
     window.addTab(this.#settingsTab);
     window.focusTab(this.#settingsTab);

@@ -88,11 +88,10 @@ export class ExtensionTabBridge implements Tab {
   }
 
   open(): void {
-    if (this.#isOpen) {
-      this.#window.focusTab(this);
-      return;
+    if (!this.#isOpen) {
+      this.#window.addTab(this);
     }
-    this.#window.addTab(this);
+    this.#window.focus();
     this.#window.focusTab(this);
     this.#isOpen = true;
   }

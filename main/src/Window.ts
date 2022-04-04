@@ -684,6 +684,20 @@ export class Window {
     this.#contentStack.addWidget(tab.getContents());
   }
 
+  hasTab(targetTab: Tab): boolean {
+    for (const [index, tab] of this.#tabs.entries()) {
+      if (targetTab === tab.tab) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  focus(): void {
+    this.#windowWidget.setFocus();
+    this.#windowWidget.raise();
+  }
+
   removeTab(targetTab: Tab): boolean {
     for (const [index, tab] of this.#tabs.entries()) {
       if (targetTab === tab.tab) {
