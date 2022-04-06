@@ -30,6 +30,7 @@ export interface WidgetOptions {
   onLeave?: () => void;
   onMouseButtonPress?: (nativeEvent /* NativeQEvent */) => void;
   onMouseMove?: (nativeEvent /* NativeQEvent */) => void;
+  onMove?: (nativeEvent /* NativeQEvent */) => void;
   onResize?: (native /* NativeQEvent */) => void;
   sizePolicy?: {horizontal: QSizePolicyPolicy, vertical: QSizePolicyPolicy};
   styleSheet?: string;
@@ -42,9 +43,9 @@ export interface WidgetOptions {
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
-    objectName, onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onResize,
-    sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag,
-    inlineStyle, toolTip, visible
+    objectName, onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onMove,
+    onResize, sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
+    windowFlag, inlineStyle, toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
@@ -99,6 +100,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (onMouseMove !== undefined) {
     widget.addEventListener(WidgetEventTypes.MouseMove, onMouseMove);
+  }
+  if (onMove !== undefined) {
+    widget.addEventListener(WidgetEventTypes.Move, onMove);
   }
   if (onResize !== undefined) {
     widget.addEventListener(WidgetEventTypes.Resize, onResize);

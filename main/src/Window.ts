@@ -10,7 +10,8 @@ import { doLater } from "extraterm-later";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
   FocusPolicy, QKeyEvent, WidgetAttribute, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
-  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat, QMouseEvent, MouseButton } from "@nodegui/nodegui";
+  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat, QMouseEvent,
+  MouseButton, Visibility } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import { escape } from "he";
@@ -50,7 +51,6 @@ export class Window {
   #windowHandle: QWindow = null;
   #screen: QScreen = null;
   #topLayout: QBoxLayout = null;
-  #tabRowWidget: QWidget = null;
   #tabBarLayout: QBoxLayout = null;
   #topBar: QWidget = null;
   #tabBar: QTabBar = null;
@@ -73,6 +73,9 @@ export class Window {
   onTabChange: Event<Tab> = null;
   #onTabChangeEventEmitter = new EventEmitter<Tab>();
 
+  onWindowGeometryChanged: Event<void> = null;
+  #onWindowGeometryChangedEventEmitter = new EventEmitter<void>();
+
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
       keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle) {
 
@@ -87,9 +90,10 @@ export class Window {
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
     this.onTabChange = this.#onTabChangeEventEmitter.event;
+    this.onWindowGeometryChanged = this.#onWindowGeometryChangedEventEmitter.event;
   }
 
-  async init(): Promise<void> {
+  async init(geometry: QRect): Promise<void> {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
@@ -101,13 +105,19 @@ export class Window {
       onKeyPress: (nativeEvent) => {
         this.#handleKeyPress(new QKeyEvent(nativeEvent));
       },
+      onMove: (nativeEvent) => {
+        this.#onWindowGeometryChangedEventEmitter.fire();
+      },
+      onResize:(nativeEvent) => {
+        this.#onWindowGeometryChangedEventEmitter.fire();
+      },
       mouseTracking: true,
       layout: this.#topLayout = BoxLayout({
         direction: Direction.TopToBottom,
         contentsMargins: 0,
         spacing: 0,
         children: [
-          this.#tabRowWidget = Widget({
+          Widget({
             layout: BoxLayout({
               direction: Direction.LeftToRight,
               contentsMargins: [0, 0, 0, 0],
@@ -162,12 +172,17 @@ export class Window {
       })
     });
 
+    if (geometry != null) {
+      this.#windowWidget.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
+    } else {
+      this.#windowWidget.resize(800, 480);
+    }
+
     this.#borderlessWindowSupport = new BorderlessWindowSupport(this.#windowWidget);
     this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, this.#hamburgerMenuButton);
     this.#setWindowFrame(generalConfig.titleBarStyle);
 
     this.#loadStyleSheet(generalConfig.uiScalePercent/100);
-    this.#windowWidget.resize(800, 480);
 
     this.#initContextMenu();
 
@@ -581,6 +596,9 @@ export class Window {
       this.#watchScreen(screen);
       this.#handleLogicalDpiChanged(this.#screen.logicalDotsPerInch());
     });
+    this.#windowHandle.addEventListener("visibilityChanged", (visibility: Visibility) => {
+      this.#onWindowGeometryChangedEventEmitter.fire();
+    });
   }
 
   close(): void {
@@ -590,6 +608,18 @@ export class Window {
     }
 
     this.#windowWidget.close();
+  }
+
+  isMaximized(): boolean {
+    return this.#windowHandle.visibility() === Visibility.Maximized;
+  }
+
+  maximize(): void {
+    this.#windowWidget.showMaximized();
+  }
+
+  getGeometry(): QRect {
+    return this.#windowWidget.geometry();
   }
 
   #handleLogicalDpiChanged(dpi: number): void {

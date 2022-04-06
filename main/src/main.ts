@@ -10,11 +10,11 @@ import * as fs from "fs";
 import * as path from "path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import { QApplication, QFontDatabase, QStyleFactory, QStylePixelMetric } from "@nodegui/nodegui";
+import { QApplication, QFontDatabase, QRect, QStyleFactory, QStylePixelMetric } from "@nodegui/nodegui";
 import { StyleTweaker } from "nodegui-plugin-style-tweaker";
 
 import { Window } from "./Window";
-import { GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG } from './config/Config';
+import { GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG, WindowConfiguration } from './config/Config';
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
 import { ExtensionCommandContribution } from './extension/ExtensionMetadata';
 import { DisposableHolder } from "./utils/DisposableUtils";
@@ -37,6 +37,7 @@ import { createUiStyle } from "./ui/styles/DarkTwo";
 import { UiStyle } from "./ui/UiStyle";
 import { CommandPalette } from "./CommandPalette";
 import { PingHandler } from "./local_http_server/PingHandler";
+import _ = require("lodash");
 
 
 const LOG_FILENAME = "extraterm.log";
@@ -444,7 +445,19 @@ class Main {
   async openWindow(): Promise<void> {
     const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
       this.#themeManager, this.#uiStyle);
-    await win.init();
+
+    const generalConfig = this.#configDatabase.getGeneralConfig();
+    let geometry: QRect = null;
+    let showMaximized = false;
+    if (generalConfig.windowConfiguration != null) {
+      const winConfig = generalConfig.windowConfiguration[this.#windows.length];
+      if (winConfig != null) {
+        geometry = new QRect(winConfig.x, winConfig.y, winConfig.width, winConfig.height);
+        showMaximized = winConfig.isMaximized === true;
+      }
+    }
+
+    await win.init(geometry);
 
     win.onTabCloseRequest((tab: Tab): void => {
       this.#closeTab(win, tab);
@@ -454,9 +467,38 @@ class Main {
       this.#extensionManager.setActiveTerminal(tab instanceof Terminal ? tab : null);
     });
 
+    const onWindowGeometryChanged = _.debounce(() => {
+      if (!this.#windows.includes(win)) {
+        return;
+      }
+      this.#saveWindowGeometry();
+    }, 500);
+
+    win.onWindowGeometryChanged(onWindowGeometryChanged);
+
     this.#windows.push(win);
     win.open();
+    if (showMaximized) {
+      win.maximize();
+    }
     this.#extensionManager.newWindowCreated(win, this.#windows);
+  }
+
+  #saveWindowGeometry(): void {
+    const generalConfig = this.#configDatabase.getGeneralConfigCopy();
+    const winConfig: WindowConfiguration = {};
+    for (const [index, win] of this.#windows.entries()) {
+      const geo = win.getGeometry();
+      winConfig[index] = {
+        isMaximized: win.isMaximized(),
+        x: geo.left(),
+        y: geo.top(),
+        width: geo.width(),
+        height: geo.height(),
+      };
+    }
+    generalConfig.windowConfiguration = winConfig;
+    this.#configDatabase.setGeneralConfig(generalConfig);
   }
 
   #closeTab(win: Window, tab: Tab): void {
