@@ -12,7 +12,7 @@ import * as net from "net";
 import { Disposable } from "@extraterm/extraterm-extension-api";
 
 import { getLogger, Logger } from "extraterm-logging";
-import { RequestHandler } from "./RequestHandlerType";
+import { RequestHandler } from "./RequestHandlerType.js";
 
 /**
  * Local HTTP Server

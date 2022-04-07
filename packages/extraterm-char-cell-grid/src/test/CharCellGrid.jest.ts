@@ -5,7 +5,7 @@
  */
 
 import "jest";
-import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_HYPERLINK } from "../CharCellGrid";
+import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_HYPERLINK } from "../CharCellGrid.js";
 
 
 function makeGrid(): CharCellGrid {

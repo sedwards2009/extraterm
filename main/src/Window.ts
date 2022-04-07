@@ -16,22 +16,22 @@ import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repo
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import { escape } from "he";
 
-import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config";
-import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
-import { Tab } from "./Tab";
-import { ContextMenuEvent, Terminal } from "./terminal/Terminal";
-import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig";
-import { ThemeManager } from "./theme/ThemeManager";
+import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config.js";
+import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
+import { Tab } from "./Tab.js";
+import { ContextMenuEvent, Terminal } from "./terminal/Terminal.js";
+import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig.js";
+import { ThemeManager } from "./theme/ThemeManager.js";
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
-import { CommandQueryOptions, ExtensionManager } from "./InternalTypes";
-import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
-import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities";
-import { UiStyle } from "./ui/UiStyle";
-import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker";
-import { DisposableHolder } from "./utils/DisposableUtils";
-import { HoverPushButton } from "./ui/QtConstructExtra";
-import { BorderlessWindowSupport } from "./BorderlessWindowSupport";
-import { createHtmlIcon } from "./ui/Icons";
+import { CommandQueryOptions, ExtensionManager } from "./InternalTypes.js";
+import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
+import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities.js";
+import { UiStyle } from "./ui/UiStyle.js";
+import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker.js";
+import { DisposableHolder } from "./utils/DisposableUtils.js";
+import { HoverPushButton } from "./ui/QtConstructExtra.js";
+import { BorderlessWindowSupport } from "./BorderlessWindowSupport.js";
+import { createHtmlIcon } from "./ui/Icons.js";
 
 
 interface TabPlumbing {

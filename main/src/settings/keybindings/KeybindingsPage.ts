@@ -3,22 +3,23 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QLabel, QLineEdit, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget, TextFormat } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QLabel, QLineEdit, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget,
+  TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, ComboBox, GridLayout, GridLayoutChild, Label, LineEdit, PushButton, ScrollArea, StackedWidget,
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { UiStyle } from "../../ui/UiStyle";
-import { createHtmlIcon } from "../../ui/Icons";
-import { HoverPushButton, shrinkWrap } from "../../ui/QtConstructExtra";
-import { ConfigDatabase } from "../../config/ConfigDatabase";
-import { GeneralConfig } from "../../config/Config";
-import { CustomKeybindingsSet, KeybindingsBinding, LogicalKeybindingsName } from "../../keybindings/KeybindingsTypes";
-import { ExtensionManager } from "../../InternalTypes";
-import { Category, ExtensionCommandContribution } from "../../extension/ExtensionMetadata";
-import { KeybindingsIOManager } from "../../keybindings/KeybindingsIOManager";
-import { CommandBindingEditor } from "./CommandBindingEditor";
-import { CommandKeybindingInfo } from "./CommandKeybindingInfo";
-import { KeyRecord } from "./KeyRecord";
+import { UiStyle } from "../../ui/UiStyle.js";
+import { createHtmlIcon } from "../../ui/Icons.js";
+import { HoverPushButton, shrinkWrap } from "../../ui/QtConstructExtra.js";
+import { ConfigDatabase } from "../../config/ConfigDatabase.js";
+import { GeneralConfig } from "../../config/Config.js";
+import { CustomKeybindingsSet, LogicalKeybindingsName } from "../../keybindings/KeybindingsTypes.js";
+import { ExtensionManager } from "../../InternalTypes.js";
+import { Category, ExtensionCommandContribution } from "../../extension/ExtensionMetadata.js";
+import { KeybindingsIOManager } from "../../keybindings/KeybindingsIOManager.js";
+import { CommandBindingEditor } from "./CommandBindingEditor.js";
+import { CommandKeybindingInfo } from "./CommandKeybindingInfo.js";
+import { KeyRecord } from "./KeyRecord.js";
 
 
 interface KeybindingStyle {

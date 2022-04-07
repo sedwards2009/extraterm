@@ -10,7 +10,7 @@ import * as MimeTypeDetector from 'extraterm-mimetype-detector';
 import { Disposable } from '@extraterm/extraterm-extension-api';
 
 import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType";
-import { BulkFileStorage } from "./BulkFileStorage";
+import { BulkFileStorage } from "./BulkFileStorage.js";
 
 const MAXIMUM_UPLOAD_BUFFER_SIZE_BYTES = 10 * 1024 * 1024;
 

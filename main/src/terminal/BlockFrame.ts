@@ -4,8 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QWidget } from "@nodegui/nodegui";
-import { getLogger, log, Logger } from "extraterm-logging";
-import { Block } from "./Block";
+import { Block } from "./Block.js";
 
 /**
  * A frame around a Block.

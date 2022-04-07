@@ -4,11 +4,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { createHtmlIcon } from "../../ui/Icons";
-import { ConfigDatabase } from "../../config/ConfigDatabase";
-import { Window } from "../../Window";
 import { QIcon } from "@nodegui/nodegui";
-import { UiStyle } from "../../ui/UiStyle";
+
+import { createHtmlIcon } from "../../ui/Icons.js";
+import { ConfigDatabase } from "../../config/ConfigDatabase.js";
+import { Window } from "../../Window.js";
+import { UiStyle } from "../../ui/UiStyle.js";
 
 
 export class StyleImpl implements ExtensionApi.Style {

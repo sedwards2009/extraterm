@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { InternalExtensionContext } from "../../InternalTypes";
+import { InternalExtensionContext } from "../../InternalTypes.js";
 
 export class WindowsImpl implements ExtensionApi.Windows {
 

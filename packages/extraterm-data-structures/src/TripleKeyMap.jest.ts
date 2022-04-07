@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import { TripleKeyMap } from "./TripleKeyMap";
+import { TripleKeyMap } from "./TripleKeyMap.js";
 
 
 const TEST_ITEMS: Array<[Array<number>, string]> = [

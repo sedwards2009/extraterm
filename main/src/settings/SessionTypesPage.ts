@@ -10,13 +10,14 @@ import { Direction, QBoxLayout, QFrame, QLabel, QPushButton, QScrollArea, QSizeP
 import * as _ from 'lodash';
 import { BoxLayout, Frame, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import { UiStyle } from "../ui/UiStyle";
-import { createHtmlIcon } from "../ui/Icons";
-import { HoverPushButton, makeSubTabBar } from "../ui/QtConstructExtra";
-import { ExtensionManager, SessionConfigurationChange, SessionSettingsChange } from "../InternalTypes";
 import { createUuid } from "extraterm-uuid";
-import { Window } from "../Window";
+
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { UiStyle } from "../ui/UiStyle.js";
+import { createHtmlIcon } from "../ui/Icons.js";
+import { HoverPushButton, makeSubTabBar } from "../ui/QtConstructExtra.js";
+import { ExtensionManager, SessionConfigurationChange, SessionSettingsChange } from "../InternalTypes.js";
+import { Window } from "../Window.js";
 
 
 export class SessionTypesPage {

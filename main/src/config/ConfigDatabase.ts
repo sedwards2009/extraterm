@@ -7,13 +7,14 @@ import * as _ from "lodash";
 
 import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { Event, SessionConfiguration} from "@extraterm/extraterm-extension-api";
-
-import { SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, CommandLineAction,
-  COMMAND_LINE_ACTIONS_CONFIG } from "./Config";
 import {Logger, getLogger, log } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
 
-import * as SharedMap from "../shared_map/SharedMap";
+import { SESSION_CONFIG, SystemConfig, GENERAL_CONFIG, SYSTEM_CONFIG, GeneralConfig, CommandLineAction,
+  COMMAND_LINE_ACTIONS_CONFIG } from "./Config.js";
+
+import * as SharedMap from "../shared_map/SharedMap.js";
+
 
 export interface ConfigChangeEvent {
   key: string;

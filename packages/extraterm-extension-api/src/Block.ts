@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Screen } from "./Screen";
-import { Tab } from "./Tab";
+import { Screen } from "./Screen.js";
+import { Tab } from "./Tab.js";
 
 /**
  * A block of content stacking inside a terminal.

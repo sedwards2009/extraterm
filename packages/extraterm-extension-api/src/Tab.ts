@@ -5,9 +5,9 @@
  */
 
 import { QLabel } from "@nodegui/nodegui";
-import { Terminal } from "./Terminal";
-import { ListPickerOptions } from "./ListPickerOptions";
-import { Window } from "./Windows";
+import { Terminal } from "./Terminal.js";
+import { ListPickerOptions } from "./ListPickerOptions.js";
+import { Window } from "./Windows.js";
 
 
 export interface TabTitleWidgetFactory {

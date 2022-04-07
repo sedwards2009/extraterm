@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { ExtensionContext } from "@extraterm/extraterm-extension-api";
-import { init as wslInit, wslProxySessionEditorFactory } from "./WslProxySessionEditor";
+import { init as wslInit, wslProxySessionEditorFactory } from "./WslProxySessionEditor.js";
 
 
 export function activate(context: ExtensionContext): any {

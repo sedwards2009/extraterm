@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Key, QKeyEvent, QLineEdit, QSizePolicyPolicy, QSizePolicyPolicyFlag, QWidget } from "@nodegui/nodegui";
+import { Key, QKeyEvent, QLineEdit, QSizePolicyPolicy, QWidget } from "@nodegui/nodegui";
 import { LineEdit } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { qKeyEventToMinimalKeyboardEvent } from "../../keybindings/QKeyEventUtilities";
-import { eventKeyNameToConfigKeyName, KeyStroke } from "../../keybindings/KeybindingsMapping";
+import { qKeyEventToMinimalKeyboardEvent } from "../../keybindings/QKeyEventUtilities.js";
+import { eventKeyNameToConfigKeyName, KeyStroke } from "../../keybindings/KeybindingsMapping.js";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 
 

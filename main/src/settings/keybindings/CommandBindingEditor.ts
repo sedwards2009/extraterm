@@ -7,14 +7,14 @@ import { Direction, QBoxLayout, QLabel, QPushButton, QSizePolicyPolicy, QStacked
 } from "@nodegui/nodegui";
 import { BoxLayout, Label, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { UiStyle } from "../../ui/UiStyle";
-import { HoverPushButton } from "../../ui/QtConstructExtra";
-import { CommandKeybindingInfo } from "./CommandKeybindingInfo";
-import { KeyRecord } from "./KeyRecord";
-import { Category } from "../../extension/ExtensionMetadata";
-import { createHtmlIcon } from "../../ui/Icons";
-import { TermKeyStroke } from "../../keybindings/KeybindingsManager";
-import { Emulator, Platform } from "../../emulator/Term";
+import { UiStyle } from "../../ui/UiStyle.js";
+import { HoverPushButton } from "../../ui/QtConstructExtra.js";
+import { CommandKeybindingInfo } from "./CommandKeybindingInfo.js";
+import { KeyRecord } from "./KeyRecord.js";
+import { Category } from "../../extension/ExtensionMetadata.js";
+import { createHtmlIcon } from "../../ui/Icons.js";
+import { TermKeyStroke } from "../../keybindings/KeybindingsManager.js";
+import { Emulator, Platform } from "../../emulator/Term.js";
 
 
 export class CommandBindingEditor {

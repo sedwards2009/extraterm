@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { BulkFileHandle } from "./BulkFiles";
-import { Tab } from "./Tab";
-import { Terminal } from "./Terminal";
+import { BulkFileHandle } from "./BulkFiles.js";
+import { Tab } from "./Tab.js";
+import { Terminal } from "./Terminal.js";
 
 
 export enum ViewerPosture {

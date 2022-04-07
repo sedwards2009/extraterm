@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QLineEdit } from "@nodegui/nodegui";
-import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget.js";
 
 export interface LineEditOptions extends WidgetOptions {
   text?: string;

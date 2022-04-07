@@ -8,14 +8,14 @@ import * as open from "open";
 import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import { GeneralConfig, TerminalMarginStyle, TitleBarStyle } from "../config/Config";
-import { UiStyle } from "../ui/UiStyle";
-import { createHtmlIcon } from "../ui/Icons";
-import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
-import { ThemeManager } from "../theme/ThemeManager";
-import { ThemeInfo } from "../theme/Theme";
-import { ExtensionManager } from "../InternalTypes";
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { GeneralConfig, TerminalMarginStyle, TitleBarStyle } from "../config/Config.js";
+import { UiStyle } from "../ui/UiStyle.js";
+import { createHtmlIcon } from "../ui/Icons.js";
+import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra.js";
+import { ThemeManager } from "../theme/ThemeManager.js";
+import { ThemeInfo } from "../theme/Theme.js";
+import { ExtensionManager } from "../InternalTypes.js";
 
 
 const uiScalePercentOptions: {id: number, name: string}[] = [

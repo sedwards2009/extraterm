@@ -13,8 +13,8 @@ import { QFontDatabase } from "@nodegui/nodegui";
 import { getLogger } from "extraterm-logging";
 import { PairKeyMap } from "extraterm-data-structures";
 
-import { FontInfo } from "../config/Config";
-import * as SourceDir from "../SourceDir";
+import { FontInfo } from "../config/Config.js";
+import * as SourceDir from "../SourceDir.js";
 
 
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";

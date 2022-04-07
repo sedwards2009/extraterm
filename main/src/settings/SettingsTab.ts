@@ -7,19 +7,19 @@
 import { Direction, QStackedWidget, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ListWidget, ListWidgetItem, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { Tab } from "../Tab";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import { UiStyle } from "../ui/UiStyle";
-import { GeneralPage } from "./GeneralPage";
-import { AppearancePage } from "./AppearancePage";
-import { ExtensionsPage } from "./ExtensionsPage";
-import { FramesPage } from "./FramesPage";
-import { ExtensionManager } from "../InternalTypes";
-import { ThemeManager } from "../theme/ThemeManager";
-import { SessionTypesPage } from "./SessionTypesPage";
-import { KeybindingsPage } from "./keybindings/KeybindingsPage";
-import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
-import { Window } from "../Window";
+import { Tab } from "../Tab.js";
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { UiStyle } from "../ui/UiStyle.js";
+import { GeneralPage } from "./GeneralPage.js";
+import { AppearancePage } from "./AppearancePage.js";
+import { ExtensionsPage } from "./ExtensionsPage.js";
+import { FramesPage } from "./FramesPage.js";
+import { ExtensionManager } from "../InternalTypes.js";
+import { ThemeManager } from "../theme/ThemeManager.js";
+import { SessionTypesPage } from "./SessionTypesPage.js";
+import { KeybindingsPage } from "./keybindings/KeybindingsPage.js";
+import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager.js";
+import { Window } from "../Window.js";
 
 
 export class SettingsTab implements Tab {

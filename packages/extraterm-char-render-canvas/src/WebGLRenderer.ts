@@ -5,9 +5,9 @@ import { mat4, vec3 } from "gl-matrix";
 
 import { CharCellGrid, STYLE_MASK_CURSOR, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
-import { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas";
-import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
-import { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator";
+import { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas.js";
+import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics.js";
+import { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator.js";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;

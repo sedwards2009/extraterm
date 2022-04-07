@@ -5,7 +5,7 @@
  */
 import { Event } from "extraterm-event-emitter";
 import { NodeWidget } from "@nodegui/nodegui";
-import { Style } from "./Style";
+import { Style } from "./Style.js";
 
 
 export interface Sessions {

@@ -4,40 +4,40 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "source-map-support/register";
-import * as SourceDir from './SourceDir';
+import * as _ from "lodash";
+import * as SourceDir from "./SourceDir.js";
 import * as os from "os";
 import * as fs from "fs";
 import * as path from "path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
-import { QApplication, QFontDatabase, QRect, QStyleFactory, QStylePixelMetric } from "@nodegui/nodegui";
+import { QApplication, QFontDatabase, QRect, QStylePixelMetric } from "@nodegui/nodegui";
 import { StyleTweaker } from "nodegui-plugin-style-tweaker";
 
-import { Window } from "./Window";
-import { GENERAL_CONFIG, SESSION_CONFIG, SYSTEM_CONFIG, WindowConfiguration } from './config/Config';
-import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase";
-import { ExtensionCommandContribution } from './extension/ExtensionMetadata';
-import { DisposableHolder } from "./utils/DisposableUtils";
-import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase";
-import { SharedMap } from "./shared_map/SharedMap";
-import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, getUserTerminalThemeDirectory, sanitizeAndInitializeConfigs, setupAppData } from "./config/MainConfig";
-import { getFonts, installBundledFonts } from "./ui/FontList";
-import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
-import { FontInfo, GeneralConfig, SystemConfig, TitleBarStyle } from "./config/Config";
-import { ThemeManager } from "./theme/ThemeManager";
-import { PtyManager } from "./pty/PtyManager";
-import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage";
-import { ExtensionManager } from "./extension/ExtensionManager";
-import { EXTRATERM_COOKIE_ENV, Terminal } from "./terminal/Terminal";
-import { Tab } from "./Tab";
-import { SettingsTab } from "./settings/SettingsTab";
-import { LocalHttpServer } from "./local_http_server/LocalHttpServer";
-import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler";
-import { createUiStyle } from "./ui/styles/DarkTwo";
-import { UiStyle } from "./ui/UiStyle";
-import { CommandPalette } from "./CommandPalette";
-import { PingHandler } from "./local_http_server/PingHandler";
-import _ = require("lodash");
+import { Window } from "./Window.js";
+import { GENERAL_CONFIG, SESSION_CONFIG, WindowConfiguration } from "./config/Config.js";
+import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
+import { ExtensionCommandContribution } from "./extension/ExtensionMetadata.js";
+import { DisposableHolder } from "./utils/DisposableUtils.js";
+import { PersistentConfigDatabase } from "./config/PersistentConfigDatabase.js";
+import { SharedMap } from "./shared_map/SharedMap.js";
+import { getUserExtensionDirectory, getUserKeybindingsDirectory, getUserSettingsDirectory, getUserTerminalThemeDirectory, sanitizeAndInitializeConfigs, setupAppData } from "./config/MainConfig.js";
+import { getFonts, installBundledFonts } from "./ui/FontList.js";
+import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
+import { FontInfo, GeneralConfig, SystemConfig, TitleBarStyle } from "./config/Config.js";
+import { ThemeManager } from "./theme/ThemeManager.js";
+import { PtyManager } from "./pty/PtyManager.js";
+import { BulkFileStorage } from "./bulk_file_handling/BulkFileStorage.js";
+import { ExtensionManager } from "./extension/ExtensionManager.js";
+import { EXTRATERM_COOKIE_ENV, Terminal } from "./terminal/Terminal.js";
+import { Tab } from "./Tab.js";
+import { SettingsTab } from "./settings/SettingsTab.js";
+import { LocalHttpServer } from "./local_http_server/LocalHttpServer.js";
+import { BulkFileRequestHandler } from "./bulk_file_handling/BulkFileRequestHandler.js";
+import { createUiStyle } from "./ui/styles/DarkTwo.js";
+import { UiStyle } from "./ui/UiStyle.js";
+import { CommandPalette } from "./CommandPalette.js";
+import { PingHandler } from "./local_http_server/PingHandler.js";
 
 
 const LOG_FILENAME = "extraterm.log";

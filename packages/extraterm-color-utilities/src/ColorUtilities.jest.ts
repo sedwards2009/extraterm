@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import { Color } from "./ColorUtilities";
+import { Color } from "./ColorUtilities.js";
 
 describe.each([
   ["#123456", 0x123456ff, "#123456", "rgba(18,52,86,1)"],

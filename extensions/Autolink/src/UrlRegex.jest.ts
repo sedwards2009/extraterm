@@ -5,7 +5,7 @@
  */
 import "jest";
 
-import { findAllURLs } from "./UrlRegex";
+import { findAllURLs } from "./UrlRegex.js";
 
 const TEST_ITEMS = [
   ["http://extraterm.org", "http://extraterm.org", 0],

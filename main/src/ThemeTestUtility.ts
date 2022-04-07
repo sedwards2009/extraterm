@@ -3,12 +3,11 @@ import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton
   TextEdit,
   ToolButton,
   Widget } from "qt-construct";
-import * as fs from "fs";
 import * as path from "path";
 import * as SourceDir from './SourceDir';
 
-import { createUiStyle } from "./ui/styles/DarkTwo";
-import { shrinkWrap } from "./ui/QtConstructExtra";
+import { createUiStyle } from "./ui/styles/DarkTwo.js";
+import { shrinkWrap } from "./ui/QtConstructExtra.js";
 
 let centralWidget: QWidget = null;
 

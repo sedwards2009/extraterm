@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QIcon, QTabBar } from "@nodegui/nodegui";
-import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget.js";
 
 export interface TabBarOptions extends WidgetOptions {
   expanding?: boolean;

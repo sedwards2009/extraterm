@@ -5,19 +5,19 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { NodeWidget } from "@nodegui/nodegui";
-import { CommandsRegistry } from "./CommandsRegistry";
-import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./extension/ExtensionManagerTypes";
+import { CommandsRegistry } from "./CommandsRegistry.js";
+import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./extension/ExtensionManagerTypes.js";
 
 // import { EtTerminal, LineRangeChange } from "../Terminal";
 // import { ViewerElement } from "../viewers/ViewerElement";
-import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
-import { WorkspaceSessionEditorRegistry } from "./extension/WorkspaceSessionEditorRegistry";
-import { WorkspaceSessionSettingsEditorRegistry } from "./extension/WorkspaceSessionSettingsEditorRegistry";
-import { TabTitleWidgetRegistry } from "./extension/TabTitleWidgetRegistry";
+import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata.js";
+import { WorkspaceSessionEditorRegistry } from "./extension/WorkspaceSessionEditorRegistry.js";
+import { WorkspaceSessionSettingsEditorRegistry } from "./extension/WorkspaceSessionSettingsEditorRegistry.js";
+import { TabTitleWidgetRegistry } from "./extension/TabTitleWidgetRegistry.js";
 
-import { Tab } from "./Tab";
-import { BlockFrame } from "./terminal/BlockFrame";
-import { LineRangeChange, Terminal } from "./terminal/Terminal";
+import { Tab } from "./Tab.js";
+import { BlockFrame } from "./terminal/BlockFrame.js";
+import { LineRangeChange, Terminal } from "./terminal/Terminal.js";
 // import { EtViewerTab } from "../ViewerTab";
 // import { SupportsDialogStack } from "../SupportsDialogStack";
 // import { CommandsRegistry } from "./CommandsRegistry";
@@ -27,7 +27,7 @@ import { LineRangeChange, Terminal } from "./terminal/Terminal";
 // import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 // import { ExtensionContainerElement } from "./ExtensionContainerElement";
 // import { SplitLayout } from "../SplitLayout";
-import { Window } from "./Window";
+import { Window } from "./Window.js";
 
 
 export interface CommandQueryOptions {

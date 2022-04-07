@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { AlignmentFlag, Direction, NodeLayout, NodeWidget, QBoxLayout, QWidget, SizeConstraint } from "@nodegui/nodegui";
-import { Label } from "./Label";
+import { Label } from "./Label.js";
 
 
 export interface BoxLayoutItem {

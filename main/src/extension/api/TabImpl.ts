@@ -5,8 +5,8 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 
-import { InternalExtensionContext } from "../../InternalTypes";
-import { Tab } from "../../Tab";
+import { InternalExtensionContext } from "../../InternalTypes.js";
+import { Tab } from "../../Tab.js";
 
 
 export class TabImpl implements ExtensionApi.Tab {

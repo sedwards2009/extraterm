@@ -9,16 +9,15 @@ import * as _ from "lodash";
 
 import { createUuid } from "extraterm-uuid";
 import { Logger, getLogger } from "extraterm-logging";
-import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME } from "../theme/Theme";
-import { GeneralConfig, FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle,
-  WindowBackgroundMode, GENERAL_CONFIG } from "./Config";
+import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME } from "../theme/Theme.js";
+import { FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle,
+  WindowBackgroundMode } from "./Config.js";
 import * as envPaths from "env-paths";
 
-import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
-import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from "../keybindings/KeybindingsTypes";
-import { PersistentConfigDatabase } from "./PersistentConfigDatabase";
-import { ConfigChangeEvent, ConfigDatabase } from "./ConfigDatabase";
-import { ThemeManager } from "../theme/ThemeManager";
+import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from "../keybindings/KeybindingsTypes.js";
+import { PersistentConfigDatabase } from "./PersistentConfigDatabase.js";
+import { ConfigDatabase } from "./ConfigDatabase.js";
+import { ThemeManager } from "../theme/ThemeManager.js";
 
 export const EXTRATERM_CONFIG_DIR = "extratermqt";
 const PATHS_CONFIG_FILENAME = "application_paths.json";

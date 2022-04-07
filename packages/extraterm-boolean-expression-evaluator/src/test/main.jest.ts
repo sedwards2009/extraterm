@@ -5,7 +5,7 @@
  */
 
 import "jest";
-import { BooleanExpressionEvaluator } from "../main";
+import { BooleanExpressionEvaluator } from "../main.js";
 
 const testCases: [string, boolean][] = [
   ["Atrue", true],

@@ -4,17 +4,16 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { Direction, QWidget } from "@nodegui/nodegui";
+import { QWidget } from "@nodegui/nodegui";
 import * as _ from "lodash";
 
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
 
-import { Terminal, EXTRATERM_COOKIE_ENV } from "../../terminal/Terminal";
-import { InternalExtensionContext } from "../../InternalTypes";
-import { BorderDirection, ExtensionMetadata, ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
-import { BoxLayout, Widget } from "qt-construct";
+import { Terminal, EXTRATERM_COOKIE_ENV } from "../../terminal/Terminal.js";
+import { InternalExtensionContext } from "../../InternalTypes.js";
+import { BorderDirection, ExtensionMetadata, ExtensionTerminalBorderContribution } from "../ExtensionMetadata.js";
 
 // import { ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
 

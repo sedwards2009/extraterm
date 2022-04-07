@@ -4,12 +4,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { ConfigDatabase } from "../../config/ConfigDatabase";
-import { InternalExtensionContext } from "../../InternalTypes";
-import { Window } from "../../Window";
-import { ExtensionMetadata } from "../ExtensionMetadata";
-import { ExtensionTabBridge } from "./ExtensionTabImpl";
-import { StyleImpl } from "./StyleImpl";
+import { ConfigDatabase } from "../../config/ConfigDatabase.js";
+import { InternalExtensionContext } from "../../InternalTypes.js";
+import { Window } from "../../Window.js";
+import { ExtensionMetadata } from "../ExtensionMetadata.js";
+import { ExtensionTabBridge } from "./ExtensionTabImpl.js";
+import { StyleImpl } from "./StyleImpl.js";
 
 
 export class WindowImpl implements ExtensionApi.Window {

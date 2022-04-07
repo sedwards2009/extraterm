@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { TermKeyStroke } from "../../keybindings/KeybindingsManager";
 import { Event, EventEmitter } from "extraterm-event-emitter";
+import { TermKeyStroke } from "../../keybindings/KeybindingsManager.js";
 
 
 export class CommandKeybindingInfo {

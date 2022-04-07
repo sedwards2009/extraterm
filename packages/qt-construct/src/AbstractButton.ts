@@ -5,7 +5,7 @@
  */
 import { QAbstractButton, QIcon } from "@nodegui/nodegui";
 
-import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget.js";
 
 
 export interface AbstractButtonOptions extends WidgetOptions {

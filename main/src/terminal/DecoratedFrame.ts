@@ -7,13 +7,13 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { AlignmentFlag, Direction, QLabel, QPushButton, QResizeEvent, QSizePolicyPolicy,
   QWidget } from "@nodegui/nodegui";
 import { Disposable, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, Label, PushButton, repolish, setCssClasses, Widget } from "qt-construct";
+import { BoxLayout, Label, repolish, setCssClasses, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { Block } from "./Block";
-import { BlockFrame } from "./BlockFrame";
-import { createHtmlIcon } from "../ui/Icons";
-import { UiStyle } from "../ui/UiStyle";
-import { HoverPushButton } from "../ui/QtConstructExtra";
+import { Block } from "./Block.js";
+import { BlockFrame } from "./BlockFrame.js";
+import { createHtmlIcon } from "../ui/Icons.js";
+import { UiStyle } from "../ui/UiStyle.js";
+import { HoverPushButton } from "../ui/QtConstructExtra.js";
 
 
 const POSTURE_MAPPING = {

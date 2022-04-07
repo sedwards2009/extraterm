@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Style } from '@extraterm/extraterm-extension-api';
-import { FieldFormatter, FormatResult } from "./TemplateString";
+import { FieldFormatter, FormatResult } from "./TemplateString.js";
 
 
 export class IconFormatter implements FieldFormatter {

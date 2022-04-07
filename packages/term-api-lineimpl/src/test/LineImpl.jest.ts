@@ -5,7 +5,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import { LineImpl } from "../LineImpl";
+import { LineImpl } from "../LineImpl.js";
 
 const EXTRATERM_URL = "https://extraterm.org/";
 

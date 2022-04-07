@@ -7,12 +7,12 @@ import { Logger, log, getLogger } from "extraterm-logging";
 import { doLater } from "extraterm-later";
 import { Direction, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
 import { BoxLayout, Widget, Label } from "qt-construct";
-import { Tab } from "./Tab";
-import { Window } from "./Window";
-import { ExtensionManager } from "./InternalTypes";
-import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager";
-import { Entry, FieldType, ListPicker } from "./ui/ListPicker";
-import { UiStyle } from "./ui/UiStyle";
+import { Tab } from "./Tab.js";
+import { Window } from "./Window.js";
+import { ExtensionManager } from "./InternalTypes.js";
+import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
+import { Entry, FieldType, ListPicker } from "./ui/ListPicker.js";
+import { UiStyle } from "./ui/UiStyle.js";
 
 
 export class CommandPalette {

@@ -7,9 +7,8 @@ import { Event, SessionConfiguration, CreateSessionOptions} from "@extraterm/ext
 import { createUuid } from "extraterm-uuid";
 import { EventEmitter } from "extraterm-event-emitter";
 import { Logger, getLogger, log } from "extraterm-logging";
-import { Pty, BufferSizeChange } from "./Pty";
-import { ExtensionManager } from "../extension/ExtensionManager";
-import { ConfigDatabase } from "../config/ConfigDatabase";
+import { Pty, BufferSizeChange } from "./Pty.js";
+import { ExtensionManager } from "../extension/ExtensionManager.js";
 
 
 const LOG_FINE = false;

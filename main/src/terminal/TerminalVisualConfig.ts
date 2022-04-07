@@ -5,9 +5,9 @@
  */
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { FontSlice } from "extraterm-char-render-canvas";
-import { LigatureMarker } from "../CachingLigatureMarker";
-import { ConfigCursorStyle } from "../config/Config";
-import { FontInfo } from "../config/Config";
+import { LigatureMarker } from "../CachingLigatureMarker.js";
+import { ConfigCursorStyle } from "../config/Config.js";
+import { FontInfo } from "../config/Config.js";
 
 export interface TerminalVisualConfig {
   cursorStyle: ConfigCursorStyle;

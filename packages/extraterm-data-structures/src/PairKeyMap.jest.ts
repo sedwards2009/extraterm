@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import { PairKeyMap } from "./PairKeyMap";
+import { PairKeyMap } from "./PairKeyMap.js";
 
 
 const TEST_ITEMS: Array<[Array<number>, string]> = [

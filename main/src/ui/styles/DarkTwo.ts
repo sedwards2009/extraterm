@@ -6,8 +6,8 @@
 import { QIcon } from "@nodegui/nodegui";
 import { alpha, blue, change, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate, toHex } from "khroma";
 
-import { createIcon } from "../Icons";
-import { IconPair, UiStyle } from "../UiStyle";
+import { createIcon } from "../Icons.js";
+import { IconPair, UiStyle } from "../UiStyle.js";
 
 
 function toRgba(color: string): number {

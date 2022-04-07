@@ -3,8 +3,8 @@
  */
 
 import { QFont, QFontMetricsF, QFontWeight } from "@nodegui/nodegui";
-import { MonospaceFontMetrics } from "./MonospaceFontMetrics";
 import { Logger, getLogger, log } from "extraterm-logging";
+import { MonospaceFontMetrics } from "./MonospaceFontMetrics.js";
 
 const computeFontMetricsCache = new Map<string, MonospaceFontMetrics>();
 

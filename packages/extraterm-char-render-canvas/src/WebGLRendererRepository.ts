@@ -1,12 +1,12 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
-import { Disposable } from "./Disposable";
-import { WebGLRenderer } from "./WebGLRenderer";
-import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas";
-import { computeFontMetrics } from "./font_metrics/FontMeasurement";
-import { FontSlice } from "./FontSlice";
+import { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics.js";
+import { Disposable } from "./Disposable.js";
+import { WebGLRenderer } from "./WebGLRenderer.js";
+import { TextureFontAtlas } from "./font_atlas/TextureFontAtlas.js";
+import { computeFontMetrics } from "./font_metrics/FontMeasurement.js";
+import { FontSlice } from "./FontSlice.js";
 
 
 /**

@@ -5,9 +5,9 @@
  */
 const { performance } = require('perf_hooks');
 
-import { ArrayKeyTrie } from "./ArrayKeyTrie";
-import { TripleKeyMap } from "./TripleKeyMap";
-import { PairKeyMap } from "./PairKeyMap";
+import { ArrayKeyTrie } from "./ArrayKeyTrie.js";
+import { TripleKeyMap } from "./TripleKeyMap.js";
+import { PairKeyMap } from "./PairKeyMap.js";
 
 const NUMBER_OF_KEYS = 20480;
 const NUMBER_OF_LOOPS = 200;

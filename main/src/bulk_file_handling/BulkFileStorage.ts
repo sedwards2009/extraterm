@@ -10,7 +10,8 @@ import * as path from 'path';
 import { BulkFileMetadata, Event } from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
-import { BulkFile } from "./BulkFile";
+
+import { BulkFile } from "./BulkFile.js";
 
 
 export type BulkFileIdentifier = string;

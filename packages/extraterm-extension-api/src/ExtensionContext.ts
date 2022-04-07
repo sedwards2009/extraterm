@@ -5,12 +5,12 @@
  */
 import { Event } from "extraterm-event-emitter";
 
-import { Sessions } from "./Sessions";
-import { Commands } from "./Commands";
-import { Logger } from "./Logger";
-import { Window, Windows } from "./Windows";
-import { Terminal, Terminals } from "./Terminal";
-import { Block } from "./Block";
+import { Sessions } from "./Sessions.js";
+import { Commands } from "./Commands.js";
+import { Logger } from "./Logger.js";
+import { Window, Windows } from "./Windows.js";
+import { Terminal, Terminals } from "./Terminal.js";
+import { Block } from "./Block.js";
 
 
 /**

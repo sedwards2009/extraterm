@@ -5,7 +5,7 @@
  */
 import { Direction, QBoxLayout, QLabel, QPushButton, QWidget, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, Label, PushButton, PushButtonOptions, Widget } from "qt-construct";
-import { IconPair, UiStyle } from "./UiStyle";
+import { IconPair, UiStyle } from "./UiStyle.js";
 
 export interface CompactGroupOptions {
   children: (QWidget | string)[];

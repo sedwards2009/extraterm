@@ -6,9 +6,9 @@
 import { Direction, QBoxLayout, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { Block } from "./Block";
-import { BlockFrame } from "./BlockFrame";
-import { UiStyle } from "../ui/UiStyle";
+import { Block } from "./Block.js";
+import { BlockFrame } from "./BlockFrame.js";
+import { UiStyle } from "../ui/UiStyle.js";
 
 /**
  * A frame around a Block.

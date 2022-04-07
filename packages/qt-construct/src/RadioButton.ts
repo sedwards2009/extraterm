@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QRadioButton } from "@nodegui/nodegui";
-import { AbstractButtonOptions, ApplyAbstractButtonOptions } from "./AbstractButton";
+import { AbstractButtonOptions, ApplyAbstractButtonOptions } from "./AbstractButton.js";
 
 export interface RadioButtonOptions extends AbstractButtonOptions {
 }

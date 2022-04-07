@@ -5,7 +5,7 @@
  */
 
 import "jest";
-import { PageDatabase } from "./PageDatabase";
+import { PageDatabase } from "./PageDatabase.js";
 
 test("Scan", async () => {
   const db = new PageDatabase("./data/pages");

@@ -8,11 +8,11 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
 import * as getStream from "get-stream";
 
-import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType";
-import { ExtensionManager } from "../extension/ExtensionManager";
+import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType.js";
+import { ExtensionManager } from "../extension/ExtensionManager.js";
 // import { MainDesktop } from "../MainDesktop";
 // import { MainWindow } from "../MainWindow";
-import { Window } from "../Window";
+import { Window } from "../Window.js";
 
 const BAD_REQUEST_400 = 400;
 const METHOD_NOT_ALLOWED_405 = 405;

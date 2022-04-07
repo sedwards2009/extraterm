@@ -6,11 +6,11 @@
 import { QWidget } from "@nodegui/nodegui";
 import { Event } from "extraterm-event-emitter";
 
-import { Tab } from "./Tab";
-import { TerminalEnvironment } from "./TerminalEnvironment";
-import { SessionConfiguration } from "./Sessions";
-import { Block } from "./Block";
-import { ScreenWithCursor } from "./Screen";
+import { Tab } from "./Tab.js";
+import { TerminalEnvironment } from "./TerminalEnvironment.js";
+import { SessionConfiguration } from "./Sessions.js";
+import { Block } from "./Block.js";
+import { ScreenWithCursor } from "./Screen.js";
 
 
 // TODO: Rename this file to Terminals.ts

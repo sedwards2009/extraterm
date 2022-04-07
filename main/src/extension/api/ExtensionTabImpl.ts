@@ -8,8 +8,8 @@ import { EventEmitter } from "extraterm-event-emitter";
 import { Direction, QBoxLayout, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, Widget } from "qt-construct";
 
-import { Tab } from "../../Tab";
-import { Window } from "../../Window";
+import { Tab } from "../../Tab.js";
+import { Window } from "../../Window.js";
 
 
 export class ExtensionTabBridge implements Tab {

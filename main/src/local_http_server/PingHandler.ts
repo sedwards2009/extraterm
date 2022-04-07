@@ -6,7 +6,7 @@
 import * as http from "http";
 import { getLogger, Logger } from "extraterm-logging";
 
-import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType";
+import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType.js";
 
 
 export class PingHandler implements RequestHandler {

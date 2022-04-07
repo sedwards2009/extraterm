@@ -3,7 +3,7 @@
  */
 import { ArrayKeyTrie } from "extraterm-data-structures";
 import { StyleCode } from "extraterm-char-cell-grid";
-import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase";
+import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase.js";
 
 export interface TextureCachedGlyph extends CachedGlyph {
   textureXpx: number;

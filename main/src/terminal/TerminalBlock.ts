@@ -15,14 +15,12 @@ import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
 import { ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
-
-import { Block } from "./Block";
-import * as Term from "../emulator/Term";
 import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 
-
-import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
-import { ConfigCursorStyle } from "../config/Config";
+import { Block } from "./Block.js";
+import * as Term from "../emulator/Term.js";
+import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig.js";
+import { ConfigCursorStyle } from "../config/Config.js";
 
 
 enum SelectionMode {

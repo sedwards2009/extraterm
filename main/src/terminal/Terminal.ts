@@ -6,6 +6,8 @@
 import * as crypto from "crypto";
 import * as TermApi from "term-api";
 import { getLogger, log, Logger } from "extraterm-logging";
+import { computeFontMetrics } from "extraterm-char-render-canvas";
+import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { doLater } from "extraterm-later";
@@ -41,25 +43,23 @@ import {
 } from "@nodegui/nodegui";
 const performanceNow = require('performance-now');
 
-import * as Term from "../emulator/Term";
-import { Tab } from "../Tab";
-import { AppendScrollbackLinesDetail, TerminalBlock } from "./TerminalBlock";
-import { Pty } from "../pty/Pty";
-import { TerminalEnvironmentImpl } from "./TerminalEnvironmentImpl";
-import { PALETTE_BG_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig";
-import { qKeyEventToMinimalKeyboardEvent } from "../keybindings/QKeyEventUtilities";
-import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager";
-import { ExtensionManager } from "../extension/ExtensionManager";
-import { Color } from "extraterm-color-utilities";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import { CommandLineAction, MouseButtonAction } from "../config/Config";
-import { computeFontMetrics } from "extraterm-char-render-canvas";
-import { CommandQueryOptions } from "../InternalTypes";
-import { BlockFrame } from "./BlockFrame";
-import { DecoratedFrame } from "./DecoratedFrame";
-import { SpacerFrame } from "./SpacerFrame";
-import { UiStyle } from "../ui/UiStyle";
-import { BorderDirection } from "../extension/ExtensionMetadata";
+import * as Term from "../emulator/Term.js";
+import { Tab } from "../Tab.js";
+import { AppendScrollbackLinesDetail, TerminalBlock } from "./TerminalBlock.js";
+import { Pty } from "../pty/Pty.js";
+import { TerminalEnvironmentImpl } from "./TerminalEnvironmentImpl.js";
+import { PALETTE_BG_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig.js";
+import { qKeyEventToMinimalKeyboardEvent } from "../keybindings/QKeyEventUtilities.js";
+import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager.js";
+import { ExtensionManager } from "../extension/ExtensionManager.js";
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { CommandLineAction, MouseButtonAction } from "../config/Config.js";
+import { CommandQueryOptions } from "../InternalTypes.js";
+import { BlockFrame } from "./BlockFrame.js";
+import { DecoratedFrame } from "./DecoratedFrame.js";
+import { SpacerFrame } from "./SpacerFrame.js";
+import { UiStyle } from "../ui/UiStyle.js";
+import { BorderDirection } from "../extension/ExtensionMetadata.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 

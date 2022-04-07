@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { TerminalBlock } from "main/src/terminal/TerminalBlock";
-import { ExtensionMetadata } from "../ExtensionMetadata";
+import { TerminalBlock } from "../../terminal/TerminalBlock.js";
+import { ExtensionMetadata } from "../ExtensionMetadata.js";
 
 
 export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDetails {

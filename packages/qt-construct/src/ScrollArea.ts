@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QScrollArea, QScrollBar, QWidget, ScrollBarPolicy, Shape } from "@nodegui/nodegui";
-import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget.js";
 
 export interface ScrollAreaOptions extends WidgetOptions {
   frameShape?: Shape,

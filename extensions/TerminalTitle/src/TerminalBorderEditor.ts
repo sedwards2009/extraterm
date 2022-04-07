@@ -7,8 +7,8 @@ import { Logger, Event, Style } from '@extraterm/extraterm-extension-api';
 import { AlignmentFlag, Direction, QWidget } from '@nodegui/nodegui';
 import { BoxLayout, PushButton, Widget } from 'qt-construct';
 import { EventEmitter } from "extraterm-event-emitter";
-import { TemplateEditor } from './TemplateEditor';
-import { TemplateString } from "./TemplateString";
+import { TemplateEditor } from "./TemplateEditor.js";
+import { TemplateString } from "./TemplateString.js";
 
 export class TerminalBorderEditor {
 

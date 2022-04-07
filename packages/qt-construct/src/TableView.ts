@@ -5,7 +5,7 @@
  */
 import { QAbstractItemModel, QTableView, QAbstractItemViewSelectionBehavior, SelectionMode, NativeElement
 } from "@nodegui/nodegui";
-import { ApplyWidgetOptions, WidgetOptions } from "./Widget";
+import { ApplyWidgetOptions, WidgetOptions } from "./Widget.js";
 
 // TODO: Introduce an AbstractItemViewOptions
 

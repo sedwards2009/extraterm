@@ -4,12 +4,12 @@
 
 import { CharCellGrid, STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
 import { log, Logger, getLogger } from "extraterm-logging";
-import { Disposable } from "./Disposable";
-import { FontSlice } from "./FontSlice";
-import { CursorStyle } from "./CursorStyle";
-import { WebGLRenderer } from "./WebGLRenderer";
-import { RGBAToCss } from "./RGBAToCss";
-import { WebGLRendererRepository } from "./WebGLRendererRepository";
+import { Disposable } from "./Disposable.js";
+import { FontSlice } from "./FontSlice.js";
+import { CursorStyle } from "./CursorStyle.js";
+import { WebGLRenderer } from "./WebGLRenderer.js";
+import { RGBAToCss } from "./RGBAToCss.js";
+import { WebGLRendererRepository } from "./WebGLRendererRepository.js";
 
 export const PALETTE_BG_INDEX = 256;
 export const PALETTE_FG_INDEX = 257;

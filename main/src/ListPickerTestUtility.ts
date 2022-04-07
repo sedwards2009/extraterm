@@ -7,8 +7,8 @@ import { QApplication, QMainWindow, QWidget } from "@nodegui/nodegui";
 import * as path from "path";
 import * as SourceDir from './SourceDir';
 
-import { createUiStyle } from "./ui/styles/DarkTwo";
-import { FieldType, ListPicker } from "./ui/ListPicker";
+import { createUiStyle } from "./ui/styles/DarkTwo.js";
+import { FieldType, ListPicker } from "./ui/ListPicker.js";
 
 let centralWidget: QWidget = null;
 

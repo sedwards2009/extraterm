@@ -9,23 +9,23 @@ import * as fs from "fs";
 import * as _ from "lodash";
 import * as path from "path";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
-
-import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionDesiredState, ExtensionCommandContribution, WhenVariables, Category } from "./ExtensionMetadata";
-import { parsePackageJsonString } from "./PackageFileParser";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
-import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import * as InternalTypes from "../InternalTypes";
-import { CommonExtensionWindowState } from "./CommonExtensionState";
-import { CommandMenuEntry } from "../CommandsRegistry";
-import { Window } from "../Window";
-import { LineRangeChange, Terminal } from "../terminal/Terminal";
-import { InternalExtensionContext, InternalSessionEditor, InternalSessionSettingsEditor } from "../InternalTypes";
-import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl";
 import { QLabel } from "@nodegui/nodegui";
-import { Tab } from "../Tab";
+
+import { Logger, getLogger } from "extraterm-logging";
+import { ExtensionMetadata, ExtensionDesiredState, ExtensionCommandContribution, WhenVariables, Category } from "./ExtensionMetadata.js";
+import { parsePackageJsonString } from "./PackageFileParser.js";
+import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import * as InternalTypes from "../InternalTypes.js";
+import { CommonExtensionWindowState } from "./CommonExtensionState.js";
+import { CommandMenuEntry } from "../CommandsRegistry.js";
+import { Window } from "../Window.js";
+import { LineRangeChange, Terminal } from "../terminal/Terminal.js";
+import { InternalExtensionContext, InternalSessionEditor, InternalSessionSettingsEditor } from "../InternalTypes.js";
+import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl.js";
+import { Tab } from "../Tab.js";
 
 
 interface ActiveExtension {

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QIcon, QMenu, QToolButton, ToolButtonPopupMode } from "@nodegui/nodegui";
-import { AbstractButtonOptions, ApplyAbstractButtonOptions } from "./AbstractButton";
+import { AbstractButtonOptions, ApplyAbstractButtonOptions } from "./AbstractButton.js";
 
 
 export interface ToolButtonOptions extends AbstractButtonOptions {

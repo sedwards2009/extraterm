@@ -6,15 +6,15 @@
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { Logger, getLogger, log } from "extraterm-logging";
 
-import { ApplicationImpl } from "./ApplicationImpl";
-import { CommandsImpl } from "./CommandsImpl";
-import { ConfigurationImpl } from "./ConfigurationImpl";
-import { ConfigDatabase } from "../../config/ConfigDatabase";
-import { ExtensionMetadata } from "../ExtensionMetadata";
-import { SessionsImpl } from "./SessionsImpl";
-import { TerminalsImpl } from "./TerminalsImpl";
-import { WindowsImpl } from "./WindowsImpl";
-import { InternalExtensionContext } from "../../InternalTypes";
+import { ApplicationImpl } from "./ApplicationImpl.js";
+import { CommandsImpl } from "./CommandsImpl.js";
+import { ConfigurationImpl } from "./ConfigurationImpl.js";
+import { ConfigDatabase } from "../../config/ConfigDatabase.js";
+import { ExtensionMetadata } from "../ExtensionMetadata.js";
+import { SessionsImpl } from "./SessionsImpl.js";
+import { TerminalsImpl } from "./TerminalsImpl.js";
+import { WindowsImpl } from "./WindowsImpl.js";
+import { InternalExtensionContext } from "../../InternalTypes.js";
 
 
 export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, ExtensionApi.Disposable {

@@ -6,26 +6,26 @@
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 import { Logger, getLogger, log } from "extraterm-logging";
-
-import { ExtensionManager, InternalExtensionContext } from "../InternalTypes";
-import { ExtensionMetadata, ExtensionCommandContribution, ExtensionMenusContribution } from "./ExtensionMetadata";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import { ExtensionContextImpl } from "./api/ExtensionContextImpl";
-import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes";
-import { LineRangeChange, Terminal } from "../terminal/Terminal";
-import { CommandsRegistry } from "../CommandsRegistry";
 import { SessionBackend } from "@extraterm/extraterm-extension-api";
-import { WorkspaceSessionEditorRegistry } from "./WorkspaceSessionEditorRegistry";
-import { TerminalImpl } from "./api/TerminalImpl";
-import { Block } from "../terminal/Block";
-import { BlockImpl } from "./api/BlockImpl";
-import { BlockFrame } from "../terminal/BlockFrame";
-import { TabImpl } from "./api/TabImpl";
-import { Window } from "../Window";
-import { WindowImpl } from "./api/WindowImpl";
-import { Tab } from "../Tab";
-import { WorkspaceSessionSettingsEditorRegistry } from "./WorkspaceSessionSettingsEditorRegistry";
-import { TabTitleWidgetRegistry } from "./TabTitleWidgetRegistry";
+
+import { ExtensionManager, InternalExtensionContext } from "../InternalTypes.js";
+import { ExtensionMetadata, ExtensionCommandContribution, ExtensionMenusContribution } from "./ExtensionMetadata.js";
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { ExtensionContextImpl } from "./api/ExtensionContextImpl.js";
+import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes.js";
+import { LineRangeChange, Terminal } from "../terminal/Terminal.js";
+import { CommandsRegistry } from "../CommandsRegistry.js";
+import { WorkspaceSessionEditorRegistry } from "./WorkspaceSessionEditorRegistry.js";
+import { TerminalImpl } from "./api/TerminalImpl.js";
+import { Block } from "../terminal/Block.js";
+import { BlockImpl } from "./api/BlockImpl.js";
+import { BlockFrame } from "../terminal/BlockFrame.js";
+import { TabImpl } from "./api/TabImpl.js";
+import { Window } from "../Window.js";
+import { WindowImpl } from "./api/WindowImpl.js";
+import { Tab } from "../Tab.js";
+import { WorkspaceSessionSettingsEditorRegistry } from "./WorkspaceSessionSettingsEditorRegistry.js";
+import { TabTitleWidgetRegistry } from "./TabTitleWidgetRegistry.js";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {

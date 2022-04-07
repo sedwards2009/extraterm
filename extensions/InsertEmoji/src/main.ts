@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { ExtensionContext, Logger, OnCursorListPickerOptions } from '@extraterm/extraterm-extension-api';
-import { emojiNames, emojiCodePoints } from "./EmojiData";
+import { emojiNames, emojiCodePoints } from "./EmojiData.js";
 
 
 let log: Logger = null;

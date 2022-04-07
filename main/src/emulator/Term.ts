@@ -76,8 +76,8 @@ import {
   setCellBgClutFlag,
 } from 'extraterm-char-cell-grid';
 import { CellWithHyperlink, LineImpl } from "term-api-lineimpl";
-import { ControlSequenceParameters } from "./ControlSequenceParameters";
-import { MouseEncoder } from "./MouseEncoder";
+import { ControlSequenceParameters } from "./ControlSequenceParameters.js";
+import { MouseEncoder } from "./MouseEncoder.js";
 
 const DEBUG_RESIZE = false;
 

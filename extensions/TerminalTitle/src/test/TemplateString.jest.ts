@@ -6,7 +6,7 @@
 
 import "jest";
 
-import { Segment, TemplateString, TextSegment, FieldSegment } from "../TemplateString";
+import { Segment, TemplateString, TextSegment, FieldSegment } from "../TemplateString.js";
 
 
 const args: [string, Segment[]][] = [

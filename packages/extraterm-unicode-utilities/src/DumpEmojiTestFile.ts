@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as easta from "easta";
-import { isWide } from "./UnicodeUtilities";
+import { isWide } from "./UnicodeUtilities.js";
 
 const log = console.log.bind(console);
 

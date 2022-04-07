@@ -10,7 +10,7 @@ import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelInd
 } from "@nodegui/nodegui";
 import * as fuzzyjs from "fuzzyjs";
 import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
-import { UiStyle } from "./UiStyle";
+import { UiStyle } from "./UiStyle.js";
 
 
 export enum FieldType {

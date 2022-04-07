@@ -10,9 +10,9 @@ import * as path from "path";
 import { getLogger, log } from "extraterm-logging";
 import { DebouncedDoLater } from "extraterm-later";
 
-import { ConfigChangeEvent, ConfigDatabase, ConfigKey } from "./ConfigDatabase";
-import * as SharedMap from "../shared_map/SharedMap";
-import { COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, SESSION_CONFIG, UserStoredConfig } from "./Config";
+import { ConfigChangeEvent, ConfigDatabase, ConfigKey } from "./ConfigDatabase.js";
+import * as SharedMap from "../shared_map/SharedMap.js";
+import { COMMAND_LINE_ACTIONS_CONFIG, GENERAL_CONFIG, SESSION_CONFIG, UserStoredConfig } from "./Config.js";
 
 const MAIN_CONFIG = "extraterm.json";
 const EXTENSION_CONFIG_DIR = "extension_config";

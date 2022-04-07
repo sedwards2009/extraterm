@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { ClipboardImpl } from "./ClipboardImpl";
 import * as open from "open";
 import * as fs from "fs";
 import * as path from "path";
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { ClipboardImpl } from "./ClipboardImpl.js";
 
 
 export class ApplicationImpl implements ExtensionApi.Application {

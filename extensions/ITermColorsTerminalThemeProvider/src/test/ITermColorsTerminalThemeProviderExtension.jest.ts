@@ -6,7 +6,7 @@
 import "jest";
 import * as path from "path";
 import { getLogger } from "extraterm-logging";
-import { ItermColorTerminalThemeProvider } from "../ITermColorsTerminalThemeProviderExtension";
+import { ItermColorTerminalThemeProvider } from "../ITermColorsTerminalThemeProviderExtension.js";
 
 
 const themePaths = [path.join(__dirname, "..", "..", "src", "test")];

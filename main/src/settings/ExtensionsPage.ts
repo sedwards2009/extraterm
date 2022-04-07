@@ -9,11 +9,11 @@ import { BoxLayout, Frame, Label, PushButton, ScrollArea, StackedWidget, Widget 
 import { EventEmitter, Event } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
 
-import { ExtensionMetadata } from "../extension/ExtensionMetadata";
-import { ExtensionManager } from "../InternalTypes";
-import { createHtmlIcon } from "../ui/Icons";
-import { UiStyle } from "../ui/UiStyle";
-import { makeLinkLabel, makeSubTabBar } from "../ui/QtConstructExtra";
+import { ExtensionMetadata } from "../extension/ExtensionMetadata.js";
+import { ExtensionManager } from "../InternalTypes.js";
+import { createHtmlIcon } from "../ui/Icons.js";
+import { UiStyle } from "../ui/UiStyle.js";
+import { makeLinkLabel, makeSubTabBar } from "../ui/QtConstructExtra.js";
 
 enum SubPage {
   ALL_EXTENSIONS = 0,

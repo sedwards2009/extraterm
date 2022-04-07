@@ -5,8 +5,8 @@
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { Logger, getLogger, log } from 'extraterm-logging';
-import { ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata";
-import { ExtensionManager, InternalExtensionContext } from "./InternalTypes";
+import { ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata.js";
+import { ExtensionManager, InternalExtensionContext } from "./InternalTypes.js";
 
 export interface CommandMenuEntry {
   commandContribution: ExtensionCommandContribution;

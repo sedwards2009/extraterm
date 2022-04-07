@@ -6,11 +6,11 @@
 import { Direction, QBoxLayout, QScrollArea, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, CheckBox, ComboBox, GridLayout, Label, ScrollArea, SpinBox, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
-import { UiStyle } from "../ui/UiStyle";
-import { createHtmlIcon } from "../ui/Icons";
-import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import { GeneralConfig, MouseButtonAction } from "../config/Config";
+import { UiStyle } from "../ui/UiStyle.js";
+import { createHtmlIcon } from "../ui/Icons.js";
+import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra.js";
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { GeneralConfig, MouseButtonAction } from "../config/Config.js";
 
 
 export class GeneralPage {

@@ -8,12 +8,12 @@ import * as path from "path";
 
 import { Logger, getLogger, log } from "extraterm-logging";
 
-import { ExtensionManager } from "../extension/ExtensionManager";
-import { KeybindingsFileInfo } from "../config/Config";
+import { ExtensionManager } from "../extension/ExtensionManager.js";
+import { KeybindingsFileInfo } from "../config/Config.js";
 import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, KeybindingsBinding, StackedKeybindingsSet,
-  CustomKeybindingsSet } from "./KeybindingsTypes";
-import { ConfigChangeEvent, ConfigDatabase } from "../config/ConfigDatabase";
-import { TermKeybindingsMapping } from "./KeybindingsManager";
+  CustomKeybindingsSet } from "./KeybindingsTypes.js";
+import { ConfigChangeEvent, ConfigDatabase } from "../config/ConfigDatabase.js";
+import { TermKeybindingsMapping } from "./KeybindingsManager.js";
 
 /**
  * Manages reading keybindings files and r/w keybinding customisation files.

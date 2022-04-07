@@ -11,11 +11,11 @@ import {
   BoxLayout, ComboBox, Frame, GridLayout, Label, LineEdit, PushButton, ScrollArea, SpinBox, StackedWidget, Widget
 } from "qt-construct";
 
-import { createHtmlIcon } from "../ui/Icons";
-import { UiStyle } from "../ui/UiStyle";
-import { ConfigDatabase } from "../config/ConfigDatabase";
-import { HoverPushButton, makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra";
-import { CommandLineAction, CommandLineActionMatchType, FrameRule } from "../config/Config";
+import { createHtmlIcon } from "../ui/Icons.js";
+import { UiStyle } from "../ui/UiStyle.js";
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { HoverPushButton, makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra.js";
+import { CommandLineAction, CommandLineActionMatchType, FrameRule } from "../config/Config.js";
 
 
 const frameActionOptions: {id: FrameRule, name: string}[] = [

@@ -3,13 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Block } from "./Block";
-import { TabTitleWidgetFactory } from "./Tab";
-import { Terminal } from "./Terminal";
-import { TerminalThemeProvider } from "./TerminalTheme";
 import { Event } from "extraterm-event-emitter";
 import { QWidget } from "@nodegui/nodegui";
-import { Style } from "./Style";
+
+import { Block } from "./Block.js";
+import { TabTitleWidgetFactory } from "./Tab.js";
+import { Terminal } from "./Terminal.js";
+import { TerminalThemeProvider } from "./TerminalTheme.js";
+import { Style } from "./Style.js";
 
 
 export interface Windows {
