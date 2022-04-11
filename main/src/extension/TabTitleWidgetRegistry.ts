@@ -4,10 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionTabTitlesWidgetContribution } from './ExtensionMetadata';
+import { ExtensionMetadata, ExtensionTabTitlesWidgetContribution } from './ExtensionMetadata.js';
 import { NodeWidget, QLabel } from '@nodegui/nodegui';
 
 

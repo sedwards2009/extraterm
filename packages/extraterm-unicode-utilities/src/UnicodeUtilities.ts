@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as easta from "easta";
-const emoji_table = require("./emoji_table");
+import easta from "easta";
+import * as emoji_table from "./emoji_table.js";
 
 function newUint32Array(length: number): Uint32Array {
   return new Uint32Array(Math.max(length, 0));

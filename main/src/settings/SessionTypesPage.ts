@@ -7,7 +7,7 @@ import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
 import { Direction, QBoxLayout, QFrame, QLabel, QPushButton, QScrollArea, QSizePolicyPolicy, QStackedWidget, QWidget,
   TextFormat
 } from "@nodegui/nodegui";
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 import { BoxLayout, Frame, Label, PushButton, ScrollArea, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { createUuid } from "extraterm-uuid";

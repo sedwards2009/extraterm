@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import {Logger, objectName} from './Logger';
+import {Logger, objectName} from "./Logger.js";
 
 /**
  * Decorator to log method calls.

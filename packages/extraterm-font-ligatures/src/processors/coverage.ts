@@ -1,4 +1,4 @@
-import { CoverageTable } from '../tables';
+import { CoverageTable } from '../tables.js';
 
 /**
  * Get the index of the given glyph in the coverage table, or null if it is not

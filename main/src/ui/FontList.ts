@@ -4,18 +4,21 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as child_process from "child_process";
-import * as fs from "fs";
-import * as path from "path";
-import * as util from 'util';
-import * as opentype from 'opentype.js';
+import * as child_process from "node:child_process";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as util from "node:util";
+import * as opentype from "opentype.js";
 import { QFontDatabase } from "@nodegui/nodegui";
 import { getLogger } from "extraterm-logging";
 import { PairKeyMap } from "extraterm-data-structures";
+import {fileURLToPath} from "node:url";
 
 import { FontInfo } from "../config/Config.js";
 import * as SourceDir from "../SourceDir.js";
 
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
 

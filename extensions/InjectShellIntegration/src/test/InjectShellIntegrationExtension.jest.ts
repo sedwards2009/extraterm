@@ -7,6 +7,9 @@
 import "jest";
 import * as path from 'path';
 import {PythonFileFlattener} from '../ScriptBuilders';
+import {fileURLToPath} from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 test("", () => {
@@ -14,7 +17,7 @@ test("", () => {
   const result = flattener.readAndInlineCommand('command');
 
   expect(result.length).not.toBe(0);
-  
+
   const lines = result.split('\n');
   expect(lines.filter(line => line.indexOf('import os') !== -1).length).toBe(1);
   expect(lines.filter(line => line.indexOf('from library import *') !== -1).length).toBe(0);

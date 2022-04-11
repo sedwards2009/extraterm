@@ -7,7 +7,7 @@
 export interface ExtensionMetadata {
   readonly name: string;
   readonly path: string;
-  readonly main?: string;
+  readonly exports?: string;
   readonly version?: string;
   readonly description?: string;
   readonly homepage?: string;

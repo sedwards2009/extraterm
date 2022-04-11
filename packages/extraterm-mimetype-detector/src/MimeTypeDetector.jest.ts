@@ -3,11 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import "jest";
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as MimeTypeDetector from './MimeTypeDetector';
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as MimeTypeDetector from "./MimeTypeDetector";
 
 
 function readTestFile(filename: string): Buffer {

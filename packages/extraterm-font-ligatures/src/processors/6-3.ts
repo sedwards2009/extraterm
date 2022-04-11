@@ -1,8 +1,9 @@
-import { ChainingContextualSubstitutionTable, Lookup } from '../tables';
-import { LookupTree, LookupTreeEntry } from '../types';
+import { ChainingContextualSubstitutionTable, Lookup } from '../tables.js';
+import { LookupTree, LookupTreeEntry } from '../types.js';
 
-import { listGlyphsByIndex } from './coverage';
-import { processInputPosition, processLookaheadPosition, processBacktrackPosition, getInputTree, EntryMeta } from './helper';
+import { listGlyphsByIndex } from './coverage.js';
+import { processInputPosition, processLookaheadPosition, processBacktrackPosition, getInputTree,
+  EntryMeta } from './helper.js';
 
 /**
  * Build lookup tree for GSUB lookup table 6, format 3.
@@ -12,7 +13,7 @@ import { processInputPosition, processLookaheadPosition, processBacktrackPositio
  * @param lookups List of lookup tables
  * @param tableIndex Index of this table in the overall lookup
  */
-export default function buildTree(table: ChainingContextualSubstitutionTable.Format3, lookups: Lookup[], tableIndex: number): LookupTree {
+export function buildTree(table: ChainingContextualSubstitutionTable.Format3, lookups: Lookup[], tableIndex: number): LookupTree {
   const result: LookupTree = {
     individual: new Map<number, LookupTreeEntry>(),
     range: []

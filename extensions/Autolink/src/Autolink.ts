@@ -11,7 +11,7 @@ import {
   Terminal,
   TerminalOutputDetails
 } from '@extraterm/extraterm-extension-api';
-import { findAllURLs } from './UrlRegex';
+import { findAllURLs } from './UrlRegex.js';
 
 let log: Logger = null;
 let context: ExtensionContext = null;

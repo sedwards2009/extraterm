@@ -8,7 +8,7 @@ import { Direction, QBoxLayout, QIcon, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ToolButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 
-import { Segment, TemplateString } from './TemplateString';
+import { Segment, TemplateString } from './TemplateString.js';
 
 
 export class TitlePreview {

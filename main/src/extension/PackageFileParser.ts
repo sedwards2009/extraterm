@@ -3,7 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as path from 'path';
+import * as path from "node:path";
+import { getLogger, Logger } from "extraterm-logging";
+import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
+import { JsonNode, JsonObject } from "json-to-ast";
+import jsonParse from "json-to-ast";
 import {
   BorderDirection,
   Category,
@@ -24,15 +28,11 @@ import {
   ExtensionTerminalThemeProviderContribution,
   ExtensionViewerContribution,
   WhenVariables,
-} from "./ExtensionMetadata";
-import { getLogger, Logger } from "extraterm-logging";
-import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
-import { JsonNode, JsonObject } from "json-to-ast";
-import jsonParse = require("json-to-ast");
+} from "./ExtensionMetadata.js";
 
 import { JsonError, assertIsJsonObject, getJsonProperty, throwJsonError, parseObjectListJson, getJsonStringField,
   getJsonNumberField, getJsonStringArrayField, getJsonBooleanField, assertKnownJsonObjectKeys
-} from "./JsonToAstUtils";
+} from "./JsonToAstUtils.js";
 
 export function parsePackageJsonString(packageJsonString: string, extensionPath: string): ExtensionMetadata {
   return (new PackageParser(extensionPath)).parse(packageJsonString);
@@ -75,7 +75,7 @@ class PackageParser {
       const result: ExtensionMetadata = {
         name: getJsonStringField(packageJson, "name"),
         path: this._extensionPath,
-        main: getJsonStringField(packageJson, "main", null),
+        exports: getJsonStringField(packageJson, "exports", null),
         version: getJsonStringField(packageJson, "version"),
         homepage: getJsonStringField(packageJson, "homepage", null),
         keywords: getJsonStringArrayField(packageJson, "keywords", []),

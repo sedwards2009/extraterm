@@ -5,7 +5,7 @@
  */
 
 import { QWidget } from "@nodegui/nodegui";
-import * as _ from "lodash";
+import * as _ from "lodash-es";
 
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";

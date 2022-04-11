@@ -153,7 +153,7 @@ const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 export class Emulator implements EmulatorApi {
   private _log: Logger = null;
   private cols = 80;
-  private rows = 24
+  private rows = 24;
 
   private state = ParserState.NORMAL;
 

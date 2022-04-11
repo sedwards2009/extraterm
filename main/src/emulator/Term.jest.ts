@@ -3,17 +3,16 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import "jest";
-
-import {Emulator, Platform} from './Term';
-import {RenderEvent, Line, EmulatorApi, MinimalKeyboardEvent, DataEvent} from 'term-api';
+import { performance } from "node:perf_hooks";
+import {Emulator, Platform} from "./Term.js";
+import {RenderEvent, Line, MinimalKeyboardEvent, DataEvent} from "term-api";
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
-const performanceNow = require('performance-now');
 
 
 test("basic", done => {
   async function testBasic(): Promise<void> {
-    const emulator = new Emulator({platform: <Platform> process.platform, performanceNowFunc: performanceNow});
+    const emulator = new Emulator({platform: <Platform> process.platform,
+      performanceNowFunc: () => performance.now()});
     emulator.write('Hello');
 
     await waitOnEmulator(emulator);
@@ -28,7 +27,7 @@ test("basic", done => {
 test("wrap", done => {
   async function testWrap(): Promise<void> {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
-      performanceNowFunc: performanceNow});
+      performanceNowFunc: () => performance.now()});
     emulator.write('abcdefghijklmnopqrstuvwxyz');
 
     await waitOnEmulator(emulator);
@@ -43,7 +42,7 @@ test("wrap", done => {
 test("scroll one", done => {
   async function testScrollOne(): Promise<void> {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
-      performanceNowFunc: performanceNow});
+      performanceNowFunc: () => performance.now()});
 
     emulator.write('1\n');
     emulator.write('2\n');
@@ -68,7 +67,7 @@ test("scroll one", done => {
 test("render device", done => {
   async function testRenderDevice(): Promise<void> {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
-      performanceNowFunc: performanceNow});
+      performanceNowFunc: () => performance.now()});
     const device = new RenderDevice();
     emulator.onRender(device.renderEventHandler.bind(device));
 
@@ -94,7 +93,7 @@ test("render device", done => {
 test("move cursor", done => {
   async function testMoveCursor(): Promise<void> {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
-      performanceNowFunc: performanceNow});
+      performanceNowFunc: () => performance.now()});
     const device = new RenderDevice();
     emulator.onRender(device.renderEventHandler.bind(device));
     emulator.write('1\r\n');
@@ -119,7 +118,7 @@ test("move cursor", done => {
 test("Move rows above cursor to scrollback", done => {
   async function testMoveRowsAboveCursorToScrollback(): Promise<void> {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
-      performanceNowFunc: performanceNow});
+      performanceNowFunc: () => performance.now()});
     const device = new RenderDevice();
     emulator.onRender(device.renderEventHandler.bind(device));
     emulator.write('1\r\n');
@@ -158,7 +157,7 @@ describe.each([
 
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
-      performanceNowFunc: performanceNow});
+      performanceNowFunc: () => performance.now()});
     let collectedData = "";
     emulator.onData( (event: DataEvent): void => {
       collectedData = collectedData + event.data;
@@ -205,7 +204,7 @@ describe.each([
 
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
-      performanceNowFunc: performanceNow });
+      performanceNowFunc: () => performance.now() });
     let collectedData = "";
     emulator.onData( (event: DataEvent): void => {
       collectedData = collectedData + event.data;

@@ -1,4 +1,4 @@
-import { ClassDefTable } from '../tables';
+import { ClassDefTable } from '../tables.js';
 
 /**
  * Get the number of the class to which the glyph belongs, or null if it doesn't

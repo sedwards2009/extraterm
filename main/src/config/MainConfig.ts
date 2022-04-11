@@ -3,16 +3,16 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as fs from "fs";
-import * as path from "path";
-import * as _ from "lodash";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as _ from "lodash-es";
 
 import { createUuid } from "extraterm-uuid";
 import { Logger, getLogger } from "extraterm-logging";
 import { ThemeInfo, ThemeType, FALLBACK_TERMINAL_THEME } from "../theme/Theme.js";
 import { FontInfo, ConfigCursorStyle, TerminalMarginStyle, FrameRule, TitleBarStyle,
   WindowBackgroundMode } from "./Config.js";
-import * as envPaths from "env-paths";
+import envPaths from "env-paths";
 
 import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from "../keybindings/KeybindingsTypes.js";
 import { PersistentConfigDatabase } from "./PersistentConfigDatabase.js";

@@ -1,4 +1,4 @@
-import { LookupTree, LookupTreeEntry } from './types';
+import { LookupTree, LookupTreeEntry } from './types.js';
 
 /**
  * Merges the provided trees into a single lookup tree. When conflicting lookups
@@ -8,7 +8,7 @@ import { LookupTree, LookupTreeEntry } from './types';
  * @param trees Array of trees to merge. Entries in earlier trees are favored
  *              over those in later trees when there is a choice.
  */
-export default function mergeTrees(trees: LookupTree[]): LookupTree {
+export function mergeTrees(trees: LookupTree[]): LookupTree {
   const result: LookupTree = {
     individual: new Map<number, LookupTreeEntry>(),
     range: []

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { SessionConfiguration } from '@extraterm/extraterm-extension-api';
-import { KeybindingsSet, LogicalKeybindingsName } from '../keybindings/KeybindingsTypes';
+import { KeybindingsSet, LogicalKeybindingsName } from '../keybindings/KeybindingsTypes.js';
 
 export type ConfigCursorStyle = "block" | "underscore" | "beam";
 export type MouseButtonAction = "none" | "context_menu" | "paste" | "paste_selection";

@@ -4,25 +4,26 @@
   "description": "Detect a mimetype from the first few bytes of a file",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "dist/MimeTypeDetector.js",
-  "types": "dist/MimeTypeDetector.d.ts",
+  "type": "module",
+  "exports": "./dist/MimeTypeDetector.js",
+  "types": "./dist/MimeTypeDetector.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "file-type": "^7.6.0",
+    "file-type": "12.4.2",
     "jschardet": "1.4.1",
     "mime-types": "^2.1.21"
   },
   "devDependencies": {
-    "@types/file-type": "^5.2.1",
     "@types/jest": "27.0.1",
-    "eslint": "7.19.0",
+    "eslint": "8.13.0",
     "eslint-config-extraterm": "1.0.0",
-    "jest": "27.2.0",
+    "eslint-plugin-unicorn": "42.0.0",
+    "jest": "27.5.1",
     "shx": "^0.3.2",
-    "typescript": "4.3.5"
+    "typescript": "4.6.3"
   },
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",
@@ -30,7 +31,7 @@
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
-    "test": "yarn run build && jest",
+    "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)",
     "run": "false"
   }
 }

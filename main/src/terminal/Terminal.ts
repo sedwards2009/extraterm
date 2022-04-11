@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as crypto from "crypto";
+import * as crypto from "node:crypto";
 import * as TermApi from "term-api";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { computeFontMetrics } from "extraterm-char-render-canvas";
@@ -41,7 +41,7 @@ import {
   SizeConstraint,
   SliderAction
 } from "@nodegui/nodegui";
-const performanceNow = require('performance-now');
+import { performance } from "node:perf_hooks";
 
 import * as Term from "../emulator/Term.js";
 import { Tab } from "../Tab.js";
@@ -802,7 +802,7 @@ export class Terminal implements Tab, Disposable {
       platform: <Term.Platform> process.platform,
       applicationModeCookie: cookie,
       debug: true,
-      performanceNowFunc: performanceNow
+      performanceNowFunc: () => performance.now()
     });
 
     emulator.debug = true;

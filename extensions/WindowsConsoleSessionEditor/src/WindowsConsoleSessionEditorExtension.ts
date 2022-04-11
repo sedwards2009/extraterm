@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as path from 'path';
-import * as fse from 'fs-extra';
-import * as constants from 'constants';
+import * as path from "node:path";
+import fse from "fs-extra";
+import * as constants from "node:constants";
 
 import { ExtensionContext, Logger, SessionConfiguration, SessionEditorBase } from '@extraterm/extraterm-extension-api';
 import { NodeWidget, QComboBox, QLineEdit, QWidget } from "@nodegui/nodegui";

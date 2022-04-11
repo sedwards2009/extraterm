@@ -3,16 +3,16 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as child_process from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as _ from 'lodash';
+import * as child_process from "node:child_process";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as _ from "lodash-es";
 
-import { Logger, Pty, SessionConfiguration, SessionBackend, CreateSessionOptions} from '@extraterm/extraterm-extension-api';
-import { ShellStringParser } from 'extraterm-shell-string-parser';
+import { Logger, Pty, SessionConfiguration, SessionBackend, CreateSessionOptions} from "@extraterm/extraterm-extension-api";
+import { ShellStringParser } from "extraterm-shell-string-parser";
 
-import * as SourceDir from './SourceDir';
-import { ProxyPtyConnector, PtyOptions } from './ProxyPty';
+import * as SourceDir from "./SourceDir.js";
+import { ProxyPtyConnector, PtyOptions } from "./ProxyPty.js";
 
 interface CygwinProxySessionConfiguration extends SessionConfiguration {
   useDefaultShell?: boolean;

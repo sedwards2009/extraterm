@@ -1,19 +1,19 @@
-import * as util from 'util';
+import * as util from 'node:util';
 import * as opentype from 'opentype.js';
 import * as fontFinder from 'font-finder';
-import * as lru from 'lru-cache';
+import lru from 'lru-cache';
 import { CharCellGrid } from "extraterm-char-cell-grid";
 
-import { Font, LigatureData, FlattenedLookupTree, LookupTree, Options } from './types';
-import mergeTrees from './merge';
-import walkTree from './walk';
-import mergeRange from './mergeRange';
+import { Font, LigatureData, FlattenedLookupTree, LookupTree, Options } from './types.js';
+import { mergeTrees } from './merge.js';
+import { walkTree } from './walk.js';
+import { mergeRange } from './mergeRange.js';
 
-import buildTreeGsubType6Format1 from './processors/6-1';
-import buildTreeGsubType6Format2 from './processors/6-2';
-import buildTreeGsubType6Format3 from './processors/6-3';
-import buildTreeGsubType8Format1 from './processors/8-1';
-import flatten from './flatten';
+import { buildTree as buildTreeGsubType6Format1 } from './processors/6-1.js';
+import { buildTree as buildTreeGsubType6Format2 } from './processors/6-2.js';
+import { buildTree as buildTreeGsubType6Format3 } from './processors/6-3.js';
+import { buildTree as buildTreeGsubType8Format1 } from './processors/8-1.js';
+import { flatten } from './flatten.js';
 
 class FontImpl implements Font {
   private _font: opentype.Font;
@@ -29,10 +29,10 @@ class FontImpl implements Font {
   private _cache?: lru.Cache<string, LigatureData | [number, number][]>;
   private _codePointToGlyphIndexCache = new Map<number, number>();
 
-  constructor(font: opentype.Font, options: Required<Options>) {
+  constructor(font: opentype.Font, options: Options) {
     this._font = font;
 
-    if (options.cacheSize > 0) {
+    if ((options.cacheSize ?? 0) > 0) {
       this._cache = lru({
         max: options.cacheSize,
         length: ((val: LigatureData | [number, number][], key: string) => key.length) as any
@@ -306,7 +306,7 @@ class FontImpl implements Font {
 export async function load(name: string, options?: Options): Promise<Font> {
   // We just grab the first font variant we find for now.
   // TODO: allow users to specify information to pick a specific variant
-  const [fontInfo] = await fontFinder.listVariants(name);
+  const [fontInfo] = await (options.listVariants ?? fontFinder.listVariants)(name);
 
   if (!fontInfo) {
     throw new Error(`Font ${name} not found`);

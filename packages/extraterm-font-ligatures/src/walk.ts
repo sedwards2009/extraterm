@@ -1,6 +1,6 @@
-import { FlattenedLookupTree, LookupResult } from './types';
+import { FlattenedLookupTree, LookupResult } from './types.js';
 
-export default function walkTree(tree: FlattenedLookupTree, sequence: number[], startIndex: number, index: number): LookupResult | undefined {
+export function walkTree(tree: FlattenedLookupTree, sequence: number[], startIndex: number, index: number): LookupResult | undefined {
   let bestLookup: LookupResult = undefined;
 
   while (true) {

@@ -3,11 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import "jest";
-import * as path from "path";
+import * as path from "node:path";
 import { getLogger } from "extraterm-logging";
 import { ItermColorTerminalThemeProvider } from "../ITermColorsTerminalThemeProviderExtension.js";
+import {fileURLToPath} from 'node:url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const themePaths = [path.join(__dirname, "..", "..", "src", "test")];
 

@@ -6,11 +6,11 @@
 import { Event, Logger, Style, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 import { Direction, Key, QAction, QKeyEvent, QLineEdit, QPoint, QPushButton, QSizePolicyPolicy, QVariant, QWidget, TextFormat, WidgetAttribute,
   WindowType } from "@nodegui/nodegui";
-import { BoxLayout, GridLayout, Label, LineEdit, Menu, PushButton, ToolButton, Widget } from "qt-construct";
+import { BoxLayout, GridLayout, Label, LineEdit, Menu, PushButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 
-import { Segment, TemplateString } from './TemplateString';
-import { TitlePreview } from './TitlePreview';
+import { Segment, TemplateString } from './TemplateString.js';
+import { TitlePreview } from './TitlePreview.js';
 
 
 export class TemplateEditor {

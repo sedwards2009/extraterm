@@ -3,8 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import he from "he";
 import { FieldFormatter, FormatResult } from "./TemplateString.js";
-import he = require("he");
+
 
 /***
  * Translate keys to values from the given terminal environment.

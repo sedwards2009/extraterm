@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 import { Logger, getLogger, log } from "extraterm-logging";
 import { KeybindingsSet, KeybindingsBinding } from './KeybindingsTypes';
 

@@ -4,17 +4,19 @@
   "description": "UUID v4",
   "author": "Simon Edwards",
   "license": "MIT",
-  "main": "dist/main.js",
-  "types": "dist/main.d.ts",
+  "type": "module",
+  "exports": "./dist/main.js",
+  "types": "./dist/main.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "devDependencies": {
-    "eslint": "7.19.0",
+    "eslint": "8.13.0",
     "eslint-config-extraterm": "1.0.0",
+    "eslint-plugin-unicorn": "42.0.0",
     "shx": "^0.3.2",
-    "typescript": "4.3.5"
+    "typescript": "4.6.3"
   },
   "scripts": {
     "build": "yarn run build-fast && yarn run lint",

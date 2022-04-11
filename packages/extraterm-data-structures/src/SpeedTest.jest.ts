@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-const { performance } = require('perf_hooks');
+import { performance } from "node:perf_hooks";
 
 import { ArrayKeyTrie } from "./ArrayKeyTrie.js";
 import { TripleKeyMap } from "./TripleKeyMap.js";

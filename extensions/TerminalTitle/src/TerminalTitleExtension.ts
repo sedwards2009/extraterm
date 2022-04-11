@@ -3,14 +3,15 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalEnvironment, SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalEnvironment,
+  SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
 import { NodeWidget, QLabel, QSizePolicyPolicy, TextFormat } from '@nodegui/nodegui';
 import { Label } from 'qt-construct';
-import { IconFormatter } from './IconFormatter';
-import { TemplateString } from './TemplateString';
-import { TerminalBorderEditor } from './TerminalBorderEditor';
-import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
-import { createTerminalTitleSessionSettings, Settings } from './TerminalTitleSessionSettings';
+import { IconFormatter } from './IconFormatter.js';
+import { TemplateString } from './TemplateString.js';
+import { TerminalBorderEditor } from './TerminalBorderEditor.js';
+import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter.js';
+import { createTerminalTitleSessionSettings, Settings } from './TerminalTitleSessionSettings.js';
 
 
 let log: Logger = null;

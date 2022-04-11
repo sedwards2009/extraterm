@@ -9,11 +9,11 @@
     "author": "Simon Edwards",
     "license": "MIT",
     "devDependencies": {
-        "@typescript-eslint/parser": "^3.10.1",
-        "eslint": "7.19.0"
+        "@typescript-eslint/parser": "5.18.0",
+        "eslint": "8.13.0"
     },
     "peerDependencies": {
-        "@typescript-eslint/parser": "^3.10.1",
-        "eslint": "7.19.0"
+        "@typescript-eslint/parser": "5.18.0",
+        "eslint": "8.13.0"
     }
 }

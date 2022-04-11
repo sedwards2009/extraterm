@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as http from "http";
+import * as http from "node:http";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
 import * as getStream from "get-stream";

@@ -3,14 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as crypto from 'crypto';
+import * as crypto from "node:crypto";
 import { SmartBuffer } from 'smart-buffer';
-import { Transform } from 'stream';
+import { Transform } from "node:stream";
 
 import { BulkFileMetadata, Disposable, Event } from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from "extraterm-event-emitter";
 import { getLogger, Logger } from "extraterm-logging";
-import { WriterReaderFile } from './WriterReaderFile';
+import { WriterReaderFile } from "./WriterReaderFile.js";
 
 const BULK_FILE_MAXIMUM_BUFFER_SIZE = 512 * 1024;
 const ONE_KILOBYTE = 1024;

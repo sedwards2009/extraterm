@@ -2,7 +2,7 @@
  *
  */
 
-const fs = require("fs");
+import * as fs from "fs";
 
 const log = console.log.bind(console);
 
@@ -106,12 +106,12 @@ function codePointsToRanges(codePoints) {
 }
 
 function dumpRanges(ranges) {
-  log(`const wideEmojiRanges = new Uint32Array([`);
+  log(`// WARNING: This is a generated file. Do not modify it, or commit it.`);
+  log(`export const wideEmojiRanges = new Uint32Array([`);
   for (const range of ranges) {
     log(`  0x${range.start.toString(16)}, 0x${range.end.toString(16)},`);
   }
   log(`]);`);
-  log(`exports.wideEmojiRanges = wideEmojiRanges;`);
 }
 
 function dumpEmojiTestFile() {
@@ -141,7 +141,5 @@ function getNarrowCodePoints() {
   narrowCodePoints.sort( (a,b) => a === b ? 0 : (a <b ? -1 : 1));
   return narrowCodePoints;
 }
-
-
 
 main();

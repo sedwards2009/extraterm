@@ -1,6 +1,6 @@
-import { LookupTree, FlattenedLookupTree, LookupTreeEntry, FlattenedLookupTreeEntry } from './types';
+import { LookupTree, FlattenedLookupTree, LookupTreeEntry, FlattenedLookupTreeEntry } from './types.js';
 
-export default function flatten(tree: LookupTree): FlattenedLookupTree {
+export function flatten(tree: LookupTree): FlattenedLookupTree {
   const result: FlattenedLookupTree = new Map<number, FlattenedLookupTreeEntry>();
   for (const [glyphId, entry] of tree.individual.entries()) {
     result.set(glyphId, flattenEntry(entry));

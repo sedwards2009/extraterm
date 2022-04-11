@@ -3,7 +3,7 @@ import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton
   TextEdit,
   ToolButton,
   Widget } from "qt-construct";
-import * as path from "path";
+import * as path from "node:path";
 import * as SourceDir from './SourceDir';
 
 import { createUiStyle } from "./ui/styles/DarkTwo.js";

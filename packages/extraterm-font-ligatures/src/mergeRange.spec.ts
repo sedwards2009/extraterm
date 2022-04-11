@@ -1,6 +1,6 @@
 import test from 'ava';
 
-import mergeRange from './mergeRange';
+import { mergeRange } from './mergeRange.js';
 
 test('inserts a new range before the existing ones', t => {
   const result = mergeRange([[1, 2], [2, 3]], 0, 1);

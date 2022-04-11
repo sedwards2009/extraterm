@@ -3,13 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as path from 'path';
-import * as _ from 'lodash';
+import * as path from "node:path";
+import * as _ from "lodash-es";
 
 import {Logger, log, getLogger} from "extraterm-logging";
-import { ThemeInfo } from './Theme';
-import { ExtensionManager } from '../extension/ExtensionManager';
-import { TerminalTheme } from '@extraterm/extraterm-extension-api';
+import { ThemeInfo } from "./Theme";
+import { ExtensionManager } from "../extension/ExtensionManager";
+import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 
 
 const DEBUG_SCAN = false;
@@ -302,7 +302,7 @@ export class ThemeManager {
   #extensionManager: ExtensionManager = null;
 
   constructor(paths: ThemeTypePaths, mainExtensionManager: ExtensionManager) {
-    this._log = getLogger("ThemeManagerImpl", this);
+    this._log = getLogger("ThemeManager", this);
     this.#paths = paths;
     this.#extensionManager = mainExtensionManager;
     this.#updateThemesList();

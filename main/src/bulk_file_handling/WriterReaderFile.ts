@@ -3,9 +3,9 @@
 *
 * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 */
-import * as fs from 'fs';
-import {Readable, ReadableOptions, Transform} from 'stream';
-import {Disposable} from '@extraterm/extraterm-extension-api';
+import * as fs from "node:fs";
+import {Readable, ReadableOptions, Transform} from "node:stream";
+import {Disposable} from "@extraterm/extraterm-extension-api";
 
 import {getLogger, Logger} from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -95,7 +95,7 @@ class TailingFileReader extends Readable implements Disposable {
     if (this._fhandle !== -1) {
       fs.closeSync(this._fhandle);
       this._fhandle = -1;
-    }  
+    }
   }
 
   _read(size: number): void {
@@ -120,7 +120,7 @@ class TailingFileReader extends Readable implements Disposable {
       fs.read(this._fhandle, this._buffer, 0, Math.min(this._buffer.length, effectiveReadSize), this._readPointer,
         (err: any, bytesRead: number, buffer: Buffer): void => {
           this._readOperationRunning = false;
-          
+
           if (bytesRead !== 0) {
             const correctSizeBuffer = Buffer.alloc(bytesRead);
             this._buffer.copy(correctSizeBuffer, 0, 0, bytesRead);

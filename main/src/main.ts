@@ -3,12 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import "source-map-support/register";
-import * as _ from "lodash";
+import sourceMapSupport from "source-map-support";
+
+import * as _ from "lodash-es";
 import * as SourceDir from "./SourceDir.js";
-import * as os from "os";
-import * as fs from "fs";
-import * as path from "path";
+import * as os from "node:os";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
 import { QApplication, QFontDatabase, QRect, QStylePixelMetric } from "@nodegui/nodegui";
@@ -38,7 +39,11 @@ import { createUiStyle } from "./ui/styles/DarkTwo.js";
 import { UiStyle } from "./ui/UiStyle.js";
 import { CommandPalette } from "./CommandPalette.js";
 import { PingHandler } from "./local_http_server/PingHandler.js";
+import {fileURLToPath} from 'node:url';
 
+sourceMapSupport.install();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
@@ -88,7 +93,7 @@ class Main {
 
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
-    const extensionManager = this.setupExtensionManager(configDatabase, packageJson.version);
+    const extensionManager = await this.setupExtensionManager(configDatabase, packageJson.version);
     this.#extensionManager = extensionManager;
 
     this.#keybindingsIOManager = this.setupKeybindingsManager(configDatabase, extensionManager);
@@ -190,7 +195,7 @@ class Main {
     this._log.info("Recording logs to ", logFilePath);
   }
 
-  setupExtensionManager(configDatabase: ConfigDatabase, applicationVersion: string): ExtensionManager {
+  async setupExtensionManager(configDatabase: ConfigDatabase, applicationVersion: string): Promise<ExtensionManager> {
     const extensionPaths = [path.join(__dirname, "../../extensions" )];
     const userExtensionDirectory = getUserExtensionDirectory();
     this._log.info(`User extension directory is: ${userExtensionDirectory}`);
@@ -199,7 +204,7 @@ class Main {
     }
 
     const extensionManager = new ExtensionManager(configDatabase, extensionPaths, applicationVersion);
-    extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
+    await extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
     return extensionManager;
   }
 

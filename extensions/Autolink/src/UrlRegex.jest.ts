@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import "jest";
-
 import { findAllURLs } from "./UrlRegex.js";
 
 const TEST_ITEMS = [

@@ -1,7 +1,7 @@
-import { LookupTreeEntry, LookupTree } from '../types';
-import { SubstitutionLookupRecord, Lookup } from '../tables';
+import { LookupTreeEntry, LookupTree } from '../types.js';
+import { SubstitutionLookupRecord, Lookup } from '../tables.js';
 
-import { getIndividualSubstitutionGlyph, getRangeSubstitutionGlyphs } from './substitution';
+import { getIndividualSubstitutionGlyph, getRangeSubstitutionGlyphs } from './substitution.js';
 
 export interface EntryMeta {
   entry: LookupTreeEntry;

@@ -3,14 +3,15 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as child_process from 'child_process';
-import * as constants from 'constants';
-import * as fs from 'fs';
-import * as _ from 'lodash';
-import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend, EnvironmentMap, CreateSessionOptions } from '@extraterm/extraterm-extension-api';
-import { ShellStringParser } from 'extraterm-shell-string-parser';
+import * as child_process from "node:child_process";
+import * as constants from "node:constants";
+import * as fs from "node:fs";
+import * as _ from "lodash-es";
+import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend,
+  CreateSessionOptions } from "@extraterm/extraterm-extension-api";
+import { ShellStringParser } from "extraterm-shell-string-parser";
 
-import { UnixPty, PtyOptions } from './UnixPty';
+import { UnixPty, PtyOptions } from "./UnixPty.js";
 
 interface UnixSessionConfiguration extends SessionConfiguration {
   useDefaultShell?: boolean;

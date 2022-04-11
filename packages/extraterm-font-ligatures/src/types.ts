@@ -1,4 +1,5 @@
 import { CharCellGrid } from "extraterm-char-cell-grid";
+import { Font as FontFinderFont, ListOptions } from "font-finder";
 
 export interface SubstitutionResult {
   index: number;
@@ -53,6 +54,8 @@ export interface Options {
    * characters from input strings. Defaults to no cache (0)
    */
   cacheSize?: number;
+
+  listVariants?: (name: string, options?: ListOptions) => Promise<FontFinderFont[]>;
 }
 
 export interface LookupTree {

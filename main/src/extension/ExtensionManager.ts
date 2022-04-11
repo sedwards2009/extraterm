@@ -5,9 +5,9 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
-import * as fs from "fs";
-import * as _ from "lodash";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as _ from "lodash-es";
+import * as path from "node:path";
 import { BooleanExpressionEvaluator } from "extraterm-boolean-expression-evaluator";
 import { Event } from "@extraterm/extraterm-extension-api";
 import { log } from "extraterm-logging";
@@ -87,7 +87,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     this.#applicationVersion = applicationVersion;
   }
 
-  startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): void {
+  async startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): Promise<void> {
     const desiredState: ExtensionDesiredState = {};
     for (const extensionInfo of this.#extensionMetadata) {
       desiredState[extensionInfo.name] = startByDefault && InternalTypes.isSupportedOnThisPlatform(extensionInfo);;
@@ -104,7 +104,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     for (const extensionName of Object.keys(desiredState)) {
       if (desiredState[extensionName]) {
-        this.#startExtension(this.#getExtensionMetadataByName(extensionName));
+        await this.#startExtension(this.#getExtensionMetadataByName(extensionName));
       }
     }
 
@@ -181,7 +181,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return null;
   }
 
-  #startExtension(metadata: ExtensionMetadata): ActiveExtension {
+  async #startExtension(metadata: ExtensionMetadata): Promise<ActiveExtension> {
     let module = null;
     let publicApi = null;
 
@@ -190,8 +190,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     const internalExtensionContext = new InternalExtensionContextImpl(this, metadata, this.#configDatabase, /* this.#commonExtensionWindowState, */
       this.#applicationVersion);
 
-    if (metadata.main != null) {
-      module = this.#loadExtensionModule(metadata);
+    if (metadata.exports != null) {
+      module = await this.#loadExtensionModule(metadata);
       if (module == null) {
         return null;
       }
@@ -207,10 +207,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return activeExtension;
   }
 
-  #loadExtensionModule(extension: ExtensionMetadata): any {
-    const mainJsPath = path.join(extension.path, extension.main);
+  async #loadExtensionModule(extension: ExtensionMetadata): Promise<any> {
+    const mainJsPath = path.join(extension.path, extension.exports);
     try {
-      const module = require(mainJsPath);
+      const module = await import(mainJsPath);
       return module;
     } catch(ex) {
       this._log.warn(`Unable to load ${mainJsPath}. ${ex}`);

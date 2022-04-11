@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as jschardet from 'jschardet';
-import * as mimeTypes from 'mime-types';
-import * as filetype from 'file-type';
+import fileType from "file-type";
+import jschardet from "jschardet";
+import * as mimeTypes from "mime-types";
 
 
 export interface DetectionResult {
@@ -17,7 +17,7 @@ const SAMPLE_SIZE = 1024;
 
 /**
  * Detect the mimetype of a file based on its filename and the first part of its contents.
- * 
+ *
  * @param filename the filename to check
  * @param buffer string of bytes containing the first part of the file
  * @return the results of the detection or null if the type could not be detected.
@@ -37,8 +37,8 @@ export function detect(filename: string=null, buffer: Buffer=null): DetectionRes
 
   // Check the data directly.
   if (buffer !== null) {
-    const fileTypeResult = filetype(buffer);
-    if (fileTypeResult !== null) {
+    const fileTypeResult = fileType(buffer);
+    if (fileTypeResult != null) {
       return {mimeType: fileTypeResult.mime, charset: null };
     }
 
@@ -219,7 +219,7 @@ const modeInfo: ModeInfo[] = [
 
 /**
  * Try to match a filename to a text mimetype.
- * 
+ *
  * @param name the filename to match.
  * @return the matching mimetype or null if one could not be identified.
  */
@@ -228,9 +228,9 @@ function filenameToTextMimetype(name: string): string {
   const dotIndex = lowerFilename.lastIndexOf('.');
   if (dotIndex !== -1) {
     const extension = lowerFilename.slice(lowerFilename.indexOf('.') + 1);
-    for (const modeRecord of modeInfo) { 
+    for (const modeRecord of modeInfo) {
       if (modeRecord.ext !== undefined && modeRecord.ext.indexOf(extension) !== -1) {
-        if (modeRecord.mime !== undefined){ 
+        if (modeRecord.mime !== undefined){
           return modeRecord.mime;
         } else {
           if (modeRecord.mimes !== undefined) {
@@ -245,7 +245,7 @@ function filenameToTextMimetype(name: string): string {
 
 /**
  * A crude test to see if a buffer contains a binary format or may be text.
- * 
+ *
  * @param buffer the buffer to test.
  * @return true if the buffer looks like a binary file format.
  */
@@ -273,7 +273,7 @@ export interface Metadata {
 
 export function detectWithMetadata(metadata: Metadata, buffer: Buffer=null): DetectionResult {
   const filename = "" + metadata.filename;
-  
+
   let mimeType: string = metadata.mimeType == null ? null : "" + metadata.mimeType;
   let charset: string = metadata.charset == null ? null : "" + metadata.charset;
   if (mimeType === null) {

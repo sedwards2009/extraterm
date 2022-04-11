@@ -7,7 +7,7 @@
  * @param newRangeStart Start position of the range to merge, inclusive
  * @param newRangeEnd End position of range to merge, exclusive
  */
-export default function mergeRange(ranges: [number, number][], newRangeStart: number, newRangeEnd: number): [number, number][] {
+export function mergeRange(ranges: [number, number][], newRangeStart: number, newRangeEnd: number): [number, number][] {
   let inRange = false;
   for (let i = 0; i < ranges.length; i++) {
     const range = ranges[i];

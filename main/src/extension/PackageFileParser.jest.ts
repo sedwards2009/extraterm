@@ -3,11 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import "jest";
-import { parsePackageJsonString } from './PackageFileParser';
-import * as path from 'path';
-import * as fs from 'fs';
-import * as sh from "shelljs";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import sh from "shelljs";
+import { parsePackageJsonString } from "./PackageFileParser.js";
+import {fileURLToPath} from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
 
 test("metadata", () => {
   const parsed = parsePackageJsonString(JSON.stringify({
@@ -55,7 +57,7 @@ test("viewers", () => {
       "name": "audio-viewer",
       "description": "Audio viewer",
       "version": "1.0.0",
-      "main": "src/AudioViewerExtension.js",
+      "exports": "src/AudioViewerExtension.js",
       "scripts": {
         "build": "tsc"
       },
@@ -82,7 +84,7 @@ test("viewers", () => {
     }), "");
   expect(parsed.name).toBe("audio-viewer");
   expect(parsed.version).toBe("1.0.0");
-  expect(parsed.main).toBe("src/AudioViewerExtension.js");
+  expect(parsed.exports).toBe("src/AudioViewerExtension.js");
   expect(parsed.contributes.viewers.length).toBe(1);
   expect(parsed.contributes.viewers[0].name).toBe("AudioViewer");
   expect(parsed.contributes.viewers[0].mimeTypes.length).toBe(2);

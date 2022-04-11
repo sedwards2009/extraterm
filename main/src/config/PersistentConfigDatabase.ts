@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as fs from "fs";
-import * as _ from "lodash";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as _ from "lodash-es";
+import * as path from "node:path";
 
 import { getLogger, log } from "extraterm-logging";
 import { DebouncedDoLater } from "extraterm-later";

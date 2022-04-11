@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import "jest";
 import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_HYPERLINK } from "../CharCellGrid.js";
 
 

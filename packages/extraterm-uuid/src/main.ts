@@ -1,25 +1,20 @@
 /*
- * Copyright 2018 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { randomBytes } from "node:crypto";
 
 /**
  * Create a UUID v4
  *
- * Works in browser and node environments.
  * @return New cryptographcially secure UUID.
  */
 export function createUuid(): string {
   const buffer = new Uint8Array(16);
-  if (typeof window !== "undefined" && window?.crypto?.getRandomValues != null) {
-    window.crypto.getRandomValues(buffer);
-  } else {
-    const crypto = require("crypto");
-    const buf = crypto.randomBytes(16);
-    for (let i=0; i<16; i++) {
-      buffer[i] = buf[i];
-    }
+  const buf = randomBytes(16);
+  for (let i=0; i<16; i++) {
+    buffer[i] = buf[i];
   }
 
   buffer[6] = (buffer[6] & 0x0f) | 0x40;

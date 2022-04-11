@@ -1,14 +1,14 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-export { CursorStyle } from "./CursorStyle";
-export { FontSlice } from "./FontSlice";
-export { computeFontMetrics, computeEmojiMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement";
-export { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics";
-export { Disposable } from "./Disposable";
-export { WebGLRenderer } from "./WebGLRenderer";
-export { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas";
-export { WebGLCharRenderCanvas } from "./WebGLCharRenderCanvas";
-export { xtermPalette,  } from "./WebGLCharRenderCanvas";
-export { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator";
-export { RGBAToQColor } from "./RGBAToQColor";
+export { CursorStyle } from "./CursorStyle.js";
+export { FontSlice } from "./FontSlice.js";
+export { computeFontMetrics, computeEmojiMetrics, debugFontMetrics } from "./font_metrics/FontMeasurement.js";
+export { MonospaceFontMetrics } from "./font_metrics/MonospaceFontMetrics.js";
+export { Disposable } from "./Disposable.js";
+export { WebGLRenderer } from "./WebGLRenderer.js";
+export { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAtlas.js";
+export { WebGLCharRenderCanvas } from "./WebGLCharRenderCanvas.js";
+export { xtermPalette,  } from "./WebGLCharRenderCanvas.js";
+export { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator.js";
+export { RGBAToQColor } from "./RGBAToQColor.js";

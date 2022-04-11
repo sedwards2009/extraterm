@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2019, Simon Edwards <simon@simonzome.com>
  */
-import * as net from 'net';
+import * as net from 'node:net';
 
 /**
  * This exposes additional properties of the node-pty implementation.

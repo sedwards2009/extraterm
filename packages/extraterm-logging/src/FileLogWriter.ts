@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import * as fs from 'fs';
-import {LogWriter, Level} from './Logger';
+import * as fs from "node:fs";
+import {LogWriter, Level} from "./Logger.js";
 
 export class FileLogWriter implements LogWriter {
 

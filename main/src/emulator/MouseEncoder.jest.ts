@@ -3,10 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import "jest";
-
-import { MouseEncoder } from './MouseEncoder';
-import { TerminalCoord, MouseEventOptions } from 'term-api';
+import { MouseEncoder } from "./MouseEncoder.js";
+import { TerminalCoord, MouseEventOptions } from "term-api";
 
 
 function emptyEvent(): MouseEventOptions {

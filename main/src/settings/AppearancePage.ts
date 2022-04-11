@@ -48,7 +48,7 @@ export class AppearancePage {
   #uiStyle: UiStyle = null;
 
   #terminalThemeCombo: QComboBox = null;
-  #terminalThemes: ThemeInfo[]
+  #terminalThemes: ThemeInfo[];
   #terminalThemeCommentSpacer: QLabel = null;
   #terminalThemeCommentLabel: QLabel = null;
 

@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from "lodash";
-import * as fse from "fs-extra";
-import * as constants from "constants";
+import * as _ from "lodash-es";
+import fse from "fs-extra";
+import * as constants from "node:constants";
 
 import {ExtensionContext, Logger, SessionConfiguration, SessionEditorBase} from "@extraterm/extraterm-extension-api";
 import { Direction, NodeWidget, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";

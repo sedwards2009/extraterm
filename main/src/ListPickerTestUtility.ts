@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QApplication, QMainWindow, QWidget } from "@nodegui/nodegui";
-import * as path from "path";
+import * as path from "node:path";
 import * as SourceDir from './SourceDir';
 
 import { createUiStyle } from "./ui/styles/DarkTwo.js";

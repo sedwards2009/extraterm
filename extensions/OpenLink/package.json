@@ -3,7 +3,8 @@
   "displayName": "Open Link",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/OpenLink.js",
+  "type": "module",
+  "exports": "./dist/OpenLink.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist data"
@@ -33,6 +34,6 @@
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "shelljs": "0.8.3",
-    "typescript": "4.3.5"
+    "typescript": "4.6.3"
   }
 }

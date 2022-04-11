@@ -3,11 +3,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Logger, getLogger } from "extraterm-logging";
+import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from "term-api";
 import { KeyStroke, KeybindingsMapping, KeyStrokeOptions, parseConfigKeyStrokeString, configKeyNameToEventKeyName,
-  eventKeyNameToConfigKeyName } from "./KeybindingsMapping";
-import { MinimalKeyboardEvent as TermMinimalKeyboardEvent } from 'term-api';
-import { KeybindingsSet } from './KeybindingsTypes';
-import { Logger, getLogger } from 'extraterm-logging';
+  eventKeyNameToConfigKeyName } from "./KeybindingsMapping.js";
+import { KeybindingsSet } from "./KeybindingsTypes.js";
 
 export class TermKeybindingsMapping extends KeybindingsMapping<TermKeyStroke> {
 

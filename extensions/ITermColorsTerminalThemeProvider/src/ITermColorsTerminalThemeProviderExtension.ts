@@ -3,9 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as fs from "fs";
-import * as path from "path";
-import * as plist from "plist";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import plist from "plist";
 
 import { ExtensionContext, Logger, TerminalThemeProvider, TerminalThemeInfo, TerminalTheme } from '@extraterm/extraterm-extension-api';
 import { log } from "extraterm-logging";
@@ -17,7 +17,6 @@ export class ItermColorTerminalThemeProvider implements TerminalThemeProvider {
   }
 
   scanThemes(paths: string[]): TerminalThemeInfo[] {
-
     let results: TerminalThemeInfo[] = [];
     for (const themePath of paths) {
       results = [...results, ...this._scanDirectory(themePath)];

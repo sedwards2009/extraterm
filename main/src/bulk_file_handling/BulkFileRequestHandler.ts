@@ -3,13 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as http from "http";
-import * as net from 'net';
+import * as http from "node:http";
+import * as net from "node:net";
 import { getLogger, Logger } from "extraterm-logging";
-import * as MimeTypeDetector from 'extraterm-mimetype-detector';
-import { Disposable } from '@extraterm/extraterm-extension-api';
+import * as MimeTypeDetector from "extraterm-mimetype-detector";
+import { Disposable } from "@extraterm/extraterm-extension-api";
 
-import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType";
+import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType.js";
 import { BulkFileStorage } from "./BulkFileStorage.js";
 
 const MAXIMUM_UPLOAD_BUFFER_SIZE_BYTES = 10 * 1024 * 1024;

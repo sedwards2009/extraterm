@@ -1,10 +1,11 @@
-import { ChainingContextualSubstitutionTable, Lookup } from '../tables';
-import { LookupTree, LookupTreeEntry } from '../types';
-import mergeTrees from '../merge';
+import { ChainingContextualSubstitutionTable, Lookup } from '../tables.js';
+import { LookupTree, LookupTreeEntry } from '../types.js';
+import { mergeTrees } from '../merge.js';
 
-import { listGlyphsByIndex } from './coverage';
-import getGlyphClass, { listClassGlyphs } from './classDef';
-import { processInputPosition, processLookaheadPosition, processBacktrackPosition, getInputTree, EntryMeta } from './helper';
+import { listGlyphsByIndex } from './coverage.js';
+import getGlyphClass, { listClassGlyphs } from './classDef.js';
+import { processInputPosition, processLookaheadPosition, processBacktrackPosition, getInputTree,
+  EntryMeta } from './helper.js';
 
 /**
  * Build lookup tree for GSUB lookup table 6, format 2.
@@ -14,7 +15,7 @@ import { processInputPosition, processLookaheadPosition, processBacktrackPositio
  * @param lookups List of lookup tables
  * @param tableIndex Index of this table in the overall lookup
  */
-export default function buildTree(table: ChainingContextualSubstitutionTable.Format2, lookups: Lookup[], tableIndex: number): LookupTree {
+export function buildTree(table: ChainingContextualSubstitutionTable.Format2, lookups: Lookup[], tableIndex: number): LookupTree {
   const results: LookupTree[] = [];
 
   const firstGlyphs = listGlyphsByIndex(table.coverage);

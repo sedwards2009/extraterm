@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as http from "http";
+import * as http from "node:http";
 import { getLogger, Logger } from "extraterm-logging";
 
 import { RequestContext, RequestHandler } from "../local_http_server/RequestHandlerType.js";

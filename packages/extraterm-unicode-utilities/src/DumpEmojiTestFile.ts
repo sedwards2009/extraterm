@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as easta from "easta";
+import * as fs from "node:fs";
+import easta from "easta";
 import { isWide } from "./UnicodeUtilities.js";
 
 const log = console.log.bind(console);
@@ -34,7 +34,7 @@ function formatCodePoints(codePoints: number[], codePointsPerLine: number, tail:
     codePointStr = codePointStr + " ".repeat(5-codePointStr.length);
 
     const ch = String.fromCodePoint(codePoint);
-    let eaw = easta(ch);
+    let eaw: string = easta(ch);
     if (eaw.length === 1) {
       eaw = eaw + " ";
     }

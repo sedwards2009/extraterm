@@ -125,7 +125,7 @@ export interface Logger {
   getFormattedLogMessages(): string;
 }
 
-let finalizationRegistry: FinalizationRegistry = null;
+let finalizationRegistry: FinalizationRegistry<any> = null;
 if (typeof FinalizationRegistry !== "undefined") {
   finalizationRegistry = new FinalizationRegistry( (log: Logger) => {
     log.debug(`Object destroyed.`);

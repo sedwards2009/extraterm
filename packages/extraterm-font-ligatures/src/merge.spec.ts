@@ -1,7 +1,7 @@
-import test, { GenericTestContext, Context } from 'ava';
+import test, { ExecutionContext } from 'ava';
 
-import mergeTrees from './merge';
-import { LookupResult, LookupTreeEntry, LookupTree } from './types';
+import { mergeTrees } from './merge.js';
+import { LookupResult, LookupTreeEntry, LookupTree } from './types.js';
 
 function lookup(substitutionGlyph: number, index?: number, subIndex?: number): LookupResult {
   return {
@@ -13,7 +13,7 @@ function lookup(substitutionGlyph: number, index?: number, subIndex?: number): L
   };
 }
 
-function lookupTreeEquals(t: GenericTestContext<Context<any>>, a: LookupTree, b: LookupTree): void {
+function lookupTreeEquals(t: ExecutionContext, a: LookupTree, b: LookupTree): void {
   t.true((a == null) === (b == null));
   if (a == null) {
     return;
@@ -23,7 +23,7 @@ function lookupTreeEquals(t: GenericTestContext<Context<any>>, a: LookupTree, b:
   t.deepEqual(a.range, b.range);
 }
 
-function lookupTreeListEquals(t: GenericTestContext<Context<any>>, a: LookupTree[], b: LookupTree[]): void {
+function lookupTreeListEquals(t: ExecutionContext, a: LookupTree[], b: LookupTree[]): void {
   t.true((a == null) === (b == null));
   if (a == null) {
     return;
@@ -34,7 +34,7 @@ function lookupTreeListEquals(t: GenericTestContext<Context<any>>, a: LookupTree
   }
 }
 
-function mapDeepEquals(t: GenericTestContext<Context<any>>, a: Map<any, any>, b: Map<any, any>): void {
+function mapDeepEquals(t: ExecutionContext, a: Map<any, any>, b: Map<any, any>): void {
   t.true((a == null) === (b == null));
   if (a == null) {
     return;

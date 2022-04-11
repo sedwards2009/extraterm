@@ -5,10 +5,10 @@
  */
 
 // Small HTTP server running on localhost for IPC with other desktop apps.
-import * as crypto from "crypto";
-import * as fs from "fs";
-import * as http from "http";
-import * as net from "net";
+import * as crypto from "node:crypto";
+import * as fs from "node:fs";
+import * as http from "node:http";
+import * as net from "node:net";
 import { Disposable } from "@extraterm/extraterm-extension-api";
 
 import { getLogger, Logger } from "extraterm-logging";

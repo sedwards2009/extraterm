@@ -5,11 +5,11 @@
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { EventEmitter } from 'extraterm-event-emitter';
-import * as _ from 'lodash';
+import * as _ from 'lodash-es';
 
 import { Logger, getLogger } from "extraterm-logging";
-import { ExtensionMetadata, ExtensionSessionSettingsContribution } from "./ExtensionMetadata";
-import { InternalSessionSettingsEditor, SessionSettingsChange } from "../InternalTypes";
+import { ExtensionMetadata, ExtensionSessionSettingsContribution } from "./ExtensionMetadata.js";
+import { InternalSessionSettingsEditor, SessionSettingsChange } from "../InternalTypes.js";
 import { NodeWidget } from "@nodegui/nodegui";
 import { Window } from "../Window.js";
 import { StyleImpl } from "./api/StyleImpl.js";

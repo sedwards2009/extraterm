@@ -5,9 +5,9 @@
  */
 import {EventEmitter} from "extraterm-event-emitter";
 import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from "@extraterm/extraterm-extension-api";
-import * as _ from "lodash";
-import * as child_process from "child_process";
-import * as fs from "fs";
+import * as _ from "lodash-es";
+import * as child_process from "node:child_process";
+import * as fs from "node:fs";
 import * as pty from "node-pty";
 
 

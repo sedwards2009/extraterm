@@ -45,7 +45,7 @@ export class EventEmitter<T> implements Disposable {
         this._listeners = this._listeners.filter(item => item !== listener);
       }
     };
-  }
+  };
 
   /**
    * Fire the event to all listeners.

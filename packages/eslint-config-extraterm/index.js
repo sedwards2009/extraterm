@@ -4,6 +4,9 @@ module.exports = {
     "ecmaVersion": 6,
     "sourceType": "module"
   },
+  "plugins": [
+    "unicorn"
+  ],
   rules: {
     "curly": "warn",
     "eqeqeq": ["warn", "smart"],
@@ -39,5 +42,7 @@ module.exports = {
     "semi": "warn",
     "use-isnan": "warn",
     "valid-typeof": "warn",
+    "unicorn/prefer-node-protocol": ["error"],
+    "unicorn/prefer-module": ["error"]
   }
 };

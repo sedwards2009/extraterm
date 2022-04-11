@@ -1,8 +1,8 @@
-import { ReverseChainingContextualSingleSubstitutionTable } from '../tables';
-import { LookupTree, LookupTreeEntry } from '../types';
+import { ReverseChainingContextualSingleSubstitutionTable } from '../tables.js';
+import { LookupTree, LookupTreeEntry } from '../types.js';
 
-import { listGlyphsByIndex } from './coverage';
-import { processLookaheadPosition, processBacktrackPosition, EntryMeta } from './helper';
+import { listGlyphsByIndex } from './coverage.js';
+import { processLookaheadPosition, processBacktrackPosition, EntryMeta } from './helper.js';
 
 /**
  * Build lookup tree for GSUB lookup table 8, format 1.
@@ -11,7 +11,7 @@ import { processLookaheadPosition, processBacktrackPosition, EntryMeta } from '.
  * @param table JSON representation of the table
  * @param tableIndex Index of this table in the overall lookup
  */
-export default function buildTree(table: ReverseChainingContextualSingleSubstitutionTable, tableIndex: number): LookupTree {
+export function buildTree(table: ReverseChainingContextualSingleSubstitutionTable, tableIndex: number): LookupTree {
   const result: LookupTree = {
     individual: new Map<number, LookupTreeEntry>(),
     range: []

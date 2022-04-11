@@ -6,10 +6,10 @@
 import { NodeWidget } from '@nodegui/nodegui';
 import { Logger, SessionSettingsEditorBase, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 
-import { TemplateString } from './TemplateString';
-import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter';
-import { TemplateEditor } from './TemplateEditor';
-import { IconFormatter } from './IconFormatter';
+import { TemplateString } from './TemplateString.js';
+import { TerminalEnvironmentFormatter } from './TerminalEnvironmentFormatter.js';
+import { TemplateEditor } from './TemplateEditor.js';
+import { IconFormatter } from './IconFormatter.js';
 
 
 export interface Settings {

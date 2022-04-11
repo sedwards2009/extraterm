@@ -5,24 +5,24 @@
  */
 
 export { Disposable, Event } from "extraterm-event-emitter";
-export { Logger } from "./Logger";
-export { TerminalEnvironment } from "./TerminalEnvironment";
+export { Logger } from "./Logger.js";
+export { TerminalEnvironment } from "./TerminalEnvironment.js";
 export {
   Terminal, LineRangeChange, TerminalBorderWidget, OnCursorListPickerOptions, Terminals
-} from "./Terminal";
-export { Tab, NumberInputOptions, TabTitleWidgetFactory } from "./Tab";
-export { CustomizedCommand, Commands } from "./Commands";
-export { BulkFileMetadata, BulkFileState, BulkFileHandle } from "./BulkFiles";
-export { ListPickerOptions } from "./ListPickerOptions";
-export { TerminalThemeInfo, TerminalThemeProvider, TerminalTheme } from "./TerminalTheme";
-export { Clipboard, Configuration, Application, ExtensionContext, ExtensionModule } from "./ExtensionContext";
+} from "./Terminal.js";
+export { Tab, NumberInputOptions, TabTitleWidgetFactory } from "./Tab.js";
+export { CustomizedCommand, Commands } from "./Commands.js";
+export { BulkFileMetadata, BulkFileState, BulkFileHandle } from "./BulkFiles.js";
+export { ListPickerOptions } from "./ListPickerOptions.js";
+export { TerminalThemeInfo, TerminalThemeProvider, TerminalTheme } from "./TerminalTheme.js";
+export { Clipboard, Configuration, Application, ExtensionContext, ExtensionModule } from "./ExtensionContext.js";
 export { SessionConfiguration, SessionEditorBase, SessionEditorFactory, EnvironmentMap, SessionBackend,
   CreateSessionOptions, BufferSizeChange, Pty, SessionSettingsEditorBase, SessionSettingsEditorFactory, Sessions
-} from "./Sessions";
+} from "./Sessions.js";
 export { ViewerPosture, ViewerMetadata, ViewerMetadataChange, ExtensionViewerBase, ExtensionViewerBaseConstructor,
-  ViewerBase } from "./Viewers";
+  ViewerBase } from "./Viewers.js";
 export { Block, FindStartPosition, FindOptions, TerminalOutputDetails, TerminalOutputType, TextViewerDetails,
-  TextViewerType } from "./Block";
-export { Screen, ScreenChange, ScreenWithCursor } from "./Screen";
-export { ExtensionTab, Window, Windows } from "./Windows";
-export { Style, IconName, IconModification, IconRotation, ModifiedIconName, Palette } from "./Style";
+  TextViewerType } from "./Block.js";
+export { Screen, ScreenChange, ScreenWithCursor } from "./Screen.js";
+export { ExtensionTab, Window, Windows } from "./Windows.js";
+export { Style, IconName, IconModification, IconRotation, ModifiedIconName, Palette } from "./Style.js";

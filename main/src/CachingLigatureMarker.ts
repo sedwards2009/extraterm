@@ -1,7 +1,7 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-import * as lru from 'lru-cache';
+import lru from 'lru-cache';
 
 import { getLogger, Logger } from "extraterm-logging";
 import { CharCellGrid, FLAG_MASK_WIDTH, FLAG_MASK_LIGATURE } from 'extraterm-char-cell-grid';

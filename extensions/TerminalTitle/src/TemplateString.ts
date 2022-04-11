@@ -3,8 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QIcon } from "@nodegui/nodegui";
-import he = require("he");
+import he from "he";
 
 
 export interface TextSegment {

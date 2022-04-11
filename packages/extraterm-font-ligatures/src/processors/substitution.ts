@@ -1,6 +1,6 @@
-import { SubstitutionTable } from '../tables';
+import { SubstitutionTable } from '../tables.js';
 
-import getCoverageGlyphIndex from './coverage';
+import getCoverageGlyphIndex from './coverage.js';
 
 /**
  * Get the substitution glyph for the givne glyph, or null if the glyph was not

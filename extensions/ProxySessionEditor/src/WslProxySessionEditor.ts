@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as _ from "lodash";
-import * as child_process from "child_process";
+import * as _ from "lodash-es";
+import * as child_process from "node:child_process";
 
 import { Logger, SessionConfiguration, SessionEditorBase } from "@extraterm/extraterm-extension-api";
 import { Direction, NodeWidget, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";

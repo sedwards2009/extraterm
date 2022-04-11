@@ -1,50 +1,50 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import test from 'ava';
-import * as sinon from 'sinon';
 import * as fontFinder from 'font-finder';
 
 import { CharCellGrid } from "extraterm-char-cell-grid";
+import { load } from './index.js';
+import { performance } from 'node:perf_hooks';
+import {fileURLToPath} from 'node:url';
 
-import { load } from './';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const { performance } = require('perf_hooks');
 
-test.before(t => {
-  sinon.stub(fontFinder, 'listVariants').callsFake(async (name: string) => {
-    switch (name) {
-      case 'Fira Code':
-        return [{
-          path: path.join(__dirname, '../fonts/FiraCode-Regular.otf'),
-          weight: 400,
-          type: fontFinder.Type.Monospace,
-          style: fontFinder.Style.Regular
-        }];
-      case 'Iosevka':
-        return [{
-          path: path.join(__dirname, '../fonts/iosevka-regular.ttf'),
-          weight: 400,
-          type: fontFinder.Type.Monospace,
-          style: fontFinder.Style.Regular
-        }];
-      case 'Monoid':
-        return [{
-          path: path.join(__dirname, '../fonts/Monoid-Regular.ttf'),
-          weight: 400,
-          type: fontFinder.Type.Monospace,
-          style: fontFinder.Style.Regular
-        }];
-      case 'Ubuntu Mono':
-        return [{
-          path: path.join(__dirname, '../fonts/UbuntuMono-Regular.ttf'),
-          weight: 400,
-          type: fontFinder.Type.Monospace,
-          style: fontFinder.Style.Regular
-        }];
-      default:
-        return [];
-    }
-  });
-});
+async function fakeListVariants(name: string, options?: fontFinder.ListOptions): Promise<fontFinder.Font[]> {
+  switch (name) {
+    case 'Fira Code':
+      return [{
+        path: path.join(__dirname, '../fonts/FiraCode-Regular.otf'),
+        weight: 400,
+        type: fontFinder.Type.Monospace,
+        style: fontFinder.Style.Regular
+      }];
+    case 'Iosevka':
+      return [{
+        path: path.join(__dirname, '../fonts/iosevka-regular.ttf'),
+        weight: 400,
+        type: fontFinder.Type.Monospace,
+        style: fontFinder.Style.Regular
+      }];
+    case 'Monoid':
+      return [{
+        path: path.join(__dirname, '../fonts/Monoid-Regular.ttf'),
+        weight: 400,
+        type: fontFinder.Type.Monospace,
+        style: fontFinder.Style.Regular
+      }];
+    case 'Ubuntu Mono':
+      return [{
+        path: path.join(__dirname, '../fonts/UbuntuMono-Regular.ttf'),
+        weight: 400,
+        type: fontFinder.Type.Monospace,
+        style: fontFinder.Style.Regular
+      }];
+    default:
+      return [];
+  }
+}
+
 
 interface Context {
   font: string;
@@ -309,39 +309,39 @@ for (const { font, input, glyphs, ranges } of [
   ...otherCases
 ]) {
   test(`findLigatures() > ${font}: '${input}'`, async t => {
-    const inst = await load(font);
+    const inst = await load(font, { listVariants: fakeListVariants });
     const result = inst.findLigatures(input);
     t.deepEqual(result.outputGlyphs, glyphs);
     t.deepEqual(result.contextRanges, ranges);
   });
 
   test(`findLigatureRanges() > ${font}: '${input}'`, async t => {
-    const inst = await load(font);
+    const inst = await load(font, { listVariants: fakeListVariants });
     const result = inst.findLigatureRanges(input);
     t.deepEqual(result, ranges);
   });
 }
 
 test('findLigatures() caches successive calls correctly', async t => {
-  const font = await load('Fira Code', { cacheSize: 100 });
+  const font = await load('Fira Code', { cacheSize: 100, listVariants: fakeListVariants });
   const result1 = font.findLigatures('in --> out');
   const result2 = font.findLigatures('in --> out');
   t.deepEqual(result1, result2);
 });
 
 test('findLigatureRanges() caches successive calls correctly', async t => {
-  const font = await load('Fira Code', { cacheSize: 100 });
+  const font = await load('Fira Code', { cacheSize: 100, listVariants: fakeListVariants });
   const result1 = font.findLigatureRanges('in --> out');
   const result2 = font.findLigatureRanges('in --> out');
   t.deepEqual(result1, result2);
 });
 
 test('caches calls to findLigatures() after findLigatureRanges() correctly', async t => {
-  const uncached = await load('Fira Code');
+  const uncached = await load('Fira Code', { listVariants: fakeListVariants });
   const uncachedResult1 = uncached.findLigatureRanges('in --> out');
   const uncachedResult2 = uncached.findLigatures('in --> out');
 
-  const font = await load('Fira Code', { cacheSize: 100 });
+  const font = await load('Fira Code', { cacheSize: 100, listVariants: fakeListVariants });
   const result1 = font.findLigatureRanges('in --> out');
   const result2 = font.findLigatures('in --> out');
 
@@ -351,11 +351,11 @@ test('caches calls to findLigatures() after findLigatureRanges() correctly', asy
 });
 
 test('caches calls to findLigatureRanges() after findLigatures() correctly', async t => {
-  const uncached = await load('Fira Code');
+  const uncached = await load('Fira Code', { listVariants: fakeListVariants });
   const uncachedResult1 = uncached.findLigatures('in --> out');
   const uncachedResult2 = uncached.findLigatureRanges('in --> out');
 
-  const font = await load('Fira Code', { cacheSize: 100 });
+  const font = await load('Fira Code', { cacheSize: 100, listVariants: fakeListVariants });
   const result1 = font.findLigatures('in --> out');
   const result2 = font.findLigatureRanges('in --> out');
 
@@ -366,18 +366,19 @@ test('caches calls to findLigatureRanges() after findLigatures() correctly', asy
 
 test('throws if the font is not found', async t => {
   try {
-    await load('Nonexistant');
+    await load('Nonexistant', { listVariants: fakeListVariants });
     t.fail();
   } catch (e) {
     t.true(e instanceof Error);
   }
 });
 
+
 test("Mark ligatures", async t => {
   const grid = new CharCellGrid(10, 5);
   grid.setString(0, 0, "Foo --> Bar");
 
-  const font = await load("Monoid");
+  const font = await load("Monoid", { listVariants: fakeListVariants });
   font.markLigaturesCharCellGridRow(grid, 0);
 
   t.is(grid.getLigature(0, 0), 0);
@@ -389,32 +390,34 @@ test("Mark ligatures", async t => {
 });
 
 test("Speed test", async t => {
-  const GRID_WIDTH = 240;
-  const GRID_HEIGHT = 50;
-  const LOOPS = 100;
+  return await t.notThrowsAsync(async (): Promise<void> => {
+    const GRID_WIDTH = 240;
+    const GRID_HEIGHT = 50;
+    const LOOPS = 100;
 
-  const spaceCodePoint = " ".codePointAt(0);
-  const max = "~".codePointAt(0) - spaceCodePoint;
-  const grid = new CharCellGrid(GRID_WIDTH, GRID_HEIGHT);
-  for (let y=0; y<GRID_HEIGHT; y++) {
-    for (let x=0; x<GRID_WIDTH; x++) {
-      const randomChar = Math.floor(Math.random() * Math.floor(max)) + spaceCodePoint;
-      grid.setCodePoint(x, y, randomChar);
-    }
-  }
-
-  const font = await load("Fira Code");
-
-  const start = performance.now();
-
-  for (let l=0; l<LOOPS; l++) {
+    const spaceCodePoint = " ".codePointAt(0);
+    const max = "~".codePointAt(0) - spaceCodePoint;
+    const grid = new CharCellGrid(GRID_WIDTH, GRID_HEIGHT);
     for (let y=0; y<GRID_HEIGHT; y++) {
-      font.markLigaturesCharCellGridRow(grid, y);
+      for (let x=0; x<GRID_WIDTH; x++) {
+        const randomChar = Math.floor(Math.random() * Math.floor(max)) + spaceCodePoint;
+        grid.setCodePoint(x, y, randomChar);
+      }
     }
-  }
-  const end = performance.now();
-  const durationPerLoop = (end - start) / LOOPS;
-  console.log(`Speed test: ${GRID_WIDTH}x${GRID_HEIGHT} ${LOOPS} loops, ${durationPerLoop}ms per loop`);
 
-  t.pass();
+    const font = await load("Fira Code", { listVariants: fakeListVariants });
+
+    const start = performance.now();
+
+    for (let l=0; l<LOOPS; l++) {
+      for (let y=0; y<GRID_HEIGHT; y++) {
+        font.markLigaturesCharCellGridRow(grid, y);
+      }
+    }
+    const end = performance.now();
+    const durationPerLoop = (end - start) / LOOPS;
+    console.log(`Speed test: ${GRID_WIDTH}x${GRID_HEIGHT} ${LOOPS} loops, ${durationPerLoop}ms per loop`);
+
+    t.pass();
+  });
 });

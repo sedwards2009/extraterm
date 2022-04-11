@@ -14,7 +14,7 @@ import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPop
   MouseButton, Visibility } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
-import { escape } from "he";
+import he from "he";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config.js";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
@@ -697,7 +697,7 @@ export class Window {
     if (tabTitleWidget == null) {
       const iconName = tab.getIconName();
       const iconHtml = iconName != null ? createHtmlIcon(iconName) + "  " : "";
-      const titleHtml = `${iconHtml}${escape(tab.getTitle() ?? "")}`;
+      const titleHtml = `${iconHtml}${he.escape(tab.getTitle() ?? "")}`;
       const tabTitleLabel = Label({
         cssClass: ["tab-title"],
         contentsMargins: [8, 0, 0, 0],
