@@ -27,7 +27,7 @@ jobs:
         displayName: "Install development packages"
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
       - script: yarn set version berry
-      - script: yarn set version 2.x
+      - script: yarn set version 3.x
       - script: yarn plugin import workspace-tools
       - script: yarn install --immutable
         displayName: 'Yarn install'
@@ -61,7 +61,7 @@ jobs:
         inputs:
           versionSpec: $(nodeVersion)
       - script: yarn set version berry
-      - script: yarn set version 2.x
+      - script: yarn set version 3.x
       - script: yarn plugin import workspace-tools
       - script: yarn --version
         displayName: "yarn --version"
@@ -101,7 +101,7 @@ jobs:
         inputs:
           versionSpec: $(nodeVersion)
       - script: yarn set version berry
-      - script: yarn set version 2.x
+      - script: yarn set version 3.x
       - script: yarn plugin import workspace-tools
       - script: yarn install --immutable
         displayName: "yarn install"
@@ -148,7 +148,7 @@ jobs:
         inputs:
           versionSpec: $(nodeVersion)
       - script: yarn set version berry
-      - script: yarn set version 2.x
+      - script: yarn set version 3.x
       - script: yarn plugin import workspace-tools
       - script: yarn install --immutable
         displayName: "yarn install"
