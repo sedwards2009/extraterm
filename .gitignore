@@ -5,6 +5,7 @@ dist/
 .vscode/
 .directory
 .yarn
+.yarnrc.yml
 yarn-error.log
 __pycache__/
 build_tmp/
