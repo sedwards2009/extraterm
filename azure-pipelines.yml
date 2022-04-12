@@ -26,6 +26,9 @@ jobs:
           sudo apt-get install mesa-common-dev libglu1-mesa-dev
         displayName: "Install development packages"
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
+      - script: yarn set version berry
+      - script: yarn set version 2.x
+      - script: yarn plugin import workspace-tools
       - script: yarn install --immutable
         displayName: 'Yarn install'
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
@@ -57,6 +60,9 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
+      - script: yarn set version berry
+      - script: yarn set version 2.x
+      - script: yarn plugin import workspace-tools
       - script: yarn --version
         displayName: "yarn --version"
       - script: yarn install --immutable
@@ -94,6 +100,9 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
+      - script: yarn set version berry
+      - script: yarn set version 2.x
+      - script: yarn plugin import workspace-tools
       - script: yarn install --immutable
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
@@ -138,6 +147,9 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
+      - script: yarn set version berry
+      - script: yarn set version 2.x
+      - script: yarn plugin import workspace-tools
       - script: yarn install --immutable
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)

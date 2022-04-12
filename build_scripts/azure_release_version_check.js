@@ -4,7 +4,7 @@
  * the root `package.json`. If it doesn't then this script returns non-zero
  * back.
  */
-const fs = require('fs');
+import * as fs from 'node:fs';
 
 const log = console.log.bind(console);
 

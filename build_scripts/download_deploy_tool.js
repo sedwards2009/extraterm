@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const fs = require('fs');
-const path = require('path');
-const download_utilities = require('./download_utilities');
+import sh from 'shelljs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as download_utilities from './download_utilities.js';
 
 const log = console.log.bind(console);
 
@@ -20,7 +20,7 @@ async function main() {
   if (process.platform === "linux") {
     const exe = await download_utilities.fetchUrl(url);
     const dirPath = path.join(DOWNLOADS_DIR, 'linux-x64');
-    mkdir('-p', dirPath);
+    sh.mkdir('-p', dirPath);
     const outputPath = path.join(dirPath, 'linuxdeployqt-x86_64.AppImage');
     fs.writeFileSync(outputPath, exe);
     fs.chmodSync(outputPath, 0o777);

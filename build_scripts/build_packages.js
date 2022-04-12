@@ -3,17 +3,26 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const fs = require('fs');
-const path = require('path');
-const getRepoInfo = require('git-repo-info');
+import sh from 'shelljs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import getRepoInfo from 'git-repo-info';
 
-const packagingFunctions = require('./packaging_functions');
+import * as packagingFunctions from './packaging_functions.js';
 const makePackage = packagingFunctions.makePackage;
 const makeNsis = packagingFunctions.makeNsis;
 const makeDmg = packagingFunctions.makeDmg;
 
 const log = console.log.bind(console);
+const cd = sh.cd;
+const cp = sh.cp;
+const echo = sh.echo;
+const exec = sh.exec;
+const mkdir = sh.mkdir;
+const pwd = sh.pwd;
+const rm = sh.rm;
+const test = sh.test;
+
 
 async function main() {
 
@@ -52,7 +61,7 @@ async function main() {
   exec("yarn run build");
 
   echo("Removing development dependencies");
-  exec("yarn install --production=true");
+  exec("yarn workspaces focus --production");
 
   const version = packageData.version;
 

@@ -4,10 +4,11 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-require('shelljs/global');
-const fs = require('fs');
-const path = require('path');
-const lockfileParser = require('@yarnpkg/parsers');
+import sh from 'shelljs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import lockfileParser from '@yarnpkg/parsers';
+
 
 /**
  * Prune away yarn development dependencies
@@ -20,11 +21,11 @@ const lockfileParser = require('@yarnpkg/parsers');
  * @param {string} targetPath     Path to the target directory which contains the built
  *                                project whose dependencies need to be pruned.
  */
-function pruneDevDependencies(sourceRootPath, targetPath) {
-  echo("");
-  echo("Pruning Yarn dev dependencies");
-  echo("=============================");
-  echo("");
+export function pruneDevDependencies(sourceRootPath, targetPath) {
+  sh.echo("");
+  sh.echo("Pruning Yarn dev dependencies");
+  sh.echo("=============================");
+  sh.echo("");
 
   const keepPrune = computeKeepAndPrunePackages(sourceRootPath);
   // dumpKeepPrune(keepPrune);
@@ -62,15 +63,12 @@ function pruneDevDependencies(sourceRootPath, targetPath) {
     }
   }
 
-  echo("");
-  echo(`    Total modules in yarn.lock:     ${keepPrune.keep.length + keepPrune.prune.length}`);
-  echo(`    Modules identified for keeping: ${keepPrune.keep.length}`);
-  echo(`    Modules identified for pruning: ${keepPrune.prune.length}`);
-  echo(`    Module directories deleted:     ${pruneCount}`);
+  sh.echo("");
+  sh.echo(`    Total modules in yarn.lock:     ${keepPrune.keep.length + keepPrune.prune.length}`);
+  sh.echo(`    Modules identified for keeping: ${keepPrune.keep.length}`);
+  sh.echo(`    Modules identified for pruning: ${keepPrune.prune.length}`);
+  sh.echo(`    Module directories deleted:     ${pruneCount}`);
 }
-
-exports.pruneDevDependencies = pruneDevDependencies;
-
 
 /**
  * @typedef { {[depName: string]: Yarn2LockDep; } Yarn2Lock
@@ -100,8 +98,8 @@ function readYarnLock(sourceRootPath) {
       // delete contents[key];
     }
   }
-echo(`typeof contents: ${typeof contents}`);
-echo(`Array.isArray(): ${Array.isArray(contents)}`);
+sh.echo(`typeof contents: ${typeof contents}`);
+sh.echo(`Array.isArray(): ${Array.isArray(contents)}`);
   return contents;
 }
 
@@ -159,7 +157,7 @@ function findPrimaryDependencies(sourceRootPath) {
 
   let depsList = [];
   for (const p of [".", ...pkg.workspaces.packages]) {
-    for (const pkgPath of ls(path.join(sourceRootPath, p, "package.json"))) {
+    for (const pkgPath of sh.ls(path.join(sourceRootPath, p, "package.json"))) {
       depsList = [...depsList, ...readPrimaryDependencies(pkgPath)];
     }
   }
@@ -176,7 +174,7 @@ function markUsedDependency(yarnLock, useCount, dependency) {
 
   const yarnDep = yarnLock[depString];
   if (yarnDep == null) {
-    echo(`Warning: Couldn't find ${depString} in yarn.lock to mark. Skipping.`);
+    sh.echo(`Warning: Couldn't find ${depString} in yarn.lock to mark. Skipping.`);
   } else {
 
     const usedDepString = `${dependency.package}@${yarnDep.version}`;
@@ -249,19 +247,19 @@ function dumpKeepPrune(keepPrune) {
   const keep = keepPrune.keep;
   const prune = keepPrune.prune;
 
-  echo("-------------------------------------------------------------------");
+  sh.echo("-------------------------------------------------------------------");
   for (const k of keep) {
-    echo(`${k.package}@${k.version} -> keep`);
+    sh.echo(`${k.package}@${k.version} -> keep`);
   }
 
-  echo("-------------------------------------------------------------------");
+  sh.echo("-------------------------------------------------------------------");
   for (const p of prune) {
-    echo(`${p.package}@${p.version} -> prune`);
+    sh.echo(`${p.package}@${p.version} -> prune`);
   }
 }
 
 function pruneNodeModulesDir(pruneDepNameMap /* Map<string, Dependency[]> */, projectDirectory) {
-  echo(`Scanning ${projectDirectory} for modules to prune.`);
+  sh.echo(`Scanning ${projectDirectory} for modules to prune.`);
   let pruneCount = 0;
 
   const nodeModulesPath = path.join(projectDirectory, "node_modules");
@@ -269,9 +267,9 @@ function pruneNodeModulesDir(pruneDepNameMap /* Map<string, Dependency[]> */, pr
     return pruneCount;
   }
 
-  for (const depDir of ls(nodeModulesPath)) {
+  for (const depDir of sh.ls(nodeModulesPath)) {
     if (depDir.slice(0, 1) === "@") {
-      for (const subDir of ls(path.join(nodeModulesPath, depDir))) {
+      for (const subDir of sh.ls(path.join(nodeModulesPath, depDir))) {
         if (checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir + "/" + subDir)) {
           pruneCount++;
         }
@@ -286,7 +284,7 @@ function pruneNodeModulesDir(pruneDepNameMap /* Map<string, Dependency[]> */, pr
 }
 
 function pruneBrokenBinLinks(projectDirectory) {
-  echo(`Scanning ${projectDirectory} for broken bin/ links to prune.`);
+  sh.echo(`Scanning ${projectDirectory} for broken bin/ links to prune.`);
 
   const nodeModulesPath = path.join(projectDirectory, "node_modules");
   if ( ! fs.existsSync(nodeModulesPath)) {
@@ -295,20 +293,20 @@ function pruneBrokenBinLinks(projectDirectory) {
 
   const binPath = path.join(nodeModulesPath, ".bin");
   if (fs.existsSync(binPath)) {
-    for (const binEntry of ls("-l", binPath)) {
+    for (const binEntry of sh.ls("-l", binPath)) {
       if (binEntry.isSymbolicLink()) {
         const linkPath = path.join(binPath, binEntry.name);
         const linkTarget = fs.readlinkSync(linkPath);
         const linkTargetPath = path.join(binPath, linkTarget);
         if ( ! fs.existsSync(linkTargetPath)) {
-          echo(`Pruning broken symlink link ${linkPath}`);
+          sh.echo(`Pruning broken symlink link ${linkPath}`);
           rm(linkPath);
         }
       }
     }
   }
 
-  for (const moduleDir of ls(nodeModulesPath)) {
+  for (const moduleDir of sh.ls(nodeModulesPath)) {
     pruneBrokenBinLinks(path.join(nodeModulesPath, moduleDir));
   }
 }
@@ -321,7 +319,7 @@ function checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir) {
     const deps = pruneDepNameMap.get(depDir);
     for (const dep of deps) {
       if (pkg.version === dep.version) {
-        echo(`Pruning module directory ${depDirPath}`);
+        sh.echo(`Pruning module directory ${depDirPath}`);
         rm('-rf', depDirPath);
         return true;
       }

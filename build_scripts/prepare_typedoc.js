@@ -10,28 +10,28 @@
 //
 // This is called from an npm script.
 
-require('shelljs/global');
-const fs = require('fs');
-const path = require('path');
+import sh from 'shelljs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 const log = console.log.bind(console);
 const TYPEDOC_TMP = 'build_tmp';
 
 function main() {
-  if (test('-d', TYPEDOC_TMP)) {
-    rm('-r', TYPEDOC_TMP);
+  if (sh.test('-d', TYPEDOC_TMP)) {
+    sh.rm('-r', TYPEDOC_TMP);
   }
-  mkdir(TYPEDOC_TMP);
-  
+  sh.mkdir(TYPEDOC_TMP);
+
   const tsconfigStr = fs.readFileSync('../tsconfig.json', { encoding: 'utf8'});
   const tsconfig = JSON.parse(tsconfigStr);
-  
+
   tsconfig.files.forEach( (fileName) => {
     const targetDir = path.join(TYPEDOC_TMP, path.dirname(fileName.substr(6)));
-    if ( ! test('-d', targetDir)) {
-      mkdir('-p', targetDir);
+    if ( ! sh.test('-d', targetDir)) {
+      sh.mkdir('-p', targetDir);
     }
-    cp(fileName.substr(6), targetDir);
+    sh.cp(fileName.substr(6), targetDir);
   });
 }
 

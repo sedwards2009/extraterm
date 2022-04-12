@@ -3,27 +3,26 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const path = require('path');
-const fs = require('fs');
-const dependencyPruner = require('./dependency_pruner');
+import sh from 'shelljs';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import { version } from 'node:os';
+import * as qtConfig from "@nodegui/nodegui/config/qtConfig.js";
+
+import * as dependencyPruner from './dependency_pruner.js';
+import * as utilities from './packaging_utilities.js';
+import * as patchQode from './patch_qode.js';
+
 const log = console.log.bind(console);
-const utilities = require('./packaging_utilities');
-const patchQode = require('./patch_qode');
-const qtConfig = require("@nodegui/nodegui/config/qtConfig");
-const { mv, echo } = require('shelljs');
-const { version } = require('os');
 
-const APP_NAME = "extratermqt";
-const APP_TITLE = "ExtratermQt";
-exports.APP_NAME = APP_NAME;
-exports.APP_TITLE = APP_TITLE;
+export const APP_NAME = "extratermqt";
+export const APP_TITLE = "ExtratermQt";
 
-async function makePackage({ arch, platform, version, outputDir }) {
+export async function makePackage({ arch, platform, version, outputDir }) {
   log("");
-  const srcDir = "" + pwd();
+  const srcDir = "" + sh.pwd();
 
-  echo(`Making package from '${srcDir}' to output '${outputDir}'`);
+  sh.echo(`Making package from '${srcDir}' to output '${outputDir}'`);
 
   fixNodeModulesSubProjects();
 
@@ -31,15 +30,15 @@ async function makePackage({ arch, platform, version, outputDir }) {
   const versionedDirName = createOutputDirName({version, platform, arch});
   const versionedOutputDir = path.join(outputDir, versionedDirName);
 
-  if (test('-d', versionedOutputDir)) {
-    rm('-rf', versionedOutputDir);
+  if (sh.test('-d', versionedOutputDir)) {
+    sh.rm('-rf', versionedOutputDir);
   }
 
-  echo("Copying source tree to versioned directory");
+  sh.echo("Copying source tree to versioned directory");
   utilities.copySourceTree(srcDir, versionedOutputDir, ignoreRegExp);
 
-  const thisCD = pwd();
-  cd(outputDir);
+  const thisCD = sh.pwd();
+  sh.cd(outputDir);
 
   await pruneNodeGui(versionedOutputDir, platform);
 
@@ -63,25 +62,23 @@ async function makePackage({ arch, platform, version, outputDir }) {
 
     runMacOSDeployQt(srcDir, versionedOutputDir);
   }
-  rm("-rf", path.join(versionedOutputDir, "./node_modules/@nodegui/nodegui/miniqt"));
+  sh.rm("-rf", path.join(versionedOutputDir, "./node_modules/@nodegui/nodegui/miniqt"));
 
   log("Zipping up the package");
 
   if (platform === "linux") {
-    cp(path.join(srcDir, "main/resources/extraterm.desktop"), path.join(versionedOutputDir, `${APP_NAME}.desktop`));
+    sh.cp(path.join(srcDir, "main/resources/extraterm.desktop"), path.join(versionedOutputDir, `${APP_NAME}.desktop`));
   }
 
   const linkOption = process.platform === "win32" ? "" : " -y";
-  cd(outputDir);
+  sh.cd(outputDir);
   const outputZip = versionedDirName + ".zip";
-  exec(`zip ${linkOption} -r ${outputZip} ${versionedDirName}`);
-  cd(thisCD);
+  sh.exec(`zip ${linkOption} -r ${outputZip} ${versionedDirName}`);
+  sh.cd(thisCD);
 
   log("App bundle written to " + versionedOutputDir);
   return true;
 }
-
-exports.makePackage = makePackage;
 
 
 const ignoreRegExp = [
@@ -113,57 +110,57 @@ const ignoreRegExp = [
 ];
 
 function addLauncher(versionedOutputDir, platform) {
-  echo(`Inserting launcher executable`);
+  sh.echo(`Inserting launcher executable`);
 
   let downloadsDirPath = null;
   if (platform === "linux") {
     downloadsDirPath = path.join(versionedOutputDir, "downloads");
     const launcherPath = path.join(downloadsDirPath, "linux-x64/extraterm-launcher");
     const launcherDestPath = path.join(versionedOutputDir, APP_NAME);
-    mv(launcherPath, launcherDestPath);
-    chmod('a+x', launcherDestPath);
+    sh.mv(launcherPath, launcherDestPath);
+    sh.chmod('a+x', launcherDestPath);
   }
 
   if (platform === "win32") {
     downloadsDirPath = path.join(versionedOutputDir, "downloads");
     const launcherPath = path.join(downloadsDirPath, "win32-x64", "extraterm-launcher.exe");
-    mv(launcherPath, path.join(versionedOutputDir, `${APP_NAME}.exe`));
+    sh.mv(launcherPath, path.join(versionedOutputDir, `${APP_NAME}.exe`));
   }
 
   if (platform === "darwin") {
     downloadsDirPath = path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/downloads`);
     const launcherPath = path.join(downloadsDirPath, "darwin-x64/extraterm-launcher");
     const launcherDestPath = path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS/${APP_TITLE}`);
-    mv(launcherPath, launcherDestPath);
-    chmod('a+x', launcherDestPath);
+    sh.mv(launcherPath, launcherDestPath);
+    sh.chmod('a+x', launcherDestPath);
   }
 
-  rm('-rf', downloadsDirPath);
+  sh.rm('-rf', downloadsDirPath);
 }
 
 function pruneTwemoji(versionedOutputDir, platform) {
   if (platform !== "linux") {
     const twemojiPath = path.join(versionedOutputDir, "main/resources/themes/default/fonts/Twemoji.ttf");
-    rm(twemojiPath);
+    sh.rm(twemojiPath);
   }
 }
 
 async function pruneNodeGui(versionedOutputDir, platform) {
-  echo("");
-  echo("---------------------------------------------------------------------------");
-  echo("Pruning NodeGui");
-  echo("");
+  sh.echo("");
+  sh.echo("---------------------------------------------------------------------------");
+  sh.echo("Pruning NodeGui");
+  sh.echo("");
 
   const nodeGuiDir = path.join(versionedOutputDir, "node_modules/@nodegui/nodegui");
-  const prevDir = pwd();
-  cd(nodeGuiDir);
+  const prevDir = sh.pwd();
+  sh.cd(nodeGuiDir);
 
   utilities.pruneDirTreeWithWhitelist("build", [
     /\.node$/
   ]);
 
   await utilities.pruneEmptyDirectories("build");
-  cd(prevDir);
+  sh.cd(prevDir);
 }
 
 function pruneListFontsJsonExe(versionedOutputDir, platform) {
@@ -171,31 +168,31 @@ function pruneListFontsJsonExe(versionedOutputDir, platform) {
     if (p !== platform) {
       const listFontsJsonPath = path.join(versionedOutputDir,
         `main/resources/list-fonts-json-binary/${p}-x64/`);
-      echo(`Deleting ${listFontsJsonPath}`);
-      rm('-rf', listFontsJsonPath);
+      sh.echo(`Deleting ${listFontsJsonPath}`);
+      sh.rm('-rf', listFontsJsonPath);
     }
   }
 }
 
 function hoistSubprojectsModules(versionedOutputDir, platform) {
   const modulesDir = path.join(versionedOutputDir, "node_modules");
-  echo("");
-  echo("---------------------------------------------------------------------------");
-  echo("Hoisting subproject modules");
-  echo("");
+  sh.echo("");
+  sh.echo("---------------------------------------------------------------------------");
+  sh.echo("Hoisting subproject modules");
+  sh.echo("");
 
   // Delete the symlinks.
-  for (const item of ls(modulesDir)) {
+  for (const item of sh.ls(modulesDir)) {
     const itemPath = path.join(modulesDir, item);
-    if (test('-L', itemPath)) {
-      echo(`Deleting symlink ${item} in ${modulesDir}`);
-      rm(itemPath);
-    } else if (test('-d', itemPath) && item.startsWith('@')) {
-      for (const item2 of ls(path.join(modulesDir, item))) {
+    if (sh.test('-L', itemPath)) {
+      sh.echo(`Deleting symlink ${item} in ${modulesDir}`);
+      sh.rm(itemPath);
+    } else if (sh.test('-d', itemPath) && item.startsWith('@')) {
+      for (const item2 of sh.ls(path.join(modulesDir, item))) {
         const itemPath2 = path.join(modulesDir, item, item2);
-        if (test('-L', itemPath2)) {
-          echo(`Deleting deeper symlink ${path.join(item, item2)} in ${path.join(modulesDir, item)}`);
-          rm(itemPath2);
+        if (sh.test('-L', itemPath2)) {
+          sh.echo(`Deleting deeper symlink ${path.join(item, item2)} in ${path.join(modulesDir, item)}`);
+          sh.rm(itemPath2);
         }
       }
     }
@@ -203,29 +200,29 @@ function hoistSubprojectsModules(versionedOutputDir, platform) {
 
   // Move the 'packages' subprojects up into this node_modules dir.
   const packagesDir = path.join(versionedOutputDir, "packages");
-  for (const item of ls(packagesDir)) {
+  for (const item of sh.ls(packagesDir)) {
     const packageJson = JSON.parse(fs.readFileSync(path.join(packagesDir, item, "package.json"), {encoding: "utf8"}));
     const destDir = path.join(modulesDir, packageJson.name);
-    echo(`Moving ${item} in to ${destDir}`);
-    mv(path.join(packagesDir, item), destDir);
+    sh.echo(`Moving ${item} in to ${destDir}`);
+    sh.mv(path.join(packagesDir, item), destDir);
     const binDirPath = path.join(destDir, "node_modules", ".bin");
     if (fs.existsSync(binDirPath)) {
-      rm('-rf', binDirPath);
+      sh.rm('-rf', binDirPath);
     }
   }
 }
 
 function pruneNodeModules(versionedOutputDir, platform) {
-  const prevDir = pwd();
+  const prevDir = sh.pwd();
 
-  cd(versionedOutputDir);
+  sh.cd(versionedOutputDir);
 
   pruneNodePty();
 
-  exec("modclean -n default:safe -r");
+  sh.exec("modclean -n default:safe -r");
   pruneSpecificNodeModules();
 
-  cd(prevDir);
+  sh.cd(prevDir);
 }
 
 function pruneSpecificNodeModules() {
@@ -235,14 +232,14 @@ function pruneSpecificNodeModules() {
   ].forEach( (subpath) => {
     const fullPath = path.join("node_modules", subpath);
 
-    echo("Deleting " + fullPath);
+    sh.echo("Deleting " + fullPath);
 
-    if (test('-d', fullPath)) {
-      rm('-rf', fullPath);
-    } else if (test('-f', fullPath)) {
-      rm(fullPath);
+    if (sh.test('-d', fullPath)) {
+      sh.rm('-rf', fullPath);
+    } else if (sh.test('-f', fullPath)) {
+      sh.rm(fullPath);
     } else {
-      echo("Warning: Unable to find path "+ fullPath);
+      sh.echo("Warning: Unable to find path "+ fullPath);
     }
   });
 }
@@ -267,7 +264,7 @@ function pruneNodePty() {
   ]);
 }
 
-function createOutputDirName({version, platform, arch}) {
+export function createOutputDirName({version, platform, arch}) {
   return `${APP_NAME}-${version}-${platform}-${arch}`;
 }
 
@@ -276,33 +273,31 @@ function fixNodeModulesSubProjects() {
   // don't include `test/*` stuff in the final build, which may result in
   // a broken link.
   const badLinkPath = "node_modules/extraterm-char-render-canvas-test";
-  if (test('-L', badLinkPath)) {
-    echo(`Deleting bad symlink '${badLinkPath}'`);
-    rm(badLinkPath);
+  if (sh.test('-L', badLinkPath)) {
+    sh.echo(`Deleting bad symlink '${badLinkPath}'`);
+    sh.rm(badLinkPath);
   }
 }
-
-exports.createOutputDirName = createOutputDirName;
 
 /**
  * @param {string} srcDir
  * @param {string} versionedOutputDir
  */
 function runLinuxDeployQt(srcDir, versionedOutputDir) {
-  echo("");
-  echo("---------------------------------------------------------------------------");
-  echo("Deploy Qt");
-  echo("");
+  sh.echo("");
+  sh.echo("---------------------------------------------------------------------------");
+  sh.echo("Deploy Qt");
+  sh.echo("");
 
-  const prevDir = pwd();
-  cd(versionedOutputDir);
+  const prevDir = sh.pwd();
+  sh.cd(versionedOutputDir);
 
   const qtHome = qtConfig.qtHome;
   const LD_LIBRARY_PATH=`${qtHome}/lib:${process.env.LD_LIBRARY_PATH || ""}`;
 
-  mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode"), versionedOutputDir);
+  sh.mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode"), versionedOutputDir);
 
-  const nodeBinaryModules = ls("**/*.node").filter(m => ! m.endsWith("pty.node"));
+  const nodeBinaryModules = sh.ls("**/*.node").filter(m => ! m.endsWith("pty.node"));
 
   const deployCommand = [path.resolve(srcDir, `downloads/linux-x64/linuxdeployqt-x86_64.AppImage`),
                         `qode`,
@@ -311,16 +306,16 @@ function runLinuxDeployQt(srcDir, versionedOutputDir) {
                         nodeBinaryModules.map(x => `-executable=${x.toString()}`).join(" ")
                       ].join(" ");
 
-  echo(deployCommand);
-  exec(deployCommand, { env: {...process.env, LD_LIBRARY_PATH} });
+  sh.echo(deployCommand);
+  sh.exec(deployCommand, { env: {...process.env, LD_LIBRARY_PATH} });
 
   writeQodeJson(versionedOutputDir);
 
   // TODO: Strip the library .so and qode files
 
-  rm(`AppRun`);
+  sh.rm(`AppRun`);
 
-  cd(prevDir);
+  sh.cd(prevDir);
 }
 
 /**
@@ -338,21 +333,21 @@ function writeQodeJson(versionedOutputDir) {
  * @param {string} versionedOutputDir
  */
 function runWindowsDeployQt(srcDir, versionedOutputDir) {
-  echo("");
-  echo("---------------------------------------------------------------------------");
-  echo("Deploy Qt");
-  echo("");
+  sh.echo("");
+  sh.echo("---------------------------------------------------------------------------");
+  sh.echo("Deploy Qt");
+  sh.echo("");
 
-  const prevDir = pwd();
-  cd(versionedOutputDir);
+  const prevDir = sh.pwd();
+  sh.cd(versionedOutputDir);
 
   const qtHome = qtConfig.qtHome;
   const winDeployQtBin = path.resolve(qtHome, "bin", "windeployqt.exe");
   process.env.PATH=`${path.resolve(qtHome, "bin")};${process.env.PATH}`;
 
-  mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode.exe"), versionedOutputDir);
+  sh.mv(path.join(versionedOutputDir, "./node_modules/@nodegui/qode/binaries/qode.exe"), versionedOutputDir);
 
-  const nodeBinaryModules = ls("**/*.node").filter(m => ! m.endsWith("pty.node"));
+  const nodeBinaryModules = sh.ls("**/*.node").filter(m => ! m.endsWith("pty.node"));
 
   const deployCommand = [
       winDeployQtBin,
@@ -364,14 +359,14 @@ function runWindowsDeployQt(srcDir, versionedOutputDir) {
       'qode.exe',
       ...nodeBinaryModules
     ].join(" ");
-  echo(deployCommand);
-  exec(deployCommand, { env: process.env });
+  sh.echo(deployCommand);
+  sh.exec(deployCommand, { env: process.env });
 
   writeQodeJson(versionedOutputDir);
 
   patchQode.switchToGuiSubsystem("qode.exe");
 
-  cd(prevDir);
+  sh.cd(prevDir);
 }
 
 /**
@@ -380,16 +375,16 @@ function runWindowsDeployQt(srcDir, versionedOutputDir) {
  */
 function organizeMacOSBundle(versionedOutputDir, version) {
   const tmpResourcesDir  = path.join(versionedOutputDir, "../Resources");
-  echo(`mv(${versionedOutputDir},${tmpResourcesDir})`);
-  mv(versionedOutputDir, tmpResourcesDir);
+  sh.echo(`mv(${versionedOutputDir},${tmpResourcesDir})`);
+  sh.mv(versionedOutputDir, tmpResourcesDir);
   const contentsPath = path.join(versionedOutputDir, `${APP_TITLE}.app`, `Contents`);
-  echo(`mkdir(${contentsPath})`);
-  mkdir('-p', contentsPath);
-  echo(`mv(${tmpResourcesDir}, ${contentsPath})`);
-  mv(tmpResourcesDir, contentsPath + "/");
-  mkdir('-p', path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS`));
+  sh.echo(`mkdir(${contentsPath})`);
+  sh.mkdir('-p', contentsPath);
+  sh.echo(`mv(${tmpResourcesDir}, ${contentsPath})`);
+  sh.mv(tmpResourcesDir, contentsPath + "/");
+  sh.mkdir('-p', path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS`));
 
-  mv(path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/main/resources/logo/extraterm_small_logo.icns`),
+  sh.mv(path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/main/resources/logo/extraterm_small_logo.icns`),
     path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/extraterm.icns`));
 
   const plistContents = `<?xml version="1.0" encoding="UTF-8"?>
@@ -438,22 +433,22 @@ function organizeMacOSBundle(versionedOutputDir, version) {
  * @param {string} versionedOutputDir
  */
 function runMacOSDeployQt(srcDir, versionedOutputDir) {
-  echo("");
-  echo("---------------------------------------------------------------------------");
-  echo("Deploy Qt");
-  echo("");
+  sh.echo("");
+  sh.echo("---------------------------------------------------------------------------");
+  sh.echo("Deploy Qt");
+  sh.echo("");
 
-  const prevDir = pwd();
-  cd(versionedOutputDir);
+  const prevDir = sh.pwd();
+  sh.cd(versionedOutputDir);
 
   const qtHome = qtConfig.qtHome;
   const macDeployQtBin = path.resolve(qtHome, "bin", "macdeployqt");
   process.env.PATH=`${path.resolve(qtHome, "bin")};${process.env.PATH}`;
 
-  mv(path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/node_modules/@nodegui/qode/binaries/qode`),
+  sh.mv(path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/node_modules/@nodegui/qode/binaries/qode`),
     path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/MacOS/qode`));
 
-  const nodeBinaryModules = ls("**/*.node");
+  const nodeBinaryModules = sh.ls("**/*.node");
 
   const deployCommand = [
       macDeployQtBin,
@@ -463,11 +458,11 @@ function runMacOSDeployQt(srcDir, versionedOutputDir) {
       `-executable=${APP_TITLE}.app/Contents/MacOS/qode`,
       ...nodeBinaryModules.map(b => `-executable=${b}`)
     ].join(" ");
-  echo(deployCommand);
-  exec(deployCommand, { env: process.env });
-  
-  // The libraries in here were copied by `macdeployqt`
-  rm('-rf', path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/node_modules/@nodegui/nodegui/miniqt`));
+  sh.echo(deployCommand);
+  sh.exec(deployCommand, { env: process.env });
 
-  cd(prevDir);
+  // The libraries in here were copied by `macdeployqt`
+  sh.rm('-rf', path.join(versionedOutputDir, `${APP_TITLE}.app/Contents/Resources/node_modules/@nodegui/nodegui/miniqt`));
+
+  sh.cd(prevDir);
 }

@@ -3,15 +3,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const sh = require('shelljs');
-const fs = require('fs');
-const path = require('path');
-const command = require('commander');
+import sh from 'shelljs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as command from 'commander';
 
 sh.config.fatal = true;
 
-const packaging_functions = require('./packaging_functions');
+import * as packaging_functions from './packaging_functions.js';
 
 const APP_NAME = packaging_functions.APP_NAME;
 const APP_TITLE = packaging_functions.APP_TITLE;
@@ -24,16 +23,16 @@ async function main() {
 
   const options = parsedArgs.opts();
 
-  if ( ! test('-f', './package.json')) {
-    echo("This script was called from the wrong directory.");
+  if ( ! sh.test('-f', './package.json')) {
+    sh.echo("This script was called from the wrong directory.");
     return;
   }
-  const srcDir = "" + pwd();
+  const srcDir = "" + sh.pwd();
   const buildTmpDir = path.join(srcDir, 'build_tmp');
-  if (test('-d', buildTmpDir)) {
-    rm('-rf', buildTmpDir);
+  if (sh.test('-d', buildTmpDir)) {
+    sh.rm('-rf', buildTmpDir);
   }
-  mkdir(buildTmpDir);
+  sh.mkdir(buildTmpDir);
 
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
@@ -57,8 +56,8 @@ async function main() {
       useDocker: false
   });
 
-  echo("");
-  echo("Done.");
+  sh.echo("");
+  sh.echo("Done.");
 }
 
 main().catch(ex => {
@@ -68,10 +67,10 @@ main().catch(ex => {
 
 function makeNsis( { version, outputDir, useDocker } ) {
   const BUILD_TMP_DIR = outputDir;
-  echo("");
-  echo("---------------------------------------------------");
-  echo("Building NSIS based installer for Windows");
-  echo("---------------------------------------------------");
+  sh.echo("");
+  sh.echo("---------------------------------------------------");
+  sh.echo("Building NSIS based installer for Windows");
+  sh.echo("---------------------------------------------------");
 
   const windowsBuildDirName = `${APP_NAME}-${version}-win32-x64`;
   const versionSplit = version.split(".");
@@ -172,18 +171,18 @@ DeleteRegKey HKCU "Software\\Classes\\directory\\shell\\${APP_NAME}"
 
 SectionEnd
 `;
-echo("----------------------------------------------------------")
-echo(installerScript);
-echo("----------------------------------------------------------")
+sh.echo("----------------------------------------------------------")
+sh.echo(installerScript);
+sh.echo("----------------------------------------------------------")
 
   fs.writeFileSync(path.join(BUILD_TMP_DIR, "installer.nsi"), installerScript, {encoding: "utf-8"});
   if (useDocker) {
-    exec(`docker run --rm -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
+    sh.exec(`docker run --rm -t -v ${BUILD_TMP_DIR}:/wine/drive_c/src/ cdrx/nsis`);
   } else {
-    const prevDir = pwd();
-    cd(BUILD_TMP_DIR);
-    exec("makensis installer.nsi");
-    cd(prevDir);
+    const prevDir = sh.pwd();
+    sh.cd(BUILD_TMP_DIR);
+    sh.exec("makensis installer.nsi");
+    sh.cd(prevDir);
   }
   return true;
 }

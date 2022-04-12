@@ -3,8 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const https = require('https');
+import * as https from 'node:https';
 
 const log = console.log.bind(console);
 

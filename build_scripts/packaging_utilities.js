@@ -3,12 +3,12 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const fsExtra = require('fs-extra');
-const path = require('path');
-const os = require('os');
-const uuid = require('extraterm-uuid');
-const readdirp = require('readdirp');
+import sh from 'shelljs';
+import fsExtra from 'fs-extra';
+import * as path from 'node:path';
+import * as os from 'node:os';
+import * as uuid from 'extraterm-uuid';
+import readdirp from 'readdirp';
 
 const log = console.log.bind(console);
 
@@ -20,14 +20,14 @@ const log = console.log.bind(console);
  * @param {RegExp[]} ignoreRegExp
  * @return {void}
  */
-function copySourceTree(sourceDir, destDir, ignoreRegExp) {
+export function copySourceTree(sourceDir, destDir, ignoreRegExp) {
   // We don't use tempdir() or similar, instead we use a dir next to the source tree.
   // In some environments a temp dir will be on a different filesystem and that will
   // fail the `mv()` at the end of this function.
   const tempPath = path.join(sourceDir, `../extraterm-build-${uuid.createUuid()}`);
 
-  mkdir(tempPath);
-  echo(`Using tmp dir ${tempPath} during source tree copy.`);
+  sh.mkdir(tempPath);
+  sh.echo(`Using tmp dir ${tempPath} during source tree copy.`);
 
   const ignoreFunc = function ignoreFunc(rawFilePath) {
     const filePath = rawFilePath.substr(sourceDir.length).replaceAll("\\", "/");
@@ -37,29 +37,28 @@ function copySourceTree(sourceDir, destDir, ignoreRegExp) {
   };
 
   fsExtra.copySync(sourceDir, tempPath, {filter: ignoreFunc});
-  mv(tempPath, destDir);
+  sh.mv(tempPath, destDir);
 }
-exports.copySourceTree = copySourceTree;
 
 /**
  * @param {string} dependencyName
  * @param {(RegExp | string)[]} subpathList
  */
-function pruneDependencyWithWhitelist(dependencyName, subpathList) {
-  const prevDir = pwd();
-  cd("node_modules");
-  cd(dependencyName);
+export function pruneDependencyWithWhitelist(dependencyName, subpathList) {
+  const prevDir = sh.pwd();
+  sh.cd("node_modules");
+  sh.cd(dependencyName);
   pruneDirTreeWithWhitelist(".", subpathList)
-  cd(prevDir);
+  sh.cd(prevDir);
 }
 
 /**
  * @param {string} dir
  * @param {(RegExp | string)[]} subpathList
  */
-function pruneDirTreeWithWhitelist(dir, subpathList) {
-  for (const itemPath of find(dir)) {
-    if ( ! test('-f', itemPath)) {
+export function pruneDirTreeWithWhitelist(dir, subpathList) {
+  for (const itemPath of sh.find(dir)) {
+    if ( ! sh.test('-f', itemPath)) {
       continue;
     }
 
@@ -67,11 +66,10 @@ function pruneDirTreeWithWhitelist(dir, subpathList) {
       // echo(`Keeping: ${itemPath}`);
     } else {
       // echo(`Pruning ${itemPath}`);
-      rm(itemPath);
+      sh.rm(itemPath);
     }
   }
 }
-exports.pruneDirTreeWithWhitelist = pruneDirTreeWithWhitelist;
 
 /**
  * Match a path against a whilelist.
@@ -112,13 +110,11 @@ function pathMatchWhitelist(whitelist, testPath) {
   return false;
 }
 
-exports.pruneDependencyWithWhitelist = pruneDependencyWithWhitelist;
-
 /**
  * @param {string} directoryPath
  * @return {void}
  */
-async function pruneEmptyDirectories(directoryPath) {
+export async function pruneEmptyDirectories(directoryPath) {
   const dirEntries = await readdirp.promise(directoryPath, { type: "directories", depth: 1 });
   for (const dirEntry of dirEntries) {
     await pruneEmptyDirectories(dirEntry.fullPath);
@@ -127,25 +123,22 @@ async function pruneEmptyDirectories(directoryPath) {
   const allEntries = await readdirp.promise(directoryPath, { type: "files_directories", depth: 1 });
   if (Array.from(allEntries).length === 0) {
     // echo(`Pruning empty directory: ${directoryPath}`);
-    rm('-rf', directoryPath);
+    sh.rm('-rf', directoryPath);
   }
 }
-exports.pruneEmptyDirectories = pruneEmptyDirectories;
 
 /**
  * @param {string} directoryPath
  * @return {void}
  */
-async function materializeSymlinks(directoryPath) {
+export async function materializeSymlinks(directoryPath) {
   const filter = entry => entry.stats.isSymbolicLink();
   const allFileEntries = await readdirp.promise(directoryPath, {alwaysStat: true, lstat: true, fileFilter: filter});
 
   for (const fileEntry of allFileEntries) {
     // echo(`Materializing symlink: ${fileEntry.path}`);
     const contents = fs.readFileSync(fileEntry.fullPath);
-    rm(fileEntry.fullPath);
+    sh.rm(fileEntry.fullPath);
     fs.writeFileSync(fileEntry.fullPath, contents, { mode: fileEntry.stats.mode });
   }
 }
-
-exports.materializeSymlinks = materializeSymlinks;

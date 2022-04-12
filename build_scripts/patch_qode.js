@@ -2,8 +2,7 @@
  * This file is converted to JS from the file `patchQode.ts` in https://github.com/nodegui/packer
  * Where it was published under the MIT license.
  */
-
-const fs = require("fs");
+import * as fs from "node:fs";
 
 const PE_SIGNATURE_OFFSET_LOCATION = 0x3c;
 
@@ -56,7 +55,7 @@ function switchIfCui(fd, subsystemOffset) {
   fs.writeSync(fd, GUISubsytemBuffer, 0, 2, subsystemOffset);
 }
 
-function switchToGuiSubsystem(filePath) {
+export function switchToGuiSubsystem(filePath) {
   const fd = fs.openSync(filePath, "r+");
   const PESignatureOffset = getPESignatureOffset(fd);
   validatePESignature(fd, PESignatureOffset);
@@ -67,4 +66,3 @@ function switchToGuiSubsystem(filePath) {
   switchIfCui(fd, subsystemOffset);
   fs.closeSync(fd);
 }
-exports.switchToGuiSubsystem = switchToGuiSubsystem;

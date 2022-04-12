@@ -3,10 +3,10 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const fs = require('fs');
-const path = require('path');
-const download_utilities = require('./download_utilities');
+import sh from 'shelljs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as download_utilities from './download_utilities.js';
 
 const log = console.log.bind(console);
 
@@ -19,21 +19,21 @@ async function main(version) {
   if (process.platform === "linux") {
     const exe = await download_utilities.fetchUrl(`${baseUrl}/extraterm-launcher-linux`);
     const dirPath = path.join(DOWNLOADS_DIR, 'linux-x64');
-    mkdir('-p', dirPath);
+    sh.mkdir('-p', dirPath);
     fs.writeFileSync(path.join(dirPath, 'extraterm-launcher'), exe);
   }
 
   if (process.platform === "darwin") {
     const exe = await download_utilities.fetchUrl(`${baseUrl}/extraterm-launcher-macos`);
     const dirPath = path.join(DOWNLOADS_DIR, 'darwin-x64');
-    mkdir('-p', dirPath);
+    sh.mkdir('-p', dirPath);
     fs.writeFileSync(path.join(dirPath, 'extraterm-launcher'), exe);
   }
 
   if (process.platform === "win32") {
     const exe = await download_utilities.fetchUrl(`${baseUrl}/extraterm-launcher-windows.exe`);
     const windowPath = path.join(DOWNLOADS_DIR, 'win32-x64');
-    mkdir('-p', windowPath);
+    sh.mkdir('-p', windowPath);
     fs.writeFileSync(path.join(windowPath, 'extraterm-launcher.exe'), exe);
   }
 

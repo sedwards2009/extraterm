@@ -4,15 +4,14 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-require('shelljs/global');
-const sh = require('shelljs');
-const fs = require('fs');
-const path = require('path');
-const command = require('commander');
+import sh from 'shelljs';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as command from 'commander';
 
 sh.config.fatal = true;
 
-const packaging_functions = require('./packaging_functions');
+import * as packaging_functions from './packaging_functions.js';
 
 const APP_NAME = packaging_functions.APP_NAME;
 const APP_TITLE = packaging_functions.APP_TITLE;
@@ -24,16 +23,16 @@ async function main() {
 
   const options = parsedArgs.opts();
 
-  if ( ! test('-f', './package.json')) {
-    echo("This script was called from the wrong directory.");
+  if ( ! sh.test('-f', './package.json')) {
+    sh.echo("This script was called from the wrong directory.");
     return;
   }
-  const srcDir = "" + pwd();
+  const srcDir = "" + sh.pwd();
   const buildTmpDir = path.join(srcDir, 'build_tmp');
-  if (test('-d', buildTmpDir)) {
-    rm('-rf', buildTmpDir);
+  if (sh.test('-d', buildTmpDir)) {
+    sh.rm('-rf', buildTmpDir);
   }
-  mkdir(buildTmpDir);
+  sh.mkdir(buildTmpDir);
 
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
@@ -50,16 +49,16 @@ async function main() {
     outputDir: buildTmpDir,
     replaceModuleDirs: false
   });
-  echo("");
+  sh.echo("");
 
-  echo("Creating debian package");
-  cd(srcDir);
+  sh.echo("Creating debian package");
+  sh.cd(srcDir);
   makeDeb({
     version,
     buildDir: buildTmpDir
   });
 
-  echo("Done.");
+  sh.echo("Done.");
 }
 
 main().catch(ex => {
@@ -71,12 +70,12 @@ function makeDeb({version, buildDir}) {
   // Move the files into position
   const outputDirName = packaging_functions.createOutputDirName({version, platform: "linux", arch: "x64"});
   const debTmp = path.join(buildDir, `${APP_NAME}_${version}_amd64`);
-  mkdir("-p", path.join(debTmp, "opt"));
-  mv(path.join(buildDir, outputDirName), path.join(debTmp, "opt", APP_NAME));
+  sh.mkdir("-p", path.join(debTmp, "opt"));
+  sh.mv(path.join(buildDir, outputDirName), path.join(debTmp, "opt", APP_NAME));
 
   // Set up special Debian control files
   const debianDir = path.join(debTmp, "DEBIAN");
-  mkdir("-p", debianDir);
+  sh.mkdir("-p", debianDir);
   const controlFile = `Package: ${APP_NAME}
 Architecture: amd64
 Maintainer: Simon Edwards
@@ -89,7 +88,7 @@ Description: The swiss army chainsaw of terminal emulators
 
   // Write `.desktop` file
   const appsDir = path.join(debTmp, "usr", "share", "applications");
-  mkdir("-p", appsDir);
+  sh.mkdir("-p", appsDir);
 
   const desktopFile = `[Desktop Entry]
 Name=${APP_TITLE}
@@ -102,8 +101,8 @@ Icon=${APP_NAME}
 `;
   fs.writeFileSync(path.join(appsDir, `${APP_NAME}.desktop`), desktopFile, {encoding: "utf-8"});
 
-  cp("-r", "build_scripts/resources/linux/icons", path.join(debTmp, "usr", "share"));
+  sh.cp("-r", "build_scripts/resources/linux/icons", path.join(debTmp, "usr", "share"));
 
   // Package in .deb
-  exec(`dpkg-deb --root-owner-group --build ${debTmp}`);
+  sh.exec(`dpkg-deb --root-owner-group --build ${debTmp}`);
 }
