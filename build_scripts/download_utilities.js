@@ -11,7 +11,7 @@ const log = console.log.bind(console);
  * @param {string} url
  * @return {Promise<Buffer>}
  */
-async function fetchUrl(url) {
+export async function fetchUrl(url) {
   log(`Downloading ${url}`);
   return new Promise( (resolve, reject) => {
     https.get(url, {}, (resp) => {
@@ -37,4 +37,3 @@ async function fetchUrl(url) {
     });
   });
 }
-exports.fetchUrl = fetchUrl;
