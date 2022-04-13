@@ -20,7 +20,7 @@ async function main() {
     return;
   }
 
-  const SRC_DIR = "" + pwd();
+  const SRC_DIR = "" + sh.pwd();
   const BUILD_TMP_DIR = path.join(SRC_DIR, 'build_tmp');
   if (sh.test('-d', BUILD_TMP_DIR)) {
     sh.rm('-rf', BUILD_TMP_DIR);
