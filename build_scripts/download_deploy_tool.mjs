@@ -6,7 +6,7 @@
 import sh from 'shelljs';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as download_utilities from './download_utilities.js';
+import * as download_utilities from './download_utilities.mjs';
 
 const log = console.log.bind(console);
 

@@ -4,7 +4,6 @@
   "description": "A terminal",
   "author": "Simon Edwards",
   "license": "MIT",
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
@@ -14,16 +13,16 @@
     "run-theme-test": "qode main/dist/ThemeTestUtility.js",
     "build": "wsrun --concurrency 5 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
-    "download-launcher-executable": "node build_scripts/download_launcher_executables.js v8",
-    "download-deploy-tool": "node build_scripts/download_deploy_tool.js",
+    "download-launcher-executable": "node build_scripts/download_launcher_executables.mjs v8",
+    "download-deploy-tool": "node build_scripts/download_deploy_tool.mjs",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
-    "package": "node build_scripts/build_packages.js",
-    "package-commands-zip": "node build_scripts/package_commands_zip.js",
-    "package-linux": "node build_scripts/package_linux.js",
-    "package-macos": "node build_scripts/package_macos.js",
-    "package-windows": "node build_scripts/package_windows.js",
-    "package-linux-zip-only": "node build_scripts/build_packages.js --linux-zip-only",
+    "package": "node build_scripts/build_packages.mjs",
+    "package-commands-zip": "node build_scripts/package_commands_zip.mjs",
+    "package-linux": "node build_scripts/package_linux.mjs",
+    "package-macos": "node build_scripts/package_macos.mjs",
+    "package-windows": "node build_scripts/package_windows.mjs",
+    "package-linux-zip-only": "node build_scripts/build_packages.mjs --linux-zip-only",
     "test": "wsrun --concurrency 2 --exclude-missing --stages test"
   },
   "jshintConfig": {
@@ -67,6 +66,7 @@
     "@nodegui/nodegui": "^0.49.0",
     "@types/fs-extra": "^9.0.12",
     "commander": "^8.3.0",
+    "extraterm-uuid": "1.0.0",
     "fs-extra": "^10.0.0",
     "nodegui-plugin-font-icon": "^0.2.0",
     "qode": "^0.1.0",
@@ -84,6 +84,7 @@
     "node-gyp": "^8.2.0",
     "readdirp": "3.6.0",
     "shelljs": "0.8.4",
+    "typescript": "4.6.3",
     "wsrun": "5.2.0"
   },
   "packageManager": "yarn@3.2.0"

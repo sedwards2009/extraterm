@@ -9,9 +9,9 @@ import * as fs from 'node:fs';
 import { version } from 'node:os';
 import * as qtConfig from "@nodegui/nodegui/config/qtConfig.js";
 
-import * as dependencyPruner from './dependency_pruner.js';
-import * as utilities from './packaging_utilities.js';
-import * as patchQode from './patch_qode.js';
+import * as dependencyPruner from './dependency_pruner.mjs';
+import * as utilities from './packaging_utilities.mjs';
+import * as patchQode from './patch_qode.mjs';
 
 const log = console.log.bind(console);
 

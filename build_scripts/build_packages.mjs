@@ -8,7 +8,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import getRepoInfo from 'git-repo-info';
 
-import * as packagingFunctions from './packaging_functions.js';
+import * as packagingFunctions from './packaging_functions.mjs';
 const makePackage = packagingFunctions.makePackage;
 const makeNsis = packagingFunctions.makeNsis;
 const makeDmg = packagingFunctions.makeDmg;
