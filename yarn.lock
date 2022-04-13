@@ -1072,9 +1072,9 @@ __metadata:
   linkType: hard
 
 "@types/prettier@npm:^2.1.5":
-  version: 2.4.4
-  resolution: "@types/prettier@npm:2.4.4"
-  checksum: 2c2cc57efd49c7d8907415a72f96c84a6dd8696dd3bf8aa4ca3a667427bebf71cbfbc912673624bdfc935d272d1c008c639cf155f6449315990a4dc110f0d216
+  version: 2.6.0
+  resolution: "@types/prettier@npm:2.6.0"
+  checksum: 946f1f82ce6f31664e023a5d65931c31b7d677b454f528f67dce851d72e7fcfe713076f4251b16c3646eecf1545f5f5b909b4962966341ed9ddf5b80113b3674
   languageName: node
   linkType: hard
 
@@ -2025,9 +2025,9 @@ __metadata:
   linkType: hard
 
 "caniuse-lite@npm:^1.0.30001317":
-  version: 1.0.30001327
-  resolution: "caniuse-lite@npm:1.0.30001327"
-  checksum: 789076fb889bd03515c4a3e2bfa09cd5b28439645173445147eb6ddfd8105c755e46dfda3de4b75edd2b71490864188bbfe8a2efe920c7998960b4e98916f518
+  version: 1.0.30001331
+  resolution: "caniuse-lite@npm:1.0.30001331"
+  checksum: b869b4222f08593ca6c3272e000dcf38c0db7fa100912f4dd5bb2992927721db0cfda0e6766099258187eb371270fe0f2d6f3cad6c4dfd12bd71e9f19dbce2c3
   languageName: node
   linkType: hard
 
@@ -2895,9 +2895,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.4.84":
-  version: 1.4.106
-  resolution: "electron-to-chromium@npm:1.4.106"
-  checksum: 79eae050a775f6f674a24d4541d54cdb1c35e956d6e112ee9ec8d752fa9bcd94739e5f86c58d8e04f85199cf720146aee301b2e397932ad5c8d8e8cffe65a2ee
+  version: 1.4.107
+  resolution: "electron-to-chromium@npm:1.4.107"
+  checksum: c4538eb41df17330e9bc7aa030a5670788e1533f07280e2114c59ee89020162b50b2fff25675114c08826b29843c7271e76f6c9fbe313de0d307c90a5d097f78
   languageName: node
   linkType: hard
 
@@ -5653,10 +5653,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lru-cache@npm:^7.4.0, lru-cache@npm:^7.7.1":
-  version: 7.8.0
-  resolution: "lru-cache@npm:7.8.0"
-  checksum: 7cc046276b668e7b59c10f7f25049d89315cd22fb5205c0eb476583ba29b8542955189452dc8655a771e1a91f6056ddcb29daf4ac35197f77b3ce9a0041d54c9
+"lru-cache@npm:^7.7.1":
+  version: 7.8.1
+  resolution: "lru-cache@npm:7.8.1"
+  checksum: 31ea67388c9774300331d70f4affd5a433869bcf0fae5405f967d19d7b447930b713b0566a2e95362c9082034a8b496f3671ccf8f0c061d8e8048412663f9432
   languageName: node
   linkType: hard
 
@@ -5840,11 +5840,11 @@ __metadata:
   linkType: hard
 
 "marked@npm:^4.0.12":
-  version: 4.0.13
-  resolution: "marked@npm:4.0.13"
+  version: 4.0.14
+  resolution: "marked@npm:4.0.14"
   bin:
     marked: bin/marked.js
-  checksum: 98e5acb793feb41b56f6257a3f6f9158111576d1d9bd1dd1c9069a7581d755bd07c30c7ae42414899f90d8b0302a44792b103d962413fb16d6f4d64a41560938
+  checksum: 778bc2fc94c51ae4fbafe5a08bc1f3917799c4dd39e9fccd972a97df4e5bc5aa78664b7143d12d4b4969608fb90c6a2de3f19811a2f9ccf6b7f207022f2842ba
   languageName: node
   linkType: hard
 
@@ -6342,9 +6342,9 @@ __metadata:
   linkType: hard
 
 "node-releases@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "node-releases@npm:2.0.2"
-  checksum: da858bf86b4d512842379749f5a5e4196ddab05ba18ffcf29f05bf460beceaca927f070f4430bb5046efec18941ddbc85e4c5fdbb83afc28a38dd6069a2f255e
+  version: 2.0.3
+  resolution: "node-releases@npm:2.0.3"
+  checksum: 5e555fbbebb3343a5d1e5f4e10e1737998bedc57472a35027410d17b2678ed9bc0e5fae008f513798a960eb8687159331b1f46f82a3210d39bd7c40d3c9dcead
   languageName: node
   linkType: hard
 
@@ -7560,13 +7560,13 @@ __metadata:
   linkType: hard
 
 "semver@npm:^7.3.2, semver@npm:^7.3.4, semver@npm:^7.3.5":
-  version: 7.3.6
-  resolution: "semver@npm:7.3.6"
+  version: 7.3.7
+  resolution: "semver@npm:7.3.7"
   dependencies:
-    lru-cache: ^7.4.0
+    lru-cache: ^6.0.0
   bin:
     semver: bin/semver.js
-  checksum: 9845f96b22268190b30025e02feca391451f2bd49b2c51920c27cc56744f64cbe397df089018fdb347d4b4fd800eabbd85661870eb63eb28055d2b72e457f759
+  checksum: 2fa3e877568cd6ce769c75c211beaed1f9fce80b28338cadd9d0b6c40f2e2862bafd62c19a6cff42f3d54292b7c623277bcab8816a2b5521cf15210d43e75232
   languageName: node
   linkType: hard
 
@@ -8620,8 +8620,8 @@ __metadata:
   linkType: hard
 
 "typedoc@npm:^0.22.3":
-  version: 0.22.14
-  resolution: "typedoc@npm:0.22.14"
+  version: 0.22.15
+  resolution: "typedoc@npm:0.22.15"
   dependencies:
     glob: ^7.2.0
     lunr: ^2.3.9
@@ -8632,7 +8632,7 @@ __metadata:
     typescript: 4.0.x || 4.1.x || 4.2.x || 4.3.x || 4.4.x || 4.5.x || 4.6.x
   bin:
     typedoc: bin/typedoc
-  checksum: 7375eeb4a5873408b0b4cda4ebbf52bbded4afa444b9caeee3a572f39f491e0563fed40322c83ac24c027a340691cde0cf9e24fdbed2c151a3977fdcbee13ff4
+  checksum: 3f5f1cb9288bf811f42df59750c7062a026a23257b38dfe227515a30007a28e3d8139187949fcd19300fd6b2ef76bcdc4cf54549100bff3e000e61bb19958fb2
   languageName: node
   linkType: hard
 
@@ -9320,8 +9320,8 @@ __metadata:
   linkType: hard
 
 "yargs@npm:^17.3.1":
-  version: 17.4.0
-  resolution: "yargs@npm:17.4.0"
+  version: 17.4.1
+  resolution: "yargs@npm:17.4.1"
   dependencies:
     cliui: ^7.0.2
     escalade: ^3.1.1
@@ -9330,7 +9330,7 @@ __metadata:
     string-width: ^4.2.3
     y18n: ^5.0.5
     yargs-parser: ^21.0.0
-  checksum: 63985bddddf1fb6b9c98744591e8b70f99839591521cb84eea60903d52ec0da35ab46c42c325d151f3ab5c41935f976c10da096b5a7067c217714a91c0bd4be3
+  checksum: e9012322870d7e4e912a6ae1f63b203e365f911c0cf158be92c36edefddfb3bd38ce17eb9ef0d18858a4777f047c50589ea22dacb44bd949169ba37dc6d34bee
   languageName: node
   linkType: hard
 
