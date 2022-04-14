@@ -32,7 +32,7 @@ jobs:
       - script: yarn plugin import workspace-tools
       - script: yarn install
         displayName: 'Yarn install'
-      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+      - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run package-commands-zip --use-version=$(git describe --tags)
         displayName: 'Run yarn package-commands-zip'
@@ -69,7 +69,7 @@ jobs:
         displayName: "yarn --version"
       - script: yarn install
         displayName: "yarn install"
-      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+      - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
@@ -108,7 +108,7 @@ jobs:
       - script: yarn plugin import workspace-tools
       - script: yarn install
         displayName: "yarn install"
-      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+      - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
@@ -156,7 +156,7 @@ jobs:
       - script: yarn plugin import workspace-tools
       - script: yarn install
         displayName: "yarn install"
-      - script: node build_scripts/azure_release_version_check.js $(Build.SourceBranch)
+      - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
