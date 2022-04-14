@@ -69,7 +69,7 @@ function makeDmg( { version, outputDir, useDocker } ) {
   const srcDir = "" + sh.pwd();
 
   const darwinPath = path.join(buildTmpDir, `${APP_NAME}-${version}-darwin-x64`);
-  for (const f of ls(darwinPath)) {
+  for (const f of sh.ls(darwinPath)) {
     if ( ! f.endsWith(".app")) {
       sh.echo(`Deleting ${f}`);
       sh.rm(path.join(darwinPath, f));
