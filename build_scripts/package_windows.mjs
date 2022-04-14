@@ -10,7 +10,7 @@ import * as command from 'commander';
 
 sh.config.fatal = true;
 
-import * as packaging_functions from './packaging_functions.js';
+import * as packaging_functions from './packaging_functions.mjs';
 
 const APP_NAME = packaging_functions.APP_NAME;
 const APP_TITLE = packaging_functions.APP_TITLE;
