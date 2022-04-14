@@ -55,7 +55,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install pkg-config build-essential
           sudo apt-get install cmake make
-          sudo apt-get install xserver-xorg-core mesa-common-dev libglu1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0
+          sudo apt-get install xserver-xorg-core mesa-common-dev libglu1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
         displayName: "Install development packages"
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
       - task: NodeTool@0
