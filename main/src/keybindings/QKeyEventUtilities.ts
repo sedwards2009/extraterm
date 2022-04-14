@@ -10,13 +10,21 @@ import {
   Modifier,
   Key,
 } from "@nodegui/nodegui";
+import { Platform } from "../emulator/Term";
 
 
 export function qKeyEventToMinimalKeyboardEvent(event: QKeyEvent): MinimalKeyboardEvent {
   const modifiers = event.modifiers();
   const altKey = (modifiers & Modifier.ALT) !== 0;
-  const ctrlKey = (modifiers & Modifier.CTRL) !== 0;
-  const metaKey = (modifiers & Modifier.META) !== 0;
+
+  let ctrlKey = (modifiers & Modifier.CTRL) !== 0;
+  let metaKey = (modifiers & Modifier.META) !== 0;
+  if ((<Platform> process.platform) === "darwin") {
+    // Qt on macOS reverses the meaning of these keys compared to what they are commonly called.
+    const tmp = ctrlKey;
+    ctrlKey = metaKey;
+    metaKey = tmp;
+  }
   const shiftKey = (modifiers & Modifier.SHIFT) !== 0;
 
   const ev: MinimalKeyboardEvent = {
@@ -190,7 +198,7 @@ function mapQKeyEventToDOMKey(ev: QKeyEvent): string {
     return qkeyToDOMMapping.get(key);
   }
   const text = ev.text();
-  if ((text.charCodeAt(0) <= 31) && (key < 256)) {
+  if ((key < 256) && (text.charCodeAt(0) <= 31 || text.length === 0)) {
     return String.fromCodePoint(key);
   }
   return text;
