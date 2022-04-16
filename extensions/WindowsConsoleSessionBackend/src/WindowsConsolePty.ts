@@ -7,8 +7,7 @@ import {EventEmitter} from "extraterm-event-emitter";
 import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from "@extraterm/extraterm-extension-api";
 import * as pty from "node-pty";
 import * as _ from "lodash-es";
-// eslint-disable-next-line unicorn/prefer-module
-const pidCwd = require("pid-cwd");
+
 
 const MAXIMUM_WRITE_BUFFER_SIZE = 64 * 1024;
 
@@ -150,6 +149,9 @@ export class WindowsConsolePty implements Pty {
     // change its working directory on an OS level when you `cd` through your
     // filesystems.
     // See https://www.itprotoday.com/powershell/why-powershell-working-directory-and-powershell-location-arent-one-same
-    return pidCwd(this.realPty.pid);
+    // FIXME: the pid-cwd package doesn't play well with ESM and TypeScript. It's index.d.ts is bugged.
+    // const pidCwd = await import("pid-cwd");
+    // return pidCwd.default(this.realPty.pid);
+    return null;
   }
 }

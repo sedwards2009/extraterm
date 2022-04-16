@@ -210,7 +210,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   async #loadExtensionModule(extension: ExtensionMetadata): Promise<any> {
     const mainJsPath = path.join(extension.path, extension.exports);
     try {
-      const module = await import(mainJsPath);
+      const module = await import("file://" + mainJsPath);
       return module;
     } catch(ex) {
       this._log.warn(`Unable to load ${mainJsPath}. ${ex}`);
