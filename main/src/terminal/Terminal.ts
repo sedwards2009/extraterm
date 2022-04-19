@@ -60,6 +60,7 @@ import { DecoratedFrame } from "./DecoratedFrame.js";
 import { SpacerFrame } from "./SpacerFrame.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { BorderDirection } from "../extension/ExtensionMetadata.js";
+import { QtTimeout } from "../utils/QtTimeout.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -110,6 +111,8 @@ export class Terminal implements Tab, Disposable {
   #pty: Pty = null;
   #emulator: Term.Emulator = null;
   #cookie: string = null;
+
+  #qtTimeout: QtTimeout = null;
 
   // The current size of the emulator. This is used to detect changes in size.
   #columns = -1;
@@ -218,6 +221,7 @@ export class Terminal implements Tab, Disposable {
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#uiStyle = uiStyle;
+    this.#qtTimeout = new QtTimeout();
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
@@ -802,7 +806,10 @@ export class Terminal implements Tab, Disposable {
       platform: <Term.Platform> process.platform,
       applicationModeCookie: cookie,
       debug: true,
-      performanceNowFunc: () => performance.now()
+      performanceNowFunc: () => performance.now(),
+
+      setTimeout: this.#qtTimeout.setTimeout.bind(this.#qtTimeout),
+      clearTimeout: this.#qtTimeout.clearTimeout.bind(this.#qtTimeout),
     });
 
     emulator.debug = true;

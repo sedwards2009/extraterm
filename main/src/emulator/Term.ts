@@ -130,6 +130,8 @@ interface Options {
   debug?: boolean;
   applicationModeCookie?: string;
   performanceNowFunc?: () => number;
+  setTimeout?: (func: () => void, delayMs: number) => any;
+  clearTimeout?: (timerId: any) => void;
 };
 
 interface CharSet {
@@ -243,11 +245,14 @@ export class Emulator implements EmulatorApi {
 
   private _platform: Platform = "linux";
 
-  private _writeBuffers: string[] = [];                 // Buffer for incoming data waiting to be processed.
-  private _processWriteChunkTimer: NodeJS.Timer = null; // Timer ID for our write chunk timer.
+  private _writeBuffers: string[] = [];         // Buffer for incoming data waiting to be processed.
+  private _processWriteChunkTimer: any = null;  // Timer ID for our write chunk timer.
   private _paused = false;
-  private _refreshTimer: NodeJS.Timer = null;           // Timer ID for triggering an on scren refresh.
+  private _refreshTimer: any = null;            // Timer ID for triggering an on scren refresh.
   private _performanceNow: () => number = null;
+
+  #setTimeout: (func: () => void, delayMs: number) => number = null;
+  #clearTimeout: (timerId: number) => void = null;
 
   private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
   private _refreshStart = REFRESH_START_NULL;
@@ -290,6 +295,9 @@ export class Emulator implements EmulatorApi {
       this._performanceNow = options.performanceNowFunc;
     }
 
+    this.#setTimeout = options.setTimeout ?? setTimeout;
+    this.#clearTimeout = options.clearTimeout ?? clearTimeout;
+
     this._platform = options.platform;
 
     this.onRender = this.#onRenderEventEmitter.event;
@@ -314,12 +322,12 @@ export class Emulator implements EmulatorApi {
 
   destroy(): void {
     if (this._processWriteChunkTimer !== null) {
-      clearTimeout(this._processWriteChunkTimer);
+      this.#clearTimeout(this._processWriteChunkTimer);
       this._processWriteChunkTimer = null;
     }
 
     if (this._refreshTimer !== null) {
-      clearTimeout(this._refreshTimer);
+      this.#clearTimeout(this._refreshTimer);
     }
 
     this.handler = function() {};
@@ -525,7 +533,7 @@ export class Emulator implements EmulatorApi {
    */
   private _scheduleRefresh(immediate: boolean): void {
     if (this._refreshTimer === null) {
-      this._refreshTimer = setTimeout(() => {
+      this._refreshTimer = this.#setTimeout(() => {
         this._refreshTimer = null;
         this._refreshFrame();
       }, immediate ? 0 : REFRESH_DELAY);
@@ -722,7 +730,7 @@ export class Emulator implements EmulatorApi {
    */
   private _scheduleProcessWriteChunk(): void {
     if (this._processWriteChunkTimer === null) {
-      this._processWriteChunkTimer = setTimeout(() => {
+      this._processWriteChunkTimer = this.#setTimeout(() => {
         this._processWriteChunkTimer = null;
         this._processWriteChunkRealTime();
       }, 0);
@@ -736,7 +744,7 @@ export class Emulator implements EmulatorApi {
 
     this._paused = true;
     if (this._processWriteChunkTimer === null) {
-      clearTimeout(this._processWriteChunkTimer);
+      this.#clearTimeout(this._processWriteChunkTimer);
       this._processWriteChunkTimer = null;
     }
   }
@@ -767,7 +775,7 @@ export class Emulator implements EmulatorApi {
 
     while (! this._paused) {
       if (this._processOneWriteChunk() === false) {
-        clearTimeout(this._processWriteChunkTimer);
+        this.#clearTimeout(this._processWriteChunkTimer);
         this._processWriteChunkTimer = null;
 
         this._scheduleRefresh(true);
@@ -2316,7 +2324,7 @@ export class Emulator implements EmulatorApi {
 
   private send(data: string): void {
     if (!this.queue) {
-      setTimeout(() => {
+      this.#setTimeout(() => {
         this.handler(this.queue);
         this.queue = '';
       }, 1);
