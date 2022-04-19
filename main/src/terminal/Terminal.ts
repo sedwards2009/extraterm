@@ -338,7 +338,7 @@ export class Terminal implements Tab, Disposable {
       QWidget {
         background-color: #0f0;
       }
-    `);
+    `, false);
     this.#scrollArea.viewport().hide();
 
     this.#contentLayout.addStretch(1);
@@ -671,12 +671,12 @@ export class Terminal implements Tab, Disposable {
     #content {
       background-color: ${backgroundHex};
     }
-    `);
+    `, false);
     this.#scrollArea.setStyleSheet(`
       QScrollArea {
         background-color: ${backgroundHex};
       }
-    `);
+    `, false);
 
     this.resizeEmulatorFromTerminalSize();
   }

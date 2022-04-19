@@ -273,7 +273,7 @@ QPushButton[cssClass~="terminal-title"]:hover {
               pb.setIcon(icon);
             }
           });
-          pb.setStyleSheet(buttonStyleSheet);
+          pb.setStyleSheet(buttonStyleSheet, false);
           return pb;
         }),
       })

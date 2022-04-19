@@ -161,7 +161,7 @@ class Main {
     dpi = dpi === 0 ? QApplication.primaryScreen().logicalDotsPerInch() : dpi;
 
     const qApplication = QApplication.instance();
-    qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(uiScalePercent / 100, dpi));
+    qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(uiScalePercent / 100, dpi), false);
     this.#tweakerStyle = new StyleTweaker("Windows");
 
     const iconSize = this.#uiStyle.getMenuIconSize(uiScalePercent / 100, dpi);

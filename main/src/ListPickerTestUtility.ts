@@ -57,7 +57,7 @@ function main(): void {
   // console.log(styleSheet);
 
   win.resize(600, 800);
-  centralWidget.setStyleSheet(styleSheet);
+  centralWidget.setStyleSheet(styleSheet, false);
 
   win.setCentralWidget(centralWidget);
   win.show();

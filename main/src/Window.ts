@@ -190,8 +190,8 @@ export class Window {
   }
 
   #loadStyleSheet(uiScale: number): void {
-    this.#windowWidget.setStyleSheet("");
-    this.#hamburgerMenu.setStyleSheet("");
+    this.#windowWidget.setStyleSheet("", false);
+    this.#hamburgerMenu.setStyleSheet("", false);
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
     this.#windowWidget.setStyleSheet(sheet);
     this.#hamburgerMenu.setStyleSheet(sheet);

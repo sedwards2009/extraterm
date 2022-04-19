@@ -142,7 +142,7 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
     widget.setToolTip(toolTip);
   }
   if (styleSheet !== undefined) {
-    widget.setStyleSheet(styleSheet);
+    widget.setStyleSheet(styleSheet, false);
   }
 }
 

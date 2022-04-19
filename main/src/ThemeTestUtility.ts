@@ -42,7 +42,7 @@ function main(): void {
     const styleSheet = uiStyle.getApplicationStyleSheet(guiScale, dpi);
     console.log(styleSheet);
     stylesheetEdit.setText(styleSheet);
-    topWidget.setStyleSheet(styleSheet);
+    topWidget.setStyleSheet(styleSheet, false);
   }
 
 
@@ -226,7 +226,7 @@ function main(): void {
                   PushButton({
                     text: "Apply Stylesheet",
                     onClicked: () => {
-                      topWidget.setStyleSheet(stylesheetEdit.toPlainText());
+                      topWidget.setStyleSheet(stylesheetEdit.toPlainText(), false);
                     }
                   }),
                   {
