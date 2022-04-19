@@ -37,7 +37,8 @@ import { createHtmlIcon } from "./ui/Icons.js";
 interface TabPlumbing {
   tab: Tab;
   disposableHolder: DisposableHolder;
-  titleWidget: QLabel;
+  titleLabel: QLabel;
+  titleWidget: QWidget;
 }
 
 export class Window {
@@ -193,8 +194,20 @@ export class Window {
     this.#windowWidget.setStyleSheet("", false);
     this.#hamburgerMenu.setStyleSheet("", false);
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
-    this.#windowWidget.setStyleSheet(sheet);
-    this.#hamburgerMenu.setStyleSheet(sheet);
+    this.#windowWidget.setStyleSheet(sheet, false);
+    this.#hamburgerMenu.setStyleSheet(sheet, false);
+
+    this.#repolishTabBar();
+  }
+
+  #repolishTabBar(): void {
+    repolish(this.#tabBar);
+
+    // This is a hack to force a repolish of the widgets inside the tabs.
+    for (const [index, tabInfo] of this.#tabs.entries()) {
+      this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, null);
+      this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, tabInfo.titleWidget);
+    }
   }
 
   #createDragAreaWidget(): QWidget {
@@ -652,9 +665,9 @@ export class Window {
     for (let i=0; i<this.#tabs.length; i++) {
       const tabPlumbing =  this.#tabs[i];
       const isCurrent = i === index;
-      if (tabPlumbing.titleWidget != null) {
-        tabPlumbing.titleWidget.setProperty("cssClass", isCurrent ? ["tab-title", "tab-title-selected"] : ["tab-title"]);
-        repolish(tabPlumbing.titleWidget);
+      if (tabPlumbing.titleLabel != null) {
+        tabPlumbing.titleLabel.setProperty("cssClass", isCurrent ? ["tab-title", "tab-title-selected"] : ["tab-title"]);
+        repolish(tabPlumbing.titleLabel);
       }
       tabPlumbing.tab.setIsCurrent(isCurrent);
     }
@@ -682,7 +695,8 @@ export class Window {
     if (this.#tabs.map(t => t.tab).includes(tab)) {
       return;
     }
-    const tabPlumbing: TabPlumbing = { tab, disposableHolder: new DisposableHolder(), titleWidget: null };
+    const tabPlumbing: TabPlumbing = { tab, disposableHolder: new DisposableHolder(), titleLabel: null,
+      titleWidget: null };
     this.#tabs.push(tabPlumbing);
 
     if (tab instanceof Terminal) {
@@ -705,8 +719,9 @@ export class Window {
         textFormat: TextFormat.RichText
       });
       tabTitleWidget = tabTitleLabel;
-      tabPlumbing.titleWidget = tabTitleLabel;
+      tabPlumbing.titleLabel = tabTitleLabel;
     }
+    tabPlumbing.titleWidget = tabTitleWidget;
 
     const index = this.#tabBar.addTab(null, "");
     this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, tabTitleWidget);
