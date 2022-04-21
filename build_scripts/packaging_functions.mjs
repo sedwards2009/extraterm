@@ -309,23 +309,11 @@ function runLinuxDeployQt(srcDir, versionedOutputDir) {
   sh.echo(deployCommand);
   sh.exec(deployCommand, { env: {...process.env, LD_LIBRARY_PATH} });
 
-  writeQodeJson(versionedOutputDir);
-
   // TODO: Strip the library .so and qode files
 
   sh.rm(`AppRun`);
 
   sh.cd(prevDir);
-}
-
-/**
- * @param {string} versionedOutputDir
- */
-function writeQodeJson(versionedOutputDir) {
-  const qodeJson = {
-    distPath: "main/dist/main.js"
-  };
-  fs.writeFileSync(path.join(versionedOutputDir, "qode.json"), JSON.stringify(qodeJson), {encoding: "utf8"});
 }
 
 /**
