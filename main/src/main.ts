@@ -147,7 +147,7 @@ class Main {
       }
       const oldConfig = <GeneralConfig> e.oldConfig;
       const newConfig = <GeneralConfig> e.newConfig;
-      if (oldConfig ?? oldConfig.uiScalePercent !== newConfig.uiScalePercent) {
+      if ((oldConfig?.uiScalePercent) !== newConfig.uiScalePercent) {
         this.#setApplicationStyle(newConfig.uiScalePercent);
       }
     });
