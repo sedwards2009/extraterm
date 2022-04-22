@@ -13,6 +13,7 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
+  "isInternal": true,
   "dependencies": {
     "escape-string-regexp": "^1.0.5",
     "extraterm-trim-between-tags": "1.0.0",
@@ -22,7 +23,7 @@
   "devDependencies": {
     "@types/node": "^16.4.0",
     "eslint": "8.13.0",
-"eslint-plugin-unicorn": "42.0.0",
+    "eslint-plugin-unicorn": "42.0.0",
     "eslint-config-extraterm": "1.0.0",
     "@extraterm/extraterm-extension-api": "0.15.0",
     "shx": "^0.3.2",

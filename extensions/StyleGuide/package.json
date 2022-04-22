@@ -13,6 +13,7 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
+  "isInternal": true,
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/he": "^1.1.1",

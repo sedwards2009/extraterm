@@ -22,6 +22,7 @@
       }
     ]
   },
+  "isInternal": true,
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/jest": "27.0.1",

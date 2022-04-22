@@ -14,10 +14,11 @@
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "test": "yarn run build && jest"
   },
+  "isInternal": true,
   "devDependencies": {
     "@types/node": "^16.4.0",
     "eslint": "8.13.0",
-"eslint-plugin-unicorn": "42.0.0",
+    "eslint-plugin-unicorn": "42.0.0",
     "eslint-config-extraterm": "1.0.0",
     "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/jest": "27.0.1",
