@@ -350,8 +350,6 @@ function runWindowsDeployQt(srcDir, versionedOutputDir) {
   sh.echo(deployCommand);
   sh.exec(deployCommand, { env: process.env });
 
-  writeQodeJson(versionedOutputDir);
-
   patchQode.switchToGuiSubsystem("qode.exe");
 
   sh.cd(prevDir);
