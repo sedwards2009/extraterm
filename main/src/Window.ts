@@ -193,6 +193,9 @@ export class Window {
   #loadStyleSheet(uiScale: number): void {
     this.#windowWidget.setStyleSheet("", false);
     this.#hamburgerMenu.setStyleSheet("", false);
+    if (process.platform === "darwin") {
+      uiScale *= 1.5; // Make everything bigger on macOS to more closely match native apps.
+    }
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
     this.#windowWidget.setStyleSheet(sheet, false);
     this.#hamburgerMenu.setStyleSheet(sheet, false);
