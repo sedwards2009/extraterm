@@ -20,6 +20,7 @@ import { SessionTypesPage } from "./SessionTypesPage.js";
 import { KeybindingsPage } from "./keybindings/KeybindingsPage.js";
 import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager.js";
 import { Window } from "../Window.js";
+import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 
 
 export class SettingsTab implements Tab {
@@ -29,6 +30,7 @@ export class SettingsTab implements Tab {
   #extensionManager: ExtensionManager = null;
   #themeManager: ThemeManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
+  #terminalVisualConfig: TerminalVisualConfig = null;
 
   #generalPage: GeneralPage = null;
   #appearancePage: AppearancePage = null;
@@ -85,6 +87,11 @@ export class SettingsTab implements Tab {
   }
 
   unfocus(): void {
+  }
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this.#terminalVisualConfig = terminalVisualConfig;
+    this.#appearancePage.setTerminalVisualConfig(this.#terminalVisualConfig);
   }
 
   #createUI(uiStyle: UiStyle): void {

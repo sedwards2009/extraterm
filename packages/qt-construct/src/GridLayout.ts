@@ -90,5 +90,5 @@ export function GridLayout(options: GridLayoutOptions): QGridLayout {
 
 function isGridLayoutItem(item: any): item is GridLayoutItem {
   return typeof item === "object" && (! (item instanceof NodeWidget)) &&
-    (typeof item.widget === "number" || item.layout !== "number");
+    (item.widget != null || item.layout != null);
 }

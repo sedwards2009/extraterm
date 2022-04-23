@@ -32,6 +32,7 @@ import { DisposableHolder } from "./utils/DisposableUtils.js";
 import { HoverPushButton } from "./ui/QtConstructExtra.js";
 import { BorderlessWindowSupport } from "./BorderlessWindowSupport.js";
 import { createHtmlIcon } from "./ui/Icons.js";
+import { SettingsTab } from "./settings/SettingsTab.js";
 
 
 interface TabPlumbing {
@@ -566,6 +567,9 @@ export class Window {
       if (tab.tab instanceof Terminal) {
         tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
       }
+      if (tab.tab instanceof SettingsTab) {
+        tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+      }
     }
   }
 
@@ -708,6 +712,9 @@ export class Window {
         this.#updateContextMenu(this.#uiStyle);
         this.#contextMenu.popup(new QPoint(ev.x, ev.y));
       }));
+    }
+    if (tab instanceof SettingsTab) {
+      tab.setTerminalVisualConfig(this.#terminalVisualConfig);
     }
 
     let tabTitleWidget = tab.getTabWidget();

@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QComboBox, QLabel, QScrollArea, TextFormat } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QComboBox, QLabel, QScrollArea, QSizePolicyPolicy, QWidget, TextFormat } from "@nodegui/nodegui";
 import * as open from "open";
 import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
@@ -16,6 +16,10 @@ import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra.js";
 import { ThemeManager } from "../theme/ThemeManager.js";
 import { ThemeInfo } from "../theme/Theme.js";
 import { ExtensionManager } from "../InternalTypes.js";
+import { TerminalBlock } from "../terminal/TerminalBlock.js";
+import * as Term from "../emulator/Term.js";
+import { QtTimeout } from "../utils/QtTimeout.js";
+import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 
 
 const uiScalePercentOptions: {id: number, name: string}[] = [
@@ -40,12 +44,21 @@ const titleBarOptions: {id: TitleBarStyle, name: string}[] = [
   { id: "compact", name: "Compact Theme" },
 ];
 
+const PREVIEW_WIDTH_CELLS = 45;
+
+
 export class AppearancePage {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
   #themeManager: ThemeManager = null;
   #extensionManager: ExtensionManager = null;
   #uiStyle: UiStyle = null;
+
+  #previewTerminalBlock: TerminalBlock = null;
+  #previewEmulator: Term.Emulator = null;
+  #qtTimeout: QtTimeout = null;
+  #terminalVisualConfig: TerminalVisualConfig = null;
+  #previewContainer: QWidget = null;
 
   #terminalThemeCombo: QComboBox = null;
   #terminalThemes: ThemeInfo[];
@@ -81,6 +94,7 @@ export class AppearancePage {
       "normal",
       "thick"
     ];
+    this.#initPreview();
 
     const page = ScrollArea({
       cssClass: "settings-tab",
@@ -219,6 +233,11 @@ export class AppearancePage {
                   }
                 })),
 
+                {
+                  colSpan: 2,
+                  widget: this.#previewContainer
+                },
+
                 {widget: Label({text: "Interface", cssClass: "h3"}), colSpan: 2},
 
                 "Zoom:",
@@ -247,6 +266,98 @@ export class AppearancePage {
     });
     this.#loadTerminalThemes();
     return page;
+  }
+
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
+    this._log.debug(`setTerminalVisualConfig()`);
+    this.#terminalVisualConfig = terminalVisualConfig;
+    if (this.#previewTerminalBlock != null) {
+      this.#previewTerminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
+      this.#previewContainer.setMinimumWidth(this.#previewTerminalBlock.getCellWidthPx() * PREVIEW_WIDTH_CELLS);
+      this.#previewTerminalBlock.getWidget().update();
+    }
+  }
+
+  #initPreview(): void {
+    this.#qtTimeout = new QtTimeout();
+    this.#previewEmulator = new Term.Emulator({
+      platform: <Term.Platform> process.platform,
+      applicationModeCookie: "",
+      debug: true,
+      performanceNowFunc: () => performance.now(),
+
+      setTimeout: this.#qtTimeout.setTimeout.bind(this.#qtTimeout),
+      clearTimeout: this.#qtTimeout.clearTimeout.bind(this.#qtTimeout),
+    });
+
+    this.#previewTerminalBlock = new TerminalBlock();
+    if (this.#terminalVisualConfig != null) {
+      this.#previewTerminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
+    }
+    this.#previewTerminalBlock.setEmulator(this.#previewEmulator);
+    this.#previewEmulator.write(this.#previewContents());
+
+    this.#previewContainer = Widget({
+      cssClass: ["terminal-preview-container"],
+      sizePolicy: {
+        vertical: QSizePolicyPolicy.Preferred,
+        horizontal: QSizePolicyPolicy.Maximum,
+      },
+      layout: BoxLayout({
+        direction: Direction.LeftToRight,
+        children: [this.#previewTerminalBlock.getWidget()]
+      })
+    });
+
+    this.#previewContainer.setMinimumWidth(this.#previewTerminalBlock.getCellWidthPx() * PREVIEW_WIDTH_CELLS);
+  }
+
+  #previewContents(): string {
+    const defaultFG = "\x1b[0m";
+    const defaultColor = "\x1b[0m";
+    const newline = "\n\r ";
+
+    let result = newline;
+
+    for (let i=0; i<16; i++) {
+      if (i === 8) {
+        result += "\n\r ";
+      }
+      result += " ";
+      if (i >= 1) {
+        result += this.#charFG(0);
+      }
+
+      result += this.#charBG(i);
+      if (i < 10) {
+        result += " ";
+      }
+      result += " " + i + " " + defaultColor;
+    }
+
+    result += this.#charFG(0);
+
+    result += newline + defaultFG + newline +
+      " " + this.#boldFG(4) + "dir" + defaultColor + "/         " + this.#boldFG(2) + "script.sh" + defaultColor + "*" + newline +
+      " file         " + this.#boldFG(6) + "symbolic_link" + defaultColor + " -> something" + newline +
+      " " + this.#boldFG(5) + "image.png" + defaultColor + "    " + this.#boldFG(1) + "shambolic_link" + defaultColor + " -> " + this.#boldFG(1) + "nothing" + defaultColor + newline +
+      " \x1b[30;42mtmp" + defaultColor + "/" + newline +
+      newline +
+      " " + this.#charFG(2) +"[user@computer " + this.#charFG(12) + "/home/user" + this.#charFG(2) + "]$ "+ defaultColor;
+
+    return result;
+  }
+
+  #boldFG(n: number): string {
+    return `\x1b[1;${30+n}m`;
+  }
+
+  #charFG(n: number): string {
+    return `\x1b[38;5;${n}m`;
+  }
+
+  #charBG(n: number): string {
+    return `\x1b[48;5;${n}m`;
   }
 
   #loadTerminalThemes(): void {

@@ -909,7 +909,11 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QWidget[cssClass~="tab-title-selected"] {
     color: ${tabTextColorActive};
   }
-    `;
+
+  QWidget[cssClass~="terminal-preview-container"] {
+    border: 1px solid ${baseBorderColor};
+  }
+  `;
 
     }
 
@@ -1054,8 +1058,6 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     border: 1px solid ${baseBorderColor};
     background-color: ${packageCardBackgroundColor};
   }
-
-
 
   QPushButton[cssClass~="subtabbar-tab"] {
     color: ${textColor};

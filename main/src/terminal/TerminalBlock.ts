@@ -319,6 +319,10 @@ export class TerminalBlock implements Block {
     this.#heightPx = newHeightPx;
   }
 
+  getCellWidthPx(): number {
+    return this.#fontMetrics.widthPx;
+  }
+
   setEmulator(emulator: Term.Emulator): void {
     if (this.#emulator !== null) {
       // Disconnect the last emulator.
