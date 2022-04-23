@@ -547,6 +547,7 @@ export class TerminalBlock implements Block {
         }
       }
       line.setExtraFontsFlag(i, 0, isExtra);
+      line. setLigature(i, 0, 0);
     }
   }
 

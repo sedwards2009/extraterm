@@ -269,7 +269,6 @@ export class AppearancePage {
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
-    this._log.debug(`setTerminalVisualConfig()`);
     this.#terminalVisualConfig = terminalVisualConfig;
     if (this.#previewTerminalBlock != null) {
       this.#previewTerminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
