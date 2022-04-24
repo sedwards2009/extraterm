@@ -40,6 +40,7 @@ import { UiStyle } from "./ui/UiStyle.js";
 import { CommandPalette } from "./CommandPalette.js";
 import { PingHandler } from "./local_http_server/PingHandler.js";
 import {fileURLToPath} from 'node:url';
+import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
 
 sourceMapSupport.install();
 
@@ -66,6 +67,7 @@ class Main {
   #themeManager: ThemeManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #uiStyle: UiStyle = null;
+  #fontAtlasCache: FontAtlasCache = null;
 
   #settingsTab: SettingsTab = null;
 
@@ -106,6 +108,8 @@ class Main {
     const titleBarStyle = generalConfig.titleBarStyle;
     const systemConfig = this.systemConfiguration(availableFonts, packageJson, titleBarStyle);
     configDatabase.setSystemConfig(systemConfig);
+
+    this.#fontAtlasCache = new FontAtlasCache();
 
     const ptyManager = this.setupPtyManager(extensionManager);
     this.#ptyManager = ptyManager;
@@ -334,7 +338,7 @@ class Main {
     const window = this.#extensionManager.getActiveWindow() ?? this.#windows[0];
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
-      this.#keybindingsIOManager);
+      this.#keybindingsIOManager, this.#fontAtlasCache);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
@@ -519,7 +523,7 @@ class Main {
     const window = this.#extensionManager.getActiveWindow();
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#themeManager,
-        this.#keybindingsIOManager, window, this.#uiStyle);
+        this.#keybindingsIOManager, window, this.#uiStyle, this.#fontAtlasCache);
     }
     for (const win of this.#windows) {
       if (win.hasTab(this.#settingsTab)) {

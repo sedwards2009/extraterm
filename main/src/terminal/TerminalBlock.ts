@@ -21,6 +21,7 @@ import { Block } from "./Block.js";
 import * as Term from "../emulator/Term.js";
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig.js";
 import { ConfigCursorStyle } from "../config/Config.js";
+import { FontAtlasCache } from "./FontAtlasCache.js";
 
 
 enum SelectionMode {
@@ -57,6 +58,8 @@ export class TerminalBlock implements Block {
   #onRenderDispose: Disposable =null;
   #terminalVisualConfig: TerminalVisualConfig = null;
   #extraFontSlices: ExtraFontSlice[] = [];
+
+  #fontAtlasCache: FontAtlasCache = null;
   #fontAtlas: TextureFontAtlas = null;
   #heightPx = 1;
   #fontMetrics: MonospaceFontMetrics = null;
@@ -90,8 +93,9 @@ export class TerminalBlock implements Block {
   #returnCode: string = null;
   #commandLine: string = null;
 
-  constructor() {
+  constructor(fontAtlasCache: FontAtlasCache) {
     this._log = getLogger("TerminalBlock", this);
+    this.#fontAtlasCache = fontAtlasCache;
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
     this.onHyperlinkHover = this.#onHyperlinkHoverEventEmitter.event;
@@ -171,24 +175,11 @@ export class TerminalBlock implements Block {
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this.#terminalVisualConfig = terminalVisualConfig;
-    const fontInfo = terminalVisualConfig.fontInfo;
 
-    this.#fontMetrics = computeFontMetrics(fontInfo.family, fontInfo.style, terminalVisualConfig.fontSizePx);
-
-    const extraFonts: FontSlice[] = [
-      {
-        fontFamily: "twemoji",
-        fontSizePx: 16,
-        unicodeStart: 0x1f000,
-        unicodeEnd: 0x20000,
-        sampleChars: ["\u{1f600}"]  // Smile emoji
-      }
-    ];
-    this.#extraFontMetrics = extraFonts.map(
-      (extraFont) => computeEmojiMetrics(this.#fontMetrics, extraFont.fontFamily, extraFont.fontSizePx));
-
-    this.#fontAtlas = new TextureFontAtlas(this.#fontMetrics, this.#extraFontMetrics, terminalVisualConfig.transparentBackground,
-      terminalVisualConfig.screenWidthHintPx, terminalVisualConfig.screenHeightHintPx);
+    const fontAtlasInfo = this.#fontAtlasCache.get(terminalVisualConfig);
+    this.#fontAtlas = fontAtlasInfo.fontAtlas;
+    this.#fontMetrics = fontAtlasInfo.metrics;
+    this.#extraFontMetrics = fontAtlasInfo.extraMetrics;
 
     this.#extraFontSlices = this.#setupExtraFontSlices(terminalVisualConfig.extraFonts);
     this.#updateWidgetSize();

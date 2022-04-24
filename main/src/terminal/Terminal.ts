@@ -61,6 +61,7 @@ import { SpacerFrame } from "./SpacerFrame.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { BorderDirection } from "../extension/ExtensionMetadata.js";
 import { QtTimeout } from "../utils/QtTimeout.js";
+import { FontAtlasCache } from "./FontAtlasCache.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -107,6 +108,7 @@ export class Terminal implements Tab, Disposable {
   #configDatabase: ConfigDatabase = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #extensionManager: ExtensionManager = null;
+  #fontAtlasCache: FontAtlasCache = null;
 
   #pty: Pty = null;
   #emulator: Term.Emulator = null;
@@ -209,7 +211,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,
-      keybindingsIOManager: KeybindingsIOManager) {
+      keybindingsIOManager: KeybindingsIOManager, fontAtlasCache: FontAtlasCache) {
 
     this._log = getLogger("Terminal", this);
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
@@ -222,6 +224,7 @@ export class Terminal implements Tab, Disposable {
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#uiStyle = uiStyle;
     this.#qtTimeout = new QtTimeout();
+    this.#fontAtlasCache = fontAtlasCache;
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
@@ -370,7 +373,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator): TerminalBlock {
-    const terminalBlock = new TerminalBlock();
+    const terminalBlock = new TerminalBlock(this.#fontAtlasCache);
     if (emulator != null) {
       terminalBlock.setEmulator(emulator);
     }

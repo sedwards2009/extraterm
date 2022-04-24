@@ -21,6 +21,7 @@ import { KeybindingsPage } from "./keybindings/KeybindingsPage.js";
 import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager.js";
 import { Window } from "../Window.js";
 import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
+import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
 
 
 export class SettingsTab implements Tab {
@@ -44,7 +45,7 @@ export class SettingsTab implements Tab {
   #stackedWidgetCount = 0;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
-    keybindingsIOManager: KeybindingsIOManager, window: Window, uiStyle: UiStyle) {
+    keybindingsIOManager: KeybindingsIOManager, window: Window, uiStyle: UiStyle, fontAtlasCache: FontAtlasCache) {
 
     this._log = getLogger("SettingsTab", this);
     this.#configDatabase = configDatabase;
@@ -54,7 +55,7 @@ export class SettingsTab implements Tab {
 
     this.#generalPage = new GeneralPage(this.#configDatabase, uiStyle);
     this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
-      uiStyle);
+      uiStyle, fontAtlasCache);
     this.#sessionTypesPage = new SessionTypesPage(this.#configDatabase, this.#extensionManager, window, uiStyle);
     this.#keybindingsPage = new KeybindingsPage(this.#configDatabase, this.#extensionManager,
       this.#keybindingsIOManager, uiStyle);

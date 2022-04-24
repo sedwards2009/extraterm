@@ -20,6 +20,7 @@ import { TerminalBlock } from "../terminal/TerminalBlock.js";
 import * as Term from "../emulator/Term.js";
 import { QtTimeout } from "../utils/QtTimeout.js";
 import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
+import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
 
 
 const uiScalePercentOptions: {id: number, name: string}[] = [
@@ -53,6 +54,7 @@ export class AppearancePage {
   #themeManager: ThemeManager = null;
   #extensionManager: ExtensionManager = null;
   #uiStyle: UiStyle = null;
+  #fontAtlasCache: FontAtlasCache = null;
 
   #previewTerminalBlock: TerminalBlock = null;
   #previewEmulator: Term.Emulator = null;
@@ -66,7 +68,7 @@ export class AppearancePage {
   #terminalThemeCommentLabel: QLabel = null;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
-      uiStyle: UiStyle) {
+      uiStyle: UiStyle, fontAtlasCache: FontAtlasCache) {
 
     this._log = getLogger("AppearancePage", this);
     this.#configDatabase = configDatabase;
@@ -289,7 +291,7 @@ export class AppearancePage {
       clearTimeout: this.#qtTimeout.clearTimeout.bind(this.#qtTimeout),
     });
 
-    this.#previewTerminalBlock = new TerminalBlock();
+    this.#previewTerminalBlock = new TerminalBlock(this.#fontAtlasCache);
     if (this.#terminalVisualConfig != null) {
       this.#previewTerminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
     }
