@@ -75,6 +75,7 @@ export class AppearancePage {
     this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
     this.#uiStyle = uiStyle;
+    this.#fontAtlasCache = fontAtlasCache;
   }
 
   getPage(): QScrollArea {
