@@ -219,7 +219,7 @@ function sanitizeGeneralConfig(configDatabase: ConfigDatabase, themeManager: The
   sanitizeField(generalConfig, "tipTimestamp", 0);
 
   const titleBarStyles: TitleBarStyle[] = ["compact", "native", "theme"];
-  sanitizeStringEnumField(generalConfig, "titleBarStyle", titleBarStyles, "compact");
+  sanitizeStringEnumField(generalConfig, "titleBarStyle", titleBarStyles, "native");
 
   sanitizeField(generalConfig, "uiScalePercent", 100);
   generalConfig.uiScalePercent = Math.min(500, Math.max(5, generalConfig.uiScalePercent || 100));

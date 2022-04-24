@@ -87,7 +87,7 @@ export class AppearancePage {
       mutator(generalConfig);
       this.#configDatabase.setGeneralConfig(generalConfig);
     };
-
+    const showTitleBar = (<Term.Platform> process.platform) === "linux";
     const marginSizes: TerminalMarginStyle[] = [
       "none",
       "thin",
@@ -249,8 +249,8 @@ export class AppearancePage {
                   }
                 })),
 
-                "Window Title Bar:",
-                shrinkWrap(ComboBox({
+                showTitleBar && "Window Title Bar:",
+                showTitleBar && shrinkWrap(ComboBox({
                   currentIndex: titleBarOptions.map(option => option.id).indexOf(generalConfig.titleBarStyle),
                   items: titleBarOptions.map(item => item.name),
                   onActivated: (index) => {

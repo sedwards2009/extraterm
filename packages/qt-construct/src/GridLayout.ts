@@ -13,7 +13,7 @@ export interface GridLayoutItem {
   alignment?: AlignmentFlag;
 }
 
-export type GridLayoutChild = QWidget | string | NodeLayout<any> | GridLayoutItem;
+export type GridLayoutChild = QWidget | string | NodeLayout<any> | GridLayoutItem | false | null | undefined;
 
 export interface GridLayoutOptions {
   columns: number;
@@ -43,6 +43,10 @@ export function GridLayout(options: GridLayoutOptions): QGridLayout {
   for (let i=0; i<children.length; i++) {
     let kid: QWidget | null = null;
     const candidate = children[i];
+
+    if (candidate === false || candidate == null) {
+      continue;
+    }
 
     const row = Math.floor(col / columns);
     const column = col % columns;
