@@ -93,7 +93,6 @@ export class CommandPalette {
   }
 
   #commandSelected(id: string): void {
-    this._log.debug(`#commandSelected: ${id}`);
     this.hide();
     doLater( () => {
       try {

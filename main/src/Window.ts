@@ -695,7 +695,7 @@ export class Window {
   }
 
   getTab(index: number): Tab {
-    return this.#tabs[index].tab;
+    return this.#tabs[index]?.tab;
   }
 
   addTab(tab: Tab): void {
