@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Logger, log, getLogger } from "extraterm-logging";
-import { doLater } from "extraterm-later";
+import { doLater } from "extraterm-timeoutqt";
 import { Direction, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
 import { BoxLayout, Widget, Label } from "qt-construct";
 import { Tab } from "./Tab.js";

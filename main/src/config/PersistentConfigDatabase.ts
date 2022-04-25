@@ -8,7 +8,7 @@ import * as _ from "lodash-es";
 import * as path from "node:path";
 
 import { getLogger, log } from "extraterm-logging";
-import { DebouncedDoLater } from "extraterm-later";
+import { DebouncedDoLater } from "extraterm-timeoutqt";
 
 import { ConfigChangeEvent, ConfigDatabase, ConfigKey } from "./ConfigDatabase.js";
 import * as SharedMap from "../shared_map/SharedMap.js";

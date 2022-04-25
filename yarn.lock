@@ -3456,7 +3456,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"extraterm-later@1.0.0, extraterm-later@workspace:packages/extraterm-later":
+"extraterm-later@workspace:packages/extraterm-later":
   version: 0.0.0-use.local
   resolution: "extraterm-later@workspace:packages/extraterm-later"
   dependencies:
@@ -3519,6 +3519,19 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     jest: 27.5.1
+    shx: ^0.3.2
+    typescript: 4.6.3
+  languageName: unknown
+  linkType: soft
+
+"extraterm-timeoutqt@1.0.0, extraterm-timeoutqt@workspace:packages/extraterm-timeoutqt":
+  version: 0.0.0-use.local
+  resolution: "extraterm-timeoutqt@workspace:packages/extraterm-timeoutqt"
+  dependencies:
+    "@nodegui/nodegui": ^0.50.0
+    eslint: 8.13.0
+    eslint-config-extraterm: 1.0.0
+    eslint-plugin-unicorn: 42.0.0
     shx: ^0.3.2
     typescript: 4.6.3
   languageName: unknown
@@ -5697,10 +5710,10 @@ __metadata:
     extraterm-color-utilities: 1.0.0
     extraterm-data-structures: 1.0.0
     extraterm-font-ligatures: 1.0.0
-    extraterm-later: 1.0.0
     extraterm-logging: 1.0.0
     extraterm-mimetype-detector: 1.0.0
     extraterm-readonly-toolbox: 0.1.0
+    extraterm-timeoutqt: 1.0.0
     extraterm-trim-between-tags: 1.0.0
     extraterm-unicode-utilities: 1.0.0
     extraterm-uuid: 1.0.0

@@ -10,7 +10,7 @@ import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { DeepReadonly } from "extraterm-readonly-toolbox";
-import { doLater } from "extraterm-later";
+import { doLater } from "extraterm-timeoutqt";
 import { BoxLayout, repolish, ScrollArea, ScrollBar, Widget } from "qt-construct";
 import {
   Disposable,
