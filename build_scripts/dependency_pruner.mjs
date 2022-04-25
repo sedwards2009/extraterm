@@ -42,7 +42,7 @@ export function pruneDevDependencies(sourceRootPath, targetPath) {
   for (const p of [".", ...pkg.workspaces.packages]) {
     let nodeModulesPathList = [];
     try {
-      nodeModulesPathList = ls('-d', path.join(targetPath, p))
+      nodeModulesPathList = sh.ls('-d', path.join(targetPath, p))
     } catch(ex) {
     }
 
@@ -54,7 +54,7 @@ export function pruneDevDependencies(sourceRootPath, targetPath) {
   for (const p of [".", ...pkg.workspaces.packages]) {
     let nodeModulesPathList = [];
     try {
-      nodeModulesPathList = ls('-d', path.join(targetPath, p))
+      nodeModulesPathList = sh.ls('-d', path.join(targetPath, p))
     } catch(ex) {
     }
 
@@ -98,8 +98,6 @@ function readYarnLock(sourceRootPath) {
       // delete contents[key];
     }
   }
-sh.echo(`typeof contents: ${typeof contents}`);
-sh.echo(`Array.isArray(): ${Array.isArray(contents)}`);
   return contents;
 }
 
@@ -120,33 +118,36 @@ function readPackageJson(pkgPath) {
 /**
  * @return {Dependency[]}
  */
-function objectToDependencyList(dependencies) {
+function objectToDependencyList(dependencies, resolutions) {
   const result = [];
   for (const key in dependencies) {
-    result.push( { package: key, version: dependencies[key] } );
+    const version = resolutions[key] ?? dependencies[key];
+    result.push( { package: key, version } );
   }
   return result;
 }
 
 /**
  * @param {string} pkgPath
+ * @param {object} resolutions Dependency resolutions mapping a dep name to a forced version.
  * @return {Dependency[]}
  */
-function readPrimaryDependencies(pkgPath) {
+function readPrimaryDependencies(pkgPath, resolutions) {
   const pkg = readPackageJson(pkgPath);
-  let deps = objectToDependencyList(pkg.dependencies);
+  let deps = objectToDependencyList(pkg.dependencies, resolutions);
   if (pkg.optionalDependencies !== undefined) {
-    deps = [...deps, ...objectToDependencyList(pkg.optionalDependencies)];
+    deps = [...deps, ...objectToDependencyList(pkg.optionalDependencies, resolutions)];
   }
   return deps;
 }
 
 /**
+ * @param {object} package JSON
  * @param {string} sourceRootPath
  * @return {Dependency[]}
  */
-function findPrimaryDependencies(sourceRootPath) {
-  const pkg = readPackageJson(path.join(sourceRootPath, "package.json"));
+function findPrimaryDependencies(pkg, sourceRootPath) {
+  const resolutions = pkg.resolutions == null ? {} : pkg.resolutions;
 
   if (pkg.workspaces == null) {
     throw new Error("package.json doesn't have a 'workspaces' key.");
@@ -158,7 +159,7 @@ function findPrimaryDependencies(sourceRootPath) {
   let depsList = [];
   for (const p of [".", ...pkg.workspaces.packages]) {
     for (const pkgPath of sh.ls(path.join(sourceRootPath, p, "package.json"))) {
-      depsList = [...depsList, ...readPrimaryDependencies(pkgPath)];
+      depsList = [...depsList, ...readPrimaryDependencies(pkgPath, resolutions)];
     }
   }
   return depsList;
@@ -169,7 +170,7 @@ function findPrimaryDependencies(sourceRootPath) {
  * @param { {[key: string]: number} } useCount
  * @param {Dependency} dependency
  */
-function markUsedDependency(yarnLock, useCount, dependency) {
+function markUsedDependency(yarnLock, useCount, dependency, resolutions) {
   const depString = `${dependency.package}@npm:${dependency.version}`;
 
   const yarnDep = yarnLock[depString];
@@ -189,7 +190,7 @@ function markUsedDependency(yarnLock, useCount, dependency) {
 
     if (yarnDep.dependencies != null) {
       markUsedDependencyList(yarnLock, useCount,
-        objectToDependencyList(yarnDep.dependencies));
+        objectToDependencyList(yarnDep.dependencies, resolutions), resolutions);
     }
   }
 }
@@ -199,9 +200,9 @@ function markUsedDependency(yarnLock, useCount, dependency) {
  * @param { {[key: string]: number} } useCount
  * @param {Dependency[]} depsList
  */
-function markUsedDependencyList(yarnLock, useCount, depsList) {
+function markUsedDependencyList(yarnLock, useCount, depsList, resolutions) {
   for (const dep of depsList) {
-    markUsedDependency(yarnLock, useCount, dep);
+    markUsedDependency(yarnLock, useCount, dep, resolutions);
   }
 }
 
@@ -210,14 +211,22 @@ function markUsedDependencyList(yarnLock, useCount, depsList) {
  */
 function computeKeepAndPrunePackages(sourceRootPath) {
   const yarnLock = readYarnLock(sourceRootPath);
-  const depsList = findPrimaryDependencies(sourceRootPath);
+  const pkg = readPackageJson(path.join(sourceRootPath, "package.json"));
+  const depsList = findPrimaryDependencies(pkg, sourceRootPath);
 
+  // sh.echo("");
+  // sh.echo("Primary dependencies");
+  // for (const dp of depsList) {
+  //   sh.echo(`package: ${dp.package}@${dp.version}`);
+  // }
+
+  const resolutions = pkg.resolutions ?? {};
   const useCount = {};
-  markUsedDependencyList(yarnLock, useCount, depsList);
+  markUsedDependencyList(yarnLock, useCount, depsList, resolutions);
 
-  // echo("-------------------------------------------------------------------");
+  // sh.echo("-------------------------------------------------------------------");
   // for (const key in useCount) {
-  //   echo(`${key} used ${useCount[key]}`);
+  //   sh.echo(`${key} used ${useCount[key]}`);
   // }
 
   const keep = [];
@@ -300,7 +309,7 @@ function pruneBrokenBinLinks(projectDirectory) {
         const linkTargetPath = path.join(binPath, linkTarget);
         if ( ! fs.existsSync(linkTargetPath)) {
           sh.echo(`Pruning broken symlink link ${linkPath}`);
-          rm(linkPath);
+          sh.rm(linkPath);
         }
       }
     }
@@ -320,7 +329,7 @@ function checkAndPruneDependency(pruneDepNameMap, projectDirectory, depDir) {
     for (const dep of deps) {
       if (pkg.version === dep.version) {
         sh.echo(`Pruning module directory ${depDirPath}`);
-        rm('-rf', depDirPath);
+        sh.rm('-rf', depDirPath);
         return true;
       }
     }
