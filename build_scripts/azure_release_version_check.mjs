@@ -26,7 +26,7 @@ function checkReleaseVersion() {
 
   const packageJson = fs.readFileSync('package.json');
   const packageData = JSON.parse(packageJson);
-  packageVersion = packageData.version;
+  const packageVersion = packageData.version;
   if (packageVersion !== tagName) {
     log(`Error: Tag name '${tagName}' doesn't match the version '${packageVersion}' in package.json.`);
     return 1;
