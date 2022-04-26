@@ -196,6 +196,7 @@ export class Window {
     this.#hamburgerMenu.setStyleSheet("", false);
     if (process.platform === "darwin") {
       uiScale *= 1.5; // Make everything bigger on macOS to more closely match native apps.
+                      // Note: This factor appears in main.ts:#setApplicationStyle too.
     }
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
     this.#windowWidget.setStyleSheet(sheet, false);

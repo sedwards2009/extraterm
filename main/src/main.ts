@@ -165,11 +165,17 @@ class Main {
     dpi = dpi === 0 ? QApplication.primaryScreen().logicalDotsPerInch() : dpi;
 
     const qApplication = QApplication.instance();
-    qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(uiScalePercent / 100, dpi), false);
+    let uiScale = uiScalePercent / 100;
+    if (process.platform === "darwin") {
+      uiScale *= 1.5; // Make everything bigger on macOS to more closely match native apps.
+                      // Note: This factor appears in Wndow.ts too
+    }
+
+    qApplication.setStyleSheet(this.#uiStyle.getApplicationStyleSheet(uiScale, dpi), false);
     this.#tweakerStyle = new StyleTweaker("Windows");
 
-    const iconSize = this.#uiStyle.getMenuIconSize(uiScalePercent / 100, dpi);
-    const buttonIconSize = this.#uiStyle.getButtonIconSize(uiScalePercent / 100, dpi);
+    const iconSize = this.#uiStyle.getMenuIconSize(uiScale, dpi);
+    const buttonIconSize = this.#uiStyle.getButtonIconSize(uiScale, dpi);
     this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_SmallIconSize, iconSize);
     this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_ToolBarIconSize, iconSize);
     this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_ButtonIconSize, buttonIconSize);
