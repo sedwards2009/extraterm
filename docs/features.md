@@ -5,12 +5,7 @@ Extraterm is a open source terminal emulator which aims to add many new features
 
 It is currently in steady development and although not at a 1.0 release yet, it is generally stable for everyday use provided you can tolerate the occasional bug. (Submit [bug reports here](https://github.com/sedwards2009/extraterm/issues) .)
 
-
-# Tiling and panes
-
-Extraterm also supports tiling and panes, text size scaling per terminal session and color emoji on all operating systems.
-
-![Tiling and panes](splits_and_panes.png)
+Note: Many of these features are currently only present in the older Electron based version of Extraterm.
 
 
 # Command Palette
@@ -29,7 +24,7 @@ Extraterm supports directly viewing richer content than just text. Works across 
 
 # Shell Integration
 
-Use the shell integration to unlock Extraterm’s power. 
+Use the shell integration to unlock Extraterm’s power.
 
 Command output is clearly marked and return status of commands is clearly visible. Interesting command output can be put in its own tab, or just delete it directly. Bash, zshell and fish are currently supported. Extraterm features a powerful keyboard based cursor mode. Copy and paste without having to leave the keyboard.
 

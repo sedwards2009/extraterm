@@ -26,15 +26,12 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 
 # Features
 
-* Supports Linux and macOS, and on Windows WSL, CMD, PowerShell and Cygwin
-* Multiple tabs and panes, split and tiled any way you like
+* Supports Linux and macOS, and on Windows WSL, CMD, and PowerShell
 * Images in terminal
-* GPU accelerated rendering
 * 24 bit color
 * Color emoji on all platforms
 * Font ligatures
 * Keyboard friendly "Command Palette"
-* Text selection using cursor/keyboard, block selections, multi-cursor selections
 * Text zoom
 * Configurable key bindings
 * Global shortcuts
@@ -42,7 +39,6 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * Search
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
 * Easy uploads and downloads using the shell integration
-* Command output is editable in place. Multi-cursor editing
 * Previous command output can be used as input for new commands
 * Supports iTerm2 and TextMate themes
 * Multiple windows
@@ -57,7 +53,12 @@ See the more detailed [features list](https://extraterm.org/features.html).
 
 # Download
 
-[Download and try it out on Linux, Windows+Cygwin and macOS](https://github.com/sedwards2009/extraterm/releases)
+Extraterm is available in two flavours: the classic Extraterm is based on Electron, and the lighter faster Qt based version which is the future of Extraterm but is in development and lacking features. Both can run on Linux, Windows, and macOS.
+
+* Try the classic version here](https://github.com/sedwards2009/extraterm/releases/tag/v0.59.4) (versions before 0.60.0)
+* [Try the latest Qt based version here](https://github.com/sedwards2009/extraterm/releases) (version 0.60.0 and later
+
+Both can be installed at the same time, without problems.
 
 :warning: Extraterm is in development and roughly 'beta' in quality. It is generally stable, but don't be too surprised if you encounter a few bugs. Use at your own risk. :warning:
 
