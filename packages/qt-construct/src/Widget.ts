@@ -23,6 +23,7 @@ export interface WidgetOptions {
   minimumWidth?: number;
   mouseTracking?: boolean;
   objectName?: string;
+  onClose?: () => void;
   onEnter?: () => void;
   onFocusOut?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
@@ -43,8 +44,8 @@ export interface WidgetOptions {
 export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
-    objectName, onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onMove,
-    onResize, sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
+    objectName, onClose, onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove,
+    onMove, onResize, sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
     windowFlag, inlineStyle, toolTip, visible
   } = options;
 
@@ -80,8 +81,8 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   if (mouseTracking !== undefined) {
     widget.setMouseTracking(mouseTracking);
   }
-  if (onKeyPress !== undefined) {
-    widget.addEventListener(WidgetEventTypes.KeyPress, onKeyPress);
+  if (onClose !== undefined) {
+    widget.addEventListener(WidgetEventTypes.Close, onClose);
   }
   if (onEnter !== undefined) {
     widget.addEventListener(WidgetEventTypes.Enter, onEnter);
@@ -94,6 +95,9 @@ export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptio
   }
   if (onLeave !== undefined) {
     widget.addEventListener(WidgetEventTypes.Leave, onLeave);
+  }
+  if (onKeyPress !== undefined) {
+    widget.addEventListener(WidgetEventTypes.KeyPress, onKeyPress);
   }
   if (onMouseButtonPress !== undefined) {
     widget.addEventListener(WidgetEventTypes.MouseButtonPress, onMouseButtonPress);

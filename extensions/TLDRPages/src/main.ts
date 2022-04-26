@@ -1,12 +1,11 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { ExtensionContext, Logger, ListPickerOptions } from '@extraterm/extraterm-extension-api';
-import * as path from 'path';
-import * as fs from 'fs';
-import { PageDatabase } from './PageDatabase';
+import * as path from 'node:path';
+import { PageDatabase } from './PageDatabase.js';
 
 
 let log: Logger = null;
@@ -30,7 +29,7 @@ async function showCommandList(): Promise<void> {
     selectedItemIndex: 0,
   };
 
-  const selected = await context.window.activeTerminal.tab.showListPicker(allCommandsOptions);
+  const selected = await context.activeTerminal.tab.showListPicker(allCommandsOptions);
   if (selected == null) {
     return;
   }
@@ -42,9 +41,9 @@ async function showCommandList(): Promise<void> {
     items: info.examples.map(ex => ex.description),
     selectedItemIndex: 0,
   };
-  const selectedExample = await context.window.activeTerminal.tab.showListPicker(commandOptions);
+  const selectedExample = await context.activeTerminal.tab.showListPicker(commandOptions);
   if (selectedExample == null) {
     return;
   }
-  context.window.activeTerminal.type(info.examples[selectedExample].commandLine);
+  context.activeTerminal.type(info.examples[selectedExample].commandLine);
 }

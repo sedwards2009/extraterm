@@ -5,24 +5,23 @@
  */
 import { Logger, log, getLogger } from "extraterm-logging";
 import { doLater } from "extraterm-timeoutqt";
-import { Direction, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
-import { BoxLayout, Widget, Label } from "qt-construct";
+import { Label } from "qt-construct";
 import { Tab } from "./Tab.js";
 import { Window } from "./Window.js";
 import { ExtensionManager } from "./InternalTypes.js";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
 import { Entry, FieldType, ListPicker } from "./ui/ListPicker.js";
 import { UiStyle } from "./ui/UiStyle.js";
+import { WindowPopOver } from "./ui/WindowPopOver.js";
 
 
 export class CommandPalette {
   private _log: Logger = null;
   #uiStyle: UiStyle = null;
-
   #extensionManager: ExtensionManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #listPicker: ListPicker = null;
-  #popUp: QWidget = null;
+  #windowPopOver: WindowPopOver = null;
 
   constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
     this._log = getLogger("CommandPalette", this);
@@ -30,30 +29,19 @@ export class CommandPalette {
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
 
-    this.#createPopUp();
+    this.#createPopOver();
   }
 
-  #createPopUp(): void {
+  #createPopOver(): void {
     this.#listPicker = new ListPicker(this.#uiStyle);
-
-    this.#popUp = Widget({
-      cssClass: ["list-picker"],
-      windowFlag: WindowType.Popup,
-      attribute: [WidgetAttribute.WA_WindowPropagation, WidgetAttribute.WA_X11NetWmWindowTypePopupMenu],
-      layout: BoxLayout({
-        direction: Direction.TopToBottom,
-        children: [
-          Label({text: "Command Palette"}),
-          this.#listPicker.getWidget()
-        ]
-      })
-    });
+    this.#windowPopOver = new WindowPopOver([
+      Label({text: "Command Palette"}),
+      this.#listPicker.getWidget()
+    ]);
     this.#listPicker.onSelected((id: string) => this.#commandSelected(id));
   }
 
   show(window: Window, tab: Tab): void {
-    this.#popUp.setNodeParent(window.getWidget());
-
     const commands = this.#extensionManager.queryCommands({
       commandPalette: true,
       categories: ["application", "window", "terminal", "viewer"],
@@ -77,19 +65,12 @@ export class CommandPalette {
 
     this.#listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT, FieldType.SECONDARY_TEXT_RIGHT], entries);
 
-    const tabRect = window.getTabGlobalGeometry(tab);
-
-    const width = 500;  // px TODO: make it respect DPI
-    const leftOffset = (tabRect.width() - width ) /2;
-
-    this.#popUp.setGeometry(tabRect.left() + leftOffset, tabRect.top(), width, tabRect.height());
-    this.#popUp.raise();
-    this.#popUp.show();
+    this.#windowPopOver.show(window, tab);
     this.#listPicker.focus();
   }
 
   hide(): void {
-    this.#popUp.hide();
+    this.#windowPopOver.hide();
   }
 
   #commandSelected(id: string): void {

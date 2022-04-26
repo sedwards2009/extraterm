@@ -100,6 +100,10 @@ export class ListPicker {
     this.#lineEdit.setFocus(FocusReason.PopupFocusReason);
   }
 
+  setText(text: string): void {
+    this.#lineEdit.setText(text);
+  }
+
   #handleTextEdited(newText: string): void {
     this.#contentModel.setSearch(newText);
     this.#tableView.selectionModel().select(this.#contentModel.createIndex(0, 0),

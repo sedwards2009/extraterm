@@ -17,7 +17,6 @@ import { LineRangeChange, Terminal } from "../terminal/Terminal.js";
 import { CommandsRegistry } from "../CommandsRegistry.js";
 import { WorkspaceSessionEditorRegistry } from "./WorkspaceSessionEditorRegistry.js";
 import { TerminalImpl } from "./api/TerminalImpl.js";
-import { Block } from "../terminal/Block.js";
 import { BlockImpl } from "./api/BlockImpl.js";
 import { BlockFrame } from "../terminal/BlockFrame.js";
 import { TabImpl } from "./api/TabImpl.js";
@@ -171,7 +170,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   async showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number> {
-    throw new Error("Method not implemented.");
+    return this.#extensionManager.showListPicker(tab, options);
   }
 
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void {

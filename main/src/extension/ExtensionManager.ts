@@ -26,6 +26,8 @@ import { LineRangeChange, Terminal } from "../terminal/Terminal.js";
 import { InternalExtensionContext, InternalSessionEditor, InternalSessionSettingsEditor } from "../InternalTypes.js";
 import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl.js";
 import { Tab } from "../Tab.js";
+import { ListPickerPopOver } from "./ListPickerPopOver.js";
+import { UiStyle } from "../ui/UiStyle.js";
 
 
 interface ActiveExtension {
@@ -49,6 +51,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   private _log: Logger = null;
 
   #configDatabase: ConfigDatabase = null;
+  #uiStyle: UiStyle = null;
 
   #extensionMetadata: ExtensionMetadata[] = [];
   #desiredState: ExtensionDesiredState = null;
@@ -71,11 +74,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   #allWindows: Window[] = [];
 
-  constructor(configDatabase: ConfigDatabase, extensionPaths: string[],
+  #listPickerPopOver: ListPickerPopOver = null;
+
+  constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionPaths: string[],
       applicationVersion: string) {
 
     this._log = getLogger("ExtensionManager", this);
     this.#configDatabase = configDatabase;
+    this.#uiStyle = uiStyle;
 
     this.#extensionPaths = extensionPaths;
     this.onDesiredStateChanged = this.#desiredStateChangeEventEmitter.event;
@@ -748,5 +754,12 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   getAllWindows(): Window[] {
     return this.#allWindows;
+  }
+
+  async showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number> {
+    if (this.#listPickerPopOver == null) {
+      this.#listPickerPopOver = new ListPickerPopOver(this.#uiStyle);
+    }
+    return this.#listPickerPopOver.show(this.getWindowForTab(tab), tab, options);
   }
 }

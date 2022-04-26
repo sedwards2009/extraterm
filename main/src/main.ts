@@ -93,9 +93,16 @@ class Main {
     const availableFonts = getFonts();
     const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, PACKAGE_JSON_PATH), "utf8"));
 
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/Twemoji.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/extraicons.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-brands-400.ttf"));
+    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
+
+    this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
+
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
-    const extensionManager = await this.setupExtensionManager(configDatabase, packageJson.version);
+    const extensionManager = await this.setupExtensionManager(configDatabase, this.#uiStyle, packageJson.version);
     this.#extensionManager = extensionManager;
 
     this.#keybindingsIOManager = this.setupKeybindingsManager(configDatabase, extensionManager);
@@ -135,13 +142,6 @@ class Main {
 
     this.registerCommands(extensionManager);
     this.startUpSessions(configDatabase, extensionManager);
-
-    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/Twemoji.ttf"));
-    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/extraicons.ttf"));
-    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-brands-400.ttf"));
-    QFontDatabase.addApplicationFont(path.join(SourceDir.path, "../resources/fonts/fa-solid-900.ttf"));
-
-    this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
 
     this.#setApplicationStyle(generalConfig.uiScalePercent);
 
@@ -205,7 +205,9 @@ class Main {
     this._log.info("Recording logs to ", logFilePath);
   }
 
-  async setupExtensionManager(configDatabase: ConfigDatabase, applicationVersion: string): Promise<ExtensionManager> {
+  async setupExtensionManager(configDatabase: ConfigDatabase, uiStyle: UiStyle,
+      applicationVersion: string): Promise<ExtensionManager> {
+
     const extensionPaths = [path.join(__dirname, "../../extensions" )];
     const userExtensionDirectory = getUserExtensionDirectory();
     this._log.info(`User extension directory is: ${userExtensionDirectory}`);
@@ -213,7 +215,7 @@ class Main {
       extensionPaths.push(userExtensionDirectory);
     }
 
-    const extensionManager = new ExtensionManager(configDatabase, extensionPaths, applicationVersion);
+    const extensionManager = new ExtensionManager(configDatabase, uiStyle, extensionPaths, applicationVersion);
     await extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
     return extensionManager;
   }

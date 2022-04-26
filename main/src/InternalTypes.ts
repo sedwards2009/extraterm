@@ -90,6 +90,7 @@ export interface ExtensionManager {
   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration,
     window: Window): InternalSessionSettingsEditor[];
+  showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
 
 //   setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void;
 //   getViewerTabDisplay(): ViewerTabDisplay;

@@ -1,10 +1,10 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as path from 'path';
-import * as fs from 'fs';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
 
 
 export interface PageInfo {
@@ -29,15 +29,17 @@ enum ParseState {
 
 export class PageDatabase {
 
-  private _commandNameList: string[] = [];
-  private _pageInfoList: PageInfo[] = [];
-  private _pageInfoCache = new Map<string, PageInfo>();
+  #commandNameList: string[] = [];
+  #pageInfoList: PageInfo[] = [];
+  #pageInfoCache = new Map<string, PageInfo>();
+  #databasePath: string;
 
-  constructor(private _databasePath: string) {
+  constructor(databasePath: string) {
+    this.#databasePath = databasePath;
   }
 
   async loadIndex(): Promise<void> {
-    const pagesIndexPath = path.join(this._databasePath, "index.json");
+    const pagesIndexPath = path.join(this.#databasePath, "index.json");
     const indexJSONString = await fs.promises.readFile(pagesIndexPath, {encoding: "utf8"});
     const pageIndex = JSON.parse(indexJSONString);
 
@@ -66,45 +68,45 @@ export class PageDatabase {
         }
       }
     }
-    this._commandNameList = commandList;
-    this._pageInfoList = pageInfoList;
+    this.#commandNameList = commandList;
+    this.#pageInfoList = pageInfoList;
   }
 
   getCommandNames(): string[] {
-    return this._commandNameList;
+    return this.#commandNameList;
   }
 
   async getPageInfoByName(commandName: string, platform: string): Promise<PageInfo> {
-    const info = this._pageInfoList.find(info => info.command === commandName && info.platform === platform);
+    const info = this.#pageInfoList.find(info => info.command === commandName && info.platform === platform);
     if (info == null) {
       return null;
     }
-    return this._getPageInfoByInfo(info);
+    return this.#getPageInfoByInfo(info);
   }
 
   async getPageInfoByIndex(commandIndex: number): Promise<PageInfo> {
-    const info = this._pageInfoList[commandIndex];
-    return this._getPageInfoByInfo(info);
+    const info = this.#pageInfoList[commandIndex];
+    return this.#getPageInfoByInfo(info);
   }
 
-  private async _getPageInfoByInfo(commandInfo: PageInfo): Promise<PageInfo> {
-    if (this._pageInfoCache.has(commandInfo.name)) {
-      return this._pageInfoCache.get(commandInfo.name);
+  async #getPageInfoByInfo(commandInfo: PageInfo): Promise<PageInfo> {
+    if (this.#pageInfoCache.has(commandInfo.name)) {
+      return this.#pageInfoCache.get(commandInfo.name);
     }
-    await this._fillInExamples(commandInfo);
-    this._pageInfoCache.set(commandInfo.name, commandInfo);
+    await this.#fillInExamples(commandInfo);
+    this.#pageInfoCache.set(commandInfo.name, commandInfo);
     return commandInfo;
   }
 
-  private async _fillInExamples(commandInfo: PageInfo): Promise<void> {
-    const pagePath = path.join(this._databasePath, commandInfo.platform, `${commandInfo.name}.md`);
+  async #fillInExamples(commandInfo: PageInfo): Promise<void> {
+    const pagePath = path.join(this.#databasePath, commandInfo.platform, `${commandInfo.name}.md`);
     const pageString = await fs.promises.readFile(pagePath, { encoding: "utf8" });
-    const {description, examples } = this._parsePage(pageString);
+    const {description, examples } = this.#parsePage(pageString);
     commandInfo.description = description;
     commandInfo.examples = examples;
   }
 
-  private _parsePage(pageString: string): { description: string; examples: CommandExample[]; } {
+  #parsePage(pageString: string): { description: string; examples: CommandExample[]; } {
     const lines = pageString.split("\n");
     let state: ParseState = ParseState.PROLOGUE;
 

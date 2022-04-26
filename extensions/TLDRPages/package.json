@@ -3,11 +3,12 @@
   "displayName": "TLDR Pages",
   "version": "1.0.0",
   "description": "",
-  "windowMain": "dist/main.js",
+  "type": "module",
+  "exports": "./dist/main.js",
   "scripts": {
     "build": "yarn run fetch-data && tsc",
     "clean": "shx rm -rf dist data",
-    "fetch-data": "node build_scripts/download_data.js",
+    "fetch-data": "node build_scripts/download_data.mjs",
     "test": "yarn run build && jest"
   },
   "author": "",
@@ -22,7 +23,6 @@
       }
     ]
   },
-  "isInternal": true,
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/jest": "27.0.1",
