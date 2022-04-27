@@ -9,7 +9,7 @@
     "build": "yarn run fetch-data && tsc",
     "clean": "shx rm -rf dist data",
     "fetch-data": "node build_scripts/download_data.mjs",
-    "test": "yarn run build && jest"
+    "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "author": "",
   "license": "MIT",
