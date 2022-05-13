@@ -1,7 +1,7 @@
 ---
 title: Extraterm Qt v0.61.0 released
 date: 2022-05-13 20:00:00 +0200
-categories: news
+categories: release
 ---
 
 **Feature**
