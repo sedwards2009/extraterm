@@ -335,19 +335,6 @@ export class Terminal implements Tab, Disposable {
       })
     });
 
-    this.#scrollArea.viewport().setObjectName("viewport");
-
-    // For some reason the viewport widget appears like small (invisible)
-    // postage stamp on top of the scrollarea contents and gets in the
-    // way by consuming mouse clicks etc. Here we make the problem visible
-    // and then hide it which seems to work around the problem.
-    this.#scrollArea.viewport().setStyleSheet(`
-      QWidget {
-        background-color: #0f0;
-      }
-    `, false);
-    this.#scrollArea.viewport().hide();
-
     this.#contentLayout.addStretch(1);
 
     this.#lastCommandTerminalViewer = this.#createFramedTerminalBlock();

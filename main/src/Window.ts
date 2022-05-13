@@ -417,7 +417,7 @@ export class Window {
         this.#handleWindowMenuTriggered(action.data().toString());
       }
     });
-    this.#contextMenu.setNodeParent(this.getWidget());
+    this.#contextMenu.hide();
   }
 
   #updateContextMenu(uiStyle: UiStyle): void {

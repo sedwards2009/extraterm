@@ -8,7 +8,7 @@ import fse from "fs-extra";
 import * as constants from "node:constants";
 
 import {ExtensionContext, Logger, SessionConfiguration, SessionEditorBase} from "@extraterm/extraterm-extension-api";
-import { Direction, NodeWidget, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";
+import { Direction, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ComboBox, GridLayout, LineEdit, RadioButton, setCssClasses, Widget } from "qt-construct";
 
 
@@ -30,7 +30,7 @@ export function activate(context: ExtensionContext): any {
   });
 }
 
-function SessionEditorFactory(sessionEditorBase: SessionEditorBase): NodeWidget<any> {
+function SessionEditorFactory(sessionEditorBase: SessionEditorBase): QWidget {
   return new EditorUi(sessionEditorBase).getWidget();
 }
 

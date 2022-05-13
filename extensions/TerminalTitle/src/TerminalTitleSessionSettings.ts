@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { NodeWidget } from '@nodegui/nodegui';
+import { QWidget } from '@nodegui/nodegui';
 import { Logger, SessionSettingsEditorBase, TerminalEnvironment } from '@extraterm/extraterm-extension-api';
 
 import { TemplateString } from './TemplateString.js';
@@ -17,7 +17,7 @@ export interface Settings {
 }
 
 export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: SessionSettingsEditorBase,
-    log: Logger): NodeWidget<any> {
+    log: Logger): QWidget {
 
   const templateString = new TemplateString();
 

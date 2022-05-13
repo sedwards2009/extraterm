@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { NodeWidget } from "@nodegui/nodegui";
+import { QWidget } from "@nodegui/nodegui";
 import { CommandsRegistry } from "./CommandsRegistry.js";
 import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./extension/ExtensionManagerTypes.js";
 
@@ -86,7 +86,7 @@ export interface ExtensionManager {
 //   onCommandsChanged: ExtensionApi.Event<void>;
 //   commandRegistrationChanged(): void;
 
-  createTabTitleWidgets(terminal: Terminal): NodeWidget<any>[];
+  createTabTitleWidgets(terminal: Terminal): QWidget[];
   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration,
     window: Window): InternalSessionSettingsEditor[];
@@ -219,7 +219,7 @@ export interface SessionSettingsChange {
 export interface InternalSessionSettingsEditor extends ExtensionApi.SessionSettingsEditorBase {
    name: string;
    onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
-  _getWidget(): NodeWidget<any>;
+  _getWidget(): QWidget;
 }
 
 export interface SessionConfigurationChange {
@@ -228,7 +228,7 @@ export interface SessionConfigurationChange {
 
 export interface InternalSessionEditor extends ExtensionApi.SessionEditorBase {
    onSessionConfigurationChanged: ExtensionApi.Event<SessionConfigurationChange>;
-   _getWidget(): NodeWidget<any>;
+   _getWidget(): QWidget;
 }
 
 export function isSupportedOnThisPlatform(metadata: ExtensionMetadata): boolean {

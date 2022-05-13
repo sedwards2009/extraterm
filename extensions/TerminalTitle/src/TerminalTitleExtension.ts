@@ -5,7 +5,7 @@
  */
 import { ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalEnvironment,
   SessionSettingsEditorBase } from '@extraterm/extraterm-extension-api';
-import { NodeWidget, QLabel, QSizePolicyPolicy, TextFormat } from '@nodegui/nodegui';
+import { QWidget, QLabel, QSizePolicyPolicy, TextFormat } from '@nodegui/nodegui';
 import { Label } from 'qt-construct';
 import { IconFormatter } from './IconFormatter.js';
 import { TemplateString } from './TemplateString.js';
@@ -31,7 +31,7 @@ export function activate(context: ExtensionContext): any {
   context.commands.registerCommand("terminal-title:editTitle", commandEditTitle.bind(null, context));
   context.windows.registerTabTitleWidget("title", tabTitleWidgetFactory);
   context.sessions.registerSessionSettingsEditor("title",
-    (sessionSettingsEditorBase: SessionSettingsEditorBase): NodeWidget<any> => {
+    (sessionSettingsEditorBase: SessionSettingsEditorBase): QWidget => {
       return createTerminalTitleSessionSettings(sessionSettingsEditorBase, log);
     }
   );

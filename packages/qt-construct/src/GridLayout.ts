@@ -3,17 +3,17 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, NodeLayout, NodeWidget, QGridLayout, QWidget } from "@nodegui/nodegui";
+import { AlignmentFlag, QLayout, QGridLayout, QWidget } from "@nodegui/nodegui";
 import { Label } from "./Label.js";
 
 export interface GridLayoutItem {
   widget?: QWidget;
-  layout?: NodeLayout<any>;
+  layout?: QLayout;
   colSpan?: number;
   alignment?: AlignmentFlag;
 }
 
-export type GridLayoutChild = QWidget | string | NodeLayout<any> | GridLayoutItem | false | null | undefined;
+export type GridLayoutChild = QWidget | string | QLayout | GridLayoutItem | false | null | undefined;
 
 export interface GridLayoutOptions {
   columns: number;
@@ -53,7 +53,7 @@ export function GridLayout(options: GridLayoutOptions): QGridLayout {
     if ((typeof candidate) === "string") {
       kid = Label({text: <string> candidate});
       gridLayout.addWidget(kid, row, column);
-    } else if (candidate instanceof NodeLayout) {
+    } else if (candidate instanceof QLayout) {
       gridLayout.addLayout(candidate, row, column);
     } else if (isGridLayoutItem(candidate)) {
       const colSpan = candidate.colSpan ?? 1;
@@ -93,6 +93,6 @@ export function GridLayout(options: GridLayoutOptions): QGridLayout {
 }
 
 function isGridLayoutItem(item: any): item is GridLayoutItem {
-  return typeof item === "object" && (! (item instanceof NodeWidget)) &&
+  return typeof item === "object" && (! (item instanceof QWidget)) &&
     (item.widget != null || item.layout != null);
 }

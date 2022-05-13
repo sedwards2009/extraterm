@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ContextMenuPolicy, CursorShape, FocusPolicy, NodeLayout, NodeWidget, QSizePolicyPolicy, QWidget,
+import { ContextMenuPolicy, CursorShape, FocusPolicy, QLayout, QSizePolicyPolicy, QWidget,
   WidgetAttribute, WidgetEventTypes, WindowType
 } from "@nodegui/nodegui";
 
@@ -16,7 +16,7 @@ export interface WidgetOptions {
   enabled?: boolean;
   focusPolicy?: FocusPolicy;
   inlineStyle?: string;
-  layout?: NodeLayout<any>;
+  layout?: QLayout;
   maximumHeight?: number;
   maximumWidth?: number;
   minimumHeight?: number;
@@ -41,7 +41,7 @@ export interface WidgetOptions {
   windowTitle?: string;
 }
 
-export function ApplyWidgetOptions(widget: NodeWidget<any>, options: WidgetOptions): void {
+export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
     objectName, onClose, onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove,

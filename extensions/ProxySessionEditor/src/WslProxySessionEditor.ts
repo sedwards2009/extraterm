@@ -7,7 +7,7 @@ import * as _ from "lodash-es";
 import * as child_process from "node:child_process";
 
 import { Logger, SessionConfiguration, SessionEditorBase } from "@extraterm/extraterm-extension-api";
-import { Direction, NodeWidget, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";
+import { Direction, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ComboBox, GridLayout, LineEdit, RadioButton, setCssClasses, Widget } from "qt-construct";
 
 
@@ -22,7 +22,7 @@ export function init(): void {
   readDistributionsSpawn();
 }
 
-export function wslProxySessionEditorFactory(log: Logger, sessionEditorBase: SessionEditorBase): NodeWidget<any> {
+export function wslProxySessionEditorFactory(log: Logger, sessionEditorBase: SessionEditorBase): QWidget {
   return new EditorUi(sessionEditorBase).getWidget();
 }
 

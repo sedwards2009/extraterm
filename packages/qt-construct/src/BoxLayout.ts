@@ -3,20 +3,20 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, NodeLayout, NodeWidget, QBoxLayout, QWidget, SizeConstraint } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QLayout, QBoxLayout, QWidget, SizeConstraint } from "@nodegui/nodegui";
 import { Label } from "./Label.js";
 
 
 export interface BoxLayoutItem {
   widget?: QWidget;
-  layout?: NodeLayout<any>;
+  layout?: QLayout;
   stretch?: number;
   alignment?: AlignmentFlag;
 }
 
 export interface BoxLayoutOptions {
   direction: Direction;
-  children: (NodeWidget<any> | string | BoxLayoutItem | NodeLayout<any>)[];
+  children: (QWidget | string | BoxLayoutItem | QLayout)[];
   sizeConstraint?: SizeConstraint,
   spacing?: number;
   contentsMargins?: [number, number, number, number] | number;
@@ -47,9 +47,9 @@ export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
       if ((typeof child) === "string") {
         const kid = Label({text: <string> child});
         boxLayout.addWidget(kid);
-      } else if (child instanceof NodeWidget) {
+      } else if (child instanceof QWidget) {
         boxLayout.addWidget(child);
-      } else if (child instanceof NodeLayout) {
+      } else if (child instanceof QLayout) {
         boxLayout.addLayout(child);
       } else if (isBoxLayoutItem(child)) {
         if (child.widget !== undefined) {

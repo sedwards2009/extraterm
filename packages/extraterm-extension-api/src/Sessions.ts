@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event } from "extraterm-event-emitter";
-import { NodeWidget } from "@nodegui/nodegui";
+import { QWidget } from "@nodegui/nodegui";
 import { Style } from "./Style.js";
 
 
@@ -71,7 +71,7 @@ export interface SessionEditorBase {
 
 
 export interface SessionEditorFactory {
-  (sessionEditorBase: SessionEditorBase): NodeWidget<any>;
+  (sessionEditorBase: SessionEditorBase): QWidget;
 }
 
 /**
@@ -179,5 +179,5 @@ export interface SessionSettingsEditorBase {
 }
 
 export interface SessionSettingsEditorFactory {
-  (sessionSettingsEditorBase: SessionSettingsEditorBase): NodeWidget<any>;
+  (sessionSettingsEditorBase: SessionSettingsEditorBase): QWidget;
 }

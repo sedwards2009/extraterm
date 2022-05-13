@@ -5,7 +5,7 @@
  */
 import { Logger, log, getLogger } from "extraterm-logging";
 import { Event, EventEmitter } from "extraterm-event-emitter";
-import { Direction, NodeWidget, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
+import { Direction, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
 import { BoxLayout, Widget } from "qt-construct";
 import { Tab } from "../Tab.js";
 import { Window } from "../Window.js";
@@ -15,11 +15,11 @@ export class WindowPopOver {
   private _log: Logger = null;
   #popUp: QWidget = null;
 
-  #children: NodeWidget<any>[];
+  #children: QWidget[];
   #onCloseEventEmitter = new EventEmitter<void>();
   onClose: Event<void> = null;
 
-  constructor(children: NodeWidget<any>[]) {
+  constructor(children: QWidget[]) {
     this._log = getLogger("WindowPopover", this);
     this.onClose = this.#onCloseEventEmitter.event;
     this.#children = children;
@@ -37,6 +37,7 @@ export class WindowPopOver {
       }),
       onClose: this.#onClose.bind(this)
     });
+    this.#popUp.hide();
   }
 
   #onClose(): void {
@@ -44,8 +45,6 @@ export class WindowPopOver {
   }
 
   show(window: Window, tab: Tab): void {
-    this.#popUp.setNodeParent(window.getWidget());
-
     const tabRect = window.getTabGlobalGeometry(tab);
 
     const width = 500;  // px TODO: make it respect DPI
@@ -58,6 +57,5 @@ export class WindowPopOver {
 
   hide(): void {
     this.#popUp.hide();
-    this.#popUp.setNodeParent(null);
   }
 }

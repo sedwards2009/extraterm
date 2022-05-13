@@ -8,7 +8,7 @@ import * as _ from 'lodash-es';
 
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionTabTitlesWidgetContribution } from './ExtensionMetadata.js';
-import { NodeWidget, QLabel } from '@nodegui/nodegui';
+import { QLabel } from '@nodegui/nodegui';
 
 
 export class TabTitleWidgetRegistry {

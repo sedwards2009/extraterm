@@ -10,7 +10,7 @@ import * as _ from 'lodash-es';
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionSessionEditorContribution } from './ExtensionMetadata.js';
 import { InternalSessionEditor, SessionConfigurationChange } from '../InternalTypes.js';
-import { NodeWidget } from '@nodegui/nodegui';
+import { QWidget } from '@nodegui/nodegui';
 
 
 export class WorkspaceSessionEditorRegistry {
@@ -68,7 +68,7 @@ export class SessionEditorBaseImpl implements InternalSessionEditor {
   #sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   onSessionConfigurationChanged: ExtensionApi.Event<SessionConfigurationChange>;
   #onSettingsConfigurationChangedEventEmitter = new EventEmitter<SessionConfigurationChange>();
-  #widget: NodeWidget<any> = null;
+  #widget: QWidget = null;
 
   constructor(sessionConfiguration: ExtensionApi.SessionConfiguration,
       factory: ExtensionApi.SessionEditorFactory) {
@@ -77,7 +77,7 @@ export class SessionEditorBaseImpl implements InternalSessionEditor {
     this.#widget = factory.call(null, this);
   }
 
-  _getWidget(): NodeWidget<any> {
+  _getWidget(): QWidget {
     return this.#widget;
   }
 

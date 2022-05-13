@@ -10,7 +10,7 @@ import * as _ from 'lodash-es';
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionSessionSettingsContribution } from "./ExtensionMetadata.js";
 import { InternalSessionSettingsEditor, SessionSettingsChange } from "../InternalTypes.js";
-import { NodeWidget } from "@nodegui/nodegui";
+import { QWidget } from "@nodegui/nodegui";
 import { Window } from "../Window.js";
 import { StyleImpl } from "./api/StyleImpl.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
@@ -90,7 +90,7 @@ export class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEdi
   #onSettingsChangedEventEmitter = new EventEmitter<SessionSettingsChange>();
 
   #configDatabase: ConfigDatabase;
-  #widget: NodeWidget<any> = null;
+  #widget: QWidget = null;
   #window: Window;
   #style: StyleImpl = null;
 
@@ -110,7 +110,7 @@ export class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEdi
     return this.#name;
   }
 
-  _getWidget(): NodeWidget<any> {
+  _getWidget(): QWidget {
     return this.#widget;
   }
 
