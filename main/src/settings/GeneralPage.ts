@@ -23,6 +23,12 @@ export class GeneralPage {
   }
 
   getPage(): QScrollArea {
+    const updateGeneralConfig = (func: (generalConfig: GeneralConfig) => void): void => {
+      const generalConfig = this.#configDatabase.getGeneralConfigCopy();
+      func(generalConfig);
+      this.#configDatabase.setGeneralConfig(generalConfig);
+    };
+
     return ScrollArea({
       cssClass: "settings-tab",
       widgetResizable: true,
@@ -47,9 +53,14 @@ export class GeneralPage {
                   SpinBox({
                     minimum: 0,
                     maximum: 10000,
-                    value: 1000
+                    value: 1000,
+                    onValueChanged: (lines: number) => {
+                      updateGeneralConfig((generalConfig: GeneralConfig) => {
+                        generalConfig.scrollbackMaxLines = lines;
+                      });
+                    }
                   }),
-                  "lines"
+                  "lines",
                 ),
 
                 "Max. Scrollback Frames:",
@@ -57,7 +68,12 @@ export class GeneralPage {
                   SpinBox({
                     minimum: 0,
                     maximum: 10000,
-                    value: 1000
+                    value: 1000,
+                    onValueChanged: (frames: number) => {
+                      updateGeneralConfig((generalConfig: GeneralConfig) => {
+                        generalConfig.scrollbackMaxFrames = frames;
+                      });
+                    }
                   }),
                   "frames"
                 ),

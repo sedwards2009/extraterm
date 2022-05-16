@@ -103,8 +103,6 @@ export class TerminalBlock implements Block {
     this.onMetadataChanged = this.#metadataChangedEventEmitter.event;
 
     this.#widget = this.#createWidget();
-
-    // new TextureFontAtlas();
   }
 
   #createWidget(): QWidget {

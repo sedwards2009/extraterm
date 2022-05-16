@@ -10,7 +10,7 @@ import { computeFontMetrics } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { DeepReadonly } from "extraterm-readonly-toolbox";
-import { doLater } from "extraterm-timeoutqt";
+import { DebouncedDoLater, doLater } from "extraterm-timeoutqt";
 import { BoxLayout, repolish, ScrollArea, ScrollBar, Widget } from "qt-construct";
 import {
   Disposable,
@@ -39,7 +39,9 @@ import {
   ScrollBarPolicy,
   Shape,
   SizeConstraint,
-  SliderAction
+  SliderAction,
+  WidgetAttribute,
+  WidgetEventTypes
 } from "@nodegui/nodegui";
 import { performance } from "node:perf_hooks";
 
@@ -162,6 +164,8 @@ export class Terminal implements Tab, Disposable {
 
   #fontSizeAdjustment = 0;
 
+  #enforceScrollbackSizeLater: DebouncedDoLater = null;
+
   private _htmlData: string = null;
   // private _fileBroker: BulkFileBroker = null;
   // private _downloadHandler: DownloadApplicationModeHandler = null;
@@ -246,6 +250,7 @@ export class Terminal implements Tab, Disposable {
 
         children: [
           Widget({
+            objectName: "border.west",
             contentsMargins: 0,
             layout: this.#borderWidgetLayout.west = BoxLayout({
               direction: Direction.LeftToRight,
@@ -263,6 +268,7 @@ export class Terminal implements Tab, Disposable {
               spacing: 0,
               children: [
                 Widget({
+                  objectName: "border.north",
                   contentsMargins: 0,
                   layout: this.#borderWidgetLayout.north = BoxLayout({
                     direction: Direction.TopToBottom,
@@ -310,6 +316,7 @@ export class Terminal implements Tab, Disposable {
                 }),
 
                 Widget({
+                  objectName: "border.south",
                   contentsMargins: 0,
                   layout: this.#borderWidgetLayout.south = BoxLayout({
                     direction: Direction.TopToBottom,
@@ -323,6 +330,7 @@ export class Terminal implements Tab, Disposable {
           },
 
           Widget({
+            objectName: "border.east",
             contentsMargins: 0,
             layout: this.#borderWidgetLayout.east = BoxLayout({
               direction: Direction.LeftToRight,
@@ -818,6 +826,14 @@ export class Terminal implements Tab, Disposable {
     // if (this._terminalVisualConfig != null) {
     //   emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
     // }
+
+    this.#enforceScrollbackSizeLater = new DebouncedDoLater(() => {
+      this.#laterEnforceScrollbackSize();
+    }, 1500);
+    emulator.onRender(() => {
+      this.#enforceScrollbackSizeLater.trigger();
+    });
+
     this.#emulator = emulator;
     // this._initDownloadApplicationModeHandler();
   }
@@ -874,10 +890,16 @@ export class Terminal implements Tab, Disposable {
     }
   }
 
-  deleteFrame(frame: BlockFrame): void {
-    const index = this.#blockFrames.indexOf(frame);
+  #removeFrame(frame: BlockFrame): void {
+    this.#contentLayout.removeWidget(frame.getWidget());
+    frame.getWidget().hide();
     frame.getWidget().setParent(null);
+    const index = this.#blockFrames.indexOf(frame);
     this.#blockFrames.splice(index, 1);
+  }
+
+  deleteFrame(frame: BlockFrame): void {
+    this.#removeFrame(frame);
     this.#contentWidget.update();
     this.#contentWidget.setFocus();
   }
@@ -1307,6 +1329,56 @@ export class Terminal implements Tab, Disposable {
     widget.hide();
     this.#borderWidgetLayout[border].removeWidget(widget);
     widget.setParent(null);
+  }
+
+  #laterEnforceScrollbackSize(): void {
+    if (this.#configDatabase != null) {
+      const config = this.#configDatabase.getGeneralConfig();
+      this.#enforceScrollbackFrameSize(config.scrollbackMaxFrames);
+    }
+  }
+
+  #enforceScrollbackFrameSize(maxScrollbackFrames: number): void {
+    const size = this.#computeTerminalSize();
+    if (size == null) {
+      return;
+    }
+
+    // Skip past any blocks which might be visible in the window.
+    let blockIndex = this.#blockFrames.length - 1;
+    let currentHeight = 0;
+    while (blockIndex > 0 && currentHeight < size.rows) {
+      const block = this.#blockFrames[blockIndex].getBlock();
+      if (block instanceof TerminalBlock) {
+        currentHeight += block.getScrollbackLength();
+      }
+      blockIndex--;
+    }
+
+    if (blockIndex > maxScrollbackFrames) {
+      this.#scrollArea.setUpdatesEnabled(false);
+
+      const oldSizeHint = this.#contentWidget.sizeHint();
+      const initialWidgetHeight = oldSizeHint.height();
+
+      let chopCount = blockIndex - maxScrollbackFrames;
+      while (chopCount > 0) {
+        const targetFrame = this.#blockFrames[0];
+        this.#removeFrame(targetFrame);
+        chopCount--;
+      }
+
+      // Make the current contents of the viewport visually stationary.
+      // const newWidgetHeight = this.#contentWidget.height();
+      const newSizeHint = this.#contentWidget.sizeHint();
+      const newWidgetHeight = newSizeHint.height();
+      const pos = this.#verticalScrollBar.sliderPosition();
+
+      const newPos = Math.max(0, pos-(initialWidgetHeight-newWidgetHeight));
+      this.#verticalScrollBar.setSliderPosition(newPos);
+
+      this.#scrollArea.setUpdatesEnabled(true);
+    }
   }
 
   private handleRequestFrame(frameId: string): void {
