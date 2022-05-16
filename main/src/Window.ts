@@ -757,6 +757,8 @@ export class Window {
   removeTab(targetTab: Tab): boolean {
     for (const [index, tab] of this.#tabs.entries()) {
       if (targetTab === tab.tab) {
+        this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, null);
+        tab.titleWidget.setParent(null);
         this.#tabBar.removeTab(index);
         this.#contentStack.removeWidget(tab.tab.getContents());
         this.#tabs.splice(index, 1);

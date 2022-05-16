@@ -153,6 +153,13 @@
         "when": ""
       },
       {
+        "command": "extraterm:window.moveTabToNewWindow",
+        "title": "Move Tab to New Window",
+        "category": "window",
+        "order": 1202,
+        "when": ""
+      },
+      {
         "command": "extraterm:window.openSettings",
         "title": "Settings",
         "category": "application",

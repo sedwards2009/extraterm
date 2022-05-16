@@ -291,6 +291,8 @@ class Main {
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
+    commands.registerCommand("extraterm:window.closeWindow", () => this.commandCloseWindow());
+    commands.registerCommand("extraterm:window.moveTabToNewWindow", () => this.commandMoveTabToNewWindow());
 
     Terminal.registerCommands(extensionManager);
   }
@@ -459,7 +461,7 @@ class Main {
     createSessionCommands(sessionConfig);
   }
 
-  async openWindow(): Promise<void> {
+  async openWindow(): Promise<Window> {
     const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
       this.#themeManager, this.#uiStyle);
 
@@ -499,6 +501,7 @@ class Main {
       win.maximize();
     }
     this.#extensionManager.newWindowCreated(win, this.#windows);
+    return win;
   }
 
   #saveWindowGeometry(): void {
@@ -562,6 +565,22 @@ class Main {
     const win = this.#extensionManager.getActiveWindow();
     const tab = win.getTab(win.getCurrentTabIndex());
     this.#closeTab(win, tab);
+  }
+
+  commandCloseWindow(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    win.close();
+  }
+
+  async commandMoveTabToNewWindow(): Promise<void> {
+    const win = this.#extensionManager.getActiveWindow();
+    const tab = win.getTab(win.getCurrentTabIndex());
+    const newWindow = await this.openWindow();
+
+    win.removeTab(tab);
+    newWindow.addTab(tab);
+    newWindow.focus();
+    newWindow.focusTab(tab);
   }
 
   commandCopyToClipboard(): void {
