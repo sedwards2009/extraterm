@@ -25,6 +25,7 @@ export interface WidgetOptions {
   objectName?: string;
   onClose?: () => void;
   onEnter?: () => void;
+  onFocusIn?: () => void;
   onFocusOut?: () => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
   onLayoutRequest?: () => void;
@@ -33,6 +34,7 @@ export interface WidgetOptions {
   onMouseMove?: (nativeEvent /* NativeQEvent */) => void;
   onMove?: (nativeEvent /* NativeQEvent */) => void;
   onResize?: (native /* NativeQEvent */) => void;
+  onWheel?: (native /* WheelEvent */) => void;
   sizePolicy?: {horizontal: QSizePolicyPolicy, vertical: QSizePolicyPolicy};
   styleSheet?: string;
   toolTip?: string;
@@ -44,9 +46,9 @@ export interface WidgetOptions {
 export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
-    objectName, onClose, onEnter, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove,
-    onMove, onResize, sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
-    windowFlag, inlineStyle, toolTip, visible
+    objectName, onClose, onEnter, onFocusIn, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress,
+    onMouseMove, onMove, onResize, onWheel, sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight,
+    minimumWidth, windowFlag, inlineStyle, toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
@@ -87,6 +89,9 @@ export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): voi
   if (onEnter !== undefined) {
     widget.addEventListener(WidgetEventTypes.Enter, onEnter);
   }
+  if (onFocusIn !== undefined) {
+    widget.addEventListener(WidgetEventTypes.FocusIn, onFocusIn);
+  }
   if (onFocusOut !== undefined) {
     widget.addEventListener(WidgetEventTypes.FocusOut, onFocusOut);
   }
@@ -110,6 +115,9 @@ export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): voi
   }
   if (onResize !== undefined) {
     widget.addEventListener(WidgetEventTypes.Resize, onResize);
+  }
+  if (onWheel !== undefined) {
+    widget.addEventListener(WidgetEventTypes.Wheel, onWheel);
   }
   if (contentsMargins !== undefined) {
     if (typeof contentsMargins === "number") {

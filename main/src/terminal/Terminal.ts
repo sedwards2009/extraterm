@@ -64,6 +64,7 @@ import { UiStyle } from "../ui/UiStyle.js";
 import { BorderDirection } from "../extension/ExtensionMetadata.js";
 import { QtTimeout } from "../utils/QtTimeout.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
+import { TerminalScrollArea } from "../ui/TerminalScrollArea.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -123,7 +124,8 @@ export class Terminal implements Tab, Disposable {
   #rows = -1;
 
   #topContents: QWidget = null;
-  #scrollArea: QScrollArea = null;
+  #scrollArea: TerminalScrollArea = null;
+
   #contentWidget: QWidget = null;
   #borderWidgetLayout: {north: QBoxLayout, south: QBoxLayout, east: QBoxLayout, west: QBoxLayout} = {
     north: null,
@@ -134,12 +136,9 @@ export class Terminal implements Tab, Disposable {
   #tabTitleWidget: QWidget = null;
   #tabTitleLabelWidgets: QLabel[] = null;
   #marginPx = 11;
-  #verticalScrollBar: QScrollBar = null;
-  #atBottom = true; // True if the terminal is scrolled to the bottom and should
-                    // automatically scroll to the end as new rows arrive.
 
+  #verticalScrollBar: QScrollBar = null;
   #blockFrames: BlockFrame[] = [];
-  #contentLayout: QBoxLayout = null;
 
   onDispose: Event<void>;
   #onDisposeEventEmitter = new EventEmitter<void>();
@@ -241,6 +240,21 @@ export class Terminal implements Tab, Disposable {
   }
 
   #createUi() : void {
+    this.#scrollArea = new TerminalScrollArea({
+      objectName: "content",
+      onKeyPress: (nativeEvent) => {
+        this.#handleKeyPress(new QKeyEvent(nativeEvent));
+      },
+      onMouseButtonPress: (nativeEvent) => {
+        this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
+      },
+    });
+    this.#scrollArea.getWidget().addEventListener(WidgetEventTypes.Resize, () => {
+      this.#handleResize();
+    });
+
+    this.#contentWidget = this.#scrollArea.getContentWidget();
+
     this.#topContents = Widget({
       contentsMargins: 0,
       layout: BoxLayout({
@@ -277,44 +291,18 @@ export class Terminal implements Tab, Disposable {
                     children: []
                   })
                 }),
-
-                this.#scrollArea = ScrollArea({
-                  widgetResizable: true,
-                  frameShape: Shape.NoFrame,
-                  verticalScrollBarPolicy: ScrollBarPolicy.ScrollBarAlwaysOn,
-                  onResize: () => {
-                    this.#handleResize();
-                  },
-                  widget: this.#contentWidget = Widget({
-                    objectName: "content",
-                    focusPolicy: FocusPolicy.ClickFocus,
-                    onKeyPress: (nativeEvent) => {
-                      this.#handleKeyPress(new QKeyEvent(nativeEvent));
-                    },
-                    onMouseButtonPress: (nativeEvent) => {
-                      this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
-                    },
-                    layout: this.#contentLayout = BoxLayout({
-                      direction: Direction.TopToBottom,
-                      sizeConstraint: SizeConstraint.SetMinimumSize,
-                      contentsMargins: 0,
-                      children: []
-                    })
-                  }),
-                  verticalScrollBar: this.#verticalScrollBar = ScrollBar({
-                    orientation: Orientation.Vertical,
-                    onRangeChanged: (min: number, max: number) => {
-                      this.#handleVerticalScrollBarRangeChanged();
-                    },
-                    onActionTriggered: (action: number) => {
-                      this.#handleVerticalScrollBarAction();
-                    },
-                    onValueChanged: () => {
-                      this.#handleVerticalScrollBarChanged();
-                    }
+                {
+                  layout: BoxLayout({
+                    direction: Direction.LeftToRight,
+                    children: [
+                      this.#scrollArea.getWidget(),
+                      this.#verticalScrollBar = ScrollBar({
+                        maximum: 0,
+                        value: 0,
+                      })
+                    ]
                   })
-                }),
-
+                },
                 Widget({
                   objectName: "border.south",
                   contentsMargins: 0,
@@ -343,7 +331,18 @@ export class Terminal implements Tab, Disposable {
       })
     });
 
-    this.#contentLayout.addStretch(1);
+    this.#scrollArea.onScrollRangeChanged((max: number) => {
+      this.#verticalScrollBar.setMaximum(max);
+    });
+    this.#scrollArea.onScrollPositionChanged((position: number) => {
+      this.#verticalScrollBar.setValue(position);
+    });
+    this.#scrollArea.onScrollPageSizeChanged((pageSize: number) => {
+      this.#verticalScrollBar.setPageStep(pageSize);
+    });
+    this.#verticalScrollBar.addEventListener("valueChanged", (value: number) => {
+      this.#scrollArea.setScrollPosition(value);
+    });
 
     this.#lastCommandTerminalViewer = this.#createFramedTerminalBlock();
     this.#appendBlockFrame(this.#lastCommandTerminalViewer);
@@ -444,8 +443,8 @@ export class Terminal implements Tab, Disposable {
 
     const fontInfo = this.#terminalVisualConfig.fontInfo;
     const metrics = computeFontMetrics(fontInfo.family, fontInfo.style, this.#terminalVisualConfig.fontSizePx);
-    const maxViewportSize = this.#scrollArea.maximumViewportSize();
-    const currentMargins = this.#scrollArea.viewportMargins();
+    const maxViewportSize = this.#scrollArea.getMaximumViewportSize();
+    const currentMargins = this.#scrollArea.getViewportMargins();
 
     const generalConfig = this.#configDatabase.getGeneralConfig();
     let spacing = 0;
@@ -523,27 +522,8 @@ export class Terminal implements Tab, Disposable {
     this.#emulator.reset();
   }
 
-  #handleVerticalScrollBarAction(): void {
-    this.#atBottom = this.#verticalScrollBar.sliderPosition() > (this.#verticalScrollBar.maximum() - this.#marginPx);
-  }
-
-  #handleVerticalScrollBarChanged(): void {
-    this.#updateViewportTopOnFrames();
-  }
-
-  #handleVerticalScrollBarRangeChanged(): void {
-    if (this.#atBottom) {
-      this.#verticalScrollBar.setSliderPosition(this.#verticalScrollBar.maximum());
-    }
-    this.#updateViewportTopOnFrames();
-  }
-
   #scrollToBottom(): void {
-    if (this.#atBottom) {
-      return;
-    }
-    this.#atBottom = true;
-    this.#verticalScrollBar.triggerAction(SliderAction.SliderToMaximum);
+    this.#scrollArea.scrollToMaximum();
   }
 
   #handleKeyPress(event: QKeyEvent): void {
@@ -674,11 +654,6 @@ export class Terminal implements Tab, Disposable {
       background-color: ${backgroundHex};
     }
     `, false);
-    this.#scrollArea.setStyleSheet(`
-      QScrollArea {
-        background-color: ${backgroundHex};
-      }
-    `, false);
 
     this.resizeEmulatorFromTerminalSize();
   }
@@ -726,7 +701,7 @@ export class Terminal implements Tab, Disposable {
       blockFrame.onCloseClicked((frame) => this.#handleBlockCloseClicked(frame));
     }
     this.#blockFrames.push(blockFrame);
-    this.#contentLayout.insertWidget(this.#blockFrames.length-1, blockFrame.getWidget());
+    this.#scrollArea.appendBlockFrame(blockFrame);
   }
 
   #closeLastTerminalFrame(): void {
@@ -863,11 +838,11 @@ export class Terminal implements Tab, Disposable {
   }
 
   scrollPageDown(): void {
-    this.#verticalScrollBar.triggerAction(SliderAction.SliderPageStepAdd);
+    this.#scrollArea.scrollPageDown();
   }
 
   scrollPageUp(): void {
-    this.#verticalScrollBar.triggerAction(SliderAction.SliderPageStepSub);
+    this.#scrollArea.scrollPageUp();
   }
 
   getSelectionText(): string {
@@ -891,7 +866,8 @@ export class Terminal implements Tab, Disposable {
   }
 
   #removeFrame(frame: BlockFrame): void {
-    this.#contentLayout.removeWidget(frame.getWidget());
+    this.#scrollArea.removeBlockFrame(frame);
+
     frame.getWidget().hide();
     frame.getWidget().setParent(null);
     const index = this.#blockFrames.indexOf(frame);
@@ -924,23 +900,23 @@ export class Terminal implements Tab, Disposable {
   }
 
   commandGoToNextFrame(): void {
-    const viewportTop = this.#verticalScrollBar.value();
+    const viewportTop = this.#scrollArea.getScrollPosition();
     for (const bf of this.#blockFrames) {
       const geo = bf.getWidget().geometry();
       if (geo.top() > viewportTop) {
-        this.#verticalScrollBar.setValue(geo.top());
+        this.#scrollArea.setScrollPosition(geo.top());
         return;
       }
     }
   }
 
   commandGoToPreviousFrame(): void {
-    const viewportTop = this.#verticalScrollBar.value();
+    const viewportTop = this.#scrollArea.getScrollPosition();
     for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
       const bf = this.#blockFrames[i];
       const geo = bf.getWidget().geometry();
       if (geo.top() < viewportTop) {
-        this.#verticalScrollBar.setValue(geo.top());
+        this.#scrollArea.setScrollPosition(geo.top());
         return;
       }
     }
@@ -969,7 +945,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #updateViewportTopOnFrames(): void {
-    const value = this.#verticalScrollBar.value();
+    const value = this.#scrollArea.getScrollPosition();
     for (const bf of this.#blockFrames) {
       const widget = bf.getWidget();
       const geo = widget.geometry();
@@ -1275,7 +1251,9 @@ export class Terminal implements Tab, Disposable {
 
     this.#closeLastTerminalFrame();
 
-    this.#contentLayout.removeWidget(terminalBlockFrame.getWidget());
+    // this.#contentLayout.removeWidget(terminalBlockFrame.getWidget());
+this.#scrollArea.removeBlockFrame(terminalBlockFrame);
+
     terminalBlockFrame.getWidget().setParent(null);
     terminalBlockFrame.setBlock(null);
 
@@ -1356,28 +1334,12 @@ export class Terminal implements Tab, Disposable {
     }
 
     if (blockIndex > maxScrollbackFrames) {
-      this.#scrollArea.setUpdatesEnabled(false);
-
-      const oldSizeHint = this.#contentWidget.sizeHint();
-      const initialWidgetHeight = oldSizeHint.height();
-
       let chopCount = blockIndex - maxScrollbackFrames;
       while (chopCount > 0) {
         const targetFrame = this.#blockFrames[0];
         this.#removeFrame(targetFrame);
         chopCount--;
       }
-
-      // Make the current contents of the viewport visually stationary.
-      // const newWidgetHeight = this.#contentWidget.height();
-      const newSizeHint = this.#contentWidget.sizeHint();
-      const newWidgetHeight = newSizeHint.height();
-      const pos = this.#verticalScrollBar.sliderPosition();
-
-      const newPos = Math.max(0, pos-(initialWidgetHeight-newWidgetHeight));
-      this.#verticalScrollBar.setSliderPosition(newPos);
-
-      this.#scrollArea.setUpdatesEnabled(true);
     }
   }
 
