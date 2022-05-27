@@ -81,8 +81,13 @@ export class GeneralPage {
 
                 "",
                 CheckBox({
-                  checkState: true,
-                  text: "Automatically copy selection to clipboard"
+                  checkState: config.autoCopySelectionToClipboard,
+                  text: "Automatically copy selection to clipboard",
+                  onStateChanged: (state: number) => {
+                    updateGeneralConfig((generalConfig: GeneralConfig) => {
+                      generalConfig.autoCopySelectionToClipboard = state !== 0;
+                    });
+                  }
                 }),
 
                 "",
