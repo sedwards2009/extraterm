@@ -895,12 +895,27 @@ export class TerminalBlock implements Block {
 
   deleteTopLines(lineCount: number): void {
     this.#scrollback.splice(0, lineCount);
-    if (this.#selectionStart != null) {
-      this.#selectionStart = { ...this.#selectionStart, y: Math.max(0, this.#selectionStart.y - lineCount) };
+
+    let selectionStart = this.#selectionStart;
+    let selectionEnd = this.#selectionEnd;
+    if (selectionStart != null && selectionEnd != null) {
+      // Correctly order the selection start and end points;
+      if ((selectionEnd.y < selectionStart.y) || (selectionEnd.y === selectionStart.y && selectionEnd.x < selectionStart.x)) {
+        selectionStart = this.#selectionEnd;
+        selectionEnd = this.#selectionStart;
+      }
+
+      if (selectionEnd.y <= lineCount) {
+        this.#selectionStart = null;
+        this.#selectionEnd = null;
+      } else {
+        if (selectionStart.y <= lineCount) {
+          this.#selectionStart = { x: 0, y: 0 };
+        }
+        this.#selectionEnd = selectionEnd;
+      }
     }
-    if (this.#selectionEnd != null) {
-      this.#selectionEnd = { ...this.#selectionEnd, y: Math.max(0, this.#selectionEnd.y - lineCount) };
-    }
+
     this.#updateWidgetSize();
     this.#widget.update();
   }
