@@ -28,6 +28,7 @@ export class GeneralPage {
       func(generalConfig);
       this.#configDatabase.setGeneralConfig(generalConfig);
     };
+    const config = this.#configDatabase.getGeneralConfig();
 
     return ScrollArea({
       cssClass: "settings-tab",
@@ -53,7 +54,7 @@ export class GeneralPage {
                   SpinBox({
                     minimum: 0,
                     maximum: 10000,
-                    value: 1000,
+                    value: config.scrollbackMaxLines,
                     onValueChanged: (lines: number) => {
                       updateGeneralConfig((generalConfig: GeneralConfig) => {
                         generalConfig.scrollbackMaxLines = lines;
@@ -68,7 +69,7 @@ export class GeneralPage {
                   SpinBox({
                     minimum: 0,
                     maximum: 10000,
-                    value: 1000,
+                    value: config.scrollbackMaxFrames,
                     onValueChanged: (frames: number) => {
                       updateGeneralConfig((generalConfig: GeneralConfig) => {
                         generalConfig.scrollbackMaxFrames = frames;

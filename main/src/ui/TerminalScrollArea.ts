@@ -100,7 +100,7 @@ export class TerminalScrollArea {
 
     this.#contentWidget.addEventListener(WidgetEventTypes.LayoutRequest, () => {
       this.#layout();
-    }, {afterBaseWidget: true});
+    }, {afterDefault: true});
   }
 
   getScrollPosition(): number {
@@ -205,7 +205,12 @@ export class TerminalScrollArea {
     const height = widget.geometry().height();
     this.#boxLayout.removeWidget(widget);
     this.#blockFrames.splice(index, 1);
-    this.#scrollPosition = Math.max(this.#scrollPosition - height, 0);
+    this.preMoveScrollPosition(-height);
+  }
+
+  preMoveScrollPosition(delta: number): void {
+    this.#scrollPosition = Math.max(this.#scrollPosition + delta, 0);
+    this.#layout();
   }
 
   #updateViewportTopOnFrames(): void {

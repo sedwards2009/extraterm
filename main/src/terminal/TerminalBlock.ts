@@ -893,6 +893,17 @@ export class TerminalBlock implements Block {
     };
   }
 
+  deleteTopLines(lineCount: number): void {
+    this.#scrollback.splice(0, lineCount);
+    if (this.#selectionStart != null) {
+      this.#selectionStart = { ...this.#selectionStart, y: Math.max(0, this.#selectionStart.y - lineCount) };
+    }
+    if (this.#selectionEnd != null) {
+      this.#selectionEnd = { ...this.#selectionEnd, y: Math.max(0, this.#selectionEnd.y - lineCount) };
+    }
+    this.#updateWidgetSize();
+    this.#widget.update();
+  }
 }
 
 

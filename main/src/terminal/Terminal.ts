@@ -75,6 +75,8 @@ interface TerminalSize {
   topMargin: number;
   rightMargin: number;
   bottomMargin: number;
+  cellHeightPx: number;
+  cellWidthPx: number;
 }
 
 export interface LineRangeChange {
@@ -392,6 +394,8 @@ export class Terminal implements Tab, Disposable {
           blockFrame: frame,
           terminalBlock
         });
+        const config = this.#configDatabase.getGeneralConfig();
+        this.#enforceScrollbackLinesSize(config.scrollbackMaxLines);
       }
     );
     return terminalBlock;
@@ -488,6 +492,8 @@ export class Terminal implements Tab, Disposable {
       topMargin,
       rightMargin,
       bottomMargin,
+      cellWidthPx: metrics.widthPx,
+      cellHeightPx: metrics.heightPx,
     };
   }
 
@@ -1192,7 +1198,6 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleApplicationModeBracketEnd(): void {
-    // this._terminalCanvas.enforceScrollbackLengthAfter( () => {
     const returnCode = this._htmlData;
     this.#closeLastEmbeddedViewer(returnCode);
 
@@ -1208,7 +1213,6 @@ export class Terminal implements Tab, Disposable {
       newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: lastCommand });
     }
     this.environment.setList(newVars);
-    // });
   }
 
   #closeLastEmbeddedViewer(returnCode: string): void {
@@ -1251,8 +1255,7 @@ export class Terminal implements Tab, Disposable {
 
     this.#closeLastTerminalFrame();
 
-    // this.#contentLayout.removeWidget(terminalBlockFrame.getWidget());
-this.#scrollArea.removeBlockFrame(terminalBlockFrame);
+    this.#scrollArea.removeBlockFrame(terminalBlockFrame);
 
     terminalBlockFrame.getWidget().setParent(null);
     terminalBlockFrame.setBlock(null);
@@ -1340,6 +1343,43 @@ this.#scrollArea.removeBlockFrame(terminalBlockFrame);
         this.#removeFrame(targetFrame);
         chopCount--;
       }
+    }
+  }
+
+  #enforceScrollbackLinesSize(maxScrollbackLines: number): void {
+    const size = this.#computeTerminalSize();
+    if (size == null) {
+      return;
+    }
+
+    // Skip past any blocks which might be visible in the window.
+    let blockIndex = this.#blockFrames.length - 1;
+    let currentHeight = -size.rows;
+    while (blockIndex >= 0 && currentHeight < maxScrollbackLines) {
+      const block = this.#blockFrames[blockIndex].getBlock();
+      if (block instanceof TerminalBlock) {
+        currentHeight += block.getScrollbackLength();
+      }
+      blockIndex--;
+    }
+
+    if (currentHeight < maxScrollbackLines) {
+      return;
+    }
+
+    blockIndex++;
+    const block = this.#blockFrames[blockIndex].getBlock();
+    if (block instanceof TerminalBlock) {
+      const lineCount = currentHeight - maxScrollbackLines;
+      block.deleteTopLines(lineCount);
+      this.#scrollArea.preMoveScrollPosition(- lineCount * size.cellHeightPx);
+    }
+    blockIndex--;
+
+    while (blockIndex >= 0) {
+      const targetFrame = this.#blockFrames[0];
+      this.#removeFrame(targetFrame);
+      blockIndex--;
     }
   }
 
