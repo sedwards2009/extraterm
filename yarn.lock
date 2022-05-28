@@ -5,7 +5,7 @@ __metadata:
   version: 6
   cacheKey: 8
 
-"7zip-bin@npm:^5.1.1":
+"7zip-bin@npm:5.1.1":
   version: 5.1.1
   resolution: "7zip-bin@npm:5.1.1"
   checksum: 1e58ba3742ac86daa84d2e60c46fd545f235c9f60a00cd36a87a70bf824cc0c821fdc418994f1745081b17e7bc83d155e1e82bd44b06996e7cab0a491ce644c1
