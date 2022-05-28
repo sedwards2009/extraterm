@@ -31,7 +31,7 @@
   "resolutions": {
     "@types/node": "16.4.0",
     "typescript": "4.6.3",
-    "@nodegui/nodegui": "0.50.0"
+    "@nodegui/nodegui": "0.53.0"
   },
   "private": true,
   "workspaces": {
@@ -64,12 +64,12 @@
   },
   "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
-    "@nodegui/nodegui": "^0.50.0",
+    "@nodegui/nodegui": "^0.53.0",
     "@types/fs-extra": "^9.0.12",
     "commander": "^8.3.0",
     "extraterm-uuid": "1.0.0",
     "fs-extra": "^10.0.0",
-    "nodegui-plugin-font-icon": "^0.2.0",
+    "nodegui-plugin-font-icon": "0.2.3",
     "qode": "^0.1.0",
     "source-map-support": "^0.5.21"
   },
