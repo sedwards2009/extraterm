@@ -53,7 +53,7 @@ export class GeneralPage {
                 makeGroupLayout(
                   SpinBox({
                     minimum: 0,
-                    maximum: 10000,
+                    maximum: 1000000,
                     value: config.scrollbackMaxLines,
                     onValueChanged: (lines: number) => {
                       updateGeneralConfig((generalConfig: GeneralConfig) => {

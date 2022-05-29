@@ -11,7 +11,7 @@ import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { DebouncedDoLater, doLater } from "extraterm-timeoutqt";
-import { BoxLayout, repolish, ScrollArea, ScrollBar, Widget } from "qt-construct";
+import { BoxLayout, repolish, ScrollBar, Widget } from "qt-construct";
 import {
   Disposable,
   Event,
@@ -22,25 +22,17 @@ import {
 } from "@extraterm/extraterm-extension-api";
 import {
   Direction,
-  FocusPolicy,
   KeyboardModifier,
   MouseButton,
-  Orientation,
   QApplication,
   QBoxLayout,
   QClipboardMode,
   QKeyEvent,
   QLabel,
   QMouseEvent,
-  QScrollArea,
   QScrollBar,
   QSizePolicyPolicy,
   QWidget,
-  ScrollBarPolicy,
-  Shape,
-  SizeConstraint,
-  SliderAction,
-  WidgetAttribute,
   WidgetEventTypes
 } from "@nodegui/nodegui";
 import { performance } from "node:perf_hooks";
@@ -175,8 +167,8 @@ export class Terminal implements Tab, Disposable {
 
   // The command line string of the last command started.
   #lastCommandLine: string = null;
-  #lastCommandTerminalLine = -1;
-  #lastCommandTerminalViewer: SpacerFrame =null;
+  #lastCommandTerminalRow = -1;
+  #lastCommandTerminalViewer: SpacerFrame = null;
 
   environment = new TerminalEnvironmentImpl([
     { key: TerminalEnvironment.TERM_ROWS, value: "" },
@@ -1124,7 +1116,7 @@ export class Terminal implements Tab, Disposable {
       this.#emulator.flushRenderQueue();
 
       this.#lastCommandTerminalViewer = this.#findLastBareTerminalBlockFrame();
-      this.#lastCommandTerminalLine = (<TerminalBlock>this.#lastCommandTerminalViewer.getBlock())
+      this.#lastCommandTerminalRow = (<TerminalBlock>this.#lastCommandTerminalViewer.getBlock())
                                         .getScrollbackLength();
     }
     this.#lastCommandLine = cleanCommandLine;
@@ -1274,7 +1266,7 @@ export class Terminal implements Tab, Disposable {
     this.#moveCursorToFreshLine();
 
     const activeTerminalBlock = <TerminalBlock> this.#lastCommandTerminalViewer.getBlock();
-    const scrollbackOutputLength = activeTerminalBlock.getScrollbackLength() - this.#lastCommandTerminalLine;
+    const scrollbackOutputLength = activeTerminalBlock.getScrollbackLength() - this.#lastCommandTerminalRow;
     const effectiveScreenLength = this.#emulator.getCursorRow();
 
     const commandShouldBeFramed = returnCode !== "0" || this.#commandNeedsFrame(this.#lastCommandLine,
@@ -1289,7 +1281,7 @@ export class Terminal implements Tab, Disposable {
     const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null);
     decoratedFrame.setBlock(newTerminalBlock);
 
-    const scrollbackLines = activeTerminalBlock.takeScrollbackFrom(this.#lastCommandTerminalLine);
+    const scrollbackLines = activeTerminalBlock.takeScrollbackFrom(this.#lastCommandTerminalRow);
     newTerminalBlock.setScrollbackLines(scrollbackLines);
     newTerminalBlock.setReturnCode(returnCode);
     newTerminalBlock.setCommandLine(this.#lastCommandLine);
@@ -1373,6 +1365,13 @@ export class Terminal implements Tab, Disposable {
       const lineCount = currentHeight - maxScrollbackLines;
       block.deleteTopLines(lineCount);
       this.#scrollArea.preMoveScrollPosition(- lineCount * size.cellHeightPx);
+
+      // The mark for the start of the last command output may
+      // need to be adjusted if we chopped its block.
+      const isLastBlock = blockIndex === this.#blockFrames.length -1;
+      if (isLastBlock && this.#lastCommandTerminalRow !== -1) {
+        this.#lastCommandTerminalRow = Math.max(0, this.#lastCommandTerminalRow - lineCount);
+      }
     }
     blockIndex--;
 

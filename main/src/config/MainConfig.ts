@@ -197,7 +197,7 @@ function sanitizeGeneralConfig(configDatabase: ConfigDatabase, themeManager: The
 
   sanitizeField(generalConfig, "minimizeToTray", false);
   sanitizeField(generalConfig, "scrollbackMaxFrames", 100);
-  sanitizeField(generalConfig, "scrollbackMaxLines", 500000);
+  sanitizeField(generalConfig, "scrollbackMaxLines", 10000);
 
   sanitizeStringEnumField(generalConfig, "showTips", ["always", "daily", "never"], "always");
   sanitizeField(generalConfig, "showTrayIcon", false);
