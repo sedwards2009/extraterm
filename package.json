@@ -70,7 +70,7 @@
     "commander": "^8.3.0",
     "extraterm-uuid": "1.0.0",
     "fs-extra": "^10.0.0",
-    "nodegui-plugin-font-icon": "0.2.3",
+    "nodegui-plugin-font-icon": "0.2.4",
     "qode": "^0.1.0",
     "source-map-support": "^0.5.21"
   },
