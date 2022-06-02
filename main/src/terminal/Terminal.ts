@@ -57,6 +57,7 @@ import { BorderDirection } from "../extension/ExtensionMetadata.js";
 import { QtTimeout } from "../utils/QtTimeout.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
 import { TerminalScrollArea } from "../ui/TerminalScrollArea.js";
+import { ContextMenuEvent } from "../ContextMenuEvent.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -76,11 +77,6 @@ export interface LineRangeChange {
   blockFrame: BlockFrame;
   startLine: number;
   endLine: number;
-}
-
-export interface ContextMenuEvent {
-  x: number;
-  y: number;
 }
 
 const MINIMUM_FONT_SIZE = -3;
@@ -159,6 +155,9 @@ export class Terminal implements Tab, Disposable {
 
   #enforceScrollbackSizeLater: DebouncedDoLater = null;
 
+  #onPopOutClickedEventEmitter = new EventEmitter<{frame: BlockFrame, terminal: Terminal}>();
+  onPopOutClicked: Event<{frame: BlockFrame, terminal: Terminal}> = null;
+
   private _htmlData: string = null;
   // private _fileBroker: BulkFileBroker = null;
   // private _downloadHandler: DownloadApplicationModeHandler = null;
@@ -215,6 +214,7 @@ export class Terminal implements Tab, Disposable {
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this.#onDidScreenChangeEventEmitter.event;
+    this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
 
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
@@ -339,7 +339,7 @@ export class Terminal implements Tab, Disposable {
     });
 
     this.#lastCommandTerminalViewer = this.#createFramedTerminalBlock();
-    this.#appendBlockFrame(this.#lastCommandTerminalViewer);
+    this.appendBlockFrame(this.#lastCommandTerminalViewer);
   }
 
   #createTabTitleWidget(): void {
@@ -694,9 +694,10 @@ export class Terminal implements Tab, Disposable {
     return this.#sessionConfiguration;
   }
 
-  #appendBlockFrame(blockFrame: BlockFrame): void {
+  appendBlockFrame(blockFrame: BlockFrame): void {
     if (blockFrame instanceof DecoratedFrame) {
       blockFrame.onCloseClicked((frame) => this.#handleBlockCloseClicked(frame));
+      blockFrame.onPopOutClicked((frame) => this.#handleBlockPopOutClicked(frame));
     }
     this.#blockFrames.push(blockFrame);
     this.#scrollArea.appendBlockFrame(blockFrame);
@@ -716,7 +717,11 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleBlockCloseClicked(frame: BlockFrame): void {
-    this.deleteFrame(frame);
+    this.removeFrame(frame);
+  }
+
+  #handleBlockPopOutClicked(frame: BlockFrame): void {
+    this.#onPopOutClickedEventEmitter.fire({frame, terminal: this});
   }
 
   getTitle(): string {
@@ -747,6 +752,9 @@ export class Terminal implements Tab, Disposable {
    * @param text the data to send.
    */
   sendToPty(text: string): void {
+    if (this.#pty == null) {
+      return;
+    }
     this.#pty.write(text);
   }
 
@@ -863,7 +871,7 @@ export class Terminal implements Tab, Disposable {
     }
   }
 
-  #removeFrame(frame: BlockFrame): void {
+  #removeFrameFromScrollArea(frame: BlockFrame): void {
     this.#scrollArea.removeBlockFrame(frame);
 
     frame.getWidget().hide();
@@ -872,8 +880,8 @@ export class Terminal implements Tab, Disposable {
     this.#blockFrames.splice(index, 1);
   }
 
-  deleteFrame(frame: BlockFrame): void {
-    this.#removeFrame(frame);
+  removeFrame(frame: BlockFrame): void {
+    this.#removeFrameFromScrollArea(frame);
     this.#contentWidget.update();
     this.#contentWidget.setFocus();
   }
@@ -891,7 +899,7 @@ export class Terminal implements Tab, Disposable {
     for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
       const bf = this.#blockFrames[i];
       if (bf instanceof DecoratedFrame) {
-        this.deleteFrame(bf);
+        this.removeFrame(bf);
         return;
       }
     }
@@ -1107,9 +1115,9 @@ export class Terminal implements Tab, Disposable {
         toolTip: null
       };
       decoratedFrame.setDefaultMetadata(defaultMetadata);
-      this.#appendBlockFrame(decoratedFrame);
+      this.appendBlockFrame(decoratedFrame);
 
-      this.#appendBlockFrame(this.#createFramedTerminalBlock());
+      this.appendBlockFrame(this.#createFramedTerminalBlock());
     } else {
       this.#moveCursorToFreshLine();
       this.#emulator.moveRowsAboveCursorToScrollback();
@@ -1259,7 +1267,7 @@ export class Terminal implements Tab, Disposable {
     terminalBlock.setReturnCode(returnCode);
     decoratedFrame.setBlock(terminalBlock);
 
-    this.#appendBlockFrame(this.#createFramedTerminalBlock());
+    this.appendBlockFrame(this.#createFramedTerminalBlock());
   }
 
   #frameWithoutDecoratedFrame(returnCode: string): void {
@@ -1286,10 +1294,10 @@ export class Terminal implements Tab, Disposable {
     newTerminalBlock.setReturnCode(returnCode);
     newTerminalBlock.setCommandLine(this.#lastCommandLine);
 
-    this.#appendBlockFrame(decoratedFrame);
+    this.appendBlockFrame(decoratedFrame);
 
     const latestTerminalBlock = this.#createFramedTerminalBlock();
-    this.#appendBlockFrame(latestTerminalBlock);
+    this.appendBlockFrame(latestTerminalBlock);
     this.#lastCommandTerminalViewer = latestTerminalBlock;
   }
 
@@ -1332,7 +1340,7 @@ export class Terminal implements Tab, Disposable {
       let chopCount = blockIndex - maxScrollbackFrames;
       while (chopCount > 0) {
         const targetFrame = this.#blockFrames[0];
-        this.#removeFrame(targetFrame);
+        this.#removeFrameFromScrollArea(targetFrame);
         chopCount--;
       }
     }
@@ -1377,7 +1385,7 @@ export class Terminal implements Tab, Disposable {
 
     while (blockIndex >= 0) {
       const targetFrame = this.#blockFrames[0];
-      this.#removeFrame(targetFrame);
+      this.#removeFrameFromScrollArea(targetFrame);
       blockIndex--;
     }
   }

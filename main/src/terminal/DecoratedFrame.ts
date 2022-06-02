@@ -47,14 +47,19 @@ export class DecoratedFrame implements BlockFrame {
   #widthPx = -1;
   #viewportTopPx = 0;
   #closeButton: QPushButton = null;
+  #popOutButton: QPushButton = null;
 
   #onCloseClickedEventEmitter = new EventEmitter<BlockFrame>();
   onCloseClicked: Event<BlockFrame> = null;
+
+  #onPopOutClickedEventEmitter = new EventEmitter<BlockFrame>();
+  onPopOutClicked: Event<BlockFrame> = null;
 
   constructor(uiStyle: UiStyle) {
     this._log = getLogger("DecoratedFrame", this);
     this.#uiStyle = uiStyle;
     this.onCloseClicked = this.#onCloseClickedEventEmitter.event;
+    this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
 
     this.#widget = Widget({
       objectName: this._log.getName(),
@@ -113,6 +118,10 @@ export class DecoratedFrame implements BlockFrame {
     }
 
     this.#block = block;
+    if (block == null) {
+      return;
+    }
+
     this.#onMetadataChangedDisposable = block.onMetadataChanged(() => this.#handleMetadataChanged());
     this.#updateHeaderFromMetadata(this.#getMetadata());
 
@@ -168,6 +177,16 @@ export class DecoratedFrame implements BlockFrame {
             widget: this.#titleLabel = Label({cssClass: "command-line", text: "command-line"}),
             stretch: 1,
             alignment: AlignmentFlag.AlignLeft
+          },
+          {
+            widget: this.#popOutButton = HoverPushButton({
+              cssClass: "small",
+              iconPair: this.#uiStyle.getToolbarButtonIconPair("fa-external-link-square-alt"),
+              onClicked: () => {
+                this.#onPopOutClickedEventEmitter.fire(this);
+              },
+            }),
+            stretch: 0
           },
           {
             widget: this.#closeButton = HoverPushButton({

@@ -15,7 +15,7 @@ import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-
 import { QApplication, QFontDatabase, QRect, QStylePixelMetric } from "@nodegui/nodegui";
 import { StyleTweaker } from "nodegui-plugin-style-tweaker";
 
-import { Window } from "./Window.js";
+import { PopOutClickedDetails, Window } from "./Window.js";
 import { GENERAL_CONFIG, SESSION_CONFIG, WindowConfiguration } from "./config/Config.js";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
 import { ExtensionCommandContribution } from "./extension/ExtensionMetadata.js";
@@ -41,6 +41,7 @@ import { CommandPalette } from "./CommandPalette.js";
 import { PingHandler } from "./local_http_server/PingHandler.js";
 import {fileURLToPath} from 'node:url';
 import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
+import { BlockFrame } from "./terminal/BlockFrame.js";
 
 sourceMapSupport.install();
 
@@ -293,6 +294,7 @@ class Main {
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
     commands.registerCommand("extraterm:window.closeWindow", () => this.commandCloseWindow());
     commands.registerCommand("extraterm:window.moveTabToNewWindow", () => this.commandMoveTabToNewWindow());
+    commands.registerCommand("extraterm:terminal.openLastFrame",() => this.commandOpenLastFrame());
 
     Terminal.registerCommands(extensionManager);
   }
@@ -495,6 +497,10 @@ class Main {
 
     win.onWindowGeometryChanged(onWindowGeometryChanged);
 
+    win.onPopOutClicked((details: PopOutClickedDetails) => {
+      this.#handlePopOutClicked(details.window, details.terminal, details.frame);
+    });
+
     this.#windows.push(win);
     win.open();
     if (showMaximized) {
@@ -524,9 +530,8 @@ class Main {
   #closeTab(win: Window, tab: Tab): void {
     if (tab instanceof Terminal) {
       this.#disposeTerminalTab(tab);
-    }
-    if (tab instanceof SettingsTab) {
-      win.removeTab(this.#settingsTab);
+    } else {
+      win.removeTab(tab);
     }
   }
 
@@ -589,6 +594,28 @@ class Main {
       return;
     }
     terminal.commandCopyToClipboard();
+  }
+
+  commandOpenLastFrame(): void {
+    this.#extensionManager.getActiveWindow();
+// TODO
+  }
+
+  #handlePopOutClicked(window: Window, terminal: Terminal, frame: BlockFrame): void {
+    terminal.removeFrame(frame);
+
+    const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
+      this.#keybindingsIOManager, this.#fontAtlasCache);
+    // TODO disconnect these on destruction
+    newTerminal.onSelectionChanged(() => {
+      this.#handleTerminalSelectionChanged(newTerminal);
+    });
+    newTerminal.setSessionConfiguration(terminal.getSessionConfiguration());
+    newTerminal.appendBlockFrame(frame);
+
+    window.addTab(newTerminal);
+    window.focusTab(newTerminal);
+    this.#extensionManager.newTerminalCreated(window, newTerminal);
   }
 }
 

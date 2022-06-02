@@ -196,6 +196,7 @@ export class TerminalScrollArea {
 
   appendBlockFrame(blockFrame: BlockFrame): void {
     this.#boxLayout.insertWidget(this.#blockFrames.length, blockFrame.getWidget());
+    blockFrame.getWidget().show();
     this.#blockFrames.push(blockFrame);
   }
 

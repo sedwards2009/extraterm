@@ -19,7 +19,7 @@ import he from "he";
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config.js";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
 import { Tab } from "./Tab.js";
-import { ContextMenuEvent, Terminal } from "./terminal/Terminal.js";
+import { Terminal } from "./terminal/Terminal.js";
 import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig.js";
 import { ThemeManager } from "./theme/ThemeManager.js";
 import { TerminalTheme } from "@extraterm/extraterm-extension-api";
@@ -33,7 +33,15 @@ import { HoverPushButton } from "./ui/QtConstructExtra.js";
 import { BorderlessWindowSupport } from "./BorderlessWindowSupport.js";
 import { createHtmlIcon } from "./ui/Icons.js";
 import { SettingsTab } from "./settings/SettingsTab.js";
+import { BlockFrame } from "./terminal/BlockFrame.js";
+import { ContextMenuEvent } from "./ContextMenuEvent.js";
 
+
+export interface PopOutClickedDetails {
+  window: Window;
+  frame: BlockFrame;
+  terminal: Terminal;
+}
 
 interface TabPlumbing {
   tab: Tab;
@@ -78,6 +86,9 @@ export class Window {
   onWindowGeometryChanged: Event<void> = null;
   #onWindowGeometryChangedEventEmitter = new EventEmitter<void>();
 
+  #onPopOutClickedEventEmitter = new EventEmitter<PopOutClickedDetails>();
+  onPopOutClicked: Event<PopOutClickedDetails> = null;
+
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
       keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle) {
 
@@ -93,6 +104,7 @@ export class Window {
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
     this.onTabChange = this.#onTabChangeEventEmitter.event;
     this.onWindowGeometryChanged = this.#onWindowGeometryChangedEventEmitter.event;
+    this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
   }
 
   async init(geometry: QRect): Promise<void> {
@@ -712,6 +724,15 @@ export class Window {
       tabPlumbing.disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
         this.#updateContextMenu(this.#uiStyle);
         this.#contextMenu.popup(new QPoint(ev.x, ev.y));
+      }));
+    }
+    if (tab instanceof Terminal) {
+      tabPlumbing.disposableHolder.add(tab.onPopOutClicked((details) => {
+        this.#onPopOutClickedEventEmitter.fire({
+          window: this,
+          terminal: details.terminal,
+          frame: details.frame
+        });
       }));
     }
     if (tab instanceof SettingsTab) {
