@@ -155,8 +155,8 @@ export class Terminal implements Tab, Disposable {
 
   #enforceScrollbackSizeLater: DebouncedDoLater = null;
 
-  #onPopOutClickedEventEmitter = new EventEmitter<{frame: BlockFrame, terminal: Terminal}>();
-  onPopOutClicked: Event<{frame: BlockFrame, terminal: Terminal}> = null;
+  #onPopOutClickedEventEmitter = new EventEmitter<{frame: DecoratedFrame, terminal: Terminal}>();
+  onPopOutClicked: Event<{frame: DecoratedFrame, terminal: Terminal}> = null;
 
   private _htmlData: string = null;
   // private _fileBroker: BulkFileBroker = null;
@@ -720,7 +720,7 @@ export class Terminal implements Tab, Disposable {
     this.removeFrame(frame);
   }
 
-  #handleBlockPopOutClicked(frame: BlockFrame): void {
+  #handleBlockPopOutClicked(frame: DecoratedFrame): void {
     this.#onPopOutClickedEventEmitter.fire({frame, terminal: this});
   }
 

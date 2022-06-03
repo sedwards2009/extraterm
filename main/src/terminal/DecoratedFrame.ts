@@ -52,8 +52,8 @@ export class DecoratedFrame implements BlockFrame {
   #onCloseClickedEventEmitter = new EventEmitter<BlockFrame>();
   onCloseClicked: Event<BlockFrame> = null;
 
-  #onPopOutClickedEventEmitter = new EventEmitter<BlockFrame>();
-  onPopOutClicked: Event<BlockFrame> = null;
+  #onPopOutClickedEventEmitter = new EventEmitter<DecoratedFrame>();
+  onPopOutClicked: Event<DecoratedFrame> = null;
 
   constructor(uiStyle: UiStyle) {
     this._log = getLogger("DecoratedFrame", this);
@@ -224,5 +224,15 @@ export class DecoratedFrame implements BlockFrame {
     }
     this.#viewportTopPx = relativeTopPx;
     this.#layout();
+  }
+
+  setShowControls(on: boolean): void {
+    if (on) {
+      this.#closeButton.show();
+      this.#popOutButton.show();
+    } else {
+      this.#closeButton.hide();
+      this.#popOutButton.hide();
+    }
   }
 }

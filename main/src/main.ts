@@ -42,6 +42,7 @@ import { PingHandler } from "./local_http_server/PingHandler.js";
 import {fileURLToPath} from 'node:url';
 import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
 import { BlockFrame } from "./terminal/BlockFrame.js";
+import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 
 sourceMapSupport.install();
 
@@ -601,16 +602,16 @@ class Main {
 // TODO
   }
 
-  #handlePopOutClicked(window: Window, terminal: Terminal, frame: BlockFrame): void {
+  #handlePopOutClicked(window: Window, terminal: Terminal, frame: DecoratedFrame): void {
     terminal.removeFrame(frame);
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsIOManager, this.#fontAtlasCache);
-    // TODO disconnect these on destruction
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
     newTerminal.setSessionConfiguration(terminal.getSessionConfiguration());
+    frame.setShowControls(false);
     newTerminal.appendBlockFrame(frame);
 
     window.addTab(newTerminal);

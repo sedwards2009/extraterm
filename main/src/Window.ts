@@ -33,13 +33,13 @@ import { HoverPushButton } from "./ui/QtConstructExtra.js";
 import { BorderlessWindowSupport } from "./BorderlessWindowSupport.js";
 import { createHtmlIcon } from "./ui/Icons.js";
 import { SettingsTab } from "./settings/SettingsTab.js";
-import { BlockFrame } from "./terminal/BlockFrame.js";
 import { ContextMenuEvent } from "./ContextMenuEvent.js";
+import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 
 
 export interface PopOutClickedDetails {
   window: Window;
-  frame: BlockFrame;
+  frame: DecoratedFrame;
   terminal: Terminal;
 }
 
