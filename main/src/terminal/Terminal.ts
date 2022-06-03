@@ -58,6 +58,7 @@ import { QtTimeout } from "../utils/QtTimeout.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
 import { TerminalScrollArea } from "../ui/TerminalScrollArea.js";
 import { ContextMenuEvent } from "../ContextMenuEvent.js";
+import { DisposableHolder } from "../utils/DisposableUtils.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -77,6 +78,11 @@ export interface LineRangeChange {
   blockFrame: BlockFrame;
   startLine: number;
   endLine: number;
+}
+
+interface BlockPlumbing {
+  frame: BlockFrame;
+  disposableHolder: DisposableHolder;
 }
 
 const MINIMUM_FONT_SIZE = -3;
@@ -128,7 +134,7 @@ export class Terminal implements Tab, Disposable {
   #marginPx = 11;
 
   #verticalScrollBar: QScrollBar = null;
-  #blockFrames: BlockFrame[] = [];
+  #blockFrames: BlockPlumbing[] = [];
 
   onDispose: Event<void>;
   #onDisposeEventEmitter = new EventEmitter<void>();
@@ -395,7 +401,7 @@ export class Terminal implements Tab, Disposable {
 
   #handleSelectionChanged(terminalBlock: TerminalBlock): void {
     for (const blockFrame of this.#blockFrames) {
-      const block = blockFrame.getBlock();
+      const block = blockFrame.frame.getBlock();
       if (block instanceof TerminalBlock && block !== terminalBlock) {
         block.clearSelection();
       }
@@ -640,7 +646,7 @@ export class Terminal implements Tab, Disposable {
 
   #applyTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     for (const blockFrame of this.#blockFrames) {
-      const block = blockFrame.getBlock();
+      const block = blockFrame.frame.getBlock();
       if (block instanceof TerminalBlock) {
         block.setTerminalVisualConfig(terminalVisualConfig);
       }
@@ -695,11 +701,12 @@ export class Terminal implements Tab, Disposable {
   }
 
   appendBlockFrame(blockFrame: BlockFrame): void {
+    const disposableHolder = new DisposableHolder();
     if (blockFrame instanceof DecoratedFrame) {
-      blockFrame.onCloseClicked((frame) => this.#handleBlockCloseClicked(frame));
-      blockFrame.onPopOutClicked((frame) => this.#handleBlockPopOutClicked(frame));
+      disposableHolder.add(blockFrame.onCloseClicked((frame) => this.#handleBlockCloseClicked(frame)));
+      disposableHolder.add(blockFrame.onPopOutClicked((frame) => this.#handleBlockPopOutClicked(frame)));
     }
-    this.#blockFrames.push(blockFrame);
+    this.#blockFrames.push({ frame: blockFrame, disposableHolder });
     this.#scrollArea.appendBlockFrame(blockFrame);
   }
 
@@ -708,7 +715,7 @@ export class Terminal implements Tab, Disposable {
     this.#emulator.flushRenderQueue();
 
     if (this.#blockFrames.length !== 0) {
-      const lastBlockFrame = this.#blockFrames[this.#blockFrames.length-1];
+      const lastBlockFrame = this.#blockFrames[this.#blockFrames.length-1].frame;
       const lastTerminalBlock = lastBlockFrame.getBlock();
       if (lastTerminalBlock instanceof TerminalBlock) {
         lastTerminalBlock.setEmulator(null);
@@ -853,8 +860,8 @@ export class Terminal implements Tab, Disposable {
 
   getSelectionText(): string {
     let text: string = null;
-    for (const frame of this.#blockFrames) {
-      const block = frame.getBlock();
+    for (const blockFrame of this.#blockFrames) {
+      const block = blockFrame.frame.getBlock();
       if (block instanceof TerminalBlock && block.hasSelection()) {
         text = block.getSelectionText();
         if (text != null) {
@@ -876,7 +883,8 @@ export class Terminal implements Tab, Disposable {
 
     frame.getWidget().hide();
     frame.getWidget().setParent(null);
-    const index = this.#blockFrames.indexOf(frame);
+    const index = this.#blockFrames.findIndex(bf => bf.frame === frame);
+    this.#blockFrames[index].disposableHolder.dispose();
     this.#blockFrames.splice(index, 1);
   }
 
@@ -897,7 +905,7 @@ export class Terminal implements Tab, Disposable {
 
   commandDeleteLastFrame(): void {
     for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
-      const bf = this.#blockFrames[i];
+      const bf = this.#blockFrames[i].frame;
       if (bf instanceof DecoratedFrame) {
         this.removeFrame(bf);
         return;
@@ -908,7 +916,7 @@ export class Terminal implements Tab, Disposable {
   commandGoToNextFrame(): void {
     const viewportTop = this.#scrollArea.getScrollPosition();
     for (const bf of this.#blockFrames) {
-      const geo = bf.getWidget().geometry();
+      const geo = bf.frame.getWidget().geometry();
       if (geo.top() > viewportTop) {
         this.#scrollArea.setScrollPosition(geo.top());
         return;
@@ -920,7 +928,7 @@ export class Terminal implements Tab, Disposable {
     const viewportTop = this.#scrollArea.getScrollPosition();
     for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
       const bf = this.#blockFrames[i];
-      const geo = bf.getWidget().geometry();
+      const geo = bf.frame.getWidget().geometry();
       if (geo.top() < viewportTop) {
         this.#scrollArea.setScrollPosition(geo.top());
         return;
@@ -953,10 +961,10 @@ export class Terminal implements Tab, Disposable {
   #updateViewportTopOnFrames(): void {
     const value = this.#scrollArea.getScrollPosition();
     for (const bf of this.#blockFrames) {
-      const widget = bf.getWidget();
+      const widget = bf.frame.getWidget();
       const geo = widget.geometry();
       const offset = value - geo.top();
-      bf.setViewportTop(offset);
+      bf.frame.setViewportTop(offset);
     }
   }
 
@@ -1227,7 +1235,7 @@ export class Terminal implements Tab, Disposable {
   #findEmptyDecoratedFrame(): DecoratedFrame {
     const len = this.#blockFrames.length;
     for (let i=len-1; i !==0; i--) {
-      const frame = this.#blockFrames[i];
+      const frame = this.#blockFrames[i].frame;
       if (frame instanceof DecoratedFrame && frame.getBlock() == null) {
         return frame;
       }
@@ -1238,7 +1246,7 @@ export class Terminal implements Tab, Disposable {
   findLastDecoratedFrame(): DecoratedFrame {
     const len = this.#blockFrames.length;
     for (let i=len-1; i !==0; i--) {
-      const frame = this.#blockFrames[i];
+      const frame = this.#blockFrames[i].frame;
       if (frame instanceof DecoratedFrame && frame.getBlock() != null) {
         return frame;
       }
@@ -1249,7 +1257,7 @@ export class Terminal implements Tab, Disposable {
   #findLastBareTerminalBlockFrame(): SpacerFrame {
     const len = this.#blockFrames.length;
     for (let i=len-1; i >= 0; i--) {
-      const frame = this.#blockFrames[i];
+      const frame = this.#blockFrames[i].frame;
       if (frame instanceof SpacerFrame) {
         const block = frame.getBlock();
         if (block instanceof TerminalBlock) {
@@ -1271,7 +1279,7 @@ export class Terminal implements Tab, Disposable {
     terminalBlockFrame.getWidget().setParent(null);
     terminalBlockFrame.setBlock(null);
 
-    const index = this.#blockFrames.indexOf(terminalBlockFrame);
+    const index = this.#blockFrames.findIndex(bf => bf.frame === terminalBlockFrame);
     this.#blockFrames.splice(index, 1);
 
     terminalBlock.setCommandLine(this.#lastCommandLine);
@@ -1340,7 +1348,7 @@ export class Terminal implements Tab, Disposable {
     let blockIndex = this.#blockFrames.length - 1;
     let currentHeight = 0;
     while (blockIndex > 0 && currentHeight < size.rows) {
-      const block = this.#blockFrames[blockIndex].getBlock();
+      const block = this.#blockFrames[blockIndex].frame.getBlock();
       if (block instanceof TerminalBlock) {
         currentHeight += block.getScrollbackLength();
       }
@@ -1350,7 +1358,7 @@ export class Terminal implements Tab, Disposable {
     if (blockIndex > maxScrollbackFrames) {
       let chopCount = blockIndex - maxScrollbackFrames;
       while (chopCount > 0) {
-        const targetFrame = this.#blockFrames[0];
+        const targetFrame = this.#blockFrames[0].frame;
         this.#removeFrameFromScrollArea(targetFrame);
         chopCount--;
       }
@@ -1367,7 +1375,7 @@ export class Terminal implements Tab, Disposable {
     let blockIndex = this.#blockFrames.length - 1;
     let currentHeight = -size.rows;
     while (blockIndex >= 0 && currentHeight < maxScrollbackLines) {
-      const block = this.#blockFrames[blockIndex].getBlock();
+      const block = this.#blockFrames[blockIndex].frame.getBlock();
       if (block instanceof TerminalBlock) {
         currentHeight += block.getScrollbackLength();
       }
@@ -1379,7 +1387,7 @@ export class Terminal implements Tab, Disposable {
     }
 
     blockIndex++;
-    const block = this.#blockFrames[blockIndex].getBlock();
+    const block = this.#blockFrames[blockIndex].frame.getBlock();
     if (block instanceof TerminalBlock) {
       const lineCount = currentHeight - maxScrollbackLines;
       block.deleteTopLines(lineCount);
@@ -1395,7 +1403,7 @@ export class Terminal implements Tab, Disposable {
     blockIndex--;
 
     while (blockIndex >= 0) {
-      const targetFrame = this.#blockFrames[0];
+      const targetFrame = this.#blockFrames[0].frame;
       this.#removeFrameFromScrollArea(targetFrame);
       blockIndex--;
     }
