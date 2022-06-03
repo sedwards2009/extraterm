@@ -598,8 +598,17 @@ class Main {
   }
 
   commandOpenLastFrame(): void {
-    this.#extensionManager.getActiveWindow();
-// TODO
+    const win = this.#extensionManager.getActiveWindow();
+    const terminal = this.#extensionManager.getActiveTerminal();
+    if (win == null || terminal == null) {
+      return;
+    }
+
+    const frame = terminal.findLastDecoratedFrame();
+    if (frame == null) {
+      return;
+    }
+    this.#handlePopOutClicked(win, terminal, frame);
   }
 
   #handlePopOutClicked(window: Window, terminal: Terminal, frame: DecoratedFrame): void {

@@ -1235,6 +1235,17 @@ export class Terminal implements Tab, Disposable {
     return null;
   }
 
+  findLastDecoratedFrame(): DecoratedFrame {
+    const len = this.#blockFrames.length;
+    for (let i=len-1; i !==0; i--) {
+      const frame = this.#blockFrames[i];
+      if (frame instanceof DecoratedFrame && frame.getBlock() != null) {
+        return frame;
+      }
+    }
+    return null;
+  }
+
   #findLastBareTerminalBlockFrame(): SpacerFrame {
     const len = this.#blockFrames.length;
     for (let i=len-1; i >= 0; i--) {
