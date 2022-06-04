@@ -58,6 +58,7 @@ class PackageParser {
       true: true,
       false: false,
       terminalFocus: false,
+      connectedTerminalFocus: false,
       viewerFocus: false,
       isHyperlink: false,
       hyperlinkURL: null,

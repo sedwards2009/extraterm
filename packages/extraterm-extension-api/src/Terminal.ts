@@ -173,6 +173,11 @@ export interface Terminal {
    * @return a promise which resolves to the path of the working directory or null.
    */
   getWorkingDirectory(): Promise<string | null>;
+
+  /**
+   * True if the terminal is connected to a live TTY.
+   */
+  readonly isConnected: boolean;
 }
 
 /**

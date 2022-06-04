@@ -67,7 +67,7 @@
         "category": "terminal",
         "order": 1501,
         "icon": "fa-clipboard",
-        "when": "terminalFocus"
+        "when": "connectedTerminalFocus"
       },
       {
         "command": "extraterm:terminal.openLastFrame",
@@ -120,7 +120,7 @@
         "category": "terminal",
         "order": 1801,
         "icon": "fa-sync",
-        "when": "terminalFocus"
+        "when": "connectedTerminalFocus"
       },
       {
         "command": "extraterm:window.newTerminal",

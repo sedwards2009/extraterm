@@ -651,6 +651,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       true: true,
       false: false,
       terminalFocus: false,
+      connectedTerminalFocus: false,
       viewerFocus: false,
       isHyperlink: false,
       hyperlinkURL: null,
@@ -661,6 +662,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     if (state.activeTerminal != null) {
       whenVariables.terminalFocus = true;
+      whenVariables.connectedTerminalFocus = state.activeTerminal.getPty() != null;
     } else {
       // if (state.activeViewerElement) {
       //   whenVariables.viewerFocus = true;

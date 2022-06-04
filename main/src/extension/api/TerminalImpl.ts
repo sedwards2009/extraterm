@@ -168,6 +168,10 @@ export class TerminalImpl implements ExtensionApi.Terminal {
     }
     return pty.getWorkingDirectory();
   }
+
+  get isConnected(): boolean {
+    return this.#terminal.getPty() != null;
+  }
 }
 
 

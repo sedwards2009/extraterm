@@ -19,7 +19,7 @@
         "command": "tldr-pages:tldr",
         "title": "TLDR Pages",
         "category": "terminal",
-        "when": "terminalFocus"
+        "when": "connectedTerminalFocus"
       }
     ]
   },

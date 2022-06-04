@@ -51,6 +51,7 @@ export interface WhenVariables {
   true: boolean;
   false: boolean;
   terminalFocus: boolean;
+  connectedTerminalFocus: boolean;
   viewerFocus: boolean;
   isHyperlink: boolean;
   hyperlinkURL: string;
