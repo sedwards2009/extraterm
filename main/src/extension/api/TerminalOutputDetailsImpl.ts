@@ -73,6 +73,14 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
     // this._checkIsAlive();
     // this.terminalBlock.highlight(re);
   }
+
+  get commandLine(): string {
+    return this.#terminalBlock.getCommandLine();
+  }
+
+  get returnCode(): number {
+    return this.#terminalBlock.getReturnCode();
+  }
 }
 
 class ScrollbackImpl implements ExtensionApi.Screen {

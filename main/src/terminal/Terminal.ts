@@ -1283,7 +1283,8 @@ export class Terminal implements Tab, Disposable {
     this.#blockFrames.splice(index, 1);
 
     terminalBlock.setCommandLine(this.#lastCommandLine);
-    terminalBlock.setReturnCode(returnCode);
+    const returnCodeInt = Number.parseInt(returnCode, 10);
+    terminalBlock.setReturnCode(returnCodeInt);
     decoratedFrame.setBlock(terminalBlock);
 
     this.appendBlockFrame(this.#createFramedTerminalBlock());
@@ -1310,7 +1311,8 @@ export class Terminal implements Tab, Disposable {
 
     const scrollbackLines = activeTerminalBlock.takeScrollbackFrom(this.#lastCommandTerminalRow);
     newTerminalBlock.setScrollbackLines(scrollbackLines);
-    newTerminalBlock.setReturnCode(returnCode);
+    const returnCodeInt = Number.parseInt(returnCode, 10);
+    newTerminalBlock.setReturnCode(returnCodeInt);
     newTerminalBlock.setCommandLine(this.#lastCommandLine);
 
     this.appendBlockFrame(decoratedFrame);

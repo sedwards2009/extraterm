@@ -90,7 +90,7 @@ export class TerminalBlock implements Block {
   #metadataChangedEventEmitter = new EventEmitter<void>();
   onMetadataChanged: Event<void>;
 
-  #returnCode: string = null;
+  #returnCode: number = null;
   #commandLine: string = null;
 
   constructor(fontAtlasCache: FontAtlasCache) {
@@ -851,26 +851,34 @@ export class TerminalBlock implements Block {
     return this.#emulator.lineAtRow(screenRow);
   }
 
+  getCommandLine(): string {
+    return this.#commandLine;
+  }
+
   setCommandLine(commandLine: string): void {
     this.#commandLine = commandLine;
     this.#metadataChangedEventEmitter.fire();
   }
 
-  setReturnCode(returnCode: string): void {
+  getReturnCode(): number | null{
+    return this.#returnCode;
+  }
+
+  setReturnCode(returnCode: number): void {
     this.#returnCode = returnCode;
     this.#metadataChangedEventEmitter.fire();
   }
 
   getMetadata(): ViewerMetadata {
     const title = this.#commandLine !== null ? this.#commandLine : "Terminal Command";
-    const icon = this.#returnCode === "0" ? "fa-check" : "fa-times";
+    const icon = this.#returnCode === 0 ? "fa-check" : "fa-times";
 
     let posture = ViewerPosture.RUNNING;
     switch(this.#returnCode) {
       case null:
         posture = ViewerPosture.RUNNING;
         break;
-      case "0":
+      case 0:
         posture = ViewerPosture.SUCCESS;
         break;
       default:

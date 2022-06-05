@@ -11,7 +11,7 @@ import * as os from "node:os";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
-import { CreateSessionOptions, SessionConfiguration} from '@extraterm/extraterm-extension-api';
+import { CreateSessionOptions, SessionConfiguration, TerminalEnvironment} from '@extraterm/extraterm-extension-api';
 import { QApplication, QFontDatabase, QRect, QStylePixelMetric } from "@nodegui/nodegui";
 import { StyleTweaker } from "nodegui-plugin-style-tweaker";
 
@@ -43,6 +43,7 @@ import {fileURLToPath} from 'node:url';
 import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
 import { BlockFrame } from "./terminal/BlockFrame.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
+import { TerminalBlock } from "./terminal/TerminalBlock.js";
 
 sourceMapSupport.install();
 
@@ -356,33 +357,37 @@ class Main {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
     newTerminal.setSessionConfiguration(sessionConfiguration);
-    window.addTab(newTerminal);
 
-    const extraEnv = {
-      [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
-      "COLORTERM": "truecolor",   // Advertise that we support 24bit color
-    };
-    newTerminal.resizeEmulatorFromTerminalSize();
+    window.addTab(newTerminal, () => {
+      // Before the tab header widget can be added, we want to make sure
+      // that the PTY etc is set up so that any extensions which want to
+      // add a widget to the tab header see a properly initialised terminal.
 
-    const sessionOptions: CreateSessionOptions = {
-      extraEnv,
-      cols: newTerminal.getColumns(),
-      rows: newTerminal.getRows()
-    };
+      const extraEnv = {
+        [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
+        "COLORTERM": "truecolor",   // Advertise that we support 24bit color
+      };
+      newTerminal.resizeEmulatorFromTerminalSize();
 
-    if (workingDirectory != null) {
-      sessionOptions.workingDirectory = workingDirectory;
-    }
+      const sessionOptions: CreateSessionOptions = {
+        extraEnv,
+        cols: newTerminal.getColumns(),
+        rows: newTerminal.getRows()
+      };
 
-    // Set the default name of the terminal tab to the session name.
-    // newTerminal.setTerminalTitle(sessionConfiguration.name);
+      if (workingDirectory != null) {
+        sessionOptions.workingDirectory = workingDirectory;
+      }
 
-    const pty = this.#ptyManager.createPty(sessionConfiguration, sessionOptions);
-    pty.onExit(() => {
-      this.#disposeTerminalTab(newTerminal);
+      // Set the default name of the terminal tab to the session name.
+      // newTerminal.setTerminalTitle(sessionConfiguration.name);
+
+      const pty = this.#ptyManager.createPty(sessionConfiguration, sessionOptions);
+      pty.onExit(() => {
+        this.#disposeTerminalTab(newTerminal);
+      });
+      newTerminal.setPty(pty);
     });
-    newTerminal.setPty(pty);
-
     // this._setUpNewTerminalEventHandlers(newTerminal);
     // this._sendTabOpenedEvent();
 
@@ -620,6 +625,17 @@ class Main {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
     newTerminal.setSessionConfiguration(terminal.getSessionConfiguration());
+
+    const block = frame.getBlock();
+    if (block instanceof TerminalBlock) {
+      const environment = newTerminal.environment;
+      environment.set(TerminalEnvironment.EXTRATERM_EXIT_CODE, "" + block.getReturnCode());
+      const commandLine = block.getCommandLine();
+      environment.set(TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, commandLine);
+      const command = commandLine.trim().split(" ")[0];
+      environment.set(TerminalEnvironment.EXTRATERM_LAST_COMMAND, command);
+    }
+
     frame.setShowControls(false);
     newTerminal.appendBlockFrame(frame);
 

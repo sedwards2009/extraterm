@@ -711,7 +711,7 @@ export class Window {
     return this.#tabs[index]?.tab;
   }
 
-  addTab(tab: Tab): void {
+  addTab(tab: Tab, preTabHeader?: () => void): void {
     if (this.#tabs.map(t => t.tab).includes(tab)) {
       return;
     }
@@ -738,6 +738,11 @@ export class Window {
     if (tab instanceof SettingsTab) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
     }
+    this.#contentStack.addWidget(tab.getContents());
+
+    if (preTabHeader != null) {
+      preTabHeader();
+    }
 
     let tabTitleWidget = tab.getTabWidget();
     if (tabTitleWidget == null) {
@@ -757,8 +762,6 @@ export class Window {
 
     const index = this.#tabBar.addTab(null, "");
     this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, tabTitleWidget);
-
-    this.#contentStack.addWidget(tab.getContents());
   }
 
   hasTab(targetTab: Tab): boolean {

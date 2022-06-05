@@ -71,6 +71,10 @@ export interface TerminalOutputDetails {
 
   readonly scrollback: Screen;
 
+  readonly returnCode: number | null;
+
+  readonly commandLine: string;
+
   find(needle: string | RegExp, options?: FindOptions): boolean;
   findNext(needle: string | RegExp): boolean;
   findPrevious(needle: string | RegExp): boolean;

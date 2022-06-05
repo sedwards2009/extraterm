@@ -64,9 +64,16 @@ function tabTitleWidgetFactory(terminal: Terminal): QLabel {
   templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminal.environment));
   templateString.addFormatter("icon", new IconFormatter(terminal.tab.window.style));
 
-  const settings = <Settings> terminal.getSessionSettings("title");
-  const template = settings?.template ?? "${icon:fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
-  templateString.setTemplateString(template);
+  if (terminal.isConnected) {
+    const settings = <Settings> terminal.getSessionSettings("title");
+    const template = settings?.template ?? "${icon:fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
+    templateString.setTemplateString(template);
+  } else {
+    const exitCode = terminal.environment.get(TerminalEnvironment.EXTRATERM_EXIT_CODE);
+    const icon = exitCode === "0" ? "fa-check" : "fa-times";
+    const template = `\${icon:${icon}} \${${TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE}}`;
+    templateString.setTemplateString(template);
+  }
 
   const widget = Label({
     sizePolicy: {
