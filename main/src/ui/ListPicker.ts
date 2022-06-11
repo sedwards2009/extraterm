@@ -6,11 +6,14 @@
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Logger, log, getLogger } from "extraterm-logging";
 import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelIndex, ItemDataRole, QTableView,
-  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, ItemFlag, AlignmentFlag
+  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, ItemFlag, AlignmentFlag, QFont, QColor
 } from "@nodegui/nodegui";
+import { stringToCodePointArray } from "extraterm-unicode-utilities";
+import { ColorSlot, CommandChar, FontSlot, TurboTextDelegate } from "nodegui-plugin-rich-text-delegate";
 import * as fuzzyjs from "fuzzyjs";
 import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
 import { UiStyle } from "./UiStyle.js";
+import { TWEMOJI_FAMILY, TWEMOJI_UNICODE_END, TWEMOJI_UNICODE_START } from "../TwemojiConstants.js";
 
 
 export enum FieldType {
@@ -28,6 +31,12 @@ export interface Entry {
 }
 
 
+const SELECTION_START_COLOR_SLOT = ColorSlot.n0;
+
+const SELECTION_START_MARKER = `${SELECTION_START_COLOR_SLOT}${CommandChar.BoldOn}`;
+const SELECTION_END_MARKER = `${ColorSlot.default}${FontSlot.default}`;
+
+
 export class ListPicker {
   private _log: Logger = null;
   #uiStyle: UiStyle = null;
@@ -35,6 +44,7 @@ export class ListPicker {
   #lineEdit: QLineEdit = null;
   #tableView: QTableView = null;
   #contentModel: ContentModel = null;
+  #fieldTypes: FieldType[] = [];
 
   #selectedEventEmitter = new EventEmitter<string>();
   onSelected: Event<string> = null;
@@ -47,6 +57,22 @@ export class ListPicker {
   }
 
   setEntries(fieldTypes: FieldType[], entries: Entry[]): void {
+    this.#fieldTypes.forEach( (_, index) => {
+      this.#tableView.setItemDelegateForColumn(index, null);
+    });
+    this.#fieldTypes = fieldTypes;
+    this.#fieldTypes.forEach( (fieldType, index) => {
+      switch (fieldType) {
+        case FieldType.TEXT:
+        case FieldType.SECONDARY_TEXT:
+          this.#tableView.setItemDelegateForColumn(index, this.#createRichTextDelegate());
+          break;
+        // case FieldType.SECONDARY_TEXT_RIGHT:
+        // TurboTextDelegate doesn't handle right align well yet.
+        default:
+      }
+    });
+
     this.#contentModel.setEntries(fieldTypes, entries);
     this.#handleTextEdited("");
     this.#tableView.resizeColumnsToContents();
@@ -169,6 +195,15 @@ export class ListPicker {
     const selectedRowIndex = rowIndexes[0].row();
     this.#selectedEventEmitter.fire(this.#contentModel.idByRow(selectedRowIndex));
   }
+
+  #createRichTextDelegate(): TurboTextDelegate {
+    const delegate = new TurboTextDelegate();
+    delegate.setFont(FontSlot.n0, new QFont(TWEMOJI_FAMILY));
+    delegate.setColor(SELECTION_START_COLOR_SLOT,
+      new QColor(this.#uiStyle.getTextMatchColor()),
+      new QColor(this.#uiStyle.getTextMatchSelectedColor()));
+    return delegate;
+  }
 }
 
 
@@ -219,7 +254,7 @@ class ContentModel extends QAbstractTableModel {
       let i = 0;
       for (const entry of entries) {
         entry.score = i;
-        entry.markedupText = entry.text;
+        entry.markedupText = this.#encodeEmoji(entry.text);
         i++;
       }
       return [...entries];
@@ -229,16 +264,16 @@ class ContentModel extends QAbstractTableModel {
         const result = fuzzyjs.match(searchText, entry.text, { withRanges: true });
         if (result.match) {
           entry.score = result.score;
-          // const ranges = result.ranges;
-          // entry.markedupLabel = fuzzyjs.surround(entry.title,
-          //   {
-          //     result: {
-          //       ranges
-          //     },
-          //     prefix: SELECTION_START_MARKER,
-          //     suffix: SELECTION_END_MARKER
-          //   }
-          // );
+          const ranges = result.ranges;
+          entry.markedupText = fuzzyjs.surround(entry.text,
+            {
+              result: {
+                ranges
+              },
+              prefix: SELECTION_START_MARKER,
+              suffix: SELECTION_END_MARKER
+            }
+          );
         } else {
           entry.score = -1;
           // entry.markedupLabel = entry;
@@ -267,7 +302,7 @@ class ContentModel extends QAbstractTableModel {
     this.#allEntries = entries.map(entry => ({
       entry: entry,
       text: entry.fields[textFieldIndex],
-      markedupText: entry.fields[textFieldIndex],
+      markedupText: this.#encodeEmoji(entry.fields[textFieldIndex]),
       score: 0,
     }));
     this.#updateVisibleEntries();
@@ -286,7 +321,7 @@ class ContentModel extends QAbstractTableModel {
       const column = index.column();
       switch (this.#fieldTypes[column]) {
         case FieldType.TEXT:
-          return new QVariant(this.#visibleEntries[index.row()].text);
+          return new QVariant(this.#visibleEntries[index.row()].markedupText);
         case FieldType.SECONDARY_TEXT:
         case FieldType.SECONDARY_TEXT_RIGHT:
           return new QVariant(this.#visibleEntries[index.row()].entry.fields[column]);
@@ -314,5 +349,19 @@ class ContentModel extends QAbstractTableModel {
 
   idByRow(row: number): string {
     return this.#visibleEntries[row].entry.id;
+  }
+
+  #encodeEmoji(text: string): string {
+    const codePoints = stringToCodePointArray(text);
+    let result = "";
+    for (let i=0; i < codePoints.length; i++) {
+      const codePoint = codePoints[i];
+      if (codePoint >= TWEMOJI_UNICODE_START && codePoint < TWEMOJI_UNICODE_END) {
+        result += `${FontSlot.n0}${String.fromCodePoint(codePoint)}${FontSlot.default}`;
+      } else {
+        result += String.fromCodePoint(codePoint);
+      }
+    }
+    return result;
   }
 }

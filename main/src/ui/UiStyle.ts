@@ -36,4 +36,6 @@ export interface UiStyle {
   getBackgroundSelectedColor(): string;
   getLinkColor(): string;
   getLinkHoverColor(): string;
+  getTextMatchSelectedColor(): string;
+  getTextMatchColor(): string;
 }

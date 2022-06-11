@@ -26,6 +26,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   let styleBrandSuccess = "";
   let styleBrandDanger = "";
   let styleLinkHoverColor = "";
+  let styleTextMatchColor = "";
+  let styleTextMatchSelectedColor = "";
   const base100PercentFontSize = 9;
 
   function DarkTwoStyleSheet(resourceDirectory: string, guiScale: number, dpi: number): string {
@@ -33,12 +35,15 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     const fontSizeSmall = Math.round(fontSizeBase * 0.9);
 
     const uiFg = "#9da5b4";
-    const accentBgColor = "hsl(219,  79%, 66%)";
+    const accentBgColor = "#456fc4";
     const uiBg = "#282c34";
     const uiBorder = "#181a1f";
 
     const headingsColor = "#ffffff";
     const accentColor = "#578af2";
+
+  //  $accent-bg-text-color:    contrast($accent-bg-color, hsl($ui-hue,100%,10%), #fff, 30% );
+    const accentOnlyTextColor = "#759ff2";
 
     const level1Color = toHex(lighten(uiBg, 6));
     const level2Color = uiBg;
@@ -53,6 +58,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     styleTextHighlightColor = textHighlightColor;
     const textSelectedColor = "#ffffff";
     const backgroundHighlightColor = rgba(255, 255, 255, 0.07);
+
+    const textMatchColor = accentOnlyTextColor;
+    styleTextMatchColor = textMatchColor;
+
+    const textMatchSelectedColor = toHex(mix(textSelectedColor, accentOnlyTextColor, 60));
+    styleTextMatchSelectedColor = textMatchSelectedColor;
 
     // Background color for `<body>`.
     const backgroundColor = uiBg;
@@ -1047,8 +1058,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     ${IncludeDefaultBackground()}
     color: ${textColor};
 
-    selection-color: ${dropdownLinkHoverColor};
-    selection-background-color: ${dropdownLinkHoverBg};
+    selection-color: ${textSelectedColor};
+    selection-background-color: ${backgroundSelectedColor};
   }
 
   QFrame[cssClass~="card"] {
@@ -1338,6 +1349,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     },
     getLinkHoverColor(): string {
       return styleLinkHoverColor;
+    },
+    getTextMatchColor(): string {
+      return styleTextMatchColor;
+    },
+    getTextMatchSelectedColor(): string {
+      return styleTextMatchSelectedColor;
     }
   };
 }

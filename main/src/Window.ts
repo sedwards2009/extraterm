@@ -35,6 +35,7 @@ import { createHtmlIcon } from "./ui/Icons.js";
 import { SettingsTab } from "./settings/SettingsTab.js";
 import { ContextMenuEvent } from "./ContextMenuEvent.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
+import { TWEMOJI_FAMILY, TWEMOJI_UNICODE_END, TWEMOJI_UNICODE_START } from "./TwemojiConstants.js";
 
 
 export interface PopOutClickedDetails {
@@ -514,10 +515,10 @@ export class Window {
 
     const extraFonts: FontSlice[] = [
       {
-        fontFamily: "twemoji",
+        fontFamily: TWEMOJI_FAMILY,
         fontSizePx: 16,
-        unicodeStart: 0x1f000,
-        unicodeEnd: 0x20000,
+        unicodeStart: TWEMOJI_UNICODE_START,
+        unicodeEnd: TWEMOJI_UNICODE_END,
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }
     ];
