@@ -12,7 +12,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "@nodegui/nodegui": "^0.53.0"
+    "@nodegui/nodegui": "0.54.0"
   },
   "devDependencies": {
     "eslint": "8.13.0",
