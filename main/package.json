@@ -45,7 +45,7 @@
     "marked": "^0.8.2",
     "mime-types": "^2.1.21",
     "nodegui-plugin-font-icon": "0.2.4",
-    "nodegui-plugin-rich-text-delegate": "0.2.0",
+    "nodegui-plugin-rich-text-delegate": "0.2.1",
     "nodegui-plugin-style-tweaker": "0.1.3",
     "open": "^8.2.1",
     "opentype.js": "^1.3.1",
