@@ -2,7 +2,7 @@
  *
  */
 
-import * as fs from "fs";
+import {default as fs} from "node:fs";
 
 const log = console.log.bind(console);
 
