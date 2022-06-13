@@ -28,7 +28,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   let styleLinkHoverColor = "";
   let styleTextMatchColor = "";
   let styleTextMatchSelectedColor = "";
-  const base100PercentFontSize = 9;
+  const base100PercentFontSize = 10;
 
   function DarkTwoStyleSheet(resourceDirectory: string, guiScale: number, dpi: number): string {
     const fontSizeBase = Math.round(base100PercentFontSize * guiScale);
