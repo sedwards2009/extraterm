@@ -74,14 +74,14 @@ export class WindowPopOver {
 
   #keepOnScreen(window: Window, rect: Rect): Rect {
     const screen = window.getWidget().windowHandle().screen();
-    const size = screen.size();
-    const width = Math.min(rect.width, size.width());
-    const height = Math.min(rect.height, size.height());
-    const left = Math.min(size.width() - width, rect.left);
-    const top = Math.min(size.height() - height, rect.top);
+    const screenGeometry = screen.geometry();
+    const width = Math.min(rect.width, screenGeometry.width());
+    const height = Math.min(rect.height, screenGeometry.height());
+    const left = Math.max(0, Math.min(screenGeometry.width() - width, rect.left - screenGeometry.left()));
+    const top = Math.max(0, Math.min(screenGeometry.height() - height, rect.top - screenGeometry.top()));
     return {
-      left,
-      top,
+      left: left + screenGeometry.left(),
+      top: top + screenGeometry.top(),
       width,
       height
     };
