@@ -6,14 +6,14 @@
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Logger, log, getLogger } from "extraterm-logging";
 import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelIndex, ItemDataRole, QTableView,
-  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, ItemFlag, AlignmentFlag, QFont, QColor
+  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, AlignmentFlag, QFont, QColor
 } from "@nodegui/nodegui";
-import { stringToCodePointArray } from "extraterm-unicode-utilities";
+import { stringToCodePointArray, hasEmojiPresentation } from "extraterm-unicode-utilities";
 import { ColorSlot, CommandChar, FontSlot, TurboTextDelegate } from "nodegui-plugin-rich-text-delegate";
 import * as fuzzyjs from "fuzzyjs";
 import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
 import { UiStyle } from "./UiStyle.js";
-import { TWEMOJI_FAMILY, TWEMOJI_UNICODE_END, TWEMOJI_UNICODE_START } from "../TwemojiConstants.js";
+import { TWEMOJI_FAMILY } from "../TwemojiConstants.js";
 
 
 export enum FieldType {
@@ -265,7 +265,7 @@ class ContentModel extends QAbstractTableModel {
         if (result.match) {
           entry.score = result.score;
           const ranges = result.ranges;
-          entry.markedupText = fuzzyjs.surround(entry.text,
+          entry.markedupText = this.#encodeEmoji(fuzzyjs.surround(entry.text,
             {
               result: {
                 ranges
@@ -273,7 +273,7 @@ class ContentModel extends QAbstractTableModel {
               prefix: SELECTION_START_MARKER,
               suffix: SELECTION_END_MARKER
             }
-          );
+          ));
         } else {
           entry.score = -1;
           // entry.markedupLabel = entry;
@@ -356,7 +356,7 @@ class ContentModel extends QAbstractTableModel {
     let result = "";
     for (let i=0; i < codePoints.length; i++) {
       const codePoint = codePoints[i];
-      if (codePoint >= TWEMOJI_UNICODE_START && codePoint < TWEMOJI_UNICODE_END) {
+      if (hasEmojiPresentation(codePoint)) {
         result += `${FontSlot.n0}${String.fromCodePoint(codePoint)}${FontSlot.default}`;
       } else {
         result += String.fromCodePoint(codePoint);

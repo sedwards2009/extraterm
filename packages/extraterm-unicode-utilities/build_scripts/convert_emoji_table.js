@@ -28,7 +28,7 @@ function loadEmojiData() {
     const parts = line.split(" ").filter(p => p !== "");
 
     const codeRange = parts[0];
-    if (codeRange.indexOf("..")) {
+    if (codeRange.indexOf("..") !== -1) {
       const rangeParts = codeRange.split("..");
       const startRange = parseInt(rangeParts[0], 16);
       const endRange = parseInt(rangeParts[1], 16);
@@ -63,7 +63,17 @@ function markCodePoint(codePoint, property) {
 function dumpEmojiWidths() {
   const wideCodePoints = getWideCodePoints();
   const ranges = codePointsToRanges(wideCodePoints);
+
+  log(`// WARNING: This is a generated file. Do not modify it, or commit it.`);
+  log(`export const wideEmojiRanges = new Uint32Array([`);
   dumpRanges(ranges);
+  log(`]);`);
+
+  const emojiCodePoints = getEmojiCodePoints().filter(p => p > 127);
+  const emojiRanges = codePointsToRanges(emojiCodePoints);
+  log(`export const emojiRanges = new Uint32Array([`);
+  dumpRanges(emojiRanges);
+  log(`]);`);
 }
 
 function getWideCodePoints() {
@@ -75,6 +85,12 @@ function getWideCodePoints() {
   }
   wideCodePoints.sort( (a,b) => a === b ? 0 : (a <b ? -1 : 1));
   return wideCodePoints;
+}
+
+function getEmojiCodePoints() {
+  const codePoints = Array.from(emojiMap.keys());
+  codePoints.sort( (a,b) => a === b ? 0 : (a <b ? -1 : 1));
+  return codePoints;
 }
 
 function codePointsToRanges(codePoints) {
@@ -106,12 +122,9 @@ function codePointsToRanges(codePoints) {
 }
 
 function dumpRanges(ranges) {
-  log(`// WARNING: This is a generated file. Do not modify it, or commit it.`);
-  log(`export const wideEmojiRanges = new Uint32Array([`);
   for (const range of ranges) {
     log(`  0x${range.start.toString(16)}, 0x${range.end.toString(16)},`);
   }
-  log(`]);`);
 }
 
 function dumpEmojiTestFile() {

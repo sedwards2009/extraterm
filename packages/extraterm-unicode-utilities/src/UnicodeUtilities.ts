@@ -111,6 +111,17 @@ export function utf16LengthOfCodePoint(codePoint: number): number {
 }
 
 /**
+ * Returns true if the given code point has marked with Emoji_presention=true
+ */
+export function hasEmojiPresentation(codePoint: number): boolean {
+  if (codePoint < emoji_table.emojiRanges[0]) {
+    return false;
+  }
+
+  return searchEmojiRanges(emoji_table.emojiRanges, codePoint, 0, emoji_table.emojiRanges.length / 2);
+}
+
+/**
  * Returns true if the given code point is wide according to its Emoji
  * related unicode properties.
  */
@@ -119,28 +130,28 @@ export function isEmojiWide(codePoint: number): boolean {
     return false;
   }
 
-  return searchEmojiRanges(codePoint, 0, emoji_table.wideEmojiRanges.length / 2);
+  return searchEmojiRanges(emoji_table.wideEmojiRanges, codePoint, 0, emoji_table.wideEmojiRanges.length / 2);
 }
 
-function searchEmojiRanges(codePoint: number, startSearchRange: number, endSearchRange: number): boolean {
+function searchEmojiRanges(ranges: Uint32Array, codePoint: number, startSearchRange: number, endSearchRange: number): boolean {
   if (endSearchRange - startSearchRange < 8) {
-    return linearSearchEmojiRanges(codePoint, startSearchRange, endSearchRange);
+    return linearSearchEmojiRanges(ranges, codePoint, startSearchRange, endSearchRange);
   }
 
   const midPoint = startSearchRange + Math.floor((endSearchRange - startSearchRange)/ 2);
-  const midStartRange = emoji_table.wideEmojiRanges[midPoint * 2];
+  const midStartRange = ranges[midPoint * 2];
   if (codePoint < midStartRange) {
-    return searchEmojiRanges(codePoint, startSearchRange, midPoint);
+    return searchEmojiRanges(ranges, codePoint, startSearchRange, midPoint);
   } else {
-    return searchEmojiRanges(codePoint, midPoint, endSearchRange);
+    return searchEmojiRanges(ranges, codePoint, midPoint, endSearchRange);
   }
 }
 
-function linearSearchEmojiRanges(codePoint: number, startSearchRange: number, endSearchRange: number): boolean {
+function linearSearchEmojiRanges(ranges: Uint32Array, codePoint: number, startSearchRange: number, endSearchRange: number): boolean {
   for (let i=startSearchRange; i<endSearchRange; i++) {
     const offset = i * 2;
-    const startRange = emoji_table.wideEmojiRanges[offset];
-    const endRange = emoji_table.wideEmojiRanges[offset+1];
+    const startRange = ranges[offset];
+    const endRange = ranges[offset+1];
     if (codePoint >= startRange  && codePoint <= endRange) {
       return true;
     }
