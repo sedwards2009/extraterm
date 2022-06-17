@@ -169,7 +169,7 @@ export interface WebGLCharRenderCanvasOptions {
 }
 
 interface ExtraFontSlice extends FontSlice {
-  codePointSet: Set<number>;
+  // codePointSet: Set<number>;
 }
 
 export class WebGLCharRenderCanvas implements Disposable {
@@ -279,24 +279,25 @@ export class WebGLCharRenderCanvas implements Disposable {
     if (extraFonts == null) {
       return [];
     }
+    return extraFonts;
 
-    return extraFonts.map(extraFont => {
-      let codePointSet: Set<number> = null;
-      if (extraFont.unicodeCodePoints != null) {
-        codePointSet = this._createCodePointSet(extraFont.unicodeCodePoints);
-      }
+    // return extraFonts.map(extraFont => {
+    //   let codePointSet: Set<number> = null;
+    //   if (extraFont.unicodeCodePoints != null) {
+    //     codePointSet = this._createCodePointSet(extraFont.unicodeCodePoints);
+    //   }
 
-      if (extraFont.unicodeStart != null && extraFont.unicodeEnd != null) {
-        if (codePointSet == null) {
-          codePointSet = new Set();
-        }
-        for (let c = extraFont.unicodeStart; c <= extraFont.unicodeEnd; c++) {
-          codePointSet.add(c);
-        }
-      }
+    //   if (extraFont.unicodeStart != null && extraFont.unicodeEnd != null) {
+    //     if (codePointSet == null) {
+    //       codePointSet = new Set();
+    //     }
+    //     for (let c = extraFont.unicodeStart; c <= extraFont.unicodeEnd; c++) {
+    //       codePointSet.add(c);
+    //     }
+    //   }
 
-      return { ...extraFont, codePointSet };
-    });
+    //   return { ...extraFont, codePointSet };
+    // });
   }
 
   private _createCodePointSet(unicodeCodePoints: (number | [number, number])[]): Set<number> {
@@ -382,7 +383,7 @@ export class WebGLCharRenderCanvas implements Disposable {
 
   private _getExtraFontSliceFromCodePoint(codePoint: number): ExtraFontSlice {
     for (const fontSlice of this._extraFontSlices) {
-      if (fontSlice.codePointSet.has(codePoint)) {
+      if (fontSlice.containsCodePoint(codePoint)) {
         return fontSlice;
       }
     }

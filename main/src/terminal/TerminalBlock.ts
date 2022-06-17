@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,7 +9,7 @@ import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseBut
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice,
-  CursorStyle, computeFontMetrics, computeEmojiMetrics, MonospaceFontMetrics } from "extraterm-char-render-canvas";
+  CursorStyle, MonospaceFontMetrics } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR, STYLE_MASK_HYPERLINK_HIGHLIGHT, STYLE_MASK_INVERSE } from "extraterm-char-cell-grid";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -35,10 +35,6 @@ interface ExpandedMouseEventOptions extends MouseEventOptions {
   nearestColumnEdge: number;
 }
 
-interface ExtraFontSlice extends FontSlice {
-  codePointSet: Set<number>;
-}
-
 export interface AppendScrollbackLinesDetail {
   startLine: number;
   endLine: number;
@@ -57,7 +53,7 @@ export class TerminalBlock implements Block {
 
   #onRenderDispose: Disposable =null;
   #terminalVisualConfig: TerminalVisualConfig = null;
-  #extraFontSlices: ExtraFontSlice[] = [];
+  #fontSlices: FontSlice[] = [];
 
   #fontAtlasCache: FontAtlasCache = null;
   #fontAtlas: TextureFontAtlas = null;
@@ -179,7 +175,7 @@ export class TerminalBlock implements Block {
     this.#fontMetrics = fontAtlasInfo.metrics;
     this.#extraFontMetrics = fontAtlasInfo.extraMetrics;
 
-    this.#extraFontSlices = this.#setupExtraFontSlices(terminalVisualConfig.extraFonts);
+    this.#fontSlices = terminalVisualConfig.extraFonts;
     this.#updateWidgetSize();
   }
 
@@ -244,46 +240,6 @@ export class TerminalBlock implements Block {
     }
 
     return didRemove;
-  }
-
-  #setupExtraFontSlices(extraFonts: FontSlice[]): ExtraFontSlice[] {
-    if (extraFonts == null) {
-      return [];
-    }
-
-    return extraFonts.map(extraFont => {
-      let codePointSet: Set<number> = null;
-      if (extraFont.unicodeCodePoints != null) {
-        codePointSet = this.#createCodePointSet(extraFont.unicodeCodePoints);
-      }
-
-      if (extraFont.unicodeStart != null && extraFont.unicodeEnd != null) {
-        if (codePointSet == null) {
-          codePointSet = new Set();
-        }
-        for (let c = extraFont.unicodeStart; c <= extraFont.unicodeEnd; c++) {
-          codePointSet.add(c);
-        }
-      }
-
-      return { ...extraFont, codePointSet };
-    });
-  }
-
-  #createCodePointSet(unicodeCodePoints: (number | [number, number])[]): Set<number> {
-    const result = new Set<number>();
-    for (const codePoint of unicodeCodePoints) {
-      if (typeof codePoint === "number") {
-        result.add(codePoint);
-      } else {
-        const startCodePoint = codePoint[0];
-        const endCodePoint = codePoint[1];
-        for (let i=startCodePoint; i<=endCodePoint; i++) {
-          result.add(i);
-        }
-      }
-    }
-    return result;
   }
 
   #updateWidgetSize(): void {
@@ -524,19 +480,19 @@ export class TerminalBlock implements Block {
 
   #updateCharGridFlags(line: Line): void {
     const width = line.width;
-    const extraFontSlices = this.#extraFontSlices;
+    const fontSlices = this.#fontSlices;
     for (let i=0; i<width; i++) {
       const codePoint = line.getCodePoint(i, 0);
       let isExtra = false;
-      for (const fontSlice of extraFontSlices) {
-        if (fontSlice.codePointSet.has(codePoint)) {
+      for (const fontSlice of fontSlices) {
+        if (fontSlice.containsCodePoint(codePoint)) {
           line.setExtraFontsFlag(i, 0, true);
           isExtra = true;
           break;
         }
       }
       line.setExtraFontsFlag(i, 0, isExtra);
-      line. setLigature(i, 0, 0);
+      line.setLigature(i, 0, 0);
     }
   }
 

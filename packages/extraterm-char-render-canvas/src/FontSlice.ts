@@ -21,22 +21,6 @@ export interface FontSlice {
   isColor?: boolean;
 
   /**
-   * Start code point of the unicode range
-   *
-   * This and `unicodeEnd` define the range of unicode code points for
-   * which this font is to be used.
-   */
-  unicodeStart?: number;
-
-  /**
-   * End code point of the unicode range (exclusive)
-   *
-   * This and `unicodeStart` define the range of unicode code points for
-   * which this font is to be used.
-   */
-  unicodeEnd?: number;
-
-  /**
    * Characters used to determine the effective size of the glyphs
    *
    * These characters are rendered and examined on the pixel level to
@@ -44,5 +28,8 @@ export interface FontSlice {
    */
   sampleChars?: string[];
 
-  unicodeCodePoints?: (number | [number, number])[];
+  /**
+   * Predicate to signal if a code point is covered by this font.
+   */
+  containsCodePoint: (codePoint: number) => boolean;
 }

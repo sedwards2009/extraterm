@@ -15,6 +15,7 @@ import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPop
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import he from "he";
+import { hasEmojiPresentation } from "extraterm-unicode-utilities";
 
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config.js";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
@@ -35,7 +36,7 @@ import { createHtmlIcon } from "./ui/Icons.js";
 import { SettingsTab } from "./settings/SettingsTab.js";
 import { ContextMenuEvent } from "./ContextMenuEvent.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
-import { TWEMOJI_FAMILY, TWEMOJI_UNICODE_END, TWEMOJI_UNICODE_START } from "./TwemojiConstants.js";
+import { TWEMOJI_FAMILY } from "./TwemojiConstants.js";
 
 
 export interface PopOutClickedDetails {
@@ -517,8 +518,7 @@ export class Window {
       {
         fontFamily: TWEMOJI_FAMILY,
         fontSizePx: 16,
-        unicodeStart: TWEMOJI_UNICODE_START,
-        unicodeEnd: TWEMOJI_UNICODE_END,
+        containsCodePoint: hasEmojiPresentation,
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }
     ];

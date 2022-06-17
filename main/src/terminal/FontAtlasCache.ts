@@ -5,6 +5,7 @@
  */
 import { TextureFontAtlas, FontSlice, computeFontMetrics, computeEmojiMetrics,
   MonospaceFontMetrics } from "extraterm-char-render-canvas";
+import { hasEmojiPresentation } from "extraterm-unicode-utilities";
 import { TerminalVisualConfig } from "./TerminalVisualConfig.js";
 
 
@@ -30,8 +31,7 @@ export class FontAtlasCache {
       {
         fontFamily: "twemoji",
         fontSizePx: 16,
-        unicodeStart: 0x1f000,
-        unicodeEnd: 0x20000,
+        containsCodePoint: hasEmojiPresentation,
         sampleChars: ["\u{1f600}"]  // Smile emoji
       }
     ];
