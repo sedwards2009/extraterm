@@ -13,6 +13,7 @@ import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
 import { Entry, FieldType, ListPicker } from "./ui/ListPicker.js";
 import { UiStyle } from "./ui/UiStyle.js";
 import { WindowPopOver } from "./ui/WindowPopOver.js";
+import { QRect, WidgetEventTypes } from "@nodegui/nodegui";
 
 
 export class CommandPalette {
@@ -22,6 +23,8 @@ export class CommandPalette {
   #keybindingsIOManager: KeybindingsIOManager = null;
   #listPicker: ListPicker = null;
   #windowPopOver: WindowPopOver = null;
+  #containingRect: QRect = null;
+  #listPickerAfterLayoutFunc: () => void = null;
 
   constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
     this._log = getLogger("CommandPalette", this);
@@ -39,6 +42,34 @@ export class CommandPalette {
       this.#listPicker.getWidget()
     ]);
     this.#listPicker.onSelected((id: string) => this.#commandSelected(id));
+    this.#listPicker.onContentAreaChanged(() => this.#updateHeight());
+    this.#listPicker.getWidget().addEventListener(WidgetEventTypes.LayoutRequest, () => {
+      if (this.#listPickerAfterLayoutFunc == null) {
+        return;
+      }
+      this.#listPickerAfterLayoutFunc();
+      this.#listPickerAfterLayoutFunc = null;
+    });
+  }
+
+  #updateHeight(): void {
+    if (this.#containingRect == null) {
+      return;
+    }
+    const contentHeight = this.#listPicker.getContentsHeight();
+    const maxListAreaHeight = Math.floor(this.#containingRect.height() * 0.8);
+    if (contentHeight > maxListAreaHeight) {
+      // Limit the pop up window height and allow contents to scroll
+      this.#listPicker.clearListAreaFixedHeight();
+      this.#windowPopOver.clearFixedHeight();
+      this.#listPickerAfterLayoutFunc = null;
+    } else {
+      // Shrink the list picker area to match the contents, and shrink the window height to match.
+      this.#listPicker.setListAreaFixedHeight(contentHeight);
+      this.#listPickerAfterLayoutFunc = () => {
+        this.#windowPopOver.setFixedHeightToSizeHint();
+      };
+    }
   }
 
   show(window: Window, tab: Tab): void {
@@ -65,7 +96,12 @@ export class CommandPalette {
 
     this.#listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT, FieldType.SECONDARY_TEXT_RIGHT], entries);
 
-    this.#windowPopOver.show(window, tab);
+    this.#containingRect = window.getTabGlobalGeometry(tab);
+    this.#windowPopOver.position(window, {
+        containingRect: window.getTabGlobalGeometry(tab)
+    });
+    this.#updateHeight();
+    this.#windowPopOver.show();
     this.#listPicker.focus();
   }
 
@@ -77,6 +113,8 @@ export class CommandPalette {
     this.hide();
     doLater( () => {
       try {
+        this.#containingRect = null;
+        this.#listPickerAfterLayoutFunc = null;
         this.#extensionManager.executeCommand(id);
       } catch(e) {
         this._log.warn(e);

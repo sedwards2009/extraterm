@@ -12,7 +12,7 @@ import { Window } from "../Window.js";
 import { Entry, FieldType, ListPicker } from "../ui/ListPicker.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { WindowPopOver } from "../ui/WindowPopOver.js";
-import { QLabel } from "@nodegui/nodegui";
+import { QLabel, QRect, WidgetEventTypes } from "@nodegui/nodegui";
 
 export class ListPickerPopOver {
   private _log: Logger = null;
@@ -20,6 +20,8 @@ export class ListPickerPopOver {
   #listPicker: ListPicker = null;
   #titleLabel: QLabel = null;
   #windowPopOver: WindowPopOver = null;
+  #containingRect: QRect = null;
+  #listPickerAfterLayoutFunc: () => void = null;
 
   #resolveFunc: (value: number) => void = null;
 
@@ -37,6 +39,14 @@ export class ListPickerPopOver {
     ]);
     this.#windowPopOver.onClose(this.#onClose.bind(this));
     this.#listPicker.onSelected((id: string) => this.#onSelected(id));
+    this.#listPicker.onContentAreaChanged(() => this.#updateHeight());
+    this.#listPicker.getWidget().addEventListener(WidgetEventTypes.LayoutRequest, () => {
+      if (this.#listPickerAfterLayoutFunc == null) {
+        return;
+      }
+      this.#listPickerAfterLayoutFunc();
+      this.#listPickerAfterLayoutFunc = null;
+    });
   }
 
   #onClose(): void {
@@ -47,12 +57,34 @@ export class ListPickerPopOver {
     this.#sendResult(parseInt(id, 10));
   }
 
+  #updateHeight(): void {
+    if (this.#containingRect == null) {
+      return;
+    }
+    const contentHeight = this.#listPicker.getContentsHeight();
+    const maxListAreaHeight = Math.floor(this.#containingRect.height() * 0.8);
+    if (contentHeight > maxListAreaHeight) {
+      // Limit the pop up window height and allow contents to scroll
+      this.#listPicker.clearListAreaFixedHeight();
+      this.#windowPopOver.clearFixedHeight();
+      this.#listPickerAfterLayoutFunc = null;
+    } else {
+      // Shrink the list picker area to match the contents, and shrink the window height to match.
+      this.#listPicker.setListAreaFixedHeight(contentHeight);
+      this.#listPickerAfterLayoutFunc = () => {
+        this.#windowPopOver.setFixedHeightToSizeHint();
+      };
+    }
+  }
+
   #sendResult(id: number) :void {
     this.hide();
     doLater( () => {
       try {
         const resolveFunc = this.#resolveFunc;
         this.#resolveFunc = null;
+        this.#listPickerAfterLayoutFunc = null;
+        this.#containingRect = null;
         resolveFunc(id);
       } catch(e) {
         this._log.warn(e);
@@ -72,7 +104,13 @@ export class ListPickerPopOver {
     this.#listPicker.setEntries([FieldType.TEXT], entries);
     this.#listPicker.setText("");
 
-    this.#windowPopOver.show(window, tab);
+    this.#containingRect = window.getTabGlobalGeometry(tab);
+    this.#windowPopOver.position(window, {
+      containingRect: window.getTabGlobalGeometry(tab)
+    });
+    this.#updateHeight();
+    this.#windowPopOver.show();
+
     this.#listPicker.focus();
 
     return new Promise<number>((resolve, reject) => {

@@ -5,9 +5,8 @@
  */
 import { Logger, log, getLogger } from "extraterm-logging";
 import { Event, EventEmitter } from "extraterm-event-emitter";
-import { Direction, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
+import { Direction, QRect, QWidget, WidgetAttribute, WindowType } from "@nodegui/nodegui";
 import { BoxLayout, Widget } from "qt-construct";
-import { Tab } from "../Tab.js";
 import { Window } from "../Window.js";
 
 interface Rect {
@@ -17,9 +16,14 @@ interface Rect {
   height: number;
 }
 
+export interface WindowPopOverOptions {
+  containingRect: QRect;
+}
+
 export class WindowPopOver {
   private _log: Logger = null;
   #popUp: QWidget = null;
+  #defaultPosition: Rect = null;
 
   #children: QWidget[];
   #onCloseEventEmitter = new EventEmitter<void>();
@@ -50,20 +54,45 @@ export class WindowPopOver {
     this.#onCloseEventEmitter.fire();
   }
 
-  show(window: Window, tab: Tab): void {
-    const tabRect = window.getTabGlobalGeometry(tab);
+  setFixedHeight(height: number): void {
+    this.#popUp.setFixedHeight(height);
+  }
+
+  setFixedHeightToSizeHint(): void {
+    const hint = this.#popUp.sizeHint();
+    this.#popUp.setFixedHeight(hint.height());
+  }
+
+  clearFixedHeight(): void {
+    this.#popUp.setMinimumHeight(0);
+    this.#popUp.setMaximumHeight(16777215);
+
+    const pos = this.#defaultPosition;
+    this.#popUp.setGeometry(pos.left, pos.top, pos.width, pos.height);
+  }
+
+  position(window: Window, options?: WindowPopOverOptions): void {
+    let tabRect: QRect;
+    if (options?.containingRect != null) {
+      tabRect = options.containingRect;
+    } else {
+      tabRect = window.getWidget().geometry();
+    }
 
     const width = Math.round(500 * window.getDpi() / 96);
     const leftOffset = (tabRect.width() - width ) /2;
 
-    const pos = this.#keepOnScreen(window, {
+    this.#defaultPosition = this.#keepOnScreen(window, {
       left: tabRect.left() + leftOffset,
       top: tabRect.top(),
       width,
       height: tabRect.height()
     });
-
+    const pos = this.#defaultPosition;
     this.#popUp.setGeometry(pos.left, pos.top, pos.width, pos.height);
+  }
+
+  show(): void {
     this.#popUp.raise();
     this.#popUp.show();
   }

@@ -6,7 +6,7 @@
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Logger, log, getLogger } from "extraterm-logging";
 import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelIndex, ItemDataRole, QTableView,
-  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, AlignmentFlag, QFont, QColor
+  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, AlignmentFlag, QFont, QColor, QRect
 } from "@nodegui/nodegui";
 import { stringToCodePointArray, hasEmojiPresentation } from "extraterm-unicode-utilities";
 import { ColorSlot, CommandChar, FontSlot, TurboTextDelegate } from "nodegui-plugin-rich-text-delegate";
@@ -46,13 +46,17 @@ export class ListPicker {
   #contentModel: ContentModel = null;
   #fieldTypes: FieldType[] = [];
 
-  #selectedEventEmitter = new EventEmitter<string>();
+  #onSelectedEventEmitter = new EventEmitter<string>();
   onSelected: Event<string> = null;
+
+  #onContentAreaChangedEventEmitter = new EventEmitter<void>();
+  onContentAreaChanged: Event<void> = null;
 
   constructor(uiStyle: UiStyle) {
     this._log = getLogger("ListPicker", this);
     this.#uiStyle = uiStyle;
-    this.onSelected = this.#selectedEventEmitter.event;
+    this.onSelected = this.#onSelectedEventEmitter.event;
+    this.onContentAreaChanged = this.#onContentAreaChangedEventEmitter.event;
     this.#createWidget();
   }
 
@@ -100,6 +104,7 @@ export class ListPicker {
             selectionBehavior: QAbstractItemViewSelectionBehavior.SelectRows,
             selectionMode: SelectionMode.SingleSelection,
             cornerButtonEnabled: false,
+            minimumHeight: 0,
             onClicked: (nativeElement) => {
               this.#handleClicked(new QModelIndex(nativeElement));
             }
@@ -134,10 +139,26 @@ export class ListPicker {
     this.#contentModel.setSearch(newText);
     this.#tableView.selectionModel().select(this.#contentModel.createIndex(0, 0),
       SelectionFlag.ClearAndSelect | SelectionFlag.Rows);
+    this.#onContentAreaChangedEventEmitter.fire();
+  }
+
+  setListAreaFixedHeight(height: number): void {
+    this.#tableView.setFixedHeight(height);
+  }
+
+  clearListAreaFixedHeight(): void {
+    this.#tableView.setMinimumHeight(0);
+    this.#tableView.setMaximumHeight(16777215);
+  }
+
+  getContentsHeight(): number {
+    const lastIndex = this.#contentModel.index(this.#contentModel.rowCount() -1, 0);
+    const lastRect = this.#tableView.visualRect(lastIndex);
+    return lastRect.top() + lastRect.height();
   }
 
   #handleClicked(index: QModelIndex): void {
-    this.#selectedEventEmitter.fire(this.#contentModel.idByRow(index.row()));
+    this.#onSelectedEventEmitter.fire(this.#contentModel.idByRow(index.row()));
   }
 
   #handleKeyPress(event: QKeyEvent): void {
@@ -193,7 +214,7 @@ export class ListPicker {
     const selectionModel = this.#tableView.selectionModel();
     const rowIndexes = selectionModel.selectedRows();
     const selectedRowIndex = rowIndexes[0].row();
-    this.#selectedEventEmitter.fire(this.#contentModel.idByRow(selectedRowIndex));
+    this.#onSelectedEventEmitter.fire(this.#contentModel.idByRow(selectedRowIndex));
   }
 
   #createRichTextDelegate(): TurboTextDelegate {
