@@ -1,12 +1,12 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Logger, log, getLogger } from "extraterm-logging";
 import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelIndex, ItemDataRole, QTableView,
-  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, AlignmentFlag, QFont, QColor, QRect
+  QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, AlignmentFlag, QFont, QColor, QRect, QBoxLayout, QSizePolicyPolicy
 } from "@nodegui/nodegui";
 import { stringToCodePointArray, hasEmojiPresentation } from "extraterm-unicode-utilities";
 import { ColorSlot, CommandChar, FontSlot, TurboTextDelegate } from "nodegui-plugin-rich-text-delegate";
@@ -45,6 +45,8 @@ export class ListPicker {
   #tableView: QTableView = null;
   #contentModel: ContentModel = null;
   #fieldTypes: FieldType[] = [];
+  #mainLayout: QBoxLayout= null;
+  #isReverse = false;
 
   #onSelectedEventEmitter = new EventEmitter<string>();
   onSelected: Event<string> = null;
@@ -85,7 +87,7 @@ export class ListPicker {
   #createWidget(): void {
     this.#contentModel = new ContentModel(this.#uiStyle);
     this.#widget = Widget({
-      layout: BoxLayout({
+      layout: this.#mainLayout = BoxLayout({
         direction: Direction.TopToBottom,
         contentsMargins: [0, 0, 0, 0],
         children: [
@@ -105,6 +107,10 @@ export class ListPicker {
             selectionMode: SelectionMode.SingleSelection,
             cornerButtonEnabled: false,
             minimumHeight: 0,
+            sizePolicy: {
+              horizontal: QSizePolicyPolicy.Expanding,
+              vertical: QSizePolicyPolicy.Expanding
+            },
             onClicked: (nativeElement) => {
               this.#handleClicked(new QModelIndex(nativeElement));
             }
@@ -137,24 +143,43 @@ export class ListPicker {
 
   #handleTextEdited(newText: string): void {
     this.#contentModel.setSearch(newText);
-    this.#tableView.selectionModel().select(this.#contentModel.createIndex(0, 0),
-      SelectionFlag.ClearAndSelect | SelectionFlag.Rows);
+    this.#selectDefaultItem();
     this.#onContentAreaChangedEventEmitter.fire();
+  }
+
+  #selectDefaultItem(): void {
+    if (this.#contentModel.rowCount() === 0) {
+      return;
+    }
+    const index = this.#contentModel.createIndex(this.#isReverse ? (this.#contentModel.rowCount() -1) : 0, 0);
+    this.#tableView.selectionModel().select(index, SelectionFlag.ClearAndSelect | SelectionFlag.Rows);
+    this.#tableView.scrollTo(index);
   }
 
   setListAreaFixedHeight(height: number): void {
     this.#tableView.setFixedHeight(height);
+    this.#widget.adjustSize();
   }
 
   clearListAreaFixedHeight(): void {
     this.#tableView.setMinimumHeight(0);
     this.#tableView.setMaximumHeight(16777215);
+    this.#widget.adjustSize();
+  }
+
+  setReverse(reverse: boolean): void {
+    this.#isReverse = reverse;
+    this.#mainLayout.setDirection(reverse ? Direction.BottomToTop : Direction.TopToBottom);
+    this.#contentModel.setReverse(reverse);
+    this.#selectDefaultItem();
   }
 
   getContentsHeight(): number {
-    const lastIndex = this.#contentModel.index(this.#contentModel.rowCount() -1, 0);
-    const lastRect = this.#tableView.visualRect(lastIndex);
-    return lastRect.top() + lastRect.height();
+    const rowCount = this.#contentModel.rowCount();
+    if (rowCount === 0) {
+      return 0;
+    }
+    return rowCount * this.#tableView.rowHeight(0);
   }
 
   #handleClicked(index: QModelIndex): void {
@@ -244,6 +269,9 @@ function cmpScore(a: EntryMetadata, b: EntryMetadata): number {
   return a.score < b.score ? -1 : 1;
 }
 
+function reverseCmpScore(a: EntryMetadata, b: EntryMetadata): number {
+  return cmpScore(b, a);
+}
 
 class ContentModel extends QAbstractTableModel {
   private _log: Logger = null;
@@ -252,6 +280,7 @@ class ContentModel extends QAbstractTableModel {
   #fieldTypes: FieldType[] = [];
   #visibleEntries: EntryMetadata[] = [];
   #searchText: string = "";
+  #isReverse = false;
 
   constructor(uiStyle: UiStyle) {
     super();
@@ -261,6 +290,11 @@ class ContentModel extends QAbstractTableModel {
 
   setSearch(searchText: string): void {
     this.#searchText = searchText;
+    this.#updateVisibleEntries();
+  }
+
+  setReverse(reverse: boolean): void {
+    this.#isReverse = reverse;
     this.#updateVisibleEntries();
   }
 
@@ -278,8 +312,12 @@ class ContentModel extends QAbstractTableModel {
         entry.markedupText = this.#encodeEmoji(entry.text);
         i++;
       }
-      return [...entries];
 
+      if ( ! this.#isReverse) {
+        return [...entries];
+      } else {
+        return [...entries].reverse();
+      }
     } else {
       for (const entry of entries) {
         const result = fuzzyjs.match(searchText, entry.text, { withRanges: true });
@@ -302,7 +340,7 @@ class ContentModel extends QAbstractTableModel {
       }
 
       const resultEntries = entries.filter(e => e.score !== -1);
-      resultEntries.sort(cmpScore);
+      resultEntries.sort(this.#isReverse ? reverseCmpScore : cmpScore);
       return resultEntries;
     }
   }

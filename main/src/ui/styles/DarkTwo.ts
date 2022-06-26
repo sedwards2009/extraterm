@@ -924,6 +924,14 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QWidget[cssClass~="terminal-preview-container"] {
     border: 1px solid ${baseBorderColor};
   }
+
+  QWidget[cssClass~="transparent"] {
+    background-color: #0000ff00;
+  }
+
+  QWidget[cssClass~="debug"] {
+    background-color: #ff00ff;
+  }
   `;
 
     }

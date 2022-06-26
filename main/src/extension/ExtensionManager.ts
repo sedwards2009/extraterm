@@ -762,6 +762,23 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     if (this.#listPickerPopOver == null) {
       this.#listPickerPopOver = new ListPickerPopOver(this.#uiStyle);
     }
-    return this.#listPickerPopOver.show(this.getWindowForTab(tab), tab, options);
+    const win = this.getWindowForTab(tab);
+    return this.#listPickerPopOver.show(win, {...options, containingRect: win.getTabGlobalGeometry(tab)});
+  }
+
+  async showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number> {
+    if (this.#listPickerPopOver == null) {
+      this.#listPickerPopOver = new ListPickerPopOver(this.#uiStyle);
+    }
+    for (const win of this.#allWindows) {
+      win.getTerminals().includes(terminal);
+    }
+    const win = this.getWindowForTab(terminal);
+
+    const geo = terminal.getCursorGlobalGeometry();
+    if (geo == null) {
+      return Promise.reject();
+    }
+    return this.#listPickerPopOver.show(win, {...options, aroundRect: geo});
   }
 }

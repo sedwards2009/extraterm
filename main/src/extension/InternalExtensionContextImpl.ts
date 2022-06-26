@@ -173,6 +173,10 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     return this.#extensionManager.showListPicker(tab, options);
   }
 
+  async showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number> {
+    return this.#extensionManager.showOnCursorListPicker(terminal, options);
+  }
+
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void {
     if (this.hasTerminalWrap(terminal)) {
       const wrapper = this.wrapTerminal(terminal);

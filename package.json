@@ -47,6 +47,7 @@
       "extensions/DefaultTerminalTheme",
       "extensions/DirectoryCommands",
       "extensions/CommunityTerminalThemes",
+      "extensions/InsertEmoji",
       "extensions/InternalCommands",
       "extensions/ITermColorsTerminalThemeProvider",
       "extensions/UnixSessionBackend",

@@ -3,7 +3,8 @@
   "displayName": "Insert Emoji",
   "version": "1.0.0",
   "description": "",
-  "windowMain": "dist/main.js",
+  "type": "module",
+  "exports": "./dist/main.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist",
@@ -17,7 +18,7 @@
         "command": "insert-emoji:insert-emoji",
         "title": "Insert Emoji",
         "category": "terminal",
-        "when": "terminalFocus"
+        "when": "connectedTerminalFocus"
       }
     ],
     "keybindings": [
@@ -26,7 +27,6 @@
       }
     ]
   },
-  "isInternal": true,
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "download-cli": "^1.1.1",

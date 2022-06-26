@@ -5,7 +5,8 @@
  */
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode,
   QPen,
-  ContextMenuPolicy} from "@nodegui/nodegui";
+  ContextMenuPolicy,
+  QRect} from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice,
@@ -494,6 +495,21 @@ export class TerminalBlock implements Block {
       line.setExtraFontsFlag(i, 0, isExtra);
       line.setLigature(i, 0, 0);
     }
+  }
+
+  getCursorGeometry(): QRect | null {
+    if (this.#emulator == null) {
+      return null;
+    }
+    const dim = this.#emulator.getDimensions();
+
+    const metrics= this.#fontMetrics;
+    const cellHeightPx = metrics.heightPx;
+    const cellWidthPx = metrics.widthPx;
+
+    const xPx = dim.cursorX * cellWidthPx;
+    const yPx = (dim.cursorY + this.#scrollback.length) * cellHeightPx;
+    return new QRect(xPx, yPx, cellWidthPx, cellHeightPx);
   }
 
   #renderCursors(painter: QPainter, lines: Line[], startY: number): void {

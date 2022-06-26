@@ -4794,6 +4794,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"insert-emoji@workspace:extensions/InsertEmoji":
+  version: 0.0.0-use.local
+  resolution: "insert-emoji@workspace:extensions/InsertEmoji"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    download-cli: ^1.1.1
+    shelljs: 0.8.3
+    typescript: 4.6.3
+  languageName: unknown
+  linkType: soft
+
 "internal-commands@workspace:extensions/InternalCommands":
   version: 0.0.0-use.local
   resolution: "internal-commands@workspace:extensions/InternalCommands"

@@ -91,6 +91,7 @@ export interface ExtensionManager {
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration,
     window: Window): InternalSessionSettingsEditor[];
   showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
+  showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number>;
 
 //   setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void;
 //   getViewerTabDisplay(): ViewerTabDisplay;
@@ -194,6 +195,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   newWindowCreated(window: Window, allWindows: Window[]): void;
 
   showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
+  showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number>;
 
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void;
   terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;

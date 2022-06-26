@@ -64,10 +64,8 @@ export class TerminalImpl implements ExtensionApi.Terminal {
   }
 
   showOnCursorListPicker(options: ExtensionApi.ListPickerOptions): Promise<number> {
-    // this._checkIsAlive();
-    // return this._internalExtensionContext._extensionManager.extensionUiUtils
-    //   .showOnCursorListPicker(this._terminal, options);
-    return null;
+    this.#checkIsAlive();
+    return this.#internalExtensionContext.showOnCursorListPicker(this.#terminal, options);
   }
 
   #handleTerminalDispose(): void {

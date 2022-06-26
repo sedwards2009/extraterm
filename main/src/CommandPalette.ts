@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -13,7 +13,8 @@ import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
 import { Entry, FieldType, ListPicker } from "./ui/ListPicker.js";
 import { UiStyle } from "./ui/UiStyle.js";
 import { WindowPopOver } from "./ui/WindowPopOver.js";
-import { QRect, WidgetEventTypes } from "@nodegui/nodegui";
+import { Direction, QRect, QSizePolicyPolicy } from "@nodegui/nodegui";
+import { BoxLayout, Widget } from "qt-construct";
 
 
 export class CommandPalette {
@@ -24,7 +25,6 @@ export class CommandPalette {
   #listPicker: ListPicker = null;
   #windowPopOver: WindowPopOver = null;
   #containingRect: QRect = null;
-  #listPickerAfterLayoutFunc: () => void = null;
 
   constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager, uiStyle: UiStyle) {
     this._log = getLogger("CommandPalette", this);
@@ -37,19 +37,27 @@ export class CommandPalette {
 
   #createPopOver(): void {
     this.#listPicker = new ListPicker(this.#uiStyle);
-    this.#windowPopOver = new WindowPopOver([
-      Label({text: "Command Palette"}),
-      this.#listPicker.getWidget()
-    ]);
+    this.#windowPopOver = new WindowPopOver(
+      Widget({
+        cssClass: ["list-picker"],
+        contentsMargins: 0,
+        sizePolicy: {
+          horizontal: QSizePolicyPolicy.Fixed,
+          vertical: QSizePolicyPolicy.Expanding
+        },
+        layout: BoxLayout({
+          direction: Direction.TopToBottom,
+          children: [
+            Label({text: "Command Palette"}),
+            this.#listPicker.getWidget()
+          ]
+        })
+      })
+    );
+    this.#listPicker.getWidget().setSizePolicy(QSizePolicyPolicy.Fixed, QSizePolicyPolicy.Expanding);
+
     this.#listPicker.onSelected((id: string) => this.#commandSelected(id));
     this.#listPicker.onContentAreaChanged(() => this.#updateHeight());
-    this.#listPicker.getWidget().addEventListener(WidgetEventTypes.LayoutRequest, () => {
-      if (this.#listPickerAfterLayoutFunc == null) {
-        return;
-      }
-      this.#listPickerAfterLayoutFunc();
-      this.#listPickerAfterLayoutFunc = null;
-    });
   }
 
   #updateHeight(): void {
@@ -58,21 +66,13 @@ export class CommandPalette {
     }
     const contentHeight = this.#listPicker.getContentsHeight();
     const maxListAreaHeight = Math.floor(this.#containingRect.height() * 0.8);
-    if (contentHeight > maxListAreaHeight) {
-      // Limit the pop up window height and allow contents to scroll
-      this.#listPicker.clearListAreaFixedHeight();
-      this.#windowPopOver.clearFixedHeight();
-      this.#listPickerAfterLayoutFunc = null;
-    } else {
-      // Shrink the list picker area to match the contents, and shrink the window height to match.
-      this.#listPicker.setListAreaFixedHeight(contentHeight);
-      this.#listPickerAfterLayoutFunc = () => {
-        this.#windowPopOver.setFixedHeightToSizeHint();
-      };
-    }
+    this.#listPicker.setListAreaFixedHeight(Math.min(contentHeight, maxListAreaHeight));
   }
 
   show(window: Window, tab: Tab): void {
+    const widthPx = Math.round(500 * window.getDpi() / 96);
+    this.#listPicker.getWidget().setFixedWidth(widthPx);
+
     const commands = this.#extensionManager.queryCommands({
       commandPalette: true,
       categories: ["application", "window", "terminal", "viewer"],
@@ -114,7 +114,6 @@ export class CommandPalette {
     doLater( () => {
       try {
         this.#containingRect = null;
-        this.#listPickerAfterLayoutFunc = null;
         this.#extensionManager.executeCommand(id);
       } catch(e) {
         this._log.warn(e);

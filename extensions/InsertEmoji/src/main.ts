@@ -22,10 +22,10 @@ async function showEmojiList(): Promise<void> {
     selectedItemIndex: 0,
   };
 
-  const selected = await context.window.activeTerminal.showOnCursorListPicker(allEmojiOptions);
+  const selected = await context.activeTerminal.showOnCursorListPicker(allEmojiOptions);
   if (selected == null) {
     return;
   }
 
-  context.window.activeTerminal.type(String.fromCodePoint(emojiCodePoints[selected]));
+  context.activeTerminal.type(String.fromCodePoint(emojiCodePoints[selected]));
 }

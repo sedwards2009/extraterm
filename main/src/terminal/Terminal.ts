@@ -30,6 +30,8 @@ import {
   QKeyEvent,
   QLabel,
   QMouseEvent,
+  QPoint,
+  QRect,
   QScrollBar,
   QSizePolicyPolicy,
   QWidget,
@@ -824,6 +826,18 @@ export class Terminal implements Tab, Disposable {
 
     this.#emulator = emulator;
     // this._initDownloadApplicationModeHandler();
+  }
+
+  getCursorGlobalGeometry(): QRect | null {
+    const frame = this.#findLastBareTerminalBlockFrame();
+    const block = <TerminalBlock> frame.getBlock();
+    const geo = block.getCursorGeometry();
+    if (geo == null) {
+      return null;
+    }
+
+    const globalPos = block.getWidget().mapToGlobal(new QPoint(geo.left(), geo.top()));
+    return new QRect(globalPos.x(), globalPos.y(), geo.width(), geo.height());
   }
 
   #handleScreenChange(event: TermApi.ScreenChangeEvent): void {
