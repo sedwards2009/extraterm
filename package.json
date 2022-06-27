@@ -1,6 +1,6 @@
 {
   "name": "extraterm",
-  "version": "0.63.0",
+  "version": "0.64.0",
   "description": "A terminal",
   "author": "Simon Edwards",
   "license": "MIT",
@@ -25,7 +25,8 @@
     "package-macos": "node build_scripts/package_macos.mjs",
     "package-windows": "node build_scripts/package_windows.mjs",
     "package-linux-zip-only": "node build_scripts/build_packages.mjs --linux-zip-only",
-    "test": "wsrun --concurrency 2 --exclude-missing --stages test"
+    "test": "wsrun --concurrency 2 --exclude-missing --stages test",
+    "timeout_test": "qode timeout_test.js"
   },
   "jshintConfig": {
     "esversion": 6
