@@ -11,7 +11,7 @@ import { Window } from "../Window.js";
 import { Entry, FieldType, ListPicker } from "../ui/ListPicker.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { Orientation, WindowPopOver } from "../ui/WindowPopOver.js";
-import { Direction, QLabel, QRect, QSizePolicyPolicy, WidgetEventTypes } from "@nodegui/nodegui";
+import { Direction, QLabel, QRect, QSizePolicyPolicy } from "@nodegui/nodegui";
 import { BoxLayout, Widget } from "qt-construct";
 
 
@@ -90,7 +90,7 @@ export class ListPickerPopOver {
   }
 
   show(window: Window, options: ListPickerPopOverOptions): Promise<number> {
-    const widthPx = Math.round(500 * window.getDpi() / 96);
+    const widthPx = Math.round((options?.widthPx ?? 500) * window.getDpi() / 96);
     this.#listPicker.getWidget().setFixedWidth(widthPx);
 
     if (options.title == null) {

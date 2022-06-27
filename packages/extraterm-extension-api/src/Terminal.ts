@@ -11,6 +11,7 @@ import { TerminalEnvironment } from "./TerminalEnvironment.js";
 import { SessionConfiguration } from "./Sessions.js";
 import { Block } from "./Block.js";
 import { ScreenWithCursor } from "./Screen.js";
+import { ListPickerOptions } from "./ListPickerOptions.js";
 
 
 // TODO: Rename this file to Terminals.ts
@@ -22,24 +23,6 @@ export interface Terminals {
   // onWillDestroyTerminal: Event<Terminal>;
 }
 
-export interface OnCursorListPickerOptions {
-  /**
-   * The list of text items to display.
-   */
-  items: string[];
-
-  /**
-   * The index of the item to select by default.
-   */
-  selectedItemIndex: number;
-
-  /**
-   * Set the initial text in filter text input.
-   *
-   * Defaults to the empty string if nothing is provided.
-   */
-  filter?: string;
-}
 
 /**
  * An active terminal with connected TTY.
@@ -157,12 +140,12 @@ export interface Terminal {
    * picker by pressing escape, for example. The picker appears with in this
    * tab.
    *
-   * See `OnCursorListPickerOptions` for more details about how to configure this.
+   * See `ListPickerOptions` for more details about how to configure this.
    *
    * @return a promise which resolves to the selected item index or
    *          undefined if it was canceled.
    */
-  showOnCursorListPicker(options: OnCursorListPickerOptions): Promise<number | undefined>;
+  showOnCursorListPicker(options: ListPickerOptions): Promise<number | undefined>;
 
   /**
    * Get the current working directory of locally running shell process

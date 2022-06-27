@@ -1,9 +1,9 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ExtensionContext, Logger, OnCursorListPickerOptions } from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, Logger, ListPickerOptions } from '@extraterm/extraterm-extension-api';
 import { emojiNames, emojiCodePoints } from "./EmojiData.js";
 
 
@@ -17,9 +17,10 @@ export function activate(_context: ExtensionContext): any {
 }
 
 async function showEmojiList(): Promise<void> {
-  const allEmojiOptions: OnCursorListPickerOptions = {
+  const allEmojiOptions: ListPickerOptions = {
     items: emojiNames,
     selectedItemIndex: 0,
+    widthPx: 250,
   };
 
   const selected = await context.activeTerminal.showOnCursorListPicker(allEmojiOptions);
