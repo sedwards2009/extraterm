@@ -160,7 +160,7 @@ class Main {
     });
 
     await this.openWindow();
-    this.commandNewTerminal({});
+    await this.commandNewTerminal({});
   }
 
   #setApplicationStyle(uiScalePercent: number): void {
@@ -325,7 +325,7 @@ class Main {
     this.openWindow();
   }
 
-  commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): void {
+  async commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): Promise<void> {
     let sessionConfiguration: SessionConfiguration = this.#configDatabase.getSessionConfig()[0];
     if (args.sessionUuid != null) {
       sessionConfiguration = this.#getSessionByUuid(args.sessionUuid);
@@ -339,15 +339,15 @@ class Main {
       }
     }
 
-    const workingDirectory: string = null;
-    // if (args.workingDirectory != null) {
-    //   workingDirectory = args.workingDirectory;
-    // } else {
-    //   const activeTerminal = this.#extensionManager.getActiveTerminal();
-    //   if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
-    //     workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
-    //   }
-    // }
+    let workingDirectory: string = null;
+    if (args.workingDirectory != null) {
+      workingDirectory = args.workingDirectory;
+    } else {
+      const activeTerminal = this.#extensionManager.getActiveTerminal();
+      if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
+        workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
+      }
+    }
 
     const window = this.#extensionManager.getActiveWindow() ?? this.#windows[0];
 
