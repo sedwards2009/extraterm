@@ -1,12 +1,12 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {
   ExtensionContext,
   Logger,
-  OnCursorListPickerOptions,
+  ListPickerOptions,
   Screen,
   TerminalOutputDetails,
   TerminalOutputType,
@@ -24,37 +24,36 @@ export function activate(_context: ExtensionContext): any {
 async function autocompleteCommand(): Promise<void> {
   const words = collectWords();
   const defaultFilter = getDefaultFilter();
-
   const candidateWords = words.filter(w => w !== defaultFilter);
 
-  const options: OnCursorListPickerOptions = {
+  const options: ListPickerOptions = {
     items: candidateWords,
     selectedItemIndex: 0,
     filter: defaultFilter
   };
 
-  const selected = await context.window.activeTerminal.showOnCursorListPicker(options);
+  const selected = await context.activeTerminal.showOnCursorListPicker(options);
   if (selected == null) {
     return;
   }
 
   const deleteKeyStrokes = "\x7f".repeat(defaultFilter.length);
-  context.window.activeTerminal.type(deleteKeyStrokes + words[selected]);
+  context.activeTerminal.type(deleteKeyStrokes + words[selected]);
 }
 
 function collectWords(): string[] {
-  const blocks = context.window.activeTerminal.blocks;
+  const blocks = context.activeTerminal.blocks;
   let blockIndex = blocks.length -1;
   const screenLines: string[] = [];
 
-  const maxScanRows = context.window.activeTerminal.screen.height * 2;
+  const maxScanRows = context.activeTerminal.screen.height * 2;
 
   while (screenLines.length < maxScanRows && blockIndex >= 0) {
     const block = blocks[blockIndex];
     if (block.type === TerminalOutputType) {
       const details = <TerminalOutputDetails> block.details;
       if (details.hasPty) {
-        scanScreen(context.window.activeTerminal.screen, screenLines, maxScanRows);
+        scanScreen(context.activeTerminal.screen, screenLines, maxScanRows);
       }
       scanScreen(details.scrollback, screenLines, maxScanRows);
     }
@@ -78,7 +77,7 @@ function scanScreen(screen: Screen, screenLines: string[], maxScanRows: number):
 }
 
 function getDefaultFilter(): string {
-  const screen = context.window.activeTerminal.screen;
+  const screen = context.activeTerminal.screen;
   const lineText = screen.getLineText(screen.cursorLine);
   let xStart = screen.cursorX;
 
@@ -86,5 +85,5 @@ function getDefaultFilter(): string {
     xStart--;
   }
 
-  return lineText.substr(xStart, screen.cursorX - xStart);
+  return lineText.substring(xStart, screen.cursorX);
 }

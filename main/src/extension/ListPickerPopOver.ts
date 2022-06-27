@@ -114,7 +114,7 @@ export class ListPickerPopOver {
           fields: [entry]
       }));
     this.#listPicker.setEntries([FieldType.TEXT], entries);
-    this.#listPicker.setText("");
+    this.#listPicker.setText(options.filter ?? "");
 
     if (options.aroundRect != null) {
       const screenGeometry = window.getWidget().windowHandle().screen().geometry();

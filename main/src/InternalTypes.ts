@@ -202,6 +202,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
   wrapTab(tab: Tab): ExtensionApi.Tab;
   wrapTerminal(terminal: Terminal): ExtensionApi.Terminal;
+  wrapBlock(blockFrame: BlockFrame): ExtensionApi.Block;
 }
 
 // export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorderWidget {

@@ -440,6 +440,10 @@ export class Terminal implements Tab, Disposable {
     this.#contentWidget.clearFocus();
   }
 
+  getBlockFrames(): BlockFrame[] {
+    return this.#blockFrames.map(pb => pb.frame);
+  }
+
   #computeTerminalSize(): TerminalSize {
     if (this.#terminalVisualConfig == null) {
       return null;

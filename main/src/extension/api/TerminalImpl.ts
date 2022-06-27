@@ -94,10 +94,8 @@ export class TerminalImpl implements ExtensionApi.Terminal {
   }
 
   get blocks(): ExtensionApi.Block[] {
-    // this._checkIsAlive();
-    // return this._terminal.getViewerElements().map(
-    //   viewer => this._internalExtensionContext._proxyFactory.getBlock(viewer));
-    return [];
+    return this.#terminal.getBlockFrames().map(bf =>
+      this.#internalExtensionContext.wrapBlock(bf));
   }
 
   get extratermCookieValue(): string {

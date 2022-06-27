@@ -80,7 +80,7 @@ export class ListPicker {
     });
 
     this.#contentModel.setEntries(fieldTypes, entries);
-    this.#handleTextEdited("");
+    this.#handleTextEdited(this.#lineEdit.text());
     this.#tableView.resizeColumnsToContents();
   }
 
@@ -139,6 +139,7 @@ export class ListPicker {
 
   setText(text: string): void {
     this.#lineEdit.setText(text);
+    this.#handleTextEdited(text);
   }
 
   #handleTextEdited(newText: string): void {

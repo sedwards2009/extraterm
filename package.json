@@ -42,6 +42,7 @@
       "main",
       "packages/*",
       "extensions/About",
+      "extensions/Autocomplete",
       "extensions/Autolink",
       "extensions/CopyLink",
       "extensions/DefaultTerminalTheme",

@@ -3,21 +3,21 @@
   "displayName": "Autocomplete",
   "version": "1.0.0",
   "description": "",
-  "windowMain": "dist/Autocomplete.js",
+  "type": "module",
+  "exports": "./dist/Autocomplete.js",
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist"
   },
   "author": "",
   "license": "MIT",
-  "isInternal": true,
   "contributes": {
     "commands": [
       {
         "command": "autocomplete:autocomplete",
         "title": "Autocomplete",
         "category": "terminal",
-        "when": "terminalFocus"
+        "when": "connectedTerminalFocus"
       }
     ],
     "keybindings": [
