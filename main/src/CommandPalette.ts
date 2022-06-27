@@ -49,7 +49,14 @@ export class CommandPalette {
           direction: Direction.TopToBottom,
           children: [
             Label({text: "Command Palette"}),
-            this.#listPicker.getWidget()
+            this.#listPicker.getWidget(),
+            {
+              // This strechy little widget is a hack to help hide the
+              // 2 paints and temporary layout Qt likes to show when
+              // we change the size of the list picker options.
+              widget: Widget({}),
+              stretch: 1
+            }
           ]
         })
       })
