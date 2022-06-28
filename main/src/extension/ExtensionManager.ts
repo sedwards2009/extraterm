@@ -253,7 +253,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return extension != null ? extension.internalExtensionContext : null;
   }
 
-  enableExtension(name: string): void {
+  async enableExtension(name: string): Promise<void> {
     const metadata = this.#getExtensionMetadataByName(name);
     if (metadata == null) {
       this._log.warn(`Unable to find extensions metadata for name '${name}'.`);
@@ -266,7 +266,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return;
     }
 
-    this.#startExtension(metadata);
+    await this.#startExtension(metadata);
 
     const generalConfig = this.#configDatabase.getGeneralConfigCopy();
     generalConfig.activeExtensions[metadata.name] = true;
@@ -288,7 +288,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return null;
   }
 
-  disableExtension(name: string): void {
+  async disableExtension(name: string): Promise<void> {
     const metadata = this.#getExtensionMetadataByName(name);
     if (metadata == null) {
       this._log.warn(`Unable to find extensions metadata for name '${name}'.`);
