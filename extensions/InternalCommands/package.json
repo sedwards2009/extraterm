@@ -90,6 +90,7 @@
         "title": "Increase Font Size",
         "category": "terminal",
         "order": 1700,
+        "icon": "fa-text-height fa-scale-80pc",
         "when": "terminalFocus"
       },
       {
@@ -97,6 +98,7 @@
         "title": "Decrease Font Size",
         "category": "terminal",
         "order": 1701,
+        "icon": "fa-text-height fa-scale-50pc",
         "when": "terminalFocus"
       },
       {
@@ -104,6 +106,7 @@
         "title": "Reset Font Size",
         "category": "terminal",
         "order": 1702,
+        "icon": "fa-text-height fa-scale-70pc",
         "when": "terminalFocus"
       },
       {

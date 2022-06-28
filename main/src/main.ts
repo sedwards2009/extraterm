@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -41,7 +41,6 @@ import { CommandPalette } from "./CommandPalette.js";
 import { PingHandler } from "./local_http_server/PingHandler.js";
 import {fileURLToPath} from 'node:url';
 import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
-import { BlockFrame } from "./terminal/BlockFrame.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TerminalBlock } from "./terminal/TerminalBlock.js";
 

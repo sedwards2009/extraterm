@@ -20,6 +20,7 @@ export interface CreateIconOptions extends CreateFontIconOptions {}
 
 export function createIcon(name: string, options?: CreateIconOptions): QIcon {
   let rotation = 0;
+  let scale = 1;
   let parts = name.split(" ");
   if (parts.length !== 1) {
     for (const angle of [90, 180, 270]) {
@@ -29,9 +30,17 @@ export function createIcon(name: string, options?: CreateIconOptions): QIcon {
         parts = parts.filter(p => p !== keyword);
       }
     }
+
+    for (const percent of [50, 60, 70, 80, 100, 110, 120, 130, 140, 150]) {
+      const keyword = `fa-scale-${percent}pc`;
+      if (parts.includes(keyword)) {
+        scale = percent / 100;
+        parts = parts.filter(p => p !== keyword);
+      }
+    }
   }
   const cleanName = parts[0];
-  const cleanOptions = rotation === 0 ? options : {...options, rotation };
+  const cleanOptions = (rotation === 0 && scale === 100) ? options : {...options, rotation, scale };
 
   const entry = allIcons[cleanName];
   if (entry === undefined) {
