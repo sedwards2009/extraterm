@@ -8,10 +8,10 @@
       {
         "command": "extraterm:application.openCommandPalette",
         "title": "Command Palette",
-        "category": "window",
+        "category": "terminal",
         "icon": "fa-toolbox",
         "when": "",
-        "order": 900
+        "order": 1900
       },
       {
         "command": "extraterm:application.newWindow",
@@ -222,10 +222,6 @@
     "menus": {
       "contextMenu": [
         {
-          "command": "extraterm:application.openCommandPalette",
-          "show": true
-        },
-        {
           "command": "extraterm:terminal.goToPreviousFrame",
           "show": true
         },
@@ -252,14 +248,6 @@
         {
           "command": "extraterm:terminal.resetFontSize",
           "show": true
-        },
-        {
-          "command": "extraterm:terminal.clearScrollback",
-          "show": true
-        },
-        {
-          "command": "extraterm:terminal.resetVT",
-          "show": true
         }
       ],
       "commandPalette": [
@@ -279,6 +267,10 @@
         },
         {
           "command": "extraterm:window.newTerminal",
+          "show": true
+        },
+        {
+          "command": "extraterm:application.openCommandPalette",
           "show": true
         },
         {
