@@ -164,6 +164,8 @@ for (const key in configNameToEventKeyMapping) {
 const eventKeyToHumanMapping = {
   "pageup": "Page Up",
   "pagedown": "Page Down",
+  "minus": "-",
+  "plus": "+"
 };
 for (const key in configNameToEventKeyMapping) {
   eventKeyToHumanMapping[configNameToEventKeyMapping[key].toLowerCase()] = key;
