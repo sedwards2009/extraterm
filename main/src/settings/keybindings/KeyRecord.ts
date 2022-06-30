@@ -98,7 +98,9 @@ export class KeyRecord {
       Key.Key_Meta,
       Key.Key_Alt,
       Key.Key_AltGr,
-      Key.Key_CapsLock
+      Key.Key_CapsLock,
+      Key.Key_Super_L,
+      Key.Key_Super_R,
     ].includes(key);
   }
 }
