@@ -366,7 +366,7 @@ class Main {
         [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
         "COLORTERM": "truecolor",   // Advertise that we support 24bit color
       };
-      newTerminal.resizeEmulatorFromTerminalSize();
+      newTerminal.resizeTerminalArea();
 
       const sessionOptions: CreateSessionOptions = {
         extraEnv,

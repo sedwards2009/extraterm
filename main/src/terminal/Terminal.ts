@@ -123,6 +123,7 @@ export class Terminal implements Tab, Disposable {
 
   #topContents: QWidget = null;
   #scrollArea: TerminalScrollArea = null;
+  #resizeGuard = false;
 
   #contentWidget: QWidget = null;
   #borderWidgetLayout: {north: QBoxLayout, south: QBoxLayout, east: QBoxLayout, west: QBoxLayout} = {
@@ -237,7 +238,7 @@ export class Terminal implements Tab, Disposable {
     this.#createUi();
 
     doLater(() => {
-      this.resizeEmulatorFromTerminalSize();
+      this.resizeTerminalArea();
     });
   }
 
@@ -419,7 +420,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleResize(): void {
-    this.resizeEmulatorFromTerminalSize();
+    this.resizeTerminalArea();
     this.#updateViewportTopOnFrames();
   }
 
@@ -471,7 +472,7 @@ export class Terminal implements Tab, Disposable {
         break;
     }
 
-    const maxViewportHeight = maxViewportSize.height() + currentMargins.top + currentMargins.bottom;
+    const maxViewportHeight = this.#scrollArea.getWidget().geometry().height();
     const maxContentHeight = maxViewportHeight - spacing - spacing;
 
     const maxViewportWidth = maxViewportSize.width() + currentMargins.left + currentMargins.right;
@@ -501,7 +502,16 @@ export class Terminal implements Tab, Disposable {
     };
   }
 
-  resizeEmulatorFromTerminalSize(): void {
+  resizeTerminalArea(): void {
+    if (this.#resizeGuard) {
+      return;
+    }
+    this.#resizeGuard = true;
+    this.#internalResizeTerminalArea();
+    this.#resizeGuard = false;
+  }
+
+  #internalResizeTerminalArea(): void {
     const size = this.#computeTerminalSize();
     if (size == null) {
       return;
@@ -665,7 +675,7 @@ export class Terminal implements Tab, Disposable {
     }
     `, false);
 
-    this.resizeEmulatorFromTerminalSize();
+    this.resizeTerminalArea();
   }
 
   #handleHyperlinkHover(terminalBlock: TerminalBlock, url: string): void {
