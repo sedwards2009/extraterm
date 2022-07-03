@@ -695,9 +695,12 @@ export class Window {
 
     this.#tabBar.setCurrentIndex(index);
     this.#contentStack.setCurrentIndex(index);
-    this.#tabs[index].tab.focus();
+    const tab = this.#tabs[index].tab;
+    tab.focus();
 
-    this.#onTabChangeEventEmitter.fire(this.#tabs[index].tab);
+    this.#windowWidget.setWindowTitle(tab.getWindowTitle());
+
+    this.#onTabChangeEventEmitter.fire(tab);
   }
 
   getCurrentTabIndex(): number {
@@ -763,6 +766,20 @@ export class Window {
 
     const index = this.#tabBar.addTab(null, "");
     this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, tabTitleWidget);
+
+    tabPlumbing.disposableHolder.add(tab.onWindowTitleChanged((title: string) => {
+      this.#handleTabWindowTitleChanged(tab, title);
+    }));
+  }
+
+  #handleTabWindowTitleChanged(tab: Tab, title: string): void {
+    if (this.#tabs.length === 0) {
+      return;
+    }
+    if (this.#tabs[this.#tabBar.currentIndex()].tab !== tab) {
+      return;
+    }
+    this.#windowWidget.setWindowTitle(title);
   }
 
   hasTab(targetTab: Tab): boolean {

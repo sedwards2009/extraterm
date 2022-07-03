@@ -13,12 +13,18 @@ import { Segment, TemplateString } from './TemplateString.js';
 import { TitlePreview } from './TitlePreview.js';
 
 
+export interface TemplateEditorOptions {
+  icons?: boolean;
+  title: string;
+}
+
 export class TemplateEditor {
 
   #widget: QWidget;
   #style: Style;
   #templateString: TemplateString;
   #titlePreview: TitlePreview = null;
+  #showIcons = true;
 
   #onAcceptEventEmitter = new EventEmitter<void>();
   onAccept: Event<void> = null;
@@ -31,7 +37,10 @@ export class TemplateEditor {
 
   #templateLineEdit: QLineEdit = null;
 
-  constructor(templateString: TemplateString, style: Style, log: Logger) {
+  constructor(templateString: TemplateString, style: Style, log: Logger,
+      templateEditorOptions: TemplateEditorOptions) {
+
+    this.#showIcons = templateEditorOptions == null ? true : (templateEditorOptions.icons ?? true);
     this.onAccept = this.#onAcceptEventEmitter.event;
     this.onCancel = this.#onCancelEventEmitter.event;
     this.onTemplateChanged = this.#onTemplateChangedEventEmitter.event;
@@ -61,10 +70,29 @@ export class TemplateEditor {
       action.setData(new QVariant(item[1]));
     }
 
-    const iconPopup = this.#createIconPopup((iconName: string): void => {
-      this.#insertText("${icon:" + iconName +"}");
-      iconPopup.hide();
-    });
+    if (this.#showIcons) {
+      const iconPopup = this.#createIconPopup((iconName: string): void => {
+        this.#insertText("${icon:" + iconName +"}");
+        iconPopup.hide();
+      });
+      iconButton = PushButton({
+        text: "Insert Icon",
+        cssClass: ["group-right", "small"],
+        onClicked: () => {
+          if (iconPopup.isVisible()) {
+            iconPopup.hide();
+            return;
+          }
+
+          const rect = iconButton.geometry();
+          const bottomLeft = this.#widget.mapToGlobal(new QPoint(rect.left(), rect.top() + rect.height()));
+          iconPopup.setGeometry(bottomLeft.x(), bottomLeft.y(), rect.width(), 200);
+          iconPopup.raise();
+          iconPopup.show();
+        }
+      });
+    }
+
     this.#titlePreview = new TitlePreview(this.#templateString, this.#style, log);
     this.#titlePreview.onSegmentClicked((segment: Segment): void => {
       this.#templateLineEdit.setSelection(segment.startColumn, segment.endColumn - segment.startColumn);
@@ -80,7 +108,7 @@ export class TemplateEditor {
         children: [
           Label({
             textFormat: TextFormat.RichText,
-            text: this.#style.createHtmlIcon("fa-pencil-alt")
+            text: this.#style.createHtmlIcon("fa-pencil-alt") + templateEditorOptions.title
           }),
           {
             layout: BoxLayout({
@@ -103,25 +131,10 @@ export class TemplateEditor {
                     children: [
                       PushButton({
                         text: "Insert Field",
-                        cssClass: ["group-left", "small"],
+                        cssClass: [this.#showIcons ? "group-left" : "", "small"],
                         menu: fieldMenu
                       }),
-                      iconButton = PushButton({
-                        text: "Insert Icon",
-                        cssClass: ["group-right", "small"],
-                        onClicked: () => {
-                          if (iconPopup.isVisible()) {
-                            iconPopup.hide();
-                            return;
-                          }
-
-                          const rect = iconButton.geometry();
-                          const bottomLeft = this.#widget.mapToGlobal(new QPoint(rect.left(), rect.top() + rect.height()));
-                          iconPopup.setGeometry(bottomLeft.x(), bottomLeft.y(), rect.width(), 200);
-                          iconPopup.raise();
-                          iconPopup.show();
-                        }
-                      })
+                      iconButton
                     ]
                   })
                 }

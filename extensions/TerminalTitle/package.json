@@ -37,6 +37,12 @@
         "category": "terminal",
         "icon": "fa-pen",
         "when": "terminalFocus"
+      },
+      {
+        "command": "terminal-title:editWindowTitle",
+        "title": "Edit Window Title",
+        "category": "terminal",
+        "when": "terminalFocus"
       }
     ],
     "tabTitleWidgets": [
@@ -48,12 +54,20 @@
       {
         "name": "edit-title",
         "border": "north"
+      },
+      {
+        "name": "edit-window-title",
+        "border": "north"
       }
     ],
     "menus": {
       "terminalTab": [
         {
           "command": "terminal-title:editTitle",
+          "show": true
+        },
+        {
+          "command": "terminal-title:editWindowTitle",
           "show": true
         }
       ]
@@ -62,6 +76,10 @@
       {
         "id": "title",
         "name": "Tab Title"
+      },
+      {
+        "id": "window-title",
+        "name": "Window Title"
       }
     ]
   }

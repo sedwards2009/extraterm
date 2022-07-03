@@ -221,6 +221,16 @@ export class TemplateString {
     return this.getSegmentHtmlList().join("");
   }
 
+  getSegmentTextList(): string[] {
+    return this.#segments.map(segment => {
+      return this.formatSegment(segment).text;
+    });
+  }
+
+  formatText(): string {
+    return this.#segments.map(segment => this.formatSegment(segment).text).join("");
+  }
+
   formatSegment(segment: Segment): FormatResult {
     switch (segment.type) {
       case "text":

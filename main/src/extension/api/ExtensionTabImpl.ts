@@ -16,15 +16,20 @@ export class ExtensionTabBridge implements Tab {
   iconName: string = "";
   title: string = "";
 
+  #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
+  onWindowTitleChanged: ExtensionApi.Event<string> = null;
+
   #extensionTabImpl: ExtensionTabImpl;
   #containerWidget: QWidget;
   #containerLayout: QBoxLayout;
   #extensionWidget: QWidget = null;
   #window: Window;
+  #windowTitle = "";
 
   #isOpen = false;
 
   constructor(window: Window) {
+    this.onWindowTitleChanged = this.#onWindowTitleChangedEventEmitter.event;
     this.#window = window;
     this.#extensionTabImpl = new ExtensionTabImpl(this);
     this.#window.onTabCloseRequest((t: Tab) => {
@@ -81,6 +86,15 @@ export class ExtensionTabBridge implements Tab {
 
   unfocus(): void {
     // TODO
+  }
+
+  setWindowTitle(title: string): void {
+    this.#windowTitle = title;
+    this.#onWindowTitleChangedEventEmitter.fire(title);
+  }
+
+  getWindowTitle(): string {
+    return this.#windowTitle;
   }
 
   getExtensionTabImpl(): ExtensionTabImpl {

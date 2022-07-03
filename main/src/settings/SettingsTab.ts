@@ -7,6 +7,8 @@
 import { Direction, QStackedWidget, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ListWidget, ListWidgetItem, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
+import { EventEmitter } from "extraterm-event-emitter";
+import { Event } from "@extraterm/extraterm-extension-api";
 import { Tab } from "../Tab.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { UiStyle } from "../ui/UiStyle.js";
@@ -41,6 +43,9 @@ export class SettingsTab implements Tab {
   #extensionsPage: ExtensionsPage = null;
   #contentWidget: QWidget = null;
 
+  #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
+  onWindowTitleChanged: Event<string> = null;
+
   #pageToStackMapping = new Map<number, number>();
   #stackedWidgetCount = 0;
 
@@ -48,6 +53,7 @@ export class SettingsTab implements Tab {
     keybindingsIOManager: KeybindingsIOManager, window: Window, uiStyle: UiStyle, fontAtlasCache: FontAtlasCache) {
 
     this._log = getLogger("SettingsTab", this);
+    this.onWindowTitleChanged = this.#onWindowTitleChangedEventEmitter.event;
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
@@ -88,6 +94,13 @@ export class SettingsTab implements Tab {
   }
 
   unfocus(): void {
+  }
+
+  getWindowTitle(): string {
+    return "Extraterm Qt - Settings";
+  }
+
+  setWindowTitle(title: string): void {
   }
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {

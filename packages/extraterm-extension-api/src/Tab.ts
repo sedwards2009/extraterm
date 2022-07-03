@@ -64,6 +64,11 @@ export interface Tab {
    * Note: Tabs can move between windows.
    */
   readonly window: Window;
+
+  /**
+   * The text to show in the window title bar.
+   */
+  windowTitle: string;
 }
 
 export interface NumberInputOptions {

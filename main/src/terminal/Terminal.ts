@@ -121,6 +121,10 @@ export class Terminal implements Tab, Disposable {
   #columns = -1;
   #rows = -1;
 
+  #windowTitle = "Extraterm Qt";
+  #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
+  onWindowTitleChanged: Event<string> = null;
+
   #topContents: QWidget = null;
   #scrollArea: TerminalScrollArea = null;
   #resizeGuard = false;
@@ -219,11 +223,12 @@ export class Terminal implements Tab, Disposable {
       keybindingsIOManager: KeybindingsIOManager, fontAtlasCache: FontAtlasCache) {
 
     this._log = getLogger("Terminal", this);
-    this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this.#onDidScreenChangeEventEmitter.event;
     this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
+    this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
+    this.onWindowTitleChanged = this.#onWindowTitleChangedEventEmitter.event;
 
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
@@ -439,6 +444,15 @@ export class Terminal implements Tab, Disposable {
 
   unfocus(): void {
     this.#contentWidget.clearFocus();
+  }
+
+  getWindowTitle(): string {
+    return this.#windowTitle;
+  }
+
+  setWindowTitle(title: string): void {
+    this.#windowTitle = title;
+    this.#onWindowTitleChangedEventEmitter.fire(title);
   }
 
   getBlockFrames(): BlockFrame[] {

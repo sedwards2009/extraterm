@@ -12,7 +12,7 @@ import { TemplateEditor } from './TemplateEditor.js';
 import { IconFormatter } from './IconFormatter.js';
 
 
-export interface Settings {
+export interface TitleSettings {
   template?: string;
 }
 
@@ -35,14 +35,14 @@ export function createTerminalTitleSessionSettings(sessionSettingsEditorBase: Se
   templateString.addFormatter("extraterm", new TerminalEnvironmentFormatter("extraterm", terminalEnvironment));
   templateString.addFormatter("icon", new IconFormatter(sessionSettingsEditorBase.style));
 
-  const settings = <Settings> sessionSettingsEditorBase.settings;
+  const settings = <TitleSettings> sessionSettingsEditorBase.settings;
   if (settings.template == null) {
     settings.template = "${icon:fa-keyboard} ${" + TerminalEnvironment.TERM_TITLE + "}";
     sessionSettingsEditorBase.setSettings(settings);
   }
   templateString.setTemplateString(settings.template);
 
-  const templateEditor = new TemplateEditor(templateString, sessionSettingsEditorBase.style, log);
+  const templateEditor = new TemplateEditor(templateString, sessionSettingsEditorBase.style, log, { title: "" });
   templateEditor.onTemplateChanged((template: string) => {
     settings.template = template;
     sessionSettingsEditorBase.setSettings(settings);

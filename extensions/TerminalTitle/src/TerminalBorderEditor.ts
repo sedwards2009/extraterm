@@ -7,7 +7,7 @@ import { Logger, Event, Style } from '@extraterm/extraterm-extension-api';
 import { AlignmentFlag, Direction, QWidget } from '@nodegui/nodegui';
 import { BoxLayout, PushButton, Widget } from 'qt-construct';
 import { EventEmitter } from "extraterm-event-emitter";
-import { TemplateEditor } from "./TemplateEditor.js";
+import { TemplateEditor, TemplateEditorOptions } from "./TemplateEditor.js";
 import { TemplateString } from "./TemplateString.js";
 
 export class TerminalBorderEditor {
@@ -25,14 +25,14 @@ export class TerminalBorderEditor {
 
   #log: Logger;
 
-  constructor(templateString: TemplateString, style: Style, log: Logger) {
+  constructor(templateString: TemplateString, style: Style, log: Logger, templateEditorOptions: TemplateEditorOptions) {
     this.#log = log;
     this.onTemplateChanged = this.#onTemplateChangedEventEmitter.event;
     this.onDone = this.#onDoneEventEmitter.event;
 
     this.#templateString = templateString;
 
-    this.#templateEditor = new TemplateEditor(templateString, style, log);
+    this.#templateEditor = new TemplateEditor(templateString, style, log, templateEditorOptions);
     this.#templateEditor.onTemplateChanged((template: string) => {
       this.#onTemplateChangedEventEmitter.fire(template);
     });

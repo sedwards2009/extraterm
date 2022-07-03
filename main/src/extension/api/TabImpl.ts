@@ -38,4 +38,12 @@ export class TabImpl implements ExtensionApi.Tab {
   get window(): ExtensionApi.Window {
     return this.#internalExtensionContext.getWindowForTab(this.#tab);
   }
+
+  set windowTitle(title: string) {
+    this.#tab.setWindowTitle(title);
+  }
+
+  get windowTitle(): string {
+    return this.#tab.getWindowTitle();
+  }
 }
