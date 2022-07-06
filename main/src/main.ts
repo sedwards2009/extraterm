@@ -295,6 +295,9 @@ class Main {
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
     commands.registerCommand("extraterm:window.closeWindow", () => this.commandCloseWindow());
     commands.registerCommand("extraterm:window.moveTabToNewWindow", () => this.commandMoveTabToNewWindow());
+    commands.registerCommand("extraterm:window.maximizeWindow", () => this.commandMaximizeWindow());
+    commands.registerCommand("extraterm:window.minimizeWindow", () => this.commandMinimizeWindow());
+    commands.registerCommand("extraterm:window.restoreWindow", () => this.commandRestoreWindow());
     commands.registerCommand("extraterm:terminal.openLastFrame",() => this.commandOpenLastFrame());
 
     Terminal.registerCommands(extensionManager);
@@ -591,6 +594,21 @@ class Main {
     newWindow.addTab(tab);
     newWindow.focus();
     newWindow.focusTab(tab);
+  }
+
+  commandMaximizeWindow(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    win.maximize();
+  }
+
+  commandMinimizeWindow(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    win.minimize();
+  }
+
+  commandRestoreWindow(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    win.restore();
   }
 
   commandCopyToClipboard(): void {

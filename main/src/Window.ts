@@ -652,6 +652,14 @@ export class Window {
     this.#windowWidget.showMaximized();
   }
 
+  minimize(): void {
+    this.#windowWidget.showMinimized();
+  }
+
+  restore(): void {
+    this.#windowWidget.showNormal();
+  }
+
   getGeometry(): QRect {
     return this.#windowWidget.geometry();
   }

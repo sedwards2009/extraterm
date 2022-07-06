@@ -185,6 +185,26 @@
         "when": ""
       },
       {
+        "command": "extraterm:window.maximizeWindow",
+        "title": "Maximize Window",
+        "category": "window",
+        "icon": "fa-window-maximize",
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.minimizeWindow",
+        "title": "Minimize Window",
+        "category": "window",
+        "icon": "fa-window-minimize",
+        "when": ""
+      },
+      {
+        "command": "extraterm:window.restoreWindow",
+        "title": "Restore Window",
+        "category": "window",
+        "when": ""
+      },
+      {
         "command": "extraterm:window.listAll",
         "title": "List all windows",
         "category": "window",
