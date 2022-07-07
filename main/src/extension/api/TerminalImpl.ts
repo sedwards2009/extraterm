@@ -242,9 +242,17 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     this.#extensionMetadata = extensionMetadata;
   }
 
-  getLineText(line: number): string {
-    const str = this.#terminal.getEmulator().getLineText(line);
+  getLineText(lineNumber: number): string {
+    const str = this.#terminal.getEmulator().getLineText(lineNumber);
     return str == null ? "" : str;
+  }
+
+  isLineWrapped(lineNumber: number): boolean {
+    const line = this.#terminal.getEmulator().lineAtRow(lineNumber);
+    if (line == null) {
+      return false;
+    }
+    return line.wrapped;
   }
 
   applyHyperlink(line: number, x: number, length: number, url: string): void {

@@ -214,6 +214,24 @@ export class TerminalScrollArea {
     this.#layout();
   }
 
+  getBlockFrameAt(x: number, y: number): BlockFrame {
+    let child = this.#contentWidget.childAt(x, y);
+    if (child == null) {
+      return null;
+    }
+
+    while (child.parent() !== this.#contentWidget) {
+      child = <QWidget> child.parent();
+    }
+
+    for (const blockFrame of this.#blockFrames) {
+      if (child === blockFrame.getWidget()) {
+        return blockFrame;
+      }
+    }
+    return null;
+  }
+
   #updateViewportTopOnFrames(): void {
     const value = this.getScrollPosition();
     for (const bf of this.#blockFrames) {

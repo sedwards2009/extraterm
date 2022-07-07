@@ -67,6 +67,10 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, applicationVersion);
   }
 
+  getActiveBlock(): ExtensionApi.Block {
+    return this.wrapBlock(this.#extensionManager.getActiveBlockFrame());
+  }
+
   getActiveTerminal(): ExtensionApi.Terminal {
     return this.wrapTerminal(this.#extensionManager.getActiveTerminal());
   }

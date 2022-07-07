@@ -52,7 +52,8 @@ export interface WhenVariables {
   false: boolean;
   terminalFocus: boolean;
   connectedTerminalFocus: boolean;
-  viewerFocus: boolean;
+  blockFocus: boolean;
+  blockType: string;
   isHyperlink: boolean;
   hyperlinkURL: string;
   hyperlinkProtocol: string;

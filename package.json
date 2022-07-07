@@ -46,6 +46,7 @@
       "extensions/Autocomplete",
       "extensions/Autolink",
       "extensions/CopyLink",
+      "extensions/CopyBlock",
       "extensions/DefaultTerminalTheme",
       "extensions/DirectoryCommands",
       "extensions/CommunityTerminalThemes",

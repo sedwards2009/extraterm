@@ -1,8 +1,9 @@
 /*
- * Copyright 2019-2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019-2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { BlockFrame } from "../terminal/BlockFrame.js";
 import { Terminal } from "../terminal/Terminal.js";
 import { Window } from "../Window.js";
 
@@ -10,11 +11,7 @@ import { Window } from "../Window.js";
 
 export interface CommonExtensionWindowState {
   activeWindow: Window;
-  // activeTabContent: HTMLElement;
   activeTerminal: Terminal;
-  // activeViewerElement: ViewerElement;
-
-  // isInputFieldFocus: boolean;
-
+  activeBlockFrame: BlockFrame;
   activeHyperlinkURL: string;
 }

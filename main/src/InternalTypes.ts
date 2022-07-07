@@ -5,29 +5,18 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { QWidget } from "@nodegui/nodegui";
+
 import { CommandsRegistry } from "./CommandsRegistry.js";
 import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./extension/ExtensionManagerTypes.js";
-
-// import { EtTerminal, LineRangeChange } from "../Terminal";
-// import { ViewerElement } from "../viewers/ViewerElement";
 import { ExtensionMetadata, ExtensionPlatform, Category, ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata.js";
 import { WorkspaceSessionEditorRegistry } from "./extension/WorkspaceSessionEditorRegistry.js";
 import { WorkspaceSessionSettingsEditorRegistry } from "./extension/WorkspaceSessionSettingsEditorRegistry.js";
 import { TabTitleWidgetRegistry } from "./extension/TabTitleWidgetRegistry.js";
-
 import { Tab } from "./Tab.js";
 import { BlockFrame } from "./terminal/BlockFrame.js";
 import { LineRangeChange, Terminal } from "./terminal/Terminal.js";
-// import { EtViewerTab } from "../ViewerTab";
-// import { SupportsDialogStack } from "../SupportsDialogStack";
-// import { CommandsRegistry } from "./CommandsRegistry";
-// import { TextEditor } from "../viewers/TextEditorType";
-// import { CommonExtensionWindowState } from "./CommonExtensionState";
-// import { TabWidget } from "../gui/TabWidget";
-// import { SessionConfiguration } from "@extraterm/extraterm-extension-api";
-// import { ExtensionContainerElement } from "./ExtensionContainerElement";
-// import { SplitLayout } from "../SplitLayout";
 import { Window } from "./Window.js";
+import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
 
 
 export interface CommandQueryOptions {
@@ -43,11 +32,10 @@ export interface CommandQueryOptions {
 }
 
 export interface ExtensionManager {
-
   getActiveWindow(): Window;
   getActiveTerminal(): Terminal;
   getActiveHyperlinkURL(): string;
-
+  getActiveBlockFrame(): BlockFrame;
   getAllExtensions(): ExtensionMetadata[];
   getAllWindows(): Window[];
   getWindowForTab(tab: Tab): Window;
@@ -62,21 +50,18 @@ export interface ExtensionManager {
 
 //   extensionUiUtils: ExtensionUiUtils;
 
-   getExtensionContextByName(name: string): InternalExtensionContext;
-
-//   findViewerElementTagByMimeType(mimeType: string): string;
+  getExtensionContextByName(name: string): InternalExtensionContext;
 
   getAllSessionTypes(): { name: string, type: string }[];
   getAllTerminalThemeFormats(): { name: string, formatName: string }[];
 
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
-//   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
+  queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
 
   executeCommand(command: string, args?: any): any;
-//   executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
+  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
 
-//   updateExtensionWindowStateFromEvent(ev: Event): void;
-//   copyExtensionWindowState(): CommonExtensionWindowState;
+  copyExtensionWindowState(): CommonExtensionWindowState;
 //   getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState;
 //   refocus(state: CommonExtensionWindowState): void;
 
@@ -92,20 +77,7 @@ export interface ExtensionManager {
     window: Window): InternalSessionSettingsEditor[];
   showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
   showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number>;
-
-//   setViewerTabDisplay(viewerTabDisplay: ViewerTabDisplay): void;
-//   getViewerTabDisplay(): ViewerTabDisplay;
 }
-
-// /**
-//  * Interface for something which can display ViewerElements in tabs.
-//  */
-// export interface ViewerTabDisplay {
-//   openViewerTab(viewerElement: ViewerElement): void;
-//   closeViewerTab(viewerElement: ViewerElement): void;
-//   switchToTab(viewerElement: ViewerElement): void;
-// }
-
 
 export interface ProxyFactory {
 //   getTabProxy(tabLike: EtTerminal | EtViewerTab): ExtensionApi.Tab;
@@ -171,6 +143,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
 
   // createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
 
+  getActiveBlock(): ExtensionApi.Block;
   getActiveTerminal(): ExtensionApi.Terminal;
   getActiveHyperlinkURL(): string;
   getActiveWindow(): ExtensionApi.Window;
@@ -204,15 +177,6 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   wrapTerminal(terminal: Terminal): ExtensionApi.Terminal;
   wrapBlock(blockFrame: BlockFrame): ExtensionApi.Block;
 }
-
-// export interface InternalTerminalBorderWidget extends ExtensionApi.TerminalBorderWidget {
-//   _handleOpen(): void;
-//   _handleClose(): void;
-// }
-
-// export interface InternalTabTitleWidget extends ExtensionApi.TabTitleWidget {
-
-// }
 
 export interface SessionSettingsChange {
   settingsConfigKey: string;

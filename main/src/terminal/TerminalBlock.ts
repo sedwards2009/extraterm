@@ -192,6 +192,14 @@ export class TerminalBlock implements Block {
     return line.getString(0, 0);
   }
 
+  isScrollbackLineWrapped(lineNumber: number): boolean {
+    const line = this.#scrollback[lineNumber];
+    if (line == null) {
+      return null;
+    }
+    return line.wrapped;
+  }
+
   applyScrollbackHyperlink(lineNumber: number, x: number, length: number, url: string, group: string=""): void {
     const line = this.#scrollback[lineNumber];
     const startColumn = line.mapStringIndexToColumn(0, x);

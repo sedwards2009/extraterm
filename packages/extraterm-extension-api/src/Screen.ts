@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -58,11 +58,20 @@ export interface Screen {
   /**
    * Get a row of text from the screen as a string.
    *
-   * @param line The line/row to fetch. Top line on the screen is line 0. Last
+   * @param lineNumber The line/row to fetch. Top line on the screen is line 0. Last
    *    one is `height` - 1.
    * @returns The line as a string.
    */
-  getLineText(line: number): string;
+  getLineText(lineNumber: number): string;
+
+  /**
+   * Returns true if the line was wrapped.
+   *
+   * @param lineNumber The line/row to fetch. Top line on the screen is line 0. Last
+   *    one is `height` - 1.
+   * @returns True if the line was too long and had to be wrapped, otherwise false.
+   */
+  isLineWrapped(lineNumber: number): boolean;
 
   /**
    * Add a hyperlink to a range of characters.

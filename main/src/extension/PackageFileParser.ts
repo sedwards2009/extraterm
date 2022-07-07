@@ -59,12 +59,13 @@ class PackageParser {
       false: false,
       terminalFocus: false,
       connectedTerminalFocus: false,
-      viewerFocus: false,
+      blockFocus: false,
+      blockType: null,
       isHyperlink: false,
       hyperlinkURL: null,
       hyperlinkProtocol: null,
       hyperlinkDomain: null,
-      hyperlinkFileExtension: null
+      hyperlinkFileExtension: null,
     };
     this._bee = new BooleanExpressionEvaluator(variables);
   }

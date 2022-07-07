@@ -594,7 +594,14 @@ export class Terminal implements Tab, Disposable {
     switch (action) {
       case "context_menu":
         mouseEvent.accept();
-        this.#onContextMenuEventEmitter.fire({ x: mouseEvent.globalX() , y: mouseEvent.globalY() });
+
+        const blockFrame = this.#scrollArea.getBlockFrameAt(mouseEvent.x(), mouseEvent.y());
+        this.#onContextMenuEventEmitter.fire({
+          x: mouseEvent.globalX(),
+          y: mouseEvent.globalY(),
+          blockFrame,
+          terminal: this
+        });
         break;
 
       case "paste":

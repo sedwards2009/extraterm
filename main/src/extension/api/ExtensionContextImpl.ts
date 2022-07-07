@@ -49,7 +49,7 @@ export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, Exte
   }
 
   get activeBlock(): ExtensionApi.Block {
-    return null;
+    return this.#internalExtensionContext.getActiveBlock();
   }
 
   /**

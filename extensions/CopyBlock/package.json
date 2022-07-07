@@ -1,0 +1,46 @@
+{
+  "name": "copy-block",
+  "displayName": "Copy Block",
+  "version": "1.0.0",
+  "description": "Commands related to copying block contents",
+  "type": "module",
+  "exports": "./dist/CopyBlockExtension.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
+  },
+  "author": "Simon Edwards <simon@simonzone.com>",
+  "license": "MIT",
+  "contributes": {
+    "commands": [
+      {
+        "command": "copy-block:copyBlockToClipboard",
+        "title": "Copy Output",
+        "category": "terminal",
+        "when": "blockFocus"
+      },
+      {
+        "command": "copy-block:copyCommandLineToClipboard",
+        "title": "Copy Command",
+        "category": "terminal",
+        "when": "blockFocus"
+      }
+    ],
+    "menus": {
+      "contextMenu": [
+        {
+          "command": "copy-block:copyBlockToClipboard",
+          "show": true
+        },
+        {
+          "command": "copy-block:copyCommandLineToClipboard",
+          "show": true
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.15.0",
+    "typescript": "4.6.3"
+  }
+}

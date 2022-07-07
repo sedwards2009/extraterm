@@ -37,6 +37,8 @@ import { SettingsTab } from "./settings/SettingsTab.js";
 import { ContextMenuEvent } from "./ContextMenuEvent.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TWEMOJI_FAMILY } from "./TwemojiConstants.js";
+import { BlockFrame } from "./terminal/BlockFrame.js";
+import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
 
 
 export interface PopOutClickedDetails {
@@ -387,13 +389,16 @@ export class Window {
       when: true,
       windowMenu: true,
     };
-    this.#updateMenu(this.#hamburgerMenu, options, uiStyle);
+    this.#updateMenu(this.#hamburgerMenu, uiStyle, options);
   }
 
-  #updateMenu(menu: QMenu, options: CommandQueryOptions, uiStyle: UiStyle): void {
+  #updateMenu(menu: QMenu, uiStyle: UiStyle, options: CommandQueryOptions, context?: CommonExtensionWindowState): void {
     menu.clear();
 
-    const entries = this.#extensionManager.queryCommands(options);
+    if (context == null) {
+      context = this.#extensionManager.copyExtensionWindowState();
+    }
+    const entries = this.#extensionManager.queryCommandsWithExtensionWindowState(options, context);
     if (entries.length === 0) {
       return;
     }
@@ -428,18 +433,43 @@ export class Window {
       attribute: [WidgetAttribute.WA_TranslucentBackground],
       onTriggered: (nativeAction) => {
         const action = new QAction(nativeAction);
-        this.#handleWindowMenuTriggered(action.data().toString());
+        this.#handleContextMenuTriggered(this.#contextMenuState, action.data().toString());
+      },
+      onClose: () => {
+        doLater(() => {
+          this.#contextMenuState = null;
+        });
       }
     });
     this.#contextMenu.hide();
   }
 
-  #updateContextMenu(uiStyle: UiStyle): void {
+  #openContextMenu(uiStyle: UiStyle, terminal: Terminal, blockFrame: BlockFrame, x: number, y: number): void {
     const options: CommandQueryOptions = {
       when: true,
       contextMenu: true,
     };
-    this.#updateMenu(this.#contextMenu, options, uiStyle);
+
+    const state = this.#extensionManager.copyExtensionWindowState();
+    state.activeTerminal = terminal;
+    state.activeBlockFrame = blockFrame;
+    this.#contextMenuState = state;
+    this.#updateMenu(this.#contextMenu, uiStyle, options, state);
+
+    this.#contextMenu.popup(new QPoint(x, y));
+  }
+
+  #contextMenuState: CommonExtensionWindowState = null;
+
+  #handleContextMenuTriggered(context: CommonExtensionWindowState, commandName: string): void {
+    doLater( () => {
+      try {
+        this.#extensionManager.executeCommandWithExtensionWindowState(context, commandName);
+        this.#contextMenuState = null;
+      } catch(e) {
+        this._log.warn(e);
+      }
+    });
   }
 
   #handleWindowMenuTriggered(commandName: string): void {
@@ -465,7 +495,7 @@ export class Window {
       when: true,
       terminalTitleMenu: true,
     };
-    this.#updateMenu(this.#contextMenu, options, this.#uiStyle);
+    this.#updateMenu(this.#contextMenu, this.#uiStyle, options);
     this.#contextMenu.popup(new QPoint(ev.globalX(), ev.globalY()));
   }
 
@@ -734,8 +764,7 @@ export class Window {
     if (tab instanceof Terminal) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
       tabPlumbing.disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
-        this.#updateContextMenu(this.#uiStyle);
-        this.#contextMenu.popup(new QPoint(ev.x, ev.y));
+        this.#openContextMenu(this.#uiStyle, ev.terminal, ev.blockFrame, ev.x, ev.y);
       }));
     }
     if (tab instanceof Terminal) {

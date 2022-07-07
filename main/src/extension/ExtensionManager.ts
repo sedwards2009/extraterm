@@ -28,6 +28,8 @@ import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl.js"
 import { Tab } from "../Tab.js";
 import { ListPickerPopOver } from "./ListPickerPopOver.js";
 import { UiStyle } from "../ui/UiStyle.js";
+import { BlockFrame } from "../terminal/BlockFrame.js";
+import { TerminalBlock } from "../terminal/TerminalBlock.js";
 
 
 interface ActiveExtension {
@@ -63,12 +65,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #extensionPaths: string[] = null;
 
   #commonExtensionWindowState: CommonExtensionWindowState = {
-    // activeTabContent: null,
     activeWindow: null,
     activeTerminal: null,
-    // activeTabsWidget: null,
-    // activeViewerElement: null,
-    // isInputFieldFocus: false,
+    activeBlockFrame: null,
     activeHyperlinkURL: null,
   };
 
@@ -443,6 +442,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeTerminal;
   }
 
+  getActiveBlockFrame(): BlockFrame {
+    return this.#commonExtensionWindowState.activeBlockFrame;
+  }
+
   getActiveHyperlinkURL(): string {
     return this.#commonExtensionWindowState.activeHyperlinkURL;
   }
@@ -652,7 +655,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       false: false,
       terminalFocus: false,
       connectedTerminalFocus: false,
-      viewerFocus: false,
+      blockFocus: false,
+      blockType: null,
       isHyperlink: false,
       hyperlinkURL: null,
       hyperlinkProtocol: null,
@@ -663,10 +667,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     if (state.activeTerminal != null) {
       whenVariables.terminalFocus = true;
       whenVariables.connectedTerminalFocus = state.activeTerminal.getPty() != null;
-    } else {
-      // if (state.activeViewerElement) {
-      //   whenVariables.viewerFocus = true;
-      // }
+    }
+
+    if (state.activeBlockFrame != null) {
+      whenVariables.blockFocus = true;
+      const block = state.activeBlockFrame.getBlock();
+      if (block instanceof TerminalBlock) {
+        whenVariables.blockType = ExtensionApi.TerminalOutputType;
+      }
     }
 
     if (state.activeHyperlinkURL != null) {

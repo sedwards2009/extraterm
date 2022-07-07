@@ -105,6 +105,10 @@ class ScrollbackImpl implements ExtensionApi.Screen {
     return this.#terminalBlock.getScrollbackLineText(line);
   }
 
+  isLineWrapped(line: number): boolean {
+    return this.#terminalBlock.isScrollbackLineWrapped(line);
+  }
+
   applyHyperlink(line: number, x: number, length: number, url: string): void {
     const extensionName = this.#extensionMetadata.name;
     this.#terminalBlock.applyScrollbackHyperlink(line, x, length, url, extensionName);
