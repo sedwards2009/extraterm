@@ -20,4 +20,6 @@ export interface BlockFrame {
   getWidget(): QWidget;
 
   setViewportTop(relativeTopPx: number): void;
+
+  getTag(): number;
 }

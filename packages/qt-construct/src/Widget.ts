@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { ContextMenuPolicy, CursorShape, FocusPolicy, QLayout, QSizePolicyPolicy, QWidget,
+import { ContextMenuPolicy, CursorShape, FocusPolicy, QIcon, QLayout, QSizePolicyPolicy, QWidget,
   WidgetAttribute, WidgetEventTypes, WindowType
 } from "@nodegui/nodegui";
 
@@ -41,14 +41,15 @@ export interface WidgetOptions {
   visible?: boolean;
   windowFlag?: WindowType;
   windowTitle?: string;
+  windowIcon?: QIcon;
 }
 
 export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
     objectName, onClose, onEnter, onFocusIn, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress,
-    onMouseMove, onMove, onResize, onWheel, sizePolicy, styleSheet, windowTitle, maximumHeight, maximumWidth, minimumHeight,
-    minimumWidth, windowFlag, inlineStyle, toolTip, visible
+    onMouseMove, onMove, onResize, onWheel, sizePolicy, styleSheet, windowIcon, windowTitle, maximumHeight,
+    maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle, toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
@@ -128,6 +129,9 @@ export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): voi
   }
   if (windowFlag !== undefined) {
     widget.setWindowFlag(windowFlag, true);
+  }
+  if (windowIcon !== undefined) {
+    widget.setWindowIcon(windowIcon);
   }
   if (maximumHeight !== undefined) {
     widget.setMaximumHeight(maximumHeight);

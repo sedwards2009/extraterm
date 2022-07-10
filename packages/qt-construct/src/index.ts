@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -26,3 +26,4 @@ export { Frame, FrameOptions } from "./Frame.js";
 export { setCssClasses, repolish } from "./Utilities.js";
 export { TextEdit, TextEditOptions } from "./TextEdit.js";
 export { ScrollBar, ScrollBarOptions } from "./ScrollBar.js";
+export { ProgressBar, ProgressBarOptions } from "./ProgressBar.js";

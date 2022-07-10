@@ -48,6 +48,10 @@ export class SpacerFrame implements BlockFrame {
     });
   }
 
+  getTag(): number {
+    return -1;
+  }
+
   getBlock(): Block {
     return this.#block;
   }

@@ -220,6 +220,14 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     const badgeColor = textHighlightColor;
     // const badgeVerticalAlign:          1/$badge-font-ratio * $badge-vertical-padding !default;
 
+
+    //-------------------------------------------------------------------------
+    // Progress bar
+    const progressHeight = `8px`;
+    // $progress-shine-gradient: -webkit-linear-gradient(top, rgba(255, 255, 255, .15), rgba(0, 0, 0, .15));
+    const progressBackgroundColor = accentColor;
+    const progressValueBgColor = accentColor;
+
     // --- Extension Card related ---
     const componentPaddingVerticalCard = `${emToPx(0.66)}px`;
     const componentPaddingHorizontal = `${emToPx(1.2)}px`;
@@ -595,6 +603,23 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     border-radius: 0px;
   }
   `;
+    }
+
+    function QProgressBarStyleSheet(): string {
+      return `
+  QProgressBar {
+    height: ${progressHeight};
+    border: ${inputBorderWidth} solid ${inputBorderColor};
+    border-radius: ${borderRadius};
+    background-color: ${inputBackgroundColor};
+    font-size: 1px;
+  }
+
+  QProgressBar::chunk {
+    background-color: ${progressValueBgColor};
+    border-radius: ${borderRadius};
+  }
+`;
     }
 
     function AtomButtonBG(baseRule: string, color: string, hoverColor: string, selectedColor: string, textColor: string): string {
@@ -1191,6 +1216,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
       QLineEditQSpinBoxStyleSheet(resourceDirectory) +
       QMenuStyleSheet() +
       QPushButtonStyleSheet() +
+      QProgressBarStyleSheet() +
       QRadioButtonStyleSheet(resourceDirectory) +
       QScrollAreaStyleSheet() +
       QScrollBarStyleSheet() +

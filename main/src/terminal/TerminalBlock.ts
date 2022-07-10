@@ -15,7 +15,7 @@ import { STYLE_MASK_CURSOR, STYLE_MASK_HYPERLINK_HIGHLIGHT, STYLE_MASK_INVERSE }
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
-import { ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
+import { BulkFileHandle, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
 import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 
 import { Block } from "./Block.js";
@@ -23,6 +23,7 @@ import * as Term from "../emulator/Term.js";
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig.js";
 import { ConfigCursorStyle } from "../config/Config.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
+import { BlobBulkFileHandle } from "../bulk_file_handling/BlobBulkFileHandle.js";
 
 
 enum SelectionMode {
@@ -906,6 +907,23 @@ export class TerminalBlock implements Block {
 
     this.#updateWidgetSize();
     this.#widget.update();
+  }
+
+  getBulkFileHandle(): BulkFileHandle {
+    return new BlobBulkFileHandle("text/plain;charset=utf8", {}, Buffer.from(this.#getText(), 'utf8'));
+  }
+
+  #getText(): string {
+    const lines: string[] = [];
+    const len = this.#scrollback.length;
+    for (let y=0; y<len; y++) {
+      const line = this.#scrollback[y];
+      lines.push(line.getString(0, 0));
+      if ( ! line.wrapped) {
+        lines.push("\n");
+      }
+    }
+    return lines.join("");
   }
 }
 

@@ -34,6 +34,7 @@ const POSTURE_MAPPING = {
 export class DecoratedFrame implements BlockFrame {
   private _log: Logger = null;
   #uiStyle: UiStyle = null;
+  #tag = -1;
 
   #block: Block = null;
   #widget: QWidget = null;
@@ -55,9 +56,10 @@ export class DecoratedFrame implements BlockFrame {
   #onPopOutClickedEventEmitter = new EventEmitter<DecoratedFrame>();
   onPopOutClicked: Event<DecoratedFrame> = null;
 
-  constructor(uiStyle: UiStyle) {
+  constructor(uiStyle: UiStyle, tag: number) {
     this._log = getLogger("DecoratedFrame", this);
     this.#uiStyle = uiStyle;
+    this.#tag = tag;
     this.onCloseClicked = this.#onCloseClickedEventEmitter.event;
     this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
 
@@ -141,6 +143,10 @@ export class DecoratedFrame implements BlockFrame {
     this.#updateHeaderFromMetadata(this.#getMetadata());
   }
 
+  getTag(): number {
+    return this.#tag;
+  }
+
   #getMetadata(): ViewerMetadata {
     let metadata: ViewerMetadata = {
       title: "",
@@ -177,6 +183,10 @@ export class DecoratedFrame implements BlockFrame {
             widget: this.#titleLabel = Label({cssClass: "command-line", text: "command-line"}),
             stretch: 1,
             alignment: AlignmentFlag.AlignLeft
+          },
+          {
+            widget: Label({text: `${createHtmlIcon("fa-tag")} ${this.#tag} `}),
+            stretch: 0
           },
           {
             widget: this.#popOutButton = HoverPushButton({

@@ -1,10 +1,8 @@
 import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, PushButton, RadioButton, ScrollArea, SpinBox, TabWidget,
-  TextEdit,
-  ToolButton,
-  Widget } from "qt-construct";
+import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, ProgressBar, PushButton, RadioButton, ScrollArea, SpinBox,
+  TabWidget, TextEdit, ToolButton, Widget } from "qt-construct";
 import * as path from "node:path";
-import * as SourceDir from './SourceDir';
+import * as SourceDir from './SourceDir.js';
 
 import { createUiStyle } from "./ui/styles/DarkTwo.js";
 import { shrinkWrap } from "./ui/QtConstructExtra.js";
@@ -189,6 +187,27 @@ function main(): void {
           ),
 
           SpinBox({suffix: " frames", minimum: 0, maximum: 1000}),
+
+          ProgressBar({
+            minimum: 0,
+            maximum: 100,
+            value: 0,
+            textVisible: false,
+          }),
+
+          ProgressBar({
+            minimum: 0,
+            maximum: 100,
+            value: 50,
+            textVisible: false,
+          }),
+
+          ProgressBar({
+            minimum: 0,
+            maximum: 100,
+            value: 100,
+            textVisible: false,
+          }),
 
           TabWidget({
             tabs: [

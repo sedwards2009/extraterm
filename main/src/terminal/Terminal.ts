@@ -13,6 +13,7 @@ import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { DebouncedDoLater, doLater } from "extraterm-timeoutqt";
 import { BoxLayout, repolish, ScrollBar, Widget } from "qt-construct";
 import {
+  BulkFileHandle,
   Disposable,
   Event,
   SessionConfiguration,
@@ -61,6 +62,9 @@ import { FontAtlasCache } from "./FontAtlasCache.js";
 import { TerminalScrollArea } from "../ui/TerminalScrollArea.js";
 import { ContextMenuEvent } from "../ContextMenuEvent.js";
 import { DisposableHolder } from "../utils/DisposableUtils.js";
+import { FrameFinder } from "./FrameFinderType.js";
+import { BulkFileUploader } from "../bulk_file_handling/BulkFileUploader.js";
+import { UploadProgressBar } from "../ui/UploadProgressBar.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -95,12 +99,14 @@ const DEBUG_APPLICATION_MODE = false;
 
 const enum ApplicationMode {
   APPLICATION_MODE_NONE = 0,
-  APPLICATION_MODE_HTML = 1,
   APPLICATION_MODE_OUTPUT_BRACKET_START = 2,
   APPLICATION_MODE_OUTPUT_BRACKET_END = 3,
   APPLICATION_MODE_REQUEST_FRAME = 4,
   APPLICATION_MODE_SHOW_FILE = 5,
 }
+
+type InputStreamFilter = (input: string) => string;
+
 
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
@@ -111,7 +117,12 @@ export class Terminal implements Tab, Disposable {
   #extensionManager: ExtensionManager = null;
   #fontAtlasCache: FontAtlasCache = null;
 
+  #nextTag: () => number = null;
+  #frameFinder: FrameFinder = null;
+  #uploadProgressBar: UploadProgressBar = null;
+
   #pty: Pty = null;
+  #inputStreamFilters: InputStreamFilter[] = [];
   #emulator: Term.Emulator = null;
   #cookie: string = null;
 
@@ -127,6 +138,7 @@ export class Terminal implements Tab, Disposable {
 
   #topContents: QWidget = null;
   #scrollArea: TerminalScrollArea = null;
+  #contentAreaWidget: QWidget = null;
   #resizeGuard = false;
 
   #contentWidget: QWidget = null;
@@ -138,7 +150,6 @@ export class Terminal implements Tab, Disposable {
   };
   #tabTitleWidget: QWidget = null;
   #tabTitleLabelWidgets: QLabel[] = null;
-  #marginPx = 11;
 
   #verticalScrollBar: QScrollBar = null;
   #blockFrames: BlockPlumbing[] = [];
@@ -171,11 +182,11 @@ export class Terminal implements Tab, Disposable {
   #onPopOutClickedEventEmitter = new EventEmitter<{frame: DecoratedFrame, terminal: Terminal}>();
   onPopOutClicked: Event<{frame: DecoratedFrame, terminal: Terminal}> = null;
 
-  private _htmlData: string = null;
+  #applicationModeData: string = null;
   // private _fileBroker: BulkFileBroker = null;
   // private _downloadHandler: DownloadApplicationModeHandler = null;
-  private _applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
-  private _bracketStyle: string = null;
+  #applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+  #bracketStyle: string = null;
 
   // The command line string of the last command started.
   #lastCommandLine: string = null;
@@ -220,7 +231,8 @@ export class Terminal implements Tab, Disposable {
   }
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,
-      keybindingsIOManager: KeybindingsIOManager, fontAtlasCache: FontAtlasCache) {
+      keybindingsIOManager: KeybindingsIOManager, fontAtlasCache: FontAtlasCache, nextTag: () => number,
+      frameFinder: FrameFinder) {
 
     this._log = getLogger("Terminal", this);
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
@@ -236,6 +248,8 @@ export class Terminal implements Tab, Disposable {
     this.#uiStyle = uiStyle;
     this.#qtTimeout = new QtTimeout();
     this.#fontAtlasCache = fontAtlasCache;
+    this.#nextTag = nextTag;
+    this.#frameFinder = frameFinder;
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
@@ -299,9 +313,13 @@ export class Terminal implements Tab, Disposable {
                     children: []
                   })
                 }),
-                {
+                this.#contentAreaWidget = Widget({
+                  objectName: "content-area",
+                  contentsMargins: 0,
                   layout: BoxLayout({
                     direction: Direction.LeftToRight,
+                    contentsMargins: 0,
+                    spacing: 0,
                     children: [
                       this.#scrollArea.getWidget(),
                       this.#verticalScrollBar = ScrollBar({
@@ -309,8 +327,9 @@ export class Terminal implements Tab, Disposable {
                         value: 0,
                       })
                     ]
-                  })
-                },
+                  }),
+                  onLayoutRequest: this.#handleContentAreaWidgetLayoutRequest.bind(this)
+                }),
                 Widget({
                   objectName: "border.south",
                   contentsMargins: 0,
@@ -896,7 +915,24 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleTermData(event: TermApi.DataEvent): void {
-    this.sendToPty(event.data);
+    // Apply the input filters
+    let filteredData = event.data;
+    for (const filter of this.#inputStreamFilters) {
+      filteredData = filter(filteredData);
+    }
+
+    if (filteredData !== "") {
+      this.sendToPty(filteredData);
+    }
+  }
+
+  #registerInputStreamFilter(filter: InputStreamFilter): Disposable {
+    this.#inputStreamFilters.push(filter);
+    return {
+      dispose: () => {
+        this.#inputStreamFilters = this.#inputStreamFilters.filter(f => f !== filter);
+      }
+    };
   }
 
   scrollPageDown(): void {
@@ -1028,7 +1064,7 @@ export class Terminal implements Tab, Disposable {
       this._log.debug("application-mode started! ",params);
     }
 
-    this._htmlData = "";
+    this.#applicationModeData = "";
 
     // Check security cookie
     if (params.length === 0) {
@@ -1042,25 +1078,25 @@ export class Terminal implements Tab, Disposable {
     }
 
     if (params.length === 1) {
-      // Normal HTML mode.
-      this._applicationMode = ApplicationMode.APPLICATION_MODE_HTML;
+      this._log.warn("Received the wrong number of parameters at the start of an application mode sequence.");
+      return {action: TermApi.ApplicationModeResponseAction.ABORT};
 
     } else if(params.length >= 2) {
-      switch ("" + params[1]) {
+      switch (params[1]) {
         case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
-          this._bracketStyle = params[2];
+          this.#applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START;
+          this.#bracketStyle = params[2];
           break;
 
         case "" + ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
+          this.#applicationMode = ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END;
           if (DEBUG_APPLICATION_MODE) {
             this._log.debug("Starting APPLICATION_MODE_OUTPUT_BRACKET_END");
           }
           break;
 
         case "" + ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
-          this._applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
+          this.#applicationMode = ApplicationMode.APPLICATION_MODE_REQUEST_FRAME;
           if (DEBUG_APPLICATION_MODE) {
             this._log.debug("Starting APPLICATION_MODE_REQUEST_FRAME");
           }
@@ -1090,11 +1126,11 @@ export class Terminal implements Tab, Disposable {
     if (DEBUG_APPLICATION_MODE) {
       this._log.debug("html-mode data!", data);
     }
-    switch (this._applicationMode) {
+    switch (this.#applicationMode) {
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_END:
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
-        this._htmlData = this._htmlData + data;
+        this.#applicationModeData = this.#applicationModeData + data;
         break;
 
       // case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
@@ -1110,13 +1146,7 @@ export class Terminal implements Tab, Disposable {
    * Handle the exit from application mode.
    */
   #handleApplicationModeEnd(): TermApi.ApplicationModeResponse {
-    switch (this._applicationMode) {
-      case ApplicationMode.APPLICATION_MODE_HTML:
-        // el = this._getWindow().document.createElement("div");
-        // el.innerHTML = this._htmlData;
-        // this._appendElementToScrollArea(el);
-        break;
-
+    switch (this.#applicationMode) {
       case ApplicationMode.APPLICATION_MODE_OUTPUT_BRACKET_START:
         this.#handleApplicationModeBracketStart();
         break;
@@ -1126,7 +1156,7 @@ export class Terminal implements Tab, Disposable {
         break;
 
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
-        this.handleRequestFrame(this._htmlData);
+        this.#handleRequestFrame(this.#applicationModeData);
         break;
 
       // case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
@@ -1135,12 +1165,12 @@ export class Terminal implements Tab, Disposable {
       default:
         break;
     }
-    this._applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+    this.#applicationMode = ApplicationMode.APPLICATION_MODE_NONE;
 
     if (DEBUG_APPLICATION_MODE) {
-      this._log.debug("html-mode end!",this._htmlData);
+      this._log.debug("Application mode end!", this.#applicationModeData);
     }
-    this._htmlData = null;
+    this.#applicationModeData = null;
 
     return {action: TermApi.ApplicationModeResponseAction.CONTINUE};
   }
@@ -1153,16 +1183,16 @@ export class Terminal implements Tab, Disposable {
     // }
 
     // Fetch the command line.
-    let cleanCommandLine = this._htmlData;
-    if (this._bracketStyle === "bash") {
+    let cleanCommandLine = this.#applicationModeData;
+    if (this.#bracketStyle === "bash") {
       // Bash includes the history number. Remove it.
-      const trimmed = this._htmlData.trim();
+      const trimmed = this.#applicationModeData.trim();
       cleanCommandLine = trimmed.slice(trimmed.indexOf(" ")).trim();
     }
 
     if (this.#commandNeedsFrame(cleanCommandLine)) {
       this.#closeLastTerminalFrame();
-      const decoratedFrame = new DecoratedFrame(this.#uiStyle);
+      const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
       const defaultMetadata: ViewerMetadata = {
         title: cleanCommandLine,
         posture: ViewerPosture.RUNNING,
@@ -1193,6 +1223,15 @@ export class Terminal implements Tab, Disposable {
       { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: command },
       { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
     ]);
+  }
+
+  getFrameContents(frameId: number): BulkFileHandle {
+    for (const bf of this.#blockFrames) {
+      if (bf.frame.getTag() === frameId) {
+        return bf.frame.getBlock().getBulkFileHandle();
+      }
+    }
+    return null;
   }
 
   #moveCursorToFreshLine(): void {
@@ -1255,7 +1294,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleApplicationModeBracketEnd(): void {
-    const returnCode = this._htmlData;
+    const returnCode = this.#applicationModeData;
     this.#closeLastEmbeddedViewer(returnCode);
 
     const lastCommandLine = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE);
@@ -1354,7 +1393,7 @@ export class Terminal implements Tab, Disposable {
 
     this.#closeLastTerminalFrame();
 
-    const decoratedFrame = new DecoratedFrame(this.#uiStyle);
+    const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
     const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null);
     decoratedFrame.setBlock(newTerminalBlock);
 
@@ -1460,31 +1499,58 @@ export class Terminal implements Tab, Disposable {
     }
   }
 
-  private handleRequestFrame(frameId: string): void {
-    /*
-    if (this._frameFinder === null) {
+  #handleContentAreaWidgetLayoutRequest(): void {
+    if (this.#uploadProgressBar == null) {
+      return;
+    }
+    const geo = this.#contentAreaWidget.geometry();
+    this.#uploadProgressBar.getWidget().setGeometry(0, 0, geo.width(), geo.height());
+  }
+
+  #initUploadProgressBar(): void {
+    if (this.#uploadProgressBar == null) {
+      this.#uploadProgressBar = new UploadProgressBar();
+      const progressBarWidget = this.#uploadProgressBar.getWidget();
+      progressBarWidget.setParent(this.#contentAreaWidget);
+      progressBarWidget.setGeometry(0, 0, 300, 200);
+    }
+  }
+
+  #showUploadProgressBar(): void {
+    const progressBarWidget = this.#uploadProgressBar.getWidget();
+    progressBarWidget.raise();
+    progressBarWidget.show();
+  }
+
+  #hideUploadProgressBar(): void {
+    const progressBarWidget = this.#uploadProgressBar.getWidget();
+    progressBarWidget.hide();
+  }
+
+  #handleRequestFrame(frameId: string): void {
+    if (this.#frameFinder === null) {
       return;
     }
 
-    const bulkFileHandle = this._frameFinder(frameId);
+    const bulkFileHandle = this.#frameFinder(frameId);
     if (bulkFileHandle === null) {
       this.sendToPty("#error\n");
       return;
     }
 
-    const uploader = new BulkFileUploader(bulkFileHandle, this._pty);
-    const uploadProgressBar = <UploadProgressBar> document.createElement(UploadProgressBar.TAG_NAME);
+    const uploader = new BulkFileUploader(bulkFileHandle, this.#pty);
+    this.#initUploadProgressBar();
 
     if ("filename" in bulkFileHandle.metadata) {
-      uploadProgressBar.filename = <string> bulkFileHandle.metadata["filename"];
+      this.#uploadProgressBar.setFilename(<string> bulkFileHandle.metadata["filename"]);
     }
 
-    uploadProgressBar.total = bulkFileHandle.totalSize;
+    this.#uploadProgressBar.setTotal(bulkFileHandle.totalSize);
     uploader.onUploadedChange(uploaded => {
-      uploadProgressBar.transferred = uploaded;
+      this.#uploadProgressBar.setTransferred(uploaded);
     });
 
-    const inputFilterRegistration = this._registerInputStreamFilter((input: string): string => {
+    const inputFilterRegistration = this.#registerInputStreamFilter((input: string): string => {
       const ctrlCIndex = input.indexOf("\x03");
       if (ctrlCIndex !== -1) {
         // Abort the upload.
@@ -1497,19 +1563,16 @@ export class Terminal implements Tab, Disposable {
     });
 
     uploader.onFinished(() => {
-      this._containerElement.removeChild(uploadProgressBar);
+      // this.#hideUploadProgressBar();
       inputFilterRegistration.dispose();
       doLater(() => {
         uploader.dispose();
       });
     });
 
-    uploadProgressBar.hide();
-    this._containerElement.appendChild(uploadProgressBar);
-    uploadProgressBar.show(200);  // Show after delay
+    // TODO: Show after delay
+    // this.#showUploadProgressBar();
 
     uploader.upload();
-    */
   }
-
 }

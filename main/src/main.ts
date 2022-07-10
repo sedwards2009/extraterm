@@ -11,7 +11,7 @@ import * as os from "node:os";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
-import { CreateSessionOptions, SessionConfiguration, TerminalEnvironment} from '@extraterm/extraterm-extension-api';
+import { BulkFileHandle, CreateSessionOptions, SessionConfiguration, TerminalEnvironment} from '@extraterm/extraterm-extension-api';
 import { QApplication, QFontDatabase, QRect, QStylePixelMetric } from "@nodegui/nodegui";
 import { StyleTweaker } from "nodegui-plugin-style-tweaker";
 
@@ -74,6 +74,7 @@ class Main {
   #settingsTab: SettingsTab = null;
 
   #tweakerStyle: StyleTweaker = null;
+  #tagCounter = 0;
 
   constructor() {
     this._log = getLogger("main", this);
@@ -207,6 +208,10 @@ class Main {
     this._log.info("Recording logs to ", logFilePath);
   }
 
+  #nextTag(): number {
+    return ++this.#tagCounter;
+  }
+
   async setupExtensionManager(configDatabase: ConfigDatabase, uiStyle: UiStyle,
       applicationVersion: string): Promise<ExtensionManager> {
 
@@ -268,6 +273,27 @@ class Main {
   setupBulkFileStorage(): BulkFileStorage {
     const bulkFileStorage = new BulkFileStorage(os.tmpdir());
     return bulkFileStorage;
+  }
+
+  #frameFinder(frameIdStr: string): BulkFileHandle {
+    const frameId = Number.parseInt(frameIdStr, 10);
+    if (isNaN(frameId)) {
+      return null;
+    }
+
+    for (const win of this.#windows) {
+      const tc = win.getTabCount();
+      for (let i=0; i<tc; i++) {
+        const tab = win.getTab(i);
+        if (tab instanceof Terminal) {
+          const bulkFileHandle = tab.getFrameContents(frameId);
+          if (bulkFileHandle != null) {
+            return bulkFileHandle;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   async setupLocalHttpServer(bulkFileStorage: BulkFileStorage): Promise<LocalHttpServer> {
@@ -354,7 +380,7 @@ class Main {
     const window = this.#extensionManager.getActiveWindow() ?? this.#windows[0];
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
-      this.#keybindingsIOManager, this.#fontAtlasCache);
+      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this));
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
@@ -637,7 +663,7 @@ class Main {
     terminal.removeFrame(frame);
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
-      this.#keybindingsIOManager, this.#fontAtlasCache);
+      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this));
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
