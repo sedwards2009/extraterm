@@ -1,6 +1,6 @@
 {
   "name": "extraterm",
-  "version": "0.64.0",
+  "version": "0.65.0",
   "description": "A terminal",
   "author": "Simon Edwards",
   "license": "MIT",
@@ -49,6 +49,7 @@
       "extensions/CopyBlock",
       "extensions/DefaultTerminalTheme",
       "extensions/DirectoryCommands",
+      "extensions/DownloadBlock",
       "extensions/CommunityTerminalThemes",
       "extensions/InsertEmoji",
       "extensions/InternalCommands",
