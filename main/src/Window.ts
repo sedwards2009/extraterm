@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as path from "node:path";
 import { Logger, log, getLogger } from "extraterm-logging";
 import { FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
@@ -11,12 +12,13 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
   FocusPolicy, QKeyEvent, WidgetAttribute, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
   ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat, QMouseEvent,
-  MouseButton, Visibility } from "@nodegui/nodegui";
+  MouseButton, Visibility, QIcon, QSize } from "@nodegui/nodegui";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import he from "he";
 import { hasEmojiPresentation } from "extraterm-unicode-utilities";
 
+import * as SourceDir from "./SourceDir.js";
 import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config.js";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
 import { Tab } from "./Tab.js";
@@ -129,6 +131,7 @@ export class Window {
       onResize:(nativeEvent) => {
         this.#onWindowGeometryChangedEventEmitter.fire();
       },
+      windowIcon: this.#createWindowIcon(),
       mouseTracking: true,
       layout: this.#topLayout = BoxLayout({
         direction: Direction.TopToBottom,
@@ -219,6 +222,15 @@ export class Window {
     this.#hamburgerMenu.setStyleSheet(sheet, false);
 
     this.#repolishTabBar();
+  }
+
+  #createWindowIcon(): QIcon {
+    const windowIcon = new QIcon();
+    for (const size of [16, 22, 32, 64, 256]) {
+      const iconPath = path.join(SourceDir.path, `../resources/logo/extraterm_small_logo_${size}x${size}.png`);
+      windowIcon.addFile(iconPath, new QSize(size, size));
+    }
+    return windowIcon;
   }
 
   #repolishTabBar(): void {
