@@ -82,7 +82,7 @@ export class BulkFileUploader implements Disposable {
 
   upload(): void {
     const url = this._bulkFileHandle.url;
-    if (url.startsWith("data:")) {
+    if (url !== null && url.startsWith("data:")) {
       getUri(url, (err, stream) => {
         this._sourceStream = stream;
         [this._pipeEnd , this._uploadEncoder] = this._configurePipeline(stream);

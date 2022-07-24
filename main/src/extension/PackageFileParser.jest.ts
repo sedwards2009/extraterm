@@ -18,7 +18,7 @@ test("metadata", () => {
   expect(parsed.name).toBe("Foo");
   expect(parsed.version).toBe("1.0.0");
   expect(parsed.description).toBe("Foobar");
-  expect(parsed.contributes.viewers.length).toBe(0);
+  expect(parsed.contributes.blocks.length).toBe(0);
 });
 
 test("isInternal", () => {
@@ -28,7 +28,7 @@ test("isInternal", () => {
   expect(parsed.name).toBe("Foo");
   expect(parsed.version).toBe("1.0.0");
   expect(parsed.description).toBe("Foobar");
-  expect(parsed.contributes.viewers.length).toBe(0);
+  expect(parsed.contributes.blocks.length).toBe(0);
   expect(parsed.isInternal).toBe(true);
 });
 
@@ -38,26 +38,26 @@ test("contributes", () => {
     version: "1.0.0",
     description: "Foobar",
     contributes: {
-      viewers: [{name: "SmegViewer", mimeTypes: ["foo/bar"]}]
+      blocks: [{name: "SmegViewer", mimeTypes: ["foo/bar"]}]
     }
   }), "");
 
   expect(parsed.name).toBe("Foo");
   expect(parsed.version).toBe("1.0.0");
   expect(parsed.description).toBe("Foobar");
-  expect(parsed.contributes.viewers.length).toBe(1);
-  expect(parsed.contributes.viewers[0].name).toBe("SmegViewer");
-  expect(parsed.contributes.viewers[0].mimeTypes.length).toBe(1);
-  expect(parsed.contributes.viewers[0].mimeTypes[0]).toBe("foo/bar");
+  expect(parsed.contributes.blocks.length).toBe(1);
+  expect(parsed.contributes.blocks[0].name).toBe("SmegViewer");
+  expect(parsed.contributes.blocks[0].mimeTypes.length).toBe(1);
+  expect(parsed.contributes.blocks[0].mimeTypes[0]).toBe("foo/bar");
 });
 
-test("viewers", () => {
+test("blocks", () => {
   const parsed = parsePackageJsonString(JSON.stringify(
     {
-      "name": "audio-viewer",
-      "description": "Audio viewer",
+      "name": "download-block",
+      "description": "Download Block",
       "version": "1.0.0",
-      "exports": "src/AudioViewerExtension.js",
+      "exports": "src/DownloadBlockExtension.js",
       "scripts": {
         "build": "tsc"
       },
@@ -71,9 +71,9 @@ test("viewers", () => {
         "typescript": "3.1.6"
       },
       "contributes": {
-        "viewers": [
+        "blocks": [
           {
-            "name": "AudioViewer",
+            "name": "download-block",
             "mimeTypes": [
               "audio/vorbis",
               "audio/mpeg"
@@ -82,12 +82,12 @@ test("viewers", () => {
         ]
       }
     }), "");
-  expect(parsed.name).toBe("audio-viewer");
+  expect(parsed.name).toBe("download-block");
   expect(parsed.version).toBe("1.0.0");
-  expect(parsed.exports).toBe("src/AudioViewerExtension.js");
-  expect(parsed.contributes.viewers.length).toBe(1);
-  expect(parsed.contributes.viewers[0].name).toBe("AudioViewer");
-  expect(parsed.contributes.viewers[0].mimeTypes.length).toBe(2);
+  expect(parsed.exports).toBe("src/DownloadBlockExtension.js");
+  expect(parsed.contributes.blocks.length).toBe(1);
+  expect(parsed.contributes.blocks[0].name).toBe("download-block");
+  expect(parsed.contributes.blocks[0].mimeTypes.length).toBe(2);
 });
 
 test("platform", () => {

@@ -46,32 +46,9 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
     return this.#scrollback;
   }
 
-  find(needle: string, options?: ExtensionApi.FindOptions): boolean {
-    // this._checkIsAlive();
-    // return this.#terminalBlock.find(needle, options);
-    return false;
-  }
-
-  findNext(needle: string): boolean {
-    // this._checkIsAlive();
-    // return this.#terminalBlock.findNext(needle);
-    return false;
-  }
-
-  findPrevious(needle: string): boolean {
-    // this._checkIsAlive();
-    // return this.#terminalBlock.findPrevious(needle);
-    return false;
-  }
-
   hasSelection(): boolean {
     this.#checkIsAlive();
     return this.#terminalBlock.hasSelection();
-  }
-
-  highlight(re: RegExp): void {
-    // this._checkIsAlive();
-    // this.terminalBlock.highlight(re);
   }
 
   get commandLine(): string {

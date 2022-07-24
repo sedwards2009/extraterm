@@ -9,7 +9,7 @@ import { Logger, getLogger, log } from "extraterm-logging";
 import { SessionBackend } from "@extraterm/extraterm-extension-api";
 
 import { ExtensionManager, InternalExtensionContext } from "../InternalTypes.js";
-import { ExtensionMetadata, ExtensionCommandContribution, ExtensionMenusContribution } from "./ExtensionMetadata.js";
+import { ExtensionMetadata, ExtensionMenusContribution } from "./ExtensionMetadata.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { ExtensionContextImpl } from "./api/ExtensionContextImpl.js";
 import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContribution } from "./ExtensionManagerTypes.js";
@@ -25,6 +25,7 @@ import { WindowImpl } from "./api/WindowImpl.js";
 import { Tab } from "../Tab.js";
 import { WorkspaceSessionSettingsEditorRegistry } from "./WorkspaceSessionSettingsEditorRegistry.js";
 import { TabTitleWidgetRegistry } from "./TabTitleWidgetRegistry.js";
+import { BlockRegistry } from "./BlockRegistry.js";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -38,6 +39,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
   sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
   tabTitleWidgetRegistry: TabTitleWidgetRegistry;
+  blockRegistry: BlockRegistry;
 
   #extensionMetadata: ExtensionMetadata;
 
@@ -65,6 +67,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       extensionMetadata);
     this.tabTitleWidgetRegistry = new TabTitleWidgetRegistry(extensionMetadata);
     this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, applicationVersion);
+    this.blockRegistry = new BlockRegistry(this, extensionMetadata);
   }
 
   getActiveBlock(): ExtensionApi.Block {
@@ -127,10 +130,6 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   dispose(): void {
   }
 
-  registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable {
-    throw new Error("Method not implemented.");
-  }
-
   registerSessionBackend(name: string, backend: SessionBackend): void {
     for (const backendMeta of this.#extensionMetadata.contributes.sessionBackends) {
       if (backendMeta.name === name) {
@@ -146,7 +145,6 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     this._log.warn(`Unable to register session backend '${name}' for extension ` +
       `'${this.#extensionMetadata.name}' because the session backend contribution data ` +
       `couldn't be found in the extension's package.json file.`);
-    return;
   }
 
   registerTerminalThemeProvider(name: string, provider: ExtensionApi.TerminalThemeProvider): void {
@@ -249,7 +247,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       return null;
     }
     if (!this.#blockWrapMap.has(blockFrame)) {
-      const wrappedBlock = new BlockImpl(this.#extensionMetadata, blockFrame);
+      const wrappedBlock = new BlockImpl(this, this.#extensionMetadata, blockFrame);
       this.#blockWrapMap.set(blockFrame, wrappedBlock);
     }
     return this.#blockWrapMap.get(blockFrame);
@@ -258,6 +256,9 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   #windowWrapMap = new WeakMap<Window, WindowImpl>();
 
   wrapWindow(window: Window): WindowImpl {
+    if (window == null) {
+      return null;
+    }
     if (!this.#windowWrapMap.has(window)) {
       const wrappedWindow = new WindowImpl(this, this.#extensionMetadata, window, this.#configDatabase);
       this.#windowWrapMap.set(window, wrappedWindow);
@@ -268,6 +269,9 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   #tabWrapMap = new WeakMap<Tab, TabImpl>();
 
   wrapTab(tab: Tab): TabImpl {
+    if (tab == null) {
+      return null;
+    }
     if (!this.#tabWrapMap.has(tab)) {
       const wrappedTab = new TabImpl(this, tab);
       this.#tabWrapMap.set(tab, wrappedTab);

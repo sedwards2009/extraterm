@@ -39,7 +39,7 @@ export class BulkFileRequestHandler implements RequestHandler {
       return;
     }
 
-    const {mimeType, charset} = MimeTypeDetector.detectWithMetadata(bulkFile.getMetadata(), bulkFile.peek1KB());
+    const {mimeType, charset} = MimeTypeDetector.detectWithMetadata(bulkFile.getMetadata(), bulkFile.getPeekBuffer());
     const combinedMimeType = charset === null ? mimeType : mimeType + "; charset=" + charset;
 
     res.statusCode = 200;

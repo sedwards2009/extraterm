@@ -6,7 +6,7 @@
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { AlignmentFlag, Direction, QLabel, QPushButton, QResizeEvent, QSizePolicyPolicy,
   QWidget } from "@nodegui/nodegui";
-import { Disposable, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
+import { Disposable, BlockMetadata, BlockPosture } from "@extraterm/extraterm-extension-api";
 import { BoxLayout, Label, repolish, setCssClasses, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Block } from "./Block.js";
@@ -17,10 +17,10 @@ import { HoverPushButton } from "../ui/QtConstructExtra.js";
 
 
 const POSTURE_MAPPING = {
-  [ViewerPosture.NEUTRAL]: "posture-neutral",
-  [ViewerPosture.FAILURE]: "posture-failure",
-  [ViewerPosture.RUNNING]: "posture-running",
-  [ViewerPosture.SUCCESS]: "posture-success"
+  [BlockPosture.NEUTRAL]: "posture-neutral",
+  [BlockPosture.FAILURE]: "posture-failure",
+  [BlockPosture.RUNNING]: "posture-running",
+  [BlockPosture.SUCCESS]: "posture-success"
 };
 
 
@@ -40,7 +40,7 @@ export class DecoratedFrame implements BlockFrame {
   #widget: QWidget = null;
   #headerWidget: QWidget = null;
 
-  #defaultMetadata: ViewerMetadata = null;
+  #defaultMetadata: BlockMetadata = null;
   #titleLabel: QLabel = null;
   #iconText: QLabel = null;
 
@@ -84,7 +84,12 @@ export class DecoratedFrame implements BlockFrame {
     let totalHeight = headerSizeHint.height();
     if (this.#block != null) {
       const blockWidget = this.#block.getWidget();
-      const blockSizeHint = blockWidget.maximumSize();
+
+      let blockSizeHint = blockWidget.sizeHint();
+      if ( ! blockSizeHint.isValid()) {
+        blockSizeHint = blockWidget.minimumSize();
+      }
+
       totalHeight += blockSizeHint.height();
       totalHeight += this.#uiStyle.getDecoratedFrameMarginBottomPx();
       blockWidget.setGeometry(leftRightMarginPx, headerSizeHint.height(),
@@ -138,7 +143,7 @@ export class DecoratedFrame implements BlockFrame {
     return this.#widget;
   }
 
-  setDefaultMetadata(defaultMetadata: ViewerMetadata): void {
+  setDefaultMetadata(defaultMetadata: BlockMetadata): void {
     this.#defaultMetadata = defaultMetadata;
     this.#updateHeaderFromMetadata(this.#getMetadata());
   }
@@ -147,14 +152,13 @@ export class DecoratedFrame implements BlockFrame {
     return this.#tag;
   }
 
-  #getMetadata(): ViewerMetadata {
-    let metadata: ViewerMetadata = {
+  #getMetadata(): BlockMetadata {
+    let metadata: BlockMetadata = {
       title: "",
-      posture: ViewerPosture.NEUTRAL,
+      posture: BlockPosture.NEUTRAL,
       icon: null,
       moveable: true,
       deleteable: true,
-      toolTip: null
     };
 
     if (this.#block != null) {
@@ -213,7 +217,7 @@ export class DecoratedFrame implements BlockFrame {
     });
   }
 
-  #updateHeaderFromMetadata(metadata: ViewerMetadata): void {
+  #updateHeaderFromMetadata(metadata: BlockMetadata): void {
     setCssClasses(this.#widget, ["decorated-frame", POSTURE_MAPPING[metadata.posture]]);
     setCssClasses(this.#headerWidget, ["decorated-frame-header", POSTURE_MAPPING[metadata.posture]]);
 

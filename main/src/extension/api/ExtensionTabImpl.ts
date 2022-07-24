@@ -16,6 +16,7 @@ export class ExtensionTabBridge implements Tab {
   iconName: string = "";
   title: string = "";
 
+  #parent: any = null;
   #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
   onWindowTitleChanged: ExtensionApi.Event<string> = null;
 
@@ -47,6 +48,14 @@ export class ExtensionTabBridge implements Tab {
         children: []
       })
     });
+  }
+
+  setParent(parent: any): void {
+    this.#parent = parent;
+  }
+
+  getParent(): any {
+    return this.#parent;
   }
 
   getIconName(): string {

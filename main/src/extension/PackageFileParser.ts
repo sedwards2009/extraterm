@@ -26,7 +26,7 @@ import {
   ExtensionTerminalBorderContribution,
   ExtensionTerminalThemeContribution,
   ExtensionTerminalThemeProviderContribution,
-  ExtensionViewerContribution,
+  ExtensionBlockContribution,
   WhenVariables,
 } from "./ExtensionMetadata.js";
 
@@ -165,7 +165,7 @@ class PackageParser {
         terminalBorderWidgets: [],
         terminalThemes: [],
         terminalThemeProviders: [],
-        viewers: [],
+        blocks: [],
       };
     }
 
@@ -177,7 +177,7 @@ class PackageParser {
       "commands",
       "keybindings",
       "menus",
-      "viewers",
+      "blocks",
       "sessionEditors",
       "sessionBackends",
       "sessionSettings",
@@ -201,12 +201,12 @@ class PackageParser {
       terminalBorderWidgets: parseObjectListJson(contributes, "terminalBorderWidgets", node => this.parseTerminalBorderWidgetContributionsJson(node)),
       terminalThemes: parseObjectListJson(contributes, "terminalThemes", node => this.parseTerminalThemeContributionsJson(node)),
       terminalThemeProviders: parseObjectListJson(contributes, "terminalThemeProviders", node => this.parseTerminalThemeProviderContributionsJson(node)),
-      viewers: parseObjectListJson(contributes, "viewers", node => this.parseViewerConstributionJson(node)),
+      blocks: parseObjectListJson(contributes, "blocks", node => this.parseViewerConstributionJson(node)),
     };
   }
 
-  private parseViewerConstributionJson(packageJson: JsonNode): ExtensionViewerContribution {
-    const knownKeys: (keyof ExtensionViewerContribution)[] = [
+  private parseViewerConstributionJson(packageJson: JsonNode): ExtensionBlockContribution {
+    const knownKeys: (keyof ExtensionBlockContribution)[] = [
       "name",
       "mimeTypes",
     ];

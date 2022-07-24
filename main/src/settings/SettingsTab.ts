@@ -34,6 +34,7 @@ export class SettingsTab implements Tab {
   #themeManager: ThemeManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
   #terminalVisualConfig: TerminalVisualConfig = null;
+  #parent: any = null;
 
   #generalPage: GeneralPage = null;
   #appearancePage: AppearancePage = null;
@@ -68,6 +69,14 @@ export class SettingsTab implements Tab {
     this.#framesPage = new FramesPage(configDatabase, uiStyle);
     this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
     this.#createUI(uiStyle);
+  }
+
+  setParent(parent: any): void {
+    this.#parent = parent;
+  }
+
+  getParent(): any {
+    return this.#parent;
   }
 
   getTitle(): string {

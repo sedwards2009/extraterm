@@ -595,7 +595,7 @@ class ExtensionDetailCard {
       `);
     }
 
-    if (contributes.viewers.length !== 0) {
+    if (contributes.blocks.length !== 0) {
       parts.push(`
         <h4>Viewers</h4>
         <table width="100%">
@@ -607,7 +607,7 @@ class ExtensionDetailCard {
           </thead>
           <tbody>
       `);
-      for (const viewer of contributes.viewers) {
+      for (const viewer of contributes.blocks) {
         parts.push(`
           <tr>
             <td>${viewer.name}</td>

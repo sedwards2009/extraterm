@@ -3,8 +3,29 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { QWidget } from "@nodegui/nodegui";
+import { BulkFileHandle } from "./BulkFiles.js";
 import { Screen } from "./Screen.js";
-import { Tab } from "./Tab.js";
+import { Terminal } from "./Terminal.js";
+
+
+export enum BlockPosture {
+  NEUTRAL,
+  RUNNING,
+  SUCCESS,
+  FAILURE,
+}
+
+export interface BlockMetadata {
+  readonly title: string;
+  readonly icon: string;
+  readonly posture: BlockPosture;
+  readonly moveable: boolean;
+  readonly deleteable: boolean;
+}
+
+export type BlockMetadataChange = { -readonly [K in keyof BlockMetadata]?: BlockMetadata[K] };
+
 
 /**
  * A block of content stacking inside a terminal.
@@ -27,26 +48,15 @@ export interface Block {
   readonly details: any;
 
   /**
-   * The Tab this block is on.
+   * The Terminal this block is on.
    */
-  readonly tab: Tab;
+  readonly terminal: Terminal;
 }
 
 /**
  * Identifies a `Block` of type terminal output in the `Block.type` field.
  */
 export const TerminalOutputType = "extraterm:terminal-output";
-
-export enum FindStartPosition {
-  CURSOR,
-  DOCUMENT_START,
-  DOCUMENT_END,
-}
-
-export interface FindOptions {
-  backwards?: boolean;
-  startPosition?: FindStartPosition;
-}
 
 /**
  * Terminal output specific details and methods.
@@ -75,11 +85,7 @@ export interface TerminalOutputDetails {
 
   readonly commandLine: string;
 
-  find(needle: string | RegExp, options?: FindOptions): boolean;
-  findNext(needle: string | RegExp): boolean;
-  findPrevious(needle: string | RegExp): boolean;
   hasSelection(): boolean;
-  highlight(needle: string |  RegExp): void;
 
   /**
    * True if this block of terminal output still exists.
@@ -88,65 +94,17 @@ export interface TerminalOutputDetails {
 }
 
 /**
- * Identifies a `Block` of type text viewer in the `Block.type` field.
- */
-export const TextViewerType = "extraterm:text-viewer";
-
-/**
- * Text viewer specific details and methods.
  *
- * This object is present in `Block.details` when a block's `type` is
- * equal to `TextViewerType`.
+ *
  */
-export interface TextViewerDetails {
-  /**
-   * The configured tab size.
-   */
-  readonly tabSize: number;
+export interface ExtensionBlock {
+  contentWidget: QWidget;
+  bulkFile: BulkFileHandle;
 
-  /**
-   * Set the tab size.
-   */
-  setTabSize(size: number): void;
+  readonly metadata: BlockMetadata;
+  updateMetadata(change: BlockMetadataChange): void;
 
-  /**
-   * The mimetype of the contents of this text viewer.
-   */
-  readonly mimeType: string;
-
-  /**
-   * Set the mimetype of the cotnent of this text viewer.
-   */
-  setMimeType(mimeType: string): void;
-
-  /**
-   * Return true if line numbers are being shown in the gutter.
-   */
-  readonly showLineNumbers: boolean;
-
-  /**
-   * Set whether to show line numebrs in the gutter.
-   */
-  setShowLineNumbers(show: boolean): void;
-
-  /**
-   * True if long lines are set to be wrapped.
-   */
-  readonly wrapLines: boolean;
-
-  /**
-   * Set whether long lines should be wrapped.
-   */
-  setWrapLines(wrap: boolean): void;
-
-  find(needle: string | RegExp, options?: FindOptions): boolean;
-  findNext(needle: string | RegExp): boolean;
-  findPrevious(needle: string | RegExp): boolean;
-  hasSelection(): boolean;
-  highlight(needle: string |  RegExp): void;
-
-  /**
-   * True if this block still exists.
-   */
-  readonly isAlive: boolean;
+  readonly terminal: Terminal;
+  //details: any;
+  // TODO: A way of exposing methods to on a block to other extensions/commands.
 }

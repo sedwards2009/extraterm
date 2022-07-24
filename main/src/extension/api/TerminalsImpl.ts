@@ -22,4 +22,8 @@ export class TerminalsImpl implements ExtensionApi.Terminals {
   get terminals(): ExtensionApi.Terminal[] {
     return this.#internalExtensionContext.getAllTerminals();
   }
+
+  registerBlock(name: string, factory: ExtensionApi.ExtensionBlockFactory): void {
+    this.#internalExtensionContext.blockRegistry.registerBlock(name, factory);
+  }
 }

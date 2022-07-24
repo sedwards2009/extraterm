@@ -6,7 +6,6 @@
 import { Event } from "extraterm-event-emitter";
 import { QWidget } from "@nodegui/nodegui";
 
-import { Block } from "./Block.js";
 import { TabTitleWidgetFactory } from "./Tab.js";
 import { Terminal } from "./Terminal.js";
 import { TerminalThemeProvider } from "./TerminalTheme.js";

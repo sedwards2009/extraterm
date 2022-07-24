@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2017-2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,8 +7,7 @@ import * as crypto from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { BulkFileMetadata, Event } from '@extraterm/extraterm-extension-api';
-import { EventEmitter } from "extraterm-event-emitter";
+import { BulkFileMetadata } from '@extraterm/extraterm-extension-api';
 import { getLogger, Logger } from "extraterm-logging";
 
 import { BulkFile } from "./BulkFile.js";
@@ -26,24 +25,14 @@ export type CloseEvent = {identifier: BulkFileIdentifier, success: boolean};
 export class BulkFileStorage {
   private _log: Logger;
 
-  #urlBase: string = null;
   #storageMap = new Map<BulkFileIdentifier, BulkFile>();
   #storageDirectory: string;
-  #onWriteBufferSizeEventEmitter = new EventEmitter<BufferSizeEvent>();
-  #onCloseEventEmitter = new EventEmitter<CloseEvent>();
+  #tempDirectory: string = null;
 
-  onWriteBufferSize: Event<BufferSizeEvent>;
-  onClose: Event<CloseEvent>;
-
-  constructor(private _tempDirectory: string) {
+  constructor(tempDirectory: string) {
     this._log = getLogger("BulkFileStorage", this);
-    this.#storageDirectory = this._createStorageDirectory(this._tempDirectory);
-    this.onWriteBufferSize = this.#onWriteBufferSizeEventEmitter.event;
-    this.onClose = this.#onCloseEventEmitter.event;
-  }
-
-  setLocalUrlBase(urlBase: string): void {
-    this.#urlBase = urlBase;
+    this.#tempDirectory = tempDirectory;
+    this.#storageDirectory = this.#createStorageDirectory(this.#tempDirectory);
   }
 
   /**
@@ -53,7 +42,7 @@ export class BulkFileStorage {
    * the location is in a shared directory like /tmp which may be vulnerable
    * to symlink style attacks.
    */
-  private _createStorageDirectory(tempDirectory: string): string {
+  #createStorageDirectory(tempDirectory: string): string {
     const identifier = "extraterm-tmp-storage-" + crypto.randomBytes(16).toString('hex');
     const fullPath = path.join(tempDirectory, identifier);
     try {
@@ -65,7 +54,7 @@ export class BulkFileStorage {
     return fullPath;
   }
 
-  private _checkAndSetupStorageDirectory(): boolean {
+  #checkAndSetupStorageDirectory(): boolean {
     try {
       fs.accessSync(this.#storageDirectory, fs.constants.R_OK | fs.constants.W_OK);
       return true;
@@ -74,7 +63,7 @@ export class BulkFileStorage {
     }
 
     try {
-      this.#storageDirectory = this._createStorageDirectory(this._tempDirectory);
+      this.#storageDirectory = this.#createStorageDirectory(this.#tempDirectory);
       return true;
     } catch (err) {
       this._log.warn(`Attempt to create new bulk file storage directory at ${this.#storageDirectory} failed!`, err);
@@ -84,7 +73,7 @@ export class BulkFileStorage {
 
   dispose(): void {
     for (const identifier of this.#storageMap.keys()) {
-      this._deleteBulkFile(identifier);
+      this.#deleteBulkFile(identifier);
     }
 
     try {
@@ -94,12 +83,12 @@ export class BulkFileStorage {
     }
   }
 
-  createBulkFile(metadata: BulkFileMetadata, size: number): {identifier: BulkFileIdentifier, url: string} {
+  createBulkFile(metadata: BulkFileMetadata): BulkFile {
     const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
 
-    if ( ! this._checkAndSetupStorageDirectory()) {
+    if ( ! this.#checkAndSetupStorageDirectory()) {
       this._log.warn("Unable to create bulk file.");
-      return { identifier: null, url: null};
+      return null;
     }
 
     try {
@@ -108,39 +97,13 @@ export class BulkFileStorage {
       bulkFile.ref();
       const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
 
-      bulkFile.onWriteBufferSizeChange(({totalBufferSize, availableDelta}): void => {
-        this.#onWriteBufferSizeEventEmitter.fire({identifier: internalFileIdentifier, totalBufferSize, availableDelta});
-      });
-
-      bulkFile.onClose((payload: {success: boolean}): void => {
-        this.#onCloseEventEmitter.fire({identifier: internalFileIdentifier, success: payload.success});
-      });
-
       this.#storageMap.set(internalFileIdentifier, bulkFile);
 
-      return {identifier: internalFileIdentifier, url: this.getUrl(internalFileIdentifier)};
+      return bulkFile;
     } catch(e) {
       this._log.warn("Unable to create bulk file on disk.", e);
-      return { identifier: null, url: null};
+      return null;
     }
-  }
-
-  write(identifier: BulkFileIdentifier, data: Buffer): void {
-    if ( ! this.#storageMap.has(identifier)) {
-      this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
-      return;
-    }
-
-    this.#storageMap.get(identifier).write(data);
-  }
-
-  close(identifier: BulkFileIdentifier, success: boolean): void {
-    if ( ! this.#storageMap.has(identifier)) {
-      this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
-      return;
-    }
-
-    this.#storageMap.get(identifier).close(success);
   }
 
   ref(identifier: BulkFileIdentifier): void {
@@ -157,15 +120,15 @@ export class BulkFileStorage {
       return;
     }
     this.#storageMap.get(identifier).deref();
-    this._deleteBulkFile(identifier);
+    this.#deleteBulkFile(identifier);
   }
 
-  private _deleteBulkFile(identifier: BulkFileIdentifier): void {
+  #deleteBulkFile(identifier: BulkFileIdentifier): void {
     const bulkFile = this.#storageMap.get(identifier);
     try {
-      fs.unlinkSync(bulkFile.filePath);
+      fs.unlinkSync(bulkFile.getFilePath());
     } catch(e) {
-      this._log.warn(`Unable to delete file ${bulkFile.filePath}`, e);
+      this._log.warn(`Unable to delete file ${bulkFile.getFilePath()}`, e);
     }
     this.#storageMap.delete(identifier);
   }
@@ -175,9 +138,5 @@ export class BulkFileStorage {
       return null;
     }
     return this.#storageMap.get(identifier);
-  }
-
-  getUrl(identifier: BulkFileIdentifier): string {
-    return `${this.#urlBase}/bulk/${identifier}`;
   }
 }

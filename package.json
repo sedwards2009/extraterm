@@ -49,6 +49,7 @@
       "extensions/CopyBlock",
       "extensions/DefaultTerminalTheme",
       "extensions/DirectoryCommands",
+      "extensions/DownloadBlock",
       "extensions/CommunityTerminalThemes",
       "extensions/InsertEmoji",
       "extensions/InternalCommands",

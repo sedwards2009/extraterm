@@ -18,8 +18,8 @@ import {
   Event,
   SessionConfiguration,
   TerminalEnvironment,
-  ViewerMetadata,
-  ViewerPosture,
+  BlockMetadata,
+  BlockPosture,
 } from "@extraterm/extraterm-extension-api";
 import {
   Direction,
@@ -65,6 +65,10 @@ import { DisposableHolder } from "../utils/DisposableUtils.js";
 import { FrameFinder } from "./FrameFinderType.js";
 import { BulkFileUploader } from "../bulk_file_handling/BulkFileUploader.js";
 import { UploadProgressBar } from "../ui/UploadProgressBar.js";
+import { DownloadApplicationModeHandler } from "./DownloadApplicationModeHandler.js";
+import { BulkFileStorage } from "../bulk_file_handling/BulkFileStorage.js";
+import { BulkFile } from "../bulk_file_handling/BulkFile.js";
+import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -116,6 +120,7 @@ export class Terminal implements Tab, Disposable {
   #keybindingsIOManager: KeybindingsIOManager = null;
   #extensionManager: ExtensionManager = null;
   #fontAtlasCache: FontAtlasCache = null;
+  #parent: any = null;
 
   #nextTag: () => number = null;
   #frameFinder: FrameFinder = null;
@@ -183,9 +188,10 @@ export class Terminal implements Tab, Disposable {
   onPopOutClicked: Event<{frame: DecoratedFrame, terminal: Terminal}> = null;
 
   #applicationModeData: string = null;
-  // private _fileBroker: BulkFileBroker = null;
-  // private _downloadHandler: DownloadApplicationModeHandler = null;
+  #downloadHandler: DownloadApplicationModeHandler = null;
   #applicationMode: ApplicationMode = ApplicationMode.APPLICATION_MODE_NONE;
+  #bulkFileStorage: BulkFileStorage = null;
+
   #bracketStyle: string = null;
 
   // The command line string of the last command started.
@@ -232,7 +238,7 @@ export class Terminal implements Tab, Disposable {
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,
       keybindingsIOManager: KeybindingsIOManager, fontAtlasCache: FontAtlasCache, nextTag: () => number,
-      frameFinder: FrameFinder) {
+      frameFinder: FrameFinder, bulkFileStorage: BulkFileStorage) {
 
     this._log = getLogger("Terminal", this);
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
@@ -250,6 +256,7 @@ export class Terminal implements Tab, Disposable {
     this.#fontAtlasCache = fontAtlasCache;
     this.#nextTag = nextTag;
     this.#frameFinder = frameFinder;
+    this.#bulkFileStorage = bulkFileStorage;
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
@@ -446,6 +453,14 @@ export class Terminal implements Tab, Disposable {
   #handleResize(): void {
     this.resizeTerminalArea();
     this.#updateViewportTopOnFrames();
+  }
+
+  setParent(parent: any): void {
+    this.#parent = parent;
+  }
+
+  getParent(): any {
+    return this.#parent;
   }
 
   setIsCurrent(isCurrent: boolean): void {
@@ -763,6 +778,7 @@ export class Terminal implements Tab, Disposable {
       disposableHolder.add(blockFrame.onPopOutClicked((frame) => this.#handleBlockPopOutClicked(frame)));
     }
     this.#blockFrames.push({ frame: blockFrame, disposableHolder });
+    blockFrame.getBlock().setParent(this);
     this.#scrollArea.appendBlockFrame(blockFrame);
   }
 
@@ -879,7 +895,12 @@ export class Terminal implements Tab, Disposable {
     });
 
     this.#emulator = emulator;
-    // this._initDownloadApplicationModeHandler();
+    this.#initDownloadApplicationModeHandler();
+  }
+
+  #initDownloadApplicationModeHandler(): void {
+    this.#downloadHandler = new DownloadApplicationModeHandler(this.#emulator, this.#bulkFileStorage);
+    this.#downloadHandler.onCreatedBulkFile(this.#handleShowFile.bind(this));
   }
 
   getCursorGlobalGeometry(): QRect | null {
@@ -969,6 +990,7 @@ export class Terminal implements Tab, Disposable {
     frame.getWidget().hide();
     frame.getWidget().setParent(null);
     const index = this.#blockFrames.findIndex(bf => bf.frame === frame);
+    frame.getBlock().setParent(null);
     this.#blockFrames[index].disposableHolder.dispose();
     this.#blockFrames.splice(index, 1);
   }
@@ -1102,12 +1124,12 @@ export class Terminal implements Tab, Disposable {
           }
           break;
 
-        // case "" + ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-        //   if (DEBUG_APPLICATION_MODE) {
-        //     this._log.debug("Starting APPLICATION_MODE_SHOW_FILE");
-        //   }
-        //   this._applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_FILE;
-        //   return this._downloadHandler.handleStart(params.slice(2));
+        case "" + ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+          if (DEBUG_APPLICATION_MODE) {
+            this._log.debug("Starting APPLICATION_MODE_SHOW_FILE");
+          }
+          this.#applicationMode = ApplicationMode.APPLICATION_MODE_SHOW_FILE;
+          return this.#downloadHandler.handleStart(params.slice(2));
 
         default:
           this._log.warn("Unrecognized application escape parameters.");
@@ -1132,10 +1154,8 @@ export class Terminal implements Tab, Disposable {
       case ApplicationMode.APPLICATION_MODE_REQUEST_FRAME:
         this.#applicationModeData = this.#applicationModeData + data;
         break;
-
-      // case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-      //   return this._downloadHandler.handleData(data);
-
+      case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+        return this.#downloadHandler.handleData(data);
       default:
         break;
     }
@@ -1159,8 +1179,8 @@ export class Terminal implements Tab, Disposable {
         this.#handleRequestFrame(this.#applicationModeData);
         break;
 
-      // case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
-      //   return this._downloadHandler.handleStop();
+      case ApplicationMode.APPLICATION_MODE_SHOW_FILE:
+        return this.#downloadHandler.handleStop();
 
       default:
         break;
@@ -1193,13 +1213,12 @@ export class Terminal implements Tab, Disposable {
     if (this.#commandNeedsFrame(cleanCommandLine)) {
       this.#closeLastTerminalFrame();
       const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
-      const defaultMetadata: ViewerMetadata = {
+      const defaultMetadata: BlockMetadata = {
         title: cleanCommandLine,
-        posture: ViewerPosture.RUNNING,
+        posture: BlockPosture.RUNNING,
         icon: "fa-cog",
         moveable: false,
-        deleteable: false,
-        toolTip: null
+        deleteable: false
       };
       decoratedFrame.setDefaultMetadata(defaultMetadata);
       this.appendBlockFrame(decoratedFrame);
@@ -1223,6 +1242,45 @@ export class Terminal implements Tab, Disposable {
       { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: command },
       { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
     ]);
+  }
+
+  #handleApplicationModeBracketEnd(): void {
+    const returnCode = this.#applicationModeData;
+    this.#closeLastEmbeddedViewer(returnCode);
+
+    const lastCommandLine = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE);
+    const lastCommand = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND);
+    const newVars = [
+      { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, value: "" },
+      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: "" },
+    ];
+    if (lastCommand != null) {
+      newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, value: lastCommandLine });
+      newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: lastCommand });
+    }
+    this.environment.setList(newVars);
+  }
+
+  #handleShowFile(bulkFile: BulkFile): void {
+    const isDownload = bulkFile.getMetadata()["download"] === "true";
+    const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFile);
+    const blockMimeType = mimeType == null || isDownload ? "application/octet-stream" : mimeType;
+    this.#appendExtensionBlock(blockMimeType, bulkFile);
+  }
+
+  #appendExtensionBlock(blockMimeType: string, bulkFile: BulkFile): void {
+    this.#closeLastTerminalFrame();
+
+    const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
+    const newExtensionBlock = this.#extensionManager.createExtensionBlock(this, blockMimeType, bulkFile);
+    decoratedFrame.setBlock(newExtensionBlock);
+
+    this.appendBlockFrame(decoratedFrame);
+
+    const latestTerminalBlock = this.#createFramedTerminalBlock();
+    this.appendBlockFrame(latestTerminalBlock);
+    this.#lastCommandTerminalViewer = latestTerminalBlock;
   }
 
   getFrameContents(frameId: number): BulkFileHandle {
@@ -1293,24 +1351,6 @@ export class Terminal implements Tab, Disposable {
     }
   }
 
-  #handleApplicationModeBracketEnd(): void {
-    const returnCode = this.#applicationModeData;
-    this.#closeLastEmbeddedViewer(returnCode);
-
-    const lastCommandLine = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE);
-    const lastCommand = this.environment.get(TerminalEnvironment.EXTRATERM_CURRENT_COMMAND);
-    const newVars = [
-      { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
-      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND_LINE, value: "" },
-      { key: TerminalEnvironment.EXTRATERM_CURRENT_COMMAND, value: "" },
-    ];
-    if (lastCommand != null) {
-      newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, value: lastCommandLine });
-      newVars.push( { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: lastCommand });
-    }
-    this.environment.setList(newVars);
-  }
-
   #closeLastEmbeddedViewer(returnCode: string): void {
     const startFrame = this.#findEmptyDecoratedFrame();
     if (startFrame != null) {
@@ -1365,6 +1405,7 @@ export class Terminal implements Tab, Disposable {
     this.#scrollArea.removeBlockFrame(terminalBlockFrame);
 
     terminalBlockFrame.getWidget().setParent(null);
+    terminalBlockFrame.getBlock().setParent(null);
     terminalBlockFrame.setBlock(null);
 
     const index = this.#blockFrames.findIndex(bf => bf.frame === terminalBlockFrame);

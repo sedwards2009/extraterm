@@ -771,6 +771,7 @@ export class Window {
     }
     const tabPlumbing: TabPlumbing = { tab, disposableHolder: new DisposableHolder(), titleLabel: null,
       titleWidget: null };
+    tab.setParent(this);
     this.#tabs.push(tabPlumbing);
 
     if (tab instanceof Terminal) {
@@ -832,8 +833,8 @@ export class Window {
   }
 
   hasTab(targetTab: Tab): boolean {
-    for (const [index, tab] of this.#tabs.entries()) {
-      if (targetTab === tab.tab) {
+    for (const [index, tabPlumbing] of this.#tabs.entries()) {
+      if (targetTab === tabPlumbing.tab) {
         return true;
       }
     }
@@ -846,15 +847,15 @@ export class Window {
   }
 
   removeTab(targetTab: Tab): boolean {
-    for (const [index, tab] of this.#tabs.entries()) {
-      if (targetTab === tab.tab) {
+    for (const [index, tabPlumbing] of this.#tabs.entries()) {
+      if (targetTab === tabPlumbing.tab) {
         this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, null);
-        tab.titleWidget.setParent(null);
+        tabPlumbing.titleWidget.setParent(null);
         this.#tabBar.removeTab(index);
-        this.#contentStack.removeWidget(tab.tab.getContents());
+        this.#contentStack.removeWidget(tabPlumbing.tab.getContents());
         this.#tabs.splice(index, 1);
-
-        tab.disposableHolder.dispose();
+        tabPlumbing.tab.setParent(null);
+        tabPlumbing.disposableHolder.dispose();
         const newCurrentIndex = Math.max(0, index - 1);
         if (this.#tabs.length !== 0) {
           this.setCurrentTabIndex(newCurrentIndex);

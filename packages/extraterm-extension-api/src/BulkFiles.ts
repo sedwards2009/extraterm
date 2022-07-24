@@ -8,7 +8,7 @@ import { Event } from "extraterm-event-emitter";
 
 
 export interface BulkFileMetadata {
-  readonly [index: string]: (string | number | undefined);
+  readonly [index: string]: (string | undefined);
 }
 
 
@@ -39,7 +39,7 @@ export interface BulkFileHandle {
    */
   readonly availableSize: number;
 
-  onAvailableSizeChange: Event<number>;
+  onAvailableSizeChanged: Event<number>;
 
   /**
    * Get the complete size of the file.
@@ -86,5 +86,5 @@ export interface BulkFileHandle {
   /**
    * This event is fired when the file has been completely downloaded or fails.
    */
-  onStateChange: Event<BulkFileState>;
+  onStateChanged: Event<BulkFileState>;
 }

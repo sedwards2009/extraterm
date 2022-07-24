@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,10 +9,12 @@ import { Event } from "extraterm-event-emitter";
 import { Tab } from "./Tab.js";
 import { TerminalEnvironment } from "./TerminalEnvironment.js";
 import { SessionConfiguration } from "./Sessions.js";
-import { Block } from "./Block.js";
+import { Block, ExtensionBlock } from "./Block.js";
 import { ScreenWithCursor } from "./Screen.js";
 import { ListPickerOptions } from "./ListPickerOptions.js";
 
+
+export type ExtensionBlockFactory = (extensionBlock: ExtensionBlock) => void;
 
 // TODO: Rename this file to Terminals.ts
 
@@ -21,6 +23,7 @@ export interface Terminals {
 
   readonly onDidCreateTerminal: Event<Terminal>;
   // onWillDestroyTerminal: Event<Terminal>;
+  registerBlock(name: string, factory: ExtensionBlockFactory): void;
 }
 
 

@@ -37,7 +37,7 @@ export interface ExtensionContributes {
   readonly terminalBorderWidgets: ExtensionTerminalBorderContribution[];
   readonly terminalThemes: ExtensionTerminalThemeContribution[];
   readonly terminalThemeProviders: ExtensionTerminalThemeProviderContribution[];
-  readonly viewers: ExtensionViewerContribution[];
+  readonly blocks: ExtensionBlockContribution[];
 }
 
 export type Category = "global" |
@@ -71,7 +71,7 @@ export interface ExtensionCommandContribution {
   readonly checked?: boolean;
 }
 
-export interface ExtensionViewerContribution {
+export interface ExtensionBlockContribution {
   readonly name: string;
   readonly mimeTypes: string[];
 }

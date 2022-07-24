@@ -1,11 +1,13 @@
 /*
-* Copyright 2017 Simon Edwards <simon@simonzone.com>
+* Copyright 2022 Simon Edwards <simon@simonzone.com>
 *
 * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 */
 import * as fs from "node:fs";
-import {Readable, ReadableOptions, Transform} from "node:stream";
-import {Disposable} from "@extraterm/extraterm-extension-api";
+import { Readable, ReadableOptions, Transform } from "node:stream";
+import { Event, Disposable } from "@extraterm/extraterm-extension-api";
+import { EventEmitter } from "extraterm-event-emitter";
+import { SmartBuffer } from "smart-buffer";
 
 import {getLogger, Logger} from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -13,36 +15,58 @@ import { log } from "extraterm-logging";
 
 export class WriterReaderFile {
 
-  private _writeStream: fs.WriteStream = null;
-  private _counterTransform: CounterTransform = null;
+  #filename: string = null;
+  #writeStream: fs.WriteStream = null;
+  #peekTransform: PeekTransform = null;
+  #counterTransform: CounterTransform = null;
 
-  constructor(private _filename: string) {
-    const fd = fs.openSync(_filename, "w");
-    this._writeStream = fs.createWriteStream("", {fd});
-    this._counterTransform = new CounterTransform();
-    this._counterTransform.pipe(this._writeStream);
+  #onByteCountChangedEventEmitter = new EventEmitter<number>();
+  onByteCountChanged: Event<number>;
+
+  constructor(filename: string) {
+    this.onByteCountChanged = this.#onByteCountChangedEventEmitter.event;
+    this.#filename = filename;
+    const fd = fs.openSync(this.#filename, "w");
+    this.#writeStream = fs.createWriteStream("", {fd});
+
+    this.#counterTransform = new CounterTransform();
+    this.#counterTransform.on("expanded", () => {
+      this.#onByteCountChangedEventEmitter.fire(this.getByteCount());
+    });
+
+    this.#peekTransform = new PeekTransform();
+    this.#counterTransform.pipe(this.#peekTransform);
+    this.#peekTransform.pipe(this.#writeStream);
   }
 
   getWritableStream(): NodeJS.WritableStream {
-    return this._counterTransform;
+    return this.#counterTransform;
   }
 
   createReadableStream(): NodeJS.ReadableStream & Disposable {
-    return new TailingFileReader(this._filename, this._counterTransform);
+    return new TailingFileReader(this.#filename, this.#counterTransform);
+  }
+
+  getByteCount(): number {
+    return this.#counterTransform.getByteCount();
+  }
+
+  getPeekBuffer(): Buffer {
+    return this.#peekTransform.getPeekBuffer();
   }
 }
 
 
 class CounterTransform extends Transform {
 
-  private _counter = 0;
-  private _closed = false;
+  #counter = 0;
+  #closed = false;
 
   constructor(options?) {
     super(options);
 
     this.on('end', () => {
-      this._closed = true;
+      this.#closed = true;
       process.nextTick(() => {
         this.emit('expanded');
       });
@@ -51,7 +75,7 @@ class CounterTransform extends Transform {
 
   _transform(chunk: any, encoding: string, callback: Function): void {
     this.push(chunk);
-    this._counter += chunk.length;
+    this.#counter += chunk.length;
 
     callback();
     process.nextTick(() => {
@@ -59,12 +83,47 @@ class CounterTransform extends Transform {
     });
   }
 
-  getCount(): number {
-    return this._counter;
+  getByteCount(): number {
+    return this.#counter;
   }
 
   isClosed(): boolean {
-    return this._closed;
+    return this.#closed;
+  }
+}
+
+
+const ONE_KILOBYTE = 1024;
+
+class PeekTransform extends Transform {
+
+  #peekBuffer = new SmartBuffer();
+
+  constructor(options?) {
+    super(options);
+  }
+
+  _transform(chunk: any, encoding: string, callback: Function): void {
+    this.#writePeekBuffer(chunk);
+
+    this.push(chunk);
+    callback();
+  }
+
+  #writePeekBuffer(data: Buffer): void {
+    if (this.#peekBuffer.length < ONE_KILOBYTE) {
+      if (this.#peekBuffer.length + data.length > ONE_KILOBYTE) {
+        const tmpBuffer = Buffer.alloc(ONE_KILOBYTE - this.#peekBuffer.length);
+        data.copy(tmpBuffer, 0, 0, tmpBuffer.length);
+        this.#peekBuffer.writeBuffer(tmpBuffer);
+      } else {
+        this.#peekBuffer.writeBuffer(data);
+      }
+    }
+  }
+
+  getPeekBuffer(): Buffer {
+    return this.#peekBuffer.toBuffer();
   }
 }
 
@@ -99,7 +158,7 @@ class TailingFileReader extends Readable implements Disposable {
   }
 
   _read(size: number): void {
-    if (this._closed || (this._counterTransformer.isClosed() && this._counterTransformer.getCount() === this._readPointer)) {
+    if (this._closed || (this._counterTransformer.isClosed() && this._counterTransformer.getByteCount() === this._readPointer)) {
       this.push(null);  // Done
       if (this._fhandle !== -1) {
         fs.closeSync(this._fhandle);
@@ -114,7 +173,7 @@ class TailingFileReader extends Readable implements Disposable {
     }
 
     // Don't read past the end of the file.
-    const effectiveReadSize = Math.min(size, this._counterTransformer.getCount() - this._readPointer);
+    const effectiveReadSize = Math.min(size, this._counterTransformer.getByteCount() - this._readPointer);
 
     if (effectiveReadSize !== 0) {
       fs.read(this._fhandle, this._buffer, 0, Math.min(this._buffer.length, effectiveReadSize), this._readPointer,

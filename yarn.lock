@@ -3051,6 +3051,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"download-block@workspace:extensions/DownloadBlock":
+  version: 0.0.0-use.local
+  resolution: "download-block@workspace:extensions/DownloadBlock"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    qt-construct: 0.1.0
+    typescript: 4.6.3
+  languageName: unknown
+  linkType: soft
+
 "download-cli@npm:^1.1.1":
   version: 1.1.1
   resolution: "download-cli@npm:1.1.1"

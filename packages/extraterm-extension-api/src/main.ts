@@ -8,7 +8,7 @@ export { Disposable, Event } from "extraterm-event-emitter";
 export { Logger } from "./Logger.js";
 export { TerminalEnvironment } from "./TerminalEnvironment.js";
 export {
-  Terminal, LineRangeChange, TerminalBorderWidget, Terminals
+  Terminal, LineRangeChange, TerminalBorderWidget, Terminals, ExtensionBlockFactory
 } from "./Terminal.js";
 export { Tab, NumberInputOptions, TabTitleWidgetFactory } from "./Tab.js";
 export { CustomizedCommand, Commands } from "./Commands.js";
@@ -19,10 +19,8 @@ export { Clipboard, Configuration, Application, ExtensionContext, ExtensionModul
 export { SessionConfiguration, SessionEditorBase, SessionEditorFactory, EnvironmentMap, SessionBackend,
   CreateSessionOptions, BufferSizeChange, Pty, SessionSettingsEditorBase, SessionSettingsEditorFactory, Sessions
 } from "./Sessions.js";
-export { ViewerPosture, ViewerMetadata, ViewerMetadataChange, ExtensionViewerBase, ExtensionViewerBaseConstructor,
-  ViewerBase } from "./Viewers.js";
-export { Block, FindStartPosition, FindOptions, TerminalOutputDetails, TerminalOutputType, TextViewerDetails,
-  TextViewerType } from "./Block.js";
+export { BlockPosture, BlockMetadataChange, BlockMetadata, Block, TerminalOutputDetails, TerminalOutputType,
+  ExtensionBlock } from "./Block.js";
 export { Screen, ScreenChange, ScreenWithCursor } from "./Screen.js";
 export { ExtensionTab, Window, Windows } from "./Windows.js";
 export { Style, IconName, IconModification, IconRotation, ModifiedIconName, Palette } from "./Style.js";

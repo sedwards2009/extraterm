@@ -30,6 +30,8 @@ import { ListPickerPopOver } from "./ListPickerPopOver.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { BlockFrame } from "../terminal/BlockFrame.js";
 import { TerminalBlock } from "../terminal/TerminalBlock.js";
+import { Block } from "../terminal/Block.js";
+import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 
 
 interface ActiveExtension {
@@ -353,8 +355,34 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     );
   }
 
+  createExtensionBlock(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
+    const block = this.#createExtensionBlock(terminal, fileMimeType, bulkFile);
+    if (block != null) {
+      return block;
+    }
+    return this.#createExtensionBlock(terminal, "application/octet-stream", bulkFile);
+  }
+
+  #createExtensionBlock(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
+    for (const ae of this.#activeExtensions) {
+      const blockMetadata = ae.metadata.contributes.blocks;
+      if (blockMetadata.length === 0) {
+        continue;
+      }
+
+      for (const blockContribution of blockMetadata) {
+        for (const mimeType of blockContribution.mimeTypes) {
+          if (fileMimeType === mimeType) {
+            return ae.internalExtensionContext.blockRegistry.createExtensionBlock(terminal, blockContribution.name, bulkFile);
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   createTabTitleWidgets(terminal: Terminal): QLabel[] {
-    const ttExtensions = this.#activeExtensions.filter(ae => ae.metadata.contributes.tabTitleWidgets != null);
+    const ttExtensions = this.#activeExtensions.filter(ae => ae.metadata.contributes.tabTitleWidgets.length !== 0);
     let tabTitleWidgets: QLabel[] = [];
     for (const extension of ttExtensions) {
       const wrappedTerminal = extension.internalExtensionContext.wrapTerminal(terminal);

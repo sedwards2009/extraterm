@@ -61,6 +61,6 @@ export class BlobBulkFileHandle implements BulkFileHandle {
   deref(): void{
   }
 
-  onAvailableSizeChange: Event<number>;
-  onStateChange: Event<BulkFileState>;
+  onAvailableSizeChanged: Event<number>;
+  onStateChanged: Event<BulkFileState>;
 }

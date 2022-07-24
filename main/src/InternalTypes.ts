@@ -17,6 +17,9 @@ import { BlockFrame } from "./terminal/BlockFrame.js";
 import { LineRangeChange, Terminal } from "./terminal/Terminal.js";
 import { Window } from "./Window.js";
 import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
+import { BulkFile } from "./bulk_file_handling/BulkFile.js";
+import { Block } from "./terminal/Block.js";
+import { BlockRegistry } from "./extension/BlockRegistry.js";
 
 
 export interface CommandQueryOptions {
@@ -70,6 +73,7 @@ export interface ExtensionManager {
 
 //   onCommandsChanged: ExtensionApi.Event<void>;
 //   commandRegistrationChanged(): void;
+  createExtensionBlock(terminal: Terminal, mimeType: string, bulkFile: BulkFile): Block;
 
   createTabTitleWidgets(terminal: Terminal): QWidget[];
   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
@@ -127,21 +131,11 @@ export interface CommandMenuEntry {
  * provided.
  */
 export interface InternalExtensionContext extends ExtensionApi.Disposable {
-
-  // _extensionManager: ExtensionManager;
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
   sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
   tabTitleWidgetRegistry: TabTitleWidgetRegistry;
-
-  // _extensionMetadata: ExtensionMetadata;
-  // _internalWindow: InternalWindow;
-  // _proxyFactory: ProxyFactory;
-
-  // _findViewerElementTagByMimeType(mimeType: string): string;
-  // _registerCommandContribution(contribution: ExtensionCommandContribution): ExtensionApi.Disposable;
-
-  // createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
+  blockRegistry: BlockRegistry;
 
   getActiveBlock(): ExtensionApi.Block;
   getActiveTerminal(): ExtensionApi.Terminal;
@@ -159,10 +153,6 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   registerTerminalThemeProvider(name: string, provider: ExtensionApi.TerminalThemeProvider): void;
 
   setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void;
-  // _debugRegisteredCommands(): void;
-
-  // _registerTabTitleWidget(name: string, factory: ExtensionApi.TabTitleWidgetFactory): void;
-  // _createTabTitleWidgets(terminal: EtTerminal): HTMLElement[];
 
   newTerminalCreated(window: Window, newTerminal: Terminal): void;
   newWindowCreated(window: Window, allWindows: Window[]): void;

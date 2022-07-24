@@ -18,4 +18,6 @@ export interface Tab {
   getWindowTitle(): string;
   setWindowTitle(title: string): void;
   onWindowTitleChanged: Event<string>;
+  setParent(parent: any);
+  getParent(): any;
 }

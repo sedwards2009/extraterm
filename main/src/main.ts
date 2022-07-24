@@ -70,6 +70,7 @@ class Main {
   #keybindingsIOManager: KeybindingsIOManager = null;
   #uiStyle: UiStyle = null;
   #fontAtlasCache: FontAtlasCache = null;
+  #bulkFileStorage: BulkFileStorage = null;
 
   #settingsTab: SettingsTab = null;
 
@@ -135,13 +136,13 @@ class Main {
 
     this.setupDefaultSessions(configDatabase, ptyManager);
 
-    const bulkFileStorage = this.setupBulkFileStorage();
+    this.#bulkFileStorage = this.setupBulkFileStorage();
     // TODO: MainDesktop()
     this.setupDesktopSupport();
     // TODO: setupGlobalKeybindingsManager()
     // TODO: registerInternalCommands()
 
-    this.setupLocalHttpServer(bulkFileStorage);
+    this.setupLocalHttpServer(this.#bulkFileStorage);
 
     this.registerCommands(extensionManager);
     this.startUpSessions(configDatabase, extensionManager);
@@ -301,7 +302,7 @@ class Main {
     const localHttpServer = new LocalHttpServer(ipcFilePath);
     await localHttpServer.start();
 
-    bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
+    // bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
     const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
     localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
     const pingHandler = new PingHandler();
@@ -380,7 +381,8 @@ class Main {
     const window = this.#extensionManager.getActiveWindow() ?? this.#windows[0];
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
-      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this));
+      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
+      this.#bulkFileStorage);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
@@ -663,7 +665,8 @@ class Main {
     terminal.removeFrame(frame);
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
-      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this));
+      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
+      this.#bulkFileStorage);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });

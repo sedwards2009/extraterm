@@ -15,7 +15,7 @@ import { STYLE_MASK_CURSOR, STYLE_MASK_HYPERLINK_HIGHLIGHT, STYLE_MASK_INVERSE }
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
-import { BulkFileHandle, ViewerMetadata, ViewerPosture } from "@extraterm/extraterm-extension-api";
+import { BulkFileHandle, BlockMetadata, BlockPosture } from "@extraterm/extraterm-extension-api";
 import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 
 import { Block } from "./Block.js";
@@ -48,6 +48,7 @@ export interface AppendScrollbackLinesDetail {
 export class TerminalBlock implements Block {
   private _log: Logger = null;
 
+  #parent: any = null;
   #widget: QWidget = null;
   #emulator: Term.Emulator = null;
 
@@ -128,6 +129,14 @@ export class TerminalBlock implements Block {
     });
 
     return widget;
+  }
+
+  setParent(parent: any): void {
+    this.#parent = parent;
+  }
+
+  getParent(): any {
+    return this.#parent;
   }
 
   getWidget(): QWidget {
@@ -850,20 +859,20 @@ export class TerminalBlock implements Block {
     this.#metadataChangedEventEmitter.fire();
   }
 
-  getMetadata(): ViewerMetadata {
+  getMetadata(): BlockMetadata {
     const title = this.#commandLine !== null ? this.#commandLine : "Terminal Command";
     const icon = this.#returnCode === 0 ? "fa-check" : "fa-times";
 
-    let posture = ViewerPosture.RUNNING;
+    let posture = BlockPosture.RUNNING;
     switch(this.#returnCode) {
       case null:
-        posture = ViewerPosture.RUNNING;
+        posture = BlockPosture.RUNNING;
         break;
       case 0:
-        posture = ViewerPosture.SUCCESS;
+        posture = BlockPosture.SUCCESS;
         break;
       default:
-        posture = ViewerPosture.FAILURE;
+        posture = BlockPosture.FAILURE;
         break;
     }
 
@@ -876,7 +885,6 @@ export class TerminalBlock implements Block {
       title,
       icon,
       posture,
-      toolTip,
       moveable: false,
       deleteable: false
     };

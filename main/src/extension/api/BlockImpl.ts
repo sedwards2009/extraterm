@@ -9,26 +9,20 @@ import { BlockFrame } from "../../terminal/BlockFrame.js";
 import { TerminalBlock } from "../../terminal/TerminalBlock.js";
 import { TerminalOutputDetailsImpl } from "./TerminalOutputDetailsImpl.js";
 import { ExtensionMetadata } from "../ExtensionMetadata.js";
-
-// import { ViewerElement } from "../viewers/ViewerElement";
-// import { EmbeddedViewer } from "../viewers/EmbeddedViewer";
-// import { TerminalViewer } from "../viewers/TerminalAceViewer";
-// import { TextViewer } from"../viewers/TextAceViewer";
-// import { TerminalOutputDetailsProxy } from "./proxy/TerminalOutputDetailsProxy";
-// import { TextViewerDetailsProxy } from "./proxy/TextViewerDetailsProxy";
-// import * as DomUtils from "../DomUtils";
-// import { EtTerminal } from "../Terminal";
-// import { EtViewerTab } from "../ViewerTab";
+import { InternalExtensionContext } from "../../InternalTypes.js";
 
 
 export class BlockImpl implements ExtensionApi.Block {
 
+  #internalExtensionContext: InternalExtensionContext;
   #type: string = null;
   #details: any = null;
   #extensionMetadata: ExtensionMetadata;
   #blockFrame: BlockFrame = null;
 
-  constructor(extensionMetadata: ExtensionMetadata, blockFrame: BlockFrame) {
+  constructor(internalExtensionContext: InternalExtensionContext, extensionMetadata: ExtensionMetadata,
+      blockFrame: BlockFrame) {
+    this.#internalExtensionContext = internalExtensionContext;
     this.#extensionMetadata = extensionMetadata;
     this.#blockFrame = blockFrame;
   }
@@ -43,21 +37,6 @@ export class BlockImpl implements ExtensionApi.Block {
       this.#details = new TerminalOutputDetailsImpl(this.#extensionMetadata, block);
       this.#type = ExtensionApi.TerminalOutputType;
     }
-
-    // let insideViewer = this._viewer;
-    // if (this._viewer instanceof EmbeddedViewer) {
-    //   insideViewer = this._viewer.getViewerElement();
-    // }
-
-    // if (insideViewer instanceof TerminalViewer) {
-    //   this._details = new TerminalOutputDetailsProxy(this._internalExtensionContext, insideViewer);
-    //   this._type = ExtensionApi.TerminalOutputType;
-    // } else if (insideViewer instanceof TextViewer) {
-    //   this._details = new TextViewerDetailsProxy(this._internalExtensionContext, insideViewer);
-    //   this._type = ExtensionApi.TextViewerType;
-    // } else {
-    //   this._type = "unknown";
-    // }
   }
 
   get type(): string {
@@ -70,35 +49,7 @@ export class BlockImpl implements ExtensionApi.Block {
     return this.#details;
   }
 
-  get tab(): ExtensionApi.Tab {
-    // const terminal = this._getOwningEtTerminal();
-    // if (terminal != null) {
-    //   return this._internalExtensionContext._proxyFactory.getTabProxy(terminal);
-    // }
-    // const viewerTab = this._getOwningEtViewerTab();
-    // if (viewerTab != null) {
-    //   return this._internalExtensionContext._proxyFactory.getTabProxy(viewerTab);
-    // }
-    return null;
+  get terminal(): ExtensionApi.Terminal {
+    return this.#internalExtensionContext.wrapTerminal(this.#blockFrame.getBlock().getParent());
   }
-
-  // private _getOwningEtTerminal(): EtTerminal {
-  //   const path = DomUtils.nodePathToRoot(this._viewer);
-  //   for (const node of path) {
-  //     if (node instanceof EtTerminal) {
-  //       return node;
-  //     }
-  //   }
-  //   return null;
-  // }
-
-  // private _getOwningEtViewerTab(): EtViewerTab {
-  //   const path = DomUtils.nodePathToRoot(this._viewer);
-  //   for (const node of path) {
-  //     if (node instanceof EtViewerTab) {
-  //       return node;
-  //     }
-  //   }
-  //   return null;
-  // }
 }
