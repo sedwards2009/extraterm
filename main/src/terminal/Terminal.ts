@@ -1283,10 +1283,10 @@ export class Terminal implements Tab, Disposable {
     this.#lastCommandTerminalViewer = latestTerminalBlock;
   }
 
-  getFrameContents(frameId: number): BulkFileHandle {
+  getFrameContents(frameId: number): BulkFile {
     for (const bf of this.#blockFrames) {
       if (bf.frame.getTag() === frameId) {
-        return bf.frame.getBlock().getBulkFileHandle();
+        return bf.frame.getBlock().getBulkFile();
       }
     }
     return null;
@@ -1573,20 +1573,20 @@ export class Terminal implements Tab, Disposable {
       return;
     }
 
-    const bulkFileHandle = this.#frameFinder(frameId);
-    if (bulkFileHandle === null) {
+    const bulkFile = this.#frameFinder(frameId);
+    if (bulkFile === null) {
       this.sendToPty("#error\n");
       return;
     }
 
-    const uploader = new BulkFileUploader(bulkFileHandle, this.#pty);
+    const uploader = new BulkFileUploader(bulkFile, this.#pty);
     this.#initUploadProgressBar();
 
-    if ("filename" in bulkFileHandle.metadata) {
-      this.#uploadProgressBar.setFilename(<string> bulkFileHandle.metadata["filename"]);
+    if ("filename" in bulkFile.getMetadata()) {
+      this.#uploadProgressBar.setFilename(<string> bulkFile.getMetadata()["filename"]);
     }
 
-    this.#uploadProgressBar.setTotal(bulkFileHandle.totalSize);
+    this.#uploadProgressBar.setTotal(bulkFile.getTotalSize());
     uploader.onUploadedChange(uploaded => {
       this.#uploadProgressBar.setTransferred(uploaded);
     });
@@ -1604,7 +1604,7 @@ export class Terminal implements Tab, Disposable {
     });
 
     uploader.onFinished(() => {
-      // this.#hideUploadProgressBar();
+      this.#hideUploadProgressBar();
       inputFilterRegistration.dispose();
       doLater(() => {
         uploader.dispose();
@@ -1612,7 +1612,7 @@ export class Terminal implements Tab, Disposable {
     });
 
     // TODO: Show after delay
-    // this.#showUploadProgressBar();
+    this.#showUploadProgressBar();
 
     uploader.upload();
   }

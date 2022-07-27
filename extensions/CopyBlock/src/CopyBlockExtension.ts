@@ -47,7 +47,6 @@ function screenToString(screen: Screen): string {
     }
   }
   return lines.join("");
-
 }
 
 async function copyCommandLineCommand(): Promise<void> {

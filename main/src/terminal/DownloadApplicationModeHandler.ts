@@ -14,6 +14,7 @@ import * as TermApi from 'term-api';
 
 import { BulkFileStorage } from '../bulk_file_handling/BulkFileStorage.js';
 import { BulkFile } from '../bulk_file_handling/BulkFile.js';
+import { StoredBulkFile } from '../bulk_file_handling/StoredBulkFile.js';
 
 
 export class DownloadApplicationModeHandler /* implements ApplicationModeHandler */ {
@@ -74,7 +75,7 @@ class DownloadSession {
   #decodedDataBuffers: Buffer[] = [];
   #metadataSize = -1;
   #previousHash: Buffer = null;
-  #bulkFile: BulkFile = null;
+  #bulkFile: StoredBulkFile = null;
 
   #onCreatedBulkFileEventEmitter = new EventEmitter<BulkFile>();
   onCreatedBulkFile: Event<BulkFile>;

@@ -23,7 +23,8 @@ import * as Term from "../emulator/Term.js";
 import { PALETTE_BG_INDEX, PALETTE_CURSOR_INDEX, TerminalVisualConfig } from "./TerminalVisualConfig.js";
 import { ConfigCursorStyle } from "../config/Config.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
-import { BlobBulkFileHandle } from "../bulk_file_handling/BlobBulkFileHandle.js";
+import { BlobBulkFile } from "../bulk_file_handling/BlobBulkFile.js";
+import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 
 
 enum SelectionMode {
@@ -917,8 +918,8 @@ export class TerminalBlock implements Block {
     this.#widget.update();
   }
 
-  getBulkFileHandle(): BulkFileHandle {
-    return new BlobBulkFileHandle("text/plain;charset=utf8", {}, Buffer.from(this.#getText(), 'utf8'));
+  getBulkFile(): BulkFile {
+    return new BlobBulkFile("text/plain;charset=utf8", {}, Buffer.from(this.#getText(), 'utf8'));
   }
 
   #getText(): string {

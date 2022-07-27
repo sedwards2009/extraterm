@@ -2746,13 +2746,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"data-uri-to-buffer@npm:3":
-  version: 3.0.1
-  resolution: "data-uri-to-buffer@npm:3.0.1"
-  checksum: c59c3009686a78c071806b72f4810856ec28222f0f4e252aa495ec027ed9732298ceea99c50328cf59b151dd34cbc3ad6150bbb43e41fc56fa19f48c99e9fc30
-  languageName: node
-  linkType: hard
-
 "data-urls@npm:^2.0.0":
   version: 2.0.0
   resolution: "data-urls@npm:2.0.0"
@@ -3710,7 +3703,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"extraterm-later@workspace:packages/extraterm-later":
+"extraterm-later@1.0.0, extraterm-later@workspace:packages/extraterm-later":
   version: 0.0.0-use.local
   resolution: "extraterm-later@workspace:packages/extraterm-later"
   dependencies:
@@ -3979,13 +3972,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-uri-to-path@npm:2":
-  version: 2.0.0
-  resolution: "file-uri-to-path@npm:2.0.0"
-  checksum: 4a71a99ddaa6ae7ae7bffe2948c34da59982ed465d930a0af9cb59fcc10fcd93366cc356ec3337c18373fde5df7ac52afda4558f155febd1799d135552207edb
-  languageName: node
-  linkType: hard
-
 "filename-reserved-regex@npm:^2.0.0":
   version: 2.0.0
   resolution: "filename-reserved-regex@npm:2.0.0"
@@ -4155,17 +4141,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fs-extra@npm:^8.1.0":
-  version: 8.1.0
-  resolution: "fs-extra@npm:8.1.0"
-  dependencies:
-    graceful-fs: ^4.2.0
-    jsonfile: ^4.0.0
-    universalify: ^0.1.0
-  checksum: bf44f0e6cea59d5ce071bba4c43ca76d216f89e402dc6285c128abc0902e9b8525135aa808adad72c9d5d218e9f4bcc63962815529ff2f684ad532172a284880
-  languageName: node
-  linkType: hard
-
 "fs-minipass@npm:^1.2.7":
   version: 1.2.7
   resolution: "fs-minipass@npm:1.2.7"
@@ -4219,16 +4194,6 @@ __metadata:
     mkdirp: ">=0.5 0"
     rimraf: 2
   checksum: e6998651aeb85fd0f0a8a68cec4d05a3ada685ecc4e3f56e0d063d0564a4fc39ad11a856f9020f926daf869fc67f7a90e891def5d48e4cadab875dc313094536
-  languageName: node
-  linkType: hard
-
-"ftp@npm:^0.3.10":
-  version: 0.3.10
-  resolution: "ftp@npm:0.3.10"
-  dependencies:
-    readable-stream: 1.1.x
-    xregexp: 2.0.0
-  checksum: ddd313c1d44eb7429f3a7d77a0155dc8fe86a4c64dca58f395632333ce4b4e74c61413c6e0ef66ea3f3d32d905952fbb6d028c7117d522f793eb1fa282e17357
   languageName: node
   linkType: hard
 
@@ -4370,20 +4335,6 @@ __metadata:
   version: 2.0.2
   resolution: "get-system-fonts@npm:2.0.2"
   checksum: 399011583bfc32239c9484fbf913158330e8860b5eb5e0ab95f76caf4d8247154736c60f42972386608e4aa11cbc4b1d591328f9a5c14726ece1bf69a38e873f
-  languageName: node
-  linkType: hard
-
-"get-uri@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "get-uri@npm:4.0.0"
-  dependencies:
-    "@tootallnate/once": 2
-    data-uri-to-buffer: 3
-    debug: 4
-    file-uri-to-path: 2
-    fs-extra: ^8.1.0
-    ftp: ^0.3.10
-  checksum: 66962b1af8a9140f2876b2d087e620ce1d7d5d3dfaead61bf14337883d6ade81c723cf70173c778b146bd90039b760d616d5a2ee399b3f1b6b7259d9e902b5fa
   languageName: node
   linkType: hard
 
@@ -6225,7 +6176,6 @@ __metadata:
     fontinfo: 0.3.0
     fuzzyjs: ^4.0.4
     get-stream: ^6.0.0
-    get-uri: ^4.0.0
     he: ^1.2.0
     jest: 27.5.1
     json-to-ast: 2.1.0
@@ -7956,7 +7906,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:1.1.x, readable-stream@npm:^1.0.33":
+"readable-stream@npm:^1.0.33":
   version: 1.1.14
   resolution: "readable-stream@npm:1.1.14"
   dependencies:
@@ -9579,6 +9529,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     extraterm-event-emitter: 1.0.0
+    extraterm-later: 1.0.0
     lodash-es: 4.17.21
     node-pty: 0.10.0-beta19
     shx: ^0.3.2
@@ -10098,13 +10049,6 @@ __metadata:
   version: 2.2.0
   resolution: "xmlchars@npm:2.2.0"
   checksum: 8c70ac94070ccca03f47a81fcce3b271bd1f37a591bf5424e787ae313fcb9c212f5f6786e1fa82076a2c632c0141552babcd85698c437506dfa6ae2d58723062
-  languageName: node
-  linkType: hard
-
-"xregexp@npm:2.0.0":
-  version: 2.0.0
-  resolution: "xregexp@npm:2.0.0"
-  checksum: de62d1f01c9f1a67c80cafe48a3dc081b324249a0e88e65dc9acae9cce6d8e63c9d91c0f97e2ad2d8c5351c856c139c04dc55ebd941e59b7d1d5c1169e164cff
   languageName: node
   linkType: hard
 

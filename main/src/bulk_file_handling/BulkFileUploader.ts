@@ -3,22 +3,18 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import * as crypto from "node:crypto";
-import getUri from "get-uri";
-import * as http from "node:http";
-import { BulkFileHandle, BulkFileMetadata, Event, Disposable } from "@extraterm/extraterm-extension-api";
-
+import { Event, Disposable } from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
+
 import { BufferSizeChange, Pty } from "../pty/Pty.js";
 import { DisposableHolder } from "../utils/DisposableUtils.js";
 import { ByteCountingStreamTransform } from "../utils/ByteCountingStreamTransform.js";
+import { BulkFile } from "./BulkFile.js";
+import { UploadEncoder } from "./UploadEncoder.js";
 
 
-const BYTES_PER_LINE = 3 * 240;
 const DEBUG = false;
-const HASH_LENGTH = 20; // 20 hex chars hash length
-
 
 /**
  * Uploads files to a remote process over shell and remote's stdin.
@@ -36,73 +32,55 @@ const HASH_LENGTH = 20; // 20 hex chars hash length
 export class BulkFileUploader implements Disposable {
 
   private _log: Logger;
-  private _onUploadedChangeEmitter = new EventEmitter<number>();
-  private _onFinishedEmitter = new EventEmitter<void>();
-  private _uploadEncoder: UploadEncoder = null;
-  private _stringChunkBuffer: string[] = [];
-  private _disposables = new DisposableHolder();
-  private _sourceStream: NodeJS.ReadableStream = null;
-  private _sourceHttpStream: http.IncomingMessage = null;
-  private _pipeEnd: NodeJS.ReadableStream = null;
-  private _isEnding = false;
-  private _aborted = false;
+  #onUploadedChangeEmitter = new EventEmitter<number>();
+  #onFinishedEmitter = new EventEmitter<void>();
+  #uploadEncoder: UploadEncoder = null;
+  #stringChunkBuffer: string[] = [];
+  #disposables = new DisposableHolder();
+  #sourceStream: NodeJS.ReadableStream = null;
+  #pipeEnd: NodeJS.ReadableStream = null;
+  #isEnding = false;
+  #aborted = false;
 
-  constructor(private _bulkFileHandle: BulkFileHandle, private _pty: Pty) {
+  #bulkFile: BulkFile = null;
+  #pty: Pty = null;
+
+  constructor(bulkFile: BulkFile, pty: Pty) {
     this._log = getLogger("BulkFileUploader", this);
 
-    this.onUploadedChange = this._onUploadedChangeEmitter.event;
-    this.onFinished = this._onFinishedEmitter.event;
+    this.#bulkFile = bulkFile;
+    this.#pty = pty;
+
+    this.onUploadedChange = this.#onUploadedChangeEmitter.event;
+    this.onFinished = this.#onFinishedEmitter.event;
   }
 
   abort(): void {
-    if (this._uploadEncoder != null) {
-      this._uploadEncoder.abort();
+    if (this.#uploadEncoder != null) {
+      this.#uploadEncoder.abort();
 
-      this._pipeEnd.removeAllListeners();
-      if (this._sourceHttpStream != null) {
-        this._sourceHttpStream.destroy();
-        this._sourceHttpStream = null;
-      }
+      this.#pipeEnd.removeAllListeners();
     }
-    this._aborted = true;
-    this._onFinishedEmitter.fire(undefined);
+    this.#aborted = true;
+    this.#onFinishedEmitter.fire(undefined);
   }
 
   dispose(): void {
-    if (this._sourceHttpStream != null) {
-      this._sourceHttpStream.destroy();
-      this._sourceHttpStream = null;
-    }
-
-    this._disposables.dispose();
+    this.#disposables.dispose();
   }
 
   onUploadedChange: Event<number>;
   onFinished: Event<void>;
 
   upload(): void {
-    const url = this._bulkFileHandle.url;
-    if (url !== null && url.startsWith("data:")) {
-      getUri(url, (err, stream) => {
-        this._sourceStream = stream;
-        [this._pipeEnd , this._uploadEncoder] = this._configurePipeline(stream);
-        this._sourceStream.on('error', this._responseOnError.bind(this));
-      });
-    } else {
-      const req = http.request(<any> url, res => {
-        this._sourceHttpStream = res;
-        [this._pipeEnd, this._uploadEncoder] = this._configurePipeline(res);
-      });
-      req.on('error', this._responseOnError.bind(this));
-
-      req.end();
-    }
-
-    this._disposables.add(this._pty.onAvailableWriteBufferSizeChange(
-      this._handlePtyWriteBufferSizeChange.bind(this)));
+    this.#sourceStream = this.#bulkFile.createReadableStream();
+    [this.#pipeEnd , this.#uploadEncoder] = this.#configurePipeline(this.#sourceStream);
+    this.#sourceStream.on("error", this.#responseOnError.bind(this));
+    this.#disposables.add(this.#pty.onAvailableWriteBufferSizeChange(
+      this.#handlePtyWriteBufferSizeChange.bind(this)));
   }
 
-  private _configurePipeline(sourceStream: NodeJS.ReadableStream): [NodeJS.ReadableStream, UploadEncoder] {
+  #configurePipeline(sourceStream: NodeJS.ReadableStream): [NodeJS.ReadableStream, UploadEncoder] {
     const byteCountingTransform = new ByteCountingStreamTransform();
     let countSleep = 1024*1024;
     byteCountingTransform.onCountUpdate((count: number) => {
@@ -112,204 +90,82 @@ export class BulkFileUploader implements Disposable {
           countSleep += 1024*1024;
         }
       }
-      this._onUploadedChangeEmitter.fire(count);
+      this.#onUploadedChangeEmitter.fire(count);
     });
 
     sourceStream.pipe(byteCountingTransform);
-    const encoder = new UploadEncoder(this._bulkFileHandle.metadata, byteCountingTransform);
+    const encoder = new UploadEncoder(this.#bulkFile.getMetadata(), byteCountingTransform);
 
-    encoder.onData(this._responseOnData.bind(this));
-    encoder.onEnd(this._responseOnEnd.bind(this));
+    encoder.onData(this.#responseOnData.bind(this));
+    encoder.onEnd(this.#responseOnEnd.bind(this));
     return [byteCountingTransform, encoder];
   }
 
-  private _responseOnData(nextStringChunk: string): void {
-    if (this._aborted) {
+  #responseOnData(nextStringChunk: string): void {
+    if (this.#aborted) {
       return;
     }
 
     if (DEBUG) {
-      this._log.debug("_responseOnData this._pty.getAvailableWriteBufferSize() = ",this._pty.getAvailableWriteBufferSize());
+      this._log.debug("_responseOnData this._pty.getAvailableWriteBufferSize() = ",this.#pty.getAvailableWriteBufferSize());
     }
 
-    this._appendToStringChunkBuffer(nextStringChunk);
-    this._transmitStringChunkBuffer();
+    this.#appendToStringChunkBuffer(nextStringChunk);
+    this.#transmitStringChunkBuffer();
 
-    if(this._stringChunkBuffer.length !== 0) {
-      if (this._sourceHttpStream != null) {
-        this._sourceHttpStream.pause();
-      }
-      if (this._sourceStream != null) {
-        this._sourceStream.pause();
-      }
+    if(this.#stringChunkBuffer.length !== 0) {
+      this.#pipeEnd.pause();
     }
   }
 
-  private _appendToStringChunkBuffer(stringChunk: string): void {
-    this._stringChunkBuffer.push(stringChunk);
+  #appendToStringChunkBuffer(stringChunk: string): void {
+    this.#stringChunkBuffer.push(stringChunk);
     if (DEBUG) {
-      this._log.debug("this._stringChunkBuffer.length = ", this._stringChunkBuffer.length);
+      this._log.debug("this._stringChunkBuffer.length = ", this.#stringChunkBuffer.length);
     }
   }
 
-  private _handlePtyWriteBufferSizeChange(bufferSizeChange: BufferSizeChange): void {
+  #handlePtyWriteBufferSizeChange(bufferSizeChange: BufferSizeChange): void {
     if (DEBUG) {
-      this._log.debug(`availableDelta: ${bufferSizeChange.availableDelta}, totalBufferSize: ${bufferSizeChange.totalBufferSize}, availableWriteBufferSize: ${this._pty.getAvailableWriteBufferSize()}`);
+      this._log.debug(`availableDelta: ${bufferSizeChange.availableDelta}, totalBufferSize: ${bufferSizeChange.totalBufferSize}, availableWriteBufferSize: ${this.#pty.getAvailableWriteBufferSize()}`);
     }
 
-    this._transmitStringChunkBuffer();
+    this.#transmitStringChunkBuffer();
 
     // If we were finishing up and there is no more work to do then signal finished.
-    if (this._stringChunkBuffer.length === 0 && this._isEnding) {
-      this._isEnding = false;
-      this._onFinishedEmitter.fire(undefined);
+    if (this.#stringChunkBuffer.length === 0 && this.#isEnding) {
+      this.#isEnding = false;
+      this.#onFinishedEmitter.fire(undefined);
       return;
     }
 
-    if (this._stringChunkBuffer.length === 0) {
+    if (this.#stringChunkBuffer.length === 0) {
       if (DEBUG) {
-        this._log.debug(`resuming, availableWriteBufferSize: ${this._pty.getAvailableWriteBufferSize()}`);
+        this._log.debug(`resuming, availableWriteBufferSize: ${this.#pty.getAvailableWriteBufferSize()}`);
       }
-      if (this._sourceHttpStream != null) {
-        this._sourceHttpStream.resume();
-      }
-      if (this._sourceStream != null) {
-        this._sourceStream.resume();
-      }
+      this.#pipeEnd.resume();
     }
   }
 
-  private _transmitStringChunkBuffer(): void {
-    while (this._stringChunkBuffer.length !== 0 && this._stringChunkBuffer[0].length <= this._pty.getAvailableWriteBufferSize()) {
-      const nextStringChunk = this._stringChunkBuffer[0];
-      this._stringChunkBuffer.splice(0, 1);
-      this._pty.write(nextStringChunk);
+  #transmitStringChunkBuffer(): void {
+    while (this.#stringChunkBuffer.length !== 0 &&
+        this.#stringChunkBuffer[0].length <= this.#pty.getAvailableWriteBufferSize()) {
+
+      const nextStringChunk = this.#stringChunkBuffer[0];
+      this.#stringChunkBuffer.splice(0, 1);
+      this.#pty.write(nextStringChunk);
     }
   }
 
-  private _responseOnEnd(): void {
-    if (this._stringChunkBuffer.length !== 0) {
-      this._isEnding = true;
+  #responseOnEnd(): void {
+    if (this.#stringChunkBuffer.length !== 0) {
+      this.#isEnding = true;
     } else {
-      this._onFinishedEmitter.fire(undefined);
+      this.#onFinishedEmitter.fire(undefined);
     }
   }
 
-  private _responseOnError(e): void {
+  #responseOnError(e): void {
     this._log.warn(`Problem with request: ${e.message}`);
-  }
-}
-
-
-class UploadEncoder {
-
-  private _log: Logger;
-  private _doneIntro = false;
-  private _buffer: Buffer = Buffer.alloc(0);
-  private _abort = false;
-  private _previousHash: Buffer = null;
-  private _onDataEmitter = new EventEmitter<string>();
-  private _onEndEmitter = new EventEmitter<undefined>();
-
-  onData: Event<string>;
-  onEnd: Event<undefined>;
-
-  constructor(private _metadata: BulkFileMetadata, private _readable: NodeJS.ReadableStream) {
-    this._log = getLogger("UploadEncoder", this);
-    this.onData = this._onDataEmitter.event;
-    this.onEnd = this._onEndEmitter.event;
-
-    this._readable.on('data', this._responseOnData.bind(this));
-    this._readable.on('end', this._responseOnEnd.bind(this));
-  }
-
-  private _responseOnData(chunk: Buffer): void {
-    if ( ! this._abort) {
-      this._appendChunkToBuffer(chunk);
-      if ( ! this._doneIntro) {
-        this._doneIntro = true;
-        this._sendHeader();
-      }
-      this._sendBuffer();
-    }
-  }
-
-  private _appendChunkToBuffer(chunk: Buffer): void {
-    if (this._buffer.length !== 0) {
-      const combinedBuffer = Buffer.alloc(this._buffer.length + chunk.length);
-      this._buffer.copy(combinedBuffer);
-      chunk.copy(combinedBuffer, this._buffer.length);
-      this._buffer = combinedBuffer;
-    } else {
-      this._buffer = chunk;
-    }
-  }
-
-  private _sendHeader(): void {
-    const jsonString = JSON.stringify(this._metadata);
-    this._sendLine("M", Buffer.from(jsonString, "utf8"));
-  }
-
-  private _sendLine(command: string, content: Buffer): void {
-    if (DEBUG) {
-      this._log.debug("_sendLine command=",command);
-    }
-    this._onDataEmitter.fire(this._encodeLine(command, content));
-  }
-
-  private _sendBuffer(): void {
-    const lines = Math.floor(this._buffer.length/BYTES_PER_LINE);
-    for (let i = 0; i < lines; i++) {
-      const lineBuffer = this._buffer.slice(i*BYTES_PER_LINE, (i+1) * BYTES_PER_LINE);
-      this._sendLine("D", lineBuffer);
-    }
-
-    const remainder = this._buffer.length % BYTES_PER_LINE;
-    if (remainder !== 0) {
-      const newBuffer = Buffer.alloc(remainder);
-      this._buffer.copy(newBuffer, 0, this._buffer.length-remainder, this._buffer.length);
-      this._buffer = newBuffer;
-    } else {
-      this._buffer = Buffer.alloc(0);
-    }
-  }
-
-  private _encodeLine(command: string, content: Buffer): string {
-    const parts: string[] = [];
-
-    parts.push("#");
-    parts.push(command);
-    parts.push(":");
-
-    const hash = crypto.createHash("sha256");
-    if (this._previousHash !== null) {
-      hash.update(this._previousHash);
-    }
-
-    if (content !== null && content.length !==0) {
-      hash.update(content);
-      parts.push(content.toString("base64"));
-    }
-
-    this._previousHash = hash.digest();
-
-    parts.push(":");
-    parts.push(this._previousHash.toString("hex").substr(0, HASH_LENGTH));
-    parts.push("\n");
-
-    return parts.join("");
-  }
-
-  private _responseOnEnd(): void {
-    if ( ! this._abort) {
-      this._sendLine("D", this._buffer);
-      this._sendLine("E", null);
-    }
-    this._onEndEmitter.fire(undefined);
-  }
-
-  abort(): void {
-    this._abort = true;
-    this._sendLine("A", null);
   }
 }

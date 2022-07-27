@@ -1,11 +1,11 @@
 /*
- * Copyright 2018-2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2018-2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {EventEmitter} from "extraterm-event-emitter";
 import {Event, BufferSizeChange, Pty, Logger, EnvironmentMap} from "@extraterm/extraterm-extension-api";
-import * as _ from "lodash-es";
+import { DebouncedDoLater } from "extraterm-later";
 import * as child_process from "node:child_process";
 import * as fs from "node:fs";
 import * as pty from "node-pty";
@@ -32,151 +32,148 @@ enum PtyState {
 
 export class UnixPty implements Pty {
 
-  private realPty: pty.IPty;
-  private _permittedDataSize = 0;
-  private _paused = true;
-  private _state = PtyState.NEW;
-  private _onDataEventEmitter = new EventEmitter<string>();
-  private _onExitEventEmitter = new EventEmitter<void>();
-  private _onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
-  private _outstandingWriteDataCount = 0;
-  private _emitBufferSizeLater: _.DebouncedFunc<any> = null;
+  private _log: Logger;
+  #realPty: pty.IPty;
+  #permittedDataSize = 0;
+  #paused = true;
+  #state = PtyState.NEW;
+  #onDataEventEmitter = new EventEmitter<string>();
+  #onExitEventEmitter = new EventEmitter<void>();
+  #onAvailableWriteBufferSizeChangeEventEmitter = new EventEmitter<BufferSizeChange>();
+  #outstandingWriteDataCount = 0;
+  #emitBufferSizeLater: DebouncedDoLater = null;
 
   // Amount of data which went directly to the OS but still needs to 'announced' via an event.
-  private _directWrittenDataCount = 0;
+  #directWrittenDataCount = 0;
 
   onData: Event<string>;
   onExit: Event<void>;
   onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
 
-  constructor(private _log: Logger, options: PtyOptions) {
-    this.onData = this._onDataEventEmitter.event;
-    this.onExit = this._onExitEventEmitter.event;
-    this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
+  constructor(log: Logger, options: PtyOptions) {
+    this._log = log;
+    this.onData = this.#onDataEventEmitter.event;
+    this.onExit = this.#onExitEventEmitter.event;
+    this.onAvailableWriteBufferSizeChange = this.#onAvailableWriteBufferSizeChangeEventEmitter.event;
 
-    this.realPty = pty.spawn(options.exe, options.args, options);
+    this.#realPty = pty.spawn(options.exe, options.args, options);
 
-    this.realPty.on("data", (data: any): void => {
-      this._onDataEventEmitter.fire(data);
-      this.permittedDataSize(this._permittedDataSize - data.length);
+    this.#realPty.on("data", (data: any): void => {
+      this.#onDataEventEmitter.fire(data);
+      this.permittedDataSize(this.#permittedDataSize - data.length);
     });
 
-    this.realPty.on("exit", (exitCode: number, signal: number) => {
+    this.#realPty.on("exit", (exitCode: number, signal: number) => {
       if (exitCode !== 0) {
-        this._state = PtyState.WAIT_EXIT_CONFIRM;
-        this._onDataEventEmitter.fire(`\n\n[Process exited with code ${exitCode}. Press Enter to close this terminal.]`);
+        this.#state = PtyState.WAIT_EXIT_CONFIRM;
+        this.#onDataEventEmitter.fire(`\n\n[Process exited with code ${exitCode}. Press Enter to close this terminal.]`);
       } else {
-        this._state = PtyState.DEAD;
-        this._onExitEventEmitter.fire(undefined);
+        this.#state = PtyState.DEAD;
+        this.#onExitEventEmitter.fire(undefined);
       }
     });
 
-    this.realPty.on("drain", () => {
-      this._onAvailableWriteBufferSizeChangeEventEmitter.fire({
-        totalBufferSize: MAXIMUM_WRITE_BUFFER_SIZE,
-        availableDelta: this._outstandingWriteDataCount + this._directWrittenDataCount
-      });
-      this._directWrittenDataCount = 0;
-      this._outstandingWriteDataCount = 0;
+    this.#emitBufferSizeLater = new DebouncedDoLater(this.#emitAvailableWriteBufferSizeChange.bind(this), 0);
+
+    this.#realPty.on("drain", () => {
+      this.#directWrittenDataCount = 0;
+      this.#outstandingWriteDataCount = 0;
+      this.#emitBufferSizeLater.trigger();
     });
 
-    this._emitBufferSizeLater = _.throttle(this._emitAvailableWriteBufferSizeChange.bind(this), 0, {leading: false});
-
-    this.realPty.pause();
-    this._state = PtyState.LIVE;
+    this.#realPty.pause();
+    this.#state = PtyState.LIVE;
 
     if (options.preMessage != null && options.preMessage !== "") {
       process.nextTick(() => {
-        this._onDataEventEmitter.fire(options.preMessage);
+        this.#onDataEventEmitter.fire(options.preMessage);
       });
     }
   }
 
   write(data: string): void {
-    if (this._state === PtyState.LIVE) {
-      if (this.realPty._socket.write(data)) { // FIXME try to avoid using _socket directly. Upgraded node-pty is needed.
-        this._directWrittenDataCount += data.length;
-        this._emitBufferSizeLater();
+    if (this.#state === PtyState.LIVE) {
+      if (this.#realPty._socket.write(data)) { // FIXME try to avoid using _socket directly. Upgraded node-pty is needed.
+        this.#directWrittenDataCount += data.length;
+        this.#emitBufferSizeLater.trigger();
       } else {
-        this._outstandingWriteDataCount += data.length;
+        this.#outstandingWriteDataCount += data.length;
       }
-    } else if (this._state === PtyState.WAIT_EXIT_CONFIRM) {
+    } else if (this.#state === PtyState.WAIT_EXIT_CONFIRM) {
       // See if the user hit the Enter key to fully close the terminal.
       if (data.indexOf("\r") !== -1) {
-        this._onExitEventEmitter.fire(undefined);
+        this.#onExitEventEmitter.fire(undefined);
       }
     }
   }
 
-  private _emitAvailableWriteBufferSizeChange(): void {
-    if (this._directWrittenDataCount !== 0) {
-      const writtenCount = this._directWrittenDataCount;
-      this._directWrittenDataCount = 0;
-      this._onAvailableWriteBufferSizeChangeEventEmitter.fire({
-        totalBufferSize: MAXIMUM_WRITE_BUFFER_SIZE,
-        availableDelta: writtenCount
-      });
-    }
+  #emitAvailableWriteBufferSizeChange(): void {
+    const writtenCount = this.#directWrittenDataCount;
+    this.#directWrittenDataCount = 0;
+    this.#onAvailableWriteBufferSizeChangeEventEmitter.fire({
+      totalBufferSize: MAXIMUM_WRITE_BUFFER_SIZE,
+      availableDelta: writtenCount
+    });
   }
 
   getAvailableWriteBufferSize(): number {
-    return MAXIMUM_WRITE_BUFFER_SIZE - this._outstandingWriteDataCount - this._directWrittenDataCount;
+    return MAXIMUM_WRITE_BUFFER_SIZE - this.#outstandingWriteDataCount - this.#directWrittenDataCount;
   }
 
   resize(cols: number, rows: number): void {
-    if (this._state !== PtyState.LIVE) {
+    if (this.#state !== PtyState.LIVE) {
       return;
     }
 
-    this.realPty.resize(cols, rows);
+    this.#realPty.resize(cols, rows);
   }
 
   destroy(): void {
-    if (this._state === PtyState.DEAD) {
+    if (this.#state === PtyState.DEAD) {
       return;
     }
 
-    this._emitBufferSizeLater.cancel();
-    this.realPty.destroy();
-    this._state = PtyState.DEAD;
+    this.#emitBufferSizeLater.cancel();
+    this.#realPty.destroy();
+    this.#state = PtyState.DEAD;
   }
 
   permittedDataSize(size: number): void {
-    if (this._state !== PtyState.LIVE) {
+    if (this.#state !== PtyState.LIVE) {
       return;
     }
 
-    this._permittedDataSize = size;
+    this.#permittedDataSize = size;
     if (size > 0) {
-      if (this._paused) {
-        this._paused = false;
-        this.realPty.resume();
+      if (this.#paused) {
+        this.#paused = false;
+        this.#realPty.resume();
       }
     } else {
-      if ( ! this._paused) {
-        this._paused = true;
-        this.realPty.pause();
+      if ( ! this.#paused) {
+        this.#paused = true;
+        this.#realPty.pause();
       }
     }
   }
 
   async getWorkingDirectory(): Promise<string> {
-    if (this._state !== PtyState.LIVE) {
+    if (this.#state !== PtyState.LIVE) {
       return null;
     }
 
     if (process.platform === "linux") {
-      return this._getLinuxWorkingDirectory();
+      return this.#getLinuxWorkingDirectory();
     } else if (process.platform === "darwin") {
-      return this._getDarwinWorkingDirectory();
+      return this.#getDarwinWorkingDirectory();
     } else {
       return null;
     }
   }
 
-  private async _getLinuxWorkingDirectory(): Promise<string> {
+  async #getLinuxWorkingDirectory(): Promise<string> {
     try {
-      const cwd = await fs.promises.readlink(`/proc/${this.realPty.pid}/cwd`, {encoding: "utf8"});
+      const cwd = await fs.promises.readlink(`/proc/${this.#realPty.pid}/cwd`, {encoding: "utf8"});
       return cwd;
     } catch (err) {
       this._log.warn(err);
@@ -184,9 +181,9 @@ export class UnixPty implements Pty {
     return null;
   }
 
-  private async _getDarwinWorkingDirectory(): Promise<string> {
+  async #getDarwinWorkingDirectory(): Promise<string> {
     try {
-      const lsofParams = ["-a", "-d", "cwd", "-p", "" + this.realPty.pid, "-F", "n0"];  // 'n0'=path and nul delimited
+      const lsofParams = ["-a", "-d", "cwd", "-p", "" + this.#realPty.pid, "-F", "n0"];  // 'n0'=path and nul delimited
       const output = child_process.execFileSync("/usr/sbin/lsof", lsofParams, {encoding: "utf8"});
 
       let cwd: string = null;

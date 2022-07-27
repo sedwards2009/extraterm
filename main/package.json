@@ -36,7 +36,6 @@
     "fontinfo": "0.3.0",
     "fuzzyjs": "^4.0.4",
     "get-stream": "^6.0.0",
-    "get-uri": "^4.0.0",
     "he": "^1.2.0",
     "json-to-ast": "2.1.0",
     "khroma": "^1.4.1",

@@ -23,6 +23,7 @@ export class ExtensionBlockImpl implements Block {
   #parent: any = null;
   #internalExtensionContext: InternalExtensionContext;
   #extensionBlockBlock: ExtensionBlockBlock = null;
+  #bulkFile: BulkFile = null;
   #widget: QWidget = null;
   #layout: QLayout = null;
   #contentWidget: QWidget = null;
@@ -44,6 +45,7 @@ export class ExtensionBlockImpl implements Block {
 
     this.#internalExtensionContext = internalExtensionContext;
     this.onMetadataChanged = this.#metadataChangedEventEmitter.event;
+    this.#bulkFile = bulkFile;
     this.#bulkFileWrapper = new BulkFileWrapper(bulkFile);
     this.#extensionBlockBlock = new ExtensionBlockBlock(this, this.#bulkFileWrapper);
 
@@ -89,8 +91,8 @@ export class ExtensionBlockImpl implements Block {
     this.#metadataChangedEventEmitter.fire();
   }
 
-  getBulkFileHandle(): ExtensionApi.BulkFileHandle {
-    return this.#bulkFileWrapper;
+  getBulkFile(): BulkFile {
+    return this.#bulkFile;
   }
 
   getExtensionBlock(): ExtensionApi.ExtensionBlock {

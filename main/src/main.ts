@@ -43,6 +43,7 @@ import {fileURLToPath} from 'node:url';
 import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TerminalBlock } from "./terminal/TerminalBlock.js";
+import { BulkFile } from "./bulk_file_handling/BulkFile.js";
 
 sourceMapSupport.install();
 
@@ -276,7 +277,7 @@ class Main {
     return bulkFileStorage;
   }
 
-  #frameFinder(frameIdStr: string): BulkFileHandle {
+  #frameFinder(frameIdStr: string): BulkFile {
     const frameId = Number.parseInt(frameIdStr, 10);
     if (isNaN(frameId)) {
       return null;
@@ -287,9 +288,9 @@ class Main {
       for (let i=0; i<tc; i++) {
         const tab = win.getTab(i);
         if (tab instanceof Terminal) {
-          const bulkFileHandle = tab.getFrameContents(frameId);
-          if (bulkFileHandle != null) {
-            return bulkFileHandle;
+          const bulkFile = tab.getFrameContents(frameId);
+          if (bulkFile != null) {
+            return bulkFile;
           }
         }
       }

@@ -11,6 +11,7 @@ import { BulkFileMetadata } from '@extraterm/extraterm-extension-api';
 import { getLogger, Logger } from "extraterm-logging";
 
 import { BulkFile } from "./BulkFile.js";
+import { StoredBulkFile } from "./StoredBulkFile.js";
 
 
 export type BulkFileIdentifier = string;
@@ -83,7 +84,7 @@ export class BulkFileStorage {
     }
   }
 
-  createBulkFile(metadata: BulkFileMetadata): BulkFile {
+  createBulkFile(metadata: BulkFileMetadata): StoredBulkFile {
     const onDiskFileIdentifier = crypto.randomBytes(16).toString('hex');
 
     if ( ! this.#checkAndSetupStorageDirectory()) {
@@ -93,7 +94,7 @@ export class BulkFileStorage {
 
     try {
       const fullPath = path.join(this.#storageDirectory, onDiskFileIdentifier);
-      const bulkFile = new BulkFile(metadata, fullPath);
+      const bulkFile = new StoredBulkFile(metadata, fullPath);
       bulkFile.ref();
       const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
 

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "extraterm-event-emitter": "1.0.0",
+    "extraterm-later": "1.0.0",
     "lodash-es": "4.17.21",
     "node-pty": "0.10.0-beta19"
   },
