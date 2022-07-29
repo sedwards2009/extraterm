@@ -20,7 +20,13 @@ if ( isfunction "preexec_invoke_exec" ); then return 0; fi
 if [ -z "$LC_EXTRATERM_COOKIE" ]; then return 0; fi
 if [[ "$TERM" =~ 'screen' ]]; then
     unset -v LC_EXTRATERM_COOKIE
-    return 0;
+    return 0
+fi
+
+if [ ! -t 0 ] ; then
+    # Not an interactive terminal
+    unset -v LC_EXTRATERM_COOKIE
+    return 0
 fi
 
 echo "Setting up Extraterm support."
