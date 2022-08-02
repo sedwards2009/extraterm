@@ -13,7 +13,6 @@ import { DeepReadonly } from "extraterm-readonly-toolbox";
 import { DebouncedDoLater, doLater } from "extraterm-timeoutqt";
 import { BoxLayout, repolish, ScrollBar, Widget } from "qt-construct";
 import {
-  BulkFileHandle,
   Disposable,
   Event,
   SessionConfiguration,
@@ -1557,17 +1556,6 @@ export class Terminal implements Tab, Disposable {
     }
   }
 
-  #showUploadProgressBar(): void {
-    const progressBarWidget = this.#uploadProgressBar.getWidget();
-    progressBarWidget.raise();
-    progressBarWidget.show();
-  }
-
-  #hideUploadProgressBar(): void {
-    const progressBarWidget = this.#uploadProgressBar.getWidget();
-    progressBarWidget.hide();
-  }
-
   #handleRequestFrame(frameId: string): void {
     if (this.#frameFinder === null) {
       return;
@@ -1604,15 +1592,14 @@ export class Terminal implements Tab, Disposable {
     });
 
     uploader.onFinished(() => {
-      this.#hideUploadProgressBar();
+      this.#uploadProgressBar.hide();
       inputFilterRegistration.dispose();
       doLater(() => {
         uploader.dispose();
       });
     });
 
-    // TODO: Show after delay
-    this.#showUploadProgressBar();
+    this.#uploadProgressBar.showDelayed();
 
     uploader.upload();
   }

@@ -10,9 +10,13 @@ import { formatHumanDuration } from "../utils/TextUtils.js";
 import { createHtmlIcon } from "./Icons.js";
 
 
+const SHOW_DELAY_MS = 500;
+
 export class UploadProgressBar {
 
   #widget: QWidget = null;
+  #delayedShowTimeout: NodeJS.Timeout = null;
+
   #filename: string = "";
   #actionLabel: QLabel = null;
   #progressBar: QProgressBar = null;
@@ -125,5 +129,24 @@ export class UploadProgressBar {
     const totalBytes = this.#totalBytes === 0 ? 100 : this.#totalBytes;
     const transferredBytes = this.#totalBytes === 0 ? 50 : this.#transferredBytes;
     this.#progressBar.setValue(Math.round(transferredBytes / totalBytes * 100));
+  }
+
+  showDelayed(): void {
+    if (this.#delayedShowTimeout != null) {
+      return;
+    }
+    this.#delayedShowTimeout = setTimeout(() => {
+      this.#delayedShowTimeout = null;
+      this.#widget.raise();
+      this.#widget.show();
+    }, SHOW_DELAY_MS);
+  }
+
+  hide(): void {
+    if (this.#delayedShowTimeout != null) {
+      clearTimeout(this.#delayedShowTimeout);
+      this.#delayedShowTimeout = null;
+    }
+    this.#widget.hide();
   }
 }
