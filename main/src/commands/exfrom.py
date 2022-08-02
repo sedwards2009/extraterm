@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# Copyright 2014-2018 Simon Edwards <simon@simonzone.com>
+# Copyright 2014-2022 Simon Edwards <simon@simonzone.com>
 #
 # This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
 # 
@@ -14,10 +14,8 @@ import os
 import sys
 import tempfile
 import termios
-import time
-import tty
 import uuid
-from signal import signal, SIGPIPE, SIG_DFL, SIGTSTP, SIG_IGN, SIGTTOU
+from signal import signal, SIGPIPE, SIG_DFL
 
 
 ##@inline
@@ -101,7 +99,7 @@ def requestFrame(frame_name):
     hashHex = hash.hexdigest()
 
     # Check the hash.
-    if lineHash.lower() != hash.hexdigest()[:HASH_LENGTH].lower():
+    if lineHash.lower() != hashHex[:HASH_LENGTH].lower():
         yield FrameReadError("Error: Hash didn't match for metadata line. '"+lineHash+"'")
         return
 
@@ -199,9 +197,9 @@ def writeFrame(frame_name, frameWriter):
             frameWriter.write(block.data)
         else:
             # FrameReadError
-            frameWriter.errorWrite.write(bytes(block.message, 'utf8'))
-            frameWriter.errorWrite.write(bytes("\n", "utf8"))
-            frameWriter.errorFlush.flush()
+            frameWriter.errorWrite(bytes(block.message, 'utf8'))
+            frameWriter.errorWrite(bytes("\n", "utf8"))
+            frameWriter.errorFlush()
             rc = 1
     frameWriter.flush()
     return rc, metadata

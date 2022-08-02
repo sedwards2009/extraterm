@@ -1585,7 +1585,7 @@ export class Terminal implements Tab, Disposable {
         // Abort the upload.
         uploader.abort();
         inputFilterRegistration.dispose();
-        return input.substr(ctrlCIndex + 1);
+        return input.substring(ctrlCIndex + 1);
       } else {
         return "";
       }
