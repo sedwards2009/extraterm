@@ -141,7 +141,6 @@ class Main {
     // TODO: MainDesktop()
     this.setupDesktopSupport();
     // TODO: setupGlobalKeybindingsManager()
-    // TODO: registerInternalCommands()
 
     this.setupLocalHttpServer(this.#bulkFileStorage);
 
@@ -303,7 +302,7 @@ class Main {
     const localHttpServer = new LocalHttpServer(ipcFilePath);
     await localHttpServer.start();
 
-    // bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
+    bulkFileStorage.setLocalUrlBase(localHttpServer.getLocalUrlBase());
     const bulkFileRequestHandler = new BulkFileRequestHandler(bulkFileStorage);
     localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
     const pingHandler = new PingHandler();

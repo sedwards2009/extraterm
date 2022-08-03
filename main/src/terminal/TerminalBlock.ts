@@ -919,7 +919,7 @@ export class TerminalBlock implements Block {
   }
 
   getBulkFile(): BulkFile {
-    return new BlobBulkFile("text/plain;charset=utf8", {}, Buffer.from(this.#getText(), 'utf8'));
+    return new BlobBulkFile("text/plain;charset=utf8", {}, Buffer.from(this.#getText(), "utf8"));
   }
 
   #getText(): string {

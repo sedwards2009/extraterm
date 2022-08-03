@@ -14,7 +14,6 @@ const ONE_KILOBYTE = 1024;
 
 export class BlobBulkFile implements BulkFile {
   #peekBuffer: Buffer = null;
-  #url: string = null;
   #mimeType: string = null;
   #metadata: BulkFileMetadata = null;
   #blobBuffer: Buffer = null;
@@ -29,6 +28,10 @@ export class BlobBulkFile implements BulkFile {
   }
 
   getFilePath(): string {
+    return null;
+  }
+
+  getUrl(): string {
     return null;
   }
 

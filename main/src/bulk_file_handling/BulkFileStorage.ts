@@ -26,6 +26,7 @@ export type CloseEvent = {identifier: BulkFileIdentifier, success: boolean};
 export class BulkFileStorage {
   private _log: Logger;
 
+  #urlBase: string = null;
   #storageMap = new Map<BulkFileIdentifier, BulkFile>();
   #storageDirectory: string;
   #tempDirectory: string = null;
@@ -72,6 +73,10 @@ export class BulkFileStorage {
     }
   }
 
+  setLocalUrlBase(urlBase: string): void {
+    this.#urlBase = urlBase;
+  }
+
   dispose(): void {
     for (const identifier of this.#storageMap.keys()) {
       this.#deleteBulkFile(identifier);
@@ -94,9 +99,10 @@ export class BulkFileStorage {
 
     try {
       const fullPath = path.join(this.#storageDirectory, onDiskFileIdentifier);
-      const bulkFile = new StoredBulkFile(metadata, fullPath);
-      bulkFile.ref();
       const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
+      const url = `${this.#urlBase}/bulk/${internalFileIdentifier}`;
+      const bulkFile = new StoredBulkFile(metadata, fullPath, url);
+      bulkFile.ref();
 
       this.#storageMap.set(internalFileIdentifier, bulkFile);
 

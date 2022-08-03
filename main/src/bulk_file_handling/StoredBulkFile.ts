@@ -23,6 +23,7 @@ export class StoredBulkFile implements BulkFile {
 
   #metadata: BulkFileMetadata = null;
   #filePath: string = null;
+  #url: string = null;
   #totalSize = -1;
   #referenceCount = 0;
   #writeStreamOpen = true;
@@ -43,8 +44,9 @@ export class StoredBulkFile implements BulkFile {
 
   #emitAvailableSizeChangedLater: DebouncedDoLater = null;
 
-  constructor(metadata: BulkFileMetadata, filePath: string) {
+  constructor(metadata: BulkFileMetadata, filePath: string, url: string) {
     this._log = getLogger("StoredBulkFile", this);
+    this.#url = url;
 
     this.onAvailableSizeChanged = this.#onAvailableSizeChangedEventEmitter.event;
     this.#emitAvailableSizeChangedLater = new DebouncedDoLater(() => {
@@ -84,6 +86,10 @@ export class StoredBulkFile implements BulkFile {
 
   getFilePath(): string {
     return this.#filePath;
+  }
+
+  getUrl(): string {
+    return this.#url;
   }
 
   #handleByteCountChanged(byteCount: number): void {

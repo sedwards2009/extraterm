@@ -134,7 +134,9 @@ class BulkFileWrapper implements ExtensionApi.BulkFileHandle {
     return this.#bulkFile.getState();
   }
 
-  url: string;
+  get url(): string {
+    return this.#bulkFile.getUrl();
+  }
 
   get availableSize(): number {
     return this.#bulkFile.getByteCount();

@@ -20,5 +20,6 @@ export interface BulkFile {
   deref(): number;
   getMetadata(): BulkFileMetadata;
   getPeekBuffer(): Buffer;
+  getUrl(): string;
   createReadableStream(): NodeJS.ReadableStream & Disposable;
 }
