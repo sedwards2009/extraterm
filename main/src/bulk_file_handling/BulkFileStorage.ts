@@ -8,6 +8,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { BulkFileMetadata } from '@extraterm/extraterm-extension-api';
+import { DebouncedDoLater } from "extraterm-later";
 import { getLogger, Logger } from "extraterm-logging";
 
 import { BulkFile } from "./BulkFile.js";
@@ -30,11 +31,15 @@ export class BulkFileStorage {
   #storageMap = new Map<BulkFileIdentifier, BulkFile>();
   #storageDirectory: string;
   #tempDirectory: string = null;
+  #cleanupFilesLater: DebouncedDoLater = null;
 
   constructor(tempDirectory: string) {
     this._log = getLogger("BulkFileStorage", this);
     this.#tempDirectory = tempDirectory;
     this.#storageDirectory = this.#createStorageDirectory(this.#tempDirectory);
+    this.#cleanupFilesLater = new DebouncedDoLater(() => {
+      this.#cleanupFiles();
+    });
   }
 
   /**
@@ -102,7 +107,7 @@ export class BulkFileStorage {
       const internalFileIdentifier = crypto.randomBytes(16).toString('hex');
       const url = `${this.#urlBase}/bulk/${internalFileIdentifier}`;
       const bulkFile = new StoredBulkFile(metadata, fullPath, url);
-      bulkFile.ref();
+      bulkFile.onReferenceCountChanged(this.#handleReferenceCountChanged.bind(this));
 
       this.#storageMap.set(internalFileIdentifier, bulkFile);
 
@@ -113,21 +118,18 @@ export class BulkFileStorage {
     }
   }
 
-  ref(identifier: BulkFileIdentifier): void {
-    if ( ! this.#storageMap.has(identifier)) {
-      this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
-      return;
+  #cleanupFiles(): void {
+    const allKeys = Array.from(this.#storageMap.keys());
+    for (const identifier of allKeys) {
+      const bulkFile = this.#storageMap.get(identifier);
+      if (bulkFile.getRefCount() === 0) {
+        this.#deleteBulkFile(identifier);
+      }
     }
-    this.#storageMap.get(identifier).ref();
   }
 
-  deref(identifier: BulkFileIdentifier): void {
-    if ( ! this.#storageMap.has(identifier)) {
-      this._log.warn("Invalid BulkFileIdentifier received: ", identifier);
-      return;
-    }
-    this.#storageMap.get(identifier).deref();
-    this.#deleteBulkFile(identifier);
+  #handleReferenceCountChanged(bulkFile: StoredBulkFile): void {
+    this.#cleanupFilesLater.trigger();
   }
 
   #deleteBulkFile(identifier: BulkFileIdentifier): void {

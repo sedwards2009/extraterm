@@ -18,6 +18,7 @@ export interface BulkFile {
   getState(): BulkFileState;
   ref(): number;
   deref(): number;
+  getRefCount(): number;
   getMetadata(): BulkFileMetadata;
   getPeekBuffer(): Buffer;
   getUrl(): string;

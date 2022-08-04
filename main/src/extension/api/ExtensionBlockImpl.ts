@@ -46,6 +46,9 @@ export class ExtensionBlockImpl implements Block {
     this.#internalExtensionContext = internalExtensionContext;
     this.onMetadataChanged = this.#metadataChangedEventEmitter.event;
     this.#bulkFile = bulkFile;
+    if (this.#bulkFile != null) {
+      bulkFile.ref();
+    }
     this.#bulkFileWrapper = new BulkFileWrapper(bulkFile);
     this.#extensionBlockBlock = new ExtensionBlockBlock(this, this.#bulkFileWrapper);
 
@@ -59,6 +62,13 @@ export class ExtensionBlockImpl implements Block {
         children: []
       })
     });
+  }
+
+  dispose(): void {
+    if (this.#bulkFile != null) {
+      this.#bulkFile.deref();
+      this.#bulkFile = null;
+    }
   }
 
   setParent(parent: any): void {

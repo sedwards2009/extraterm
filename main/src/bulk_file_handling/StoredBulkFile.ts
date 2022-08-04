@@ -44,6 +44,9 @@ export class StoredBulkFile implements BulkFile {
 
   #emitAvailableSizeChangedLater: DebouncedDoLater = null;
 
+  #onReferenceCountChangedEventEmitter = new EventEmitter<StoredBulkFile>();
+  onReferenceCountChanged: Event<StoredBulkFile> = null;
+
   constructor(metadata: BulkFileMetadata, filePath: string, url: string) {
     this._log = getLogger("StoredBulkFile", this);
     this.#url = url;
@@ -53,6 +56,7 @@ export class StoredBulkFile implements BulkFile {
       this.#emitAvailableSizeChangedEvent();
     }, 250);
     this.onStateChanged = this.#onStateChangedEventEmitter.event;
+    this.onReferenceCountChanged = this.#onReferenceCountChangedEventEmitter.event;
 
     this.#metadata = metadata;
     this.#filePath = filePath;
@@ -129,11 +133,17 @@ export class StoredBulkFile implements BulkFile {
 
   ref(): number {
     this.#referenceCount++;
+    this.#onReferenceCountChangedEventEmitter.fire(this);
     return this.#referenceCount;
   }
 
   deref(): number {
     this.#referenceCount--;
+    this.#onReferenceCountChangedEventEmitter.fire(this);
+    return this.#referenceCount;
+  }
+  
+  getRefCount(): number {
     return this.#referenceCount;
   }
 

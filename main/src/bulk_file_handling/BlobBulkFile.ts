@@ -74,4 +74,8 @@ export class BlobBulkFile implements BulkFile {
   deref(): number {
     return 0;
   }
+
+  getRefCount(): number {
+    return 0;
+  }
 }

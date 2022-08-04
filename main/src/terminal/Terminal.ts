@@ -795,7 +795,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleBlockCloseClicked(frame: BlockFrame): void {
-    this.removeFrame(frame);
+    this.destoryFrame(frame);
   }
 
   #handleBlockPopOutClicked(frame: DecoratedFrame): void {
@@ -994,8 +994,9 @@ export class Terminal implements Tab, Disposable {
     this.#blockFrames.splice(index, 1);
   }
 
-  removeFrame(frame: BlockFrame): void {
+  destoryFrame(frame: BlockFrame): void {
     this.#removeFrameFromScrollArea(frame);
+    frame.getBlock().dispose();
     this.#contentWidget.update();
     this.#contentWidget.setFocus();
   }
@@ -1013,7 +1014,7 @@ export class Terminal implements Tab, Disposable {
     for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
       const bf = this.#blockFrames[i].frame;
       if (bf instanceof DecoratedFrame) {
-        this.removeFrame(bf);
+        this.destoryFrame(bf);
         return;
       }
     }
@@ -1490,6 +1491,7 @@ export class Terminal implements Tab, Disposable {
       while (chopCount > 0) {
         const targetFrame = this.#blockFrames[0].frame;
         this.#removeFrameFromScrollArea(targetFrame);
+        targetFrame.getBlock().dispose();
         chopCount--;
       }
     }

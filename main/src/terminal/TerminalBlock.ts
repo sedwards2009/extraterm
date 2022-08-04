@@ -15,7 +15,7 @@ import { STYLE_MASK_CURSOR, STYLE_MASK_HYPERLINK_HIGHLIGHT, STYLE_MASK_INVERSE }
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
-import { BulkFileHandle, BlockMetadata, BlockPosture } from "@extraterm/extraterm-extension-api";
+import { BlockMetadata, BlockPosture } from "@extraterm/extraterm-extension-api";
 import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 
 import { Block } from "./Block.js";
@@ -103,6 +103,9 @@ export class TerminalBlock implements Block {
     this.onMetadataChanged = this.#metadataChangedEventEmitter.event;
 
     this.#widget = this.#createWidget();
+  }
+  
+  dispose(): void {
   }
 
   #createWidget(): QWidget {
