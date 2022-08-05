@@ -18,9 +18,10 @@ const BULK_FILE_MAXIMUM_BUFFER_SIZE = 512 * 1024;
 const CIPHER_ALGORITHM = "AES-256-CBC";
 
 
-export class StoredBulkFile implements BulkFile {
+export class StoredBulkFile implements BulkFile, Disposable {
   private _log: Logger;
 
+  #isAlive = true;
   #metadata: BulkFileMetadata = null;
   #filePath: string = null;
   #url: string = null;
@@ -84,15 +85,28 @@ export class StoredBulkFile implements BulkFile {
     });
   }
 
+  dispose(): void {
+    this.#isAlive = false;
+  }
+
+  #checkIsAlive(): void {
+    if ( ! this.#isAlive) {
+      throw new Error("StoredBulkFile is no longer alive and cannot be used.");
+    }
+  }
+
   getTotalSize(): number {
+    this.#checkIsAlive();
     return this.#totalSize;
   }
 
   getFilePath(): string {
+    this.#checkIsAlive();
     return this.#filePath;
   }
 
   getUrl(): string {
+    this.#checkIsAlive();
     return this.#url;
   }
 
@@ -105,18 +119,22 @@ export class StoredBulkFile implements BulkFile {
   }
 
   getByteCount(): number {
+    this.#checkIsAlive();
     return this.#wrFile.getByteCount();
   }
 
   getDesiredWriteSize(): number {
+    this.#checkIsAlive();
     return BULK_FILE_MAXIMUM_BUFFER_SIZE;
   }
 
   getWritableStream(): NodeJS.WritableStream {
+    this.#checkIsAlive();
     return this.#writeStream;
   }
 
   getState(): BulkFileState {
+    this.#checkIsAlive();
     if (this.#writeStreamOpen) {
       return BulkFileState.DOWNLOADING;
     }
@@ -124,6 +142,7 @@ export class StoredBulkFile implements BulkFile {
   }
 
   setSuccess(success: boolean): void {
+    this.#checkIsAlive();
     this.#succeess = success;
     if (this.#writeStreamOpen) {
       return;
@@ -132,30 +151,36 @@ export class StoredBulkFile implements BulkFile {
   }
 
   ref(): number {
+    this.#checkIsAlive();
     this.#referenceCount++;
     this.#onReferenceCountChangedEventEmitter.fire(this);
     return this.#referenceCount;
   }
 
   deref(): number {
+    this.#checkIsAlive();
     this.#referenceCount--;
     this.#onReferenceCountChangedEventEmitter.fire(this);
     return this.#referenceCount;
   }
   
   getRefCount(): number {
+    this.#checkIsAlive();
     return this.#referenceCount;
   }
 
   getMetadata(): BulkFileMetadata {
+    this.#checkIsAlive();
     return this.#metadata;
   }
 
   getPeekBuffer(): Buffer {
+    this.#checkIsAlive();
     return this.#wrFile.getPeekBuffer();
   }
 
   createReadableStream(): NodeJS.ReadableStream & Disposable {
+    this.#checkIsAlive();
     const aesDecipher = crypto.createDecipheriv(CIPHER_ALGORITHM, this.#cryptoKey, this.#cryptoIV);
 
     try {

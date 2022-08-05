@@ -28,7 +28,7 @@ export class BulkFileStorage {
   private _log: Logger;
 
   #urlBase: string = null;
-  #storageMap = new Map<BulkFileIdentifier, BulkFile>();
+  #storageMap = new Map<BulkFileIdentifier, StoredBulkFile>();
   #storageDirectory: string;
   #tempDirectory: string = null;
   #cleanupFilesLater: DebouncedDoLater = null;
@@ -124,6 +124,7 @@ export class BulkFileStorage {
       const bulkFile = this.#storageMap.get(identifier);
       if (bulkFile.getRefCount() === 0) {
         this.#deleteBulkFile(identifier);
+        bulkFile.dispose();
       }
     }
   }
