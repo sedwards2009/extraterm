@@ -32,6 +32,7 @@ import { BlockFrame } from "../terminal/BlockFrame.js";
 import { TerminalBlock } from "../terminal/TerminalBlock.js";
 import { Block } from "../terminal/Block.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
+import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
 
 
 interface ActiveExtension {
@@ -194,7 +195,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     this._log.info(`Starting extension '${metadata.name}'`);
 
-    const internalExtensionContext = new InternalExtensionContextImpl(this, metadata, this.#configDatabase, /* this.#commonExtensionWindowState, */
+    const internalExtensionContext = new InternalExtensionContextImpl(this, metadata, this.#configDatabase,
       this.#applicationVersion);
 
     if (metadata.exports != null) {
@@ -237,8 +238,24 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       }
     }
 
+    this.#purgeExtensionBlocks(activeExtension);
     activeExtension.internalExtensionContext.dispose();
+
     this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
+  }
+
+  #purgeExtensionBlocks(activeExtension: ActiveExtension): void {
+    for (const window of this.#allWindows) {
+      for (const terminal of window.getTerminals()) {
+        for (const blockFrame of terminal.getBlockFrames()) {
+          const block = blockFrame.getBlock();
+          if (block instanceof ExtensionBlockImpl &&
+              block.getInternalExtensionContext() === activeExtension.internalExtensionContext) {
+            terminal.destroyFrame(blockFrame);
+          }
+        }
+      }
+    }
   }
 
   getAllExtensions(): ExtensionMetadata[] {

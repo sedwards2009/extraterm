@@ -71,6 +71,10 @@ export class ExtensionBlockImpl implements Block {
     }
   }
 
+  getInternalExtensionContext(): InternalExtensionContext {
+    return this.#internalExtensionContext;
+  }
+
   setParent(parent: any): void {
     this.#parent = parent;
   }

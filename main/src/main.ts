@@ -659,7 +659,7 @@ class Main {
   }
 
   #handlePopOutClicked(window: Window, terminal: Terminal, frame: DecoratedFrame): void {
-    terminal.destoryFrame(frame);
+    terminal.destroyFrame(frame);
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),

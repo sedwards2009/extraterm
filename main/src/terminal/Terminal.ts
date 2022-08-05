@@ -799,7 +799,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleBlockCloseClicked(frame: BlockFrame): void {
-    this.destoryFrame(frame);
+    this.destroyFrame(frame);
   }
 
   #handleBlockPopOutClicked(frame: DecoratedFrame): void {
@@ -998,7 +998,7 @@ export class Terminal implements Tab, Disposable {
     this.#blockFrames.splice(index, 1);
   }
 
-  destoryFrame(frame: BlockFrame): void {
+  destroyFrame(frame: BlockFrame): void {
     this.#removeFrameFromScrollArea(frame);
     frame.getBlock().dispose();
     this.#contentWidget.update();
@@ -1018,7 +1018,7 @@ export class Terminal implements Tab, Disposable {
     for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
       const bf = this.#blockFrames[i].frame;
       if (bf instanceof DecoratedFrame) {
-        this.destoryFrame(bf);
+        this.destroyFrame(bf);
         return;
       }
     }
