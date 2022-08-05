@@ -4,10 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QWidget } from "@nodegui/nodegui";
-import { Event } from "@extraterm/extraterm-extension-api";
+import { Disposable, Event } from "@extraterm/extraterm-extension-api";
 
 
-export interface Tab {
+export interface Tab extends Disposable {
   getIconName(): string;
   getTitle(): string;
   getContents(): QWidget;

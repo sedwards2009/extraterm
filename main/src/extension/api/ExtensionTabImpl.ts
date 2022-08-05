@@ -50,6 +50,9 @@ export class ExtensionTabBridge implements Tab {
     });
   }
 
+  dispose(): void {
+  }
+
   setParent(parent: any): void {
     this.#parent = parent;
   }

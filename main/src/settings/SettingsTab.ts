@@ -71,6 +71,9 @@ export class SettingsTab implements Tab {
     this.#createUI(uiStyle);
   }
 
+  dispose(): void {   
+  }
+
   setParent(parent: any): void {
     this.#parent = parent;
   }

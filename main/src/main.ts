@@ -564,11 +564,8 @@ class Main {
   }
 
   #closeTab(win: Window, tab: Tab): void {
-    if (tab instanceof Terminal) {
-      this.#disposeTerminalTab(tab);
-    } else {
-      win.removeTab(tab);
-    }
+    win.removeTab(tab);
+    tab.dispose();
   }
 
   commandOpenSettings(): void {
@@ -610,7 +607,7 @@ class Main {
 
   commandCloseWindow(): void {
     const win = this.#extensionManager.getActiveWindow();
-    win.close();
+    win.dispose();
   }
 
   async commandMoveTabToNewWindow(): Promise<void> {

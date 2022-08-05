@@ -13,6 +13,7 @@ import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPop
   FocusPolicy, QKeyEvent, WidgetAttribute, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
   ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat, QMouseEvent,
   MouseButton, Visibility, QIcon, QSize } from "@nodegui/nodegui";
+import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import he from "he";
@@ -25,7 +26,6 @@ import { Tab } from "./Tab.js";
 import { Terminal } from "./terminal/Terminal.js";
 import { TerminalVisualConfig } from "./terminal/TerminalVisualConfig.js";
 import { ThemeManager } from "./theme/ThemeManager.js";
-import { TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { CommandQueryOptions, ExtensionManager } from "./InternalTypes.js";
 import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities.js";
@@ -56,7 +56,7 @@ interface TabPlumbing {
   titleWidget: QWidget;
 }
 
-export class Window {
+export class Window implements Disposable {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
@@ -314,7 +314,7 @@ export class Window {
                 vertical: QSizePolicyPolicy.Fixed,
               },
               onClicked: () => {
-                this.close();
+                this.dispose();
               }
             }),
             stretch: 0
@@ -677,10 +677,11 @@ export class Window {
     });
   }
 
-  close(): void {
+  dispose(): void {
     // Terminate any running terminal tabs.
     for (const tab of this.#tabs) {
       this.removeTab(tab.tab);
+      tab.tab.dispose();
     }
 
     this.#windowWidget.close();

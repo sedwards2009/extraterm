@@ -753,6 +753,10 @@ export class Terminal implements Tab, Disposable {
   }
 
   dispose(): void {
+    for (const blockPlumbing of this.#blockFrames) {
+      blockPlumbing.frame.getBlock().dispose();
+    }
+
     this.#onDisposeEventEmitter.fire();
     this.#onDisposeEventEmitter.dispose();
 
