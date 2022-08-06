@@ -28,9 +28,6 @@ export function activate(_context: ExtensionContext): any {
 }
 
 function newDownloadBlock(extensionBlock: ExtensionBlock): void {
-  const label = new QLabel();
-  label.setText("DownloadBlock extension");
-
   const downloadUI = new DownloadUI(extensionBlock);
   extensionBlock.contentWidget = downloadUI.getWidget();
 }

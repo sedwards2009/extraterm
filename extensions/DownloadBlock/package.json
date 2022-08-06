@@ -5,6 +5,7 @@
   "description": "Block to show a download",
   "type": "module",
   "exports": "./dist/DownloadBlockExtension.js",
+  "isInternal": true,
   "scripts": {
     "build": "tsc",
     "clean": "shx rm -rf dist"
