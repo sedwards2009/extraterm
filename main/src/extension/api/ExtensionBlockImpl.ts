@@ -53,11 +53,13 @@ export class ExtensionBlockImpl implements Block {
     this.#extensionBlockBlock = new ExtensionBlockBlock(this, this.#bulkFileWrapper);
 
     this.#widget = Widget({
+      contentsMargins: 0,
       sizePolicy: {
         vertical: QSizePolicyPolicy.Minimum,
         horizontal: QSizePolicyPolicy.Maximum,
       },
       layout: this.#layout = BoxLayout({
+        contentsMargins: 0,
         direction: Direction.TopToBottom,
         children: []
       })
