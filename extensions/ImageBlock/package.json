@@ -1,0 +1,32 @@
+{
+  "name": "image-block",
+  "displayName": "Image Block",
+  "version": "1.0.0",
+  "description": "Block to show an image",
+  "type": "module",
+  "exports": "./dist/ImageBlockExtension.js",
+  "scripts": {
+    "build": "tsc",
+    "clean": "shx rm -rf dist"
+  },
+  "author": "Simon Edwards <simon@simonzone.com>",
+  "license": "MIT",
+  "contributes": {
+    "blocks": [
+      {
+        "name": "image-block",
+        "mimeTypes": [
+          "image/png"
+        ]
+      }
+    ]
+  },
+  "dependencies": {
+    "qt-construct": "0.1.0"
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.15.0",
+    "@types/node": "^16.4.0",
+    "typescript": "4.6.3"
+  }
+}

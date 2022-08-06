@@ -51,6 +51,7 @@
       "extensions/DirectoryCommands",
       "extensions/DownloadBlock",
       "extensions/CommunityTerminalThemes",
+      "extensions/ImageBlock",
       "extensions/InsertEmoji",
       "extensions/InternalCommands",
       "extensions/ITermColorsTerminalThemeProvider",
