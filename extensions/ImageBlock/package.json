@@ -19,7 +19,33 @@
           "image/png"
         ]
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "image-block:zoomIn",
+        "title": "Zoom In",
+        "category": "terminal",
+        "when": "blockFocus"
+      },
+      {
+        "command": "image-block:zoomOut",
+        "title": "Zoom Out",
+        "category": "terminal",
+        "when": "blockFocus"
+      }
+    ],
+    "menus": {
+      "contextMenu": [
+        {
+          "command": "image-block:zoomIn",
+          "show": true
+        },
+        {
+          "command": "image-block:zoomOut",
+          "show": true
+        }
+      ]
+    }
   },
   "dependencies": {
     "qt-construct": "0.1.0"

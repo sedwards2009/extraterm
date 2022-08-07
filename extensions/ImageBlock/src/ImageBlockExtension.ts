@@ -24,11 +24,14 @@ export function activate(_context: ExtensionContext): any {
   log = context.logger;
 
   context.terminals.registerBlock("image-block", newImageBlock);
+  context.commands.registerCommand("image-block:zoomIn", commandZoomIn);
+  context.commands.registerCommand("image-block:zoomOut", commandZoomOut);
 }
 
 function newImageBlock(extensionBlock: ExtensionBlock): void {
   const imageUI = new ImageUI(extensionBlock);
   extensionBlock.contentWidget = imageUI.getWidget();
+  extensionBlock.details = imageUI;
 }
 
 class ImageUI {
@@ -37,6 +40,22 @@ class ImageUI {
   #filename = "";
   #topWidget: QWidget = null;
   #image: QImage = null;
+  #zoomPercent = 100;
+
+  static ZoomPercentsArray = [
+    10,
+    25,
+    50,
+    75,
+    100,
+    125,
+    150,
+    200,
+    250,
+    300,
+    500,
+    1000
+  ];
 
   constructor(extensionBlock: ExtensionBlock) {
     this.#extensionBlock = extensionBlock;
@@ -70,9 +89,9 @@ class ImageUI {
         changes.icon = "fa-download";
         break;
       case BulkFileState.COMPLETED:
-        changes.title = `${this.#filename}`;
+        changes.title = `${this.#filename} (Zoom: ${this.#zoomPercent}%)`;
         changes.posture = BlockPosture.SUCCESS;
-        changes.icon = "fa-check";
+        changes.icon = "fa-file-image";
         break;
       case BulkFileState.FAILED:
         changes.title = `Failed to download ${this.#filename}`;
@@ -91,6 +110,12 @@ class ImageUI {
     }
 
     const painter = new QPainter(this.#topWidget);
+    const zoomRatio = this.#zoomPercent / 100;
+    painter.setTransform([
+      zoomRatio, 0, // a, b 
+      0, zoomRatio, // c, d 
+      0, 0          // tx, ty
+    ]);
     painter.drawImage(0, 0, this.#image);
     painter.end();
   }
@@ -106,6 +131,16 @@ class ImageUI {
     }
   }
 
+  zoomIn(): void {
+    const i = Math.min(ImageUI.ZoomPercentsArray.length - 1, ImageUI.ZoomPercentsArray.indexOf(this.#zoomPercent) + 1);
+    this.#setZoomPercent(ImageUI.ZoomPercentsArray[i]);
+  }
+
+  zoomOut(): void {
+    const i = Math.max(0, ImageUI.ZoomPercentsArray.indexOf(this.#zoomPercent) - 1);
+    this.#setZoomPercent(ImageUI.ZoomPercentsArray[i]);
+  }
+
   async #downloadImage(): Promise<void> {
     const imageBuffer = await downloadURL(this.#extensionBlock.bulkFile. url); 
     this.#image = new QImage();
@@ -114,13 +149,21 @@ class ImageUI {
       log.warn(`Unable to load image into QImage.`);
       return;
     }
-    const width = this.#image.width();
-    const height = this.#image.height();
+    this.#setZoomPercent(100);
+    this.#topWidget.update();
+  }
+
+  #setZoomPercent(zoomPercent: number): void {
+    const width = Math.round(zoomPercent * this.#image.width() / 100);
+    const height = Math.round(zoomPercent * this.#image.height() / 100);
     this.#topWidget.setMinimumSize(width, height);
     this.#topWidget.setMaximumSize(width, height);
     this.#topWidget.update();
+    this.#zoomPercent = zoomPercent;  
+    this.#updateMetadata();
   }
 }
+
 
 function downloadURL(url: string): Promise<Buffer> {
   return new Promise((resolve) => {
@@ -134,4 +177,20 @@ function downloadURL(url: string): Promise<Buffer> {
       });
     })
   })
+}
+
+function commandZoomIn(): void {
+  const block = context.activeBlock;
+  if (block.type !== "image-block:image-block") {
+    return;
+  }
+  block.details.zoomIn();
+}
+
+function commandZoomOut(): void {
+  const block = context.activeBlock;
+  if (block.type !== "image-block:image-block") {
+    return;
+  }
+  block.details.zoomOut();
 }
