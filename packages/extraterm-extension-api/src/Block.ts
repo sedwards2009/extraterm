@@ -94,17 +94,53 @@ export interface TerminalOutputDetails {
 }
 
 /**
- *
- *
+ * Interface to a Block instance for performing customization.
+ * 
+ * When a custom block is created, its extension is provided with an instance
+ * of this interface. Extensions can then use this object to set the contents
+ * of the block to display, access any bulk file associated with the block,
+ * etc and to generally customize the block to implement their own custom
+ * block types.
  */
 export interface ExtensionBlock {
+  /**
+   * The `QWidget` contents of the block.
+   * 
+   * Extensions should create their own `QWidget` instance and assign it to this field.
+   */
   contentWidget: QWidget;
+
+  /**
+   * The bulk file associated with this block.
+   * 
+   * This may be null if the block was not created in response to a file download.
+   */
   bulkFile: BulkFileHandle;
 
+  /**
+   * Metadata describing the block.
+   * 
+   * This metadata is shown in the frame surrounding the block.
+   */
   readonly metadata: BlockMetadata;
-  updateMetadata(change: BlockMetadataChange): void;
 
+  /**
+   * Method of modify some or all of the metadata fields.
+   */
+  updateMetadata(change: BlockMetadataChange): void;
+  
+  /**
+   * The terminal which contains this block.
+   */
   readonly terminal: Terminal;
-  //details: any;
-  // TODO: A way of exposing methods to on a block to other extensions/commands.
+
+  /**
+   * An object holding custom details specific to this block.
+   * 
+   * Extensions can create an object and assign it to this field. This object
+   * will then be available to other extensions via the `details` field on the
+   * `Block` interface. The object can contain any valid JavaScript value
+   * including functions.
+   */
+  details: any;
 }

@@ -52,7 +52,8 @@ export class BlockRegistry {
   createExtensionBlock(terminal: Terminal, name: string, bulkFile: BulkFile): Block {
     for (const lbc of this.#blockTypes) {
       if (lbc.blockMetadata.name === name) {
-        const blockImpl = new ExtensionBlockImpl(this.#internalExtensionContext, bulkFile);
+        const blockTypeName = `${this.#extensionMetadata.name}:${name}`;
+        const blockImpl = new ExtensionBlockImpl(this.#internalExtensionContext, blockTypeName, bulkFile);
         blockImpl.setParent(terminal);
         lbc.blockFactory(blockImpl.getExtensionBlock());
         return blockImpl;

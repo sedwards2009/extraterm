@@ -22,7 +22,9 @@ export class ExtensionBlockImpl implements Block {
 
   #parent: any = null;
   #internalExtensionContext: InternalExtensionContext;
+  #blockTypeName: string = null;
   #extensionBlockBlock: ExtensionBlockBlock = null;
+  #details: any = null;
   #bulkFile: BulkFile = null;
   #widget: QWidget = null;
   #layout: QLayout = null;
@@ -40,10 +42,11 @@ export class ExtensionBlockImpl implements Block {
 
   #bulkFileWrapper: BulkFileWrapper = null;
 
-  constructor(internalExtensionContext: InternalExtensionContext, bulkFile: BulkFile) {
+  constructor(internalExtensionContext: InternalExtensionContext, blockTypeName: string, bulkFile: BulkFile) {
     this._log = getLogger("ExtensionBlockImpl", this);
 
     this.#internalExtensionContext = internalExtensionContext;
+    this.#blockTypeName = blockTypeName;
     this.onMetadataChanged = this.#metadataChangedEventEmitter.event;
     this.#bulkFile = bulkFile;
     if (this.#bulkFile != null) {
@@ -71,6 +74,10 @@ export class ExtensionBlockImpl implements Block {
       this.#bulkFile.deref();
       this.#bulkFile = null;
     }
+  }
+
+  getBlockTypeName(): string {
+    return this.#blockTypeName;
   }
 
   getInternalExtensionContext(): InternalExtensionContext {
@@ -117,6 +124,14 @@ export class ExtensionBlockImpl implements Block {
 
   getTerminal(): ExtensionApi.Terminal {
     return this.#internalExtensionContext.wrapTerminal(this.#parent);
+  }
+
+  getDetails(): any {
+    return this.#details;
+  }
+
+  setDetails(details: any): void {
+    this.#details = details;
   }
 }
 
@@ -182,6 +197,7 @@ class BulkFileWrapper implements ExtensionApi.BulkFileHandle {
 class ExtensionBlockBlock implements ExtensionApi.ExtensionBlock {
 
   #bulkFileHandle: ExtensionApi.BulkFileHandle = null;
+  #details: any = null;
   #extensionBlockImpl: ExtensionBlockImpl = null;
 
   constructor(extensionBlockImpl: ExtensionBlockImpl, bulkFileHandle: ExtensionApi.BulkFileHandle) {
@@ -207,5 +223,13 @@ class ExtensionBlockBlock implements ExtensionApi.ExtensionBlock {
 
   updateMetadata(change: ExtensionApi.BlockMetadataChange): void {
     this.#extensionBlockImpl.updateMetadata(change);
+  }
+
+  set details(details: any) {
+    this.#extensionBlockImpl.setDetails(details);
+  }
+
+  get details(): any {
+    return this.#extensionBlockImpl.getDetails();
   }
 }
