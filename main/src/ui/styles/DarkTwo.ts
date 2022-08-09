@@ -760,6 +760,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     ${IncludeDefaultBackground()}
     width: ${emToPx(0.5)}px;
   }
+
+  QScrollBar:horizontal {
+    ${IncludeDefaultBackground()}
+    height: ${emToPx(0.5)}px;
+  }
+
   QScrollBar::handle {
     border-radius: ${emToPx(0.2)}px;
     background-color: #4b5362;
