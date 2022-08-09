@@ -8,6 +8,7 @@ import {
   Logger,
   Screen,
   TerminalOutputDetails,
+  TerminalOutputType,
 } from '@extraterm/extraterm-extension-api';
 
 
@@ -24,6 +25,9 @@ export function activate(_context: ExtensionContext): any {
 
 async function copyBlockCommand(): Promise<void> {
   const block = context.activeBlock;
+  if (block.type !== TerminalOutputType) {
+    return;
+  }
   const details = <TerminalOutputDetails> block.details;
 
   let text = screenToString(details.scrollback);
@@ -51,6 +55,9 @@ function screenToString(screen: Screen): string {
 
 async function copyCommandLineCommand(): Promise<void> {
   const block = context.activeBlock;
+  if (block.type !== TerminalOutputType) {
+    return;
+  }
   const details = <TerminalOutputDetails> block.details;
   context.application.clipboard.writeText(details.commandLine);
 }

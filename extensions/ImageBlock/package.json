@@ -25,13 +25,15 @@
         "command": "image-block:zoomIn",
         "title": "Zoom In",
         "category": "terminal",
-        "when": "blockFocus"
+        "icon": "fa-search-plus",
+        "when": "blockFocus && blockType == 'image-block:image-block'"
       },
       {
         "command": "image-block:zoomOut",
         "title": "Zoom Out",
         "category": "terminal",
-        "when": "blockFocus"
+        "icon": "fa-search-minus",
+        "when": "blockFocus && blockType == 'image-block:image-block'"
       }
     ],
     "menus": {

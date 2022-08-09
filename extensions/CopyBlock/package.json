@@ -17,13 +17,13 @@
         "command": "copy-block:copyBlockToClipboard",
         "title": "Copy Output",
         "category": "terminal",
-        "when": "blockFocus"
+        "when": "blockFocus && blockType == 'extraterm:terminal-output'"
       },
       {
         "command": "copy-block:copyCommandLineToClipboard",
         "title": "Copy Command",
         "category": "terminal",
-        "when": "blockFocus"
+        "when": "blockFocus && blockType == 'extraterm:terminal-output'"
       }
     ],
     "menus": {
