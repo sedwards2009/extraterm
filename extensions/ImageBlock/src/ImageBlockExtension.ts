@@ -12,8 +12,8 @@ import {
   BlockPosture
 } from "@extraterm/extraterm-extension-api";
 import * as http from "node:http";
-import { QImage, QPainter, QPaintEvent, QWidget } from "@nodegui/nodegui";
-import { Widget } from "qt-construct";
+import { QImage, QPainter, QPaintEvent, QScrollArea, QWidget, RenderHint, ScrollBarPolicy, WidgetEventTypes } from "@nodegui/nodegui";
+import { ScrollArea, Widget } from "qt-construct";
 
 let log: Logger = null;
 let context: ExtensionContext = null;
@@ -38,7 +38,9 @@ class ImageUI {
 
   #extensionBlock: ExtensionBlock = null;
   #filename = "";
-  #topWidget: QWidget = null;
+  #topWidget: QScrollArea = null;
+  #imageWidget: QWidget = null;
+  #needsScrollbar = false;
   #image: QImage = null;
   #zoomPercent = 100;
 
@@ -67,13 +69,21 @@ class ImageUI {
 
     this.#updateMetadata();
 
-    const style = this.#extensionBlock.terminal.tab.window.style;
-
-    this.#topWidget = Widget({
-      onPaint: (nativeEvent): void => {
-        this.#handlePaint(new QPaintEvent(nativeEvent));
-      }
+    this.#topWidget = ScrollArea({
+      widgetResizable: true,
+      verticalScrollBarPolicy: ScrollBarPolicy.ScrollBarAlwaysOff,
+      contentsMargins: 0,
+      widget: this.#imageWidget = Widget({
+        contentsMargins: 0,
+        onPaint: (nativeEvent): void => {
+          this.#handlePaint(new QPaintEvent(nativeEvent));
+        }
+      })
     });
+
+    this.#topWidget.addEventListener(WidgetEventTypes.LayoutRequest, () => {
+      this.#handleScrollAreaLayout();
+    }, {afterDefault: true});
 
     const bulkFile = this.#extensionBlock.bulkFile;
     bulkFile.onStateChanged(this.#handleStateChanged.bind(this));
@@ -109,13 +119,16 @@ class ImageUI {
       return;
     }
 
-    const painter = new QPainter(this.#topWidget);
-    const zoomRatio = this.#zoomPercent / 100;
-    painter.setTransform([
-      zoomRatio, 0, // a, b 
-      0, zoomRatio, // c, d 
-      0, 0          // tx, ty
-    ]);
+    const painter = new QPainter(this.#imageWidget);
+    if (this.#zoomPercent !== 100) {
+      painter.setRenderHint(RenderHint.SmoothPixmapTransform, true);
+      const zoomRatio = this.#zoomPercent / 100;
+      painter.setTransform([
+        zoomRatio, 0, // a, b 
+        0, zoomRatio, // c, d 
+        0, 0          // tx, ty
+      ]);
+    }
     painter.drawImage(0, 0, this.#image);
     painter.end();
   }
@@ -150,17 +163,40 @@ class ImageUI {
       return;
     }
     this.#setZoomPercent(100);
-    this.#topWidget.update();
+    this.#imageWidget.update();
+  }
+
+  #handleScrollAreaLayout(): void {
+    const geo = this.#topWidget.geometry();
+    const width = Math.round(this.#zoomPercent * this.#image.width() / 100);
+
+    const neededScrollbar = this.#needsScrollbar;
+    this.#needsScrollbar = geo.width() < width;
+    if (neededScrollbar !== this.#needsScrollbar) {
+      this.#updateLayout();
+    }
   }
 
   #setZoomPercent(zoomPercent: number): void {
-    const width = Math.round(zoomPercent * this.#image.width() / 100);
-    const height = Math.round(zoomPercent * this.#image.height() / 100);
-    this.#topWidget.setMinimumSize(width, height);
-    this.#topWidget.setMaximumSize(width, height);
-    this.#topWidget.update();
     this.#zoomPercent = zoomPercent;  
+    this.#updateLayout();
+    this.#imageWidget.update();
     this.#updateMetadata();
+  }
+
+  #updateLayout(): void {
+    const width = Math.round(this.#zoomPercent * this.#image.width() / 100);
+    const height = Math.round(this.#zoomPercent * this.#image.height() / 100);
+    let scrollAreaHeight = height;
+    if (this.#needsScrollbar) {
+      const barGeo = this.#topWidget.horizontalScrollBar();
+      scrollAreaHeight += barGeo.height();
+    }
+
+    this.#topWidget.setMinimumHeight(scrollAreaHeight);
+    this.#topWidget.setMaximumHeight(scrollAreaHeight);
+    this.#imageWidget.setMinimumSize(width, height);
+    this.#imageWidget.setMaximumSize(width, height);
   }
 }
 

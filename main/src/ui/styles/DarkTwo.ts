@@ -1067,7 +1067,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     border-bottom: none;
   }
 
-  QScrollArea[cssClass~="settings-tab"] {
+  QScrollArea {
     border: none;
   }
 
