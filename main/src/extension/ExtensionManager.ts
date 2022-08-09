@@ -719,7 +719,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       const block = state.activeBlockFrame.getBlock();
       if (block instanceof TerminalBlock) {
         whenVariables.blockType = ExtensionApi.TerminalOutputType;
-      }
+      } else if (block instanceof ExtensionBlockImpl) {
+        whenVariables.blockType = block.getBlockTypeName();   
+      }   
     }
 
     if (state.activeHyperlinkURL != null) {
