@@ -15,6 +15,8 @@ export const TerminalEnvironment = {
   EXTRATERM_CURRENT_COMMAND_LINE: "extraterm:current_command_line",
   EXTRATERM_LAST_COMMAND_LINE: "extraterm:last_commmand_line",
   EXTRATERM_EXIT_CODE: "extraterm:exit_code",
+  EXTRATERM_TERMINAL_HEIGHT_PIXELS: "extraterm:terminal_height_pixels",
+  EXTRATERM_TERMINAL_WIDTH_PIXELS: "extraterm:terminal_width_pixels",
 };
 
 export interface TerminalEnvironment {

@@ -206,6 +206,8 @@ export class Terminal implements Tab, Disposable {
     { key: TerminalEnvironment.EXTRATERM_EXIT_CODE, value: "" },
     { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, value: "" },
     { key: TerminalEnvironment.EXTRATERM_LAST_COMMAND, value: "" },
+    { key: TerminalEnvironment.EXTRATERM_TERMINAL_HEIGHT_PIXELS, value: "" },
+    { key: TerminalEnvironment.EXTRATERM_TERMINAL_WIDTH_PIXELS, value: "" },
   ]);
 
   static registerCommands(extensionManager: ExtensionManager): void {
@@ -579,9 +581,14 @@ export class Terminal implements Tab, Disposable {
 
     this.#emulator.resize({rows, columns});
 
+    const heightPx = size.rows * size.cellHeightPx;
+    const widthPx = size.columns * size.cellWidthPx;
+  
     this.environment.setList([
       { key: TerminalEnvironment.TERM_ROWS, value: "" + rows},
       { key: TerminalEnvironment.TERM_COLUMNS, value: "" + columns},
+      { key: TerminalEnvironment.EXTRATERM_TERMINAL_HEIGHT_PIXELS, value: "" + heightPx},
+      { key: TerminalEnvironment.EXTRATERM_TERMINAL_WIDTH_PIXELS, value: "" + widthPx},
     ]);
   }
 
