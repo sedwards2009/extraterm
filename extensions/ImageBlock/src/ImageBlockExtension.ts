@@ -9,7 +9,8 @@ import {
   ExtensionBlock,
   BulkFileState,
   BlockMetadataChange,
-  BlockPosture
+  BlockPosture,
+  TerminalEnvironment
 } from "@extraterm/extraterm-extension-api";
 import * as http from "node:http";
 import { QImage, QPainter, QPaintEvent, QScrollArea, QWidget, RenderHint, ScrollBarPolicy, WidgetEventTypes } from "@nodegui/nodegui";
@@ -162,8 +163,55 @@ class ImageUI {
       log.warn(`Unable to load image into QImage.`);
       return;
     }
-    this.#setZoomPercent(100);
+
+
+    let scaleIndex = ImageUI.ZoomPercentsArray.indexOf(100);
+
+    const widthPxString = this.#extensionBlock.terminal.environment.get(TerminalEnvironment.EXTRATERM_TERMINAL_WIDTH_PIXELS);
+    const heightPxString = this.#extensionBlock.terminal.environment.get(TerminalEnvironment.EXTRATERM_TERMINAL_HEIGHT_PIXELS);
+    if (widthPxString !== "" && heightPxString !== "" ) {
+      const imageHeightPx = this.#image.height();
+      const imageWidthPx = this.#image.width();
+
+      while(true) {
+        const scalePc = ImageUI.ZoomPercentsArray[scaleIndex];
+        const scaledWidthPx = Math.floor(imageWidthPx * scalePc / 100);
+        const scaledHeightPx = Math.floor(imageHeightPx * scalePc / 100);
+        if (scaleIndex === 0 || (scaledWidthPx <= imageWidthPx && scaledHeightPx <= imageHeightPx)) {
+          break;
+        }
+        scaleIndex--;
+      }
+    }
+
+    const scalePc = this.#recommendScalePercent(this.#image.width(), this.#image.height());
+    this.#setZoomPercent(scalePc);
     this.#imageWidget.update();
+  }
+
+  #recommendScalePercent(imageWidthPx: number, imageHeightPx: number): number {
+    const env = this.#extensionBlock.terminal.environment;
+    const terminalWidthPxString = env.get(TerminalEnvironment.EXTRATERM_TERMINAL_WIDTH_PIXELS);
+    const terminalHeightPxString = env.get(TerminalEnvironment.EXTRATERM_TERMINAL_HEIGHT_PIXELS);
+    if (terminalWidthPxString === "" || terminalHeightPxString === "" ) {
+      return 100;
+    }
+
+    const terminalWidthPx = Number.parseInt(terminalWidthPxString, 10) * 0.9;
+    const terminalHeightPx = Number.parseInt(terminalHeightPxString, 10) * 0.9;
+
+    // Start at 100% and zoom out to fit. We don't zoom in to fill the window.
+    let scaleIndex = ImageUI.ZoomPercentsArray.indexOf(100);
+
+    while(true) {
+      const scalePc = ImageUI.ZoomPercentsArray[scaleIndex];
+      const scaledWidthPx = Math.floor(imageWidthPx * scalePc / 100);
+      const scaledHeightPx = Math.floor(imageHeightPx * scalePc / 100);
+      if (scaleIndex === 0 || (scaledWidthPx <= terminalWidthPx && scaledHeightPx <= terminalHeightPx)) {
+        return scalePc;
+      }
+      scaleIndex--;
+    }
   }
 
   #handleScrollAreaLayout(): void {
