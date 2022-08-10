@@ -16,7 +16,16 @@
       {
         "name": "image-block",
         "mimeTypes": [
-          "image/png"
+          "image/png",
+          "image/gif",
+          "image/jpeg",
+          "image/x-portable-bitmap",
+          "image/x-portable-graymap",
+          "image/x-portable-pixmap",
+          "image/x-portable-anymap",
+          "image/x-xbitmap",
+          "image/x-xbm",
+          "image/x-xpixmap"
         ]
       }
     ],
