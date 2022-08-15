@@ -11,9 +11,11 @@ import * as os from "node:os";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
-import { BulkFileHandle, CreateSessionOptions, SessionConfiguration, TerminalEnvironment} from '@extraterm/extraterm-extension-api';
-import { QApplication, QFontDatabase, QRect, QStylePixelMetric } from "@nodegui/nodegui";
+import { CreateSessionOptions, SessionConfiguration, TerminalEnvironment} from '@extraterm/extraterm-extension-api';
+import { Menu } from "qt-construct";
+import { QAction, QApplication, QFontDatabase, QIcon, QRect, QSize, QStylePixelMetric, QSystemTrayIcon } from "@nodegui/nodegui";
 import { StyleTweaker } from "nodegui-plugin-style-tweaker";
+import { doLater } from "extraterm-timeoutqt";
 
 import { PopOutClickedDetails, Window } from "./Window.js";
 import { GENERAL_CONFIG, SESSION_CONFIG, WindowConfiguration } from "./config/Config.js";
@@ -44,6 +46,7 @@ import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TerminalBlock } from "./terminal/TerminalBlock.js";
 import { BulkFile } from "./bulk_file_handling/BulkFile.js";
+
 
 sourceMapSupport.install();
 
@@ -77,6 +80,7 @@ class Main {
 
   #tweakerStyle: StyleTweaker = null;
   #tagCounter = 0;
+  #tray: QSystemTrayIcon = null;
 
   constructor() {
     this._log = getLogger("main", this);
@@ -138,8 +142,9 @@ class Main {
     this.setupDefaultSessions(configDatabase, ptyManager);
 
     this.#bulkFileStorage = this.setupBulkFileStorage();
-    // TODO: MainDesktop()
     this.setupDesktopSupport();
+    this.#showTrayIcon(this.#configDatabase.getGeneralConfig().showTrayIcon);
+
     // TODO: setupGlobalKeybindingsManager()
 
     this.setupLocalHttpServer(this.#bulkFileStorage);
@@ -157,6 +162,9 @@ class Main {
       const newConfig = <GeneralConfig> e.newConfig;
       if ((oldConfig?.uiScalePercent) !== newConfig.uiScalePercent) {
         this.#setApplicationStyle(newConfig.uiScalePercent);
+      }
+      if ((oldConfig?.showTrayIcon) !== newConfig.showTrayIcon) {
+        this.#showTrayIcon(newConfig.showTrayIcon);
       }
     });
 
@@ -341,6 +349,53 @@ class Main {
 
       this.#extensionManager.setActiveWindow(activeWindow);
     });
+
+    const trayIcon = this.#createTrayIcon();
+    this.#tray = new QSystemTrayIcon();
+    this.#tray.setIcon(trayIcon);
+    this.#tray.setToolTip("Extraterm Qt");
+    const trayMenu = Menu({
+      items: [
+        { title: "Maximize", data: "maximize" },
+        { title: "Minimize", data: "minimize" },
+        { title: "Restore", data: "restore" },
+      ],
+      onTriggered: (nativeAction) => {
+        const action = new QAction(nativeAction);
+        switch (action.data().toString()) {
+          case "maximize":
+            this.commandMaximizeAllWindows();
+            break;
+          case "minimize":
+            this.commandMinimizeAllWindows();
+            break;
+          case "restore":
+            this.commandRestoreAllWindows();
+            break;
+        }
+      }
+    });
+    this.#tray.setContextMenu(trayMenu);
+    this.#tray.addEventListener("activated", () => {
+      this.commandToggleAllWindows();
+    });
+  }
+
+  #createTrayIcon(): QIcon {
+    const windowIcon = new QIcon();
+    for (const size of [16, 22, 32, 64, 256]) {
+      const iconPath = path.join(SourceDir.path, `../resources/logo/extraterm_small_logo_${size}x${size}.png`);
+      windowIcon.addFile(iconPath, new QSize(size, size));
+    }
+    return windowIcon;
+  }
+
+  #showTrayIcon(show: boolean): void {
+    if (show) {
+      this.#tray.show();
+    } else {
+      this.#tray.hide();
+    }
   }
 
   commandOpenCommandPalette(): void {
@@ -537,6 +592,12 @@ class Main {
       this.#handlePopOutClicked(details.window, details.terminal, details.frame);
     });
 
+    win.onWindowClosed((win: Window): void => {
+      doLater(() => {
+        this.#disposeWindow(win);
+      });
+    });
+
     this.#windows.push(win);
     win.open();
     if (showMaximized) {
@@ -607,7 +668,13 @@ class Main {
 
   commandCloseWindow(): void {
     const win = this.#extensionManager.getActiveWindow();
+    this.#disposeWindow(win);
+  }
+
+  #disposeWindow(win: Window): void {
     win.dispose();
+    const i = this.#windows.indexOf(win);
+    this.#windows.splice(i, 1);
   }
 
   async commandMoveTabToNewWindow(): Promise<void> {
@@ -634,6 +701,32 @@ class Main {
   commandRestoreWindow(): void {
     const win = this.#extensionManager.getActiveWindow();
     win.restore();
+  }
+
+  commandMaximizeAllWindows(): void {
+    for (const win of this.#windows) {
+      win.maximize();
+    }
+  }
+
+  commandMinimizeAllWindows(): void {
+    for (const win of this.#windows) {
+      win.minimize();
+    }
+  }
+
+  commandRestoreAllWindows(): void {
+    for (const win of this.#windows) {
+      win.restore();
+    }
+  }
+
+  commandToggleAllWindows(): void {
+    if (this.#windows.some((win) => win.isMinimized())) {
+      this.commandRestoreAllWindows();
+    } else {
+      this.commandMinimizeAllWindows();
+    }
   }
 
   commandCopyToClipboard(): void {

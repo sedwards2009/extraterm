@@ -4,8 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { CheckState, QCheckBox } from "@nodegui/nodegui";
+import { AbstractButtonOptions, ApplyAbstractButtonOptions } from "./AbstractButton.js";
 
-export interface CheckBoxOptions {
+export interface CheckBoxOptions extends AbstractButtonOptions {
   tristate?: boolean;
   checkState?: boolean | CheckState;
   onStateChanged?: (state: number) => void;
@@ -14,6 +15,9 @@ export interface CheckBoxOptions {
 
 export function CheckBox(options: CheckBoxOptions): QCheckBox {
   const checkBox = new QCheckBox();
+
+  ApplyAbstractButtonOptions(checkBox, options);
+
   const { checkState, onStateChanged, text, tristate } = options;
   if (checkState !== undefined) {
     if (typeof checkState === "boolean") {

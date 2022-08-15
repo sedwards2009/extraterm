@@ -12,7 +12,7 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
   FocusPolicy, QKeyEvent, WidgetAttribute, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
   ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat, QMouseEvent,
-  MouseButton, Visibility, QIcon, QSize } from "@nodegui/nodegui";
+  MouseButton, Visibility, QIcon, QSize, WindowState } from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
@@ -56,13 +56,22 @@ interface TabPlumbing {
   titleWidget: QWidget;
 }
 
+enum WindowOpenState {
+  Closed,
+  Open,
+  Minimized,
+  ClosedMinimized
+}
+
 export class Window implements Disposable {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
 
+  #windowOpenState = WindowOpenState.Closed;
   #windowWidget: QWidget = null;
+
   #borderlessWindowSupport: BorderlessWindowSupport = null;
   #windowHandle: QWindow = null;
   #screen: QScreen = null;
@@ -95,6 +104,9 @@ export class Window implements Disposable {
   #onPopOutClickedEventEmitter = new EventEmitter<PopOutClickedDetails>();
   onPopOutClicked: Event<PopOutClickedDetails> = null;
 
+  #onWindowCloseEventEmitter = new EventEmitter<Window>();
+  onWindowClosed: Event<Window> = null;
+
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
       keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle) {
 
@@ -111,6 +123,7 @@ export class Window implements Disposable {
     this.onTabChange = this.#onTabChangeEventEmitter.event;
     this.onWindowGeometryChanged = this.#onWindowGeometryChangedEventEmitter.event;
     this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
+    this.onWindowClosed = this.#onWindowCloseEventEmitter.event;
   }
 
   async init(geometry: QRect): Promise<void> {
@@ -122,6 +135,10 @@ export class Window implements Disposable {
       focusPolicy: FocusPolicy.ClickFocus,
       contextMenuPolicy: ContextMenuPolicy.PreventContextMenu,
       cssClass: ["window-background"],
+      onClose: () => {
+        this.#windowOpenState = WindowOpenState.Closed;
+        this.#onWindowCloseEventEmitter.fire(this);
+      },
       onKeyPress: (nativeEvent) => {
         this.#handleKeyPress(new QKeyEvent(nativeEvent));
       },
@@ -314,7 +331,7 @@ export class Window implements Disposable {
                 vertical: QSizePolicyPolicy.Fixed,
               },
               onClicked: () => {
-                this.dispose();
+                this.#onWindowCloseEventEmitter.fire(this);
               }
             }),
             stretch: 0
@@ -615,6 +632,15 @@ export class Window implements Disposable {
     if (oldConfig.titleBarStyle !== newConfig.titleBarStyle) {
       this.#setWindowFrame(newConfig.titleBarStyle);
     }
+
+    if (oldConfig.minimizeToTray !== newConfig.minimizeToTray) {
+      if (newConfig.minimizeToTray && newConfig.showTrayIcon) {
+        this.#convertToMinimizeToTray();
+      }
+      if ( ! newConfig.minimizeToTray) {
+        this.#convertToNormalMinimize();
+      }
+    }
   }
 
   async #updateTerminalVisualConfig(): Promise<void> {
@@ -675,6 +701,10 @@ export class Window implements Disposable {
     this.#windowHandle.addEventListener("visibilityChanged", (visibility: Visibility) => {
       this.#onWindowGeometryChangedEventEmitter.fire();
     });
+    this.#windowHandle.addEventListener("windowStateChanged", (windowState: WindowState) => {
+      this.#handleWindowStateChanged(windowState);
+    });
+    this.#windowOpenState = WindowOpenState.Open;
   }
 
   dispose(): void {
@@ -684,7 +714,10 @@ export class Window implements Disposable {
       tab.tab.dispose();
     }
 
-    this.#windowWidget.close();
+    if (this.#windowOpenState !== WindowOpenState.Closed &&
+        this.#windowOpenState !== WindowOpenState.ClosedMinimized) {
+      this.#windowWidget.close();
+    }
   }
 
   isMaximized(): boolean {
@@ -693,14 +726,54 @@ export class Window implements Disposable {
 
   maximize(): void {
     this.#windowWidget.showMaximized();
+    this.#windowOpenState = WindowOpenState.Open;
   }
 
   minimize(): void {
-    this.#windowWidget.showMinimized();
+    const config = this.#configDatabase.getGeneralConfig();
+    if (config.showTrayIcon && config.minimizeToTray) {
+      this.#windowWidget.hide();
+      this.#windowOpenState = WindowOpenState.ClosedMinimized;
+    } else {
+      this.#windowWidget.showMinimized();
+      this.#windowOpenState = WindowOpenState.Minimized;
+    }
+  }
+
+  isMinimized(): boolean {
+    return this.#windowOpenState === WindowOpenState.Minimized || this.#windowOpenState === WindowOpenState.ClosedMinimized;
   }
 
   restore(): void {
+    this.#windowWidget.hide();
     this.#windowWidget.showNormal();
+    this.#windowOpenState = WindowOpenState.Open;
+  }
+
+  #convertToMinimizeToTray(): void {
+    if (this.#windowOpenState === WindowOpenState.Minimized) {
+      this.#windowWidget.hide();
+      this.#windowOpenState = WindowOpenState.ClosedMinimized;
+    }
+  }
+
+  #convertToNormalMinimize(): void {
+    if (this.#windowOpenState === WindowOpenState.ClosedMinimized) {
+      this.#windowWidget.showMinimized();
+      this.#windowOpenState = WindowOpenState.Minimized;
+    }
+  }
+
+  #handleWindowStateChanged(windowState: WindowState): void {
+    if (windowState === WindowState.WindowMinimized) {
+      const config = this.#configDatabase.getGeneralConfig();
+      if (config.showTrayIcon && config.minimizeToTray) {
+        this.#windowWidget.hide();
+        this.#windowOpenState = WindowOpenState.ClosedMinimized;
+      } else {
+        this.#windowOpenState = WindowOpenState.Minimized;
+      }
+    }
   }
 
   getGeometry(): QRect {

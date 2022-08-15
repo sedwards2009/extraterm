@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QComboBox, QLabel, QScrollArea, QSizePolicyPolicy, QWidget, TextFormat } from "@nodegui/nodegui";
+import { AlignmentFlag, Direction, QCheckBox, QComboBox, QLabel, QScrollArea, QSizePolicyPolicy, QWidget, TextFormat } from "@nodegui/nodegui";
 import * as open from "open";
 import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
@@ -66,6 +66,8 @@ export class AppearancePage {
   #terminalThemes: ThemeInfo[];
   #terminalThemeCommentSpacer: QLabel = null;
   #terminalThemeCommentLabel: QLabel = null;
+
+  #minimizeWindowToTrayCheckBox: QCheckBox = null;
 
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
       uiStyle: UiStyle, fontAtlasCache: FontAtlasCache) {
@@ -260,6 +262,27 @@ export class AppearancePage {
                     update(config => config.titleBarStyle = titleBarOptions[index].id);
                   }
                 })),
+
+                "",
+                CheckBox({
+                  text: "Show system tray icon",
+                  checkState: generalConfig.showTrayIcon,
+                  onStateChanged: (state: number) => {
+                    const isOn = Boolean(state);
+                    update((c) => c.showTrayIcon = isOn);
+                    this.#minimizeWindowToTrayCheckBox.setEnabled(isOn);
+                  }
+                }),
+                
+                "",
+                this.#minimizeWindowToTrayCheckBox = CheckBox({
+                  text: "Minimize windows to tray",
+                  checkState: generalConfig.minimizeToTray,
+                  enabled: generalConfig.showTrayIcon,
+                  onStateChanged: (state: number) => {
+                    update((c) => c.minimizeToTray = Boolean(state));
+                  }
+                }),
               ]
             }),
             {stretch: 1, widget: Widget({}) }
