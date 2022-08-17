@@ -434,7 +434,7 @@ __metadata:
     extraterm-event-emitter: 1.0.0
     shx: ^0.3.2
     typedoc: ^0.22.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   peerDependencies:
     "@nodegui/nodegui": 0.57.0
   languageName: unknown
@@ -1281,7 +1281,7 @@ __metadata:
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -1595,7 +1595,7 @@ __metadata:
     "@types/jest": 27.0.1
     jest: 27.5.1
     shelljs: 0.8.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -1607,7 +1607,7 @@ __metadata:
     "@types/jest": 27.0.1
     jest: 27.5.1
     shelljs: 0.8.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -2631,7 +2631,7 @@ __metadata:
   resolution: "copy-block@workspace:extensions/CopyBlock"
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -2641,7 +2641,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     shelljs: 0.8.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3005,7 +3005,7 @@ __metadata:
   resolution: "directory-commands@workspace:extensions/DirectoryCommands"
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3050,7 +3050,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     qt-construct: 0.1.0
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3579,7 +3579,7 @@ __metadata:
     extraterm-boolean-expression-parser: 1.0.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3608,7 +3608,7 @@ __metadata:
     extraterm-unicode-utilities: 1.0.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3630,7 +3630,7 @@ __metadata:
     gl-matrix: ^3.3.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3644,7 +3644,7 @@ __metadata:
     eslint-plugin-unicorn: 42.0.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3658,7 +3658,7 @@ __metadata:
     eslint-plugin-unicorn: 42.0.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3670,7 +3670,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3699,7 +3699,7 @@ __metadata:
     simple-statistics: ^6.0.0
     tslint: ^5.9.1
     tslint-config-standard: ^7.0.0
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3711,7 +3711,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3724,7 +3724,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3741,7 +3741,7 @@ __metadata:
     jschardet: 1.4.1
     mime-types: ^2.1.21
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3754,7 +3754,7 @@ __metadata:
     eslint-plugin-unicorn: 42.0.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3767,7 +3767,7 @@ __metadata:
     eslint-plugin-unicorn: 42.0.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3780,7 +3780,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3792,7 +3792,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3806,7 +3806,7 @@ __metadata:
     eslint-plugin-unicorn: 42.0.0
     jest: 27.5.1
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3818,7 +3818,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -3842,7 +3842,7 @@ __metadata:
     readdirp: 3.6.0
     shelljs: 0.8.4
     source-map-support: ^0.5.21
-    typescript: 4.6.3
+    typescript: 4.7.4
     wsrun: 5.2.0
   dependenciesMeta:
     node-pty:
@@ -4685,7 +4685,7 @@ __metadata:
     "@extraterm/extraterm-extension-api": 0.15.0
     "@types/node": ^16.4.0
     qt-construct: 0.1.0
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -4789,7 +4789,7 @@ __metadata:
     "@extraterm/extraterm-extension-api": 0.15.0
     download-cli: ^1.1.1
     shelljs: 0.8.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -5187,7 +5187,7 @@ __metadata:
     jest: 27.5.1
     plist: 3.0.5
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -6209,7 +6209,7 @@ __metadata:
     source-map-support: ^0.5.21
     term-api: 1.0.0
     term-api-lineimpl: 1.0.0
-    typescript: 4.6.3
+    typescript: 4.7.4
     utf8: 2.1.2
     webfont: ^11.2.26
   languageName: unknown
@@ -7100,7 +7100,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     shelljs: 0.8.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -7758,7 +7758,7 @@ __metadata:
     extraterm-event-emitter: 1.0.0
     lodash-es: 4.17.21
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -7776,7 +7776,7 @@ __metadata:
     fs-extra: ^5.0.0
     lodash-es: 4.17.21
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -7834,7 +7834,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shelljs: 0.8.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9036,7 +9036,7 @@ __metadata:
     jest: 27.5.1
     shx: ^0.3.2
     term-api: 1.0.0
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9050,7 +9050,7 @@ __metadata:
     extraterm-char-cell-grid: 1.0.0
     extraterm-event-emitter: 1.0.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9078,7 +9078,7 @@ __metadata:
     jest: 27.5.1
     qt-construct: 0.1.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9151,7 +9151,7 @@ __metadata:
     download-cli: ^1.1.1
     jest: 27.5.1
     shelljs: 0.8.3
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9453,23 +9453,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:4.6.3":
-  version: 4.6.3
-  resolution: "typescript@npm:4.6.3"
+"typescript@npm:4.7.4":
+  version: 4.7.4
+  resolution: "typescript@npm:4.7.4"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 255bb26c8cb846ca689dd1c3a56587af4f69055907aa2c154796ea28ee0dea871535b1c78f85a6212c77f2657843a269c3a742d09d81495b97b914bf7920415b
+  checksum: 5750181b1cd7e6482c4195825547e70f944114fb47e58e4aa7553e62f11b3f3173766aef9c281783edfd881f7b8299cf35e3ca8caebe73d8464528c907a164df
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A4.6.3#~builtin<compat/typescript>":
-  version: 4.6.3
-  resolution: "typescript@patch:typescript@npm%3A4.6.3#~builtin<compat/typescript>::version=4.6.3&hash=7ad353"
+"typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>":
+  version: 4.7.4
+  resolution: "typescript@patch:typescript@npm%3A4.7.4#~builtin<compat/typescript>::version=4.7.4&hash=7ad353"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 6bf45caf847062420592e711bc9c28bf5f9a9a7fa8245343b81493e4ededae33f1774009d1234d911422d1646a2c839f44e1a23ecb111b40a60ac2ea4c1482a8
+  checksum: 9096d8f6c16cb80ef3bf96fcbbd055bf1c4a43bd14f3b7be45a9fbe7ada46ec977f604d5feed3263b4f2aa7d4c7477ce5f9cd87de0d6feedec69a983f3a4f93e
   languageName: node
   linkType: hard
 
@@ -9544,7 +9544,7 @@ __metadata:
     lodash-es: 4.17.21
     node-pty: 0.10.0-beta19
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9563,7 +9563,7 @@ __metadata:
     lodash-es: 4.17.21
     qt-construct: 0.1.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9906,7 +9906,7 @@ __metadata:
     node-pty: 0.10.0-beta19
     pid-cwd: ^1.2.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 
@@ -9923,7 +9923,7 @@ __metadata:
     fs-extra: ^5.0.0
     qt-construct: 0.1.0
     shx: ^0.3.2
-    typescript: 4.6.3
+    typescript: 4.7.4
   languageName: unknown
   linkType: soft
 

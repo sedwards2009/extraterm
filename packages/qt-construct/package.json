@@ -26,6 +26,6 @@
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
     "shelljs": "0.8.3",
-    "typescript": "4.6.3"
+    "typescript": "4.7.4"
   }
 }

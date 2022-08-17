@@ -75,7 +75,7 @@
     "jest": "27.5.1",
     "shelljs": "0.8.3",
     "shx": "^0.3.2",
-    "typescript": "4.6.3",
+    "typescript": "4.7.4",
     "webfont": "^11.2.26"
   },
   "jshintConfig": {
