@@ -93,6 +93,7 @@ function main(): void {
 
           CheckBox({text: "Checkbox"}),
           CheckBox({text: "Select Checkbox", checkState: true}),
+          CheckBox({text: "Disabled Checkbox", enabled: false}),
 
           RadioButton({text: "Radio button"}),
           RadioButton({text: "Selected Radio button", checked: true}),

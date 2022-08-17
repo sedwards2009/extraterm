@@ -193,6 +193,7 @@ class Main {
     this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_ButtonIconSize, buttonIconSize);
     this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_TabCloseIndicatorHeight, iconSize);
     this.#tweakerStyle.setPixelMetric(QStylePixelMetric.PM_TabCloseIndicatorWidth, iconSize);
+    this.#tweakerStyle.setStyleHint(0 /* QStyle::SH_EtchDisabledText */, 0);
 
     QApplication.setStyle(this.#tweakerStyle);
   };

@@ -52,7 +52,6 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     const textColor = uiFg;
     styleTextColor = textColor;
 
-    const textColorSubtle = change(textColor, { a: alpha(textColor) - 0.4});
     const textMinorColor = darken(textColor, 20);
     const textHighlightColor = toHex(lighten(textColor, 20));
     styleTextHighlightColor = textHighlightColor;
@@ -71,8 +70,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     const backgroundSelectedColor = accentBgColor;
     styleBackgroundSelectedColor = backgroundSelectedColor;
 
-    // const textColorSubtle = "rgba(157, 165, 180, 0.6)";
-
+    const textColorSubtle = mix(textColor, backgroundColor, 20);
     const textMutedColor = mix(textColor, backgroundColor, 75);
 
     const brandPrimary = "hsl(219,  79%, 66%)";
@@ -266,7 +264,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     width: ${emToPx(1)}px;
     height: ${emToPx(1)}px;
 
-    background-color: ${componentBackgroundColor};
+    background-color: ${toHex(componentBackgroundColor)};
   }
 
   QCheckBox::indicator:checked {
@@ -276,6 +274,14 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
   QCheckBox::indicator:pressed {
     background-color: #6494ed;
+  }
+
+  QCheckBox::disabled {
+    color: ${textColorSubtle};
+  }
+
+  QCheckBox::indicator::disabled {
+    background-color: ${toHex(componentBackgroundColor)};
   }
   `;
     }
