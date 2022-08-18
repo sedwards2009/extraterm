@@ -26,10 +26,6 @@ jobs:
           sudo apt-get install mesa-common-dev libglu1-mesa-dev
         displayName: "Install development packages"
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
-      - script: yarn config set enableGlobalCache true
-      - script: yarn set version berry
-      - script: yarn set version 3.x
-      - script: yarn plugin import workspace-tools
       - script: yarn --version
       - script: yarn install
         displayName: 'Yarn install'
