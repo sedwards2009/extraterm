@@ -30,6 +30,7 @@ jobs:
       - script: yarn set version berry
       - script: yarn set version 3.x
       - script: yarn plugin import workspace-tools
+      - script: yarn --version
       - script: yarn install
         displayName: 'Yarn install'
       - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
