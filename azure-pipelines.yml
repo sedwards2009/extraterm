@@ -26,13 +26,10 @@ jobs:
           sudo apt-get install mesa-common-dev libglu1-mesa-dev
         displayName: "Install development packages"
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
-      - script: yarn config set enableGlobalCache true
-      - script: yarn set version berry
-      - script: yarn set version 3.x
-      - script: yarn plugin import workspace-tools
       - script: yarn --version
+        displayName: 'yarn --version'
       - script: yarn install
-        displayName: 'Yarn install'
+        displayName: 'yarn install'
       - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
         displayName: Check for tag and package.json version
       - script: yarn run package-commands-zip --use-version=$(git describe --tags)
@@ -62,12 +59,8 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn config set enableGlobalCache true
-      - script: yarn set version berry
-      - script: yarn set version 3.x
-      - script: yarn plugin import workspace-tools
       - script: yarn --version
-        displayName: "yarn --version"
+        displayName: 'yarn --version'
       - script: yarn install
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
@@ -103,10 +96,8 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn config set enableGlobalCache true
-      - script: yarn set version berry
-      - script: yarn set version 3.x
-      - script: yarn plugin import workspace-tools
+      - script: yarn --version
+        displayName: 'yarn --version'
       - script: yarn install
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
@@ -151,10 +142,8 @@ jobs:
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
-      - script: yarn config set enableGlobalCache true
-      - script: yarn set version berry
-      - script: yarn set version 3.x
-      - script: yarn plugin import workspace-tools
+      - script: yarn --version
+        displayName: 'yarn --version'
       - script: yarn install
         displayName: "yarn install"
       - script: node build_scripts/azure_release_version_check.mjs $(Build.SourceBranch)
