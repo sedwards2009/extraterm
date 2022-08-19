@@ -49,11 +49,20 @@ async function main() {
     outputDir: buildTmpDir,
     replaceModuleDirs: false
   });
-  sh.echo("");
 
-  sh.echo("Creating debian package");
+  sh.echo("");
+  sh.echo("---------------------------------------------------------------");
+  sh.echo("Creating Debian package");
   sh.cd(srcDir);
   makeDeb({
+    version,
+    buildDir: buildTmpDir
+  });
+
+  sh.echo("");
+  sh.echo("---------------------------------------------------------------");
+  sh.echo("Creating AppImage");
+  makeAppImage({
     version,
     buildDir: buildTmpDir
   });
@@ -105,4 +114,60 @@ Icon=${APP_NAME}
 
   // Package in .deb
   sh.exec(`dpkg-deb --root-owner-group --build ${debTmp}`);
+}
+
+function makeAppImage({version, buildDir}) {
+  const srcDir = sh.pwd();
+
+  const appimageDir = path.join(buildDir, "appimage");
+  sh.mkdir(appimageDir);
+
+  const baseZipName = packaging_functions.createOutputDirName({version, platform: "linux", arch: "x64"});
+  const zipName = baseZipName + ".zip";
+
+  sh.cp("main/resources/logo/extraterm_small_logo_256x256.png", path.join(appimageDir, "extraterm.png"));
+
+  sh.cp(path.join(buildDir, zipName), appimageDir);
+  const appimageBuildScript = `app: extratermqt
+
+ingredients:
+  scripts:
+    - echo X
+
+script:
+  - BASE_NAME=${baseZipName}
+  - mkdir extratermqt
+  - unzip ../../$BASE_NAME.zip -d opt
+  - cd opt
+  - mv $BASE_NAME extratermqt
+  - cd ..
+  - echo "${version}" > VERSION
+  - cp ../../extraterm.png .
+  - cat > extratermqt.desktop <<EOF
+  - [Desktop Entry]
+  - Categories=System;TerminalEmulator;
+  - Comment[en_US]=Command line access
+  - Comment=Command line access
+  - Exec=extratermqt
+  - GenericName[en_US]=Terminal
+  - GenericName=Terminal
+  - Icon=extraterm
+  - MimeType=
+  - Name[en_US]=ExtratermQt
+  - Name=ExtratermQt
+  - Terminal=false
+  - Type=Application
+  - EOF
+  - cd usr/bin
+  - ln -s ../../opt/extratermqt/extratermqt
+  - cd ../..
+`;
+  fs.writeFileSync(path.join(appimageDir, "extraterm.yml"), appimageBuildScript, {encoding: "utf-8"});
+
+  sh.cd(appimageDir);
+  sh.exec(`ARCH=x86_64 pkg2appimage.AppImage extraterm.yml`);
+
+  sh.mv("out/*.AppImage", buildDir);
+
+  sh.cd(srcDir);
 }
