@@ -132,7 +132,7 @@ function makeAppImage({version, buildDir}) {
 
 ingredients:
   scripts:
-    - echo X
+    - echo "${version}"
 
 script:
   - BASE_NAME=${baseZipName}
@@ -141,7 +141,7 @@ script:
   - cd opt
   - mv $BASE_NAME extratermqt
   - cd ..
-  - echo "${version}" > VERSION
+  - echo "${version}" > ../VERSION
   - cp ../../extraterm.png .
   - cat > extratermqt.desktop <<EOF
   - [Desktop Entry]
