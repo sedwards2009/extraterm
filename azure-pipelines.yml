@@ -55,6 +55,14 @@ jobs:
           sudo apt-get install cmake make
           sudo apt-get install xserver-xorg-core mesa-common-dev libglu1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
         displayName: "Install development packages"
+      - script: |
+          wget -c https://github.com/$(wget -q https://github.com/AppImage/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
+          chmod +x ./pkg2appimage-*.AppImage
+          mv pkg2appimage-*.AppImage pkg2appimage.AppImage
+          sudo mv pkg2appimage.AppImage /usr/local/bin
+        displayName: "Set up pkg2appimage"
+      - script: which pkg2appimage.AppImage
+        displayName: "which pkg2appimage.AppImage"
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
       - task: NodeTool@0
         inputs:
@@ -79,6 +87,7 @@ jobs:
         displayName: "yarn run package-linux"
       - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
       - script: cp $(Build.SourcesDirectory)/build_tmp/*.deb $(Build.ArtifactStagingDirectory)
+      - script: cp $(Build.SourcesDirectory)/build_tmp/*.AppImage $(Build.ArtifactStagingDirectory)
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'Linux build output'
