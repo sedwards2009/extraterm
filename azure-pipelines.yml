@@ -58,9 +58,11 @@ jobs:
       - script: |
           wget -c https://github.com/$(wget -q https://github.com/AppImage/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
           chmod +x ./pkg2appimage-*.AppImage
-          export PATH=$PATH:$(pwd)
-          echo $PATH
-      - script: echo $PATH
+          mv pkg2appimage-*.AppImage pkg2appimage.AppImage
+          sudo mv pkg2appimage.AppImage /usr/local/bin
+        displayName: "Set up pkg2appimage"
+      - script: which pkg2appimage.AppImage
+        displayName: "which pkg2appimage.AppImage"
       - script: rm -rf ~/.cache/nodegui-mini-qt-nodejs || true
       - task: NodeTool@0
         inputs:
