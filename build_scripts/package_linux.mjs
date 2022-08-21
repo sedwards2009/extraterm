@@ -110,6 +110,31 @@ Icon=${APP_NAME}
 `;
   fs.writeFileSync(path.join(appsDir, `${APP_NAME}.desktop`), desktopFile, {encoding: "utf-8"});
 
+  // Debian .postinst script
+  const postinstFile = `#!/bin/sh -e
+set -e
+
+if [ "$1" = "configure" ]; then
+  update-alternatives --install /usr/bin/x-terminal-emulator \
+  x-terminal-emulator /opt/${APP_NAME}/${APP_NAME} 30
+fi
+`;
+  const postinstPath = path.join(debTmp, "DEBIAN", `postinst`);
+  fs.writeFileSync(postinstPath, postinstFile, {encoding: "utf-8"});
+  sh.chmod('755', postinstPath);
+
+  // Debian .prerm script
+  const prermFile = `#!/bin/sh
+set -e
+
+if [ "$1" = "remove" ]; then
+  update-alternatives --remove x-terminal-emulator /opt/${APP_NAME}/${APP_NAME}
+fi
+`;
+  const prermPath = path.join(debTmp, "DEBIAN", `prerm`);
+  fs.writeFileSync(prermPath, prermFile, {encoding: "utf-8"});
+  sh.chmod('755', prermPath);
+
   sh.cp("-r", "build_scripts/resources/linux/icons", path.join(debTmp, "usr", "share"));
 
   // Package in .deb
