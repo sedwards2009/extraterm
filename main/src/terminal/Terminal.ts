@@ -583,7 +583,7 @@ export class Terminal implements Tab, Disposable {
 
     const heightPx = size.rows * size.cellHeightPx;
     const widthPx = size.columns * size.cellWidthPx;
-  
+
     this.environment.setList([
       { key: TerminalEnvironment.TERM_ROWS, value: "" + rows},
       { key: TerminalEnvironment.TERM_COLUMNS, value: "" + columns},

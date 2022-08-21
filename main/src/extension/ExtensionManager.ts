@@ -487,6 +487,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeTerminal;
   }
 
+  setActiveBlockFrame(blockFrame: BlockFrame): void {
+    this.#commonExtensionWindowState.activeBlockFrame = blockFrame;
+  }
+
   getActiveBlockFrame(): BlockFrame {
     return this.#commonExtensionWindowState.activeBlockFrame;
   }
@@ -720,8 +724,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       if (block instanceof TerminalBlock) {
         whenVariables.blockType = ExtensionApi.TerminalOutputType;
       } else if (block instanceof ExtensionBlockImpl) {
-        whenVariables.blockType = block.getBlockTypeName();   
-      }   
+        whenVariables.blockType = block.getBlockTypeName();
+      }
     }
 
     if (state.activeHyperlinkURL != null) {

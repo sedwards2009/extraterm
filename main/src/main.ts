@@ -577,7 +577,14 @@ class Main {
     });
 
     win.onTabChange((tab: Tab): void => {
-      this.#extensionManager.setActiveTerminal(tab instanceof Terminal ? tab : null);
+      if (tab instanceof Terminal) {
+        this.#extensionManager.setActiveTerminal(tab);
+        const blockFrames = tab.getBlockFrames();
+        this.#extensionManager.setActiveBlockFrame(blockFrames[blockFrames.length-1]);
+      } else {
+        this.#extensionManager.setActiveTerminal(null);
+        this.#extensionManager.setActiveBlockFrame(null);
+      }
     });
 
     const onWindowGeometryChanged = _.debounce(() => {
