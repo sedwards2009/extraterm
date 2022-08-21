@@ -87,6 +87,9 @@ function makeDeb({version, buildDir}) {
   sh.mkdir("-p", debianDir);
   const controlFile = `Package: ${APP_NAME}
 Architecture: amd64
+Depends: libx11-6
+Provides: x-terminal-emulator
+Section: x11
 Maintainer: Simon Edwards
 Priority: optional
 Version: ${version}
