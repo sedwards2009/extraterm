@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { AlignmentFlag, Direction, QCheckBox, QComboBox, QLabel, QScrollArea, QSizePolicyPolicy, QWidget, TextFormat } from "@nodegui/nodegui";
-import * as open from "open";
+import { default as open } from "open";
 import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
@@ -273,7 +273,7 @@ export class AppearancePage {
                     this.#minimizeWindowToTrayCheckBox.setEnabled(isOn);
                   }
                 }),
-                
+
                 "",
                 this.#minimizeWindowToTrayCheckBox = CheckBox({
                   text: "Minimize windows to tray",
