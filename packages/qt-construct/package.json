@@ -18,10 +18,11 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
-  "dependencies": {
+  "peerDependencies": {
     "@nodegui/nodegui": "0.57.0"
   },
   "devDependencies": {
+    "@nodegui/nodegui": "0.57.0",
     "eslint": "8.13.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",

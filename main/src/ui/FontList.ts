@@ -12,15 +12,14 @@ import * as opentype from "opentype.js";
 import { QFontDatabase } from "@nodegui/nodegui";
 import { getLogger } from "extraterm-logging";
 import { PairKeyMap } from "extraterm-data-structures";
-import {fileURLToPath} from "node:url";
 
 import { FontInfo } from "../config/Config.js";
 import * as SourceDir from "../SourceDir.js";
 
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = SourceDir.path;
 
-const TERMINAL_FONTS_DIRECTORY = "../../resources/terminal_fonts";
+const TERMINAL_FONTS_DIRECTORY = "../resources/terminal_fonts";
 
 const log = getLogger("FontList");
 

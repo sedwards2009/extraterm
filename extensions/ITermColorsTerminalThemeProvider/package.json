@@ -9,25 +9,24 @@
   "exports": "./dist/ITermColorsTerminalThemeProviderExtension.js",
   "isInternal": true,
   "scripts": {
-    "build": "yarn run build-fast && yarn run lint",
-    "build-fast": "tsc",
-    "clean": "shx rm -rf dist",
+    "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/ITermColorsTerminalThemeProviderExtension.js --bundle --outfile=dist/ITermColorsTerminalThemeProviderExtension.js --platform=node --format=esm --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
+    "clean": "shx rm -rf build dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
-  },
-  "dependencies": {
-    "extraterm-logging": "1.0.0",
-    "plist": "3.0.5"
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/jest": "27.0.1",
     "@types/plist": "^3.0.2",
+    "esbuild": "^0.15.5",
     "eslint": "8.13.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
     "jest": "27.5.1",
+    "plist": "3.0.5",
     "shx": "^0.3.2",
     "typescript": "4.7.4"
   },

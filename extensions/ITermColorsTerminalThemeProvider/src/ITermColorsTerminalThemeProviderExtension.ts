@@ -8,7 +8,6 @@ import * as path from "node:path";
 import plist from "plist";
 
 import { ExtensionContext, Logger, TerminalThemeProvider, TerminalThemeInfo, TerminalTheme } from '@extraterm/extraterm-extension-api';
-import { log } from "extraterm-logging";
 
 
 export class ItermColorTerminalThemeProvider implements TerminalThemeProvider {

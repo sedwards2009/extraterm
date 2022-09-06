@@ -9,7 +9,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "qode main/dist/main.js",
+    "run": "qode main/dist/main.cjs",
     "run-valgrind": "valgrind qode main/dist/main.js",
     "run-strace": "strace -f -o strace.log qode main/dist/main.js",
     "run-theme-test": "qode main/dist/ThemeTestUtility.js",
@@ -35,7 +35,10 @@
     "@types/node": "16.4.0",
     "typescript": "4.7.4",
     "@nodegui/nodegui": "0.57.0",
-    "7zip-bin": "5.1.1"
+    "@nodegui/nodegui/cmake-js": "file:./no-package",
+    "@nodegui/nodegui/node-addon-api": "file:./no-package",
+    "7zip-bin": "5.1.1",
+    "jam-pack-nodegui": "portal:/home/sbe/devel/jam-pack-nodegui"
   },
   "private": true,
   "workspaces": {
@@ -66,32 +69,22 @@
       "extensions/WindowsConsoleSessionEditor"
     ],
     "nohoist": [
-      "**/chai",
-      "**/reflect-metadata",
       "**/@types/jest"
     ]
   },
-  "dependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
   "dependencies": {
     "@nodegui/nodegui": "0.57.0",
-    "@types/fs-extra": "^9.0.12",
-    "commander": "^8.3.0",
-    "extraterm-uuid": "1.0.0",
-    "fs-extra": "^10.0.0",
-    "nodegui-plugin-font-icon": "0.2.4",
-    "qode": "^0.1.0",
-    "source-map-support": "^0.5.21"
-  },
-  "optionalDependencies//": "These dependencies are listed here so that electron-rebuild can find them.",
-  "optionalDependencies": {
-    "node-pty": "0.10.0-beta19"
+    "node-gyp": "^8.3.0",
+    "qode": "^0.1.0"
   },
   "devDependencies": {
     "@yarnpkg/parsers": "2.5.0-rc.7",
+    "commander": "^8.3.0",
+    "extraterm-uuid": "1.0.0",
+    "fs-extra": "^10.0.0",
     "git-repo-info": "^1.4.1",
     "jest": "27.5.1",
     "modclean": "3.0.0-beta.1",
-    "node-gyp": "^8.2.0",
     "readdirp": "3.6.0",
     "shelljs": "0.8.4",
     "typescript": "4.7.4",

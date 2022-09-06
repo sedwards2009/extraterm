@@ -41,7 +41,6 @@ import { createUiStyle } from "./ui/styles/DarkTwo.js";
 import { UiStyle } from "./ui/UiStyle.js";
 import { CommandPalette } from "./CommandPalette.js";
 import { PingHandler } from "./local_http_server/PingHandler.js";
-import {fileURLToPath} from 'node:url';
 import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TerminalBlock } from "./terminal/TerminalBlock.js";
@@ -50,7 +49,7 @@ import { BulkFile } from "./bulk_file_handling/BulkFile.js";
 
 sourceMapSupport.install();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = SourceDir.path;
 
 const LOG_FILENAME = "extraterm.log";
 const IPC_FILENAME = "ipc.run";
