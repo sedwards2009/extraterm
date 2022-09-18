@@ -1,6 +1,6 @@
 *~
 dist/
-
+build/
 .cache/
 .vscode/
 .directory
