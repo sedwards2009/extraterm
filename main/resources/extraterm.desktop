@@ -1,18 +1,8 @@
-#!/usr/bin/env xdg-open
 [Desktop Entry]
-Categories=System;TerminalEmulator;
-Comment[en_US]=Command line access
-Comment=Command line access
-Exec=bash -c '"$(dirname "%k")/extratermqt"'
-GenericName[en_US]=Terminal
-GenericName=Terminal
-Icon=extratermqt
-MimeType=
-Name[en_US]=ExtratermQt
 Name=ExtratermQt
+Exec=/opt/extratermqt/extratermqt
 Terminal=false
 Type=Application
-X-DBUS-ServiceName=
-X-DBUS-StartupType=
-X-KDE-SubstituteUID=false
-X-KDE-Username=
+Comment=The swiss army chainsaw of terminal emulators
+Categories=System;TerminalEmulator;X-GNOME-Utilities;
+Icon=extratermqt
