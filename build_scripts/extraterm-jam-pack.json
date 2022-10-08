@@ -1,0 +1,125 @@
+{
+  "fetch": {
+    "gitFromCwd": true
+  },
+  "build": {
+    "packageManager": "yarn",
+    "postBuild": [
+      "cd $fetchStep_sourcePath && node build_scripts/download_launcher_executables.mjs v11",
+      {
+        "platform": "linux",
+        "commands": [
+          "cd $fetchStep_sourcePath && cp downloads/linux-x64/extraterm-launcher extratermqt && chmod a+rx extratermqt",
+          "cd $fetchStep_sourcePath && cp main/resources/extraterm.desktop extratermqt.desktop"
+        ]
+      },
+      {
+        "platform": "macos",
+        "commands": [
+          "cd $fetchStep_sourcePath && cp downloads/darwin-x64/extraterm-launcher extratermqt && chmod a+rx extratermqt"
+        ]
+      },
+      {
+        "platform": "windows",
+        "commands": [
+          "cd $fetchStep_sourcePath && cp downloads/win32-x64/extraterm-launcher.exe extratermqt.exe"
+        ]
+      }
+    ]
+  },
+  "prune": {
+    "skip": false,
+    "patterns": [
+      {
+        "keep": [
+          "extratermqt",
+          "extratermqt.exe",
+          "extratermqt.desktop",
+          "LICENSE.txt",
+          "README.md",
+          "package.json",
+          "main/dist/*",
+          "main/resources/theme_ui/**/*",
+          "main/resources/fonts/**/*",
+          "main/resources/terminal_fonts/**/*",
+          "main/resources/terminal_fonts/**/*",
+          "node_modules/nodegui-plugin-*/dist/*.js",
+          "node_modules/nodegui-plugin-*/dist/*.cjs",
+          "node_modules/nodegui-plugin-*/LICENSE*",
+          "node_modules/nodegui-plugin-*/package.json",
+          "node_modules/nodegui-plugin-*/**/*.node",
+          "node_modules/node-pty/**/*.node",
+          "node_modules/node-pty/LICENSE",
+          "node_modules/node-pty/package.json",
+          "node_modules/node-pty/lib/*.js",
+          "extensions/**/dist/*.js",
+          "extensions/**/dist/*.cjs",
+          "extensions/*/package.json",
+          "extensions/About/resources/*",
+          "extensions/TLDRPages/data/**/*",
+          "extensions/*/keybindings/*",
+          "extensions/*/theme/**/*"
+        ]
+      },
+      {
+        "platform": ["linux", "macos"],
+        "delete": [
+          "extensions/ProxySessionEditor/**/*",
+          "extensions/ProxySessionBackend/**/*",
+          "extensions/WindowsConsoleSessionBackend/**/*",
+          "extensions/WindowsConsoleSessionEditor/**/*"
+        ]
+      },
+      {
+        "platform": "windows",
+        "delete": [
+          "extensions/UnixSessionEditor/**/*",
+          "extensions/UnixSessionBackend/**/*"
+        ]
+      },
+      {
+        "platform": "linux",
+        "keep": [
+          "main/resources/list-fonts-json-binary/linux-x64/*"
+        ]
+      },
+      {
+        "platform": "macos",
+        "keep": [
+          "main/resources/list-fonts-json-binary/darwin-x64/*"
+        ]
+      },
+      {
+        "platform": "windows",
+        "keep": [
+          "main/resources/list-fonts-json-binary/win32-x64/*"
+        ]
+      }
+    ]
+  },
+  "zip": {
+    "platforms": ["linux"],
+    "skip": false
+  },
+  "debian": {
+    "skip": false,
+    "controlFields": {
+      "Depends": "libx11-6",
+      "Provides": "x-terminal-emulator",
+      "Section": "x11",
+      "Maintainer": "Simon Edwards",
+      "Priority": "optional",
+      "Description": "The swiss army chainsaw of terminal emulators"
+    },
+    "prePack": [
+      "cd $debianStep_debianSourceDirectory && mkdir -p usr/share/applications",
+      "cd $debianStep_debianSourceDirectory && mv opt/extratermqt/extratermqt.desktop usr/share/applications/",
+
+      "cd $debianStep_debianSourceDirectory && mkdir -p usr/share/icons",
+      "cd $debianStep_debianSourceDirectory && cp -r $pruneStep_trashDirectory/build_scripts/resources/linux/icons/hicolor usr/share/icons/",
+
+      "cd $debianStep_debianSourceDirectory && cp -r $pruneStep_trashDirectory/build_scripts/resources/linux/debian/* DEBIAN/",
+      "cd $debianStep_debianSourceDirectory && chmod 755 DEBIAN/*"
+    ]
+  }
+}
