@@ -5,11 +5,11 @@
   "license": "MIT",
   "version": "1.0.0",
   "type": "module",
-  "exports": "./dist/ProxySessionBackendExtension.js",
+  "exports": "./dist/ProxySessionBackendExtension.cjs",
   "scripts": {
     "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
     "build-code": "tsc",
-    "build-bundle": "esbuild build/ProxySessionBackendExtension.js --bundle --outfile=dist/ProxySessionBackendExtension.js --platform=node --format=esm && shx cp -r src/python dist/python && shx cp resources/extraterm-wsl-proxy dist/",
+    "build-bundle": "esbuild build/ProxySessionBackendExtension.js --bundle --outfile=dist/ProxySessionBackendExtension.cjs --platform=node --format=cjs && shx cp -r src/python dist/python && shx cp resources/extraterm-wsl-proxy dist/",
     "clean": "shx rm -rf dist build",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
