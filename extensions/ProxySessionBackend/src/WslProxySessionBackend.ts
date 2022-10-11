@@ -168,13 +168,13 @@ class WslProxyPtyConnector extends ProxyPtyConnector {
       {cwd: proxyDirPath, shell: true, encoding: "utf8"});
 
     if (cdResult.status !== 0) {
-      _log.warn("'wsl.exe pwd' returned status code ${cdResult.status} and stdout '${cdResult.stdout}'.");
+      _log.warn(`'wsl.exe pwd' returned status code ${cdResult.status} and stdout '${cdResult.stdout}'.`);
       // FIXME throw new Exception();
     }
 
     const wslPath = cdResult.stdout.trim();
     if (wslPath.split("\n").length !== 1) {
-      _log.warn("'wsl.exe pwd' gave unexpected output. stdout '${cdResult.stdout}'.");
+      _log.warn(`'wsl.exe pwd' gave unexpected output. stdout '${cdResult.stdout}'.`);
       // FIXME throw new Exception();
     }
 
