@@ -98,6 +98,7 @@
       }
     ]
   },
+  "quietQode": {},
   "zip": {
     "platforms": ["linux"],
     "skip": false
