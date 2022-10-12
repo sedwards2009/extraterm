@@ -5,7 +5,7 @@
   "build": {
     "packageManager": "yarn",
     "postBuild": [
-      "cd $fetchStep_sourcePath && node build_scripts/download_launcher_executables.mjs v11",
+      "cd $fetchStep_sourcePath && node build_scripts/download_launcher_executables.mjs v12",
       {
         "platform": "linux",
         "commands": [
@@ -22,7 +22,7 @@
       {
         "platform": "windows",
         "commands": [
-          "cd $fetchStep_sourcePath && cp downloads/win32-x64/extraterm-launcher.exe extratermqt.exe"
+          "cd $fetchStep_sourcePath && ./node_modules/.bin/shx cp downloads/win32-x64/extraterm-launcher.exe extratermqt.exe"
         ]
       }
     ]
@@ -57,6 +57,7 @@
           "extensions/*/package.json",
           "extensions/About/resources/*",
           "extensions/TLDRPages/data/**/*",
+          "extensions/ProxySessionBackend/dist/**/*",
           "extensions/*/keybindings/*",
           "extensions/*/theme/**/*"
         ]
@@ -120,6 +121,32 @@
 
       "cd $debianStep_debianSourceDirectory && cp -r $pruneStep_trashDirectory/build_scripts/resources/linux/debian/* DEBIAN/",
       "cd $debianStep_debianSourceDirectory && chmod 755 DEBIAN/*"
+    ]
+  },
+  "nsis": {
+    "skip": false,
+    "description": "The swiss army chainsaw of terminal emulators",
+    "detailColors": "3db54a 000000",
+    "appTitle": "ExtratermQt",
+    "installerIcon": "$pruneStep_trashDirectory/main/resources/logo/extraterm_small_logo.ico",
+    "uninstallerIcon": "$pruneStep_trashDirectory/main/resources/logo/extraterm_small_logo.ico",
+
+    "extraInstallCommands": [
+      "# Set up Windows Explorer menu items",
+      "WriteRegStr HKCU \"Software\\Classes\\directory\\Background\\shell\\extratermqt\" \"\" 'Open in ExtratermQt'",
+      "WriteRegStr HKCU \"Software\\Classes\\directory\\Background\\shell\\extratermqt\\command\" \"\" '\"$INSTDIR\\ExtratermQt.exe\" \"%V\"'",
+      "WriteRegStr HKCU \"Software\\Classes\\directory\\Background\\shell\\extratermqt\" \"icon\" '$INSTDIR\\ExtratermQt.exe'",
+      "",
+      "WriteRegStr HKCU \"Software\\Classes\\directory\\shell\\extratermqt\" \"\" 'Open in ExtratermQt'",
+      "WriteRegStr HKCU \"Software\\Classes\\directory\\shell\\extratermqt\\command\" \"\" '\"$INSTDIR\\ExtratermQt.exe\" \"%V\"'",
+      "WriteRegStr HKCU \"Software\\Classes\\directory\\shell\\extratermqt\" \"icon\" '$INSTDIR\\ExtratermQt.exe'"
+    ],
+    "extraUninstallCommands": [
+      "DeleteRegKey HKLM \"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\extratermqt\"",
+      "DeleteRegKey HKLM \"Software\\extratermqt\"",
+      "",
+      "DeleteRegKey HKCU \"Software\\Classes\\directory\\Background\\shell\\extratermqt\"",
+      "DeleteRegKey HKCU \"Software\\Classes\\directory\\shell\\extratermqt\""
     ]
   }
 }

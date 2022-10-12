@@ -19,7 +19,7 @@
     "download-deploy-tool": "node build_scripts/download_deploy_tool.mjs",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
-    "jam": "jam-pack-nodegui --config build_scripts/extraterm-jam-pack.json -D build.applicationName=extratermqt -D build.applicationVersion=$(git describe --tags | sed 's/v//')",
+    "jam": "jam-pack-nodegui --config build_scripts/extraterm-jam-pack.json -D build.applicationName=extratermqt -D build.applicationVersion=$(git describe --tags | shx sed 's/v//')",
     "package": "node build_scripts/build_packages.mjs",
     "package-commands-zip": "node build_scripts/package_commands_zip.mjs",
     "package-linux": "node build_scripts/package_linux.mjs",
@@ -36,7 +36,8 @@
     "@types/node": "16.4.0",
     "typescript": "4.7.4",
     "@nodegui/nodegui": "0.57.0",
-    "7zip-bin": "5.1.1"
+    "7zip-bin": "5.1.1",
+    "jam-pack-nodegui": "0.5.0"
   },
   "private": true,
   "workspaces": {
@@ -86,6 +87,7 @@
     "modclean": "3.0.0-beta.1",
     "readdirp": "3.6.0",
     "shelljs": "^0.8.4",
+    "shx": "^0.3.4",
     "typescript": "4.7.4",
     "wsrun": "5.2.0"
   },
