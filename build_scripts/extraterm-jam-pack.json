@@ -5,7 +5,7 @@
   "build": {
     "packageManager": "yarn",
     "postBuild": [
-      "cd $fetchStep_sourcePath && node build_scripts/download_launcher_executables.mjs v12",
+      "cd $fetchStep_sourcePath && node build_scripts/download_launcher_executables.mjs v14",
       {
         "platform": "linux",
         "commands": [
@@ -149,5 +149,15 @@
       "DeleteRegKey HKCU \"Software\\Classes\\directory\\Background\\shell\\extratermqt\"",
       "DeleteRegKey HKCU \"Software\\Classes\\directory\\shell\\extratermqt\""
     ]
+  },
+  "dmg" : {
+    "applicationIcon": "$pruneStep_trashDirectory/main/resources/logo/extraterm_small_logo.icns",
+    "applicationTitle": "ExtratermQt",
+    "nsHumanReadableCopyright": "Copyright 2022 Simon Edwards",
+    "cfBundleIdentifier": "com.extraterm.extraterm",
+    "prePack": [
+      "mv $dmgStep_dmgResourcesDirectory/extratermqt $dmgStep_dmgMacOSDirectory/"
+    ]
   }
+
 }
