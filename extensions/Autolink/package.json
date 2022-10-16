@@ -4,10 +4,12 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "exports": "./dist/Autolink.js",
+  "exports": "./dist/Autolink.cjs",
   "scripts": {
-    "build": "tsc",
-    "clean": "shx rm -rf dist",
+    "build": "yarn run build-code && yarn run build-bundle",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/Autolink.js --bundle --outfile=dist/Autolink.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
+    "clean": "shx rm -rf build dist",
     "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "author": "",
@@ -16,6 +18,7 @@
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/jest": "27.0.1",
+    "esbuild": "^0.15.5",
     "jest": "27.5.1",
     "shelljs": "0.8.3",
     "typescript": "4.7.4"
