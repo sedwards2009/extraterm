@@ -56,7 +56,7 @@ jobs:
           sudo apt-get install xserver-xorg-core mesa-common-dev libglu1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
         displayName: "Install development packages"
       - script: |
-          wget -c https://github.com/$(wget -q https://github.com/AppImage/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
+          wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage-1807-x86_64.AppImage
           chmod +x ./pkg2appimage-*.AppImage
           mv pkg2appimage-*.AppImage pkg2appimage.AppImage
           sudo mv pkg2appimage.AppImage /usr/local/bin
