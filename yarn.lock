@@ -4293,7 +4293,7 @@ __metadata:
     extraterm-uuid: 1.0.0
     fs-extra: ^10.0.0
     git-repo-info: ^1.4.1
-    jam-pack-nodegui: 0.6.0
+    jam-pack-nodegui: 0.7.0
     jest: 27.5.1
     modclean: 3.0.0-beta.1
     node-gyp: ^8.3.0
@@ -5768,9 +5768,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jam-pack-nodegui@portal:/home/sbe/devel/jam-pack-nodegui::locator=extraterm%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "jam-pack-nodegui@portal:/home/sbe/devel/jam-pack-nodegui::locator=extraterm%40workspace%3A."
+"jam-pack-nodegui@npm:0.7.0":
+  version: 0.7.0
+  resolution: "jam-pack-nodegui@npm:0.7.0"
   dependencies:
     "@yarnpkg/shell": ^3.2.4
     appdmg: ^0.6.4
@@ -5782,8 +5782,9 @@ __metadata:
     shelljs: ^0.8.5
   bin:
     jam-pack-nodegui: ./dist/main.js
+  checksum: 1d51452f16a37cf717c08537bd6cb0681dbedaf4bdd4df0de5c3e042f4312bfd48eeb5ff5a174accba7f681f0220274a9d2e7edd059b2b9d08b217aaaa9d33c7
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "jest-changed-files@npm:^24.9.0":
   version: 24.9.0
