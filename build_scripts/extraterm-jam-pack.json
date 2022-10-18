@@ -124,6 +124,13 @@
       "cd $debianStep_debianSourceDirectory && chmod 755 DEBIAN/*"
     ]
   },
+  "appImage": {
+    "exeEntryPoint": "extratermqt",
+    "prePack": [
+      "cp $pruneStep_trashDirectory/main/resources/extraterm.desktop $appImageStep_appImageSourceDirectory",
+      "cp $pruneStep_trashDirectory/build_scripts/resources/linux/icons/hicolor/32x32/apps/extratermqt.png $appImageStep_appImageSourceDirectory"
+    ]
+  },
   "nsis": {
     "skip": false,
     "description": "The swiss army chainsaw of terminal emulators",
