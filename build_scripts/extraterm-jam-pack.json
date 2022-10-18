@@ -100,7 +100,7 @@
   },
   "quietQode": {},
   "zip": {
-    "platforms": ["linux"],
+    "platforms": ["linux", "macos"],
     "skip": false
   },
   "debian": {

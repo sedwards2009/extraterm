@@ -83,7 +83,6 @@ jobs:
         displayName: "yarn run test"
       - script: yarn run package
         displayName: "yarn run package"
-      - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
       - script: cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip $(Build.ArtifactStagingDirectory)
       - script: cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.deb $(Build.ArtifactStagingDirectory)
       - script: cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.AppImage $(Build.ArtifactStagingDirectory)
