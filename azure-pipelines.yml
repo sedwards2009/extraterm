@@ -81,6 +81,8 @@ jobs:
         displayName: "yarn run build"
       - script: yarn run test
         displayName: "yarn run test"
+      - script: git branch --show-current
+        displayName: "git branch --show-current"
       - script: yarn run package
         displayName: "yarn run package"
       - script: cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip $(Build.ArtifactStagingDirectory)
