@@ -4293,7 +4293,7 @@ __metadata:
     extraterm-uuid: 1.0.0
     fs-extra: ^10.0.0
     git-repo-info: ^1.4.1
-    jam-pack-nodegui: 0.11.0
+    jam-pack-nodegui: 0.12.0
     jest: 27.5.1
     modclean: 3.0.0-beta.1
     node-gyp: ^8.3.0
@@ -5768,9 +5768,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jam-pack-nodegui@npm:0.11.0":
-  version: 0.11.0
-  resolution: "jam-pack-nodegui@npm:0.11.0"
+"jam-pack-nodegui@npm:0.12.0":
+  version: 0.12.0
+  resolution: "jam-pack-nodegui@npm:0.12.0"
   dependencies:
     "@yarnpkg/shell": ^3.2.4
     appdmg: ^0.6.4
@@ -5782,7 +5782,7 @@ __metadata:
     shelljs: ^0.8.5
   bin:
     jam-pack-nodegui: ./dist/main.js
-  checksum: 9b081c738069c0af029877b3565ec548de35077344f6ec49d5542cc38d41601ce85aa1b7e904131e990ae75dc60df2439f2b7c10902460a3703aa78368c1e19a
+  checksum: 7ab3389e1ff3b1bea2fd8cb2ec54c0d99ff360203790d7b7395ee5fa01147cfe99613ea3bd48dc8b7126f4ba5f5783782d6173655630d806dde7f15c85dea55f
   languageName: node
   linkType: hard
 
