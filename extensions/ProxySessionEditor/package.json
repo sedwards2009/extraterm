@@ -5,10 +5,11 @@
   "license": "MIT",
   "version": "1.0.0",
   "type": "module",
-  "exports": "./dist/ProxySessionEditorExtension.js",
+  "exports": "./dist/ProxySessionEditorExtension.cjs",
   "scripts": {
-    "build": "yarn run build-fast && yarn run lint",
-    "build-fast": "tsc",
+    "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/ProxySessionEditorExtension.js --bundle --outfile=dist/ProxySessionEditorExtension.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
@@ -22,6 +23,7 @@
     "@types/fs-extra": "^5.0.2",
     "@types/lodash-es": "4.17.6",
     "@types/node": "^16.4.0",
+    "esbuild": "^0.15.5",
     "eslint": "8.13.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",

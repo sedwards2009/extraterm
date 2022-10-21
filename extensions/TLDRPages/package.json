@@ -4,9 +4,11 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "exports": "./dist/main.js",
+  "exports": "./dist/main.cjs",
   "scripts": {
-    "build": "yarn run fetch-data && tsc",
+    "build": "yarn run fetch-data && yarn run build-code && yarn run build-bundle",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/main.js --bundle --outfile=dist/main.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
     "clean": "shx rm -rf dist data",
     "fetch-data": "node build_scripts/download_data.mjs",
     "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
@@ -27,6 +29,7 @@
     "@extraterm/extraterm-extension-api": "0.15.0",
     "@types/jest": "27.0.1",
     "download-cli": "^1.1.1",
+    "esbuild": "^0.15.5",
     "jest": "27.5.1",
     "shelljs": "0.8.3",
     "typescript": "4.7.4"

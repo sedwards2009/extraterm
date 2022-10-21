@@ -8,7 +8,7 @@ trigger:
     include:
     - master
     - release/*
-    - qt
+    - bundle
   tags:
     include:
     - v*
@@ -56,7 +56,7 @@ jobs:
           sudo apt-get install xserver-xorg-core mesa-common-dev libglu1-mesa-dev libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-xinerama0
         displayName: "Install development packages"
       - script: |
-          wget -c https://github.com/$(wget -q https://github.com/AppImage/pkg2appimage/releases -O - | grep "pkg2appimage-.*-x86_64.AppImage" | head -n 1 | cut -d '"' -f 2)
+          wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage-1807-x86_64.AppImage
           chmod +x ./pkg2appimage-*.AppImage
           mv pkg2appimage-*.AppImage pkg2appimage.AppImage
           sudo mv pkg2appimage.AppImage /usr/local/bin
@@ -75,19 +75,19 @@ jobs:
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
-      - script: "yarn run download-deploy-tool"
-        displayName: "Download the deploy packaging tool"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
         displayName: "yarn run build"
       - script: yarn run test
         displayName: "yarn run test"
-      - script: yarn run package-linux --version=$(git describe --tags)
-        displayName: "yarn run package-linux"
-      - script: cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
-      - script: cp $(Build.SourcesDirectory)/build_tmp/*.deb $(Build.ArtifactStagingDirectory)
-      - script: cp $(Build.SourcesDirectory)/build_tmp/*.AppImage $(Build.ArtifactStagingDirectory)
+      - script: git branch --show-current
+        displayName: "git branch --show-current"
+      - script: yarn run package
+        displayName: "yarn run package"
+      - script: cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip $(Build.ArtifactStagingDirectory)
+      - script: cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.deb $(Build.ArtifactStagingDirectory)
+      - script: cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.AppImage $(Build.ArtifactStagingDirectory)
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'Linux build output'
@@ -113,29 +113,22 @@ jobs:
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
-      - script: "yarn run download-deploy-tool"
-        displayName: "Download the deploy packaging tool"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
         displayName: "yarn run build"
       - script: yarn run test
         displayName: "yarn run test"
-      - script: |
-          PATH=C:\Program Files (x86)\NSIS\;%PATH%
-          git describe --tags > APP_VERSION.txt
-          set /p APP_VERSION= < APP_VERSION.txt
-          del APP_VERSION.txt
-          yarn run package-windows --version=%APP_VERSION%
-        displayName: "yarn run package-windows"
+      - script: yarn run package
+        displayName: "yarn run package"
       - task: CopyFiles@2
         inputs:
-          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          sourceFolder: '$(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work'
           contents: '*.zip'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
       - task: CopyFiles@2
         inputs:
-          sourceFolder: '$(Build.SourcesDirectory)/build_tmp'
+          sourceFolder: '$(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work'
           contents: '*.exe'
           targetFolder: '$(Build.ArtifactStagingDirectory)'
       - task: PublishPipelineArtifact@0
@@ -159,19 +152,17 @@ jobs:
         displayName: Check for tag and package.json version
       - script: "yarn run download-launcher-executable"
         displayName: "Download the launcher executable"
-      - script: "yarn run download-deploy-tool"
-        displayName: "Download the deploy packaging tool"
       - script: yarn run lint-strict
         displayName: "yarn run lint-strict"
       - script: yarn run build
         displayName: "yarn run build"
       - script: yarn run test
         displayName: "yarn run test"
-      - script: yarn run package-macos --version=$(git describe --tags)
-        displayName: "yarn run package-macos"
+      - script: yarn run package
+        displayName: "yarn run package"
       - script: |
-          cp $(Build.SourcesDirectory)/build_tmp/*.zip $(Build.ArtifactStagingDirectory)
-          cp $(Build.SourcesDirectory)/build_tmp/*.dmg $(Build.ArtifactStagingDirectory)
+          cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip $(Build.ArtifactStagingDirectory)
+          cp $(Build.SourcesDirectory)/tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg $(Build.ArtifactStagingDirectory)
       - task: PublishPipelineArtifact@0
         inputs:
           artifactName: 'macOS build output'

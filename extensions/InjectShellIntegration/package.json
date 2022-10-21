@@ -5,11 +5,12 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "version": "1.0.0",
-  "windowMain": "dist/InjectShellIntegrationExtension.js",
+  "windowMain": "dist/InjectShellIntegrationExtension.cjs",
   "scripts": {
-    "build": "yarn run build-fast && yarn run lint",
-    "build-fast": "tsc",
-    "clean": "shx rm -rf dist",
+    "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/InjectShellIntegrationExtension.js --bundle --outfile=dist/InjectShellIntegrationExtension.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
+    "clean": "shx rm -rf build dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
     "test": "yarn run build && jest"
@@ -17,6 +18,7 @@
   "isInternal": true,
   "devDependencies": {
     "@types/node": "^16.4.0",
+    "esbuild": "^0.15.5",
     "eslint": "8.13.0",
     "eslint-plugin-unicorn": "42.0.0",
     "eslint-config-extraterm": "1.0.0",

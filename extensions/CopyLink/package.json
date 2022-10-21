@@ -4,10 +4,12 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "exports": "./dist/CopyLink.js",
+  "exports": "./dist/CopyLink.cjs",
   "scripts": {
-    "build": "tsc",
-    "clean": "shx rm -rf dist data"
+    "build": "yarn run build-code && yarn run build-bundle",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/CopyLink.js --bundle --outfile=dist/CopyLink.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
+    "clean": "shx rm -rf build dist"
   },
   "author": "",
   "license": "MIT",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
+    "esbuild": "^0.15.5",
     "shelljs": "0.8.3",
     "typescript": "4.7.4"
   }

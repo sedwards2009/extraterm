@@ -259,8 +259,8 @@ function downloadURL(url: string): Promise<Buffer> {
       response.on("end", () => {
         resolve(Buffer.concat(body));
       });
-    })
-  })
+    });
+  });
 }
 
 function commandZoomIn(): void {
