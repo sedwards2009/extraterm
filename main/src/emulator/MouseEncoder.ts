@@ -39,7 +39,6 @@ export class MouseEncoder {
   mouseEvents = false;
 
   utfMouse = false;
-  decLocator = false;
   urxvtMouse = false;
   sgrMouse = false;
 
@@ -249,18 +248,6 @@ export class MouseEncoder {
   // locator: CSI P e ; P b ; P r ; P c ; P p & w
   #computeMouseSequence(button: number, pos0based: TerminalCoord, buttonState: ButtonState): string {
     const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
-
-    if (this.decLocator) {
-      // NOTE: Unstable.
-      this._log.debug("sendEvent with decLocator is not implemented!");
-
-      // const x = pos.x;
-      // const y = pos.y;
-      // const translatedButton = {0:2, 1:4, 2:6, 3:3}[button & 3];
-      // self.send('\x1b[' + translatedButton + ';' + (translatedButton === 3 ? 4 : 0) + ';' + y + ';' + x + ';' +
-      //   (pos.page || 0) + '&w');
-      return null;
-    }
 
     if (this.urxvtMouse) {
       const x = pos.x;
