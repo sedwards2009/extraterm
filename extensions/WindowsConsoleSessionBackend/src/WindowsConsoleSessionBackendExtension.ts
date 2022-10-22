@@ -99,7 +99,7 @@ class WindowsConsoleBackend implements SessionBackend {
     }
 
     if (cwd == null) {
-      cwd = process.env.HOME;
+      cwd = process.env.HOMEPATH;
     }
 
     const dirError = this._validateDirectoryPath(cwd);
