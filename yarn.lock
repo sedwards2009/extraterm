@@ -7485,12 +7485,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-pty@npm:0.10.0-beta19":
-  version: 0.10.0-beta19
-  resolution: "node-pty@npm:0.10.0-beta19"
+"node-pty@npm:0.11.0-beta23":
+  version: 0.11.0-beta23
+  resolution: "node-pty@npm:0.11.0-beta23"
   dependencies:
     nan: ^2.14.0
-  checksum: 429b47d297f8d5db70b14ac98efbe7c2d9a0589ccb53a3a8f88371e6336d7eb93526e5e54b05f423fb8aff97fdf7a10ca45af40c97f5050096ecfa52d5ea21db
+  peerDependencies:
+    node-gyp: ^8.3.0
+  checksum: 05ad2a347b70107786bcc7e2f2bf43c72075e934c068ec63f345f3888e72e0287e6dc604157bdcb025c80c27a220dda85070410e6bdc7050df8a4f069dd55542
   languageName: node
   linkType: hard
 
@@ -10299,7 +10301,7 @@ __metadata:
     extraterm-later: 1.0.0
     lodash-es: 4.17.21
     node-gyp: ^8.3.0
-    node-pty: 0.10.0-beta19
+    node-pty: 0.11.0-beta23
     shx: ^0.3.2
     typescript: 4.7.4
   languageName: unknown
@@ -10683,7 +10685,7 @@ __metadata:
     eslint-plugin-unicorn: 42.0.0
     extraterm-event-emitter: 1.0.0
     lodash-es: 4.17.21
-    node-pty: 0.10.0-beta19
+    node-pty: 0.11.0-beta23
     pid-cwd: ^1.2.0
     shx: ^0.3.2
     typescript: 4.7.4
