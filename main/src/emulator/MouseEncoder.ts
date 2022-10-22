@@ -54,8 +54,8 @@ export class MouseEncoder {
   // The number of cursor up/down key presses to send if `sendCursorKeysForWheel` is active.
   wheelCursorKeyAcceleration = 5;
 
-  private _mouseButtonDown = false;
-  private _lastMovePos: TerminalCoord = null;
+  #mouseButtonDown = false;
+  #lastMovePos: TerminalCoord = null;
 
   constructor() {
     this._log = getLogger("MouseEncoder", this);
@@ -66,33 +66,33 @@ export class MouseEncoder {
       return null;
     }
 
-    const sequence = this._computeMouseDownSequence(ev);
+    const sequence = this.#computeMouseDownSequence(ev);
 
     // bind events
     if (this.normalMouse) {
-      this._lastMovePos = null;
-      this._mouseButtonDown = true;
-    }  
+      this.#lastMovePos = null;
+      this.#mouseButtonDown = true;
+    }
     return sequence;
   }
 
-  private _computeMouseDownSequence(ev: MouseEventOptions): string {
+  #computeMouseDownSequence(ev: MouseEventOptions): string {
     let button = 0;
 
     // no mods
     if (this.vt200Mouse) {
       const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
-      button = this._mouseEventOptionsToButtons(ev, ButtonState.Press) | ctrlCode;
+      button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press) | ctrlCode;
     } else if ( ! this.normalMouse) {
-      button = this._mouseEventOptionsToButtons(ev, ButtonState.Press);  // no mods
+      button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press);  // no mods
     } else {
-      button = this._mouseEventOptionsToModsButtons(ev);
+      button = this.#mouseEventOptionsToModsButtons(ev);
     }
-    
-    const sequence = this._computeMouseSequence(button, {x: ev.column, y: ev.row}, ButtonState.Press);
-    
+
+    const sequence = this.#computeMouseSequence(button, {x: ev.column, y: ev.row}, ButtonState.Press);
+
     if (this.vt200Mouse) {
-      return sequence + this._computeMouseSequence(3, {x: ev.column, y: ev.row}, ButtonState.Press); // release button
+      return sequence + this.#computeMouseSequence(3, {x: ev.column, y: ev.row}, ButtonState.Press); // release button
     }
     return sequence;
   }
@@ -102,87 +102,87 @@ export class MouseEncoder {
       return null;
     }
 
-    if ( ! this._mouseButtonDown) {
+    if ( ! this.#mouseButtonDown) {
       return null;
     }
-    if (this._lastMovePos !== null && this._lastMovePos.x === ev.column && this._lastMovePos.y === ev.row) {
+    if (this.#lastMovePos !== null && this.#lastMovePos.x === ev.column && this.#lastMovePos.y === ev.row) {
       return "";
     }
-    
+
     const pos = {x: ev.column, y: ev.row};
 
-    const sequence = this._computeMouseMoveSequence(ev);
-    this._lastMovePos = pos;
+    const sequence = this.#computeMouseMoveSequence(ev);
+    this.#lastMovePos = pos;
     return sequence;
   }
 
-  private _computeMouseMoveSequence(ev: MouseEventOptions): string {
+  #computeMouseMoveSequence(ev: MouseEventOptions): string {
     const pos = {x: ev.column, y: ev.row};
 
     let button = 0;
-    
+
     // no mods
     if (this.vt200Mouse) {
       const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
-      button = this._mouseEventOptionsToButtons(ev, ButtonState.Press) | ctrlCode;
+      button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press) | ctrlCode;
     } else if ( ! this.normalMouse) {
-      button = this._mouseEventOptionsToButtons(ev, ButtonState.Press);  // no mods
+      button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press);  // no mods
     } else {
-      button = this._mouseEventOptionsToModsButtons(ev);
+      button = this.#mouseEventOptionsToModsButtons(ev);
     }
-    
+
     // buttons marked as motions
     // are incremented by 32
     button |= 32;
 
-    return this._computeMouseSequence(button, pos, ButtonState.Press);
+    return this.#computeMouseSequence(button, pos, ButtonState.Press);
   }
-  
+
   mouseUp(ev: MouseEventOptions): string {
     if ( ! this.mouseEvents) {
       return null;
     }
 
-    if ( ! this._mouseButtonDown) {
+    if ( ! this.#mouseButtonDown) {
       return null;
     }
-    
+
     if (this.x10Mouse) {
-      this._mouseButtonDown = false;
+      this.#mouseButtonDown = false;
       return null; // No mouse ups for x10.
     }
-    
+
     if (ev === null) {
-      this._mouseButtonDown = false;
+      this.#mouseButtonDown = false;
       return "";
     }
 
-    const sequence = this._computeMouseUpSequence(ev);
-    this._mouseButtonDown = false;
+    const sequence = this.#computeMouseUpSequence(ev);
+    this.#mouseButtonDown = false;
     return sequence;
   }
 
-  private _computeMouseUpSequence(ev: MouseEventOptions): string {
+  #computeMouseUpSequence(ev: MouseEventOptions): string {
     let button = 0;
 
     // no mods
     if (this.vt200Mouse) {
       const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
-      button = this._mouseEventOptionsToButtons(ev, ButtonState.Release) | ctrlCode;
+      button = this.#mouseEventOptionsToButtons(ev, ButtonState.Release) | ctrlCode;
     } else if ( ! this.normalMouse) {
-      button = this._mouseEventOptionsToButtons(ev, ButtonState.Release);  // no mods
+      button = this.#mouseEventOptionsToButtons(ev, ButtonState.Release);  // no mods
     } else {
-      button = this._mouseEventOptionsToModsButtons(ev, ButtonState.Release);
+      button = this.#mouseEventOptionsToModsButtons(ev, ButtonState.Release);
     }
-    
-    return this._computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Release);
+
+    return this.#computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Release);
   }
 
-  private _mouseEventOptionsToModsButtons(ev: MouseEventOptions, buttonState=ButtonState.Press): number {
-    return this._mouseEventOptionsToMods(ev) | this._mouseEventOptionsToButtons(ev, buttonState);
+  #mouseEventOptionsToModsButtons(ev: MouseEventOptions, buttonState=ButtonState.Press): number {
+    return this.#mouseEventOptionsToMods(ev) | this.#mouseEventOptionsToButtons(ev, buttonState);
   }
 
-  private _mouseEventOptionsToButtons(ev: MouseEventOptions, buttonState=ButtonState.Press): number {
+  #mouseEventOptionsToButtons(ev: MouseEventOptions, buttonState=ButtonState.Press): number {
     // two low bits:
     // 0 = left
     // 1 = middle
@@ -190,7 +190,7 @@ export class MouseEncoder {
     // 3 = release
     // wheel up/down:
     // 1, and 2 - with 64 added
-    
+
     let button = 0;
     if (buttonState === ButtonState.Release) {
       if ( ! this.sgrMouse) {
@@ -206,7 +206,7 @@ export class MouseEncoder {
     return button;
   }
 
-  private _mouseEventOptionsToMods(ev: MouseEventOptions): number {
+  #mouseEventOptionsToMods(ev: MouseEventOptions): number {
     const shift = ev.shiftKey ? BUTTONS_CODE_SHIFT : 0;
     const meta = ev.metaKey ? BUTTONS_CODE_META : 0;
     const ctrl = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0;
@@ -215,7 +215,7 @@ export class MouseEncoder {
 
   // encode button and
   // position to characters
-  private encodeMouseData(buffer: number[], ch: number): void {
+  #encodeMouseData(buffer: number[], ch: number): void {
     if ( ! this.utfMouse) {
       if (ch === 255) {
         buffer.push(0);
@@ -247,13 +247,13 @@ export class MouseEncoder {
   // sgr: ^[[ Cb ; Cx ; Cy M/m
   // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
   // locator: CSI P e ; P b ; P r ; P c ; P p & w
-  private _computeMouseSequence(button: number, pos0based: TerminalCoord, buttonState: ButtonState): string {
+  #computeMouseSequence(button: number, pos0based: TerminalCoord, buttonState: ButtonState): string {
     const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
-    
+
     if (this.decLocator) {
       // NOTE: Unstable.
       this._log.debug("sendEvent with decLocator is not implemented!");
-      
+
       // const x = pos.x;
       // const y = pos.y;
       // const translatedButton = {0:2, 1:4, 2:6, 3:3}[button & 3];
@@ -275,16 +275,16 @@ export class MouseEncoder {
     }
 
     const encodedData = [];
-    this.encodeMouseData(encodedData, button+32);
-    
+    this.#encodeMouseData(encodedData, button+32);
+
     // xterm sends raw bytes and
-    // starts at 32 (SP) for each.    
-    this.encodeMouseData(encodedData, pos.x + 32);
-    this.encodeMouseData(encodedData, pos.y + 32);
+    // starts at 32 (SP) for each.
+    this.#encodeMouseData(encodedData, pos.x + 32);
+    this.#encodeMouseData(encodedData, pos.y + 32);
 
     return '\x1b[M' + String.fromCharCode.apply(String, encodedData);
   }
-  
+
   // mouseup, mousedown, mousewheel
   // left click: ^[[M 3<^[[M#3<
   // mousewheel up: ^[[M`3>
@@ -296,11 +296,11 @@ export class MouseEncoder {
       }
       return null;
     }
-    const button = this._mouseEventOptionsToWheelButtons(ev, true);
-    return this._computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Press);
+    const button = this.#mouseEventOptionsToWheelButtons(ev, true);
+    return this.#computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Press);
   }
 
-  private _mouseEventOptionsToWheelButtons(ev: MouseEventOptions, scrollUp: boolean): number {
+  #mouseEventOptionsToWheelButtons(ev: MouseEventOptions, scrollUp: boolean): number {
     return scrollUp ? 64 : 65;
   }
 
@@ -310,9 +310,9 @@ export class MouseEncoder {
         return DuplicateString("\x1bOB", this.wheelCursorKeyAcceleration);
       }
       return null;
-    }    
-    const button = this._mouseEventOptionsToWheelButtons(ev, false);
-    return this._computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Press);
+    }
+    const button = this.#mouseEventOptionsToWheelButtons(ev, false);
+    return this.#computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Press);
   }
 }
 
