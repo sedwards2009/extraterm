@@ -1,10 +1,10 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { MouseEncoder } from "./MouseEncoder.js";
-import { TerminalCoord, MouseEventOptions } from "term-api";
+import { MouseEncoder, MouseProtocol, MouseProtocolEncoding } from "./MouseEncoder.js";
+import { MouseEventOptions } from "term-api";
 
 
 function emptyEvent(): MouseEventOptions {
@@ -32,8 +32,7 @@ test("no mouse events", done => {
 
 test("normal mouse", done => {
   const mouseEncoder = new MouseEncoder();
-  mouseEncoder.normalMouse = true;
-  mouseEncoder.mouseEvents = true;
+  mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
 
   expect(mouseEncoder.mouseDown( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[M &#");
   expect(mouseEncoder.mouseMove( {...emptyEvent(), leftButton: true, row: 3, column: 5 } )).toBe("\u001b[M@&$");
@@ -44,8 +43,7 @@ test("normal mouse", done => {
 
 test("normal mouse mods", done => {
   const mouseEncoder = new MouseEncoder();
-  mouseEncoder.normalMouse = true;
-  mouseEncoder.mouseEvents = true;
+  mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
 
   expect(mouseEncoder.mouseDown( {...emptyEvent(), rightButton: true, shiftKey: true, row: 2, column: 5 } )).toBe("\u001b[M2&#");
   expect(mouseEncoder.mouseUp( {...emptyEvent(), rightButton: true, shiftKey: true, row: 2, column: 5 } )).toBe("\u001b[M3&#");
@@ -61,8 +59,7 @@ test("normal mouse mods", done => {
 
 test("x10 mouse", done => {
   const mouseEncoder = new MouseEncoder();
-  mouseEncoder.x10Mouse = true;
-  mouseEncoder.mouseEvents = true;
+  mouseEncoder.mouseProtocol = MouseProtocol.X10;
 
   expect(mouseEncoder.mouseDown( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[M &#");
   expect(mouseEncoder.mouseMove( {...emptyEvent(), leftButton: true, row: 3, column: 5 } )).toBe(null);
@@ -73,21 +70,19 @@ test("x10 mouse", done => {
 
 test("vt220 mouse", done => {
   const mouseEncoder = new MouseEncoder();
-  mouseEncoder.vt200Mouse = true;
-  mouseEncoder.mouseEvents = true;
+  mouseEncoder.mouseProtocol = MouseProtocol.VT200;
 
-  expect(mouseEncoder.mouseDown( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[M &#\u001b[M#&#");
+  expect(mouseEncoder.mouseDown( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[M &#");
   expect(mouseEncoder.mouseMove( {...emptyEvent(), leftButton: true, row: 3, column: 5 } )).toBe(null);
-  expect(mouseEncoder.mouseUp( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe(null);
+  expect(mouseEncoder.mouseUp( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[M#&#");
 
   done();
 });
 
 test("sgr mouse", done => {
   const mouseEncoder = new MouseEncoder();
-  mouseEncoder.normalMouse = true;
-  mouseEncoder.sgrMouse = true;
-  mouseEncoder.mouseEvents = true;
+  mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
+  mouseEncoder.mouseEncoding = MouseProtocolEncoding.SGR;
 
   expect(mouseEncoder.mouseDown( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[<0;6;3M");
   expect(mouseEncoder.mouseMove( {...emptyEvent(), leftButton: true, row: 3, column: 5 } )).toBe("\u001b[<32;6;4M");
@@ -96,37 +91,10 @@ test("sgr mouse", done => {
   done();
 });
 
-test("urxvt mouse", done => {
-  const mouseEncoder = new MouseEncoder();
-  mouseEncoder.normalMouse = true;
-  mouseEncoder.urxvtMouse = true;
-  mouseEncoder.mouseEvents = true;
-
-  expect(mouseEncoder.mouseDown( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[32;6;3M");
-  expect(mouseEncoder.mouseMove( {...emptyEvent(), leftButton: true, row: 3, column: 5 } )).toBe("\u001b[64;6;4M");
-  expect(mouseEncoder.mouseUp( {...emptyEvent(), leftButton: true, row: 2, column: 5 } )).toBe("\u001b[35;6;3M");
-
-  done();
-});
-
-test("utf8 mouse", done => {
-  const mouseEncoder = new MouseEncoder();
-  mouseEncoder.normalMouse = true;
-  mouseEncoder.utfMouse = true;
-  mouseEncoder.mouseEvents = true;
-
-  expect(mouseEncoder.mouseDown( {...emptyEvent(), leftButton: true, row: 125, column: 258 } )).toBe("\u001b[M Ä£Â");
-  expect(mouseEncoder.mouseMove( {...emptyEvent(), leftButton: true, row: 126, column: 258 } )).toBe("\u001b[M@Ä£Â");
-  expect(mouseEncoder.mouseUp( {...emptyEvent(), leftButton: true, row: 127, column: 258 } )).toBe("\u001b[M#Ä£Â ");
-
-  done();
-});
-
 test("sgr mouse wheel", done => {
   const mouseEncoder = new MouseEncoder();
-  mouseEncoder.normalMouse = true;
-  mouseEncoder.sgrMouse = true;
-  mouseEncoder.mouseEvents = true;
+  mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
+  mouseEncoder.mouseEncoding = MouseProtocolEncoding.SGR;
 
   expect(mouseEncoder.wheelUp( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001b[<64;6;3M");
   expect(mouseEncoder.wheelDown( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001b[<65;6;3M");
@@ -144,3 +112,4 @@ test("send wheel cursor keys",  done => {
 
   done();
 });
+

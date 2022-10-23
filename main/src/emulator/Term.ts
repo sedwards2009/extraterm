@@ -77,7 +77,7 @@ import {
 } from 'extraterm-char-cell-grid';
 import { CellWithHyperlink, LineImpl } from "term-api-lineimpl";
 import { ControlSequenceParameters } from "./ControlSequenceParameters.js";
-import { MouseEncoder } from "./MouseEncoder.js";
+import { MouseEncoder, MouseProtocol, MouseProtocolEncoding } from "./MouseEncoder.js";
 
 const DEBUG_RESIZE = false;
 
@@ -3538,17 +3538,20 @@ export class Emulator implements EmulatorApi {
             break;
           case 9: // X10 Mouse
             // no release, no motion, no wheel, no modifiers.
+            this._mouseEncoder.mouseProtocol = MouseProtocol.X10;
+            break;
           case 1000: // vt200 mouse
             // no motion.
             // no modifiers, except control on the wheel.
+            this._mouseEncoder.mouseProtocol = MouseProtocol.VT200;
+            break;
           case 1002: // button event mouse
+            this._mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
+            break;
           case 1003: // any event mouse
             // any event - sends motion events,
             // even if there is no button held down.
-            this._mouseEncoder.x10Mouse = params[i].intValue === 9;
-            this._mouseEncoder.vt200Mouse = params[i].intValue === 1000;
-            this._mouseEncoder.normalMouse = params[i].intValue > 1000;
-            this._mouseEncoder.mouseEvents = true;
+            this._mouseEncoder.mouseProtocol = MouseProtocol.ANY_EVENTS;
             break;
           case 1004: // send focusin/focusout events
             // focusin: ^[[I
@@ -3556,19 +3559,19 @@ export class Emulator implements EmulatorApi {
             this.sendFocus = true;
             break;
           case 1005: // utf8 ext mode mouse
-            this._mouseEncoder.utfMouse = true;
+            this._log.warn("Escape sequence for UTF8 mouse was received, but is unsupported. (1005)");
             // for wide terminals
             // simply encodes large values as utf8 characters
             break;
           case 1006: // sgr ext mode mouse
-            this._mouseEncoder.sgrMouse = true;
+            this._mouseEncoder.mouseEncoding = MouseProtocolEncoding.SGR;
             // for wide terminals
             // does not add 32 to fields
             // press: ^[[<b;x;yM
             // release: ^[[<b;x;ym
             break;
           case 1015: // urxvt ext mode mouse
-            this._mouseEncoder.urxvtMouse = true;
+            this._log.warn("Escape sequence for URXVT mouse was received, but is unsupported. (1015)");
             // for wide terminals
             // numbers for fields
             // press: ^[[b;x;yM
@@ -3756,22 +3759,17 @@ export class Emulator implements EmulatorApi {
           case 1000: // vt200 mouse
           case 1002: // button event mouse
           case 1003: // any event mouse
-            this._mouseEncoder.x10Mouse = false;
-            this._mouseEncoder.vt200Mouse = false;
-            this._mouseEncoder.normalMouse = false;
-            this._mouseEncoder.mouseEvents = false;
+            this._mouseEncoder.mouseProtocol = MouseProtocol.NONE;
             break;
           case 1004: // send focusin/focusout events
             this.sendFocus = false;
             break;
           case 1005: // utf8 ext mode mouse
-            this._mouseEncoder.utfMouse = false;
             break;
           case 1006: // sgr ext mode mouse
-            this._mouseEncoder.sgrMouse = false;
+            this._mouseEncoder.mouseEncoding = MouseProtocolEncoding.NORMAL;
             break;
           case 1015: // urxvt ext mode mouse
-            this._mouseEncoder.urxvtMouse = false;
             break;
           case 1049: // alt screen buffer cursor
             // FALL-THROUGH

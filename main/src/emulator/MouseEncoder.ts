@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -32,19 +32,58 @@ enum ButtonState {
   Release
 }
 
+export enum MouseProtocol {
+  NONE = 0,
+  ANY_EVENTS = 1003,   // Mode 1003
+  DRAG_EVENTS = 1002,  // Mode 1002
+  VT200 = 1000,        // Mode 1000
+  X10 = 9           // Mode 9
+}
+
+export enum MouseProtocolEncoding {
+  NORMAL = 0,
+  SGR = 1006           // Mode 1006
+}
+
+const ProtocolMouseDownSupport: MouseProtocol[] = [
+  MouseProtocol.X10,
+  MouseProtocol.VT200,
+  MouseProtocol.ANY_EVENTS,
+  MouseProtocol.DRAG_EVENTS
+];
+
+const ProtocolMouseUpSupport: MouseProtocol[] = [
+  MouseProtocol.VT200,
+  MouseProtocol.ANY_EVENTS,
+  MouseProtocol.DRAG_EVENTS
+];
+
+const ProtocolMouseDragSupport: MouseProtocol[] = [
+  MouseProtocol.ANY_EVENTS,
+  MouseProtocol.DRAG_EVENTS
+];
+
+const ProtocolMouseMoveSupport: MouseProtocol[] = [
+  MouseProtocol.ANY_EVENTS
+];
+
+const ProtocolMouseWheelUpSupport : MouseProtocol[]= [
+  MouseProtocol.VT200,
+  MouseProtocol.ANY_EVENTS,
+  MouseProtocol.DRAG_EVENTS
+];
+
+const ProtocolMouseWheelDownSupport: MouseProtocol[] = [
+  MouseProtocol.VT200,
+  MouseProtocol.ANY_EVENTS,
+  MouseProtocol.DRAG_EVENTS
+];
 
 export class MouseEncoder {
   private _log: Logger = null;
 
-  mouseEvents = false;
-
-  utfMouse = false;
-  urxvtMouse = false;
-  sgrMouse = false;
-
-  normalMouse = false;
-  x10Mouse = false;
-  vt200Mouse = false;
+  mouseProtocol: MouseProtocol = MouseProtocol.NONE;
+  mouseEncoding: MouseProtocolEncoding = MouseProtocolEncoding.NORMAL;
 
   // If this is true and no other mouse mode is selected,
   // then wheel event will send cursor key up/down.
@@ -61,17 +100,17 @@ export class MouseEncoder {
   }
 
   mouseDown(ev: MouseEventOptions): string {
-    if ( ! this.mouseEvents) {
+    if ( ! ProtocolMouseDownSupport.includes(this.mouseProtocol)) {
       return null;
     }
 
     const sequence = this.#computeMouseDownSequence(ev);
 
     // bind events
-    if (this.normalMouse) {
+    if (this.mouseEncoding === MouseProtocolEncoding.NORMAL) {
       this.#lastMovePos = null;
-      this.#mouseButtonDown = true;
     }
+    this.#mouseButtonDown = true;
     return sequence;
   }
 
@@ -79,31 +118,26 @@ export class MouseEncoder {
     let button = 0;
 
     // no mods
-    if (this.vt200Mouse) {
+    if (this.mouseProtocol === MouseProtocol.VT200) {
       const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
       button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press) | ctrlCode;
-    } else if ( ! this.normalMouse) {
+    } else if (this.mouseEncoding !== MouseProtocolEncoding.NORMAL) {
       button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press);  // no mods
     } else {
       button = this.#mouseEventOptionsToModsButtons(ev);
     }
 
-    const sequence = this.#computeMouseSequence(button, {x: ev.column, y: ev.row}, ButtonState.Press);
-
-    if (this.vt200Mouse) {
-      return sequence + this.#computeMouseSequence(3, {x: ev.column, y: ev.row}, ButtonState.Press); // release button
-    }
-    return sequence;
+    return this.#computeMouseSequence(button, {x: ev.column, y: ev.row}, ButtonState.Press);
   }
 
   mouseMove(ev: MouseEventOptions): string {
-    if ( ! this.mouseEvents) {
+    if (this.#mouseButtonDown && !ProtocolMouseDragSupport.includes(this.mouseProtocol)) {
+      return null;
+    }
+    if (! this.#mouseButtonDown && !ProtocolMouseMoveSupport.includes(this.mouseProtocol)) {
       return null;
     }
 
-    if ( ! this.#mouseButtonDown) {
-      return null;
-    }
     if (this.#lastMovePos !== null && this.#lastMovePos.x === ev.column && this.#lastMovePos.y === ev.row) {
       return "";
     }
@@ -121,10 +155,10 @@ export class MouseEncoder {
     let button = 0;
 
     // no mods
-    if (this.vt200Mouse) {
+    if (this.mouseProtocol === MouseProtocol.VT200) {
       const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
       button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press) | ctrlCode;
-    } else if ( ! this.normalMouse) {
+    } else if (this.mouseEncoding !== MouseProtocolEncoding.NORMAL) {
       button = this.#mouseEventOptionsToButtons(ev, ButtonState.Press);  // no mods
     } else {
       button = this.#mouseEventOptionsToModsButtons(ev);
@@ -138,17 +172,13 @@ export class MouseEncoder {
   }
 
   mouseUp(ev: MouseEventOptions): string {
-    if ( ! this.mouseEvents) {
+    if ( ! ProtocolMouseUpSupport.includes(this.mouseProtocol)) {
+      this.#mouseButtonDown = false;
       return null;
     }
 
     if ( ! this.#mouseButtonDown) {
       return null;
-    }
-
-    if (this.x10Mouse) {
-      this.#mouseButtonDown = false;
-      return null; // No mouse ups for x10.
     }
 
     if (ev === null) {
@@ -165,10 +195,10 @@ export class MouseEncoder {
     let button = 0;
 
     // no mods
-    if (this.vt200Mouse) {
+    if (this.mouseProtocol === MouseProtocol.VT200) {
       const ctrlCode = ev.ctrlKey ? BUTTONS_CODE_CTRL : 0; // ctrl only
       button = this.#mouseEventOptionsToButtons(ev, ButtonState.Release) | ctrlCode;
-    } else if ( ! this.normalMouse) {
+    } else if (this.mouseEncoding !== MouseProtocolEncoding.NORMAL) {
       button = this.#mouseEventOptionsToButtons(ev, ButtonState.Release);  // no mods
     } else {
       button = this.#mouseEventOptionsToModsButtons(ev, ButtonState.Release);
@@ -192,7 +222,7 @@ export class MouseEncoder {
 
     let button = 0;
     if (buttonState === ButtonState.Release) {
-      if ( ! this.sgrMouse) {
+      if (this.mouseEncoding !== MouseProtocolEncoding.SGR) {
         button = BUTTONS_CODE_RELEASE;
       }
     } else if (ev.leftButton) {
@@ -215,54 +245,32 @@ export class MouseEncoder {
   // encode button and
   // position to characters
   #encodeMouseData(buffer: number[], ch: number): void {
-    if ( ! this.utfMouse) {
-      if (ch === 255) {
-        buffer.push(0);
-        return;
-      }
-      if (ch > 127) {
-        ch = 127;
-      }
-      buffer.push(ch);
-    } else {
-      if (ch === 2047) {
-        buffer.push(0);
-      }
-      if (ch < 127) {
-        buffer.push(ch);
-      } else {
-        if (ch > 2047) {
-          ch = 2047;
-        }
-        buffer.push(0xC0 | (ch >> 6));
-        buffer.push(0x80 | (ch & 0x3F));
-      }
+    if (ch === 255) {
+      buffer.push(0);
+      return;
     }
+    if (ch > 127) {
+      ch = 127;
+    }
+    buffer.push(ch);
   }
 
   // send a mouse event:
   // regular/utf8: ^[[M Cb Cx Cy
-  // urxvt: ^[[ Cb ; Cx ; Cy M
   // sgr: ^[[ Cb ; Cx ; Cy M/m
   // vt300: ^[[ 24(1/3/5)~ [ Cx , Cy ] \r
   // locator: CSI P e ; P b ; P r ; P c ; P p & w
   #computeMouseSequence(button: number, pos0based: TerminalCoord, buttonState: ButtonState): string {
     const pos: TerminalCoord = { x: pos0based.x + 1, y: pos0based.y + 1 };
 
-    if (this.urxvtMouse) {
-      const x = pos.x;
-      const y = pos.y;
-      return '\x1b[' + (button+32) + ';' + x + ';' + y + 'M';
-    }
-
-    if (this.sgrMouse) {
+    if (this.mouseEncoding === MouseProtocolEncoding.SGR) {
       const x = pos.x;
       const y = pos.y;
       return `\x1b[<${button};${x};${y}${buttonState === ButtonState.Release ? 'm' : 'M'}`;
     }
 
     const encodedData = [];
-    this.#encodeMouseData(encodedData, button+32);
+    this.#encodeMouseData(encodedData, button + 32);
 
     // xterm sends raw bytes and
     // starts at 32 (SP) for each.
@@ -277,12 +285,13 @@ export class MouseEncoder {
   // mousewheel up: ^[[M`3>
 
   wheelUp(ev: MouseEventOptions): string {
-    if ( ! this.mouseEvents) {
+    if ( ! ProtocolMouseWheelUpSupport.includes(this.mouseProtocol)) {
       if (this.sendCursorKeysForWheel) {
         return DuplicateString("\x1bOA", this.wheelCursorKeyAcceleration);
       }
       return null;
     }
+
     const button = this.#mouseEventOptionsToWheelButtons(ev, true);
     return this.#computeMouseSequence(button,  {x: ev.column, y: ev.row}, ButtonState.Press);
   }
@@ -292,7 +301,7 @@ export class MouseEncoder {
   }
 
   wheelDown(ev: MouseEventOptions): string {
-    if ( ! this.mouseEvents) {
+    if ( ! ProtocolMouseWheelDownSupport.includes(this.mouseProtocol)) {
       if (this.sendCursorKeysForWheel) {
         return DuplicateString("\x1bOB", this.wheelCursorKeyAcceleration);
       }
