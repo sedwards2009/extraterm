@@ -3581,7 +3581,7 @@ export class Emulator implements EmulatorApi {
             this.cursorHidden = false;
             break;
           case 1049: // alt screen buffer cursor
-            //this.saveCursor();
+            this.saveCursor();
             // FALL-THROUGH
           case 47: // alt screen buffer
           case 1047: // alt screen buffer
@@ -3602,7 +3602,9 @@ export class Emulator implements EmulatorApi {
               const previousGlevel = this.glevel;
               const previousCharsets = this.charsets;
 
+              const previousMouseEncoder = this._mouseEncoder;
               this._fullReset();
+              this._mouseEncoder = previousMouseEncoder;
               this._mouseEncoder.sendCursorKeysForWheel = true;
 
               this.charset = previousCharset;
