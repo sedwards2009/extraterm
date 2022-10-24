@@ -53,7 +53,7 @@ export class WindowPopOver {
   #createPopUp(): void {
     this.#popUp = Widget({
       cssClass: ["transparent"],
-      windowFlag: WindowType.Popup | WindowType.FramelessWindowHint,
+      windowFlag: WindowType.Popup | WindowType.FramelessWindowHint | WindowType.NoDropShadowWindowHint,
       attribute: [
         WidgetAttribute.WA_NoSystemBackground,
         WidgetAttribute.WA_WindowPropagation,
