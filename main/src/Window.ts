@@ -117,7 +117,7 @@ export class Window implements Disposable {
     this.#themeManager = themeManager;
     this.#uiStyle = uiStyle;
 
-    this.#handleLogicalDpiChanged.bind(this);
+    this.#handleLogicalDpiChanged = this.#UnboundHandleLogicalDpiChanged.bind(this);
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
     this.onTabChange = this.#onTabChangeEventEmitter.event;
@@ -705,6 +705,10 @@ export class Window implements Disposable {
       this.#handleWindowStateChanged(windowState);
     });
     this.#windowOpenState = WindowOpenState.Open;
+
+    if (this.getDpi() !== this.#lastConfigDpi) {
+      this.#updateTerminalVisualConfig();
+    }
   }
 
   dispose(): void {
@@ -780,7 +784,9 @@ export class Window implements Disposable {
     return this.#windowWidget.geometry();
   }
 
-  #handleLogicalDpiChanged(dpi: number): void {
+  #handleLogicalDpiChanged: (dpi: number) => void;
+
+  #UnboundHandleLogicalDpiChanged(dpi: number): void {
     if (dpi !== this.#lastConfigDpi) {
       this.#updateTerminalVisualConfig();
     }
