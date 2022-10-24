@@ -789,6 +789,7 @@ export class Window implements Disposable {
   #UnboundHandleLogicalDpiChanged(dpi: number): void {
     if (dpi !== this.#lastConfigDpi) {
       this.#updateTerminalVisualConfig();
+      this.#repolishTabBar();
     }
   }
 
