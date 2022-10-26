@@ -83,11 +83,7 @@ export class KeyRecord {
     }
     parts.push(eventKeyNameToConfigKeyName(keyboardEvent.key));
     const keyCode = parts.join("-");
-
-    this._log.debug(`keyCode: ${keyCode}`);
-
-    const humanFormat = KeyStroke.parseConfigString(keyCode).formatHumanReadable();
-    this.#onKeyPressEventEmitter.fire(humanFormat);
+    this.#onKeyPressEventEmitter.fire(keyCode);
   }
 
   #isFinalKey(key: number): boolean {

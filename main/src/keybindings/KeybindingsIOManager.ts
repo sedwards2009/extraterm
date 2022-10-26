@@ -241,7 +241,7 @@ export class KeybindingsIOManager {
   updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): void {
     this.#writeCustomKeybindingsFile(customKeybindingsFile);
     this.#customKeybindingsMap.set(customKeybindingsFile.basedOn, customKeybindingsFile);
-    this.#clearBaseCaches();
+    this.#initializeCaches();
   }
 
   #writeCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): boolean {
