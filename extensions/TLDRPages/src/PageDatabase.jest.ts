@@ -17,7 +17,7 @@ test("Scan", async () => {
 
   const info = await db.getPageInfoByName("cd", "windows");
 
-  expect(info.examples.length).toBe(4);
+  expect(info.examples.length).toBe(5);
   expect(info.examples[0].commandLine).toMatch(/^[^`].*[^`]$/);
   expect(info.examples[0].description).toMatch(/^.*[^:]$/);
 });
