@@ -49,6 +49,7 @@
           "node_modules/nodegui-plugin-*/package.json",
           "node_modules/nodegui-plugin-*/**/*.node",
           "node_modules/node-pty/build/**/*.node",
+          "node_modules/node-pty/build/Release/spawn-helper",
           "node_modules/node-pty/build/**/*.dll",
           "node_modules/node-pty/build/**/*.exe",
           "node_modules/node-pty/LICENSE",
