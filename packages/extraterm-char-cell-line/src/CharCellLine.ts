@@ -474,12 +474,12 @@ export class CharCellLine {
 
     this.#dataView.setUint16(offset + OFFSET_FG_CLUT_INDEX, index);
 
-    this._updateInternalRGB(index, offset);
+    this.#updateInternalRGB(index, offset);
 
     this.#dirtyFlag = true;
   }
 
-  private _updateInternalRGB(index: number, offset: number): void {
+  #updateInternalRGB(index: number, offset: number): void {
     if (this.palette != null) {
       const style = this.#dataView.getUint16(offset + OFFSET_STYLE);
       let rgba = 0;
@@ -534,7 +534,7 @@ export class CharCellLine {
     const ifFgClut = this.#dataView.getUint8(offset + OFFSET_FLAGS) & FLAG_MASK_FG_CLUT;
     if (ifFgClut) {
       const index = this.#dataView.getUint16(offset + OFFSET_FG_CLUT_INDEX);
-      this._updateInternalRGB(index, offset);
+      this.#updateInternalRGB(index, offset);
     }
     this.#dirtyFlag = true;
   }
