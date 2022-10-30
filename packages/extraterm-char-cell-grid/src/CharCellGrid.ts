@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -706,75 +706,5 @@ export class CharCellGrid {
       }
     }
     this.#dirtyFlag = true;
-  }
-
-  /**
-   * Scroll the whole grid N rows downwards
-   *
-   * @param verticalOffset number of rows to scroll downs. Accepts
-   *                       negative values to scroll upwards.
-   */
-  scrollVertical(verticalOffset: number): void {
-    if (verticalOffset === 0) {
-      return;
-    }
-
-    if (verticalOffset < 0) {
-      this._scrollUp(verticalOffset);
-    } else {
-      this._scrollDown(verticalOffset);
-    }
-    this.#dirtyFlag = true;
-  }
-
-  private _scrollUp(verticalOffset: number): void {
-    const absOffset = Math.abs(verticalOffset);
-    const rowWidthUint32 = this.width * CELL_SIZE_UINT32;
-
-    for(let srcY=absOffset, destY=0; srcY<this.height; srcY++, destY++) {
-      const sourceOffset = srcY * rowWidthUint32;
-      const destOffset =  destY * rowWidthUint32;
-      this._copyRow(sourceOffset, destOffset);
-    }
-  }
-
-  private _scrollDown(verticalOffset: number): void {
-    const absOffset = Math.abs(verticalOffset);
-    const rowWidthUint32 = this.width * CELL_SIZE_UINT32;
-
-    for(let srcY=this.height-1-absOffset, destY=this.height-1; srcY>=0; srcY--, destY--) {
-      const sourceOffset = srcY * rowWidthUint32;
-      const destOffset =  destY * rowWidthUint32;
-      this._copyRow(sourceOffset, destOffset);
-    }
-  }
-
-  private _copyRow(sourceOffset: number, destOffset: number): void {
-    const width = this.width;
-    const uint32Array = new Uint32Array(this._rawBuffer);
-    for (let h=0; h<width; h++) {
-
-      // Unrolled copy loop for when CELL_SIZE_UINT32 is 5
-
-      uint32Array[destOffset] = uint32Array[sourceOffset];
-      destOffset++;
-      sourceOffset++;
-
-      uint32Array[destOffset] = uint32Array[sourceOffset];
-      destOffset++;
-      sourceOffset++;
-
-      uint32Array[destOffset] = uint32Array[sourceOffset];
-      destOffset++;
-      sourceOffset++;
-
-      uint32Array[destOffset] = uint32Array[sourceOffset];
-      destOffset++;
-      sourceOffset++;
-
-      uint32Array[destOffset] = uint32Array[sourceOffset];
-      destOffset++;
-      sourceOffset++;
-    }
   }
 }
