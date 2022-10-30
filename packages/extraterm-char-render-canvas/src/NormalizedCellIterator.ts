@@ -4,7 +4,7 @@
 
 import {
   CharCellLine, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT
-} from "extraterm-char-cell-grid";
+} from "extraterm-char-cell-line";
 
 export interface NormalizedCell {
   x: number;

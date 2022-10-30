@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import test from 'ava';
 import * as fontFinder from 'font-finder';
 
-import { CharCellLine } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-line";
 import { load } from './index.js';
 import { performance } from 'node:perf_hooks';
 import {fileURLToPath} from 'node:url';

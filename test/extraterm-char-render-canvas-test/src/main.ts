@@ -1,6 +1,6 @@
 
 import { xtermPalette, TextureFontAtlas, WebGLRenderer, computeFontMetrics, MonospaceFontMetrics, WebGLCharRenderCanvas } from "extraterm-char-render-canvas";
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellGrid } from "extraterm-char-cell-line";
 import { printTestPattern, printEmoji, CellGridOutputDevice, printPalette, VtOutputDevice, OutputDevice } from "./TestPattern";
 import { WebGLRendererRepository } from "extraterm-char-render-canvas/dist/WebGLRendererRepository";
 

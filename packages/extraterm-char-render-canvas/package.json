@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@nodegui/nodegui": "0.57.0",
-    "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-char-cell-line": "1.0.0",
     "extraterm-color-utilities": "1.0.0",
     "extraterm-data-structures": "1.0.0",
     "extraterm-logging": "1.0.0",

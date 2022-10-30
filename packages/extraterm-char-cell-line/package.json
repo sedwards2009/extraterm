@@ -1,5 +1,5 @@
 {
-  "name": "extraterm-char-cell-grid",
+  "name": "extraterm-char-cell-line",
   "version": "1.0.0",
   "description": "Character Cell Grid data structure",
   "author": "Simon Edwards",

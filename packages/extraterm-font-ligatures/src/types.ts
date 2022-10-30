@@ -1,4 +1,4 @@
-import { CharCellLine } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-line";
 import { Font as FontFinderFont, ListOptions } from "font-finder";
 
 export interface SubstitutionResult {

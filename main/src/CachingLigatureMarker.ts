@@ -4,7 +4,7 @@
 import lru from "lru-cache";
 
 import { getLogger, Logger } from "extraterm-logging";
-import { CharCellLine, FLAG_MASK_WIDTH, FLAG_MASK_LIGATURE } from "extraterm-char-cell-grid";
+import { CharCellLine, FLAG_MASK_WIDTH, FLAG_MASK_LIGATURE } from "extraterm-char-cell-line";
 
 export interface LigatureMarker {
     markLigaturesCharCellLine(grid: CharCellLine, row: number, text: string): void;

@@ -1,4 +1,4 @@
-import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, UNDERLINE_STYLE_NORMAL } from "extraterm-char-cell-grid";
+import { CharCellGrid, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, UNDERLINE_STYLE_NORMAL } from "extraterm-char-cell-line";
 import * as easta from "easta";
 
 

@@ -32,7 +32,7 @@
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
-import { CharCellLine } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-line";
 import { Event } from "extraterm-event-emitter";
 
 

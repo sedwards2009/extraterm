@@ -5,7 +5,7 @@
 import { Line } from "term-api";
 import { PairKeyMap } from "extraterm-data-structures";
 import { isWide, utf16LengthOfCodePoint } from "extraterm-unicode-utilities";
-import { CharCellLine, Cell } from "extraterm-char-cell-grid";
+import { CharCellLine, Cell } from "extraterm-char-cell-line";
 
 export interface CellWithHyperlink extends Cell {
   hyperlinkID: string;

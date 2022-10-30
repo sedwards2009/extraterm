@@ -4057,9 +4057,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"extraterm-char-cell-grid@1.0.0, extraterm-char-cell-grid@workspace:packages/extraterm-char-cell-grid":
+"extraterm-char-cell-line@1.0.0, extraterm-char-cell-line@workspace:packages/extraterm-char-cell-line":
   version: 0.0.0-use.local
-  resolution: "extraterm-char-cell-grid@workspace:packages/extraterm-char-cell-grid"
+  resolution: "extraterm-char-cell-line@workspace:packages/extraterm-char-cell-line"
   dependencies:
     "@types/jest": 27.0.1
     "@types/node": ^16.4.0
@@ -4082,7 +4082,7 @@ __metadata:
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
-    extraterm-char-cell-grid: 1.0.0
+    extraterm-char-cell-line: 1.0.0
     extraterm-color-utilities: 1.0.0
     extraterm-data-structures: 1.0.0
     extraterm-logging: 1.0.0
@@ -4149,7 +4149,7 @@ __metadata:
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
-    extraterm-char-cell-grid: 1.0.0
+    extraterm-char-cell-line: 1.0.0
     font-finder: ^1.1.0
     husky: ^0.14.3
     lru-cache: ^4.1.3
@@ -6793,7 +6793,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     extraterm-boolean-expression-evaluator: 1.0.0
-    extraterm-char-cell-grid: 1.0.0
+    extraterm-char-cell-line: 1.0.0
     extraterm-color-utilities: 1.0.0
     extraterm-data-structures: 1.0.0
     extraterm-font-ligatures: 1.0.0
@@ -9762,7 +9762,7 @@ __metadata:
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
-    extraterm-char-cell-grid: 1.0.0
+    extraterm-char-cell-line: 1.0.0
     extraterm-data-structures: 1.0.0
     extraterm-unicode-utilities: 1.0.0
     jest: 27.5.1
@@ -9779,7 +9779,7 @@ __metadata:
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
-    extraterm-char-cell-grid: 1.0.0
+    extraterm-char-cell-line: 1.0.0
     extraterm-event-emitter: 1.0.0
     shx: ^0.3.2
     typescript: 4.7.4

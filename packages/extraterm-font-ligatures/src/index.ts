@@ -2,7 +2,7 @@ import * as util from 'node:util';
 import * as opentype from 'opentype.js';
 import * as fontFinder from 'font-finder';
 import lru from 'lru-cache';
-import { CharCellLine } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-line";
 
 import { Font, LigatureData, FlattenedLookupTree, LookupTree, Options } from './types.js';
 import { mergeTrees } from './merge.js';

@@ -5,7 +5,7 @@ import { QColor, QFont, QFontMetrics, QFontWeight, QImage, QImageFormat, QPainte
 
 import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE,
   STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, STYLE_MASK_HYPERLINK_HIGHLIGHT, UNDERLINE_STYLE_NORMAL,
-  UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-grid";
+  UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-line";
 import { isWide as isFullWidth } from "extraterm-unicode-utilities";
 import { select } from "floyd-rivest";
 import { Logger, getLogger, log } from "extraterm-logging";

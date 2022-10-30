@@ -12,7 +12,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "extraterm-char-cell-grid": "1.0.0",
+    "extraterm-char-cell-line": "1.0.0",
     "extraterm-data-structures": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0",
     "term-api": "1.0.0"

@@ -74,7 +74,7 @@ import {
   copyCell,
   setCellFgClutFlag,
   setCellBgClutFlag,
-} from 'extraterm-char-cell-grid';
+} from "extraterm-char-cell-line";
 import { CellWithHyperlink, LineImpl } from "term-api-lineimpl";
 import { ControlSequenceParameters } from "./ControlSequenceParameters.js";
 import { MouseEncoder, MouseProtocol, MouseProtocolEncoding } from "./MouseEncoder.js";

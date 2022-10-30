@@ -6,7 +6,7 @@
 import { performance } from "node:perf_hooks";
 import {Emulator, Platform} from "./Term.js";
 import {RenderEvent, Line, MinimalKeyboardEvent, DataEvent} from "term-api";
-import { STYLE_MASK_CURSOR } from "extraterm-char-cell-grid";
+import { STYLE_MASK_CURSOR } from "extraterm-char-cell-line";
 
 
 test("basic", done => {

@@ -2,7 +2,7 @@
  * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
 import { ArrayKeyTrie } from "extraterm-data-structures";
-import { StyleCode } from "extraterm-char-cell-grid";
+import { StyleCode } from "extraterm-char-cell-line";
 import { CachedGlyph, FontAtlasBase } from "./FontAtlasBase.js";
 
 export interface TextureCachedGlyph extends CachedGlyph {
