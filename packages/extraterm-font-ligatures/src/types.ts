@@ -1,4 +1,4 @@
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-grid";
 import { Font as FontFinderFont, ListOptions } from "font-finder";
 
 export interface SubstitutionResult {
@@ -45,7 +45,7 @@ export interface Font {
    */
   findLigatureRanges(text: string): [number, number][];
 
-  markLigaturesCharCellGridRow(grid: CharCellGrid, row: number): void;
+  markLigaturesCharCellGridRow(grid: CharCellLine): void;
 }
 
 export interface Options {

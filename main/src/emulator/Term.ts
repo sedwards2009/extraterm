@@ -576,7 +576,7 @@ export class Emulator implements EmulatorApi {
         this.x < this.cols) {
 
       const newLine = line.clone();
-      newLine.setStyle(this.x, 0, newLine.getStyle(this.x, 0) | STYLE_MASK_CURSOR);
+      newLine.setStyle(this.x, newLine.getStyle(this.x) | STYLE_MASK_CURSOR);
       return newLine;
     }
     return line;
@@ -590,7 +590,7 @@ export class Emulator implements EmulatorApi {
     const line = this._getRow(row);
     const linkID = line.getOrCreateLinkIDForURL(url, group);
     for (let i = 0; i < length; i++) {
-      line.setLinkID(column + i, 0, linkID);
+      line.setLinkID(column + i, linkID);
     }
     this.markRowForRefresh(row);
   }
@@ -605,9 +605,9 @@ export class Emulator implements EmulatorApi {
     let didRemove = false;
     if (group === "") {
       for (let i=0; i<width; i++) {
-        const linkID = line.getLinkID(i, 0);
+        const linkID = line.getLinkID(i);
         if (linkID !== 0) {
-          line.setLinkID(i, 0, 0);
+          line.setLinkID(i, 0);
           didRemove = true;
         }
       }
@@ -616,9 +616,9 @@ export class Emulator implements EmulatorApi {
       const targetLinkIDs = line.getAllLinkIDs(group);
       if (targetLinkIDs.length !== 0) {
         for (let i=0; i<width; i++) {
-          const linkID = line.getLinkID(i, 0);
+          const linkID = line.getLinkID(i);
           if (targetLinkIDs.includes(linkID)) {
-            line.setLinkID(i, 0, 0);
+            line.setLinkID(i, 0);
             didRemove = true;
           }
         }
@@ -931,16 +931,16 @@ export class Emulator implements EmulatorApi {
                 const line = this._getRow(this.y);
                 if (this.insertMode) {
                   // Push the characters out of the way to make space.
-                  line.shiftCellsRight(this.x, 0, 1);
-                  line.setCodePoint(this.x, 0, " ".codePointAt(0));
+                  line.shiftCellsRight(this.x, 1);
+                  line.setCodePoint(this.x, " ".codePointAt(0));
                   if (isWide(codePoint)) {
-                    line.shiftCellsRight(this.x, 0, 1);
-                    line.setCodePoint(this.x, 0, " ".codePointAt(0));
+                    line.shiftCellsRight(this.x, 1);
+                    line.setCodePoint(this.x, " ".codePointAt(0));
                   }
                 }
 
-                line.setCellAndLink(this.x, 0, this.curAttr);
-                line.setCodePoint(this.x, 0 ,codePoint);
+                line.setCellAndLink(this.x, this.curAttr);
+                line.setCodePoint(this.x, codePoint);
 
                 this.x++;
                 this.markRowForRefresh(this.y);
@@ -949,12 +949,12 @@ export class Emulator implements EmulatorApi {
                   const j = this.y;
                   const line = this._getRow(j);
                   if (this.cols < 2 || this.x >= this.cols) {
-                    line.setCellAndLink(this.x - 1, 0, this.curAttr);
-                    line.setCodePoint(this.x - 1, 0, ' '.codePointAt(0));
+                    line.setCellAndLink(this.x - 1, this.curAttr);
+                    line.setCodePoint(this.x - 1, " ".codePointAt(0));
                     break;
                   }
-                  line.setCellAndLink(this.x, 0, this.curAttr);
-                  line.setCodePoint(this.x, 0, ' '.codePointAt(0));
+                  line.setCellAndLink(this.x, this.curAttr);
+                  line.setCodePoint(this.x, " ".codePointAt(0));
                   this.x++;
                 }
               }
@@ -2397,11 +2397,11 @@ export class Emulator implements EmulatorApi {
     // resize cols
     for (let i = 0; i< this.lines.length; i++) {
       const line = this.lines[i];
-      const newLine = new LineImpl(newcols, 1);
-      newLine.pasteGrid(line, 0, 0);
+      const newLine = new LineImpl(newcols);
+      newLine.pasteLine(line, 0);
 
       for(let j=line.width; j<newcols; j++) {
-        newLine.setCellAndLink(j, 0, Emulator.defAttr);
+        newLine.setCellAndLink(j, Emulator.defAttr);
       }
 
       this.lines[i] = newLine;
@@ -2558,8 +2558,8 @@ export class Emulator implements EmulatorApi {
 
     const chCodePoint = ch.codePointAt(0);
     for (; x < this.cols; x++) {
-      line.setCellAndLink(x, 0, this.curAttr);
-      line.setCodePoint(x, 0, chCodePoint);
+      line.setCellAndLink(x, this.curAttr);
+      line.setCodePoint(x, chCodePoint);
     }
 
     this.markRowForRefresh(y);
@@ -2581,7 +2581,7 @@ export class Emulator implements EmulatorApi {
     x++;
     while (x !== 0) {
       x--;
-      line.setCellAndLink(x, 0, clearCellAttrs);
+      line.setCellAndLink(x, clearCellAttrs);
     }
 
     this.markRowForRefresh(y);
@@ -2592,7 +2592,7 @@ export class Emulator implements EmulatorApi {
   }
 
   private blankLine(cur?: boolean): LineImpl {
-    return new LineImpl(this.cols, 1);
+    return new LineImpl(this.cols);
   }
 
   private handler(data: string): void {
@@ -3170,10 +3170,10 @@ export class Emulator implements EmulatorApi {
     const eraseCell = this.eraseAttr();
     const line = this._getRow(row);
 
-    line.shiftCellsRight(j, 0, param);
+    line.shiftCellsRight(j, param);
 
     while (param-- && j < this.cols) {
-      line.setCell(j, 0, eraseCell);
+      line.setCell(j, eraseCell);
       j++;
     }
   }
@@ -3275,10 +3275,10 @@ export class Emulator implements EmulatorApi {
     const emptyCell = this.eraseAttr();
     const line = this.lines[row];
 
-    line.shiftCellsLeft(this.x, 0, param);
+    line.shiftCellsLeft(this.x, param);
 
     while (param--) {
-      line.setCell(line.width-1-param, 0, emptyCell);
+      line.setCell(line.width-1-param, emptyCell);
     }
   }
 
@@ -3295,7 +3295,7 @@ export class Emulator implements EmulatorApi {
     const emptyCell = this.eraseAttr();
     const line = this._getRow(row);
     while (param-- && j < this.cols) {
-      line.setCell(j, 0, emptyCell);
+      line.setCell(j, emptyCell);
       j++;
     }
   }
@@ -3899,11 +3899,11 @@ export class Emulator implements EmulatorApi {
     const line = this._getRow(this.y);
 
     const cell = this.x === 0 ? Emulator.defAttr : line.getCellAndLink(this.x-1, 0);
-    const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : line.getCodePoint(this.x-1, 0);
+    const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : line.getCodePoint(this.x-1);
 
     while (param--) {
-      line.setCellAndLink(this.x, 0, cell);
-      line.setCodePoint(this.x, 0, chCodePoint);
+      line.setCellAndLink(this.x, cell);
+      line.setCodePoint(this.x, chCodePoint);
       this.x++;
     }
   }

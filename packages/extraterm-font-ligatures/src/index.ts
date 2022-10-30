@@ -2,7 +2,7 @@ import * as util from 'node:util';
 import * as opentype from 'opentype.js';
 import * as fontFinder from 'font-finder';
 import lru from 'lru-cache';
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-grid";
 
 import { Font, LigatureData, FlattenedLookupTree, LookupTree, Options } from './types.js';
 import { mergeTrees } from './merge.js';
@@ -259,32 +259,32 @@ class FontImpl implements Font {
     return didSubstitute;
   }
 
-  markLigaturesCharCellGridRow(grid: CharCellGrid, row: number): void {
+  markLigaturesCharCellGridRow(grid: CharCellLine): void {
     // Short circuit the process if there are no possible ligatures in the
     // font
     if (this._lookupTrees.length === 0) {
       return;
     }
 
-    const glyphIds = this._findGlyphIdsInCharCellGridRow(grid, row);
+    const glyphIds = this._findGlyphIdsInCharCellGridRow(grid);
 
     const width = grid.width;
     for (let i=0; i<width; i++) {
-      grid.setLigature(i, row, 0);
+      grid.setLigature(i, 0);
     }
 
     const result = this._findInternal(glyphIds);
     for (const range of result.ranges) {
       const ligatureLength = range[1] - range[0];
-      grid.setLigature(range[0], row, ligatureLength);
+      grid.setLigature(range[0], ligatureLength);
     }
   }
 
-  private _findGlyphIdsInCharCellGridRow(grid: CharCellGrid, row: number): number [] {
+  private _findGlyphIdsInCharCellGridRow(grid: CharCellLine): number [] {
     const glyphIds: number[] = [];
     const width = grid.width;
     for (let i = 0; i < width; i++) {
-      const codePoint = grid.getCodePoint(i, row);
+      const codePoint = grid.getCodePoint(i);
       let glyphIndex = this._codePointToGlyphIndexCache.get(codePoint);
       if (glyphIndex === undefined) {
         const char = String.fromCodePoint(codePoint);

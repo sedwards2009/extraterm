@@ -270,10 +270,10 @@ class RenderDevice {
 function lineToString(line: Line): string {
   const codePoints = [];
   for (let i=0; i<line.width; i++) {
-    if (line.getStyle(i, 0) & STYLE_MASK_CURSOR) {
+    if (line.getStyle(i) & STYLE_MASK_CURSOR) {
       codePoints.push("#".codePointAt(0));
     } else {
-      codePoints.push(line.getCodePoint(i, 0));
+      codePoints.push(line.getCodePoint(i));
     }
   }
   return String.fromCodePoint(...codePoints);

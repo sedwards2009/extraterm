@@ -142,14 +142,13 @@ const SpaceCell: Cell = {
  *
  * This code uses a fast and compact representation of the data.
  */
-export class CharCellGrid {
+export class CharCellLine {
 
   #rawBuffer: ArrayBuffer;
   #dataView: DataView;
   #uint8View: Uint8Array;
   #dirtyFlag = true;
   width: number;
-  height: number;
   palette: number[];
 
   /**
@@ -159,21 +158,19 @@ export class CharCellGrid {
    * maps indices to full RGBA colors.
    *
    * @param width The width of the grid in cells.
-   * @param height The height of the grid in cells.
    * @param palette The palette to use. This is an array of 257 32bit RGBA
    *    values. This array is not copied and once passed here should not be
    *    modified externally.
    * @param __bare__ This is internal.
    */
-  constructor(width_: number, height_: number, palette_: number[]=null,
+  constructor(width_: number, palette_: number[]=null,
       __bare__=false) {
     this.width = width_;
-    this.height = height_;
     this.palette = palette_;
     if (__bare__) {
       return;
     }
-    this.#rawBuffer = new ArrayBuffer(width_ * height_ * CELL_SIZE_BYTES);
+    this.#rawBuffer = new ArrayBuffer(width_ * CELL_SIZE_BYTES);
     this.#dataView = new DataView(this.#rawBuffer);
     this.#uint8View = new Uint8Array(this.#rawBuffer);
     this.clear();
@@ -199,15 +196,12 @@ export class CharCellGrid {
 
   #reapplyPalette(): void {
     const width = this.width;
-    const height = this.height;
-    for (let j=0; j<height; j++) {
-      for (let i=0; i<width; i++) {
-        if (this.isBgClut(i, j)) {
-          this.setBgClutIndex(i, j, this.getBgClutIndex(i,j));
-        }
-        if (this.isFgClut(i, j)) {
-          this.setFgClutIndex(i, j, this.getFgClutIndex(i,j));
-        }
+    for (let i=0; i<width; i++) {
+      if (this.isBgClut(i)) {
+        this.setBgClutIndex(i, this.getBgClutIndex(i));
+      }
+      if (this.isFgClut(i)) {
+        this.setFgClutIndex(i, this.getFgClutIndex(i));
       }
     }
   }
@@ -215,13 +209,13 @@ export class CharCellGrid {
   /**
    * Create a complete copy of this grid.
    */
-  clone(): CharCellGrid {
-    const grid = new CharCellGrid(this.width, this.height, this.palette);
+  clone(): CharCellLine {
+    const grid = new CharCellLine(this.width, this.palette);
     this.cloneInto(grid);
     return grid;
   }
 
-  cloneInto(grid: CharCellGrid): void {
+  cloneInto(grid: CharCellLine): void {
     grid.#rawBuffer = this.#rawBuffer.slice(0);
     grid.#dataView = new DataView(grid.#rawBuffer);
     grid.#uint8View = new Uint8Array(grid.#rawBuffer);
@@ -235,7 +229,7 @@ export class CharCellGrid {
    */
   clear(): void {
     const spaceCodePoint = " ".codePointAt(0);
-    const maxChar = this.width * this.height;
+    const maxChar = this.width;
     let offset = 0;
 
     const fgRGBA = this.palette == null ? 0xffffffff : this.palette[FG_COLOR_INDEX];
@@ -257,8 +251,8 @@ export class CharCellGrid {
   /**
    * Get the completecontents of a cell.
    */
-  getCell(x: number, y: number): Cell {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getCell(x: number): Cell {
+    const offset = x * CELL_SIZE_BYTES;
     const cell: Cell = {
       codePoint: this.#dataView.getUint32(offset),
       flags: this.#dataView.getUint8(offset + OFFSET_FLAGS),
@@ -275,8 +269,8 @@ export class CharCellGrid {
   /**
    * Set the contents of a cell.
    */
-  setCell(x: number, y: number, cell: Cell): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setCell(x: number, cell: Cell): void {
+    const offset = x * CELL_SIZE_BYTES;
     this.#dataView.setUint32(offset, cell.codePoint);
     this.#dataView.setUint8(offset + OFFSET_FLAGS, cell.flags);
     this.#dataView.setUint8(offset + OFFSET_LINK_ID, cell.linkID);
@@ -296,29 +290,29 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  clearCell(x: number, y: number): void {
-    this.setCell(x, y, SpaceCell);
+  clearCell(x: number): void {
+    this.setCell(x, SpaceCell);
     this.#dirtyFlag = true;
   }
 
-  formatCellDebug(x: number, y: number): string {
-    return (`{ char: '${String.fromCodePoint(this.getCodePoint(x, y))}', ` +
-      `codePoint: ${this.getCodePoint(x, y)}, ` +
-      `extraWidth: ${this.getCharExtraWidth(x, y)}, ` +
-      `ligature: ${this.getLigature(x, y)}, ` +
+  formatCellDebug(x: number): string {
+    return (`{ char: '${String.fromCodePoint(this.getCodePoint(x))}', ` +
+      `codePoint: ${this.getCodePoint(x)}, ` +
+      `extraWidth: ${this.getCharExtraWidth(x)}, ` +
+      `ligature: ${this.getLigature(x)}, ` +
       `}`);
   }
 
-  formatRowDebug(y: number): string {
+  formatRowDebug(): string {
     const result = [];
     for (let i=0; i<this.width; i++) {
-      result.push("" + i + ": " + this.formatCellDebug(i, y));
+      result.push("" + i + ": " + this.formatCellDebug(i));
     }
     return result.join("\n");
   }
 
-  setCodePoint(x: number, y: number, codePoint: number): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setCodePoint(x: number, codePoint: number): void {
+    const offset = x * CELL_SIZE_BYTES;
 
     const width = isWide(codePoint) ? 1 : 0;
     const flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
@@ -329,24 +323,24 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  getCodePoint(x: number, y: number): number {
-    return this.#dataView.getUint32((y * this.width + x) * CELL_SIZE_BYTES + OFFSET_CODEPOINT);
+  getCodePoint(x: number): number {
+    return this.#dataView.getUint32(x * CELL_SIZE_BYTES + OFFSET_CODEPOINT);
   }
 
-  getCharExtraWidth(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getCharExtraWidth(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     const flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
     return (flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT;
   }
 
-  getFlags(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getFlags(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint8(offset + OFFSET_FLAGS);
   }
 
-  getRowFlags(y: number): Uint8Array {
+  getRowFlags(): Uint8Array {
     const flagsArray = new Uint8Array(this.width);
-    let offset = y * this.width * CELL_SIZE_BYTES + OFFSET_FLAGS;
+    let offset = OFFSET_FLAGS;
     const width = this.width;
     for (let i=0; i<width; i++) {
       flagsArray[i] = this.#dataView.getUint8(offset);
@@ -355,8 +349,8 @@ export class CharCellGrid {
     return flagsArray;
   }
 
-  setRowFlags(y: number, flagsArray: Uint8Array, flagMask=0xffff): void {
-    let offset = y * this.width * CELL_SIZE_BYTES + OFFSET_FLAGS;
+  setRowFlags(flagsArray: Uint8Array, flagMask=0xffff): void {
+    let offset = OFFSET_FLAGS;
     const width = Math.min(this.width, flagsArray.length);
 
     if (flagMask === 0xffff) {
@@ -380,13 +374,12 @@ export class CharCellGrid {
    * The code points for a range of cells from a string.
    *
    * @param x X position in the cells to modify.
-   * @param y The row to modify.
    * @param str The string to read from.
    */
-  setString(x: number, y: number, str: string): void {
+  setString(x: number, str: string): void {
     const codePointArray = stringToCodePointArray(str);
     for (let i=0; i<codePointArray.length; i++) {
-      this.setCodePoint(x+i, y, codePointArray[i]);
+      this.setCodePoint(x+i, codePointArray[i]);
     }
     this.#dirtyFlag = true;
   }
@@ -395,16 +388,15 @@ export class CharCellGrid {
    * Get the string representation from a range of cells.
    *
    * @param x X position in the row to start count from.
-   * @param y The row to scan.
    * @param count The number of cells to include. If this is not given, then
    *    the row is scanned up to the end.
    */
-  getString(x: number, y: number, count?: number): string {
+  getString(x: number, count?: number): string {
     const codePoints: number[] = [];
 
     const lastX = x + (count == null ? this.width : Math.min(this.width, count));
     for (let i=x; i<lastX; i++) {
-      codePoints.push(this.getCodePoint(i, y));
+      codePoints.push(this.getCodePoint(i));
     }
     return String.fromCodePoint(...codePoints);
   }
@@ -416,15 +408,14 @@ export class CharCellGrid {
    * values.
    *
    * @param x X position in the row to start count from.
-   * @param y The row to scan.
    * @param count The number of cells to scan. If this is not given, then the
    *    row is scanned up to the end.
    */
-  getUTF16StringLength(x: number, y: number, count?: number): number {
+  getUTF16StringLength(x: number, count?: number): number {
     const lastX = x + (count == null ? this.width : Math.min(this.width, count));
     let size = 0;
     for (let i=x; i<lastX; i++) {
-      const codePoint = this.getCodePoint(i, y);
+      const codePoint = this.getCodePoint(i);
       size += utf16LengthOfCodePoint(codePoint);
     }
     return size;
@@ -433,23 +424,22 @@ export class CharCellGrid {
   /**
    * Get the Unicode code points from a row.
    *
-   * @param y The row to read the code points from.
    * @param destinationArray If provided, the output will be placed directly
    *    into this array. This should be as long as the grid is wide.
    * @returns The array with code points. If `destinationArray` was provided
    *    then it is returned.
    */
-  getRowCodePoints(y: number, destinationArray?: Uint32Array): Uint32Array {
+  getRowCodePoints(destinationArray?: Uint32Array): Uint32Array {
     const width = this.width;
     const destArray = destinationArray == null ? new Uint32Array(width) : destinationArray;
     for (let i=0; i<width; i++) {
-      destArray[i] = this.getCodePoint(i, y);
+      destArray[i] = this.getCodePoint(i);
     }
     return destArray;
   }
 
-  setBgRGBA(x: number, y: number, rgba: number): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setBgRGBA(x: number, rgba: number): void {
+    const offset = x * CELL_SIZE_BYTES;
     this.#dataView.setUint32(offset + OFFSET_BG, rgba);
 
     const newAttr = this.#dataView.getUint8(offset + OFFSET_FLAGS) & ~FLAG_MASK_BG_CLUT;
@@ -457,13 +447,13 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  getBgRGBA(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getBgRGBA(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint32(offset + OFFSET_BG);
   }
 
-  setFgRGBA(x: number, y: number, rgba: number): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setFgRGBA(x: number, rgba: number): void {
+    const offset = x * CELL_SIZE_BYTES;
     this.#dataView.setUint32(offset + OFFSET_FG, rgba);
 
     const newAttr = this.#dataView.getUint8(offset + OFFSET_FLAGS) & ~FLAG_MASK_FG_CLUT;
@@ -471,13 +461,13 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  getFgRGBA(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getFgRGBA(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint32(offset + OFFSET_FG);
   }
 
-  setFgClutIndex(x: number, y: number, index: number): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setFgClutIndex(x: number, index: number): void {
+    const offset = x * CELL_SIZE_BYTES;
 
     const newAttr = this.#dataView.getUint8(offset + OFFSET_FLAGS) | FLAG_MASK_FG_CLUT;
     this.#dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
@@ -502,19 +492,18 @@ export class CharCellGrid {
     }
   }
 
-  getFgClutIndex(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getFgClutIndex(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint16(offset + OFFSET_FG_CLUT_INDEX);
   }
 
-  isFgClut(x: number, y: number): boolean {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  isFgClut(x: number): boolean {
+    const offset = x * CELL_SIZE_BYTES;
     return (this.#dataView.getUint8(offset + OFFSET_FLAGS) & FLAG_MASK_FG_CLUT) !== 0;
   }
 
-  setBgClutIndex(x: number, y: number, index: number): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-
+  setBgClutIndex(x: number, index: number): void {
+    const offset = x * CELL_SIZE_BYTES;
     const newAttr = this.#dataView.getUint8(offset + OFFSET_FLAGS) | FLAG_MASK_BG_CLUT;
     this.#dataView.setUint8(offset + OFFSET_FLAGS, newAttr);
 
@@ -527,18 +516,18 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  getBgClutIndex(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getBgClutIndex(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint16(offset + OFFSET_BG_CLUT_INDEX);
   }
 
-  isBgClut(x: number, y: number): boolean {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  isBgClut(x: number): boolean {
+    const offset = x * CELL_SIZE_BYTES;
     return (this.#dataView.getUint8(offset + OFFSET_FLAGS) & FLAG_MASK_BG_CLUT) !== 0;
   }
 
-  setStyle(x: number, y: number, style: StyleCode): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setStyle(x: number, style: StyleCode): void {
+    const offset = x * CELL_SIZE_BYTES;
 
     this.#dataView.setUint16(offset + OFFSET_STYLE, style);
 
@@ -550,19 +539,18 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  getStyle(x: number, y: number): StyleCode {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
-
+  getStyle(x: number): StyleCode {
+    const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint16(offset + OFFSET_STYLE);
   }
 
-  getExtraFontsFlag(x: number, y: number): boolean {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getExtraFontsFlag(x: number): boolean {
+    const offset = x * CELL_SIZE_BYTES;
     return (this.#dataView.getUint8(offset + OFFSET_FLAGS) & FLAG_MASK_EXTRA_FONT) !== 0;
   }
 
-  setExtraFontsFlag(x: number, y: number, on: boolean): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setExtraFontsFlag(x: number, on: boolean): void {
+    const offset = x * CELL_SIZE_BYTES;
     let flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
     if (on) {
       flags = flags | FLAG_MASK_EXTRA_FONT;
@@ -573,8 +561,8 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  setLigature(x: number, y: number, ligatureLength: number): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setLigature(x: number, ligatureLength: number): void {
+    const offset = x * CELL_SIZE_BYTES;
     const flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
     if (ligatureLength <= 1) {
       if (flags & FLAG_MASK_LIGATURE) {
@@ -589,45 +577,44 @@ export class CharCellGrid {
     this.#dirtyFlag = true;
   }
 
-  getLigature(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getLigature(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     const flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
     if ((flags & FLAG_MASK_LIGATURE) !== 0) {
-      return this.getCharExtraWidth(x, y) + 1;
+      return this.getCharExtraWidth(x) + 1;
     } else {
       return 0;
     }
   }
 
-  setLinkID(x: number, y: number, linkID: number): void {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  setLinkID(x: number, linkID: number): void {
+    const offset = x * CELL_SIZE_BYTES;
     this.#dataView.setUint8(offset + OFFSET_LINK_ID, linkID);
 
-    let style = this.getStyle(x, y);
+    let style = this.getStyle(x);
     if (linkID === 0) {
       style = style & ~STYLE_MASK_HYPERLINK;
     } else {
       style = style | STYLE_MASK_HYPERLINK;
     }
-    this.setStyle(x, y, style);
+    this.setStyle(x, style);
     this.#dirtyFlag = true;
   }
 
-  getLinkID(x: number, y: number): number {
-    const offset = (y * this.width + x) * CELL_SIZE_BYTES;
+  getLinkID(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint8(offset + OFFSET_LINK_ID);
   }
 
-  shiftCellsRight(x: number, y: number, shiftCount: number): void {
-    const offsetCell = y * this.width;
+  shiftCellsRight(x: number, shiftCount: number): void {
     const moveCount = this.width - x - shiftCount;
     if (moveCount <= 0) {
       return;
     }
 
-    this.#uint8View.copyWithin((offsetCell + x + shiftCount) * CELL_SIZE_BYTES,  // target pos
-                                (offsetCell + x) * CELL_SIZE_BYTES,         // source pos
-                                (offsetCell + this.width - shiftCount) * CELL_SIZE_BYTES); // end pos
+    this.#uint8View.copyWithin((x + shiftCount) * CELL_SIZE_BYTES,  // target pos
+                                (x) * CELL_SIZE_BYTES,         // source pos
+                                (this.width - shiftCount) * CELL_SIZE_BYTES); // end pos
     this.#dirtyFlag = true;
   }
 
@@ -641,25 +628,22 @@ export class CharCellGrid {
    * shifted in from the right side.
    *
    * @param x
-   * @param y
    * @param shiftCount
    */
-  shiftCellsLeft(x: number, y: number, shiftCount: number): void {
-    const offsetCell = y * this.width;
+  shiftCellsLeft(x: number, shiftCount: number): void {
     if ((x + shiftCount) < this.width) {
-      this.#uint8View.copyWithin((offsetCell + x) * CELL_SIZE_BYTES,                // target pos
-                                  (offsetCell + x + shiftCount) * CELL_SIZE_BYTES,  // source pos
-                                  (offsetCell + this.width) * CELL_SIZE_BYTES);     // end pos
+      this.#uint8View.copyWithin((x) * CELL_SIZE_BYTES,                // target pos
+                                  (x + shiftCount) * CELL_SIZE_BYTES,  // source pos
+                                  (this.width) * CELL_SIZE_BYTES);     // end pos
     }
 
     for (let i=Math.max(x, this.width-shiftCount); i < this.width; i++) {
-      this.setCell(i, y, SpaceCell);
+      this.setCell(i, SpaceCell);
     }
     this.#dirtyFlag = true;
   }
 
-  pasteGrid(sourceGrid: CharCellGrid, x: number, y: number): void {
-    const endY = Math.min(y+sourceGrid.height, this.height);
+  pasteLine(sourceGrid: CharCellLine, x: number): void {
     const endH = Math.min(x+sourceGrid.width, this.width);
 
     const uint32ArrayDest = new Uint32Array(this.#rawBuffer);
@@ -667,48 +651,42 @@ export class CharCellGrid {
 
     const sx = x < 0 ? -x : 0;
     x = Math.max(x, 0);
-    let sv = y < 0 ? -y : 0;
-    y = Math.max(y, 0);
 
-    for (let v=y; v<endY; v++, sv++) {
-      let sourceOffset = (sv*sourceGrid.width +sx) * CELL_SIZE_UINT32;
-      let destOffset = (v*this.width + x) * CELL_SIZE_UINT32;
+    let sourceOffset = sx * CELL_SIZE_UINT32;
+    let destOffset = x * CELL_SIZE_UINT32;
+    for (let h=x; h<endH; h++) {
+      // Unrolled copy loop for when CELL_SIZE_UINT32 is 5
+      uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+    }
+
+    if (this.palette != null) {
       for (let h=x; h<endH; h++) {
-
-        // Unrolled copy loop for when CELL_SIZE_UINT32 is 5
-
-        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
-        destOffset++;
-        sourceOffset++;
-
-        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
-        destOffset++;
-        sourceOffset++;
-
-        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
-        destOffset++;
-        sourceOffset++;
-
-        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
-        destOffset++;
-        sourceOffset++;
-
-        uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
-        destOffset++;
-        sourceOffset++;
-      }
-
-      if (this.palette != null) {
-        for (let h=x; h<endH; h++) {
-          if (this.isBgClut(h, v)) {
-            this.setBgClutIndex(h, v, this.getBgClutIndex(h, v));
-          }
-          if (this.isFgClut(h, v)) {
-            this.setFgClutIndex(h, v, this.getFgClutIndex(h, v));
-          }
-
-          destOffset += CELL_SIZE_UINT32;
+        if (this.isBgClut(h)) {
+          this.setBgClutIndex(h, this.getBgClutIndex(h));
         }
+        if (this.isFgClut(h)) {
+          this.setFgClutIndex(h, this.getFgClutIndex(h));
+        }
+
+        destOffset += CELL_SIZE_UINT32;
       }
     }
     this.#dirtyFlag = true;

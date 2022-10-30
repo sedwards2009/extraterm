@@ -104,7 +104,7 @@ export class TerminalBlock implements Block {
 
     this.#widget = this.#createWidget();
   }
-  
+
   dispose(): void {
   }
 
@@ -228,7 +228,7 @@ export class TerminalBlock implements Block {
     const line = this.#scrollback[row];
     const linkID = line.getOrCreateLinkIDForURL(url, group);
     for (let i = 0; i < length; i++) {
-      line.setLinkID(column + i, 0, linkID);
+      line.setLinkID(column + i, linkID);
     }
   }
 
@@ -238,9 +238,9 @@ export class TerminalBlock implements Block {
     let didRemove = false;
     if (group === "") {
       for (let i=0; i<width; i++) {
-        const linkID = line.getLinkID(i, 0);
+        const linkID = line.getLinkID(i);
         if (linkID !== 0) {
-          line.setLinkID(i, 0, 0);
+          line.setLinkID(i, 0);
           didRemove = true;
         }
       }
@@ -249,9 +249,9 @@ export class TerminalBlock implements Block {
       const targetLinkIDs = line.getAllLinkIDs(group);
       if (targetLinkIDs.length !== 0) {
         for (let i=0; i<width; i++) {
-          const linkID = line.getLinkID(i, 0);
+          const linkID = line.getLinkID(i);
           if (targetLinkIDs.includes(linkID)) {
-            line.setLinkID(i, 0, 0);
+            line.setLinkID(i, 0);
             didRemove = true;
           }
         }
@@ -453,7 +453,7 @@ export class TerminalBlock implements Block {
 
       if (ligatureMarker != null) {
         const text = line.getString(0, 0);
-        ligatureMarker.markLigaturesCharCellGridRow(line, 0, text);
+        ligatureMarker.markLigaturesCharCellLine(line, 0, text);
       }
 
       let hoverLinkID = 0;
@@ -462,14 +462,14 @@ export class TerminalBlock implements Block {
       }
 
       let px = 0;
-      for (const column of normalizedCellIterator(line, 0, normalizedCell)) {
+      for (const column of normalizedCellIterator(line, normalizedCell)) {
         const codePoint = normalizedCell.codePoint;
         const fontIndex = normalizedCell.extraFontFlag ? 1 : 0;
 
-        let fgRGBA = line.getFgRGBA(column, 0);
-        let bgRGBA = line.getBgRGBA(column, 0);
+        let fgRGBA = line.getFgRGBA(column);
+        let bgRGBA = line.getBgRGBA(column);
 
-        let style = line.getStyle(column, 0);
+        let style = line.getStyle(column);
         if ((style & STYLE_MASK_CURSOR) && renderCursor) {
           fgRGBA = bgRGBA;
           bgRGBA = cursorColor;
@@ -505,17 +505,17 @@ export class TerminalBlock implements Block {
     const width = line.width;
     const fontSlices = this.#fontSlices;
     for (let i=0; i<width; i++) {
-      const codePoint = line.getCodePoint(i, 0);
+      const codePoint = line.getCodePoint(i);
       let isExtra = false;
       for (const fontSlice of fontSlices) {
         if (fontSlice.containsCodePoint(codePoint)) {
-          line.setExtraFontsFlag(i, 0, true);
+          line.setExtraFontsFlag(i, true);
           isExtra = true;
           break;
         }
       }
-      line.setExtraFontsFlag(i, 0, isExtra);
-      line.setLigature(i, 0, 0);
+      line.setExtraFontsFlag(i, isExtra);
+      line.setLigature(i, 0);
     }
   }
 
@@ -555,7 +555,7 @@ export class TerminalBlock implements Block {
     for (const line of lines) {
       const width = line.width;
       for (let i=0; i<width; i++) {
-        if (line.getStyle(i, 0) & STYLE_MASK_CURSOR) {
+        if (line.getStyle(i) & STYLE_MASK_CURSOR) {
           switch (cursorStyle) {
             case CursorStyle.BLOCK_OUTLINE:
               painter.drawRect(i * cellWidthPx + outlinePenWidthPx, y + outlinePenWidthPx,
@@ -618,7 +618,7 @@ export class TerminalBlock implements Block {
       // Hyperlink click
       const line = this.#getLine(termEvent.row + this.#scrollback.length);
       if (termEvent.column < line.width) {
-        const linkID = line.getLinkID(termEvent.column, 0);
+        const linkID = line.getLinkID(termEvent.column);
         if (linkID !== 0) {
           const pair = line.getLinkURLByID(linkID);
           if (pair != null) {
@@ -711,7 +711,7 @@ export class TerminalBlock implements Block {
 
   #extendXWordLeft(termEvent: MouseEventOptions): number {
     const line = this.#getLine(termEvent.row + this.#scrollback.length);
-    const lineStringLeft = reverseString(line.getString(0, 0, termEvent.column));
+    const lineStringLeft = reverseString(line.getString(0, termEvent.column));
     const leftMatch = lineStringLeft.match(WORD_SELECTION_REGEX);
     if (leftMatch != null) {
       const newX = termEvent.column - countCells("" + leftMatch);
@@ -741,7 +741,7 @@ export class TerminalBlock implements Block {
     const line = this.#getLine(termEvent.row + this.#scrollback.length);
     let linkID = 0;
     if (termEvent.column < line.width) {
-      linkID = line.getLinkID(termEvent.column, 0);
+      linkID = line.getLinkID(termEvent.column);
     }
 
     if (linkID === 0) {
@@ -806,20 +806,20 @@ export class TerminalBlock implements Block {
       if (i === selectionStart.y) {
         if (selectionStart.y === selectionEnd.y) {
           // Small selection contained within one row.
-          lineText.push(line.getString(selectionStart.x, 0, selectionEnd.x - selectionStart.x).trim());
+          lineText.push(line.getString(selectionStart.x, selectionEnd.x - selectionStart.x).trim());
         } else {
           // Top row of the selection.
-          lineText.push(line.getString(selectionStart.x, 0, line.width-selectionStart.x).trim());
+          lineText.push(line.getString(selectionStart.x, line.width-selectionStart.x).trim());
         }
       } else {
         if ( ! isLastLineWrapped) {
           lineText.push("\n");
         }
         if (i !== selectionEnd.y) {
-          lineText.push(line.getString(0, 0, line.width).trim());
+          lineText.push(line.getString(0, line.width).trim());
         } else {
           // The last row of a multi-row selection.
-          lineText.push(line.getString(0, 0, selectionEnd.x));
+          lineText.push(line.getString(0, selectionEnd.x));
         }
       }
       isLastLineWrapped = line.wrapped;

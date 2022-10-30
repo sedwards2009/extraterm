@@ -5,7 +5,7 @@
 import { Line } from "term-api";
 import { PairKeyMap } from "extraterm-data-structures";
 import { isWide, utf16LengthOfCodePoint } from "extraterm-unicode-utilities";
-import { CharCellGrid, Cell } from "extraterm-char-cell-grid";
+import { CharCellLine, Cell } from "extraterm-char-cell-grid";
 
 export interface CellWithHyperlink extends Cell {
   hyperlinkID: string;
@@ -23,7 +23,7 @@ interface URLGroupPair {
  * This adds better support for hyperlinks and associating URLs with the link
  * ID attributes on cells.
  */
-export class LineImpl extends CharCellGrid implements Line {
+export class LineImpl extends CharCellLine implements Line {
 
   wrapped = false;
 
@@ -32,8 +32,8 @@ export class LineImpl extends CharCellGrid implements Line {
   private _hyperlinkURLToIDMapping: PairKeyMap<string, string, number> = null;
   #cachedString: string = null;
 
-  constructor(width: number, height: number, palette: number[]=null, __bare__=false) {
-    super(width, height, palette, __bare__);
+  constructor(width: number, palette: number[]=null, __bare__=false) {
+    super(width, palette, __bare__);
   }
 
   hasLinks(): boolean {
@@ -84,7 +84,6 @@ export class LineImpl extends CharCellGrid implements Line {
 
   private _compactLinkIDs(): void {
     const width = this.width;
-    const height = this.height;
 
     const oldLinkIDMapping = this._hyperlinkIDToURLMapping;
 
@@ -92,14 +91,12 @@ export class LineImpl extends CharCellGrid implements Line {
     this._hyperlinkIDToURLMapping = new Map<number, URLGroupPair>();
     this._hyperlinkURLToIDMapping = new PairKeyMap<string, string, number>();
 
-    for (let y=0; y<height; y++) {
-      for (let x=0; x<width; x++) {
-        const linkID = this.getLinkID(x, y);
-        if (linkID !== 0) {
-          const urlGroup = oldLinkIDMapping.get(linkID);
-          const newLinkID = this.getOrCreateLinkIDForURL(urlGroup.url, urlGroup.group);
-          this.setLinkID(x, y, newLinkID);
-        }
+    for (let x=0; x<width; x++) {
+      const linkID = this.getLinkID(x);
+      if (linkID !== 0) {
+        const urlGroup = oldLinkIDMapping.get(linkID);
+        const newLinkID = this.getOrCreateLinkIDForURL(urlGroup.url, urlGroup.group);
+        this.setLinkID(x, newLinkID);
       }
     }
   }
@@ -114,18 +111,18 @@ export class LineImpl extends CharCellGrid implements Line {
     return Array.from(this._hyperlinkURLToIDMapping.level1Values(group));
   }
 
-  setCellAndLink(x: number, y: number, cellAttr: CellWithHyperlink): void {
+  setCellAndLink(x: number, cellAttr: CellWithHyperlink): void {
     const hyperlinkURL = cellAttr.hyperlinkURL;
     if (hyperlinkURL != null) {
       cellAttr.linkID = this.getOrCreateLinkIDForURL(hyperlinkURL);
     } else {
       cellAttr.linkID = 0;
     }
-    this.setCell(x, y, cellAttr);
+    this.setCell(x, cellAttr);
   }
 
   getCellAndLink(x: number, y: number): CellWithHyperlink {
-    const cellAttrs = this.getCell(x, y);
+    const cellAttrs = this.getCell(x);
     let hyperlinkURLGroupPair: URLGroupPair = null;
     const hyperlinkID: string = null; // FIXME needed??
 
@@ -137,7 +134,7 @@ export class LineImpl extends CharCellGrid implements Line {
   }
 
   clone(): Line {
-    const grid = new LineImpl(this.width, this.height, this.palette);
+    const grid = new LineImpl(this.width, this.palette);
     this.cloneInto(grid);
 
     if (this._hyperlinkIDToURLMapping != null) {
@@ -156,38 +153,33 @@ export class LineImpl extends CharCellGrid implements Line {
     this._hyperlinkURLToIDMapping = null;
   }
 
-  pasteGridWithLinks(sourceGrid: Line, x: number, y: number): void {
-    super.pasteGrid(sourceGrid, x, y);
+  pasteGridWithLinks(sourceGrid: Line, x: number): void {
+    super.pasteLine(sourceGrid, x);
 
     if ( ! sourceGrid.hasLinks()) {
       return;
     }
 
-    const endY = Math.min(y+sourceGrid.height, this.height);
     const endH = Math.min(x+sourceGrid.width, this.width);
 
     const sx = x < 0 ? -x : 0;
     x = Math.max(x, 0);
-    let sv = y < 0 ? -y : 0;
-    y = Math.max(y, 0);
-    for (let v=y; v<endY; v++, sv++) {
-      for (let h=x; h<endH; h++) {
-        const sourceLinkID = sourceGrid.getLinkID(h+sx, sv);
-        if (sourceLinkID !== 0) {
-          const urlGroup = sourceGrid.getLinkURLByID(sourceLinkID);
-          const newLinkID = this.getOrCreateLinkIDForURL(urlGroup.url, urlGroup.group);
-          this.setLinkID(h, v, newLinkID);
-        }
+    for (let h=x; h<endH; h++) {
+      const sourceLinkID = sourceGrid.getLinkID(h + sx);
+      if (sourceLinkID !== 0) {
+        const urlGroup = sourceGrid.getLinkURLByID(sourceLinkID);
+        const newLinkID = this.getOrCreateLinkIDForURL(urlGroup.url, urlGroup.group);
+        this.setLinkID(h, newLinkID);
       }
     }
   }
 
-  mapStringIndexToColumn(line: number, x: number): number {
+  mapStringIndexToColumn(x: number): number {
     let c = 0;
     let i = 0;
     const width = this.width;
     while (i < x && i < width) {
-      const codePoint = this.getCodePoint(i ,line);
+      const codePoint = this.getCodePoint(i);
       i += utf16LengthOfCodePoint(codePoint);
       c += isWide(codePoint) ? 2 : 1;
     }
@@ -196,11 +188,11 @@ export class LineImpl extends CharCellGrid implements Line {
 
   // See `CharCellGrid.getString()`. This version though properly handles
   // full width characters.
-  getString(x: number, y: number, count?: number): string {
-    if (x ===0 && y === 0 && count === undefined) {
+  getString(x: number, count?: number): string {
+    if (x ===0 && count === undefined) {
       return this._cachingGetLineString();
     } else {
-      return this._generalGetString(x, y, count);
+      return this._generalGetString(x, count);
     }
   }
 
@@ -212,14 +204,14 @@ export class LineImpl extends CharCellGrid implements Line {
     return this.#cachedString;
   }
 
-  private _generalGetString(x: number, y: number, count?: number): string {
+  private _generalGetString(x: number, count?: number): string {
     const codePoints: number[] = [];
     const spaceCodePoint = " ".codePointAt(0);
     const lastX = Math.min(this.width, x + (count == null ? this.width : count));
 
     let isLastWide = false;
     for (let i=x; i<lastX; i++) {
-      const codePoint = this.getCodePoint(i, y);
+      const codePoint = this.getCodePoint(i);
       if (codePoint === spaceCodePoint && isLastWide) {
         isLastWide = false;
         continue;
@@ -232,13 +224,13 @@ export class LineImpl extends CharCellGrid implements Line {
 
   // See `CharCellGrid.getUTF16StringLength()`. This version though properly
   // handles full width characters.
-  getUTF16StringLength(x: number, y: number, count?: number): number {
+  getUTF16StringLength(x: number, count?: number): number {
     const spaceCodePoint = " ".codePointAt(0);
     const lastX = x + (count == null ? this.width : Math.min(this.width, count));
     let size = 0;
     let isLastWide = false;
     for (let i=x; i<lastX; i++) {
-      const codePoint = this.getCodePoint(i, y);
+      const codePoint = this.getCodePoint(i);
       if (codePoint === spaceCodePoint && isLastWide) {
         isLastWide = false;
         continue;

@@ -1,17 +1,17 @@
 /**
  * Copyright 2020 Simon Edwards <simon@simonzone.com>
  */
-import lru from 'lru-cache';
+import lru from "lru-cache";
 
 import { getLogger, Logger } from "extraterm-logging";
-import { CharCellGrid, FLAG_MASK_WIDTH, FLAG_MASK_LIGATURE } from 'extraterm-char-cell-grid';
+import { CharCellLine, FLAG_MASK_WIDTH, FLAG_MASK_LIGATURE } from "extraterm-char-cell-grid";
 
 export interface LigatureMarker {
-    markLigaturesCharCellGridRow(grid: CharCellGrid, row: number, text: string): void;
+    markLigaturesCharCellLine(grid: CharCellLine, row: number, text: string): void;
 }
 
 interface PlainLigatureMarker {
-  markLigaturesCharCellGridRow(grid: CharCellGrid, row: number): void;
+  markLigaturesCharCellGridRow(grid: CharCellLine, row: number): void;
 }
 
 export class CachingLigatureMarker implements LigatureMarker {
@@ -27,7 +27,7 @@ export class CachingLigatureMarker implements LigatureMarker {
     });
   }
 
-  markLigaturesCharCellGridRow(grid: CharCellGrid, row: number, text: string): void {
+  markLigaturesCharCellLine(grid: CharCellLine, row: number, text: string): void {
     if (text == null) {
       this._marker.markLigaturesCharCellGridRow(grid, row);
       return;
@@ -36,10 +36,10 @@ export class CachingLigatureMarker implements LigatureMarker {
     const rowFlags = this._cache.get(text);
     if (rowFlags == null) {
       this._marker.markLigaturesCharCellGridRow(grid, row);
-      const rowFlags = grid.getRowFlags(row);
+      const rowFlags = grid.getRowFlags();
       this._cache.set(text, rowFlags);
     } else {
-      grid.setRowFlags(row, rowFlags, FLAG_MASK_WIDTH | FLAG_MASK_LIGATURE);
+      grid.setRowFlags(rowFlags, FLAG_MASK_WIDTH | FLAG_MASK_LIGATURE);
     }
   }
 }

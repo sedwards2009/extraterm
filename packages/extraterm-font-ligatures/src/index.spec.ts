@@ -2,7 +2,7 @@ import * as path from 'node:path';
 import test from 'ava';
 import * as fontFinder from 'font-finder';
 
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-grid";
 import { load } from './index.js';
 import { performance } from 'node:perf_hooks';
 import {fileURLToPath} from 'node:url';
@@ -375,34 +375,31 @@ test('throws if the font is not found', async t => {
 
 
 test("Mark ligatures", async t => {
-  const grid = new CharCellGrid(10, 5);
-  grid.setString(0, 0, "Foo --> Bar");
+  const grid = new CharCellLine(10);
+  grid.setString(0, "Foo --> Bar");
 
   const font = await load("Monoid", { listVariants: fakeListVariants });
-  font.markLigaturesCharCellGridRow(grid, 0);
+  font.markLigaturesCharCellGridRow(grid);
 
-  t.is(grid.getLigature(0, 0), 0);
-  t.is(grid.getLigature(1, 0), 0);
-  t.is(grid.getLigature(2, 0), 0);
-  t.is(grid.getLigature(3, 0), 0);
-  t.is(grid.getLigature(4, 0), 3);
-  t.is(grid.getLigature(5, 0), 0);
+  t.is(grid.getLigature(0), 0);
+  t.is(grid.getLigature(1), 0);
+  t.is(grid.getLigature(2), 0);
+  t.is(grid.getLigature(3), 0);
+  t.is(grid.getLigature(4), 3);
+  t.is(grid.getLigature(5), 0);
 });
 
 test("Speed test", async t => {
   return await t.notThrowsAsync(async (): Promise<void> => {
     const GRID_WIDTH = 240;
-    const GRID_HEIGHT = 50;
     const LOOPS = 100;
 
     const spaceCodePoint = " ".codePointAt(0);
     const max = "~".codePointAt(0) - spaceCodePoint;
-    const grid = new CharCellGrid(GRID_WIDTH, GRID_HEIGHT);
-    for (let y=0; y<GRID_HEIGHT; y++) {
-      for (let x=0; x<GRID_WIDTH; x++) {
-        const randomChar = Math.floor(Math.random() * Math.floor(max)) + spaceCodePoint;
-        grid.setCodePoint(x, y, randomChar);
-      }
+    const grid = new CharCellLine(GRID_WIDTH);
+    for (let x=0; x<GRID_WIDTH; x++) {
+      const randomChar = Math.floor(Math.random() * Math.floor(max)) + spaceCodePoint;
+      grid.setCodePoint(x, randomChar);
     }
 
     const font = await load("Fira Code", { listVariants: fakeListVariants });
@@ -410,13 +407,11 @@ test("Speed test", async t => {
     const start = performance.now();
 
     for (let l=0; l<LOOPS; l++) {
-      for (let y=0; y<GRID_HEIGHT; y++) {
-        font.markLigaturesCharCellGridRow(grid, y);
-      }
+      font.markLigaturesCharCellGridRow(grid);
     }
     const end = performance.now();
     const durationPerLoop = (end - start) / LOOPS;
-    console.log(`Speed test: ${GRID_WIDTH}x${GRID_HEIGHT} ${LOOPS} loops, ${durationPerLoop}ms per loop`);
+    console.log(`Speed test: ${GRID_WIDTH} ${LOOPS} loops, ${durationPerLoop}ms per loop`);
 
     t.pass();
   });

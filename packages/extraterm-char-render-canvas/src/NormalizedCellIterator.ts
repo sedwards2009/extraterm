@@ -3,7 +3,7 @@
  */
 
 import {
-  CharCellGrid, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT
+  CharCellLine, FLAG_MASK_LIGATURE, FLAG_MASK_WIDTH, FLAG_WIDTH_SHIFT, FLAG_MASK_EXTRA_FONT
 } from "extraterm-char-cell-grid";
 
 export interface NormalizedCell {
@@ -27,23 +27,23 @@ export interface NormalizedCell {
  *
  * The `result` is constantly recycled to avoid memory allocations.
  */
-export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number, result: NormalizedCell): IterableIterator<number> {
+export function* normalizedCellIterator(cellGrid: CharCellLine, result: NormalizedCell): IterableIterator<number> {
   const rowLength = cellGrid.width;
   let x = 0;
   while (x < rowLength) {
-    const flags = cellGrid.getFlags(x, row);
+    const flags = cellGrid.getFlags(x);
 
     const widthChars = ((flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT) + 1;
     const isLigature = flags & FLAG_MASK_LIGATURE;
 
     if (isLigature) {
       // Ligature case
-      const extraFontFlag = (cellGrid.getFlags(x, row) & FLAG_MASK_EXTRA_FONT) !== 0;
-      const linkID = cellGrid.getLinkID(x, row);
+      const extraFontFlag = (cellGrid.getFlags(x) & FLAG_MASK_EXTRA_FONT) !== 0;
+      const linkID = cellGrid.getLinkID(x);
 
       const ligatureCodePoints: number[] = [];
       for (let k=0; k<widthChars; k++) {
-        ligatureCodePoints[k] = cellGrid.getCodePoint(x+k, row);
+        ligatureCodePoints[k] = cellGrid.getCodePoint(x+k);
       }
 
       for (let i=0; i<widthChars; i++) {
@@ -60,9 +60,9 @@ export function* normalizedCellIterator(cellGrid: CharCellGrid, row: number, res
       }
     } else {
       // Normal and wide character case
-      const codePoint = cellGrid.getCodePoint(x, row);
-      const extraFontFlag = (cellGrid.getFlags(x, row) & FLAG_MASK_EXTRA_FONT) !== 0;
-      const linkID = cellGrid.getLinkID(x, row);
+      const codePoint = cellGrid.getCodePoint(x);
+      const extraFontFlag = (cellGrid.getFlags(x) & FLAG_MASK_EXTRA_FONT) !== 0;
+      const linkID = cellGrid.getLinkID(x);
       for (let k=0; k<widthChars; k++) {
         result.x = x;
         result.segment = k;

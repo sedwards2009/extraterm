@@ -32,13 +32,13 @@
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
-import { CharCellGrid } from "extraterm-char-cell-grid";
+import { CharCellLine } from "extraterm-char-cell-grid";
 import { Event } from "extraterm-event-emitter";
 
 
 export type CharAttr = number;
 
-export interface Line extends CharCellGrid {
+export interface Line extends CharCellLine {
   wrapped: boolean;
   clone(): Line;
   hasLinks(): boolean;
@@ -46,7 +46,7 @@ export interface Line extends CharCellGrid {
   getOrCreateLinkIDForURL(url: string, group: string): number;
   getLinkIDByURL(url: string, group: string): number;
   getAllLinkIDs(group: string): number[];
-  pasteGridWithLinks(sourceGrid: Line, x: number, y: number): void;
+  pasteGridWithLinks(sourceGrid: Line, x: number): void;
 
   mapStringIndexToColumn(line: number, x: number): number;
 }
