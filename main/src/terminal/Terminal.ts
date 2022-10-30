@@ -282,7 +282,9 @@ export class Terminal implements Tab, Disposable {
     this.#scrollArea.getWidget().addEventListener(WidgetEventTypes.Resize, () => {
       this.#handleResize();
     });
-
+    this.#scrollArea.getWidget().addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
+      this.#handleMouseButtonPressBelowFrames(new QMouseEvent(nativeEvent));
+    });
     this.#contentWidget = this.#scrollArea.getContentWidget();
 
     this.#topContents = Widget({
@@ -622,7 +624,24 @@ export class Terminal implements Tab, Disposable {
     }
   }
 
+  #handleMouseButtonPressBelowFrames(mouseEvent: QMouseEvent): void {
+    if (this.#blockFrames.length === 0) {
+      return;
+    }
+    const isBelow = this.#scrollArea.isYBelowLastFrame(this.#scrollArea.getScrollPosition() + mouseEvent.y());
+    if (! isBelow) {
+      return;
+    }
+    const lastBlockFrame = this.#blockFrames[this.#blockFrames.length-1].frame;
+    this.#processMouseButtonPress(mouseEvent, lastBlockFrame);
+  }
+
   #handleMouseButtonPress(mouseEvent: QMouseEvent): void {
+    const blockFrame = this.#scrollArea.getBlockFrameAt(mouseEvent.x(), mouseEvent.y());
+    this.#processMouseButtonPress(mouseEvent, blockFrame);
+  }
+
+  #processMouseButtonPress(mouseEvent: QMouseEvent, blockFrame: BlockFrame): void {
     const key = this.#mapEventToMouseButtonActionKey(mouseEvent);
     if (key == null) {
       return;

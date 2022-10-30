@@ -113,6 +113,15 @@ export class TerminalScrollArea {
     return Math.max(0, contentGeo.height() - viewportGeo.height());
   }
 
+  isYBelowLastFrame(y: number): boolean {
+    if (this.#blockFrames.length === 0) {
+      return true;
+    }
+    const lastBlockFrame = this.#blockFrames[this.#blockFrames.length-1];
+    const rect = lastBlockFrame.getWidget().contentsRect();
+    return y > (rect.top() + rect.height());
+  }
+
   setScrollPosition(position: number): void {
     const maxScroll = this.getMaximumScrollPosition();
     this.#scrollPosition = Math.max(0, Math.min(position, maxScroll));
