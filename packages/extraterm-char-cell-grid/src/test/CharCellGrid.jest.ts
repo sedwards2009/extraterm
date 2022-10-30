@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { CharCellLine, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_HYPERLINK } from "../CharCellGrid.js";
+import { CharCellLine, STYLE_MASK_BOLD, STYLE_MASK_UNDERLINE, STYLE_MASK_HYPERLINK } from "../CharCellLine.js";
 
 
 function makeGrid(): CharCellLine {

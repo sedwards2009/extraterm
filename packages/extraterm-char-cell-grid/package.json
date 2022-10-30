@@ -5,8 +5,8 @@
   "author": "Simon Edwards",
   "license": "MIT",
   "type": "module",
-  "exports": "./dist/CharCellGrid.js",
-  "types": "./dist/CharCellGrid.d.ts",
+  "exports": "./dist/CharCellLine.js",
+  "types": "./dist/CharCellLine.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
