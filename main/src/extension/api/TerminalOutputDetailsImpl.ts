@@ -95,4 +95,20 @@ class ScrollbackImpl implements ExtensionApi.Screen {
     const extensionName = this.#extensionMetadata.name;
     this.#terminalBlock.removeHyperlinks(line, extensionName);
   }
+
+  getBaseRow(rowNumber: number): ExtensionApi.Row {
+    if (rowNumber < 0 || rowNumber >= this.#terminalBlock.getScrollbackLength()) {
+      return null;
+    }
+    return this.#terminalBlock.getLine(rowNumber);
+  }
+
+  hasLayerRow(rowNumber: number, name: string): boolean {
+    return false;
+  }
+
+  getLayerRow(rowNumber: number, name: string): ExtensionApi.Row {
+    return null;
+  }
+
 }

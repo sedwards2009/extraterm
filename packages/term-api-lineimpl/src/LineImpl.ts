@@ -1,8 +1,8 @@
 /**
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  */
 
-import { Line } from "term-api";
+import { Line, Layer } from "term-api";
 import { PairKeyMap } from "extraterm-data-structures";
 import { isWide, utf16LengthOfCodePoint } from "extraterm-unicode-utilities";
 import { CharCellLine, Cell } from "extraterm-char-cell-line";
@@ -25,12 +25,13 @@ interface URLGroupPair {
  */
 export class LineImpl extends CharCellLine implements Line {
 
-  wrapped = false;
+  isWrapped = false;
 
-  private _hyperlinkIDCounter = 0;
-  private _hyperlinkIDToURLMapping: Map<number, URLGroupPair> = null;
-  private _hyperlinkURLToIDMapping: PairKeyMap<string, string, number> = null;
+  _hyperlinkIDCounter = 0;
+  _hyperlinkIDToURLMapping: Map<number, URLGroupPair> = null;
+  _hyperlinkURLToIDMapping: PairKeyMap<string, string, number> = null;
   #cachedString: string = null;
+  layers: Layer[] = [];
 
   constructor(width: number, palette: number[]=null, __bare__=false) {
     super(width, palette, __bare__);
@@ -66,7 +67,7 @@ export class LineImpl extends CharCellLine implements Line {
 
     if ( ! this._hyperlinkURLToIDMapping.has(group, url)) {
       if (this._hyperlinkIDCounter === 255) {
-        this._compactLinkIDs();
+        this.#compactLinkIDs();
       }
       if (this._hyperlinkIDCounter === 255) {
         return 0;
@@ -82,7 +83,7 @@ export class LineImpl extends CharCellLine implements Line {
     }
   }
 
-  private _compactLinkIDs(): void {
+  #compactLinkIDs(): void {
     const width = this.width;
 
     const oldLinkIDMapping = this._hyperlinkIDToURLMapping;
@@ -189,22 +190,22 @@ export class LineImpl extends CharCellLine implements Line {
   // See `CharCellGrid.getString()`. This version though properly handles
   // full width characters.
   getString(x: number, count?: number): string {
-    if (x ===0 && count === undefined) {
-      return this._cachingGetLineString();
+    if (x === 0 && count === undefined) {
+      return this.#cachingGetLineString();
     } else {
-      return this._generalGetString(x, count);
+      return this.#generalGetString(x, count);
     }
   }
 
-  private _cachingGetLineString(): string {
+  #cachingGetLineString(): string {
     if (this.isDirtyFlag()) {
-      this.#cachedString = this._generalGetString(0, 0);
+      this.#cachedString = this.#generalGetString(0);
       this.clearDirtyFlag();
     }
     return this.#cachedString;
   }
 
-  private _generalGetString(x: number, count?: number): string {
+  #generalGetString(x: number, count?: number): string {
     const codePoints: number[] = [];
     const spaceCodePoint = " ".codePointAt(0);
     const lastX = Math.min(this.width, x + (count == null ? this.width : count));

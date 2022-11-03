@@ -14,6 +14,8 @@ import { log, Logger, getLogger } from "extraterm-logging";
 import { Terminal, EXTRATERM_COOKIE_ENV } from "../../terminal/Terminal.js";
 import { InternalExtensionContext } from "../../InternalTypes.js";
 import { BorderDirection, ExtensionMetadata, ExtensionTerminalBorderContribution } from "../ExtensionMetadata.js";
+import { LineImpl } from "term-api-lineimpl";
+import { Layer } from "packages/term-api/dist/TermApi.js";
 
 // import { ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
 
@@ -235,9 +237,7 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
   #terminal: Terminal;
   #extensionMetadata: ExtensionMetadata;
 
-  constructor(extensionMetadata: ExtensionMetadata,
-      terminal: Terminal) {
-
+  constructor(extensionMetadata: ExtensionMetadata, terminal: Terminal) {
     this.#terminal = terminal;
     this.#extensionMetadata = extensionMetadata;
   }
@@ -252,7 +252,7 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     if (line == null) {
       return false;
     }
-    return line.wrapped;
+    return line.isWrapped;
   }
 
   applyHyperlink(line: number, x: number, length: number, url: string): void {
@@ -268,6 +268,43 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     const emulator = this.#terminal.getEmulator();
     const extensionName = this.#extensionMetadata.name;
     emulator.removeHyperlinks(line, extensionName);
+  }
+
+  getBaseRow(rowNumber: number): ExtensionApi.Row {
+    return this.#terminal.getEmulator().lineAtRow(rowNumber);
+  }
+
+  hasLayerRow(rowNumber: number, name: string): boolean {
+    const line = this.#terminal.getEmulator().lineAtRow(rowNumber);
+    if (line == null) {
+      return false;
+    }
+    const key = `${this.#extensionMetadata.name}:${name}`;
+    for (const layer of line.layers) {
+      if (layer.name === key) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  getLayerRow(rowNumber: number, name: string): ExtensionApi.Row {
+    const line = this.#terminal.getEmulator().lineAtRow(rowNumber);
+    if (line == null) {
+      return null;
+    }
+    const key = `${this.#extensionMetadata.name}:${name}`;
+    for (const layer of line.layers) {
+      if (layer.name === key) {
+        return layer.line;
+      }
+    }
+    const layer: Layer = {
+      name: key,
+      line: new LineImpl(line.width, line.palette)
+    };
+    line.layers.push(layer);
+    return layer.line;
   }
 
   get width(): number {

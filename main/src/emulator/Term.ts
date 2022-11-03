@@ -519,7 +519,7 @@ export class Emulator implements EmulatorApi {
       return null;
     }
     const row = this.lines[y];
-    return row.getString(0, 0);
+    return row.getString(0);
   }
 
   /**
@@ -2503,7 +2503,7 @@ export class Emulator implements EmulatorApi {
 
   private markRowAsWrapped(y: number): void {
     const line = this._getRow(y);
-    line.wrapped = true;
+    line.isWrapped = true;
   }
 
   private _setCursorY(newY: number): void {

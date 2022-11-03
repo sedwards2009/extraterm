@@ -111,6 +111,11 @@ const enum ApplicationMode {
 type InputStreamFilter = (input: string) => string;
 
 
+export interface RowLayers {
+  layers: Map<string, TermApi.Line>;
+}
+
+
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
 

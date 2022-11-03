@@ -211,7 +211,7 @@ export class TerminalBlock implements Block {
     if (line == null) {
       return null;
     }
-    return line.wrapped;
+    return line.isWrapped;
   }
 
   applyScrollbackHyperlink(lineNumber: number, x: number, length: number, url: string, group: string=""): void {
@@ -616,7 +616,7 @@ export class TerminalBlock implements Block {
 
     if (termEvent.ctrlKey) {
       // Hyperlink click
-      const line = this.#getLine(termEvent.row + this.#scrollback.length);
+      const line = this.getLine(termEvent.row + this.#scrollback.length);
       if (termEvent.column < line.width) {
         const linkID = line.getLinkID(termEvent.column);
         if (linkID !== 0) {
@@ -700,7 +700,7 @@ export class TerminalBlock implements Block {
   }
 
   #extendXWordRight(termEvent: MouseEventOptions): number {
-    const line = this.#getLine(termEvent.row + this.#scrollback.length);
+    const line = this.getLine(termEvent.row + this.#scrollback.length);
     const lineStringRight = line.getString(termEvent.column, 0);
     const rightMatch = lineStringRight.match(WORD_SELECTION_REGEX);
     if (rightMatch != null) {
@@ -710,7 +710,7 @@ export class TerminalBlock implements Block {
   }
 
   #extendXWordLeft(termEvent: MouseEventOptions): number {
-    const line = this.#getLine(termEvent.row + this.#scrollback.length);
+    const line = this.getLine(termEvent.row + this.#scrollback.length);
     const lineStringLeft = reverseString(line.getString(0, termEvent.column));
     const leftMatch = lineStringLeft.match(WORD_SELECTION_REGEX);
     if (leftMatch != null) {
@@ -738,7 +738,7 @@ export class TerminalBlock implements Block {
     const previousURL = this.#hoveredURL;
     const previousGroup = this.#hoveredGroup;
 
-    const line = this.#getLine(termEvent.row + this.#scrollback.length);
+    const line = this.getLine(termEvent.row + this.#scrollback.length);
     let linkID = 0;
     if (termEvent.column < line.width) {
       linkID = line.getLinkID(termEvent.column);
@@ -802,7 +802,7 @@ export class TerminalBlock implements Block {
     let isLastLineWrapped = false;
 
     for (let i=firstRow; i<lastRow; i++) {
-      const line = this.#getLine(i);
+      const line = this.getLine(i);
       if (i === selectionStart.y) {
         if (selectionStart.y === selectionEnd.y) {
           // Small selection contained within one row.
@@ -822,12 +822,12 @@ export class TerminalBlock implements Block {
           lineText.push(line.getString(0, selectionEnd.x));
         }
       }
-      isLastLineWrapped = line.wrapped;
+      isLastLineWrapped = line.isWrapped;
     }
     return lineText.join("");
   }
 
-  #getLine(row: number): Line {
+  getLine(row: number): Line {
     if (row < 0) {
       return null;
     }
@@ -931,7 +931,7 @@ export class TerminalBlock implements Block {
     for (let y=0; y<len; y++) {
       const line = this.#scrollback[y];
       lines.push(line.getString(0, 0));
-      if ( ! line.wrapped) {
+      if ( ! line.isWrapped) {
         lines.push("\n");
       }
     }

@@ -39,7 +39,7 @@ import { Event } from "extraterm-event-emitter";
 export type CharAttr = number;
 
 export interface Line extends CharCellLine {
-  wrapped: boolean;
+  isWrapped: boolean;
   clone(): Line;
   hasLinks(): boolean;
   getLinkURLByID(linkID: number): { url: string, group: string };
@@ -49,6 +49,12 @@ export interface Line extends CharCellLine {
   pasteGridWithLinks(sourceGrid: Line, x: number): void;
 
   mapStringIndexToColumn(line: number, x: number): number;
+  layers: Layer[];
+}
+
+export interface Layer {
+  name: string;
+  line: Line;
 }
 
 export interface TerminalCoord {

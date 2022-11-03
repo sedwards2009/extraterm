@@ -90,6 +90,12 @@ export interface Screen {
    * @param line The line number of the row to affect.
    */
   removeHyperlinks(line: number): void;
+
+  getBaseRow(rowNumber: number): Row;
+
+  hasLayerRow(rowNumber: number, name: string): boolean;
+
+  getLayerRow(rowNumber: number, name: string): Row;
 }
 
 
@@ -105,4 +111,92 @@ export interface ScreenWithCursor extends Screen {
    * See `ScreenWithCursor.cursorLine` and `Screen.getLineText()`.
    */
   readonly cursorX: number;
+}
+
+export type StyleCode = number;
+
+// Most of this is derived from CharCellLine.ts
+
+export interface Cell {
+  codePoint: number;
+  flags: number;
+  linkID: number;
+  style: number;
+  fgRGBA: number;
+  bgRGBA: number;
+
+  fgClutIndex: number;
+  bgClutIndex: number;
+}
+
+export const STYLE_MASK_UNDERLINE = 3;
+export const STYLE_MASK_BOLD = 4;
+export const STYLE_MASK_ITALIC = 8;
+export const STYLE_MASK_STRIKETHROUGH = 16;
+export const STYLE_MASK_BLINK = 32;
+export const STYLE_MASK_INVERSE = 64;
+export const STYLE_MASK_INVISIBLE = 128;
+export const STYLE_MASK_FAINT = 256;
+export const STYLE_MASK_CURSOR = 512;
+export const STYLE_MASK_OVERLINE = 1024;
+export const STYLE_MASK_HYPERLINK = 2048;
+export const STYLE_MASK_HYPERLINK_HIGHLIGHT = 4096;
+
+export const UNDERLINE_STYLE_OFF = 0;
+export const UNDERLINE_STYLE_NORMAL = 1;
+export const UNDERLINE_STYLE_DOUBLE = 2;
+export const UNDERLINE_STYLE_CURLY = 3;
+
+
+export interface Row {
+  readonly width: number;
+  readonly isWrapped: boolean;
+
+  /**
+   * Add a hyperlink to a range of characters.
+   *
+   * @param x The starting UTF16 index of the characters to affect.
+   * @param length The number of characters to apply the link to.
+   */
+  // applyHyperlink(x: number, length: number, url: string): void;
+
+  /**
+   * Remove all links from a line.
+   *
+   * This only applies to links which were added using `applyHyperlink()`.
+   */
+  // removeHyperlinks(): void;
+
+  clear(): void;
+  getCell(x: number): Cell;
+  setCell(x: number, cell: Cell): void;
+  clearCell(x: number): void;
+  setCodePoint(x: number, codePoint: number): void;
+  getCodePoint(x: number): number;
+  getCharExtraWidth(x: number): number;
+  getFlags(x: number): number;
+  getRowFlags(): Uint8Array;
+  setRowFlags(flagsArray: Uint8Array, flagMask?: number): void;
+  setString(x: number, str: string): void;
+  getString(x: number, count?: number): string;
+  getUTF16StringLength(x: number, count?: number): number;
+  getRowCodePoints(destinationArray?: Uint32Array): Uint32Array;
+  setBgRGBA(x: number, rgba: number): void;
+  getBgRGBA(x: number): number;
+  setFgRGBA(x: number, rgba: number): void;
+  getFgRGBA(x: number): number;
+  setFgClutIndex(x: number, index: number): void;
+  getFgClutIndex(x: number): number;
+  isFgClut(x: number): boolean
+  setBgClutIndex(x: number, index: number): void;
+  getBgClutIndex(x: number): number;
+  isBgClut(x: number): boolean;
+  setStyle(x: number, style: StyleCode): void;
+  getStyle(x: number): StyleCode;
+  getExtraFontsFlag(x: number): boolean;
+  setExtraFontsFlag(x: number, on: boolean): void;
+  setLigature(x: number, ligatureLength: number): void;
+  getLigature(x: number): number;
+  shiftCellsRight(x: number, shiftCount: number): void;
+  shiftCellsLeft(x: number, shiftCount: number): void;
 }
