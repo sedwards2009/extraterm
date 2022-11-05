@@ -45,7 +45,7 @@ export interface Font {
    */
   findLigatureRanges(text: string): [number, number][];
 
-  markLigaturesCharCellGridRow(grid: CharCellLine): void;
+  markLigaturesCharCellLine(line: CharCellLine): void;
 }
 
 export interface Options {

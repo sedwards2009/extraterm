@@ -4,8 +4,10 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
+import { Layer } from "term-api";
 import { TerminalBlock } from "../../terminal/TerminalBlock.js";
 import { ExtensionMetadata } from "../ExtensionMetadata.js";
+import { LineImpl } from "term-api-lineimpl";
 
 
 export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDetails {
@@ -104,11 +106,35 @@ class ScrollbackImpl implements ExtensionApi.Screen {
   }
 
   hasLayerRow(rowNumber: number, name: string): boolean {
+    const line = this.#terminalBlock.getScrollbackLineAtRow(rowNumber);
+    if (line == null) {
+      return false;
+    }
+    const key = `${this.#extensionMetadata.name}:${name}`;
+    for (const layer of line.layers) {
+      if (layer.name === key) {
+        return true;
+      }
+    }
     return false;
   }
 
   getLayerRow(rowNumber: number, name: string): ExtensionApi.Row {
-    return null;
+    const line = this.#terminalBlock.getScrollbackLineAtRow(rowNumber);
+    if (line == null) {
+      return null;
+    }
+    const key = `${this.#extensionMetadata.name}:${name}`;
+    for (const layer of line.layers) {
+      if (layer.name === key) {
+        return layer.line;
+      }
+    }
+    const layer: Layer = {
+      name: key,
+      line: new LineImpl(line.width, line.palette, 0)
+    };
+    line.layers.push(layer);
+    return layer.line;
   }
-
 }

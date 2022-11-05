@@ -33,8 +33,8 @@ export class LineImpl extends CharCellLine implements Line {
   #cachedString: string = null;
   layers: Layer[] = [];
 
-  constructor(width: number, palette: number[]=null, __bare__=false) {
-    super(width, palette, __bare__);
+  constructor(width: number, palette: number[]=null, clearCodePoint=32, __bare__=false) {
+    super(width, palette, clearCodePoint, __bare__);
   }
 
   hasLinks(): boolean {

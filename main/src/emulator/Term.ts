@@ -577,6 +577,7 @@ export class Emulator implements EmulatorApi {
 
       const newLine = line.clone();
       newLine.setStyle(this.x, newLine.getStyle(this.x) | STYLE_MASK_CURSOR);
+      newLine.layers = line.layers;
       return newLine;
     }
     return line;

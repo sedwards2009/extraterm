@@ -174,6 +174,7 @@ export interface Row {
   setCodePoint(x: number, codePoint: number): void;
   getCodePoint(x: number): number;
   getCharExtraWidth(x: number): number;
+  setCharExtraWidth(x: number, width: number): void;
   getFlags(x: number): number;
   getRowFlags(): Uint8Array;
   setRowFlags(flagsArray: Uint8Array, flagMask?: number): void;

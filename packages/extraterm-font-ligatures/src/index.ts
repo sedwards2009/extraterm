@@ -259,32 +259,32 @@ class FontImpl implements Font {
     return didSubstitute;
   }
 
-  markLigaturesCharCellGridRow(grid: CharCellLine): void {
+  markLigaturesCharCellLine(line: CharCellLine): void {
     // Short circuit the process if there are no possible ligatures in the
     // font
     if (this._lookupTrees.length === 0) {
       return;
     }
 
-    const glyphIds = this._findGlyphIdsInCharCellGridRow(grid);
+    const glyphIds = this._findGlyphIdsInCharCellGridRow(line);
 
-    const width = grid.width;
+    const width = line.width;
     for (let i=0; i<width; i++) {
-      grid.setLigature(i, 0);
+      line.setLigature(i, 0);
     }
 
     const result = this._findInternal(glyphIds);
     for (const range of result.ranges) {
       const ligatureLength = range[1] - range[0];
-      grid.setLigature(range[0], ligatureLength);
+      line.setLigature(range[0], ligatureLength);
     }
   }
 
-  private _findGlyphIdsInCharCellGridRow(grid: CharCellLine): number [] {
+  private _findGlyphIdsInCharCellGridRow(line: CharCellLine): number [] {
     const glyphIds: number[] = [];
-    const width = grid.width;
+    const width = line.width;
     for (let i = 0; i < width; i++) {
-      const codePoint = grid.getCodePoint(i);
+      const codePoint = line.getCodePoint(i);
       let glyphIndex = this._codePointToGlyphIndexCache.get(codePoint);
       if (glyphIndex === undefined) {
         const char = String.fromCodePoint(codePoint);

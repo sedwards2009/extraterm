@@ -203,7 +203,15 @@ export class TerminalBlock implements Block {
     if (line == null) {
       return null;
     }
-    return line.getString(0, 0);
+    return line.getString(0);
+  }
+
+  getScrollbackLineAtRow(rowNumber: number): Line {
+    const line = this.#scrollback[rowNumber];
+    if (line == null) {
+      return null;
+    }
+    return line;
   }
 
   isScrollbackLineWrapped(lineNumber: number): boolean {
@@ -426,13 +434,26 @@ export class TerminalBlock implements Block {
   }
 
   #renderLines(painter: QPainter, lines: Line[], startY: number, renderCursor: boolean): void {
-    const qimage = this.#fontAtlas.getQImage();
     let y = startY;
-
-    const metrics= this.#fontMetrics;
+    const metrics = this.#fontMetrics;
     const heightPx = metrics.heightPx;
-    const widthPx = metrics.widthPx;
 
+    for (const line of lines) {
+      this.#renderSingleLine(painter, line, y, renderCursor);
+      for (const layer of line.layers) {
+        this.#renderSingleLine(painter, layer.line, y, renderCursor);
+      }
+      y += heightPx;
+    }
+  }
+
+  #renderSingleLine(painter: QPainter, line: Line, y: number, renderCursor: boolean): void {
+    const qimage = this.#fontAtlas.getQImage();
+    const metrics= this.#fontMetrics;
+    const widthPx = metrics.widthPx;
+    const heightPx = metrics.heightPx;
+    const palette = this.#terminalVisualConfig.palette;
+    const ligatureMarker = this.#terminalVisualConfig.ligatureMarker;
     const cursorColor = this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX];
     const normalizedCell: NormalizedCell = {
       x: 0,
@@ -444,26 +465,23 @@ export class TerminalBlock implements Block {
       linkID: 0,
     };
 
-    const palette = this.#terminalVisualConfig.palette;
-    const ligatureMarker = this.#terminalVisualConfig.ligatureMarker;
+    line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
+    this.#updateCharGridFlags(line);
 
-    for (const line of lines) {
-      line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
-      this.#updateCharGridFlags(line);
+    if (ligatureMarker != null) {
+      const text = line.getString(0);
+      ligatureMarker.markLigaturesCharCellLine(line, text);
+    }
 
-      if (ligatureMarker != null) {
-        const text = line.getString(0, 0);
-        ligatureMarker.markLigaturesCharCellLine(line, 0, text);
-      }
+    let hoverLinkID = 0;
+    if (this.#hoveredURL != null) {
+      hoverLinkID = line.getLinkIDByURL(this.#hoveredURL, this.#hoveredGroup);
+    }
 
-      let hoverLinkID = 0;
-      if (this.#hoveredURL != null) {
-        hoverLinkID = line.getLinkIDByURL(this.#hoveredURL, this.#hoveredGroup);
-      }
-
-      let px = 0;
-      for (const column of normalizedCellIterator(line, normalizedCell)) {
-        const codePoint = normalizedCell.codePoint;
+    let px = 0;
+    for (const column of normalizedCellIterator(line, normalizedCell)) {
+      const codePoint = normalizedCell.codePoint;
+      if (codePoint !== 0) {
         const fontIndex = normalizedCell.extraFontFlag ? 1 : 0;
 
         let fgRGBA = line.getFgRGBA(column);
@@ -495,9 +513,8 @@ export class TerminalBlock implements Block {
         }
         painter.drawImage(px, y, qimage, glyph.xPixels + normalizedCell.segment * glyph.widthPx, glyph.yPixels,
           glyph.widthPx, heightPx);
-        px += widthPx;
       }
-      y += heightPx;
+      px += widthPx;
     }
   }
 
@@ -701,7 +718,7 @@ export class TerminalBlock implements Block {
 
   #extendXWordRight(termEvent: MouseEventOptions): number {
     const line = this.getLine(termEvent.row + this.#scrollback.length);
-    const lineStringRight = line.getString(termEvent.column, 0);
+    const lineStringRight = line.getString(termEvent.column);
     const rightMatch = lineStringRight.match(WORD_SELECTION_REGEX);
     if (rightMatch != null) {
       return termEvent.column + countCells("" + rightMatch);
@@ -930,7 +947,7 @@ export class TerminalBlock implements Block {
     const len = this.#scrollback.length;
     for (let y=0; y<len; y++) {
       const line = this.#scrollback[y];
-      lines.push(line.getString(0, 0));
+      lines.push(line.getString(0));
       if ( ! line.isWrapped) {
         lines.push("\n");
       }

@@ -379,7 +379,7 @@ test("Mark ligatures", async t => {
   grid.setString(0, "Foo --> Bar");
 
   const font = await load("Monoid", { listVariants: fakeListVariants });
-  font.markLigaturesCharCellGridRow(grid);
+  font.markLigaturesCharCellLine(grid);
 
   t.is(grid.getLigature(0), 0);
   t.is(grid.getLigature(1), 0);
@@ -407,7 +407,7 @@ test("Speed test", async t => {
     const start = performance.now();
 
     for (let l=0; l<LOOPS; l++) {
-      font.markLigaturesCharCellGridRow(grid);
+      font.markLigaturesCharCellLine(grid);
     }
     const end = performance.now();
     const durationPerLoop = (end - start) / LOOPS;

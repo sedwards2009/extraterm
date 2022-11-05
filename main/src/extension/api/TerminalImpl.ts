@@ -301,7 +301,7 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     }
     const layer: Layer = {
       name: key,
-      line: new LineImpl(line.width, line.palette)
+      line: new LineImpl(line.width, line.palette, 0)
     };
     line.layers.push(layer);
     return layer.line;

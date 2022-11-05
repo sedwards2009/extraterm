@@ -148,6 +148,7 @@ export class CharCellLine {
   #dataView: DataView;
   #uint8View: Uint8Array;
   #dirtyFlag = true;
+  #clearCodePoint = " ".codePointAt(0);
   width: number;
   palette: number[];
 
@@ -161,11 +162,13 @@ export class CharCellLine {
    * @param palette The palette to use. This is an array of 257 32bit RGBA
    *    values. This array is not copied and once passed here should not be
    *    modified externally.
+   * @param clearCodePoint The code point to use when clearing the contents.
    * @param __bare__ This is internal.
    */
-  constructor(width_: number, palette_: number[]=null,
+  constructor(width_: number, palette_: number[]=null, clearCodePoint = 32,
       __bare__=false) {
     this.width = width_;
+    this.#clearCodePoint = clearCodePoint;
     this.palette = palette_;
     if (__bare__) {
       return;
@@ -228,7 +231,7 @@ export class CharCellLine {
    * foreground and background.
    */
   clear(): void {
-    const spaceCodePoint = " ".codePointAt(0);
+    const spaceCodePoint = this.#clearCodePoint;
     const maxChar = this.width;
     let offset = 0;
 
@@ -333,6 +336,14 @@ export class CharCellLine {
     return (flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT;
   }
 
+  setCharExtraWidth(x: number, width: number): void {
+    const offset = x * CELL_SIZE_BYTES;
+    const flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
+    const newFlags = (flags & ~FLAG_MASK_WIDTH) | (width << FLAG_WIDTH_SHIFT);
+    this.#dataView.setUint8(offset + OFFSET_FLAGS, newFlags);
+    this.#dirtyFlag = true;
+  }
+
   getFlags(x: number): number {
     const offset = x * CELL_SIZE_BYTES;
     return this.#dataView.getUint8(offset + OFFSET_FLAGS);
@@ -381,7 +392,6 @@ export class CharCellLine {
     for (let i=0; i<codePointArray.length; i++) {
       this.setCodePoint(x+i, codePointArray[i]);
     }
-    this.#dirtyFlag = true;
   }
 
   /**

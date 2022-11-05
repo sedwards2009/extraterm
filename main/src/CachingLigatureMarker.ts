@@ -7,11 +7,11 @@ import { getLogger, Logger } from "extraterm-logging";
 import { CharCellLine, FLAG_MASK_WIDTH, FLAG_MASK_LIGATURE } from "extraterm-char-cell-line";
 
 export interface LigatureMarker {
-    markLigaturesCharCellLine(grid: CharCellLine, row: number, text: string): void;
+    markLigaturesCharCellLine(line: CharCellLine, text: string): void;
 }
 
 interface PlainLigatureMarker {
-  markLigaturesCharCellGridRow(grid: CharCellLine, row: number): void;
+  markLigaturesCharCellLine(line: CharCellLine): void;
 }
 
 export class CachingLigatureMarker implements LigatureMarker {
@@ -27,19 +27,19 @@ export class CachingLigatureMarker implements LigatureMarker {
     });
   }
 
-  markLigaturesCharCellLine(grid: CharCellLine, row: number, text: string): void {
+  markLigaturesCharCellLine(line: CharCellLine, text: string): void {
     if (text == null) {
-      this._marker.markLigaturesCharCellGridRow(grid, row);
+      this._marker.markLigaturesCharCellLine(line);
       return;
     }
 
     const rowFlags = this._cache.get(text);
     if (rowFlags == null) {
-      this._marker.markLigaturesCharCellGridRow(grid, row);
-      const rowFlags = grid.getRowFlags();
+      this._marker.markLigaturesCharCellLine(line);
+      const rowFlags = line.getRowFlags();
       this._cache.set(text, rowFlags);
     } else {
-      grid.setRowFlags(rowFlags, FLAG_MASK_WIDTH | FLAG_MASK_LIGATURE);
+      line.setRowFlags(rowFlags, FLAG_MASK_WIDTH | FLAG_MASK_LIGATURE);
     }
   }
 }
