@@ -58,7 +58,7 @@ import { UiStyle } from "../ui/UiStyle.js";
 import { BorderDirection } from "../extension/ExtensionMetadata.js";
 import { QtTimeout } from "../utils/QtTimeout.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
-import { TerminalScrollArea } from "../ui/TerminalScrollArea.js";
+import { TerminalScrollArea, ViewportChange } from "../ui/TerminalScrollArea.js";
 import { ContextMenuEvent } from "../ContextMenuEvent.js";
 import { DisposableHolder } from "../utils/DisposableUtils.js";
 import { FrameFinder } from "./FrameFinderType.js";
@@ -373,15 +373,18 @@ export class Terminal implements Tab, Disposable {
       })
     });
 
-    this.#scrollArea.onScrollRangeChanged((max: number) => {
-      this.#verticalScrollBar.setMaximum(max);
+    this.#scrollArea.onViewportChanged((viewportChange: ViewportChange) => {
+      if (viewportChange.range !== undefined) {
+        this.#verticalScrollBar.setMaximum(viewportChange.range);
+      }
+      if (viewportChange.pageSize !== undefined) {
+        this.#verticalScrollBar.setPageStep(viewportChange.pageSize);
+      }
+      if (viewportChange.position !== undefined) {
+        this.#verticalScrollBar.setValue(viewportChange.position);
+      }
     });
-    this.#scrollArea.onScrollPositionChanged((position: number) => {
-      this.#verticalScrollBar.setValue(position);
-    });
-    this.#scrollArea.onScrollPageSizeChanged((pageSize: number) => {
-      this.#verticalScrollBar.setPageStep(pageSize);
-    });
+
     this.#verticalScrollBar.addEventListener("valueChanged", (value: number) => {
       this.#scrollArea.setScrollPosition(value);
     });

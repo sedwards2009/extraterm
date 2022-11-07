@@ -23,6 +23,14 @@ import { BlockFrame } from "../terminal/BlockFrame";
 
 const SCROLL_SCALE = 0.5;
 
+
+export interface ViewportChange {
+  position?: number;
+  range?: number;
+  pageSize?: number;
+}
+
+
 export class TerminalScrollArea {
 
   private _log: Logger;
@@ -40,23 +48,17 @@ export class TerminalScrollArea {
 
   #bottomLocked = true;
 
-  #onScrollPositionChangedEventEmitter = new EventEmitter<number>();
-  onScrollPositionChanged: Event<number> = null;
+  #onViewportChangedEventEmitter = new EventEmitter<ViewportChange>();
+  onViewportChanged: Event<ViewportChange> = null;
+
   #lastReportedScrollPosition = -1;
-
-  #onScrollRangeChangedEventEmitter = new EventEmitter<number>();
-  onScrollRangeChanged: Event<number> = null;
   #lastReportedScrollRange = -1;
-
-  #onScrollPageSizeChangedEventEmitter = new EventEmitter<number>();
-  onScrollPageSizeChanged: Event<number> = null;
   #lastReportedPageSize = -1;
 
   constructor(options: WidgetOptions) {
     this._log = getLogger("TerminalScrollArea", this);
-    this.onScrollPositionChanged = this.#onScrollPositionChangedEventEmitter.event;
-    this.onScrollRangeChanged = this.#onScrollRangeChangedEventEmitter.event;
-    this.onScrollPageSizeChanged = this.#onScrollPageSizeChangedEventEmitter.event;
+
+    this.onViewportChanged = this.#onViewportChangedEventEmitter.event;
 
     this.#topWidget = Widget({
       contentsMargins: 0,
@@ -188,18 +190,28 @@ export class TerminalScrollArea {
 
     this.#updateViewportTopOnFrames();
 
+    const viewportChanges: ViewportChange = {};
+    let didChange = false;
+
     const maxPos = this.getMaximumScrollPosition();
     if (maxPos !== this.#lastReportedScrollRange) {
       this.#lastReportedScrollRange = maxPos;
-      this.#onScrollRangeChangedEventEmitter.fire(maxPos);
+      viewportChanges.range = maxPos;
+      didChange = true;
     }
     if (this.#lastReportedPageSize !== scrollPageSize) {
       this.#lastReportedPageSize = scrollPageSize;
-      this.#onScrollPageSizeChangedEventEmitter.fire(this.#lastReportedPageSize);
+      viewportChanges.pageSize = scrollPageSize;
+      didChange = true;
     }
     if (this.#scrollPosition !== this.#lastReportedScrollPosition) {
       this.#lastReportedScrollPosition = this.#scrollPosition;
-      this.#onScrollPositionChangedEventEmitter.fire(this.#scrollPosition);
+      viewportChanges.position = this.#scrollPosition;
+      didChange = true;
+    }
+
+    if (didChange) {
+      this.#onViewportChangedEventEmitter.fire(viewportChanges);
     }
   }
 
