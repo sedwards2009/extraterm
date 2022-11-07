@@ -323,6 +323,10 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     const cursorX = this.#terminal.getEmulator().getDimensions().cursorX;
     return cursorX;
   }
+
+  redraw(): void {
+    this.#terminal.redrawScreen();
+  }
 }
 
 

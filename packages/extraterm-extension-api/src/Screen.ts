@@ -96,6 +96,8 @@ export interface Screen {
   hasLayerRow(rowNumber: number, name: string): boolean;
 
   getLayerRow(rowNumber: number, name: string): Row;
+
+  redraw(): void;
 }
 
 

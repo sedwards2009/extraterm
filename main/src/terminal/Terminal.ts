@@ -501,6 +501,10 @@ export class Terminal implements Tab, Disposable {
     return this.#blockFrames.map(pb => pb.frame);
   }
 
+  redrawScreen(): void {
+    this.#blockFrames[this.#blockFrames.length-1].frame.getWidget().update();
+  }
+
   #computeTerminalSize(): TerminalSize {
     if (this.#terminalVisualConfig == null) {
       return null;

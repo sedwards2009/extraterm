@@ -137,4 +137,8 @@ class ScrollbackImpl implements ExtensionApi.Screen {
     line.layers.push(layer);
     return layer.line;
   }
+
+  redraw(): void {
+    this.#terminalBlock.getWidget().update();
+  }
 }
