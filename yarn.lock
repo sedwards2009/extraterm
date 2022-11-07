@@ -4519,6 +4519,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"find@workspace:extensions/Find":
+  version: 0.0.0-use.local
+  resolution: "find@workspace:extensions/Find"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    esbuild: ^0.15.5
+    eslint: 8.13.0
+    eslint-config-extraterm: 1.0.0
+    eslint-plugin-unicorn: 42.0.0
+    extraterm-unicode-utilities: 1.0.0
+    qt-construct: 0.1.0
+    shx: ^0.3.2
+    typescript: 4.7.4
+  languageName: unknown
+  linkType: soft
+
 "flat-cache@npm:^3.0.4":
   version: 3.0.4
   resolution: "flat-cache@npm:3.0.4"

@@ -47,6 +47,7 @@
       "extensions/DirectoryCommands",
       "extensions/DownloadBlock",
       "extensions/CommunityTerminalThemes",
+      "extensions/Find",
       "extensions/ImageBlock",
       "extensions/InsertEmoji",
       "extensions/InternalCommands",

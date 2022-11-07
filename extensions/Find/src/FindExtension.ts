@@ -1,268 +1,188 @@
 /*
- * Copyright 2019 Simon Edwards <simon@simonzone.com>
+ * Copyright 2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {
-  Block,
   ExtensionContext,
-  FindStartPosition,
   Logger,
+  LineRangeChange,
+  Screen,
   Terminal,
-  TerminalBorderWidget,
   TerminalOutputDetails,
-  TerminalOutputType,
-  TextViewerDetails,
-  TextViewerType,
+  TerminalBorderWidget,
+  TerminalOutputType
 } from '@extraterm/extraterm-extension-api';
-import Component from 'vue-class-component';
-import Vue from 'vue';
-import { trimBetweenTags } from 'extraterm-trim-between-tags';
-const escapeStringRegexp = require('escape-string-regexp');
+import { countCells } from "extraterm-unicode-utilities";
+import { FindControls } from './FindControls';
 
 let log: Logger = null;
+let context: ExtensionContext = null;
 
-export function activate(context: ExtensionContext): any {
+const LAYER_NAME = "find";
+
+const terminalToFindExtensionMap = new WeakMap<Terminal, FindExtension>();
+
+
+export function activate(_context: ExtensionContext): any {
+  context = _context;
   log = context.logger;
 
-  const commands = context.commands;
-  commands.registerCommand("find:find", () => {
-    const findWidget = <FindWidget> context.window.activeTerminal.openTerminalBorderWidget("find");
-    findWidget.focus();
-  });
+  context.commands.registerCommand("find:find", commandFind.bind(null, context));
 
-  context.window.registerTerminalBorderWidget("find", (terminal: Terminal, widget: TerminalBorderWidget): any => {
-    return new FindWidget(context, terminal, widget);
+  for (const terminal of context.terminals.terminals) {
+    terminalToFindExtensionMap.set(terminal, new FindExtension(terminal));
+  }
+  context.terminals.onDidCreateTerminal((newTerminal: Terminal) => {
+    terminalToFindExtensionMap.set(newTerminal, new FindExtension(newTerminal));
   });
 }
 
+function commandFind(context: ExtensionContext): void {
+  const terminalExtension = terminalToFindExtensionMap.get(context.activeTerminal);
+  if (terminalExtension != null) {
+    terminalExtension.open();
+  }
+}
 
-class FindWidget {
+class FindExtension {
+  #terminal: Terminal = null;
+  #borderWidget: TerminalBorderWidget = null;
+  #findControls: FindControls = null;
+  #isOpen = false;
 
-  private _ui: FindPanelUI = null;
+  constructor(terminal: Terminal) {
+    this.#terminal = terminal;
 
-  constructor(context: ExtensionContext, private _terminal: Terminal, private _widget: TerminalBorderWidget) {
-    this._ui = new FindPanelUI();
-    this._ui.$on("find", () => {
-      this._find();
-    });
-    this._ui.$on("findNext", () => {
-      this._findBackwards();
-    });
-    this._ui.$on("findPrevious", () => {
-      this._findForwards();
-    });
-    this._ui.$on("close", () => {
-      this._close();
-    });
-    this._ui.$on("regularExpressionChange", () => {
-      this._find();
-    });
-    this._ui.$on("caseSensitiveChange", () => {
-      this._find();
-    });
-
-    const component = this._ui.$mount();
-    this._widget.containerElement.appendChild(component.$el);
-    this._terminal.onDidAppendBlock((block: Block) => {
-      this._handleBlockAppended(block);
-    });
-
-    this._widget.onDidClose(() => {
-      this._handleClose();
-    });
-
-    this._widget.onDidOpen(() => {
-      this._applyHighlight();
-    });
+    // terminal.onDidAppendScrollbackLines(scanAndHighlightScrollback);
+    // terminal.onDidScreenChange((ev: LineRangeChange) => {
+    // //   scanAndHighlightScreen(terminal, ev);
+    // });
   }
 
-  focus(): void {
-    this._ui.focus();
+  #initBorderWidget(): void {
+    this.#borderWidget = this.#terminal.createTerminalBorderWidget("find");
+
+    this.#findControls = new FindControls(this.#terminal.tab.window.style, log);
+    this.#findControls.onCloseRequest(() => {
+      this.#handleCloseRequest();
+    });
+    this.#findControls.onSearchTextChanged((text: string) => {
+      this.#scanAndHighlightTerminal(this.#terminal, text);
+    });
+    this.#borderWidget.contentWidget = this.#findControls.getWidget();
   }
 
-  private _needleRegExp(extraFlags=""): RegExp {
-    let flags = extraFlags;
-    if ( ! this._ui.caseSensitive) {
-      flags = flags + "i";
+  #handleCloseRequest(): void {
+    this.#borderWidget.close();
+    this.#clearTerminalHighlight(this.#terminal);
+    this.#isOpen = false;
+  }
+
+  open(): void {
+    if (this.#borderWidget == null) {
+      this.#initBorderWidget();
     }
-    if (this._ui.regularExpression) {
-      return new RegExp(this._ui.needle, flags);
+    if ( ! this.#isOpen) {
+      this.#borderWidget.open();
+      this.#isOpen = true;
+
+      const searchText = this.#findControls.getSearchText().trim();
+      if (searchText !== "") {
+        this.#scanAndHighlightTerminal(this.#terminal, searchText);
+      }
+    }
+    this.#findControls.focus();
+  }
+
+  #clearTerminalHighlight(terminal: Terminal): void {
+    for (const block of terminal.blocks) {
+      if (block.type === TerminalOutputType) {
+        const outputDetails = <TerminalOutputDetails> block.details;
+        this.#clearHighlight(outputDetails.scrollback, 0, outputDetails.scrollback.height);
+      }
+    }
+    this.#clearHighlight(terminal.screen, 0, terminal.screen.height);
+  }
+
+  #clearHighlight(screen: Screen, startLine: number, endLine: number): void {
+    let didChange = false;
+    for (let y = startLine; y < endLine; y++) {
+      if (screen.hasLayerRow(y, LAYER_NAME)) {
+        const layerRow = screen.getLayerRow(y, LAYER_NAME);
+        layerRow.clear();
+        didChange = true;
+      }
+    }
+    if (didChange) {
+      screen.redraw();
+    }
+  }
+
+  #scanAndHighlightTerminal(terminal: Terminal, text: string): void {
+    for (const block of terminal.blocks) {
+      if (block.type === TerminalOutputType) {
+        const outputDetails = <TerminalOutputDetails> block.details;
+        if (text !== "") {
+          this.#scanAndHighlight(text, outputDetails.scrollback, 0, outputDetails.scrollback.height);
+        } else {
+          this.#clearHighlight(outputDetails.scrollback, 0, outputDetails.scrollback.height);
+        }
+      }
+    }
+    if (text !== "") {
+      this.#scanAndHighlight(text, terminal.screen, 0, terminal.screen.height);
     } else {
-      return new RegExp(escapeStringRegexp(this._ui.needle), flags);
+      this.#clearHighlight(terminal.screen, 0, terminal.screen.height);
     }
   }
 
-  private _find(): void {
-    this._applyHighlight();
+  #scanAndHighlight(text: string, screen: Screen, startLine: number, endLine: number): void {
+    const textRegex = RegExp(`(?<text>${text})`, "gi"); // TODO escape the text
+    let didChange = false;
+    for (let y = startLine; y < endLine; y++) {
+      const lineText = screen.getLineText(y);
+      const foundList = findText(textRegex, lineText);
+      if (foundList.length !== 0) {
+        const layerRow = screen.getLayerRow(y, LAYER_NAME);
+        layerRow.clear();
+        for (const found of foundList) {
+          const index = countCells(lineText.substring(0, found.index));
+          layerRow.setString(index, found.matchText);
 
-    const termBlocks = this._getBlockDetails();
-    const needleRegExp = this._needleRegExp();
-
-    for (let i=termBlocks.length-1; i>=0; i--) {
-      if (termBlocks[i].find(needleRegExp, { backwards: true, startPosition: FindStartPosition.DOCUMENT_END })) {
-        break;
+          const matchWidthCells = countCells(found.matchText);
+          for (let i=0; i<matchWidthCells; i++) {
+            layerRow.setFgClutIndex(index + i, 0);
+            layerRow.setBgClutIndex(index + i, 11);
+          }
+        }
+        didChange = true;
+      } else {
+        if (screen.hasLayerRow(y, LAYER_NAME)) {
+          const layerRow = screen.getLayerRow(y, LAYER_NAME);
+          layerRow.clear();
+          didChange = true;
+        }
       }
     }
-  }
-
-  private _applyHighlight(): void {
-    const termViewers = this._getBlockDetails();
-    for (const viewer of termViewers) {
-      viewer.highlight(this._needleRegExp("g"));
+    if (didChange) {
+      screen.redraw();
     }
   }
-
-  private _removeHighlight(): void {
-    const termViewers = this._getBlockDetails();
-    for (const viewer of termViewers) {
-      viewer.highlight(null);
-    }
-  }
-
-  private _getBlockDetails(): (TerminalOutputDetails | TextViewerDetails)[] {
-    const termBlockDetails: (TerminalOutputDetails | TextViewerDetails)[] = [];
-    for (const block of this._terminal.blocks) {
-      const details = this._unpackBlock(block);
-      if (details != null) {
-        termBlockDetails.push(details);
-      }
-    }
-    return termBlockDetails;
-  }
-
-  private _unpackBlock(block: Block): TerminalOutputDetails | TextViewerDetails {
-    if (block.type === TerminalOutputType || block.type === TextViewerType) {
-      return block.details;
-    }
-    return null;
-  }
-
-  private _handleBlockAppended(block: Block): void {
-    if (this._widget.isOpen) {
-      const details = this._unpackBlock(block);
-      if (details != null) {
-        details.highlight(this._needleRegExp("g"));
-      }
-    }
-  }
-
-  private _findForwards(): void {
-    this._applyHighlight();
-
-    const termBlocks = this._getBlockDetails();
-    let i = termBlocks.findIndex(v => v.hasSelection());
-    if (i === -1) {
-      this._find();
-      return;
-    }
-
-    const needleRegExp = this._needleRegExp();
-    if (termBlocks[i].findNext(needleRegExp)) {
-      return;
-    }
-    i++;
-
-    for ( ; i<termBlocks.length; i++) {
-      if (termBlocks[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_START })) {
-        return;
-      }
-    }
-  }
-
-  private _findBackwards(): void {
-    this._applyHighlight();
-
-    const termDetails = this._getBlockDetails();
-    let i = termDetails.findIndex(d => d.hasSelection());
-    if (i === -1) {
-      this._find();
-      return;
-    }
-
-    const needleRegExp = this._needleRegExp();
-    if (termDetails[i].findPrevious(needleRegExp)) {
-      return;
-    }
-    i--;
-
-    for ( ; i >= 0; i--) {
-      if (termDetails[i].find(needleRegExp, { startPosition: FindStartPosition.DOCUMENT_END, backwards: true })) {
-        return;
-      }
-    }
-  }
-
-  private _handleClose(): void {
-    this._removeHighlight();
-  }
-
-  private _close(): void {
-    this._widget.close();
-  }
-
 }
 
-@Component(
-  {
-    template: trimBetweenTags(`
-      <div class="gui-packed-row width-100pc">
-        <label class="compact"><i class="fas fa-search"></i></label>
-        <input ref="needle" type="text" class="char-width-20"
-          v-model="needle"
-          placeholder="Find"
-          spellcheck="false"
-          v-on:keydown.capture="onNeedleKeyDown"
-          v-on:keypress.capture="onNeedleKeyPress"
-          />
-        <span class="group">
-          <button v-on:click="$emit('findNext')" class="inline"><i class="fas fa-arrow-up"></i></button>
-          <button v-on:click="$emit('findPrevious')" class="inline"><i class="fas fa-arrow-down"></i></button>
-        </span>
-        <span class="group">
-          <button v-on:click="onRegularExpressionClick" v-bind:class="{ inline: true, selected: this.regularExpression }" title="Search as regular expression">.*</button>
-          <button v-on:click="onCaseSensitive" v-bind:class="{ inline: true, selected: this.caseSensitive }" title="Case sensitive">aA</button>
-        </span>
-        <span class="expand"></span>
-        <button v-on:click="$emit('close')" class="compact microtool danger"><i class="fa fa-times"></i></button>
-      </div>`)
-  })
-class FindPanelUI extends Vue {
-  needle: string;
-  caseSensitive: boolean;
-  regularExpression: boolean;
 
-  constructor() {
-    super();
-    this.needle = "";
-    this.caseSensitive = false;
-    this.regularExpression = false;
-  }
+interface TextMatch {
+  index: number;
+  matchText: string;
+}
 
-  focus(): void {
-    if (this.$refs.needle != null) {
-      (<HTMLInputElement> this.$refs.needle).focus();
+function findText(textRegex: RegExp, text: string): TextMatch[] {
+  const result: TextMatch[] = [];
+  for (const m of text.matchAll(textRegex)) {
+    if (m.groups.text != null) {
+      result.push({ index: m.index, matchText: m.groups.text });
     }
   }
-
-  onNeedleKeyDown(event: KeyboardEvent): void {
-    if (event.key === "Escape") {
-      this.$emit("close");
-    }
-  }
-  onNeedleKeyPress(event: KeyboardEvent): void {
-    if (event.key === "Enter") {
-      this.$emit("findNext");
-    }
-  }
-
-  onRegularExpressionClick(): void {
-    this.regularExpression = ! this.regularExpression;
-    this.$emit("regularExpressionChange");
-  }
-
-  onCaseSensitive(): void {
-    this.caseSensitive = ! this.caseSensitive;
-    this.$emit("caseSensitiveChange");
-  }
+  return result;
 }
