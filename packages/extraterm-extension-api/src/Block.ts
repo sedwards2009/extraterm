@@ -85,7 +85,7 @@ export interface TerminalOutputDetails {
 
   readonly commandLine: string;
 
-  hasSelection(): boolean;
+  readonly hasSelection: boolean;
 
   /**
    * True if this block of terminal output still exists.

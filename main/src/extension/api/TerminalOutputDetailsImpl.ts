@@ -48,7 +48,7 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
     return this.#scrollback;
   }
 
-  hasSelection(): boolean {
+  get hasSelection(): boolean {
     this.#checkIsAlive();
     return this.#terminalBlock.hasSelection();
   }
