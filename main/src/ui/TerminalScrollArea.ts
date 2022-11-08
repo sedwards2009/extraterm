@@ -160,6 +160,11 @@ export class TerminalScrollArea {
     return new QSize(geo.width(), geo.height());
   }
 
+  getMaximumViewportHeight(): number {
+    const geo = this.#viewportWidget.contentsRect();
+    return geo.height();
+  }
+
   setViewportMargins(left: number, top: number, right: number, bottom: number): void {
     this.#marginLeft = left;
     this.#marginTop = top;
@@ -175,6 +180,11 @@ export class TerminalScrollArea {
       right: this.#marginRight,
       bottom: this.#marginBottom,
     };
+  }
+
+  getContentHeight(): number {
+    const hint = this.#contentWidget.sizeHint();
+    return hint.height();
   }
 
   #layout(): void {

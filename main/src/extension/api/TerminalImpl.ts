@@ -28,6 +28,8 @@ export class TerminalImpl implements ExtensionApi.Terminal {
 
   environment: TerminalEnvironmentImpl;
   screen: ExtensionApi.ScreenWithCursor;
+  viewport: ExtensionApi.Viewport;
+
   #sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   #sessionConfigurationExtensions: Object = null;
 
@@ -55,6 +57,7 @@ export class TerminalImpl implements ExtensionApi.Terminal {
 
     this.#terminal.onDispose(this.#handleTerminalDispose.bind(this));
     this.environment = new TerminalEnvironmentImpl(this.#terminal);
+    this.viewport = new ViewportProxy(this.#terminal);
     this.screen = new ScreenProxy(this.#extensionMetadata, this.#terminal);
     this.onDidAppendBlock = this.#onDidAppendBlockEventEmitter.event;
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
@@ -326,6 +329,39 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
 
   redraw(): void {
     this.#terminal.redrawScreen();
+  }
+}
+
+
+class ViewportProxy implements ExtensionApi.Viewport {
+
+  #terminal: Terminal;
+
+  #onDidChangeEventEmitter = new EventEmitter<void>();
+  onDidChange: ExtensionApi.Event<void>;
+
+  constructor(terminal: Terminal) {
+    this.#terminal = terminal;
+    this.onDidChange = this.#onDidChangeEventEmitter.event;
+    this.#terminal.scrollArea.onViewportChanged(() => {
+      this.#onDidChangeEventEmitter.fire();
+    });
+  }
+
+  get height(): number {
+    return this.#terminal.scrollArea.getMaximumViewportHeight();
+  }
+
+  get position(): number {
+    return this.#terminal.scrollArea.getScrollPosition();
+  }
+
+  set position(position: number) {
+    this.#terminal.scrollArea.setScrollPosition(position);
+  }
+
+  get contentHeight(): number {
+    return this.#terminal.scrollArea.getContentHeight();
   }
 }
 

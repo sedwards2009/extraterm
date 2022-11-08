@@ -164,6 +164,36 @@ export interface Terminal {
    * True if the terminal is connected to a live TTY.
    */
   readonly isConnected: boolean;
+
+  /**
+   * Geometry of the terminal viewport shown in the window.
+   */
+  readonly viewport: Viewport;
+}
+
+
+export interface Viewport {
+  /**
+   * The height of the viewport in pixels.
+   */
+  readonly height: number;
+
+  /**
+   * The position of the top of the viewport relative to the contents.
+   *
+   * Setting this changes the position of the viewport.
+   */
+  position: number;
+
+  /**
+   * The total height of the content inside the viewport.
+   */
+  readonly contentHeight: number;
+
+  /**
+   * Event fired when the size or position of the viewport changes.
+   */
+  readonly onDidChange: Event<void>;
 }
 
 /**

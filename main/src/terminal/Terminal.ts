@@ -146,7 +146,7 @@ export class Terminal implements Tab, Disposable {
   onWindowTitleChanged: Event<string> = null;
 
   #topContents: QWidget = null;
-  #scrollArea: TerminalScrollArea = null;
+  scrollArea: TerminalScrollArea = null;
   #contentAreaWidget: QWidget = null;
   #resizeGuard = false;
 
@@ -275,7 +275,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #createUi() : void {
-    this.#scrollArea = new TerminalScrollArea({
+    this.scrollArea = new TerminalScrollArea({
       objectName: "content",
       onKeyPress: (nativeEvent) => {
         this.#handleKeyPress(new QKeyEvent(nativeEvent));
@@ -284,13 +284,13 @@ export class Terminal implements Tab, Disposable {
         this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
       },
     });
-    this.#scrollArea.getWidget().addEventListener(WidgetEventTypes.Resize, () => {
+    this.scrollArea.getWidget().addEventListener(WidgetEventTypes.Resize, () => {
       this.#handleResize();
     });
-    this.#scrollArea.getWidget().addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
+    this.scrollArea.getWidget().addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
       this.#handleMouseButtonPressBelowFrames(new QMouseEvent(nativeEvent));
     });
-    this.#contentWidget = this.#scrollArea.getContentWidget();
+    this.#contentWidget = this.scrollArea.getContentWidget();
 
     this.#topContents = Widget({
       contentsMargins: 0,
@@ -336,7 +336,7 @@ export class Terminal implements Tab, Disposable {
                     contentsMargins: 0,
                     spacing: 0,
                     children: [
-                      this.#scrollArea.getWidget(),
+                      this.scrollArea.getWidget(),
                       this.#verticalScrollBar = ScrollBar({
                         maximum: 0,
                         value: 0,
@@ -373,7 +373,7 @@ export class Terminal implements Tab, Disposable {
       })
     });
 
-    this.#scrollArea.onViewportChanged((viewportChange: ViewportChange) => {
+    this.scrollArea.onViewportChanged((viewportChange: ViewportChange) => {
       if (viewportChange.range !== undefined) {
         this.#verticalScrollBar.setMaximum(viewportChange.range);
       }
@@ -386,7 +386,7 @@ export class Terminal implements Tab, Disposable {
     });
 
     this.#verticalScrollBar.addEventListener("valueChanged", (value: number) => {
-      this.#scrollArea.setScrollPosition(value);
+      this.scrollArea.setScrollPosition(value);
     });
 
     this.#lastCommandTerminalViewer = this.#createFramedTerminalBlock();
@@ -515,8 +515,8 @@ export class Terminal implements Tab, Disposable {
 
     const fontInfo = this.#terminalVisualConfig.fontInfo;
     const metrics = computeFontMetrics(fontInfo.family, fontInfo.style, this.#terminalVisualConfig.fontSizePx);
-    const maxViewportSize = this.#scrollArea.getMaximumViewportSize();
-    const currentMargins = this.#scrollArea.getViewportMargins();
+    const maxViewportSize = this.scrollArea.getMaximumViewportSize();
+    const currentMargins = this.scrollArea.getViewportMargins();
 
     const generalConfig = this.#configDatabase.getGeneralConfig();
     let spacing = 0;
@@ -535,7 +535,7 @@ export class Terminal implements Tab, Disposable {
         break;
     }
 
-    const maxViewportHeight = this.#scrollArea.getWidget().geometry().height();
+    const maxViewportHeight = this.scrollArea.getWidget().geometry().height();
     const maxContentHeight = maxViewportHeight - spacing - spacing;
 
     const maxViewportWidth = maxViewportSize.width() + currentMargins.left + currentMargins.right;
@@ -581,7 +581,7 @@ export class Terminal implements Tab, Disposable {
     }
 
     const { columns, rows, leftMargin, topMargin, rightMargin, bottomMargin } = size;
-    this.#scrollArea.setViewportMargins(leftMargin, topMargin, rightMargin, bottomMargin);
+    this.scrollArea.setViewportMargins(leftMargin, topMargin, rightMargin, bottomMargin);
 
     if (columns === this.#columns && rows === this.#rows) {
       return;
@@ -611,7 +611,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #scrollToBottom(): void {
-    this.#scrollArea.scrollToMaximum();
+    this.scrollArea.scrollToMaximum();
   }
 
   #handleKeyPress(event: QKeyEvent): void {
@@ -640,7 +640,7 @@ export class Terminal implements Tab, Disposable {
     if (this.#blockFrames.length === 0) {
       return;
     }
-    const isBelow = this.#scrollArea.isYBelowLastFrame(this.#scrollArea.getScrollPosition() + mouseEvent.y());
+    const isBelow = this.scrollArea.isYBelowLastFrame(this.scrollArea.getScrollPosition() + mouseEvent.y());
     if (! isBelow) {
       return;
     }
@@ -649,7 +649,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #handleMouseButtonPress(mouseEvent: QMouseEvent): void {
-    const blockFrame = this.#scrollArea.getBlockFrameAt(mouseEvent.x(), mouseEvent.y());
+    const blockFrame = this.scrollArea.getBlockFrameAt(mouseEvent.x(), mouseEvent.y());
     this.#processMouseButtonPress(mouseEvent, blockFrame);
   }
 
@@ -819,7 +819,7 @@ export class Terminal implements Tab, Disposable {
     }
     this.#blockFrames.push({ frame: blockFrame, disposableHolder });
     blockFrame.getBlock().setParent(this);
-    this.#scrollArea.appendBlockFrame(blockFrame);
+    this.scrollArea.appendBlockFrame(blockFrame);
   }
 
   #closeLastTerminalFrame(): void {
@@ -997,11 +997,11 @@ export class Terminal implements Tab, Disposable {
   }
 
   scrollPageDown(): void {
-    this.#scrollArea.scrollPageDown();
+    this.scrollArea.scrollPageDown();
   }
 
   scrollPageUp(): void {
-    this.#scrollArea.scrollPageUp();
+    this.scrollArea.scrollPageUp();
   }
 
   getSelectionText(): string {
@@ -1025,7 +1025,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #removeFrameFromScrollArea(frame: BlockFrame): void {
-    this.#scrollArea.removeBlockFrame(frame);
+    this.scrollArea.removeBlockFrame(frame);
 
     frame.getWidget().hide();
     frame.getWidget().setParent(null);
@@ -1062,23 +1062,23 @@ export class Terminal implements Tab, Disposable {
   }
 
   commandGoToNextFrame(): void {
-    const viewportTop = this.#scrollArea.getScrollPosition();
+    const viewportTop = this.scrollArea.getScrollPosition();
     for (const bf of this.#blockFrames) {
       const geo = bf.frame.getWidget().geometry();
       if (geo.top() > viewportTop) {
-        this.#scrollArea.setScrollPosition(geo.top());
+        this.scrollArea.setScrollPosition(geo.top());
         return;
       }
     }
   }
 
   commandGoToPreviousFrame(): void {
-    const viewportTop = this.#scrollArea.getScrollPosition();
+    const viewportTop = this.scrollArea.getScrollPosition();
     for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
       const bf = this.#blockFrames[i];
       const geo = bf.frame.getWidget().geometry();
       if (geo.top() < viewportTop) {
-        this.#scrollArea.setScrollPosition(geo.top());
+        this.scrollArea.setScrollPosition(geo.top());
         return;
       }
     }
@@ -1107,7 +1107,7 @@ export class Terminal implements Tab, Disposable {
   }
 
   #updateViewportTopOnFrames(): void {
-    const value = this.#scrollArea.getScrollPosition();
+    const value = this.scrollArea.getScrollPosition();
     for (const bf of this.#blockFrames) {
       const widget = bf.frame.getWidget();
       const geo = widget.geometry();
@@ -1443,7 +1443,7 @@ export class Terminal implements Tab, Disposable {
 
     this.#closeLastTerminalFrame();
 
-    this.#scrollArea.removeBlockFrame(terminalBlockFrame);
+    this.scrollArea.removeBlockFrame(terminalBlockFrame);
 
     terminalBlockFrame.getWidget().setParent(null);
     terminalBlockFrame.getBlock().setParent(null);
@@ -1564,7 +1564,7 @@ export class Terminal implements Tab, Disposable {
     if (block instanceof TerminalBlock) {
       const lineCount = currentHeight - maxScrollbackLines;
       block.deleteTopLines(lineCount);
-      this.#scrollArea.preMoveScrollPosition(- lineCount * size.cellHeightPx);
+      this.scrollArea.preMoveScrollPosition(- lineCount * size.cellHeightPx);
 
       // The mark for the start of the last command output may
       // need to be adjusted if we chopped its block.

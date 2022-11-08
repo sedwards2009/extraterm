@@ -8,7 +8,7 @@ export { Disposable, Event } from "extraterm-event-emitter";
 export { Logger } from "./Logger.js";
 export { TerminalEnvironment } from "./TerminalEnvironment.js";
 export {
-  Terminal, LineRangeChange, TerminalBorderWidget, Terminals, ExtensionBlockFactory
+  Terminal, LineRangeChange, TerminalBorderWidget, Terminals, ExtensionBlockFactory, Viewport,
 } from "./Terminal.js";
 export { Tab, NumberInputOptions, TabTitleWidgetFactory } from "./Tab.js";
 export { CustomizedCommand, Commands } from "./Commands.js";
