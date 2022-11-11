@@ -11,7 +11,8 @@ import {
   Terminal,
   TerminalOutputDetails,
   TerminalBorderWidget,
-  TerminalOutputType
+  TerminalOutputType,
+  RowPositionType
 } from '@extraterm/extraterm-extension-api';
 import { countCells } from "extraterm-unicode-utilities";
 import { FindControls } from './FindControls';
@@ -54,10 +55,10 @@ class FindExtension {
   constructor(terminal: Terminal) {
     this.#terminal = terminal;
 
-    // terminal.onDidAppendScrollbackLines(scanAndHighlightScrollback);
-    // terminal.onDidScreenChange((ev: LineRangeChange) => {
-    // //   scanAndHighlightScreen(terminal, ev);
-    // });
+    const updateHighlight = () => this.#updateHighlight();
+    terminal.onDidAppendScrollbackLines(updateHighlight);
+    terminal.onDidScreenChange(updateHighlight);
+    terminal.viewport.onDidChange(updateHighlight);
   }
 
   #initBorderWidget(): void {
@@ -119,22 +120,68 @@ class FindExtension {
     }
   }
 
+  #updateHighlight(): void {
+    if ( ! this.#isOpen) {
+      return;
+    }
+    this.#scanAndHighlightTerminal(this.#terminal, this.#findControls.getSearchText());
+  }
+
   #scanAndHighlightTerminal(terminal: Terminal, text: string): void {
     for (const block of terminal.blocks) {
-      if (block.type === TerminalOutputType) {
-        const outputDetails = <TerminalOutputDetails> block.details;
+      if (block.type !== TerminalOutputType) {
+        continue;
+      }
+      const details = <TerminalOutputDetails> block.details;
+
+      const scrollbackRange = this.#clipScreenToViewport(terminal, details, details.scrollback, RowPositionType.IN_SCROLLBACK);
+      if (scrollbackRange != null) {
         if (text !== "") {
-          this.#scanAndHighlight(text, outputDetails.scrollback, 0, outputDetails.scrollback.height);
+          this.#scanAndHighlight(text, details.scrollback, scrollbackRange.topRow, scrollbackRange.bottomRow);
         } else {
-          this.#clearHighlight(outputDetails.scrollback, 0, outputDetails.scrollback.height);
+          this.#clearHighlight(details.scrollback, scrollbackRange.topRow, scrollbackRange.bottomRow);
+        }
+      }
+
+      if (details.hasPty) {
+        const scrollbackRange = this.#clipScreenToViewport(terminal, details, terminal.screen, RowPositionType.IN_SCREEN);
+        if (scrollbackRange != null) {
+          if (text !== "") {
+            this.#scanAndHighlight(text, terminal.screen, scrollbackRange.topRow, scrollbackRange.bottomRow);
+          } else {
+            this.#clearHighlight(terminal.screen, scrollbackRange.topRow, scrollbackRange.bottomRow);
+          }
         }
       }
     }
-    if (text !== "") {
-      this.#scanAndHighlight(text, terminal.screen, 0, terminal.screen.height);
-    } else {
-      this.#clearHighlight(terminal.screen, 0, terminal.screen.height);
+  }
+
+  #clipScreenToViewport(terminal: Terminal, blockDetails: TerminalOutputDetails, screen: Screen,
+      inside: RowPositionType): {topRow: number, bottomRow: number} {
+
+    const viewport = terminal.viewport;
+    let topRow = 0;
+    let bottomRow = screen.height;
+    const topPosResult = blockDetails.positionToRow(viewport.position);
+    if (topPosResult.where === RowPositionType.BELOW) {
+      return null;
     }
+    if (topPosResult.where === inside) {
+      topRow = topPosResult.row;
+    }
+
+    const bottomPosResult = blockDetails.positionToRow(viewport.position + viewport.height);
+    if (bottomPosResult.where === RowPositionType.ABOVE) {
+      return null;
+    }
+    if (bottomPosResult.where === inside) {
+      bottomRow = bottomPosResult.row + 1;
+    }
+
+    return {
+      topRow,
+      bottomRow
+    };
   }
 
   #scanAndHighlight(text: string, screen: Screen, startLine: number, endLine: number): void {
