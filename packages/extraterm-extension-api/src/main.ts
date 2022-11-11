@@ -19,8 +19,8 @@ export { Clipboard, Configuration, Application, ExtensionContext, ExtensionModul
 export { SessionConfiguration, SessionEditorBase, SessionEditorFactory, EnvironmentMap, SessionBackend,
   CreateSessionOptions, BufferSizeChange, Pty, SessionSettingsEditorBase, SessionSettingsEditorFactory, Sessions
 } from "./Sessions.js";
-export { BlockPosture, BlockMetadataChange, BlockMetadata, Block, TerminalOutputDetails, TerminalOutputType,
-  ExtensionBlock } from "./Block.js";
+export { BlockPosture, BlockMetadataChange, BlockGeometry, BlockMetadata, Block, TerminalOutputDetails, TerminalOutputType,
+  ExtensionBlock, RowPositionType, PositionToRowResult } from "./Block.js";
 export { Cell,
   Row,
   StyleCode,

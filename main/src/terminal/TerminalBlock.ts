@@ -664,7 +664,7 @@ export class TerminalBlock implements Block {
   }
 
   #qMouseEventToTermApi(event: QMouseEvent): ExpandedMouseEventOptions {
-    const pos = this.#pixelToCell(event.x(), event.y());
+    const pos = this.pixelPointToCell(event.x(), event.y());
     const columnEdgePos = this.#pixelToRowColumnEdge(event.x(), event.y());
 
     const termEvent: ExpandedMouseEventOptions = {
@@ -687,7 +687,7 @@ export class TerminalBlock implements Block {
     return { x: gridX, y: gridY };
   }
 
-  #pixelToCell(x: number, y: number): TerminalCoord {
+  pixelPointToCell(x: number, y: number): TerminalCoord {
     const gridY = Math.floor(y / this.#fontMetrics.heightPx);
     const gridX = Math.floor(x / this.#fontMetrics.widthPx);
     return { x: gridX, y: gridY };

@@ -8,16 +8,20 @@ import { Layer } from "term-api";
 import { TerminalBlock } from "../../terminal/TerminalBlock.js";
 import { ExtensionMetadata } from "../ExtensionMetadata.js";
 import { LineImpl } from "term-api-lineimpl";
+import { BlockFrame } from "../../terminal/BlockFrame.js";
+import { QPoint, QWidget } from "@nodegui/nodegui";
 
 
 export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDetails {
 
   #scrollback: ExtensionApi.Screen = null;
+  #blockFrame: BlockFrame = null;
   #terminalBlock: TerminalBlock = null;
   #extensionMetadata: ExtensionMetadata;
 
-  constructor(extensionMetadata: ExtensionMetadata, terminalBlock: TerminalBlock) {
+  constructor(extensionMetadata: ExtensionMetadata, blockFrame: BlockFrame, terminalBlock: TerminalBlock) {
     this.#extensionMetadata = extensionMetadata;
+    this.#blockFrame = blockFrame;
     this.#terminalBlock = terminalBlock;
     // this._terminalViewer.onDispose(this.#handleTerminalViewerDispose.bind(this));
   }
@@ -59,6 +63,44 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
 
   get returnCode(): number {
     return this.#terminalBlock.getReturnCode();
+  }
+
+  positionToRow(position: number): ExtensionApi.PositionToRowResult {
+    const parent = this.#blockFrame.getWidget().parent();
+    const widgetCoord = this.#terminalBlock.getWidget().mapFrom(<QWidget> parent, new QPoint(0, position));
+    const cellPosition = this.#terminalBlock.pixelPointToCell(0, widgetCoord.y());
+    const y = Math.max(-1, cellPosition.y);
+    if (y < 0) {
+      return {
+        where: ExtensionApi.RowPositionType.ABOVE,
+        row: -1
+      };
+    }
+    if (y >= this.#terminalBlock.getScrollbackLength()) {
+      const emulator = this.#terminalBlock.getEmulator();
+      if (emulator == null) {
+        return {
+          where: ExtensionApi.RowPositionType.BELOW,
+          row: -1
+        };
+      }
+      const dimensions = emulator.getDimensions();
+      const screenY = y - this.#terminalBlock.getScrollbackLength();
+      if (screenY >= dimensions.rows) {
+        return {
+          where: ExtensionApi.RowPositionType.BELOW,
+          row: -1
+        };
+      }
+      return {
+        where: ExtensionApi.RowPositionType.IN_SCREEN,
+        row: screenY
+      };
+    }
+    return {
+      where: ExtensionApi.RowPositionType.IN_SCROLLBACK,
+      row: y
+    };
   }
 }
 

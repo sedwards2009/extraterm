@@ -51,6 +51,13 @@ export interface Block {
    * The Terminal this block is on.
    */
   readonly terminal: Terminal;
+
+  readonly geometry: BlockGeometry;
+}
+
+export interface BlockGeometry {
+  readonly positionTop: number
+  readonly height: number;
 }
 
 /**
@@ -91,11 +98,56 @@ export interface TerminalOutputDetails {
    * True if this block of terminal output still exists.
    */
   readonly isAlive: boolean;
+
+  /**
+   * Map a vertical position to a row number inside this block.
+   * 
+   * The result object indicates if the position is above or below the block,
+   * of maps to a row within the screen or scrollback.
+   * 
+   * @param position Vertical position with in the whole terminal.
+   * @return PositionToRowResult object.
+   */
+  positionToRow(position: number): PositionToRowResult;
+}
+
+export enum RowPositionType {
+  /**
+   * The position is above the block.
+   */
+  ABOVE,
+
+  /**
+   * The position maps to a row within the scrollback inside the block.
+   */
+  IN_SCROLLBACK,
+
+  /**
+   * The position maps to a row within the screen being shown inside the block.
+   */
+  IN_SCREEN,
+
+  /**
+   * The position is completely below the block.
+   */
+  BELOW
+}
+
+export interface PositionToRowResult {
+  /**
+   * Where the position mapped to relative to the block.
+   */
+  where: RowPositionType;
+
+  /**
+   * The corresponding row. This is only valid if the position maps inside the block.
+   */
+  row: number;
 }
 
 /**
  * Interface to a Block instance for performing customization.
- * 
+ *
  * When a custom block is created, its extension is provided with an instance
  * of this interface. Extensions can then use this object to set the contents
  * of the block to display, access any bulk file associated with the block,
@@ -105,21 +157,21 @@ export interface TerminalOutputDetails {
 export interface ExtensionBlock {
   /**
    * The `QWidget` contents of the block.
-   * 
+   *
    * Extensions should create their own `QWidget` instance and assign it to this field.
    */
   contentWidget: QWidget;
 
   /**
    * The bulk file associated with this block.
-   * 
+   *
    * This may be null if the block was not created in response to a file download.
    */
   bulkFile: BulkFileHandle;
 
   /**
    * Metadata describing the block.
-   * 
+   *
    * This metadata is shown in the frame surrounding the block.
    */
   readonly metadata: BlockMetadata;
@@ -128,7 +180,7 @@ export interface ExtensionBlock {
    * Method of modify some or all of the metadata fields.
    */
   updateMetadata(change: BlockMetadataChange): void;
-  
+
   /**
    * The terminal which contains this block.
    */
@@ -136,7 +188,7 @@ export interface ExtensionBlock {
 
   /**
    * An object holding custom details specific to this block.
-   * 
+   *
    * Extensions can create an object and assign it to this field. This object
    * will then be available to other extensions via the `details` field on the
    * `Block` interface. The object can contain any valid JavaScript value

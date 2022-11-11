@@ -22,12 +22,14 @@ export class BlockImpl implements ExtensionApi.Block {
 
   #extensionMetadata: ExtensionMetadata;
   #blockFrame: BlockFrame = null;
+  geometry: ExtensionApi.BlockGeometry;
 
   constructor(internalExtensionContext: InternalExtensionContext, extensionMetadata: ExtensionMetadata,
       blockFrame: BlockFrame) {
     this.#internalExtensionContext = internalExtensionContext;
     this.#extensionMetadata = extensionMetadata;
     this.#blockFrame = blockFrame;
+    this.geometry = new BlockGeometryImpl(blockFrame);
   }
 
   #init(): void {
@@ -37,10 +39,10 @@ export class BlockImpl implements ExtensionApi.Block {
 
     const block = this.#blockFrame.getBlock();
     if (block instanceof TerminalBlock) {
-      this.#terminalOutputDetailsImpl = new TerminalOutputDetailsImpl(this.#extensionMetadata, block);
+      this.#terminalOutputDetailsImpl = new TerminalOutputDetailsImpl(this.#extensionMetadata, this.#blockFrame, block);
       this.#type = ExtensionApi.TerminalOutputType;
     } else if (block instanceof ExtensionBlockImpl) {
-      this.#type = block.getBlockTypeName();      
+      this.#type = block.getBlockTypeName();
     }
   }
 
@@ -64,5 +66,23 @@ export class BlockImpl implements ExtensionApi.Block {
 
   get terminal(): ExtensionApi.Terminal {
     return this.#internalExtensionContext.wrapTerminal(this.#blockFrame.getBlock().getParent());
+  }
+}
+
+class BlockGeometryImpl implements ExtensionApi.BlockGeometry {
+  #blockFrame: BlockFrame;
+
+  constructor(blockFrame: BlockFrame) {
+    this.#blockFrame = blockFrame;
+  }
+
+  get positionTop(): number {
+    const geo = this.#blockFrame.getWidget().geometry();
+    return geo.top();
+  }
+
+  get height(): number {
+    const geo = this.#blockFrame.getWidget().geometry();
+    return geo.height();
   }
 }
