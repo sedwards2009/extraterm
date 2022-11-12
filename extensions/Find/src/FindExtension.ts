@@ -134,7 +134,7 @@ class FindExtension {
       }
       const details = <TerminalOutputDetails> block.details;
 
-      const scrollbackRange = this.#clipScreenToViewport(terminal, details, details.scrollback, RowPositionType.IN_SCROLLBACK);
+      const scrollbackRange = this.#clipScreenToViewport(terminal, details, details.scrollback.height, RowPositionType.IN_SCROLLBACK);
       if (scrollbackRange != null) {
         if (text !== "") {
           this.#scanAndHighlight(text, details.scrollback, scrollbackRange.topRow, scrollbackRange.bottomRow);
@@ -144,24 +144,24 @@ class FindExtension {
       }
 
       if (details.hasPty) {
-        const scrollbackRange = this.#clipScreenToViewport(terminal, details, terminal.screen, RowPositionType.IN_SCREEN);
-        if (scrollbackRange != null) {
+        const screenRange = this.#clipScreenToViewport(terminal, details, terminal.screen.materializedHeight, RowPositionType.IN_SCREEN);
+        if (screenRange != null) {
           if (text !== "") {
-            this.#scanAndHighlight(text, terminal.screen, scrollbackRange.topRow, scrollbackRange.bottomRow);
+            this.#scanAndHighlight(text, terminal.screen, screenRange.topRow, screenRange.bottomRow);
           } else {
-            this.#clearHighlight(terminal.screen, scrollbackRange.topRow, scrollbackRange.bottomRow);
+            this.#clearHighlight(terminal.screen, screenRange.topRow, screenRange.bottomRow);
           }
         }
       }
     }
   }
 
-  #clipScreenToViewport(terminal: Terminal, blockDetails: TerminalOutputDetails, screen: Screen,
+  #clipScreenToViewport(terminal: Terminal, blockDetails: TerminalOutputDetails, height: number,
       inside: RowPositionType): {topRow: number, bottomRow: number} {
 
     const viewport = terminal.viewport;
     let topRow = 0;
-    let bottomRow = screen.height;
+    let bottomRow = height;
     const topPosResult = blockDetails.positionToRow(viewport.position);
     if (topPosResult.where === RowPositionType.BELOW) {
       return null;
@@ -170,7 +170,7 @@ class FindExtension {
       topRow = topPosResult.row;
     }
 
-    const bottomPosResult = blockDetails.positionToRow(viewport.position + viewport.height);
+    const bottomPosResult = blockDetails.positionToRow(viewport.position + viewport.height-1);
     if (bottomPosResult.where === RowPositionType.ABOVE) {
       return null;
     }
