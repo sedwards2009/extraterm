@@ -122,22 +122,22 @@ class ScrollbackImpl implements ExtensionApi.Screen {
     return this.#terminalBlock.getScrollbackLength();
   }
 
-  getLineText(line: number): string {
-    return this.#terminalBlock.getScrollbackLineText(line);
+  getRowText(rowNumber: number): string {
+    return this.#terminalBlock.getScrollbackLineText(rowNumber);
   }
 
-  isLineWrapped(line: number): boolean {
-    return this.#terminalBlock.isScrollbackLineWrapped(line);
+  isRowWrapped(rowNumber: number): boolean {
+    return this.#terminalBlock.isScrollbackLineWrapped(rowNumber);
   }
 
-  applyHyperlink(line: number, x: number, length: number, url: string): void {
+  applyHyperlink(rowNumber: number, x: number, length: number, url: string): void {
     const extensionName = this.#extensionMetadata.name;
-    this.#terminalBlock.applyScrollbackHyperlink(line, x, length, url, extensionName);
+    this.#terminalBlock.applyScrollbackHyperlink(rowNumber, x, length, url, extensionName);
   }
 
-  removeHyperlinks(line: number): void {
+  removeHyperlinks(rowNumber: number): void {
     const extensionName = this.#extensionMetadata.name;
-    this.#terminalBlock.removeHyperlinks(line, extensionName);
+    this.#terminalBlock.removeHyperlinks(rowNumber, extensionName);
   }
 
   getBaseRow(rowNumber: number): ExtensionApi.Row {

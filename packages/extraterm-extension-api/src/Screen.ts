@@ -9,18 +9,18 @@
  */
 export interface ScreenChange {
   /**
-   * The index into the scrollback area of the first line added.
+   * The index into the scrollback area of the first row added.
    *
-   * The complete range of affected lines is from `startLine` up to but not including `endLine`.
+   * The complete range of affected rows is from `startRow` up to but not including `endRow`.
    */
-  startLine: number;
+  startRow: number;
 
   /**
-   * The index after the last affected line.
+   * The index after the last affected row.
    *
-   * The range of affected lines is from `startLine` up to but not including `endLine`.
+   * The range of affected rows is from `startRow` up to but not including `endRow`.
    */
-  endLine: number;
+  endRow: number;
 }
 
 /**
@@ -51,45 +51,45 @@ export interface Screen {
   readonly width: number;
 
   /**
-   * The height of the screen in cells.
+   * The height of the screen in rows.
    */
   readonly height: number;
 
   /**
-   * Get a row of text from the screen as a string.
+   * Get the text from a row on the screen.
    *
-   * @param lineNumber The line/row to fetch. Top line on the screen is line 0. Last
+   * @param rowNumber The row to fetch. Top row on the screen is row 0. Last
    *    one is `height` - 1.
    * @returns The line as a string.
    */
-  getLineText(lineNumber: number): string;
+  getRowText(rowNumber: number): string;
 
   /**
-   * Returns true if the line was wrapped.
+   * Returns true if the row was wrapped.
    *
-   * @param lineNumber The line/row to fetch. Top line on the screen is line 0. Last
+   * @param rowNumber The row to fetch. Top row on the screen is row 0. Last
    *    one is `height` - 1.
-   * @returns True if the line was too long and had to be wrapped, otherwise false.
+   * @returns True if the row was too long and had to be wrapped, otherwise false.
    */
-  isLineWrapped(lineNumber: number): boolean;
+  isRowWrapped(rowNumber: number): boolean;
 
   /**
    * Add a hyperlink to a range of characters.
    *
-   * @param line The line number of the row to affect.
+   * @param rowNumber The row number of the row to affect.
    * @param x The starting UTF16 index of the characters to affect.
    * @param length The number of characters to apply the link to.
    */
-  applyHyperlink(line: number, x: number, length: number, url: string): void;
+  applyHyperlink(rowNumber: number, x: number, length: number, url: string): void;
 
   /**
-   * Remove all links from a line.
+   * Remove all links from a row.
    *
    * This only applies to links which were added using `applyHyperlink()`.
    *
-   * @param line The line number of the row to affect.
+   * @param rowNumber The line number of the row to affect.
    */
-  removeHyperlinks(line: number): void;
+  removeHyperlinks(rowNumber: number): void;
 
   getBaseRow(rowNumber: number): Row;
 
@@ -103,9 +103,9 @@ export interface Screen {
 
 export interface ScreenWithCursor extends Screen {
   /**
-   * The line/row the emulator cursor is on.
+   * The row the emulator cursor is on.
    */
-  readonly cursorLine: number;
+  readonly cursorRow: number;
 
   /**
    * Horizontal position of the cursor in terms of UTF16 code units.

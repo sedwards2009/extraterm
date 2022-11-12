@@ -69,7 +69,7 @@ function collectWords(): string[] {
 
 function scanScreen(screen: Screen, screenLines: string[], maxScanRows: number): void {
   for(let i=screen.height-1; i>=0 && screenLines.length<maxScanRows; i--) {
-    const line = screen.getLineText(i);
+    const line = screen.getRowText(i);
     if (line.trim() !== "") {
       screenLines.push(line);
     }
@@ -78,7 +78,7 @@ function scanScreen(screen: Screen, screenLines: string[], maxScanRows: number):
 
 function getDefaultFilter(): string {
   const screen = context.activeTerminal.screen;
-  const lineText = screen.getLineText(screen.cursorLine);
+  const lineText = screen.getRowText(screen.cursorRow);
   let xStart = screen.cursorX;
 
   while (xStart !== 0 && lineText.charAt(xStart-1) !== " ") {

@@ -188,7 +188,7 @@ class FindExtension {
     const textRegex = RegExp(`(?<text>${text})`, "gi"); // TODO escape the text
     let didChange = false;
     for (let y = startLine; y < endLine; y++) {
-      const lineText = screen.getLineText(y);
+      const lineText = screen.getRowText(y);
       const foundList = findText(textRegex, lineText);
       if (foundList.length !== 0) {
         const layerRow = screen.getLayerRow(y, LAYER_NAME);

@@ -245,32 +245,32 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     this.#extensionMetadata = extensionMetadata;
   }
 
-  getLineText(lineNumber: number): string {
-    const str = this.#terminal.getEmulator().getLineText(lineNumber);
+  getRowText(rowNumber: number): string {
+    const str = this.#terminal.getEmulator().getLineText(rowNumber);
     return str == null ? "" : str;
   }
 
-  isLineWrapped(lineNumber: number): boolean {
-    const line = this.#terminal.getEmulator().lineAtRow(lineNumber);
+  isRowWrapped(rowNumber: number): boolean {
+    const line = this.#terminal.getEmulator().lineAtRow(rowNumber);
     if (line == null) {
       return false;
     }
     return line.isWrapped;
   }
 
-  applyHyperlink(line: number, x: number, length: number, url: string): void {
+  applyHyperlink(rowNumber: number, x: number, length: number, url: string): void {
     const emulator = this.#terminal.getEmulator();
-    const termLine = emulator.lineAtRow(line);
+    const termLine = emulator.lineAtRow(rowNumber);
     const startColumn = termLine.mapStringIndexToColumn(0, x);
     const endColumn = termLine.mapStringIndexToColumn(0, x + length);
     const extensionName = this.#extensionMetadata.name;
-    emulator.applyHyperlink(line, startColumn, endColumn - startColumn, url, extensionName);
+    emulator.applyHyperlink(rowNumber, startColumn, endColumn - startColumn, url, extensionName);
   }
 
-  removeHyperlinks(line: number): void {
+  removeHyperlinks(rowNumber: number): void {
     const emulator = this.#terminal.getEmulator();
     const extensionName = this.#extensionMetadata.name;
-    emulator.removeHyperlinks(line, extensionName);
+    emulator.removeHyperlinks(rowNumber, extensionName);
   }
 
   getBaseRow(rowNumber: number): ExtensionApi.Row {
@@ -318,7 +318,7 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     return this.#terminal.getEmulator().size().rows;
   }
 
-  get cursorLine(): number {
+  get cursorRow(): number {
     return this.#terminal.getEmulator().getCursorRow();
   }
 

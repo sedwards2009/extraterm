@@ -42,8 +42,8 @@ function screenToString(screen: Screen): string {
   const height = screen.height;
   const lines: string[] = [];
   for (let y=0; y<height; y++) {
-    const line = screen.getLineText(y);
-    if ( ! screen.isLineWrapped(y)) {
+    const line = screen.getRowText(y);
+    if ( ! screen.isRowWrapped(y)) {
       lines.push(line.trimEnd());
       lines.push("\n");
     } else {
