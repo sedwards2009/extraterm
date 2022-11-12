@@ -113,6 +113,8 @@ export interface ScreenWithCursor extends Screen {
    * See `ScreenWithCursor.cursorLine` and `Screen.getLineText()`.
    */
   readonly cursorX: number;
+
+  readonly materializedHeight: number;
 }
 
 export type StyleCode = number;

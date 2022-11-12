@@ -327,6 +327,10 @@ class ScreenProxy implements ExtensionApi.ScreenWithCursor {
     return cursorX;
   }
 
+  get materializedHeight(): number {
+    return this.#terminal.getEmulator().getDimensions().materializedRows;
+  }
+
   redraw(): void {
     this.#terminal.redrawScreen();
   }
