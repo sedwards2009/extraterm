@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event, Logger, Style } from '@extraterm/extraterm-extension-api';
-import { AlignmentFlag, Direction, FocusReason, QLineEdit, QPushButton, QWidget, TextFormat } from '@nodegui/nodegui';
+import { AlignmentFlag, Direction, FocusReason, Key, QKeyEvent, QLineEdit, QPushButton, QWidget, TextFormat } from '@nodegui/nodegui';
 import { BoxLayout, Label, LineEdit, PushButton, Widget } from 'qt-construct';
 import { EventEmitter } from "extraterm-event-emitter";
 
@@ -55,7 +55,8 @@ export class FindControls {
               text: "",
               onTextEdited: (newText: string) => {
                 this.#searchTextChanged(newText);
-              }
+              },
+              onKeyPress: (nativeEvent) => this.#onKeyPress(nativeEvent)
             }),
             stretch: 1
           },
@@ -87,7 +88,7 @@ export class FindControls {
               cssClass: ["small", "danger"],
               icon: this.#style.createQIcon("fa-times", this.#style.palette.textHighlight),
               onClicked: () => {
-                this.#handleClone();
+                this.#handleClose();
               }
             }),
             alignment: AlignmentFlag.AlignTop,
@@ -118,7 +119,25 @@ export class FindControls {
     return this.#regexButton.isChecked();
   }
 
-  #handleClone(): void {
+  #onKeyPress(nativeEvent): void {
+    const event = new QKeyEvent(nativeEvent);
+
+    const key = event.key();
+    if(key !== Key.Key_Escape && key !== Key.Key_Enter && key !== Key.Key_Return) {
+      return;
+    }
+
+    event.accept();
+    this.#lineEdit.setEventProcessed(true);
+
+    if(key === Key.Key_Escape) {
+      this.#handleClose();
+    } else {
+      // this.#onAcceptEventEmitter.fire();
+    }
+  }
+
+  #handleClose(): void {
     this.#onCloseRequestEventEmitter.fire();
   }
 
