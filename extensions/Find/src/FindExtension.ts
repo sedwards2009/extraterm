@@ -15,6 +15,7 @@ import {
   RowPositionType
 } from '@extraterm/extraterm-extension-api';
 import { countCells } from "extraterm-unicode-utilities";
+import escapeStringRegexp from "escape-string-regexp";
 import { FindControls } from './FindControls';
 
 let log: Logger = null;
@@ -68,9 +69,12 @@ class FindExtension {
     this.#findControls.onCloseRequest(() => {
       this.#handleCloseRequest();
     });
-    this.#findControls.onSearchTextChanged((text: string) => {
-      this.#scanAndHighlightTerminal(this.#terminal, text);
-    });
+
+    const updateHighlight = () => this.#updateHighlight();
+    this.#findControls.onSearchTextChanged(updateHighlight);
+    this.#findControls.onRegexChanged(updateHighlight);
+    this.#findControls.onCaseSensitiveChanged(updateHighlight);
+
     this.#borderWidget.contentWidget = this.#findControls.getWidget();
   }
 
@@ -87,13 +91,25 @@ class FindExtension {
     if ( ! this.#isOpen) {
       this.#borderWidget.open();
       this.#isOpen = true;
-
-      const searchText = this.#findControls.getSearchText().trim();
-      if (searchText !== "") {
-        this.#scanAndHighlightTerminal(this.#terminal, searchText);
-      }
+      this.#updateHighlight();
     }
     this.#findControls.focus();
+  }
+
+  #updateHighlight(): void {
+    if ( ! this.#isOpen) {
+      return;
+    }
+
+    const text = this.#findControls.getSearchText();
+    let regex: RegExp = null;
+    if (text.trim() !== "") {
+      const isRegex = this.#findControls.isRegex();
+      const isCaseSensitive = this.#findControls.isCaseSensitive();
+      const regexString = isRegex ? text : escapeStringRegexp(text);
+      regex = new RegExp(regexString, isCaseSensitive ? "g" : "gi");
+    }
+    this.#scanAndHighlightTerminal(this.#terminal, regex);
   }
 
   #clearTerminalHighlight(terminal: Terminal): void {
@@ -103,7 +119,7 @@ class FindExtension {
         this.#clearHighlight(outputDetails.scrollback, 0, outputDetails.scrollback.height);
       }
     }
-    this.#clearHighlight(terminal.screen, 0, terminal.screen.height);
+    this.#clearHighlight(terminal.screen, 0, terminal.screen.materializedHeight);
   }
 
   #clearHighlight(screen: Screen, startLine: number, endLine: number): void {
@@ -120,14 +136,7 @@ class FindExtension {
     }
   }
 
-  #updateHighlight(): void {
-    if ( ! this.#isOpen) {
-      return;
-    }
-    this.#scanAndHighlightTerminal(this.#terminal, this.#findControls.getSearchText());
-  }
-
-  #scanAndHighlightTerminal(terminal: Terminal, text: string): void {
+  #scanAndHighlightTerminal(terminal: Terminal, regex: RegExp): void {
     for (const block of terminal.blocks) {
       if (block.type !== TerminalOutputType) {
         continue;
@@ -136,8 +145,8 @@ class FindExtension {
 
       const scrollbackRange = this.#clipScreenToViewport(terminal, details, details.scrollback.height, RowPositionType.IN_SCROLLBACK);
       if (scrollbackRange != null) {
-        if (text !== "") {
-          this.#scanAndHighlight(text, details.scrollback, scrollbackRange.topRow, scrollbackRange.bottomRow);
+        if (regex != null) {
+          this.#scanAndHighlight(regex, details.scrollback, scrollbackRange.topRow, scrollbackRange.bottomRow);
         } else {
           this.#clearHighlight(details.scrollback, scrollbackRange.topRow, scrollbackRange.bottomRow);
         }
@@ -146,8 +155,8 @@ class FindExtension {
       if (details.hasPty) {
         const screenRange = this.#clipScreenToViewport(terminal, details, terminal.screen.materializedHeight, RowPositionType.IN_SCREEN);
         if (screenRange != null) {
-          if (text !== "") {
-            this.#scanAndHighlight(text, terminal.screen, screenRange.topRow, screenRange.bottomRow);
+          if (regex != null) {
+            this.#scanAndHighlight(regex, terminal.screen, screenRange.topRow, screenRange.bottomRow);
           } else {
             this.#clearHighlight(terminal.screen, screenRange.topRow, screenRange.bottomRow);
           }
@@ -184,12 +193,11 @@ class FindExtension {
     };
   }
 
-  #scanAndHighlight(text: string, screen: Screen, startLine: number, endLine: number): void {
-    const textRegex = RegExp(`(?<text>${text})`, "gi"); // TODO escape the text
+  #scanAndHighlight(regex: RegExp, screen: Screen, startLine: number, endLine: number): void {
     let didChange = false;
     for (let y = startLine; y < endLine; y++) {
       const lineText = screen.getRowText(y);
-      const foundList = findText(textRegex, lineText);
+      const foundList = findText(regex, lineText);
       if (foundList.length !== 0) {
         const layerRow = screen.getLayerRow(y, LAYER_NAME);
         layerRow.clear();
@@ -227,8 +235,8 @@ interface TextMatch {
 function findText(textRegex: RegExp, text: string): TextMatch[] {
   const result: TextMatch[] = [];
   for (const m of text.matchAll(textRegex)) {
-    if (m.groups.text != null) {
-      result.push({ index: m.index, matchText: m.groups.text });
+    if (m[0] != null) {
+      result.push({ index: m.index, matchText: m[0] });
     }
   }
   return result;

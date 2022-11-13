@@ -4525,6 +4525,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     esbuild: ^0.15.5
+    escape-string-regexp: ^5.0.0
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0

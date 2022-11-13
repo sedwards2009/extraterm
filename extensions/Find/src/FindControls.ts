@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { Event, Logger, Style } from '@extraterm/extraterm-extension-api';
-import { AlignmentFlag, Direction, FocusReason, QLineEdit, QWidget, TextFormat } from '@nodegui/nodegui';
-import { BoxLayout, GridLayout, Label, LineEdit, PushButton, Widget } from 'qt-construct';
+import { AlignmentFlag, Direction, FocusReason, QLineEdit, QPushButton, QWidget, TextFormat } from '@nodegui/nodegui';
+import { BoxLayout, Label, LineEdit, PushButton, Widget } from 'qt-construct';
 import { EventEmitter } from "extraterm-event-emitter";
 
 
@@ -14,6 +14,8 @@ export class FindControls {
   #rootWidget: QWidget = null;
   #style: Style;
   #lineEdit: QLineEdit = null;
+  #caseSensitiveButton: QPushButton = null;
+  #regexButton: QPushButton = null;
 
   #onCloseRequestEventEmitter = new EventEmitter<void>();
   onCloseRequest: Event<void> = null;
@@ -21,11 +23,19 @@ export class FindControls {
   #onSearchTextChangedEventEmitter = new EventEmitter<string>();
   onSearchTextChanged: Event<string> = null;
 
+  #onCaseSensitiveChangedEventEmitter = new EventEmitter<boolean>();
+  onCaseSensitiveChanged: Event<boolean>;
+
+  #onRegexChangedEventEmitter = new EventEmitter<boolean>();
+  onRegexChanged: Event<boolean>;
+
   constructor(style: Style, log: Logger) {
     this.#log = log;
     this.#style = style;
     this.onCloseRequest = this.#onCloseRequestEventEmitter.event;
     this.onSearchTextChanged = this.#onSearchTextChangedEventEmitter.event;
+    this.onCaseSensitiveChanged = this.#onCaseSensitiveChangedEventEmitter.event;
+    this.onRegexChanged = this.#onRegexChangedEventEmitter.event;
 
     this.#rootWidget = this.#createGUI();
   }
@@ -49,6 +59,29 @@ export class FindControls {
             }),
             stretch: 1
           },
+
+          BoxLayout({
+            direction: Direction.LeftToRight,
+            spacing: 0,
+            contentsMargins: [0, 0, 0, 0],
+            children: [
+              this.#caseSensitiveButton = PushButton({
+                text: "aA",
+                cssClass: ["small", "group-left"],
+                checkable: true,
+                checked: false,
+                onClicked: (checked: boolean) => this.#caseSensitiveChanged(checked)
+              }),
+              this.#regexButton = PushButton({
+                text: ".*",
+                cssClass: ["small", "group-right"],
+                checkable: true,
+                checked: false,
+                onClicked: (checked: boolean) => this.#regexChanged(checked)
+              })
+            ]
+          }),
+
           {
             widget: PushButton({
               cssClass: ["small", "danger"],
@@ -77,11 +110,27 @@ export class FindControls {
     return this.#lineEdit.text();
   }
 
+  isCaseSensitive(): boolean {
+    return this.#caseSensitiveButton.isChecked();
+  }
+
+  isRegex(): boolean {
+    return this.#regexButton.isChecked();
+  }
+
   #handleClone(): void {
     this.#onCloseRequestEventEmitter.fire();
   }
 
   #searchTextChanged(text: string): void {
     this.#onSearchTextChangedEventEmitter.fire(text);
+  }
+
+  #caseSensitiveChanged(checked: boolean): void {
+    this.#onCaseSensitiveChangedEventEmitter.fire(checked);
+  }
+
+  #regexChanged(checked: boolean): void {
+    this.#onRegexChangedEventEmitter.fire(checked);
   }
 }
