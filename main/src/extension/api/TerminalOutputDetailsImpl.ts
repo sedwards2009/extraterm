@@ -102,6 +102,19 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
       row: y
     };
   }
+
+  rowToPosition(rowNumber: number, where: ExtensionApi.RowPositionType): number {
+    let adjustedRow = rowNumber;
+    if (where === ExtensionApi.RowPositionType.IN_SCREEN &&
+        this.#terminalBlock.getEmulator() != null) {
+      adjustedRow += this.#terminalBlock.getScrollbackLength();
+    }
+
+    const widgetY = this.#terminalBlock.rowToPixel(adjustedRow);
+    const parent = this.#blockFrame.getWidget().parent();
+    const pixelPosition = this.#terminalBlock.getWidget().mapTo(<QWidget> parent, new QPoint(0, widgetY));
+    return pixelPosition.y();
+  }
 }
 
 class ScrollbackImpl implements ExtensionApi.Screen {

@@ -58,6 +58,7 @@ export interface Block {
 export interface BlockGeometry {
   readonly positionTop: number
   readonly height: number;
+  readonly titleBarHeight: number;
 }
 
 /**
@@ -101,14 +102,16 @@ export interface TerminalOutputDetails {
 
   /**
    * Map a vertical position to a row number inside this block.
-   * 
+   *
    * The result object indicates if the position is above or below the block,
    * of maps to a row within the screen or scrollback.
-   * 
+   *
    * @param position Vertical position with in the whole terminal.
    * @return PositionToRowResult object.
    */
   positionToRow(position: number): PositionToRowResult;
+
+  rowToPosition(row: number, where: RowPositionType): number;
 }
 
 export enum RowPositionType {

@@ -29,6 +29,12 @@ export class FindControls {
   #onRegexChangedEventEmitter = new EventEmitter<boolean>();
   onRegexChanged: Event<boolean>;
 
+  #onSearchBackwardsClickedEventEmitter = new EventEmitter<void>();
+  onSearchBackwardsClicked: Event<void>;
+
+  #onSearchForwardsClickedEventEmitter = new EventEmitter<void>();
+  onSearchForwardsClicked: Event<void>;
+
   constructor(style: Style, log: Logger) {
     this.#log = log;
     this.#style = style;
@@ -36,6 +42,9 @@ export class FindControls {
     this.onSearchTextChanged = this.#onSearchTextChangedEventEmitter.event;
     this.onCaseSensitiveChanged = this.#onCaseSensitiveChangedEventEmitter.event;
     this.onRegexChanged = this.#onRegexChangedEventEmitter.event;
+
+    this.onSearchBackwardsClicked = this.#onSearchBackwardsClickedEventEmitter.event;
+    this.onSearchForwardsClicked = this.#onSearchForwardsClickedEventEmitter.event;
 
     this.#rootWidget = this.#createGUI();
   }
@@ -79,6 +88,24 @@ export class FindControls {
                 checkable: true,
                 checked: false,
                 onClicked: (checked: boolean) => this.#regexChanged(checked)
+              })
+            ]
+          }),
+
+          BoxLayout({
+            direction: Direction.LeftToRight,
+            spacing: 0,
+            contentsMargins: [0, 0, 0, 0],
+            children: [
+              this.#caseSensitiveButton = PushButton({
+                icon: this.#style.createQIcon("fa-arrow-up"),
+                cssClass: ["small", "group-left"],
+                onClicked: () => this.#searchBackwards()
+              }),
+              this.#regexButton = PushButton({
+                icon: this.#style.createQIcon("fa-arrow-down"),
+                cssClass: ["small", "group-right"],
+                onClicked: () => this.#searchForwards()
               })
             ]
           }),
@@ -133,7 +160,7 @@ export class FindControls {
     if(key === Key.Key_Escape) {
       this.#handleClose();
     } else {
-      // this.#onAcceptEventEmitter.fire();
+      this.#searchBackwards();
     }
   }
 
@@ -151,5 +178,13 @@ export class FindControls {
 
   #regexChanged(checked: boolean): void {
     this.#onRegexChangedEventEmitter.fire(checked);
+  }
+
+  #searchBackwards(): void {
+    this.#onSearchBackwardsClickedEventEmitter.fire();
+  }
+
+  #searchForwards(): void {
+    this.#onSearchForwardsClickedEventEmitter.fire();
   }
 }

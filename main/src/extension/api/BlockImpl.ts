@@ -11,6 +11,8 @@ import { TerminalOutputDetailsImpl } from "./TerminalOutputDetailsImpl.js";
 import { ExtensionMetadata } from "../ExtensionMetadata.js";
 import { InternalExtensionContext } from "../../InternalTypes.js";
 import { ExtensionBlockImpl } from "./ExtensionBlockImpl.js";
+import { DecoratedFrame } from "../../terminal/DecoratedFrame.js";
+import { QPoint } from "@nodegui/nodegui";
 
 
 export class BlockImpl implements ExtensionApi.Block {
@@ -84,5 +86,14 @@ class BlockGeometryImpl implements ExtensionApi.BlockGeometry {
   get height(): number {
     const geo = this.#blockFrame.getWidget().geometry();
     return geo.height();
+  }
+
+  get titleBarHeight(): number {
+    if (this.#blockFrame instanceof DecoratedFrame) {
+      const parent = this.#blockFrame.getWidget();
+      return this.#blockFrame.getBlock().getWidget().mapTo(parent, new QPoint(0, 0)).y();
+    } else {
+      return 0;
+    }
   }
 }

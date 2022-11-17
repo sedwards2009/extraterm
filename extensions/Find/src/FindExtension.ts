@@ -6,13 +6,13 @@
 import {
   ExtensionContext,
   Logger,
-  LineRangeChange,
   Screen,
   Terminal,
   TerminalOutputDetails,
   TerminalBorderWidget,
   TerminalOutputType,
-  RowPositionType
+  RowPositionType,
+  PositionToRowResult
 } from '@extraterm/extraterm-extension-api';
 import { countCells } from "extraterm-unicode-utilities";
 import escapeStringRegexp from "escape-string-regexp";
@@ -74,6 +74,8 @@ class FindExtension {
     this.#findControls.onSearchTextChanged(updateHighlight);
     this.#findControls.onRegexChanged(updateHighlight);
     this.#findControls.onCaseSensitiveChanged(updateHighlight);
+    this.#findControls.onSearchBackwardsClicked(() => this.#searchBackwards());
+    this.#findControls.onSearchForwardsClicked(() => this.#searchForwards());
 
     this.#borderWidget.contentWidget = this.#findControls.getWidget();
   }
@@ -101,6 +103,10 @@ class FindExtension {
       return;
     }
 
+    this.#scanAndHighlightTerminal(this.#terminal, this.#buildRegexFromControls());
+  }
+
+  #buildRegexFromControls(): RegExp {
     const text = this.#findControls.getSearchText();
     let regex: RegExp = null;
     if (text.trim() !== "") {
@@ -109,7 +115,7 @@ class FindExtension {
       const regexString = isRegex ? text : escapeStringRegexp(text);
       regex = new RegExp(regexString, isCaseSensitive ? "g" : "gi");
     }
-    this.#scanAndHighlightTerminal(this.#terminal, regex);
+    return regex;
   }
 
   #clearTerminalHighlight(terminal: Terminal): void {
@@ -224,6 +230,23 @@ class FindExtension {
       screen.redraw();
     }
   }
+
+  #searchBackwards(): void {
+    const rowWalker = new RowWalker(this.#terminal);
+    const regex = this.#buildRegexFromControls();
+    while (rowWalker.goBack()) {
+      const matches = findText(regex, rowWalker.getRowText());
+      if (matches.length !== 0) {
+        rowWalker.scrollToRow();
+        break;
+      }
+    }
+  }
+
+  #searchForwards(): void {
+
+  }
+
 }
 
 
@@ -240,4 +263,106 @@ function findText(textRegex: RegExp, text: string): TextMatch[] {
     }
   }
   return result;
+}
+
+interface RowLocation extends PositionToRowResult {
+  index: number;
+}
+
+class RowWalker {
+  #rowLocation: RowLocation;
+  #terminal: Terminal;
+
+  constructor(terminal: Terminal) {
+    this.#terminal = terminal;
+    this.#rowLocation = this.#findRowAtPosition(this.#terminal.viewport.position);
+  }
+
+  #findRowAtPosition(position: number): RowLocation {
+    const blocks = this.#terminal.blocks;
+    for (let i=0; i<blocks.length; i++) {
+      const block = blocks[i];
+      if (block.type !== TerminalOutputType) {
+        continue;
+      }
+      const details = <TerminalOutputDetails> block.details;
+
+      const isInBlock = position >= block.geometry.positionTop && position < (block.geometry.positionTop + block.geometry.height);
+      if (isInBlock) {
+        const result = details.positionToRow(position + block.geometry.titleBarHeight);
+        if (result.where === RowPositionType.IN_SCREEN || result.where === RowPositionType.IN_SCROLLBACK) {
+          return {...result, index: i};
+        }
+        if (result.where === RowPositionType.ABOVE) {
+          return {...result, index: i};
+        }
+      }
+    }
+    return {
+      index: blocks.length - 1,
+      where: RowPositionType.BELOW,
+      row: -1
+    };
+  }
+
+  getRowText(): string {
+    if (this.#rowLocation.where === RowPositionType.IN_SCREEN) {
+      return this.#terminal.screen.getRowText(this.#rowLocation.row);
+    }
+
+    const block = this.#terminal.blocks[this.#rowLocation.index];
+    const details = <TerminalOutputDetails> block.details;
+    return details.scrollback.getRowText(this.#rowLocation.row);
+  }
+
+  goBack(): boolean {
+    if (this.#rowLocation.where === RowPositionType.IN_SCROLLBACK && this.#rowLocation.row > 0) {
+      this.#rowLocation.row--;
+      return true;
+    }
+
+    if (this.#rowLocation.where === RowPositionType.IN_SCREEN) {
+      if (this.#rowLocation.row > 0) {
+        this.#rowLocation.row--;
+        return true;
+      }
+      const block = this.#terminal.blocks[this.#rowLocation.index];
+      const details = <TerminalOutputDetails> block.details;
+      if (details.scrollback.height > 0) {
+        this.#rowLocation.row = details.scrollback.height - 1;
+        this.#rowLocation.where = RowPositionType.IN_SCROLLBACK;
+        return true;
+      }
+    }
+
+    const blocks = this.#terminal.blocks;
+    let index = this.#rowLocation.index;
+    while (index > 0) {
+      index--;
+      const block = blocks[index];
+      if (block.type === TerminalOutputType) {
+        const details = <TerminalOutputDetails> block.details;
+        if (details.hasPty) {
+          this.#rowLocation.index = index;
+          this.#rowLocation.where = RowPositionType.IN_SCREEN;
+          this.#rowLocation.row = this.#terminal.screen.materializedHeight - 1;
+          return true;
+        }
+        if (details.scrollback.height !== 0) {
+          this.#rowLocation.index = index;
+          this.#rowLocation.where = RowPositionType.IN_SCROLLBACK;
+          this.#rowLocation.row = details.scrollback.height - 1;
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  scrollToRow(): void {
+    const block = this.#terminal.blocks[this.#rowLocation.index];
+    const details = <TerminalOutputDetails> block.details;
+    const newPosition = details.rowToPosition(this.#rowLocation.row, this.#rowLocation.where);
+    this.#terminal.viewport.position = newPosition - block.geometry.titleBarHeight;
+  }
 }

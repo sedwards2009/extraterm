@@ -693,6 +693,10 @@ export class TerminalBlock implements Block {
     return { x: gridX, y: gridY };
   }
 
+  rowToPixel(rowNumber: number): number {
+    return this.#fontMetrics.heightPx * rowNumber;
+  }
+
   #handleMouseButtonRelease(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
     if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseUp(termEvent)) {
