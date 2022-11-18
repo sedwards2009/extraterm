@@ -273,6 +273,12 @@ export class TerminalBlock implements Block {
     return didRemove;
   }
 
+  deleteScrollbackLayers(): void {
+    for (const line of this.#scrollback) {
+      line.layers = [];
+    }
+  }
+
   #updateWidgetSize(): void {
     if (this.#terminalVisualConfig == null || this.#fontMetrics == null) {
       return;

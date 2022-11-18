@@ -777,6 +777,7 @@ class Main {
       environment.set(TerminalEnvironment.EXTRATERM_LAST_COMMAND_LINE, commandLine);
       const command = commandLine.trim().split(" ")[0];
       environment.set(TerminalEnvironment.EXTRATERM_LAST_COMMAND, command);
+      block.deleteScrollbackLayers();
     }
 
     frame.setShowControls(false);
