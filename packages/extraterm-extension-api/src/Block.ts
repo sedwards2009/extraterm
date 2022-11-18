@@ -112,6 +112,8 @@ export interface TerminalOutputDetails {
   positionToRow(position: number): PositionToRowResult;
 
   rowToPosition(row: number, where: RowPositionType): number;
+
+  readonly rowHeight: number;
 }
 
 export enum RowPositionType {

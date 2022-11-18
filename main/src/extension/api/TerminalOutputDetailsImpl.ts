@@ -115,6 +115,10 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
     const pixelPosition = this.#terminalBlock.getWidget().mapTo(<QWidget> parent, new QPoint(0, widgetY));
     return pixelPosition.y();
   }
+
+  get rowHeight(): number {
+    return this.#terminalBlock.getCellHeightPx();
+  }
 }
 
 class ScrollbackImpl implements ExtensionApi.Screen {
