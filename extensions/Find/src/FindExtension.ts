@@ -31,6 +31,8 @@ export function activate(_context: ExtensionContext): any {
   log = context.logger;
 
   context.commands.registerCommand("find:find", commandFind.bind(null, context));
+  context.commands.registerCommand("find:findNext", commandFindNext.bind(null, context));
+  context.commands.registerCommand("find:findPrevious", commandFindPrevious.bind(null, context));
 
   for (const terminal of context.terminals.terminals) {
     terminalToFindExtensionMap.set(terminal, new FindExtension(terminal));
@@ -46,6 +48,25 @@ function commandFind(context: ExtensionContext): void {
     terminalExtension.open();
   }
 }
+
+function commandFindNext(context: ExtensionContext): void {
+  const terminalExtension = terminalToFindExtensionMap.get(context.activeTerminal);
+  if (terminalExtension != null) {
+    if (terminalExtension.isOpen()) {
+      terminalExtension.searchForwards();
+    }
+  }
+}
+
+function commandFindPrevious(context: ExtensionContext): void {
+  const terminalExtension = terminalToFindExtensionMap.get(context.activeTerminal);
+  if (terminalExtension != null) {
+    if (terminalExtension.isOpen()) {
+      terminalExtension.searchBackwards();
+    }
+  }
+}
+
 
 class FindExtension {
   #terminal: Terminal = null;
@@ -74,8 +95,8 @@ class FindExtension {
     this.#findControls.onSearchTextChanged(updateHighlight);
     this.#findControls.onRegexChanged(updateHighlight);
     this.#findControls.onCaseSensitiveChanged(updateHighlight);
-    this.#findControls.onSearchBackwardsClicked(() => this.#searchBackwards());
-    this.#findControls.onSearchForwardsClicked(() => this.#searchForwards());
+    this.#findControls.onSearchBackwardsClicked(() => this.searchBackwards());
+    this.#findControls.onSearchForwardsClicked(() => this.searchForwards());
 
     this.#borderWidget.contentWidget = this.#findControls.getWidget();
   }
@@ -96,6 +117,10 @@ class FindExtension {
       this.#updateHighlight();
     }
     this.#findControls.focus();
+  }
+
+  isOpen(): boolean {
+    return this.#isOpen;
   }
 
   #updateHighlight(): void {
@@ -231,7 +256,7 @@ class FindExtension {
     }
   }
 
-  #searchBackwards(): void {
+  searchBackwards(): void {
     const rowWalker = new RowWalker(this.#terminal, RowWalkerStart.TOP_VISIBLE);
     const regex = this.#buildRegexFromControls();
     while (rowWalker.goBack()) {
@@ -243,7 +268,7 @@ class FindExtension {
     }
   }
 
-  #searchForwards(): void {
+  searchForwards(): void {
     const rowWalker = new RowWalker(this.#terminal, RowWalkerStart.BOTTOM_VISIBLE);
     const regex = this.#buildRegexFromControls();
     while (rowWalker.goForward()) {

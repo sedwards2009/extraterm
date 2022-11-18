@@ -6,6 +6,18 @@
       "keys": [
         "Cmd-F"
       ]
+    },
+    {
+      "command": "find:findNext",
+      "keys": [
+        "Cmd-G"
+      ]
+    },
+    {
+      "command": "find:findPrevious",
+      "keys": [
+        "Cmd-Shift-G"
+      ]
     }
   ]
 }

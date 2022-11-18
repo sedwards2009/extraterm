@@ -6,6 +6,18 @@
       "keys": [
         "Ctrl-Shift-F"
       ]
+    },
+    {
+      "command": "find:findNext",
+      "keys": [
+        "F3"
+      ]
+    },
+    {
+      "command": "find:findPrevious",
+      "keys": [
+        "Shift-F3"
+      ]
     }
   ]
 }

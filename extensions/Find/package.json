@@ -35,6 +35,20 @@
         "category": "terminal",
         "icon": "fa-search",
         "when": "terminalFocus"
+      },
+      {
+        "command": "find:findNext",
+        "title": "Find Next",
+        "category": "terminal",
+        "icon": "fa-arrow-down",
+        "when": "terminalFocus"
+      },
+      {
+        "command": "find:findPrevious",
+        "title": "Find Previous",
+        "category": "terminal",
+        "icon": "fa-arrow-up",
+        "when": "terminalFocus"
       }
     ],
     "keybindings": [

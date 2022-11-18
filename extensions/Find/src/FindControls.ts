@@ -150,7 +150,7 @@ export class FindControls {
     const event = new QKeyEvent(nativeEvent);
 
     const key = event.key();
-    if(key !== Key.Key_Escape && key !== Key.Key_Enter && key !== Key.Key_Return) {
+    if( ! [Key.Key_Escape, Key.Key_Enter, Key.Key_Return].includes(key)) {
       return;
     }
 
