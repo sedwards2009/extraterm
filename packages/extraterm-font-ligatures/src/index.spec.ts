@@ -375,7 +375,7 @@ test('throws if the font is not found', async t => {
 
 
 test("Mark ligatures", async t => {
-  const grid = new CharCellLine(10);
+  const grid = new CharCellLine(20);
   grid.setString(0, "Foo --> Bar");
 
   const font = await load("Monoid", { listVariants: fakeListVariants });
