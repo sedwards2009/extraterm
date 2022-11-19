@@ -43,6 +43,7 @@
           "main/resources/fonts/**/*",
           "main/resources/terminal_fonts/**/*",
           "main/resources/terminal_fonts/**/*",
+          "main/resources/logo/extraterm_small_logo_*.png",
           "node_modules/nodegui-plugin-*/dist/*.js",
           "node_modules/nodegui-plugin-*/dist/*.cjs",
           "node_modules/nodegui-plugin-*/LICENSE*",
