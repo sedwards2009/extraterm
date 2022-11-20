@@ -15,7 +15,7 @@ import { DecoratedFrame } from "../../terminal/DecoratedFrame.js";
 import { QPoint } from "@nodegui/nodegui";
 
 
-export class BlockImpl implements ExtensionApi.Block {
+export class BlockImpl implements ExtensionApi.Block, ExtensionApi.Disposable {
 
   #internalExtensionContext: InternalExtensionContext;
   #type: string = null;
@@ -45,6 +45,12 @@ export class BlockImpl implements ExtensionApi.Block {
       this.#type = ExtensionApi.TerminalOutputType;
     } else if (block instanceof ExtensionBlockImpl) {
       this.#type = block.getBlockTypeName();
+    }
+  }
+
+  dispose(): void {
+    if (this.#terminalOutputDetailsImpl != null) {
+      this.#terminalOutputDetailsImpl.dispose();
     }
   }
 

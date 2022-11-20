@@ -84,45 +84,12 @@ export interface ExtensionManager {
 }
 
 export interface ProxyFactory {
-//   getTabProxy(tabLike: EtTerminal | EtViewerTab): ExtensionApi.Tab;
-
   getTerminalProxy(terminal: Terminal): ExtensionApi.Terminal;
   hasTerminalProxy(terminal: Terminal): boolean;
 
   getBlock(blockFrame: BlockFrame): ExtensionApi.Block;
 }
 
-// export interface ExtensionUiUtils {
-//   showNumberInput(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.NumberInputOptions): Promise<number | undefined>;
-//   showListPicker(host: SupportsDialogStack & HTMLElement, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
-//   showOnCursorListPicker(terminal: EtTerminal, options: ExtensionApi.ListPickerOptions): Promise<number | undefined>;
-//}
-/*
-export interface InternalWindow extends ExtensionApi.Window {
-  findViewerElementTagByMimeType(mimeType: string): string;
-  createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
-  // createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionSettingsEditor[];
-  // getTerminalBorderWidgetFactory(name: string): ExtensionApi.TerminalBorderWidgetFactory;
-
-  newTerminalCreated(newTerminal: Terminal, allTerminals: Terminal[]): void;
-  terminalDestroyed(deadTerminal: Terminal, allTerminals: Terminal[]): void;
-
-  // terminalAppendedViewer(newTerminal: Terminal, viewer: ViewerElement): void;
-  terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void;
-  terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
-  terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
-}
-*/
-/*
-export interface CommandMenuEntry {
-  commandContribution: ExtensionCommandContribution;
-  contextMenu: boolean;
-  commandPalette: boolean;
-  newTerminal: boolean;
-  terminalTab: boolean;
-  windowMenu: boolean;
-}
-*/
 /**
  * Holds internal accounting needed to support an Extension.
  *
@@ -131,6 +98,8 @@ export interface CommandMenuEntry {
  * provided.
  */
 export interface InternalExtensionContext extends ExtensionApi.Disposable {
+  extensionMetadata: ExtensionMetadata;
+
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
   sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
@@ -165,6 +134,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
   wrapTab(tab: Tab): ExtensionApi.Tab;
   wrapTerminal(terminal: Terminal): ExtensionApi.Terminal;
+  hasBlockWrapper(blockFrame: BlockFrame): boolean;
   wrapBlock(blockFrame: BlockFrame): ExtensionApi.Block;
 }
 

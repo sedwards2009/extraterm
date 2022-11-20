@@ -50,7 +50,7 @@ import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager.js";
 import { ExtensionManager } from "../extension/ExtensionManager.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { CommandLineAction, MouseButtonAction } from "../config/Config.js";
-import { CommandQueryOptions } from "../InternalTypes.js";
+import { CommandQueryOptions, InternalExtensionContext } from "../InternalTypes.js";
 import { BlockFrame } from "./BlockFrame.js";
 import { DecoratedFrame } from "./DecoratedFrame.js";
 import { SpacerFrame } from "./SpacerFrame.js";
@@ -68,6 +68,7 @@ import { DownloadApplicationModeHandler } from "./DownloadApplicationModeHandler
 import { BulkFileStorage } from "../bulk_file_handling/BulkFileStorage.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
+import { ExtensionBlockImpl } from "../extension/api/ExtensionBlockImpl.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -162,6 +163,7 @@ export class Terminal implements Tab, Disposable {
 
   #verticalScrollBar: QScrollBar = null;
   #blockFrames: BlockPlumbing[] = [];
+  #disposableHolder = new DisposableHolder();
 
   onDispose: Event<void>;
   #onDisposeEventEmitter = new EventEmitter<void>();
@@ -801,6 +803,7 @@ export class Terminal implements Tab, Disposable {
       this.#pty.destroy();
       this.#pty = null;
     }
+    this.#disposableHolder.dispose();
   }
 
   setSessionConfiguration(sessionConfiguration: SessionConfiguration): void {

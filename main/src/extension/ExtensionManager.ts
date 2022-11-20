@@ -62,9 +62,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #desiredState: ExtensionDesiredState = null;
 
   #activeExtensions: ActiveExtension[] = [];
-  #desiredStateChangeEventEmitter = new EventEmitter<void>();
-  #applicationVersion = "";
+  #onDesiredStateChangedEventEmitter = new EventEmitter<void>();
   onDesiredStateChanged: Event<void>;
+
+  #applicationVersion = "";
   #extensionPaths: string[] = null;
 
   #commonExtensionWindowState: CommonExtensionWindowState = {
@@ -86,7 +87,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     this.#uiStyle = uiStyle;
 
     this.#extensionPaths = extensionPaths;
-    this.onDesiredStateChanged = this.#desiredStateChangeEventEmitter.event;
+    this.onDesiredStateChanged = this.#onDesiredStateChangedEventEmitter.event;
 
     this.#extensionMetadata = this.#scan(this.#extensionPaths);
 
@@ -238,24 +239,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       }
     }
 
-    this.#purgeExtensionBlocks(activeExtension);
     activeExtension.internalExtensionContext.dispose();
-
     this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
-  }
-
-  #purgeExtensionBlocks(activeExtension: ActiveExtension): void {
-    for (const window of this.#allWindows) {
-      for (const terminal of window.getTerminals()) {
-        for (const blockFrame of terminal.getBlockFrames()) {
-          const block = blockFrame.getBlock();
-          if (block instanceof ExtensionBlockImpl &&
-              block.getInternalExtensionContext() === activeExtension.internalExtensionContext) {
-            terminal.destroyFrame(blockFrame);
-          }
-        }
-      }
-    }
   }
 
   getAllExtensions(): ExtensionMetadata[] {
@@ -294,7 +279,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     desiredState[metadata.name] = true;
     this.#desiredState = desiredState;
 
-    this.#desiredStateChangeEventEmitter.fire();
+    this.#onDesiredStateChangedEventEmitter.fire();
   }
 
   #getActiveExtension(name: string): ActiveExtension {
@@ -329,7 +314,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     generalConfig.activeExtensions[metadata.name] = false;
     this.#configDatabase.setGeneralConfig(generalConfig);
 
-    this.#desiredStateChangeEventEmitter.fire();
+    this.#onDesiredStateChangedEventEmitter.fire();
   }
 
   isExtensionEnabled(name: string): boolean {

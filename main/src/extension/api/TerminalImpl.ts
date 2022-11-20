@@ -10,20 +10,21 @@ import * as _ from "lodash-es";
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { EventEmitter } from "extraterm-event-emitter";
 import { log, Logger, getLogger } from "extraterm-logging";
+import { LineImpl } from "term-api-lineimpl";
 
 import { Terminal, EXTRATERM_COOKIE_ENV } from "../../terminal/Terminal.js";
 import { InternalExtensionContext } from "../../InternalTypes.js";
 import { BorderDirection, ExtensionMetadata, ExtensionTerminalBorderContribution } from "../ExtensionMetadata.js";
-import { LineImpl } from "term-api-lineimpl";
 import { Layer } from "packages/term-api/dist/TermApi.js";
+import { isDisposable } from "main/src/utils/DisposableUtils.js";
 
 // import { ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
 
 
-export class TerminalImpl implements ExtensionApi.Terminal {
+export class TerminalImpl implements ExtensionApi.Disposable, ExtensionApi.Terminal {
   private _log: Logger = null;
   viewerType: "terminal-output";
-  #terminalBorderWidgets = new Map<string, TerminalBorderWidgetInfo>();
+  #terminalBorderWidgets = new Map<string, TerminalBorderWidgetImpl>();
   // #tabTitleWidgets = new Map<string, ExtensionApi.TerminalBorderWidget>();
 
   environment: TerminalEnvironmentImpl;
@@ -58,7 +59,7 @@ export class TerminalImpl implements ExtensionApi.Terminal {
     this.#terminal.onDispose(this.#handleTerminalDispose.bind(this));
     this.environment = new TerminalEnvironmentImpl(this.#terminal);
     this.viewport = new ViewportProxy(this.#terminal);
-    this.screen = new ScreenProxy(this.#extensionMetadata, this.#terminal);
+    this.screen = new ScreenImpl(this.#extensionMetadata, this.#terminal);
     this.onDidAppendBlock = this.#onDidAppendBlockEventEmitter.event;
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this._onDidScreenChangeEventEmitter.event;
@@ -125,31 +126,15 @@ export class TerminalImpl implements ExtensionApi.Terminal {
 
   createTerminalBorderWidget(name: string): ExtensionApi.TerminalBorderWidget {
     this.#checkIsAlive();
-    // if (this.#terminalBorderWidgets.has(name)) {
-    //   const terminalBorderWidget = this.#terminalBorderWidgets.get(name);
-    //   const data = this.#findTerminalBorderWidgetMetadata(name);
-    //   this.#terminal.appendWidgetToBorder(extensionContainerElement, data.border);
-    //   terminalBorderWidget._handleOpen();
-    //   return factoryResult;
-    // }
+
+    if (this.#terminalBorderWidgets.has(name)) {
+      return this.#terminalBorderWidgets.get(name);
+    }
     const data = this.#findTerminalBorderWidgetMetadata(name);
 
     const terminalBorderWidget = new TerminalBorderWidgetImpl(this.#terminal, data.border);
+    this.#terminalBorderWidgets.set(name, terminalBorderWidget);
     return terminalBorderWidget;
-
-    // this.#terminal.appendWidgetToBorder(extensionContainerElement, data.border);
-
-    // const terminalBorderWidget = new TerminalBorderWidgetContainer(
-    //   () => {
-    //   this._terminal.removeElementFromBorder(extensionContainerElement);
-    //   terminalBorderWidget._handleClose();
-    // }
-    // );
-    // const factoryResult = factory(this, terminalBorderWidget);
-    // this._terminalBorderWidgets.set(name, { extensionContainerElement: extensionContainerElement, terminalBorderWidget,
-    //   factoryResult });
-    // terminalBorderWidget._handleOpen();
-    // return factoryResult;
   }
 
   #findTerminalBorderWidgetMetadata(name: string): ExtensionTerminalBorderContribution {
@@ -173,15 +158,33 @@ export class TerminalImpl implements ExtensionApi.Terminal {
   get isConnected(): boolean {
     return this.#terminal.getPty() != null;
   }
+
+  dispose(): void {
+    if (isDisposable(this.screen)) {
+      this.screen.dispose();
+    }
+
+    this.#disposeExtensionBlocks();
+    this.#disposeBorderWidgets();
+  }
+
+  #disposeExtensionBlocks(): void {
+    for (const block of this.#terminal.getBlockFrames()) {
+      if (this.#internalExtensionContext.hasBlockWrapper(block)) {
+        const blockWrapper = this.#internalExtensionContext.wrapBlock(block);
+        if (isDisposable(blockWrapper)) {
+          blockWrapper.dispose();
+        }
+      }
+    }
+  }
+
+  #disposeBorderWidgets(): void {
+    for (const borderWidget of this.#terminalBorderWidgets.values()) {
+      borderWidget.dispose();
+    }
+  }
 }
-
-
-interface TerminalBorderWidgetInfo {
-  // extensionContainerElement: ExtensionContainerElement;
-  // terminalBorderWidget: InternalTerminalBorderWidget;
-  factoryResult: unknown;
-}
-
 
 class TerminalEnvironmentImpl implements ExtensionApi.TerminalEnvironment {
   onChange: ExtensionApi.Event<string[]>;
@@ -236,13 +239,23 @@ class TerminalEnvironmentImpl implements ExtensionApi.TerminalEnvironment {
 }
 
 
-class ScreenProxy implements ExtensionApi.ScreenWithCursor {
+class ScreenImpl implements ExtensionApi.ScreenWithCursor, ExtensionApi.Disposable {
   #terminal: Terminal;
   #extensionMetadata: ExtensionMetadata;
 
   constructor(extensionMetadata: ExtensionMetadata, terminal: Terminal) {
     this.#terminal = terminal;
     this.#extensionMetadata = extensionMetadata;
+  }
+
+  dispose(): void {
+    const emulator = this.#terminal.getEmulator();
+    const len = emulator.getDimensions().materializedRows;
+    const keyPrefix = `${this.#extensionMetadata.name}:`;
+    for (let i=0; i<len; i++) {
+      const line = emulator.lineAtRow(i);
+      line.layers = line.layers.filter(layer => ! layer.name.startsWith(keyPrefix));
+    }
   }
 
   getRowText(rowNumber: number): string {
@@ -370,7 +383,7 @@ class ViewportProxy implements ExtensionApi.Viewport {
 }
 
 
-class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget {
+class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget, ExtensionApi.Disposable {
   #terminal: Terminal = null;
   #border: BorderDirection = "north";
 
@@ -380,6 +393,10 @@ class TerminalBorderWidgetImpl implements ExtensionApi.TerminalBorderWidget {
   constructor(terminal: Terminal, border: BorderDirection) {
     this.#terminal = terminal;
     this.#border = border;
+  }
+
+  dispose(): void {
+    this.close();
   }
 
   get contentWidget(): QWidget {

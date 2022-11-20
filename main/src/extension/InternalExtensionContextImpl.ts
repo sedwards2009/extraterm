@@ -26,6 +26,8 @@ import { Tab } from "../Tab.js";
 import { WorkspaceSessionSettingsEditorRegistry } from "./WorkspaceSessionSettingsEditorRegistry.js";
 import { TabTitleWidgetRegistry } from "./TabTitleWidgetRegistry.js";
 import { BlockRegistry } from "./BlockRegistry.js";
+import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
+import { TerminalBlock } from "../terminal/TerminalBlock.js";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -41,7 +43,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   tabTitleWidgetRegistry: TabTitleWidgetRegistry;
   blockRegistry: BlockRegistry;
 
-  #extensionMetadata: ExtensionMetadata;
+  extensionMetadata: ExtensionMetadata;
 
   #sessionBackends: LoadedSessionBackendContribution[] = [];
   #terminalThemeProviders: LoadedTerminalThemeProviderContribution[] = [];
@@ -56,7 +58,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
-    this.#extensionMetadata = extensionMetadata;
+    this.extensionMetadata = extensionMetadata;
 
     this.onDidCreateTerminal = this.#onDidCreateTerminalEventEmitter.event;
 
@@ -128,13 +130,42 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   dispose(): void {
+    this.#disposeAllExtensionBlocks();
+    this.#disposeExtensionTerminals();
+  }
+
+  #disposeAllExtensionBlocks(): void {
+    const allWindows = this.#extensionManager.getAllWindows();
+    for (const window of allWindows) {
+      for (const terminal of window.getTerminals()) {
+        for (const blockFrame of terminal.getBlockFrames()) {
+          const block = blockFrame.getBlock();
+          if (block instanceof ExtensionBlockImpl &&
+              block.getInternalExtensionContext() === this) {
+            terminal.destroyFrame(blockFrame);
+          }
+        }
+      }
+    }
+  }
+
+  #disposeExtensionTerminals(): void {
+    const allWindows = this.#extensionManager.getAllWindows();
+
+    for (const window of allWindows) {
+      for (const terminal of window.getTerminals()) {
+        if (this.#terminalWrapMap.has(terminal)) {
+          this.#terminalWrapMap.get(terminal).dispose();
+        }
+      }
+    }
   }
 
   registerSessionBackend(name: string, backend: SessionBackend): void {
-    for (const backendMeta of this.#extensionMetadata.contributes.sessionBackends) {
+    for (const backendMeta of this.extensionMetadata.contributes.sessionBackends) {
       if (backendMeta.name === name) {
         this.#sessionBackends.push({
-          metadata: this.#extensionMetadata,
+          metadata: this.extensionMetadata,
           sessionBackendMetadata: backendMeta,
           sessionBackend: backend
         });
@@ -143,15 +174,15 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     }
 
     this._log.warn(`Unable to register session backend '${name}' for extension ` +
-      `'${this.#extensionMetadata.name}' because the session backend contribution data ` +
+      `'${this.extensionMetadata.name}' because the session backend contribution data ` +
       `couldn't be found in the extension's package.json file.`);
   }
 
   registerTerminalThemeProvider(name: string, provider: ExtensionApi.TerminalThemeProvider): void {
-    for (const backendMeta of this.#extensionMetadata.contributes.terminalThemeProviders) {
+    for (const backendMeta of this.extensionMetadata.contributes.terminalThemeProviders) {
       if (backendMeta.name === name) {
         this.#terminalThemeProviders.push({
-          metadata: this.#extensionMetadata,
+          metadata: this.extensionMetadata,
           terminalThemeProvider: provider
         } );
         return;
@@ -159,7 +190,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     }
 
     this._log.warn(`Unable to register terminal theme provider '${name}' for extension ` +
-      `'${this.#extensionMetadata.name}' because the terminal theme provider contribution data ` +
+      `'${this.extensionMetadata.name}' because the terminal theme provider contribution data ` +
       `couldn't be found in the extension's package.json file.`);
     return;
   }
@@ -180,7 +211,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void {
-    if (this.hasTerminalWrap(terminal)) {
+    if (this.hasTerminalWrapper(terminal)) {
       const wrapper = this.wrapTerminal(terminal);
       if (wrapper.environment._onChangeEventEmitter.hasListeners()) {
         wrapper.environment._onChangeEventEmitter.fire(changeList);
@@ -189,7 +220,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void {
-    if (this.hasTerminalWrap(terminal)) {
+    if (this.hasTerminalWrapper(terminal)) {
       const wrapper = this.wrapTerminal(terminal);
       if (wrapper._onDidAppendScrollbackLinesEventEmitter.hasListeners()) {
         const block = this.wrapBlock(ev.blockFrame);
@@ -204,7 +235,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   }
 
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void {
-    if (this.hasTerminalWrap(terminal)) {
+    if (this.hasTerminalWrapper(terminal)) {
       const wrapper = this.wrapTerminal(terminal);
       if (wrapper._onDidScreenChangeEventEmitter.hasListeners()) {
         const block = this.wrapBlock(ev.blockFrame);
@@ -221,7 +252,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
   #terminalWrapMap = new WeakMap<Terminal, TerminalImpl>();
 
-  hasTerminalWrap(terminal: Terminal): boolean {
+  hasTerminalWrapper(terminal: Terminal): boolean {
     return this.#terminalWrapMap.has(terminal);
   }
 
@@ -230,7 +261,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       return null;
     }
     if (!this.#terminalWrapMap.has(terminal)) {
-      const wrappedTerminal = new TerminalImpl(this, this.#extensionMetadata, terminal);
+      const wrappedTerminal = new TerminalImpl(this, this.extensionMetadata, terminal);
       this.#terminalWrapMap.set(terminal, wrappedTerminal);
     }
     return this.#terminalWrapMap.get(terminal);
@@ -238,7 +269,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
 
   #blockWrapMap = new WeakMap<BlockFrame, BlockImpl>();
 
-  hasBlockProxy(block: BlockFrame): boolean {
+  hasBlockWrapper(block: BlockFrame): boolean {
     return this.#blockWrapMap.has(block);
   }
 
@@ -247,7 +278,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       return null;
     }
     if (!this.#blockWrapMap.has(blockFrame)) {
-      const wrappedBlock = new BlockImpl(this, this.#extensionMetadata, blockFrame);
+      const wrappedBlock = new BlockImpl(this, this.extensionMetadata, blockFrame);
       this.#blockWrapMap.set(blockFrame, wrappedBlock);
     }
     return this.#blockWrapMap.get(blockFrame);
@@ -260,7 +291,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       return null;
     }
     if (!this.#windowWrapMap.has(window)) {
-      const wrappedWindow = new WindowImpl(this, this.#extensionMetadata, window, this.#configDatabase);
+      const wrappedWindow = new WindowImpl(this, this.extensionMetadata, window, this.#configDatabase);
       this.#windowWrapMap.set(window, wrappedWindow);
     }
     return this.#windowWrapMap.get(window);

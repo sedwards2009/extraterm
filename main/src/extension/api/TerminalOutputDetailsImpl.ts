@@ -10,9 +10,10 @@ import { ExtensionMetadata } from "../ExtensionMetadata.js";
 import { LineImpl } from "term-api-lineimpl";
 import { BlockFrame } from "../../terminal/BlockFrame.js";
 import { QPoint, QWidget } from "@nodegui/nodegui";
+import { isDisposable } from "main/src/utils/DisposableUtils.js";
 
 
-export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDetails {
+export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDetails, ExtensionApi.Disposable {
 
   #scrollback: ExtensionApi.Screen = null;
   #blockFrame: BlockFrame = null;
@@ -23,11 +24,12 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
     this.#extensionMetadata = extensionMetadata;
     this.#blockFrame = blockFrame;
     this.#terminalBlock = terminalBlock;
-    // this._terminalViewer.onDispose(this.#handleTerminalViewerDispose.bind(this));
   }
 
-  #handleTerminalViewerDispose(): void {
-    this.#terminalBlock = null;
+  dispose(): void {
+    if (isDisposable(this.#scrollback)) {
+      this.#scrollback.dispose();
+    }
   }
 
   #checkIsAlive(): void {
@@ -121,7 +123,7 @@ export class TerminalOutputDetailsImpl implements ExtensionApi.TerminalOutputDet
   }
 }
 
-class ScrollbackImpl implements ExtensionApi.Screen {
+class ScrollbackImpl implements ExtensionApi.Screen, ExtensionApi.Disposable {
 
   #extensionMetadata: ExtensionMetadata;
   #terminalBlock: TerminalBlock = null;
@@ -129,6 +131,16 @@ class ScrollbackImpl implements ExtensionApi.Screen {
   constructor(extensionMetadata: ExtensionMetadata, terminalViewer: TerminalBlock) {
     this.#extensionMetadata = extensionMetadata;
     this.#terminalBlock = terminalViewer;
+  }
+
+  dispose(): void {
+    const block = this.#terminalBlock;
+    const len = block.getScrollbackLength();
+    const keyPrefix = `${this.#extensionMetadata.name}:`;
+    for (let i=0; i<len; i++) {
+      const line = block.getScrollbackLineAtRow(i);
+      line.layers = line.layers.filter(layer => ! layer.name.startsWith(keyPrefix));
+    }
   }
 
   get width(): number {
