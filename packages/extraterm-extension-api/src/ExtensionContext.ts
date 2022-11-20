@@ -70,8 +70,7 @@ export interface Application {
 /**
  * A way of writing and reading an opaque JSON configuration object.
  *
- * The object is stored on disk between Extraterm runs and automatically
- * synchronized across the main process and any render processes.
+ * The object is stored on disk between Extraterm runs.
  */
 export interface Configuration {
   /**
@@ -88,11 +87,6 @@ export interface Configuration {
    * @param config the JSON compatible object to store and save .
    */
   set(config: any): void;
-
-  /**
-   * Fires whenever a config is `set()`.
-   */
-  onChange: Event<void>;
 }
 
 /**

@@ -11,27 +11,14 @@ import { ConfigChangeEvent, ConfigDatabase } from "../../config/ConfigDatabase.j
 export class ConfigurationImpl implements ExtensionApi.Configuration, ExtensionApi.Disposable {
   #configDatabase: ConfigDatabase = null;
 
-  onChange: ExtensionApi.Event<void>;
-  #onChangeEventEmitter = new EventEmitter<void>();
   #extensionName: string = null;
-
-  #onExtensionChangeDisposable: ExtensionApi.Disposable = null;
 
   constructor(configDatabase: ConfigDatabase, extensionName: string) {
     this.#configDatabase = configDatabase;
     this.#extensionName = extensionName;
-    this.onChange = this.#onChangeEventEmitter.event;
-
-    this.#onExtensionChangeDisposable = this.#configDatabase.onExtensionChange((ev: ConfigChangeEvent) => {
-      if (ev.key !== this.#extensionName) {
-        return;
-      }
-      this.#onChangeEventEmitter.fire();
-    });
   }
 
   dispose(): void {
-    this.#onExtensionChangeDisposable.dispose();
   }
 
   get(): any {

@@ -23,6 +23,13 @@ export interface Terminals {
 
   readonly onDidCreateTerminal: Event<Terminal>;
   // onWillDestroyTerminal: Event<Terminal>;
+
+  /**
+   * Register the extension block factory for a given block name.
+   *
+   * @param name The name of the block type as defined in `package.json`.
+   * @param factory The factory function itself.
+   */
   registerBlock(name: string, factory: ExtensionBlockFactory): void;
 }
 
