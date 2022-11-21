@@ -215,7 +215,7 @@ class FindExtension {
       return null;
     }
     if (bottomPosResult.where === inside) {
-      bottomRow = bottomPosResult.row + 1;
+      bottomRow = Math.min(bottomRow, bottomPosResult.row + 1);
     }
 
     return {
