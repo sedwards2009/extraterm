@@ -8,6 +8,7 @@ import {
   FocusPolicy,
   Margins,
   QBoxLayout,
+  QPoint,
   QSize,
   QSizePolicyPolicy,
   QWheelEvent,
@@ -121,7 +122,8 @@ export class TerminalScrollArea {
     }
     const lastBlockFrame = this.#blockFrames[this.#blockFrames.length-1];
     const rect = lastBlockFrame.getWidget().contentsRect();
-    return y > (rect.top() + rect.height());
+    const yPoint = lastBlockFrame.getWidget().mapToParent(new QPoint(0,0));
+    return y > (yPoint.y() + rect.height());
   }
 
   setScrollPosition(position: number): void {

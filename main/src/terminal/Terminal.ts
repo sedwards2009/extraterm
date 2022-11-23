@@ -642,7 +642,9 @@ export class Terminal implements Tab, Disposable {
     if (this.#blockFrames.length === 0) {
       return;
     }
-    const isBelow = this.scrollArea.isYBelowLastFrame(this.scrollArea.getScrollPosition() + mouseEvent.y());
+    const mappedPoint = this.scrollArea.getContentWidget().mapFrom(this.scrollArea.getWidget(),
+      new QPoint(mouseEvent.x(), mouseEvent.y()));
+    const isBelow = this.scrollArea.isYBelowLastFrame(mappedPoint.y());
     if (! isBelow) {
       return;
     }
