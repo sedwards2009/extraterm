@@ -274,8 +274,8 @@ class ScreenImpl implements ExtensionApi.ScreenWithCursor, ExtensionApi.Disposab
   applyHyperlink(rowNumber: number, x: number, length: number, url: string): void {
     const emulator = this.#terminal.getEmulator();
     const termLine = emulator.lineAtRow(rowNumber);
-    const startColumn = termLine.mapStringIndexToColumn(0, x);
-    const endColumn = termLine.mapStringIndexToColumn(0, x + length);
+    const startColumn = termLine.mapStringIndexToColumn(x);
+    const endColumn = termLine.mapStringIndexToColumn(x + length);
     const extensionName = this.#extensionMetadata.name;
     emulator.applyHyperlink(rowNumber, startColumn, endColumn - startColumn, url, extensionName);
   }

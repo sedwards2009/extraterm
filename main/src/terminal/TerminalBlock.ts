@@ -224,8 +224,8 @@ export class TerminalBlock implements Block {
 
   applyScrollbackHyperlink(lineNumber: number, x: number, length: number, url: string, group: string=""): void {
     const line = this.#scrollback[lineNumber];
-    const startColumn = line.mapStringIndexToColumn(0, x);
-    const endColumn = line.mapStringIndexToColumn(0, x + length);
+    const startColumn = line.mapStringIndexToColumn(x);
+    const endColumn = line.mapStringIndexToColumn(x + length);
 
     this.#applyHyperlinkAtTextCoordinates(lineNumber, startColumn, endColumn - startColumn,
       url, group);

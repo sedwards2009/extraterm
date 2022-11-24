@@ -48,7 +48,7 @@ export interface Line extends CharCellLine {
   getAllLinkIDs(group: string): number[];
   pasteGridWithLinks(sourceGrid: Line, x: number): void;
 
-  mapStringIndexToColumn(line: number, x: number): number;
+  mapStringIndexToColumn(x: number): number;
   layers: Layer[];
 }
 
