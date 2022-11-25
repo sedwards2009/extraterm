@@ -14,6 +14,7 @@ This also expands the foundations in Extraterm and makes it easier to implement 
 
 **Bug Fixes**
 
-* Fix problem where clipboard paste via a mouse button pasted twice.
+* Fixed problem where clipboard paste via a mouse button pasted twice.
+* Fixed the window icon.
 
 Download it from [Github](https://github.com/sedwards2009/extraterm/releases/tag/v0.68.0)
