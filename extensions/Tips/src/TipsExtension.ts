@@ -182,9 +182,6 @@ function newTipBlock(extensionBlock: ExtensionBlock, newTerminal: Terminal): voi
 }
 
 function formatTip(tip: Tip, style: Style): string {
-log.debug(
-  style.htmlStyleTag);
-
   const textLines: string[] = [];
   for (const line of tip.lines) {
     if (typeof line === "string") {
@@ -194,7 +191,7 @@ log.debug(
     } else {
       const command = <TipCommand> line;
       const shortcut = context.application.isMacOS ? command.macos : command.pc;
-      textLines.push(`<span class="keycap">${shortcut}</span>`);
+      textLines.push(`<span class="keycap">&nbsp;${style.createHtmlIcon("fa-keyboard")} ${shortcut}&nbsp;</span>`);
     }
   }
   return style.htmlStyleTag + textLines.join("");

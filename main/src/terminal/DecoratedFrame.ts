@@ -180,7 +180,7 @@ export class DecoratedFrame implements BlockFrame {
         contentsMargins: [0, 0, 0, 0],
         children: [
           {
-            widget: this.#iconText = Label({cssClass: "icon", text: ""}),
+            widget: this.#iconText = Label({cssClass: ["icon", "small"], text: ""}),
             stretch: 0
           },
           {
@@ -189,7 +189,7 @@ export class DecoratedFrame implements BlockFrame {
             alignment: AlignmentFlag.AlignLeft
           },
           {
-            widget: Label({text: `${createHtmlIcon("fa-tag")} ${this.#tag} `}),
+            widget: Label({cssClass: ["small"], text: `${createHtmlIcon("fa-tag")} ${this.#tag} `}),
             stretch: 0
           },
           {
