@@ -563,7 +563,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QPushButton[cssClass~="small"] {
     font-size: ${buttonFontSizeSmall}pt;
     icon-size: ${emToPx(smallFactor)}px;
-    padding: ${emToPx(0.1)}px ${emToPx(0.2)}px;
+    padding: ${emToPx(0.1)}px ${emToPx(0.3)}px;
   }
 
   QPushButton[cssClass~="group-left"] {
