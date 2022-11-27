@@ -357,15 +357,32 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     );
   }
 
-  createExtensionBlock(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
-    const block = this.#createExtensionBlock(terminal, fileMimeType, bulkFile);
+  createExtensionBlockByName(terminal: Terminal, extensionName: string, blockName: string, args?: any): Block {
+    for (const ae of this.#activeExtensions) {
+      const blockMetadata = ae.metadata.contributes.blocks;
+      if (blockMetadata.length === 0) {
+        continue;
+      }
+
+      for (const blockContribution of blockMetadata) {
+        if (blockContribution.name === blockName) {
+          return ae.internalExtensionContext.blockRegistry.createExtensionBlock(terminal, blockContribution.name, null,
+            args);
+        }
+      }
+    }
+    return null;
+  }
+
+  createExtensionBlockWithBulkFile(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
+    const block = this.#createExtensionBlockByMimeType(terminal, fileMimeType, bulkFile);
     if (block != null) {
       return block;
     }
-    return this.#createExtensionBlock(terminal, "application/octet-stream", bulkFile);
+    return this.#createExtensionBlockByMimeType(terminal, "application/octet-stream", bulkFile);
   }
 
-  #createExtensionBlock(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
+  #createExtensionBlockByMimeType(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
     for (const ae of this.#activeExtensions) {
       const blockMetadata = ae.metadata.contributes.blocks;
       if (blockMetadata.length === 0) {

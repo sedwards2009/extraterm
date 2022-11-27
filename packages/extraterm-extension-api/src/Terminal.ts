@@ -14,7 +14,7 @@ import { ScreenWithCursor } from "./Screen.js";
 import { ListPickerOptions } from "./ListPickerOptions.js";
 
 
-export type ExtensionBlockFactory = (extensionBlock: ExtensionBlock) => void;
+export type ExtensionBlockFactory = (extensionBlock: ExtensionBlock, args?: any) => void;
 
 // TODO: Rename this file to Terminals.ts
 
@@ -176,6 +176,14 @@ export interface Terminal {
    * Geometry of the terminal viewport shown in the window.
    */
   readonly viewport: Viewport;
+
+  /**
+   * Append a block to the bottom of the terminal.
+   *
+   * @param name The name of the block type as defined in `package.json`.
+   * @param args Option arguments object.
+   */
+   appendBlock(name: string, args?: any): Block;
 }
 
 

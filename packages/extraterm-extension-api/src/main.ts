@@ -15,7 +15,9 @@ export { CustomizedCommand, Commands } from "./Commands.js";
 export { BulkFileMetadata, BulkFileState, BulkFileHandle } from "./BulkFiles.js";
 export { ListPickerOptions } from "./ListPickerOptions.js";
 export { TerminalThemeInfo, TerminalThemeProvider, TerminalTheme } from "./TerminalTheme.js";
-export { Clipboard, Configuration, Application, ExtensionContext, ExtensionModule } from "./ExtensionContext.js";
+export {
+  Clipboard, Configuration, Application, ExtensionContext, ExtensionModule, SettingsTabFactory
+} from "./ExtensionContext.js";
 export { SessionConfiguration, SessionEditorBase, SessionEditorFactory, EnvironmentMap, SessionBackend,
   CreateSessionOptions, BufferSizeChange, Pty, SessionSettingsEditorBase, SessionSettingsEditorFactory, Sessions
 } from "./Sessions.js";
@@ -46,3 +48,4 @@ export { Cell,
 } from "./Screen.js";
 export { ExtensionTab, Window, Windows } from "./Windows.js";
 export { Style, IconName, IconModification, IconRotation, ModifiedIconName, Palette } from "./Style.js";
+export { SettingsTab } from "./Settings.js";

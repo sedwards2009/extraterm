@@ -58,6 +58,7 @@
       "extensions/ProxySessionEditor",
       "extensions/OpenLink",
       "extensions/TerminalTitle",
+      "extensions/Tips",
       "extensions/TLDRPages",
       "extensions/WindowsConsoleSessionBackend",
       "extensions/WindowsConsoleSessionEditor"

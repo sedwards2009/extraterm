@@ -20,6 +20,7 @@ import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js"
 import { BulkFile } from "./bulk_file_handling/BulkFile.js";
 import { Block } from "./terminal/Block.js";
 import { BlockRegistry } from "./extension/BlockRegistry.js";
+import { SettingsTabRegistry } from "./extension/SettingsTabRegistry.js";
 
 
 export interface CommandQueryOptions {
@@ -73,7 +74,7 @@ export interface ExtensionManager {
 
 //   onCommandsChanged: ExtensionApi.Event<void>;
 //   commandRegistrationChanged(): void;
-  createExtensionBlock(terminal: Terminal, mimeType: string, bulkFile: BulkFile): Block;
+  createExtensionBlockWithBulkFile(terminal: Terminal, mimeType: string, bulkFile: BulkFile): Block;
 
   createTabTitleWidgets(terminal: Terminal): QWidget[];
   createSessionEditor(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration): InternalSessionEditor;
@@ -105,6 +106,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
   tabTitleWidgetRegistry: TabTitleWidgetRegistry;
   blockRegistry: BlockRegistry;
+  settingsTabRegistry: SettingsTabRegistry;
 
   getActiveBlock(): ExtensionApi.Block;
   getActiveTerminal(): ExtensionApi.Terminal;

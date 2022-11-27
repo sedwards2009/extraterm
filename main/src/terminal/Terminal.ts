@@ -50,7 +50,7 @@ import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager.js";
 import { ExtensionManager } from "../extension/ExtensionManager.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { CommandLineAction, MouseButtonAction } from "../config/Config.js";
-import { CommandQueryOptions, InternalExtensionContext } from "../InternalTypes.js";
+import { CommandQueryOptions } from "../InternalTypes.js";
 import { BlockFrame } from "./BlockFrame.js";
 import { DecoratedFrame } from "./DecoratedFrame.js";
 import { SpacerFrame } from "./SpacerFrame.js";
@@ -68,7 +68,7 @@ import { DownloadApplicationModeHandler } from "./DownloadApplicationModeHandler
 import { BulkFileStorage } from "../bulk_file_handling/BulkFileStorage.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
-import { ExtensionBlockImpl } from "../extension/api/ExtensionBlockImpl.js";
+import { Block } from "./Block.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -1312,14 +1312,23 @@ export class Terminal implements Tab, Disposable {
     const isDownload = bulkFile.getMetadata()["download"] === "true";
     const {mimeType, charset} = BulkFileUtils.guessMimetype(bulkFile);
     const blockMimeType = mimeType == null || isDownload ? "application/octet-stream" : mimeType;
-    this.#appendExtensionBlock(blockMimeType, bulkFile);
+    this.#appendExtensionBlockWithBulkFile(blockMimeType, bulkFile);
   }
 
-  #appendExtensionBlock(blockMimeType: string, bulkFile: BulkFile): void {
+  appendExtensionBlockByName(extensionName: string, blockName: string, args?: any): BlockFrame {
+    const newExtensionBlock = this.#extensionManager.createExtensionBlockByName(this, extensionName, blockName, args);
+    return this.#appendExtensionBlock(newExtensionBlock);
+  }
+
+  #appendExtensionBlockWithBulkFile(blockMimeType: string, bulkFile: BulkFile): void {
+    const newExtensionBlock = this.#extensionManager.createExtensionBlockWithBulkFile(this, blockMimeType, bulkFile);
+    this.#appendExtensionBlock(newExtensionBlock);
+  }
+
+  #appendExtensionBlock(newExtensionBlock: Block): BlockFrame {
     this.#closeLastTerminalFrame();
 
     const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
-    const newExtensionBlock = this.#extensionManager.createExtensionBlock(this, blockMimeType, bulkFile);
     decoratedFrame.setBlock(newExtensionBlock);
 
     this.appendBlockFrame(decoratedFrame);
@@ -1327,6 +1336,7 @@ export class Terminal implements Tab, Disposable {
     const latestTerminalBlock = this.#createFramedTerminalBlock();
     this.appendBlockFrame(latestTerminalBlock);
     this.#lastCommandTerminalViewer = latestTerminalBlock;
+    return decoratedFrame;
   }
 
   getFrameContents(frameId: number): BulkFile {

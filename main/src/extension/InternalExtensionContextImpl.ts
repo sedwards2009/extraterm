@@ -27,7 +27,7 @@ import { WorkspaceSessionSettingsEditorRegistry } from "./WorkspaceSessionSettin
 import { TabTitleWidgetRegistry } from "./TabTitleWidgetRegistry.js";
 import { BlockRegistry } from "./BlockRegistry.js";
 import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
-import { TerminalBlock } from "../terminal/TerminalBlock.js";
+import { SettingsTabRegistry } from "./SettingsTabRegistry.js";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -42,6 +42,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   sessionSettingsEditorRegistry: WorkspaceSessionSettingsEditorRegistry;
   tabTitleWidgetRegistry: TabTitleWidgetRegistry;
   blockRegistry: BlockRegistry;
+  settingsTabRegistry: SettingsTabRegistry;
 
   extensionMetadata: ExtensionMetadata;
 
@@ -70,6 +71,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     this.tabTitleWidgetRegistry = new TabTitleWidgetRegistry(extensionMetadata);
     this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, applicationVersion);
     this.blockRegistry = new BlockRegistry(this, extensionMetadata);
+    this.settingsTabRegistry = new SettingsTabRegistry(this, extensionMetadata);
   }
 
   getActiveBlock(): ExtensionApi.Block {

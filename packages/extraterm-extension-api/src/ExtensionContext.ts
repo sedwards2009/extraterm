@@ -11,6 +11,7 @@ import { Logger } from "./Logger.js";
 import { Window, Windows } from "./Windows.js";
 import { Terminal, Terminals } from "./Terminal.js";
 import { Block } from "./Block.js";
+import { SettingsTab } from "./Settings.js";
 
 
 /**
@@ -89,6 +90,8 @@ export interface Configuration {
   set(config: any): void;
 }
 
+export type SettingsTabFactory = (extensionTab: SettingsTab) => void;
+
 /**
  * Access to the Extraterm extension API
  *
@@ -137,6 +140,8 @@ export interface ExtensionContext {
   readonly terminals: Terminals;
 
   readonly windows: Windows;
+
+  registerSettingsTab(name: string, factory: SettingsTabFactory): void;
 }
 
 /**

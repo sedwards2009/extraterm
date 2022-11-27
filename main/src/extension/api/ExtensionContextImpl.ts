@@ -110,4 +110,8 @@ export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, Exte
   get windows(): ExtensionApi.Windows {
     return this.#windows;
   }
+
+  registerSettingsTab(name: string, factory: ExtensionApi.SettingsTabFactory): void {
+    this.#internalExtensionContext.settingsTabRegistry.registerSettingsTab(name, factory);
+  }
 }
