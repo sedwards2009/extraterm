@@ -14,6 +14,7 @@ import { ExtensionManager } from "../InternalTypes.js";
 import { createHtmlIcon } from "../ui/Icons.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { makeLinkLabel, makeSubTabBar } from "../ui/QtConstructExtra.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 enum SubPage {
   ALL_EXTENSIONS = 0,
@@ -26,7 +27,7 @@ interface MenuPair {
 }
 
 
-export class ExtensionsPage {
+export class ExtensionsPage implements SettingsPageType {
   private _log: Logger = null;
   #extensionManager: ExtensionManager = null;
   #uiStyle: UiStyle = null;
@@ -39,6 +40,14 @@ export class ExtensionsPage {
     this._log = getLogger("ExtensionsPage", this);
     this.#extensionManager = extensionManager;
     this.#uiStyle = uiStyle;
+  }
+
+  getIconName(): string {
+    return "fa-puzzle-piece";
+  }
+
+  getMenuText(): string {
+    return "Extensions";
   }
 
   getPage(): QWidget {

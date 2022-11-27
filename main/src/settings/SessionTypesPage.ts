@@ -18,9 +18,10 @@ import { createHtmlIcon } from "../ui/Icons.js";
 import { HoverPushButton, makeSubTabBar } from "../ui/QtConstructExtra.js";
 import { ExtensionManager, SessionConfigurationChange, SessionSettingsChange } from "../InternalTypes.js";
 import { Window } from "../Window.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 
-export class SessionTypesPage {
+export class SessionTypesPage implements SettingsPageType {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
 
@@ -46,6 +47,14 @@ export class SessionTypesPage {
     this.#uiStyle = uiStyle;
 
     this.#sessionConfig = this.#configDatabase.getSessionConfigCopy();
+  }
+
+  getIconName(): string {
+    return "fa-terminal";
+  }
+
+  getMenuText(): string {
+    return "Session Types";
   }
 
   getPage(): QScrollArea {

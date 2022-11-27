@@ -11,15 +11,24 @@ import { createHtmlIcon } from "../ui/Icons.js";
 import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { GeneralConfig, MouseButtonAction } from "../config/Config.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 
-export class GeneralPage {
+export class GeneralPage implements SettingsPageType {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle) {
     this._log = getLogger("GeneralPage", this);
     this.#configDatabase = configDatabase;
+  }
+
+  getIconName(): string {
+    return "fa-sliders-h";
+  }
+
+  getMenuText(): string {
+    return "General";
   }
 
   getPage(): QScrollArea {

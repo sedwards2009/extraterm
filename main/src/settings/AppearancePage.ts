@@ -21,6 +21,7 @@ import * as Term from "../emulator/Term.js";
 import { QtTimeout } from "../utils/QtTimeout.js";
 import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 
 const uiScalePercentOptions: {id: number, name: string}[] = [
@@ -48,7 +49,7 @@ const titleBarOptions: {id: TitleBarStyle, name: string}[] = [
 const PREVIEW_WIDTH_CELLS = 45;
 
 
-export class AppearancePage {
+export class AppearancePage implements SettingsPageType {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
   #themeManager: ThemeManager = null;
@@ -78,6 +79,14 @@ export class AppearancePage {
     this.#themeManager = themeManager;
     this.#uiStyle = uiStyle;
     this.#fontAtlasCache = fontAtlasCache;
+  }
+
+  getIconName(): string {
+    return "fa-paint-brush";
+  }
+
+  getMenuText(): string {
+    return "Appearance";
   }
 
   getPage(): QScrollArea {

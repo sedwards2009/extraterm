@@ -16,6 +16,7 @@ import { UiStyle } from "../ui/UiStyle.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { HoverPushButton, makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra.js";
 import { CommandLineAction, CommandLineActionMatchType, FrameRule } from "../config/Config.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 
 const frameActionOptions: {id: FrameRule, name: string}[] = [
@@ -24,7 +25,7 @@ const frameActionOptions: {id: FrameRule, name: string}[] = [
   { id: "frame_if_lines", name: "Frame command output if longer than" },
 ];
 
-export class FramesPage {
+export class FramesPage implements SettingsPageType {
   private _log: Logger = null;
 
   #uiStyle: UiStyle = null;
@@ -39,6 +40,14 @@ export class FramesPage {
     this._log = getLogger("FramesPage", this);
     this.#configDatabase = configDatabase;
     this.#uiStyle = uiStyle;
+  }
+
+  getIconName(): string {
+    return "fa-window-maximize";
+  }
+
+  getMenuText(): string {
+    return "Frames";
   }
 
   getPage(): QScrollArea {

@@ -24,6 +24,7 @@ import { KeybindingsIOManager } from "../keybindings/KeybindingsIOManager.js";
 import { Window } from "../Window.js";
 import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 
 export class SettingsTab implements Tab {
@@ -36,12 +37,8 @@ export class SettingsTab implements Tab {
   #terminalVisualConfig: TerminalVisualConfig = null;
   #parent: any = null;
 
-  #generalPage: GeneralPage = null;
-  #appearancePage: AppearancePage = null;
-  #sessionTypesPage: SessionTypesPage = null;
-  #keybindingsPage: KeybindingsPage = null;
-  #framesPage: FramesPage = null;
-  #extensionsPage: ExtensionsPage = null;
+  #pages: SettingsPageType[] = [];
+
   #contentWidget: QWidget = null;
 
   #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
@@ -60,18 +57,17 @@ export class SettingsTab implements Tab {
     this.#themeManager = themeManager;
     this.#keybindingsIOManager = keybindingsIOManager;
 
-    this.#generalPage = new GeneralPage(this.#configDatabase, uiStyle);
-    this.#appearancePage = new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
-      uiStyle, fontAtlasCache);
-    this.#sessionTypesPage = new SessionTypesPage(this.#configDatabase, this.#extensionManager, window, uiStyle);
-    this.#keybindingsPage = new KeybindingsPage(this.#configDatabase, this.#extensionManager,
-      this.#keybindingsIOManager, uiStyle);
-    this.#framesPage = new FramesPage(configDatabase, uiStyle);
-    this.#extensionsPage = new ExtensionsPage(this.#extensionManager, uiStyle);
+    this.#pages.push(new GeneralPage(this.#configDatabase, uiStyle));
+    this.#pages.push(new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
+      uiStyle, fontAtlasCache));
+    this.#pages.push(new SessionTypesPage(this.#configDatabase, this.#extensionManager, window, uiStyle));
+    this.#pages.push(new KeybindingsPage(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager, uiStyle));
+    this.#pages.push(new FramesPage(configDatabase, uiStyle));
+    this.#pages.push(new ExtensionsPage(this.#extensionManager, uiStyle));
     this.#createUI(uiStyle);
   }
 
-  dispose(): void {   
+  dispose(): void {
   }
 
   setParent(parent: any): void {
@@ -117,7 +113,11 @@ export class SettingsTab implements Tab {
 
   setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void {
     this.#terminalVisualConfig = terminalVisualConfig;
-    this.#appearancePage.setTerminalVisualConfig(this.#terminalVisualConfig);
+    for (const page of this.#pages) {
+      if (hasSetTerminalVisualConfig(page)) {
+        page.setTerminalVisualConfig(this.#terminalVisualConfig);
+      }
+    }
   }
 
   #createUI(uiStyle: UiStyle): void {
@@ -142,14 +142,13 @@ export class SettingsTab implements Tab {
           {widget:
             ListWidget({
               cssClass: ["settings-menu"],
-              items: [
-                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-sliders-h"), text: "General", selected: true}),
-                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-paint-brush"), text: "Appearance"}),
-                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-terminal"), text: "Session Types"}),
-                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-keyboard"), text: "Keybindings"}),
-                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-window-maximize"), text: "Frames"}),
-                ListWidgetItem({icon: uiStyle.getSettingsMenuIcon("fa-puzzle-piece"), text: "Extensions"}),
-              ],
+              items: this.#pages.map((p, index) =>
+                ListWidgetItem({
+                  icon: uiStyle.getSettingsMenuIcon(p.getIconName()),
+                  text: p.getMenuText(),
+                  selected: index === 0
+                })
+              ),
               currentRow: 0,
               onCurrentRowChanged: (row) => {
                 showPage(row);
@@ -171,19 +170,14 @@ export class SettingsTab implements Tab {
   }
 
   #createPage(index: number): QWidget {
-    switch (index) {
-      case 0:
-        return this.#generalPage.getPage();
-      case 1:
-        return this.#appearancePage.getPage();
-      case 2:
-        return this.#sessionTypesPage.getPage();
-      case 3:
-        return this.#keybindingsPage.getPage();
-      case 4:
-        return this.#framesPage.getPage();
-      default:
-        return this.#extensionsPage.getPage();
-    }
+    return this.#pages[index].getPage();
   }
+}
+
+interface TerminalVisualConfigSetter {
+  setTerminalVisualConfig(terminalVisualConfig: TerminalVisualConfig): void;
+}
+
+function hasSetTerminalVisualConfig(page: any): page is TerminalVisualConfigSetter {
+  return page["setTerminalVisualConfig"] !== undefined;
 }
