@@ -80,6 +80,7 @@ export interface ExtensionBlockContribution {
 export interface ExtensionSettingsTabContribution {
   readonly name: string;
   readonly icon?: string;
+  readonly title: string;
 }
 
 export interface ExtensionSessionEditorContribution {

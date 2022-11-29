@@ -26,7 +26,7 @@ export interface Commands {
    * @param args arguments for the command.
    * @returns an optional return value.
    */
-  executeCommand<T>(name: string, args: any): Promise<T> | null;
+  executeCommand<T>(name: string, args?: any): Promise<T> | null;
 
   /**
    * A list of all available commands.

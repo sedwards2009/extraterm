@@ -55,9 +55,6 @@ export class GeneralPage implements SettingsPageType {
             GridLayout({
               columns: 2,
               children: [
-                "Show Tips:",
-                shrinkWrap(ComboBox({items: ["Every time", "Daily", "Never"]})),
-
                 "Max. Scrollback Lines:",
                 makeGroupLayout(
                   SpinBox({

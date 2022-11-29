@@ -33,7 +33,8 @@
     ],
     "settingsTabs": [
       {
-        "name": "Tips",
+        "name": "tips-config",
+        "title": "Tips",
         "icon": "fa-lightbulb"
       }
     ]

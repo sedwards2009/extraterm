@@ -20,7 +20,7 @@ export class SettingsTabRegistry {
 
   #internalExtensionContext: InternalExtensionContext;
   #extensionMetadata: ExtensionMetadata;
-  #settingsTabTypes: LoadedSettingsTabContribution[] = [];
+  #contributions: LoadedSettingsTabContribution[] = [];
 
   constructor(internalExtensionContext: InternalExtensionContext, extensionMetadata: ExtensionMetadata) {
     this._log = getLogger("BlockRegistry", this);
@@ -31,7 +31,7 @@ export class SettingsTabRegistry {
   registerSettingsTab(name: string, factory: ExtensionApi.SettingsTabFactory): void {
     for (const metadata of this.#extensionMetadata.contributes.settingsTabs) {
       if (metadata.name === name) {
-        this.#settingsTabTypes.push({
+        this.#contributions.push({
           metadata: metadata,
           factory: factory
         });
@@ -42,5 +42,9 @@ export class SettingsTabRegistry {
     this._log.warn(`Unable to register settings tab '${name}' for extension ` +
       `'${this.#extensionMetadata.name}' because the settings tab contribution data ` +
       `couldn't be found in the extension's package.json file.`);
+  }
+
+  getSettingsTabContributions(): LoadedSettingsTabContribution[] {
+    return [...this.#contributions];
   }
 }

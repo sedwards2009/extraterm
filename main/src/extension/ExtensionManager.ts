@@ -33,6 +33,7 @@ import { TerminalBlock } from "../terminal/TerminalBlock.js";
 import { Block } from "../terminal/Block.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
+import { LoadedSettingsTabContribution } from "./SettingsTabRegistry.js";
 
 
 interface ActiveExtension {
@@ -841,5 +842,13 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return Promise.reject();
     }
     return this.#listPickerPopOver.show(win, {...options, aroundRect: geo});
+  }
+
+  getSettingsTabContributions(): LoadedSettingsTabContribution[] {
+    return _.flatten(
+      this.#activeExtensions.map(activeExtension => {
+        return activeExtension.internalExtensionContext.settingsTabRegistry.getSettingsTabContributions();
+      })
+    );
   }
 }

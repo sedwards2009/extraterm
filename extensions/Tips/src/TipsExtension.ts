@@ -9,11 +9,12 @@ import {
   ExtensionContext,
   IconName,
   Logger,
+  SettingsTab,
   Style,
   Terminal,
 } from '@extraterm/extraterm-extension-api';
 import { AlignmentFlag, Direction, QLabel, QSizePolicyPolicy, TextFormat } from '@nodegui/nodegui';
-import { BoxLayout, Label, PushButton, Widget } from "qt-construct";
+import { BoxLayout, ComboBox, Label, PushButton, Widget } from "qt-construct";
 import * as path from "node:path";
 import * as fs from "node:fs";
 
@@ -27,6 +28,7 @@ export function activate(_context: ExtensionContext): any {
   log = context.logger;
 
   context.terminals.registerBlock("tip-block", newTipBlock);
+  context.registerSettingsTab("tips-config", settingsTab);
 
   context.terminals.onDidCreateTerminal((newTerminal: Terminal) => {
     newTerminal.appendBlock("tip-block", newTerminal);
@@ -68,15 +70,24 @@ function loadTipsData(): void {
   }
 }
 
+
+type Frequency = "every" | "daily" | "never";
+
+const FrequencyValues: readonly Frequency[] = ["every", "daily", "never"];
+const FrequencyLabels: string[] = ["Every time", "Daily", "Never"];
+
+
 interface TipConfig {
   index: number;
+  frequency: Frequency;
 }
 
 function getConfig(): TipConfig {
   let config = <TipConfig> context.configuration.get();
   if (config == null) {
     config = {
-      index: 0
+      index: 0,
+      frequency: "every"
     };
   }
   return config;
@@ -115,17 +126,16 @@ function newTipBlock(extensionBlock: ExtensionBlock, newTerminal: Terminal): voi
   extensionBlock.contentWidget = Widget({
     cssClass: ["background"],
     sizePolicy: {
-      horizontal: QSizePolicyPolicy.Fixed,
+      horizontal: QSizePolicyPolicy.Expanding,
       vertical: QSizePolicyPolicy.Minimum,
     },
-    minimumWidth: 1000,
-    maximumWidth: 1000,
-
     layout: BoxLayout({
       direction: Direction.TopToBottom,
       children: [
         {
           widget: contentsLabel = Label({
+            minimumWidth: 1000,
+            maximumWidth: 1000,
             alignment: AlignmentFlag.AlignTop | AlignmentFlag.AlignLeft,
             textFormat: TextFormat.RichText,
             wordWrap: true,
@@ -160,7 +170,14 @@ function newTipBlock(extensionBlock: ExtensionBlock, newTerminal: Terminal): voi
                 {
                   widget: Widget({}),
                   stretch: 1
-                }
+                },
+                PushButton({
+                  icon: style.createQIcon("fa-cog"),
+                  cssClass: ["small", "quiet"],
+                  onClicked: () => {
+                    context.commands.executeCommand("extraterm:window.openSettings", { select: "tips:tip-config" });
+                  }
+                })
               ]
             })
           }),
@@ -195,4 +212,31 @@ function formatTip(tip: Tip, style: Style): string {
     }
   }
   return style.htmlStyleTag + textLines.join("");
+}
+
+
+function settingsTab(extensionTab: SettingsTab): void {
+  const frequency = getConfig().frequency;
+  extensionTab.contentWidget = Widget({
+    layout: BoxLayout({
+      direction: Direction.LeftToRight,
+      children: [
+        "Show Tips:",
+        ComboBox({
+          items: FrequencyLabels,
+          currentIndex: FrequencyValues.indexOf(frequency),
+          onCurrentTextChanged: (newText: string) => {
+            const frequency = FrequencyValues[FrequencyLabels.indexOf(newText)];
+            modifyConfig(config => {
+              config.frequency = frequency;
+            });
+          }
+        }),
+        {
+          widget: Widget({}),
+          stretch: 1
+        }
+      ]
+    })
+  });
 }

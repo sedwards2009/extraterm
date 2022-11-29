@@ -225,6 +225,7 @@ class PackageParser {
   #parseSettingsTabConstributionJson(packageJson: JsonNode): ExtensionSettingsTabContribution {
     const knownKeys: (keyof ExtensionSettingsTabContribution)[] = [
       "name",
+      "title",
       "icon",
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
@@ -232,6 +233,7 @@ class PackageParser {
     return {
       name: getJsonStringField(packageJson, "name"),
       icon: getJsonStringField(packageJson, "icon", null),
+      title: getJsonStringField(packageJson, "title"),
     };
   }
 

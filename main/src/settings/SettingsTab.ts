@@ -25,6 +25,7 @@ import { Window } from "../Window.js";
 import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
 import { SettingsPageType } from "./SettingsPageType.js";
+import { ExtensionHolderPage } from "./ExtensionHolderPage.js";
 
 
 export class SettingsTab implements Tab {
@@ -36,6 +37,9 @@ export class SettingsTab implements Tab {
   #keybindingsIOManager: KeybindingsIOManager = null;
   #terminalVisualConfig: TerminalVisualConfig = null;
   #parent: any = null;
+  #uiStyle: UiStyle = null;
+  #fontAtlasCache: FontAtlasCache = null;
+  #window: Window = null;
 
   #pages: SettingsPageType[] = [];
 
@@ -56,15 +60,29 @@ export class SettingsTab implements Tab {
     this.#extensionManager = extensionManager;
     this.#themeManager = themeManager;
     this.#keybindingsIOManager = keybindingsIOManager;
+    this.#uiStyle = uiStyle;
+    this.#window = window;
+    this.#fontAtlasCache = fontAtlasCache;
 
-    this.#pages.push(new GeneralPage(this.#configDatabase, uiStyle));
-    this.#pages.push(new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
-      uiStyle, fontAtlasCache));
-    this.#pages.push(new SessionTypesPage(this.#configDatabase, this.#extensionManager, window, uiStyle));
-    this.#pages.push(new KeybindingsPage(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager, uiStyle));
-    this.#pages.push(new FramesPage(configDatabase, uiStyle));
-    this.#pages.push(new ExtensionsPage(this.#extensionManager, uiStyle));
+    this.#pages = this.#createPages();
     this.#createUI(uiStyle);
+  }
+
+  #createPages(): SettingsPageType[] {
+    const result: SettingsPageType[] =  [];
+    result.push(new GeneralPage(this.#configDatabase, this.#uiStyle));
+    result.push(new AppearancePage(this.#configDatabase, this.#extensionManager, this.#themeManager,
+      this.#uiStyle, this.#fontAtlasCache));
+    result.push(new SessionTypesPage(this.#configDatabase, this.#extensionManager, this.#window, this.#uiStyle));
+    result.push(new KeybindingsPage(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
+      this.#uiStyle));
+    result.push(new FramesPage(this.#configDatabase, this.#uiStyle));
+    result.push(new ExtensionsPage(this.#extensionManager, this.#uiStyle));
+
+    for (const contrib of this.#extensionManager.getSettingsTabContributions()) {
+      result.push(new ExtensionHolderPage(contrib, this.#uiStyle));
+    }
+    return result;
   }
 
   dispose(): void {

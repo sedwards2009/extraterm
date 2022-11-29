@@ -20,7 +20,7 @@ import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js"
 import { BulkFile } from "./bulk_file_handling/BulkFile.js";
 import { Block } from "./terminal/Block.js";
 import { BlockRegistry } from "./extension/BlockRegistry.js";
-import { SettingsTabRegistry } from "./extension/SettingsTabRegistry.js";
+import { LoadedSettingsTabContribution, SettingsTabRegistry } from "./extension/SettingsTabRegistry.js";
 
 
 export interface CommandQueryOptions {
@@ -44,15 +44,11 @@ export interface ExtensionManager {
   getAllWindows(): Window[];
   getWindowForTab(tab: Tab): Window;
 
-//   onStateChanged: ExtensionApi.Event<void>;
   onDesiredStateChanged: ExtensionApi.Event<void>;
 
-//   isExtensionRunning(name: string):boolean;
   enableExtension(name: string): void;
   disableExtension(name: string): void;
   isExtensionEnabled(name: string): boolean;
-
-//   extensionUiUtils: ExtensionUiUtils;
 
   getExtensionContextByName(name: string): InternalExtensionContext;
 
@@ -66,14 +62,6 @@ export interface ExtensionManager {
   executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
 
   copyExtensionWindowState(): CommonExtensionWindowState;
-//   getExtensionWindowStateFromEvent(ev: Event): CommonExtensionWindowState;
-//   refocus(state: CommonExtensionWindowState): void;
-
-//   newTerminalCreated(newTerminal: EtTerminal, allTerminals: EtTerminal[]): void;
-//   terminalDestroyed(deadTerminal: EtTerminal, allTerminals: EtTerminal[]): void;
-
-//   onCommandsChanged: ExtensionApi.Event<void>;
-//   commandRegistrationChanged(): void;
   createExtensionBlockWithBulkFile(terminal: Terminal, mimeType: string, bulkFile: BulkFile): Block;
 
   createTabTitleWidgets(terminal: Terminal): QWidget[];
@@ -82,6 +70,7 @@ export interface ExtensionManager {
     window: Window): InternalSessionSettingsEditor[];
   showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
   showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number>;
+  getSettingsTabContributions(): LoadedSettingsTabContribution[];
 }
 
 export interface ProxyFactory {
