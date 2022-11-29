@@ -50,6 +50,10 @@ export class FramesPage implements SettingsPageType {
     return "Frames";
   }
 
+  getName(): string {
+    return null;
+  }
+
   getPage(): QScrollArea {
     const generalConfig = this.#configDatabase.getGeneralConfig();
 

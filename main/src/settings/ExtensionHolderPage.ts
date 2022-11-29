@@ -41,6 +41,12 @@ export class ExtensionHolderPage implements SettingsPageType {
     return this.#contribution.metadata.title;
   }
 
+  getName(): string {
+    const extensionName = this.#contribution.internalExtensionContext.extensionMetadata.name;
+console.log(`${extensionName}:${this.#contribution.metadata.name}`);
+    return `${extensionName}:${this.#contribution.metadata.name}`;
+  }
+
   getPage(): QWidget {
     if (this.#page != null) {
       return this.#page;

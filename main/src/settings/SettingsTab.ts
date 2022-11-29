@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { Direction, QStackedWidget, QWidget } from "@nodegui/nodegui";
+import { Direction, QListWidget, QStackedWidget, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ListWidget, ListWidgetItem, StackedWidget, Widget } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -44,6 +44,7 @@ export class SettingsTab implements Tab {
   #pages: SettingsPageType[] = [];
 
   #contentWidget: QWidget = null;
+  #pagesWidget: QListWidget = null;
 
   #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
   onWindowTitleChanged: Event<string> = null;
@@ -158,7 +159,7 @@ export class SettingsTab implements Tab {
         contentsMargins: [0, 0, 0, 0],
         children: [
           {widget:
-            ListWidget({
+            this.#pagesWidget = ListWidget({
               cssClass: ["settings-menu"],
               items: this.#pages.map((p, index) =>
                 ListWidgetItem({
@@ -189,6 +190,15 @@ export class SettingsTab implements Tab {
 
   #createPage(index: number): QWidget {
     return this.#pages[index].getPage();
+  }
+
+  selectPageByName(name: string): void {
+    for (let i=0; i<this.#pages.length; i++) {
+      if (this.#pages[i].getName() === name) {
+        this.#pagesWidget.setCurrentRow(i);
+        break;
+      }
+    }
   }
 }
 

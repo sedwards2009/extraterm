@@ -57,6 +57,10 @@ export class SessionTypesPage implements SettingsPageType {
     return "Session Types";
   }
 
+  getName(): string {
+    return null;
+  }
+
   getPage(): QScrollArea {
     this.#page = ScrollArea({
       cssClass: "settings-tab",

@@ -56,6 +56,9 @@ const IPC_FILENAME = "ipc.run";
 
 const PACKAGE_JSON_PATH = "../../package.json";
 
+interface OpenSettingsArgs {
+  select?: string;
+}
 
 /**
  * Main.
@@ -324,7 +327,7 @@ class Main {
     commands.registerCommand("extraterm:application.openCommandPalette", () => this.commandOpenCommandPalette());
     commands.registerCommand("extraterm:application.newWindow", () => this.commandNewWindow());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
-    commands.registerCommand("extraterm:window.openSettings", () => this.commandOpenSettings());
+    commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettings(args));
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
@@ -636,12 +639,18 @@ class Main {
     tab.dispose();
   }
 
-  commandOpenSettings(): void {
+  commandOpenSettings(args: any): void {
     const window = this.#extensionManager.getActiveWindow();
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#themeManager,
         this.#keybindingsIOManager, window, this.#uiStyle, this.#fontAtlasCache);
     }
+
+    const openSettingsArgs: OpenSettingsArgs = args;
+    if (openSettingsArgs.select !== undefined) {
+      this.#settingsTab.selectPageByName(openSettingsArgs.select);
+    }
+
     for (const win of this.#windows) {
       if (win.hasTab(this.#settingsTab)) {
         win.focus();

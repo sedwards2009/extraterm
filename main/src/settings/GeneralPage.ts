@@ -31,6 +31,10 @@ export class GeneralPage implements SettingsPageType {
     return "General";
   }
 
+  getName(): string {
+    return null;
+  }
+
   getPage(): QScrollArea {
     const updateGeneralConfig = (func: (generalConfig: GeneralConfig) => void): void => {
       const generalConfig = this.#configDatabase.getGeneralConfigCopy();

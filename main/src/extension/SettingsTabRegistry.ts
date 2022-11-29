@@ -11,6 +11,7 @@ import { InternalExtensionContext } from "../InternalTypes.js";
 
 export interface LoadedSettingsTabContribution {
   metadata: ExtensionSettingsTabContribution;
+  internalExtensionContext: InternalExtensionContext;
   factory: ExtensionApi.SettingsTabFactory;
 }
 
@@ -33,6 +34,7 @@ export class SettingsTabRegistry {
       if (metadata.name === name) {
         this.#contributions.push({
           metadata: metadata,
+          internalExtensionContext: this.#internalExtensionContext,
           factory: factory
         });
         return;

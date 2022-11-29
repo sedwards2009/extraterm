@@ -10,4 +10,5 @@ export interface SettingsPageType {
   getIconName(): string;
   getMenuText(): string;
   getPage(): QWidget;
+  getName(): string;
 }

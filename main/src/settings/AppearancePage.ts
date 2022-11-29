@@ -89,6 +89,10 @@ export class AppearancePage implements SettingsPageType {
     return "Appearance";
   }
 
+  getName(): string {
+    return null;
+  }
+
   getPage(): QScrollArea {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     const systemConfig = this.#configDatabase.getSystemConfig();

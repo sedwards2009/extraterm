@@ -96,6 +96,10 @@ export class KeybindingsPage implements SettingsPageType {
     return "Keybindings";
   }
 
+  getName(): string {
+    return null;
+  }
+
   getPage(): QScrollArea {
     const config = this.#configDatabase.getGeneralConfig();
     const currentStyleIndex = keybindingStyles.map(ks => ks.id).indexOf(config.keybindingsName);

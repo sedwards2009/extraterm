@@ -175,7 +175,7 @@ function newTipBlock(extensionBlock: ExtensionBlock, newTerminal: Terminal): voi
                   icon: style.createQIcon("fa-cog"),
                   cssClass: ["small", "quiet"],
                   onClicked: () => {
-                    context.commands.executeCommand("extraterm:window.openSettings", { select: "tips:tip-config" });
+                    context.commands.executeCommand("extraterm:window.openSettings", { select: "tips:tips-config" });
                   }
                 })
               ]

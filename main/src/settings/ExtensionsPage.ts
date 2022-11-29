@@ -50,6 +50,10 @@ export class ExtensionsPage implements SettingsPageType {
     return "Extensions";
   }
 
+  getName(): string {
+    return null;
+  }
+
   getPage(): QWidget {
     this.#topLevelStack = StackedWidget({
       children: [
