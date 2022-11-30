@@ -22,6 +22,8 @@ import * as fs from "node:fs";
 let log: Logger = null;
 let context: ExtensionContext = null;
 
+const MILLIS_PER_DAY = 1000 * 60 * 60 * 24;
+
 
 export function activate(_context: ExtensionContext): any {
   context = _context;
@@ -30,9 +32,26 @@ export function activate(_context: ExtensionContext): any {
   context.terminals.registerBlock("tip-block", newTipBlock);
   context.registerSettingsTab("tips-config", settingsTab);
 
-  context.terminals.onDidCreateTerminal((newTerminal: Terminal) => {
-    newTerminal.appendBlock("tip-block", newTerminal);
+  context.terminals.onDidCreateTerminal(handleNewTerminal);
+}
+
+function handleNewTerminal(newTerminal: Terminal): void {
+  const config = getConfig();
+  switch (config.frequency) {
+    case "every":
+      break;
+    case "never":
+      return;
+    case "daily":
+      if ( (Date.now() - config.timestamp) < MILLIS_PER_DAY) {
+        return;
+      }
+  }
+  modifyConfig((config) => {
+    config.timestamp = Date.now();
   });
+
+  newTerminal.appendBlock("tip-block", newTerminal);
 }
 
 interface TipIcon {
@@ -80,6 +99,7 @@ const FrequencyLabels: string[] = ["Every time", "Daily", "Never"];
 interface TipConfig {
   index: number;
   frequency: Frequency;
+  timestamp: number;
 }
 
 function getConfig(): TipConfig {
@@ -87,7 +107,8 @@ function getConfig(): TipConfig {
   if (config == null) {
     config = {
       index: 0,
-      frequency: "every"
+      frequency: "every",
+      timestamp: Date.now()
     };
   }
   return config;
