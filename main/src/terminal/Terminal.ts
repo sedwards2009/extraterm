@@ -1024,8 +1024,8 @@ export class Terminal implements Tab, Disposable {
   }
 
   pasteText(text: string): void {
-    if (this.#pty != null) {
-      this.#pty.write(text);
+    if (this.#emulator != null) {
+      this.#emulator.pasteText(text);
     }
   }
 
