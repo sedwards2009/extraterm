@@ -2360,13 +2360,14 @@ export class Emulator implements EmulatorApi {
       return;
     }
 
+    const fixedEndingText = text.replace(/\x0a/g, "\r");
     if (this._bracketedPaste) {
       this.send("\x1b[200~");
-      const cleanText = text.replace(/\x1b[[]201~/g, "");
+      const cleanText = fixedEndingText.replace(/\x1b[[]201~/g, "");
       this.send(cleanText);
       this.send("\x1b[201~");
     } else {
-      this.send(text);
+      this.send(fixedEndingText);
     }
   }
 
