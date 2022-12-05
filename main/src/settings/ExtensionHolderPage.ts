@@ -14,23 +14,32 @@ import {
 import { BoxLayout, Label, ScrollArea, Widget } from "qt-construct";
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 
+import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { LoadedSettingsTabContribution } from "../extension/SettingsTabRegistry.js";
 import { createHtmlIcon } from "../ui/Icons.js";
 import { SettingsPageType } from "./SettingsPageType.js";
 import { UiStyle } from "../ui/UiStyle.js";
+import { StyleImpl } from "../extension/api/StyleImpl.js";
+import { Window } from "../Window.js";
 
 
 export class ExtensionHolderPage implements SettingsPageType {
 
-  #contribution: LoadedSettingsTabContribution;
-  #uiStyle: UiStyle = null;
+  #contribution: LoadedSettingsTabContribution = null;
+  #configDatabase: ConfigDatabase = null;
+  #window: Window = null;
+  uiStyle: UiStyle = null;
   #page: QScrollArea = null;
   #containerLayout: QBoxLayout = null;
   #extensionWidget: QWidget = null;
 
-  constructor(contribution: LoadedSettingsTabContribution, uiStyle: UiStyle) {
+  constructor(contribution: LoadedSettingsTabContribution, configDatabase: ConfigDatabase, window: Window,
+      uiStyle: UiStyle) {
+
     this.#contribution = contribution;
-    this.#uiStyle = uiStyle;
+    this.#configDatabase = configDatabase;
+    this.#window = window;
+    this.uiStyle = uiStyle;
   }
 
   getIconName(): string {
@@ -75,7 +84,7 @@ console.log(`${extensionName}:${this.#contribution.metadata.name}`);
         })
       })
     });
-    const settingsTab = new SettingsTabImpl(this);
+    const settingsTab = new SettingsTabImpl(this, this.#configDatabase, this.#window);
     this.#contribution.factory(settingsTab);
 
     return this.#page;
@@ -90,15 +99,22 @@ console.log(`${extensionName}:${this.#contribution.metadata.name}`);
   }
 }
 
+
 export class SettingsTabImpl implements ExtensionApi.SettingsTab {
 
   #holderPage: ExtensionHolderPage;
+  #style: ExtensionApi.Style = null;
 
-  constructor(holderPage: ExtensionHolderPage) {
+  constructor(holderPage: ExtensionHolderPage, configDatabase: ConfigDatabase, window: Window) {
     this.#holderPage = holderPage;
+    this.#style = new StyleImpl(configDatabase, window);
   }
 
   set contentWidget(contentWidget: QWidget) {
     this.#holderPage.setContentWidget(contentWidget);
+  }
+
+  get style(): ExtensionApi.Style {
+    return this.#style;
   }
 }

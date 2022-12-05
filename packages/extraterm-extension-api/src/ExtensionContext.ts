@@ -3,15 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event } from "extraterm-event-emitter";
-
 import { Sessions } from "./Sessions.js";
 import { Commands } from "./Commands.js";
 import { Logger } from "./Logger.js";
 import { Window, Windows } from "./Windows.js";
 import { Terminal, Terminals } from "./Terminal.js";
 import { Block } from "./Block.js";
-import { SettingsTab } from "./Settings.js";
+import { Settings } from "./Settings.js";
 
 
 /**
@@ -90,8 +88,6 @@ export interface Configuration {
   set(config: any): void;
 }
 
-export type SettingsTabFactory = (extensionTab: SettingsTab) => void;
-
 /**
  * Access to the Extraterm extension API
  *
@@ -137,11 +133,11 @@ export interface ExtensionContext {
 
   readonly sessions: Sessions;
 
+  readonly settings: Settings;
+
   readonly terminals: Terminals;
 
   readonly windows: Windows;
-
-  registerSettingsTab(name: string, factory: SettingsTabFactory): void;
 }
 
 /**

@@ -28,6 +28,7 @@ import { TabTitleWidgetRegistry } from "./TabTitleWidgetRegistry.js";
 import { BlockRegistry } from "./BlockRegistry.js";
 import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
 import { SettingsTabRegistry } from "./SettingsTabRegistry.js";
+import { ThemeManager } from "./../theme/ThemeManager.js";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -53,7 +54,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
 
   constructor(extensionManager: ExtensionManager, extensionMetadata: ExtensionMetadata, configDatabase: ConfigDatabase,
-      applicationVersion: string) {
+      themeManager: ThemeManager, applicationVersion: string) {
 
     this._log = getLogger(`InternalExtensionContextImpl (${extensionMetadata.name})`);
 
@@ -69,7 +70,8 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     this.sessionSettingsEditorRegistry = new WorkspaceSessionSettingsEditorRegistry(this.#configDatabase,
       extensionMetadata);
     this.tabTitleWidgetRegistry = new TabTitleWidgetRegistry(extensionMetadata);
-    this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, applicationVersion);
+    this.#extensionContext = new ExtensionContextImpl(extensionMetadata, this, configDatabase, themeManager,
+      applicationVersion);
     this.blockRegistry = new BlockRegistry(this, extensionMetadata);
     this.settingsTabRegistry = new SettingsTabRegistry(this, extensionMetadata);
   }

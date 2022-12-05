@@ -30,7 +30,7 @@ export function activate(_context: ExtensionContext): any {
   log = context.logger;
 
   context.terminals.registerBlock("tip-block", newTipBlock);
-  context.registerSettingsTab("tips-config", settingsTab);
+  context.settings.registerSettingsTab("tips-config", settingsTab);
 
   context.terminals.onDidCreateTerminal(handleNewTerminal);
 }

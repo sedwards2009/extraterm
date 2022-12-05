@@ -111,15 +111,18 @@ class Main {
 
     this.#uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
 
+    const themeManager = this.setupThemeManager();
+    this.#themeManager = themeManager;
+
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
-    const extensionManager = await this.setupExtensionManager(configDatabase, this.#uiStyle, packageJson.version);
+    const extensionManager = await this.setupExtensionManager(configDatabase, this.#themeManager, this.#uiStyle,
+      packageJson.version);
     this.#extensionManager = extensionManager;
+    this.#themeManager.init(this.#extensionManager);
 
     this.#keybindingsIOManager = this.setupKeybindingsManager(configDatabase, extensionManager);
 
-    const themeManager = this.setupThemeManager(extensionManager);
-    this.#themeManager = themeManager;
 
     sanitizeAndInitializeConfigs(configDatabase, themeManager, availableFonts);
     const generalConfig = configDatabase.getGeneralConfig();
@@ -224,7 +227,7 @@ class Main {
     return ++this.#tagCounter;
   }
 
-  async setupExtensionManager(configDatabase: ConfigDatabase, uiStyle: UiStyle,
+  async setupExtensionManager(configDatabase: ConfigDatabase, themeManager: ThemeManager, uiStyle: UiStyle,
       applicationVersion: string): Promise<ExtensionManager> {
 
     const extensionPaths = [path.join(__dirname, "../../extensions" )];
@@ -234,7 +237,7 @@ class Main {
       extensionPaths.push(userExtensionDirectory);
     }
 
-    const extensionManager = new ExtensionManager(configDatabase, uiStyle, extensionPaths, applicationVersion);
+    const extensionManager = new ExtensionManager(configDatabase, themeManager, uiStyle, extensionPaths, applicationVersion);
     await extensionManager.startUpExtensions(configDatabase.getGeneralConfig().activeExtensions);
     return extensionManager;
   }
@@ -246,8 +249,8 @@ class Main {
     return keybindingsIOManager;
   }
 
-  setupThemeManager(extensionManager: ExtensionManager): ThemeManager {
-    const themeManager = new ThemeManager({ terminal: [getUserTerminalThemeDirectory()]}, extensionManager);
+  setupThemeManager(): ThemeManager {
+    const themeManager = new ThemeManager({ terminal: [getUserTerminalThemeDirectory()]});
     return themeManager;
   }
 

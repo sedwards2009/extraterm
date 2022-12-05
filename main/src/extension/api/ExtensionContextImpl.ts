@@ -15,6 +15,8 @@ import { SessionsImpl } from "./SessionsImpl.js";
 import { TerminalsImpl } from "./TerminalsImpl.js";
 import { WindowsImpl } from "./WindowsImpl.js";
 import { InternalExtensionContext } from "../../InternalTypes.js";
+import { SettingsImpl } from "./SettingsImpl.js";
+import { ThemeManager } from "../../theme/ThemeManager.js";
 
 
 export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, ExtensionApi.Disposable {
@@ -26,11 +28,12 @@ export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, Exte
   #configuration: ExtensionApi.Configuration;
   #logger: ExtensionApi.Logger;
   #sessions: ExtensionApi.Sessions;
+  #settings: ExtensionApi.Settings;
   #terminals: ExtensionApi.Terminals;
   #windows: ExtensionApi.Windows;
 
   constructor(extensionMetadata: ExtensionMetadata, internalExtensionContext: InternalExtensionContext,
-      configDatabase: ConfigDatabase, applicationVersion: string) {
+      configDatabase: ConfigDatabase, themeManager: ThemeManager, applicationVersion: string) {
 
     this.#extensionMetadata = extensionMetadata;
     this.#internalExtensionContext = internalExtensionContext;
@@ -40,6 +43,7 @@ export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, Exte
     this.#configuration = new ConfigurationImpl(configDatabase, extensionMetadata.name);
     this.#logger = getLogger(extensionMetadata.name);
     this.#sessions = new SessionsImpl(internalExtensionContext);
+    this.#settings = new SettingsImpl(internalExtensionContext, configDatabase, themeManager);
     this.#terminals = new TerminalsImpl(internalExtensionContext);
     this.#windows = new WindowsImpl(internalExtensionContext);
   }
@@ -111,7 +115,7 @@ export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, Exte
     return this.#windows;
   }
 
-  registerSettingsTab(name: string, factory: ExtensionApi.SettingsTabFactory): void {
-    this.#internalExtensionContext.settingsTabRegistry.registerSettingsTab(name, factory);
+  get settings(): ExtensionApi.Settings {
+    return this.#settings;
   }
 }

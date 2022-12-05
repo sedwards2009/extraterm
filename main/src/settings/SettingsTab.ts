@@ -81,7 +81,7 @@ export class SettingsTab implements Tab {
     result.push(new ExtensionsPage(this.#extensionManager, this.#uiStyle));
 
     for (const contrib of this.#extensionManager.getSettingsTabContributions()) {
-      result.push(new ExtensionHolderPage(contrib, this.#uiStyle));
+      result.push(new ExtensionHolderPage(contrib, this.#configDatabase, this.#window, this.#uiStyle));
     }
     return result;
   }
