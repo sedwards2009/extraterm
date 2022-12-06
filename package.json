@@ -41,6 +41,7 @@
       "extensions/About",
       "extensions/Autocomplete",
       "extensions/Autolink",
+      "extensions/Colorizer",
       "extensions/CopyLink",
       "extensions/CopyBlock",
       "extensions/DefaultTerminalTheme",
