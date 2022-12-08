@@ -93,6 +93,6 @@ export class ColorPatchPopup {
     for (let i=0; i<NUMBER_OF_COLORS; i++) {
       this.#patches[i].getWidget().setChecked(i === index);
     }
-    this.#noneButton.setChecked(index == null);
+    this.#noneButton.setChecked(index === null);
   }
 }

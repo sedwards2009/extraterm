@@ -9,11 +9,11 @@ export interface ColorRule {
   pattern: string;
   isCaseSensitive: boolean;
   isRegex: boolean;
-  foreground?: number;
-  background?: number;
-  isBold?: boolean;
-  isItalic?: boolean;
-  isUnderline?: boolean;
+  foreground: number;
+  background: number;
+  isBold: boolean;
+  isItalic: boolean;
+  isUnderline: boolean;
 }
 
 export interface Config {

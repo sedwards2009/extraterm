@@ -15,6 +15,7 @@ import { Direction, QColor, QPoint, QPushButton, QWidget } from "@nodegui/nodegu
 import { ColorRule } from "./Config.js";
 import { ColorPatchButton } from "./ColorPatchButton.js";
 import { ColorPatchPopup } from "./ColorPatchPopup.js";
+import { ColorPatchSelector } from "./ColorPatchSelector.js";
 
 
 export class RuleEditor {
@@ -24,8 +25,9 @@ export class RuleEditor {
 
   #colorPatchPopup: ColorPatchPopup = null;
 
-  #foregroundEditor: ColorPatchButton = null;
-  #backgroundEditor: ColorPatchButton = null;
+  #foregroundEditor: ColorPatchSelector = null;
+  #backgroundEditor: ColorPatchSelector = null;
+
   #styleEditor: QWidget = null;
   #deleteButton: QPushButton = null;
 
@@ -144,43 +146,23 @@ export class RuleEditor {
   }
 
   #initForegroundEditor(): void {
-    this.#foregroundEditor = new ColorPatchButton(false, this.#log);
-    this.#foregroundEditor.onClicked(() => {
-      const widget = this.#foregroundEditor.getWidget();
-      const rect = widget.geometry();
-      const bottomLeft = widget.mapToGlobal(new QPoint(0, rect.height()));
-      const colorPatchPopupWidget = this.#colorPatchPopup.getWidget();
-      this.#colorPatchPopup.setSelectedIndex(this.#colorRule.foreground);
-
-      const dispose = () => {
-        onSelectedDisposable.dispose();
-        onCloseDisposable.dispose();
-      };
-      const onSelectedDisposable = this.#colorPatchPopup.onSelected((index: number) => {
-        dispose();
-        colorPatchPopupWidget.hide();
-
-        this.#colorRule.foreground = index;
-        const color = index == null ? null : new QColor(this.#terminalSettings.currentTheme[index]);
-        this.#foregroundEditor.setColor(color);
-        this.#onChangedEventEmitter.fire();
-      });
-      const onCloseDisposable = this.#colorPatchPopup.onClosed(dispose);
-
-      const hint = colorPatchPopupWidget.sizeHint();
-      colorPatchPopupWidget.setGeometry(bottomLeft.x(), bottomLeft.y(), hint.width(), hint.height());
-      colorPatchPopupWidget.raise();
-      colorPatchPopupWidget.show();
+    this.#foregroundEditor = new ColorPatchSelector(this.#terminalSettings.currentTheme, this.#colorPatchPopup,
+      this.#log);
+    this.#foregroundEditor.onChanged((index: number | null) => {
+      this.#colorRule.foreground = index;
+      this.#onChangedEventEmitter.fire();
     });
-
-    const color = this.#colorRule.foreground == null ? null : new QColor(this.#terminalSettings.currentTheme[this.#colorRule.foreground]);
-    this.#foregroundEditor.setColor(color);
+    this.#foregroundEditor.setColorIndex(this.#colorRule.foreground);
   }
 
   #initBackgroundEditor(): void {
-    this.#backgroundEditor = new ColorPatchButton(false, this.#log);
-
-    this.#backgroundEditor.setColor(new QColor(this.#terminalSettings.currentTheme[1]));
+    this.#backgroundEditor = new ColorPatchSelector(this.#terminalSettings.currentTheme, this.#colorPatchPopup,
+      this.#log);
+    this.#backgroundEditor.onChanged((index: number | null) => {
+      this.#colorRule.background = index;
+      this.#onChangedEventEmitter.fire();
+    });
+    this.#backgroundEditor.setColorIndex(this.#colorRule.background);
   }
 
   #initStyleEditor(): void {

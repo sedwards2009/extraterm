@@ -13,7 +13,8 @@ import {
   SettingsTab,
   STYLE_MASK_BOLD,
   STYLE_MASK_ITALIC,
-  STYLE_MASK_UNDERLINE
+  STYLE_MASK_UNDERLINE,
+  UNDERLINE_STYLE_NORMAL
 } from "@extraterm/extraterm-extension-api";
 import { countCells } from "extraterm-unicode-utilities";
 import escapeStringRegexp from "escape-string-regexp";
@@ -66,15 +67,23 @@ function loadConfig(): void {
           uuid: "bf6e8a72-dd09-4b5a-93f2-6ac93c4af16d",
           pattern: "error",
           foreground: 1,
+          background: null,
           isCaseSensitive: false,
-          isRegex: false
+          isRegex: false,
+          isBold: false,
+          isItalic: false,
+          isUnderline: false
         },
         {
           uuid: "2b10fb23-7853-479e-8ac5-7900c52ba33f",
           pattern: "warning",
           foreground: 11,
+          background: null,
           isCaseSensitive: false,
-          isRegex: false
+          isRegex: false,
+          isBold: false,
+          isItalic: false,
+          isUnderline: false
         }
       ]
     };
@@ -128,7 +137,7 @@ function scanAndColor(screen: Screen, ev: LineRangeChange): void {
           }
           if (rule.isUnderline) {
             const style = row.getStyle(x);
-            row.setStyle(x, style | STYLE_MASK_UNDERLINE);
+            row.setStyle(x, (style & ~STYLE_MASK_UNDERLINE) | UNDERLINE_STYLE_NORMAL);
           }
         }
       }

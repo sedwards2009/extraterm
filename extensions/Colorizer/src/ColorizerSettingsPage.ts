@@ -102,14 +102,18 @@ export class ColorizerSettingsPage {
                 uuid: createUuid(),
                 pattern: "pattern",
                 foreground: 1,
+                background: null,
                 isCaseSensitive: false,
-                isRegex: false
+                isRegex: false,
+                isBold: false,
+                isItalic: false,
+                isUnderline: false
               };
               this.#config.rules.push(newRule);
               const ruleEditor = this.#createRuleEditor(newRule);
               this.#ruleEditors.push(ruleEditor);
 
-              const lastRow = this.#config.rules.length -1;
+              const lastRow = this.#config.rules.length;  // Row 0 is header
               this.#gridLayout.addWidget(ruleEditor.getPatternEditor(), lastRow, 0);
               this.#gridLayout.addWidget(ruleEditor.getForegroundEditor(), lastRow, 1);
               this.#gridLayout.addWidget(ruleEditor.getBackgroundEditor(), lastRow, 2);
