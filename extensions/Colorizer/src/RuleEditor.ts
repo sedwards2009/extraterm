@@ -9,13 +9,13 @@ import {
   Style,
   TerminalSettings
 } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, LineEdit, PushButton, Widget } from "qt-construct";
+import { BoxLayout, Frame, LineEdit, PushButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
-import { Direction, QColor, QPoint, QPushButton, QWidget } from "@nodegui/nodegui";
+import { Direction, QPushButton, QWidget } from "@nodegui/nodegui";
 import { ColorRule } from "./Config.js";
-import { ColorPatchButton } from "./ColorPatchButton.js";
 import { ColorPatchPopup } from "./ColorPatchPopup.js";
 import { ColorPatchSelector } from "./ColorPatchSelector.js";
+import { Dir } from "fs-extra";
 
 
 export class RuleEditor {
@@ -29,7 +29,7 @@ export class RuleEditor {
   #backgroundEditor: ColorPatchSelector = null;
 
   #styleEditor: QWidget = null;
-  #deleteButton: QPushButton = null;
+  #deleteButton: QWidget = null;
 
   #onChangedEventEmitter = new EventEmitter<void>();
   onChanged: Event<void>;
@@ -89,14 +89,16 @@ export class RuleEditor {
   }
 
   #initPatternEditor(): void {
-    this.#patternEditor = Widget({
-      cssClass: ["background"],
+    this.#patternEditor = Frame({
+      cssClass: ["table-item"],
       layout: BoxLayout({
         direction: Direction.LeftToRight,
+        contentsMargins: 0,
         children: [
           {
             widget: LineEdit({
               text: this.#colorRule.pattern,
+              placeholderText: "pattern",
               onTextEdited: (newText: string) => {
                 this.#patternTextChanged(newText);
               }
@@ -166,8 +168,8 @@ export class RuleEditor {
   }
 
   #initStyleEditor(): void {
-    this.#styleEditor = Widget({
-      cssClass: ["background"],
+    this.#styleEditor = Frame({
+      cssClass: ["table-item"],
       layout: BoxLayout({
         direction: Direction.LeftToRight,
         spacing: 0,
@@ -212,19 +214,30 @@ export class RuleEditor {
     const normalIcon = this.#style.createQIcon("fa-times", this.#style.palette.text);
     const hoverIcon = this.#style.createQIcon("fa-times", this.#style.palette.background);
 
-    this.#deleteButton = PushButton({
-      cssClass: ["microtool", "danger"],
-      icon: normalIcon,
-      onEnter: () => {
-        this.#deleteButton.setIcon(hoverIcon);
-      },
-      onLeave: () => {
-        this.#deleteButton.setIcon(normalIcon);
-      },
-      toolTip: "Delete",
-      onClicked: () => {
-        this.#onDeleteClickedEventEmitter.fire(this.#colorRule.uuid);
-      }
+    let button: QPushButton = null;
+    this.#deleteButton = Frame({
+      cssClass: ["table-item"],
+      contentsMargins: 0,
+      layout: BoxLayout({
+        direction: Direction.TopToBottom,
+        contentsMargins: 0,
+        children: [
+          button = PushButton({
+            cssClass: ["microtool", "danger", "table-item"],
+            icon: normalIcon,
+            onEnter: () => {
+              button.setIcon(hoverIcon);
+            },
+            onLeave: () => {
+              button.setIcon(normalIcon);
+            },
+            toolTip: "Delete",
+            onClicked: () => {
+              this.#onDeleteClickedEventEmitter.fire(this.#colorRule.uuid);
+            }
+          })
+        ]
+      })
     });
   }
 }

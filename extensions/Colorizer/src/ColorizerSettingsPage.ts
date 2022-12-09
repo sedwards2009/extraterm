@@ -60,16 +60,18 @@ export class ColorizerSettingsPage {
     }
 
     return Widget({
+      maximumWidth: 800,
       layout: BoxLayout({
         direction: Direction.TopToBottom,
         children:[
           Widget({
             contentsMargins: 0,
             layout: this.#gridLayout = GridLayout({
-              contentsMargins: [0, 0, 0, 0],
+              contentsMargins: 0,
               columns: 5,
               // columnsMinimumWidth: [PAGE_WIDTH_PX/2, PAGE_WIDTH_PX/2],
               spacing: 0,
+              columnsStretch: [1, 0, 0, 0, 0],
               children: [
                 Label({
                   cssClass: ["table-header"],
@@ -95,33 +97,50 @@ export class ColorizerSettingsPage {
               ]
             })
           }),
-          PushButton({
-            text: "New Color Rule",
-            onClicked: () => {
-              const newRule: ColorRule = {
-                uuid: createUuid(),
-                pattern: "pattern",
-                foreground: 1,
-                background: null,
-                isCaseSensitive: false,
-                isRegex: false,
-                isBold: false,
-                isItalic: false,
-                isUnderline: false
-              };
-              this.#config.rules.push(newRule);
-              const ruleEditor = this.#createRuleEditor(newRule);
-              this.#ruleEditors.push(ruleEditor);
 
-              const lastRow = this.#config.rules.length;  // Row 0 is header
-              this.#gridLayout.addWidget(ruleEditor.getPatternEditor(), lastRow, 0);
-              this.#gridLayout.addWidget(ruleEditor.getForegroundEditor(), lastRow, 1);
-              this.#gridLayout.addWidget(ruleEditor.getBackgroundEditor(), lastRow, 2);
-              this.#gridLayout.addWidget(ruleEditor.getStyleEditor(), lastRow, 3);
-              this.#gridLayout.addWidget(ruleEditor.getDeleteButton(), lastRow, 4);
+          Widget({
+            layout: BoxLayout({
+              direction: Direction.LeftToRight,
+              contentsMargins: 0,
+              spacing: 0,
+              children: [
+                {
+                  widget: PushButton({
+                    text: "New Color Rule",
+                    onClicked: () => {
+                      const newRule: ColorRule = {
+                        uuid: createUuid(),
+                        pattern: "",
+                        foreground: 1,
+                        background: null,
+                        isCaseSensitive: false,
+                        isRegex: false,
+                        isBold: false,
+                        isItalic: false,
+                        isUnderline: false
+                      };
+                      this.#config.rules.push(newRule);
+                      const ruleEditor = this.#createRuleEditor(newRule);
+                      this.#ruleEditors.push(ruleEditor);
 
-              this.#onConfigChangedEventEmitter.fire(this.#config);
-            }
+                      const lastRow = this.#config.rules.length;  // Row 0 is header
+                      this.#gridLayout.addWidget(ruleEditor.getPatternEditor(), lastRow, 0);
+                      this.#gridLayout.addWidget(ruleEditor.getForegroundEditor(), lastRow, 1);
+                      this.#gridLayout.addWidget(ruleEditor.getBackgroundEditor(), lastRow, 2);
+                      this.#gridLayout.addWidget(ruleEditor.getStyleEditor(), lastRow, 3);
+                      this.#gridLayout.addWidget(ruleEditor.getDeleteButton(), lastRow, 4);
+
+                      this.#onConfigChangedEventEmitter.fire(this.#config);
+                    },
+                  }),
+                  stretch: 0
+                },
+                {
+                  widget: Widget({}),
+                  stretch: 1
+                }
+              ]
+            })
           })
         ]
       })

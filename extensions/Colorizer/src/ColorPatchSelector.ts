@@ -8,8 +8,9 @@ import {
   Logger,
   TerminalTheme,
 } from "@extraterm/extraterm-extension-api";
-import { QColor, QPoint, QWidget } from "@nodegui/nodegui";
+import { Direction, QColor, QPoint, QSizePolicyPolicy, QWidget } from "@nodegui/nodegui";
 import { EventEmitter } from "extraterm-event-emitter";
+import { BoxLayout, Frame, Label, Widget } from "qt-construct";
 import { ColorPatchButton } from "./ColorPatchButton";
 import { ColorPatchPopup } from "./ColorPatchPopup";
 
@@ -24,6 +25,7 @@ export class ColorPatchSelector {
   #colorPatchButton: ColorPatchButton = null;
   #colorPatchPopup: ColorPatchPopup = null;
   #selectedIndex: number | null = null;
+  #topWidget: QWidget = null;
 
   constructor(terminalTheme: TerminalTheme, colorPatchPopup: ColorPatchPopup, log: Logger) {
     this.onChanged = this.#onChangedEventEmitter.event;
@@ -32,6 +34,34 @@ export class ColorPatchSelector {
     this.#colorPatchButton = new ColorPatchButton(false, log);
     this.#colorPatchButton.onClicked(() => {
       this.#handleOnClicked();
+    });
+
+    this.#topWidget = Frame({
+      cssClass: ["table-item"],
+      sizePolicy: {
+        vertical: QSizePolicyPolicy.Minimum,
+        horizontal: QSizePolicyPolicy.MinimumExpanding,
+      },
+      layout: BoxLayout({
+        direction: Direction.LeftToRight,
+        contentsMargins: 0,
+        spacing: 0,
+        children: [
+          {
+            widget: this.#colorPatchButton.getWidget(),
+            stretch: 0
+          },
+          {
+            widget: Widget({
+              sizePolicy: {
+                vertical: QSizePolicyPolicy.Minimum,
+                horizontal: QSizePolicyPolicy.MinimumExpanding,
+              }
+            }),
+            stretch: 1
+          }
+        ]
+      })
     });
     this.#terminalTheme = terminalTheme;
 
@@ -45,7 +75,7 @@ export class ColorPatchSelector {
   }
 
   getWidget(): QWidget {
-    return this.#colorPatchButton.getWidget();
+    return this.#topWidget;
   }
 
   #handleOnClicked(): void {

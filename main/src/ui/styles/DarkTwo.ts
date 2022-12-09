@@ -202,7 +202,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     // Tables
     const tableCellPaddingVertical = `${emToPx(0.5)}px`;
     const tableBorderColor = baseBorderColor;
-
+    const tableCellPaddingHorizontal = `${emToPx(0.5)}px`;
 
     const settingsBgSelectedColor = lighten(backgroundColor, 8);
 
@@ -435,20 +435,53 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   }
 
   QLabel[cssClass~="table-header"] {
+    font-weight: bold;
     border: 2px solid ${tableBorderColor};
     border-top: 0px;
     border-left: 0px;
     border-right: 0px;
 
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
+
     padding-top: ${tableCellPaddingVertical};
     padding-bottom: ${tableCellPaddingVertical};
   }
 
-  QLabel[cssClass~="table-item"], QWidget[cssClass~="table-item"] {
+  QLabel[cssClass~="table-item"], QCheckBox[cssClass~="table-item"] {
     border: 1px solid ${tableBorderColor};
     border-top: 0px;
     border-left: 0px;
     border-right: 0px;
+
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
+
+    padding-top: ${tableCellPaddingVertical};
+    padding-bottom: ${tableCellPaddingVertical};
+  }
+/*
+  QWidget[cssClass~="table-item"] {
+    border: 1px solid #ff00ff;
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
+
+    margin-top: ${tableCellPaddingVertical};
+    margin-bottom: ${tableCellPaddingVertical};
+  }
+*/
+  QFrame[cssClass~="table-item"] {
+    border: 1px solid ${tableBorderColor};
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
 
     padding-top: ${tableCellPaddingVertical};
     padding-bottom: ${tableCellPaddingVertical};
