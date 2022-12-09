@@ -17,5 +17,6 @@ export interface ColorRule {
 }
 
 export interface Config {
+  enabled: boolean;
   rules: ColorRule[];
 }

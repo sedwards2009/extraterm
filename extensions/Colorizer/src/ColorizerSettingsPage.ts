@@ -10,7 +10,7 @@ import {
   Style,
   TerminalSettings
 } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, GridLayout, Label, PushButton, Widget } from "qt-construct";
+import { BoxLayout, CheckBox, GridLayout, Label, PushButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 import { Direction, QGridLayout, QWidget } from "@nodegui/nodegui";
 import { createUuid } from "extraterm-uuid";
@@ -64,6 +64,14 @@ export class ColorizerSettingsPage {
       layout: BoxLayout({
         direction: Direction.TopToBottom,
         children:[
+          CheckBox({
+            text: "Enabled",
+            checked: this.#config.enabled,
+            onStateChanged: (enabled: number) => {
+              this.#config.enabled = enabled !== 0;
+              this.#onConfigChangedEventEmitter.fire(this.#config);
+            }
+          }),
           Widget({
             contentsMargins: 0,
             layout: this.#gridLayout = GridLayout({

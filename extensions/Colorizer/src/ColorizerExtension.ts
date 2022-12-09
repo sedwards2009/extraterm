@@ -41,6 +41,9 @@ export function activate(_context: ExtensionContext): any {
   for (const terminal of context.terminals.terminals) {
     terminal.onDidAppendScrollbackLines(scanAndColorScrollback);
     terminal.onDidScreenChange((ev: LineRangeChange) => {
+      if ( ! config.enabled) {
+        return;
+      }
       scanAndColorScreen(terminal, ev);
     });
   }
@@ -48,6 +51,9 @@ export function activate(_context: ExtensionContext): any {
   context.terminals.onDidCreateTerminal((newTerminal: Terminal) => {
     newTerminal.onDidAppendScrollbackLines(scanAndColorScrollback);
     newTerminal.onDidScreenChange((ev: LineRangeChange) => {
+      if ( ! config.enabled) {
+        return;
+      }
       scanAndColorScreen(newTerminal, ev);
     });
   });
@@ -62,6 +68,7 @@ function loadConfig(): void {
   config = context.configuration.get();
   if (config == null) {
     config = {
+      enabled: true,
       rules: [
         {
           uuid: "bf6e8a72-dd09-4b5a-93f2-6ac93c4af16d",
