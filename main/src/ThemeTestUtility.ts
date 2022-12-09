@@ -1,5 +1,5 @@
 import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit, TextFormat } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, ProgressBar, PushButton, RadioButton, ScrollArea, SpinBox,
+import { BoxLayout, CheckBox, ComboBox, GridLayout, Label, LineEdit, ProgressBar, PushButton, RadioButton, ScrollArea, SpinBox,
   TabWidget, TextEdit, ToolButton, Widget } from "qt-construct";
 import * as path from "node:path";
 import * as SourceDir from './SourceDir.js';
@@ -234,6 +234,40 @@ function main(): void {
 `,
             textFormat: TextFormat.RichText
           }),
+
+          Widget({
+            layout: GridLayout({
+              columns: 3,
+              spacing: 0,
+              children: [
+                Label({
+                  cssClass: ["table-header"],
+                  text: "Table header 1"
+                }),
+                Label({
+                  cssClass: ["table-header"],
+                  text: "Table header 2"
+                }),
+                Label({
+                  cssClass: ["table-header"],
+                  text: "Table header 3"
+                }),
+                Label({
+                  cssClass: ["table-item"],
+                  text: "Table cell"
+                }),
+                LineEdit({
+                  cssClass: ["table-item"],
+                  text: "Some text input"
+                }),
+                CheckBox({
+                  cssClass: ["table-item"],
+                  text: "Checkbox"
+                })
+              ]
+            })
+          }),
+
           { widget: Widget({}), stretch: 1}
         ]
       })
