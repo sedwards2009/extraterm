@@ -51,8 +51,9 @@ export class ExtensionBlockImpl implements Block {
     this.#bulkFile = bulkFile;
     if (this.#bulkFile != null) {
       bulkFile.ref();
+      this.#bulkFileWrapper = new BulkFileWrapper(bulkFile);
     }
-    this.#bulkFileWrapper = new BulkFileWrapper(bulkFile);
+
     this.#extensionBlockBlock = new ExtensionBlockBlock(this, this.#bulkFileWrapper);
 
     this.#widget = Widget({

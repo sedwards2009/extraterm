@@ -38,6 +38,7 @@ export interface ExtensionContributes {
   readonly terminalThemes: ExtensionTerminalThemeContribution[];
   readonly terminalThemeProviders: ExtensionTerminalThemeProviderContribution[];
   readonly blocks: ExtensionBlockContribution[];
+  readonly settingsTabs: ExtensionSettingsTabContribution[];
 }
 
 export type Category = "global" |
@@ -74,6 +75,12 @@ export interface ExtensionCommandContribution {
 export interface ExtensionBlockContribution {
   readonly name: string;
   readonly mimeTypes: string[];
+}
+
+export interface ExtensionSettingsTabContribution {
+  readonly name: string;
+  readonly icon?: string;
+  readonly title: string;
 }
 
 export interface ExtensionSessionEditorContribution {

@@ -3,14 +3,13 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { Event } from "extraterm-event-emitter";
-
 import { Sessions } from "./Sessions.js";
 import { Commands } from "./Commands.js";
 import { Logger } from "./Logger.js";
 import { Window, Windows } from "./Windows.js";
 import { Terminal, Terminals } from "./Terminal.js";
 import { Block } from "./Block.js";
+import { Settings } from "./Settings.js";
 
 
 /**
@@ -133,6 +132,8 @@ export interface ExtensionContext {
   readonly logger: Logger;
 
   readonly sessions: Sessions;
+
+  readonly settings: Settings;
 
   readonly terminals: Terminals;
 

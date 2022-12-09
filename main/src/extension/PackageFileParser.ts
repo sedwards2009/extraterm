@@ -27,6 +27,7 @@ import {
   ExtensionTerminalThemeContribution,
   ExtensionTerminalThemeProviderContribution,
   ExtensionBlockContribution,
+  ExtensionSettingsTabContribution,
   WhenVariables,
 } from "./ExtensionMetadata.js";
 
@@ -166,6 +167,7 @@ class PackageParser {
         terminalThemes: [],
         terminalThemeProviders: [],
         blocks: [],
+        settingsTabs: [],
       };
     }
 
@@ -185,7 +187,8 @@ class PackageParser {
       "tabTitleWidgets",
       "terminalBorderWidgets",
       "terminalThemes",
-      "terminalThemeProviders"
+      "terminalThemeProviders",
+      "settingsTabs"
     ];
     assertKnownJsonObjectKeys(contributes, knownContributions);
 
@@ -201,11 +204,12 @@ class PackageParser {
       terminalBorderWidgets: parseObjectListJson(contributes, "terminalBorderWidgets", node => this.parseTerminalBorderWidgetContributionsJson(node)),
       terminalThemes: parseObjectListJson(contributes, "terminalThemes", node => this.parseTerminalThemeContributionsJson(node)),
       terminalThemeProviders: parseObjectListJson(contributes, "terminalThemeProviders", node => this.parseTerminalThemeProviderContributionsJson(node)),
-      blocks: parseObjectListJson(contributes, "blocks", node => this.parseViewerConstributionJson(node)),
+      blocks: parseObjectListJson(contributes, "blocks", node => this.parseBlockConstributionJson(node)),
+      settingsTabs: parseObjectListJson(contributes, "settingsTabs", node => this.#parseSettingsTabConstributionJson(node)),
     };
   }
 
-  private parseViewerConstributionJson(packageJson: JsonNode): ExtensionBlockContribution {
+  private parseBlockConstributionJson(packageJson: JsonNode): ExtensionBlockContribution {
     const knownKeys: (keyof ExtensionBlockContribution)[] = [
       "name",
       "mimeTypes",
@@ -214,7 +218,22 @@ class PackageParser {
 
     return {
       name: getJsonStringField(packageJson, "name"),
-      mimeTypes: getJsonStringArrayField(packageJson, "mimeTypes"),
+      mimeTypes: getJsonStringArrayField(packageJson, "mimeTypes", []),
+    };
+  }
+
+  #parseSettingsTabConstributionJson(packageJson: JsonNode): ExtensionSettingsTabContribution {
+    const knownKeys: (keyof ExtensionSettingsTabContribution)[] = [
+      "name",
+      "title",
+      "icon",
+    ];
+    assertKnownJsonObjectKeys(packageJson, knownKeys);
+
+    return {
+      name: getJsonStringField(packageJson, "name"),
+      icon: getJsonStringField(packageJson, "icon", null),
+      title: getJsonStringField(packageJson, "title"),
     };
   }
 

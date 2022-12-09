@@ -14,6 +14,7 @@ import { ExtensionManager } from "../InternalTypes.js";
 import { createHtmlIcon } from "../ui/Icons.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { makeLinkLabel, makeSubTabBar } from "../ui/QtConstructExtra.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 enum SubPage {
   ALL_EXTENSIONS = 0,
@@ -26,7 +27,7 @@ interface MenuPair {
 }
 
 
-export class ExtensionsPage {
+export class ExtensionsPage implements SettingsPageType {
   private _log: Logger = null;
   #extensionManager: ExtensionManager = null;
   #uiStyle: UiStyle = null;
@@ -39,6 +40,18 @@ export class ExtensionsPage {
     this._log = getLogger("ExtensionsPage", this);
     this.#extensionManager = extensionManager;
     this.#uiStyle = uiStyle;
+  }
+
+  getIconName(): string {
+    return "fa-puzzle-piece";
+  }
+
+  getMenuText(): string {
+    return "Extensions";
+  }
+
+  getName(): string {
+    return null;
   }
 
   getPage(): QWidget {
@@ -597,7 +610,7 @@ class ExtensionDetailCard {
 
     if (contributes.blocks.length !== 0) {
       parts.push(`
-        <h4>Viewers</h4>
+        <h4>Blocks</h4>
         <table width="100%">
           <thead>
             <tr>
@@ -607,11 +620,37 @@ class ExtensionDetailCard {
           </thead>
           <tbody>
       `);
-      for (const viewer of contributes.blocks) {
+      for (const block of contributes.blocks) {
         parts.push(`
           <tr>
-            <td>${viewer.name}</td>
-            <td>${viewer.mimeTypes.join(", ")}</td>
+            <td>${block.name}</td>
+            <td>${block.mimeTypes.join(", ")}</td>
+          </tr>
+        `);
+      }
+      parts.push(`
+          </tbody>
+        </table>
+      `);
+    }
+
+    if (contributes.settingsTabs.length !== 0) {
+      parts.push(`
+        <h4>Settings Pages</h4>
+        <table width="100%">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Title</th>
+            </tr>
+          </thead>
+          <tbody>
+      `);
+      for (const settingsTab of contributes.settingsTabs) {
+        parts.push(`
+          <tr>
+            <td>${settingsTab.name}</td>
+            <td>${settingsTab.title}</td>
           </tr>
         `);
       }

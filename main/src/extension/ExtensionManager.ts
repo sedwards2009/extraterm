@@ -33,6 +33,8 @@ import { TerminalBlock } from "../terminal/TerminalBlock.js";
 import { Block } from "../terminal/Block.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
+import { LoadedSettingsTabContribution } from "./SettingsTabRegistry.js";
+import { ThemeManager } from "../theme/ThemeManager.js";
 
 
 interface ActiveExtension {
@@ -56,6 +58,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   private _log: Logger = null;
 
   #configDatabase: ConfigDatabase = null;
+  #themeManager: ThemeManager = null;
   #uiStyle: UiStyle = null;
 
   #extensionMetadata: ExtensionMetadata[] = [];
@@ -79,11 +82,12 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   #listPickerPopOver: ListPickerPopOver = null;
 
-  constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionPaths: string[],
+  constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager, uiStyle: UiStyle, extensionPaths: string[],
       applicationVersion: string) {
 
     this._log = getLogger("ExtensionManager", this);
     this.#configDatabase = configDatabase;
+    this.#themeManager = themeManager;
     this.#uiStyle = uiStyle;
 
     this.#extensionPaths = extensionPaths;
@@ -197,7 +201,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     this._log.info(`Starting extension '${metadata.name}'`);
 
     const internalExtensionContext = new InternalExtensionContextImpl(this, metadata, this.#configDatabase,
-      this.#applicationVersion);
+      this.#themeManager, this.#applicationVersion);
 
     if (metadata.exports != null) {
       module = await this.#loadExtensionModule(metadata);
@@ -357,15 +361,32 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     );
   }
 
-  createExtensionBlock(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
-    const block = this.#createExtensionBlock(terminal, fileMimeType, bulkFile);
+  createExtensionBlockByName(terminal: Terminal, extensionName: string, blockName: string, args?: any): Block {
+    for (const ae of this.#activeExtensions) {
+      const blockMetadata = ae.metadata.contributes.blocks;
+      if (blockMetadata.length === 0) {
+        continue;
+      }
+
+      for (const blockContribution of blockMetadata) {
+        if (blockContribution.name === blockName) {
+          return ae.internalExtensionContext.blockRegistry.createExtensionBlock(terminal, blockContribution.name, null,
+            args);
+        }
+      }
+    }
+    return null;
+  }
+
+  createExtensionBlockWithBulkFile(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
+    const block = this.#createExtensionBlockByMimeType(terminal, fileMimeType, bulkFile);
     if (block != null) {
       return block;
     }
-    return this.#createExtensionBlock(terminal, "application/octet-stream", bulkFile);
+    return this.#createExtensionBlockByMimeType(terminal, "application/octet-stream", bulkFile);
   }
 
-  #createExtensionBlock(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
+  #createExtensionBlockByMimeType(terminal: Terminal, fileMimeType: string, bulkFile: BulkFile): Block {
     for (const ae of this.#activeExtensions) {
       const blockMetadata = ae.metadata.contributes.blocks;
       if (blockMetadata.length === 0) {
@@ -824,5 +845,13 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return Promise.reject();
     }
     return this.#listPickerPopOver.show(win, {...options, aroundRect: geo});
+  }
+
+  getSettingsTabContributions(): LoadedSettingsTabContribution[] {
+    return _.flatten(
+      this.#activeExtensions.map(activeExtension => {
+        return activeExtension.internalExtensionContext.settingsTabRegistry.getSettingsTabContributions();
+      })
+    );
   }
 }

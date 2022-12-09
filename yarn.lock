@@ -2690,6 +2690,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"colorizer@workspace:extensions/Colorizer":
+  version: 0.0.0-use.local
+  resolution: "colorizer@workspace:extensions/Colorizer"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    esbuild: ^0.15.5
+    escape-string-regexp: ^5.0.0
+    eslint: 8.13.0
+    eslint-config-extraterm: 1.0.0
+    eslint-plugin-unicorn: 42.0.0
+    extraterm-unicode-utilities: 1.0.0
+    extraterm-uuid: 1.0.0
+    qt-construct: 0.1.0
+    shx: ^0.3.2
+    typescript: 4.7.4
+  languageName: unknown
+  linkType: soft
+
 "colors@npm:0.5.x":
   version: 0.5.1
   resolution: "colors@npm:0.5.1"
@@ -9891,6 +9909,21 @@ __metadata:
   checksum: 4086a1f8938dafa4a20c63b099aeb47bf8fef5aca991bf4ea4b35dd2684fa52363b2c19b3e76660311e7613cb7c4f063bc48751b9bdf9555e498d997c30bc2d6
   languageName: node
   linkType: hard
+
+"tips@workspace:extensions/Tips":
+  version: 0.0.0-use.local
+  resolution: "tips@workspace:extensions/Tips"
+  dependencies:
+    "@extraterm/extraterm-extension-api": 0.15.0
+    esbuild: ^0.15.5
+    eslint: 8.13.0
+    eslint-config-extraterm: 1.0.0
+    eslint-plugin-unicorn: 42.0.0
+    qt-construct: 0.1.0
+    shx: ^0.3.2
+    typescript: 4.7.4
+  languageName: unknown
+  linkType: soft
 
 "tldr-pages@workspace:extensions/TLDRPages":
   version: 0.0.0-use.local

@@ -1,0 +1,199 @@
+[
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Shell Integration</h2>",
+      "<p>",
+      "Extraterm's shell integration unlocks many powerful features such as frames around command output, reusing ",
+      "command output and in-place editing of text. bash, zsh and fish shells are supported. To enable it in your ",
+      "shell session see <a ",
+      "href='https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration'>this guide</a>.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Double click to Select</h2>",
+      "<p>",
+      "Double clicking on text will select complete words and also most common special characters. Very useful when ",
+      "copying file names and paths.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Command Palette</h2>",
+      "<p>Extraterm has a pop up Command Palette ",
+      {"command": "extraterm:application.openCommandPalette", "pc": "Ctrl+P", "macos": "\u2318+Shift+P"},
+      " where all relevant commands can be seen, searched and executed.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Global Hot Key</h2>",
+      "<p>",
+      "It is possible in the Settings tab to configure a global hot key to show and focus the Extraterm window. ",
+      "Combine this with the system tray icon and \"Minimize window to tray\" options and you've got (almost) Quake ",
+      "Mode.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Tabs</h2>",
+      "<p>Use tabs to run multiple terminal sessions at the same time. Create a new tab by clicking on the plus ",
+      "button in the top right or by using ",
+      {"command": "extraterm:window.newTerminal", "pc": "Ctrl+Shift+N", "macos": "\u2318+T"},
+      " on the keyboard.",
+      "</p>",
+      "<p>",
+      "Move between tabs using next ",
+      {"command": "extraterm:window.focusTabRight", "pc": "Ctrl+.", "macos": "\u2318+Right"},
+      " and previous ",
+      {"command": "extraterm:window.focusTabLeft", "pc": "Ctrl+,", "macos": "\u2318+Left"},
+      " keys.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Frames</h2>",
+      "<p>",
+      "Once <a href='https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration'>the ",
+      "shell integration</a> has been set up, Extraterm will place 'frames' around the output of commands. Frames ",
+      "also display the command which was executed and warn when a command has indicated failure status. Frames ",
+      "can also be deleted from the scrollback if desired (",
+      {"icon": "fa-times-circle"},
+      " ",
+      {"command": "extraterm:terminal.deleteLastFrame", "pc": "Ctrl+Shift+W", "macos": "\u2318+W"},
+      ") or moved into their own tab for safe keeping (",
+      {"icon": "fa-external-link-square-alt"},
+      " ",
+      {"command": "extraterm:terminal.openLastFrame", "pc": "Ctrl+Shift+O", "macos": "\u2318+O"},
+      "), plus many other things.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Hear About Extraterm News</h2>",
+      "<p>",
+      "Extraterm is up on <a href=\"https://twitter.com/ExtratermDev\">Twitter @ExtratermDev</a>.",
+      "</p>",
+      "<p>",
+      "Follow us to hear about releases and all Extraterm news. If you are enjoying Extraterm then send us",
+      "a quick tweet!",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Use text from a frame in a command pipe-line</h2>",
+      "<p>",
+      "Once <a href=\"https://github.com/sedwards2009/extraterm/blob/master/docs/guide.md#shell-integration\">shell ",
+      "integration</a> is set up, Extraterm will place frames around the output of commands. Each frame has a ",
+      "little tag ",
+      {"icon": "fa-tag"},
+      " with a number which indentifies the frame. Extraterm's <code>from</code> command lets you grab the contents ",
+      "of a frame and use it as part of a shell command.",
+      "</p>",
+      "<p>",
+      "For example, if we have run the <code>ls</code> command and it has tag ",
+      {"icon": "fa-tag"},
+      " 5 then we can use <code>from</code> and the normal <code>grep</code> command to filter the output.",
+      "</p>",
+      "<samp>",
+      "from 5 | grep .txt",
+      "</samp>",
+      "<p>",
+      "This will find any lines with the text \".txt\" in it. This works across tabs and terminal sessions.",
+      "</p>",
+      "<p>",
+      "<a href=\"https://github.com/sedwards2009/extraterm/blob/master/docs/tips/from_command.md\">Click here to ",
+      "see a demo.</a>",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Use the \"Go to Previous/Next Frame\" commands to quickly move through the scrollback</h2>",
+      "<p>",
+      "Use the \"Go to Previous Frame\" ",
+      {"command": "extraterm:terminal.goToPreviousFrame", "pc": "Ctrl+Shift+Page Up", "macos": "\u2318+Shift+Page Up"},
+      " and \"Go to Next Frame\" ",
+      {"command": "extraterm:terminal.goToNextFrame", "pc": "Ctrl+Shift+Page Down", "macos": "\u2318+Shift+Page Down"},
+      " commands to quickly navigate between frames in the scrollback. This is useful when you are at the bottom of ",
+      "a tower of output and you want to get to the top.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Messed up Terminal</h2>",
+      "<p>",
+      "Sometimes if a terminal application crashes unexpectedly it can leave your terminal in a messed up unusable ",
+      "state. If this happens, open the Command Palette ",
+      {"command": "extraterm:application.openCommandPalette", "pc": "Ctrl+P", "macos": "\u2318+Shift+P"},
+      " and run the \"Reset VT\" command to reset everything back to a normal state.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Start a Different Terminal Session</h2>",
+      "<p>",
+      "The plus icon in the title bar lets you open a new terminal tab using the default terminal session type. ",
+      "Did you know that you can select a different session type? Just click on the plus icon with the right mouse ",
+      "button to choose a different session type.",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Have More ",
+      {"icon": "fa-keyboard"},
+      "</h2>",
+      "<p>",
+      "Extraterm is more fun if you use a mechanical keyboard.",
+      "</p>",
+      "<p>",
+      "Once you click and clack you can't go back!",
+      "</p>"
+    ]
+  },
+  {
+    "lines": [
+      "<h2>",
+      {"icon": "fa-lightbulb"},
+      " Tip: Quickly Open Links</h2>",
+      "<p>",
+      "Hold down the Control key and click on a link to perform its default action, such as opening it in the ",
+      "browser.",
+      "</p>"
+    ]
+  }
+]

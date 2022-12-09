@@ -20,6 +20,7 @@ import { KeybindingsIOManager } from "../../keybindings/KeybindingsIOManager.js"
 import { CommandBindingEditor } from "./CommandBindingEditor.js";
 import { CommandKeybindingInfo } from "./CommandKeybindingInfo.js";
 import { KeyRecord } from "./KeyRecord.js";
+import { SettingsPageType } from "../SettingsPageType.js";
 
 
 interface KeybindingStyle {
@@ -62,7 +63,7 @@ interface CategoryInfo {
 const PAGE_WIDTH_PX = 600;
 
 
-export class KeybindingsPage {
+export class KeybindingsPage implements SettingsPageType {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
@@ -85,6 +86,18 @@ export class KeybindingsPage {
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
     this.#uiStyle = uiStyle;
+  }
+
+  getIconName(): string {
+    return "fa-keyboard";
+  }
+
+  getMenuText(): string {
+    return "Keybindings";
+  }
+
+  getName(): string {
+    return null;
   }
 
   getPage(): QScrollArea {

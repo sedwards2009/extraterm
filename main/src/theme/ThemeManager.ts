@@ -301,9 +301,12 @@ export class ThemeManager {
   #paths: ThemeTypePaths = null;
   #extensionManager: ExtensionManager = null;
 
-  constructor(paths: ThemeTypePaths, mainExtensionManager: ExtensionManager) {
+  constructor(paths: ThemeTypePaths) {
     this._log = getLogger("ThemeManager", this);
     this.#paths = paths;
+  }
+
+  init(mainExtensionManager: ExtensionManager): void {
     this.#extensionManager = mainExtensionManager;
     this.#updateThemesList();
   }

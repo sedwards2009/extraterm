@@ -184,6 +184,11 @@ export class TerminalImpl implements ExtensionApi.Disposable, ExtensionApi.Termi
       borderWidget.dispose();
     }
   }
+
+  appendBlock(name: string, args?: any): ExtensionApi.Block {
+    const block = this.#terminal.appendExtensionBlockByName(this.#extensionMetadata.name, name, args);
+    return this.#internalExtensionContext.wrapBlock(block);
+  }
 }
 
 class TerminalEnvironmentImpl implements ExtensionApi.TerminalEnvironment {

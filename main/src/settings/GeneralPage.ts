@@ -11,15 +11,28 @@ import { createHtmlIcon } from "../ui/Icons.js";
 import { makeGroupLayout, shrinkWrap } from "../ui/QtConstructExtra.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import { GeneralConfig, MouseButtonAction } from "../config/Config.js";
+import { SettingsPageType } from "./SettingsPageType.js";
 
 
-export class GeneralPage {
+export class GeneralPage implements SettingsPageType {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle) {
     this._log = getLogger("GeneralPage", this);
     this.#configDatabase = configDatabase;
+  }
+
+  getIconName(): string {
+    return "fa-sliders-h";
+  }
+
+  getMenuText(): string {
+    return "General";
+  }
+
+  getName(): string {
+    return null;
   }
 
   getPage(): QScrollArea {
@@ -46,9 +59,6 @@ export class GeneralPage {
             GridLayout({
               columns: 2,
               children: [
-                "Show Tips:",
-                shrinkWrap(ComboBox({items: ["Every time", "Daily", "Never"]})),
-
                 "Max. Scrollback Lines:",
                 makeGroupLayout(
                   SpinBox({

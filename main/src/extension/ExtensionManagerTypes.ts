@@ -6,7 +6,7 @@
 import * as _ from "lodash-es";
 import { ExtensionBlock, SessionBackend, TerminalThemeProvider } from "@extraterm/extraterm-extension-api";
 
-import { ExtensionMetadata, ExtensionSessionBackendContribution } from "./ExtensionMetadata.js";
+import { ExtensionMetadata, ExtensionSessionBackendContribution, ExtensionSettingsTabContribution } from "./ExtensionMetadata.js";
 
 
 export interface LoadedSessionBackendContribution {

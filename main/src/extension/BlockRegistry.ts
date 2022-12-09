@@ -49,13 +49,13 @@ export class BlockRegistry {
       `couldn't be found in the extension's package.json file.`);
   }
 
-  createExtensionBlock(terminal: Terminal, name: string, bulkFile: BulkFile): Block {
+  createExtensionBlock(terminal: Terminal, name: string, bulkFile: BulkFile, args?: any): Block {
     for (const lbc of this.#blockTypes) {
       if (lbc.blockMetadata.name === name) {
         const blockTypeName = `${this.#extensionMetadata.name}:${name}`;
         const blockImpl = new ExtensionBlockImpl(this.#internalExtensionContext, blockTypeName, bulkFile);
         blockImpl.setParent(terminal);
-        lbc.blockFactory(blockImpl.getExtensionBlock());
+        lbc.blockFactory(blockImpl.getExtensionBlock(), args);
         return blockImpl;
       }
     }

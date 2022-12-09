@@ -1,5 +1,5 @@
-import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit } from "@nodegui/nodegui";
-import { BoxLayout, CheckBox, ComboBox, Label, LineEdit, ProgressBar, PushButton, RadioButton, ScrollArea, SpinBox,
+import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit, TextFormat } from "@nodegui/nodegui";
+import { BoxLayout, CheckBox, ComboBox, GridLayout, Label, LineEdit, ProgressBar, PushButton, RadioButton, ScrollArea, SpinBox,
   TabWidget, TextEdit, ToolButton, Widget } from "qt-construct";
 import * as path from "node:path";
 import * as SourceDir from './SourceDir.js';
@@ -35,6 +35,9 @@ function main(): void {
   const win = new QMainWindow();
   win.setWindowTitle("Theme Test");
 
+  const dpi = QApplication.primaryScreen().logicalDotsPerInch();
+  const uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
+
   let guiScale = 1;
   function applyStyleSheet(): void {
     const styleSheet = uiStyle.getApplicationStyleSheet(guiScale, dpi);
@@ -42,7 +45,7 @@ function main(): void {
     stylesheetEdit.setText(styleSheet);
     topWidget.setStyleSheet(styleSheet, false);
   }
-
+  uiStyle.getApplicationStyleSheet(guiScale, dpi);  // Force DarkTwo it init internally.
 
   let stylesheetEdit: QTextEdit = null;
 
@@ -216,6 +219,55 @@ function main(): void {
               {label: "Tabs", page: Widget({})},
             ]
           }),
+
+          Label({
+            text: `${uiStyle.getHTMLStyleTag()}
+<h1>QLabel with Rich text</h1>
+<H1>H1 Heading</H1>
+<H2>H2 Heading</H2>
+<H3>H3 Heading</H3>
+<H4>H4 Heading</H4>
+<H5>H5 Heading</H5>
+<H6>H6 Heading</H6>
+<p>QLabel normal text and a <a href="https://extraterm.org/">Link</a>.<p>
+<p>Text with a <span class="keycap">keycap</span> inside.</p>
+`,
+            textFormat: TextFormat.RichText
+          }),
+
+          Widget({
+            layout: GridLayout({
+              columns: 3,
+              spacing: 0,
+              children: [
+                Label({
+                  cssClass: ["table-header"],
+                  text: "Table header 1"
+                }),
+                Label({
+                  cssClass: ["table-header"],
+                  text: "Table header 2"
+                }),
+                Label({
+                  cssClass: ["table-header"],
+                  text: "Table header 3"
+                }),
+                Label({
+                  cssClass: ["table-item"],
+                  text: "Table cell"
+                }),
+                LineEdit({
+                  cssClass: ["table-item"],
+                  text: "Some text input"
+                }),
+                CheckBox({
+                  cssClass: ["table-item"],
+                  text: "Checkbox"
+                })
+              ]
+            })
+          }),
+
           { widget: Widget({}), stretch: 1}
         ]
       })
@@ -269,9 +321,6 @@ function main(): void {
       ]
     })
   });
-
-  const dpi = QApplication.primaryScreen().logicalDotsPerInch();
-  const uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
 
   applyStyleSheet();
 

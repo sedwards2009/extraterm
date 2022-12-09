@@ -1,0 +1,40 @@
+{
+  "name": "colorizer",
+  "displayName": "Colorizer",
+  "description": "Detect and color keywords in terminal output",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": "./dist/ColorizerExtension.cjs",
+  "scripts": {
+    "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/ColorizerExtension.js --bundle --outfile=dist/ColorizerExtension.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
+    "clean": "shx rm -rf build dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.15.0",
+    "esbuild": "^0.15.5",
+    "escape-string-regexp": "^5.0.0",
+    "eslint": "8.13.0",
+    "eslint-config-extraterm": "1.0.0",
+    "eslint-plugin-unicorn": "42.0.0",
+    "extraterm-unicode-utilities": "1.0.0",
+    "extraterm-uuid": "1.0.0",
+    "qt-construct": "0.1.0",
+    "shx": "^0.3.2",
+    "typescript": "4.7.4"
+  },
+  "contributes": {
+    "settingsTabs": [
+      {
+        "name": "colorizer-config",
+        "title": "Colorizer",
+        "icon": "fa-highlighter"
+      }
+    ]
+  }
+}

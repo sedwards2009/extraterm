@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QIcon } from "@nodegui/nodegui";
-import { alpha, blue, change, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate, toHex } from "khroma";
+import { blue, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate, toHex } from "khroma";
 
 import { createIcon } from "../Icons.js";
 import { IconPair, UiStyle } from "../UiStyle.js";
@@ -32,7 +32,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
   function DarkTwoStyleSheet(resourceDirectory: string, guiScale: number, dpi: number): string {
     const fontSizeBase = Math.round(base100PercentFontSize * guiScale);
-    const fontSizeSmall = Math.round(fontSizeBase * 0.9);
+    const smallFactor = 0.8;
+    const fontSizeSmall = Math.round(fontSizeBase * smallFactor);
 
     const uiFg = "#9da5b4";
     const accentBgColor = "#456fc4";
@@ -201,7 +202,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     // Tables
     const tableCellPaddingVertical = `${emToPx(0.5)}px`;
     const tableBorderColor = baseBorderColor;
-
+    const tableCellPaddingHorizontal = `${emToPx(0.5)}px`;
 
     const settingsBgSelectedColor = lighten(backgroundColor, 8);
 
@@ -394,6 +395,10 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     padding-bottom: ${h6PaddingBottomPx}px;
   }
 
+  QLabel[cssClass~="small"] {
+    font-size: ${buttonFontSizeSmall}pt;
+    icon-size: ${emToPx(smallFactor)}px;
+  }
   QLabel[cssClass~="group-left"], QLabel[cssClass~="group-right"] {
     color: ${textColor};
     background-color: ${groupTextBgColor};
@@ -430,20 +435,53 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   }
 
   QLabel[cssClass~="table-header"] {
+    font-weight: bold;
     border: 2px solid ${tableBorderColor};
     border-top: 0px;
     border-left: 0px;
     border-right: 0px;
 
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
+
     padding-top: ${tableCellPaddingVertical};
     padding-bottom: ${tableCellPaddingVertical};
   }
 
-  QLabel[cssClass~="table-item"], QWidget[cssClass~="table-item"] {
+  QLabel[cssClass~="table-item"], QCheckBox[cssClass~="table-item"] {
     border: 1px solid ${tableBorderColor};
     border-top: 0px;
     border-left: 0px;
     border-right: 0px;
+
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
+
+    padding-top: ${tableCellPaddingVertical};
+    padding-bottom: ${tableCellPaddingVertical};
+  }
+/*
+  QWidget[cssClass~="table-item"] {
+    border: 1px solid #ff00ff;
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
+
+    margin-top: ${tableCellPaddingVertical};
+    margin-bottom: ${tableCellPaddingVertical};
+  }
+*/
+  QFrame[cssClass~="table-item"] {
+    border: 1px solid ${tableBorderColor};
+    border-top: 0px;
+    border-left: 0px;
+    border-right: 0px;
+
+    padding-left: ${tableCellPaddingHorizontal};
+    padding-right: ${tableCellPaddingHorizontal};
 
     padding-top: ${tableCellPaddingVertical};
     padding-bottom: ${tableCellPaddingVertical};
@@ -557,7 +595,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
 
   QPushButton[cssClass~="small"] {
     font-size: ${buttonFontSizeSmall}pt;
-    padding: ${emToPx(0.3)}px ${emToPx(0.5)}px;
+    icon-size: ${emToPx(smallFactor)}px;
+    padding: ${emToPx(0.1)}px ${emToPx(0.3)}px;
   }
 
   QPushButton[cssClass~="group-left"] {
@@ -969,6 +1008,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QWidget[cssClass~="debug"] {
     background-color: #ff00ff;
   }
+  QWidget[cssClass~="debug2"] {
+    background-color: #ffff00;
+  }
+  QWidget[cssClass~="debug3"] {
+    background-color: #00ffff;
+  }
   `;
 
     }
@@ -1011,6 +1056,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
       font-size: ${fontSizeBase}pt;
     }
     h6 {
+      font-size: ${Math.round(0.8 * fontSizeBase)}pt;
+    }
+
+    span.keycap {
+      color: #333333;
+      background-color: #f7f7f7;
       font-size: ${Math.round(0.8 * fontSizeBase)}pt;
     }
 
