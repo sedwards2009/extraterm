@@ -460,20 +460,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     padding-top: ${tableCellPaddingVertical};
     padding-bottom: ${tableCellPaddingVertical};
   }
-/*
-  QWidget[cssClass~="table-item"] {
-    border: 1px solid #ff00ff;
-    border-top: 0px;
-    border-left: 0px;
-    border-right: 0px;
 
-    padding-left: ${tableCellPaddingHorizontal};
-    padding-right: ${tableCellPaddingHorizontal};
-
-    margin-top: ${tableCellPaddingVertical};
-    margin-bottom: ${tableCellPaddingVertical};
-  }
-*/
   QFrame[cssClass~="table-item"] {
     border: 1px solid ${tableBorderColor};
     border-top: 0px;
@@ -618,6 +605,11 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QPushButton[cssClass~="group-right"]:focus, QPushButton[cssClass~="group-middle"]:focus {
     border-left-width: ${btnBorderWidthPx}px;
     padding-left: ${emToPx(0.6) - btnBorderWidthPx}px;
+  }
+
+  QPushButton[cssClass~="group-right"][cssClass~="small"]:focus, QPushButton[cssClass~="group-middle"][cssClass~="small"]:focus {
+    border-left-width: ${btnBorderWidthPx}px;
+    padding-left: ${emToPx(0.3) - btnBorderWidthPx}px;
   }
 
   QPushButton:on {

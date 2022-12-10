@@ -133,6 +133,19 @@ function main(): void {
               direction:Direction.LeftToRight,
               spacing: 0,
               children: [
+                { widget: PushButton({ text: "Small Left", cssClass: ["small", "group-left"] }), stretch: 0 },
+                { widget: PushButton({ text: "Small Middle", cssClass: ["small", "group-middle"] }), stretch: 0 },
+                { widget: PushButton({ text: "Small Right", cssClass: ["small", "group-right"] }), stretch: 0 },
+                { widget: Widget({}), stretch: 1 }
+              ]
+            })}
+          ),
+
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
                 { widget: Label({ text: "I like", cssClass: ["group-left"] }), stretch: 0 },
                 { widget: LineEdit({ text: "bananas", cssClass: ["group-right"] }), stretch: 0 },
                 { widget: Widget({}), stretch: 1 }
