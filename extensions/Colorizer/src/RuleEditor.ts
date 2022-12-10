@@ -9,9 +9,9 @@ import {
   Style,
   TerminalSettings
 } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, Frame, LineEdit, PushButton, Widget } from "qt-construct";
+import { BoxLayout, Frame, LineEdit, PushButton, setCssClasses, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
-import { Direction, QPushButton, QWidget } from "@nodegui/nodegui";
+import { Direction, QLineEdit, QPushButton, QWidget } from "@nodegui/nodegui";
 import { ColorRule } from "./Config.js";
 import { ColorPatchPopup } from "./ColorPatchPopup.js";
 import { ColorPatchSelector } from "./ColorPatchSelector.js";
@@ -22,6 +22,7 @@ export class RuleEditor {
   #colorRule: ColorRule = null;
   #style: Style = null;
   #patternEditor: QWidget = null;
+  #patternLineEdit: QLineEdit = null;
 
   #colorPatchPopup: ColorPatchPopup = null;
 
@@ -96,7 +97,7 @@ export class RuleEditor {
         contentsMargins: 0,
         children: [
           {
-            widget: LineEdit({
+            widget: this.#patternLineEdit = LineEdit({
               text: this.#colorRule.pattern,
               placeholderText: "pattern",
               onTextEdited: (newText: string) => {
@@ -130,11 +131,29 @@ export class RuleEditor {
         ]
       })
     });
+    this.#updatePatternWarning();
   }
 
   #patternTextChanged(newText: string):void {
     this.#colorRule.pattern = newText;
+    this.#updatePatternWarning();
     this.#onChangedEventEmitter.fire();
+  }
+
+  #updatePatternWarning(): void {
+    if (this.#colorRule.isRegex) {
+      try {
+        new RegExp(this.#colorRule.pattern);
+      } catch (ex) {
+        this.#log.warn(ex.message);
+        this.#patternLineEdit.setToolTip(ex.message);
+        setCssClasses(this.#patternLineEdit, ["warning"]);
+        return;
+      }
+    }
+
+    this.#patternLineEdit.setToolTip(null);
+    setCssClasses(this.#patternLineEdit, []);
   }
 
   #caseSensitiveChanged(checked: boolean): void {
@@ -144,6 +163,7 @@ export class RuleEditor {
 
   #regexChanged(checked: boolean): void {
     this.#colorRule.isRegex = checked;
+    this.#updatePatternWarning();
     this.#onChangedEventEmitter.fire();
   }
 

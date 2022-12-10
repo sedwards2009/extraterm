@@ -100,12 +100,18 @@ function loadConfig(): void {
 function compileRules(rules: ColorRule[]): LiveColorRule[] {
   return rules.map((rule: ColorRule): LiveColorRule => {
     const regexString = rule.isRegex ? rule.pattern : escapeStringRegexp(rule.pattern);
-    const matchRegexp = new RegExp(regexString, rule.isCaseSensitive ? "g" : "gi");
-    return {
-      ...rule,
-      matchRegexp
-    };
-  });
+
+    try {
+      const matchRegexp = new RegExp(regexString, rule.isCaseSensitive ? "g" : "gi");
+      return {
+        ...rule,
+        matchRegexp
+      };
+    } catch(ex) {
+      log.warn(`An error occurred while parsing regular expression '${regexString}'. ${ex}`);
+      return null;
+    }
+  }).filter(r => r != null);
 }
 
 function scanAndColorScrollback(ev: LineRangeChange): void {
