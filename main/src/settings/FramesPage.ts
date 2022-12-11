@@ -55,6 +55,10 @@ export class FramesPage implements SettingsPageType {
   }
 
   getPage(): QScrollArea {
+    if (this.#page != null) {
+      return this.#page;
+    }
+
     const generalConfig = this.#configDatabase.getGeneralConfig();
 
     const defaultEditor = new FrameRuleConfigEditor({

@@ -42,6 +42,10 @@ export class ExtensionHolderPage implements SettingsPageType {
     this.uiStyle = uiStyle;
   }
 
+  getExtensionName(): string {
+    return this.#contribution.internalExtensionContext.extensionMetadata.name;
+  }
+
   getIconName(): string {
     return this.#contribution.metadata.icon;
   }

@@ -71,6 +71,7 @@ export class KeybindingsPage implements SettingsPageType {
   #keybindingsIOManager: KeybindingsIOManager = null;
   #uiStyle: UiStyle = null;
   #keybindingsName: LogicalKeybindingsName = null;
+  #page: QScrollArea = null;
 
   #commandKeybindingsMapping: Map<string, CommandKeybindingInfo> = null;
   #recordLineEdit: KeyRecord = null;
@@ -101,6 +102,13 @@ export class KeybindingsPage implements SettingsPageType {
   }
 
   getPage(): QScrollArea {
+    if (this.#page == null) {
+      this.#page = this.#createPage();
+    }
+    return this.#page;
+  }
+
+  #createPage(): QScrollArea {
     const config = this.#configDatabase.getGeneralConfig();
     const currentStyleIndex = keybindingStyles.map(ks => ks.id).indexOf(config.keybindingsName);
     this.#keybindingsName = config.keybindingsName;

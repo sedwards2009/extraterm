@@ -65,8 +65,15 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #desiredState: ExtensionDesiredState = null;
 
   #activeExtensions: ActiveExtension[] = [];
+
   #onDesiredStateChangedEventEmitter = new EventEmitter<void>();
   onDesiredStateChanged: Event<void>;
+
+  #onExtensionActivatedEventEmitter = new EventEmitter<ExtensionMetadata>();
+  onExtensionActivated: Event<ExtensionMetadata>;
+
+  #onExtensionDeactivatedEventEmitter = new EventEmitter<ExtensionMetadata>();
+  onExtensionDeactivated: Event<ExtensionMetadata>;
 
   #applicationVersion = "";
   #extensionPaths: string[] = null;
@@ -92,6 +99,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     this.#extensionPaths = extensionPaths;
     this.onDesiredStateChanged = this.#onDesiredStateChangedEventEmitter.event;
+    this.onExtensionActivated = this.#onExtensionActivatedEventEmitter.event;
+    this.onExtensionDeactivated = this.#onExtensionDeactivatedEventEmitter.event;
 
     this.#extensionMetadata = this.#scan(this.#extensionPaths);
 
@@ -217,6 +226,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
     const activeExtension: ActiveExtension = {metadata, publicApi, internalExtensionContext, module};
     this.#activeExtensions.push(activeExtension);
+    this.#onExtensionActivatedEventEmitter.fire(activeExtension.metadata);
     return activeExtension;
   }
 
@@ -245,6 +255,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
     activeExtension.internalExtensionContext.dispose();
     this.#activeExtensions = this.#activeExtensions.filter(ex => ex !== activeExtension);
+    this.#onExtensionDeactivatedEventEmitter.fire(activeExtension.metadata);
   }
 
   getAllExtensions(): ExtensionMetadata[] {

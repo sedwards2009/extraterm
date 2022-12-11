@@ -45,6 +45,8 @@ export interface ExtensionManager {
   getWindowForTab(tab: Tab): Window;
 
   onDesiredStateChanged: ExtensionApi.Event<void>;
+  onExtensionActivated: ExtensionApi.Event<ExtensionMetadata>;
+  onExtensionDeactivated: ExtensionApi.Event<ExtensionMetadata>;
 
   enableExtension(name: string): void;
   disableExtension(name: string): void;

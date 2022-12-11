@@ -62,6 +62,10 @@ export class SessionTypesPage implements SettingsPageType {
   }
 
   getPage(): QScrollArea {
+    if (this.#page != null) {
+      return this.#page;
+    }
+
     this.#page = ScrollArea({
       cssClass: "settings-tab",
       widgetResizable: true,

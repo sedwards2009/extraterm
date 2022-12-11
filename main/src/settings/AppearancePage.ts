@@ -57,6 +57,8 @@ export class AppearancePage implements SettingsPageType {
   #uiStyle: UiStyle = null;
   #fontAtlasCache: FontAtlasCache = null;
 
+  #page: QScrollArea = null;
+
   #previewTerminalBlock: TerminalBlock = null;
   #previewEmulator: Term.Emulator = null;
   #qtTimeout: QtTimeout = null;
@@ -94,6 +96,13 @@ export class AppearancePage implements SettingsPageType {
   }
 
   getPage(): QScrollArea {
+    if (this.#page == null) {
+      this.#page = this.#createPage();
+    }
+    return this.#page;
+  }
+
+  #createPage(): QScrollArea {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     const systemConfig = this.#configDatabase.getSystemConfig();
 

@@ -26,6 +26,7 @@ import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
 import { SettingsPageType } from "./SettingsPageType.js";
 import { ExtensionHolderPage } from "./ExtensionHolderPage.js";
+import { ExtensionMetadata } from "../extension/ExtensionMetadata.js";
 
 
 export class SettingsTab implements Tab {
@@ -49,9 +50,6 @@ export class SettingsTab implements Tab {
   #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
   onWindowTitleChanged: Event<string> = null;
 
-  #pageToStackMapping = new Map<number, number>();
-  #stackedWidgetCount = 0;
-
   constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager, themeManager: ThemeManager,
     keybindingsIOManager: KeybindingsIOManager, window: Window, uiStyle: UiStyle, fontAtlasCache: FontAtlasCache) {
 
@@ -64,6 +62,13 @@ export class SettingsTab implements Tab {
     this.#uiStyle = uiStyle;
     this.#window = window;
     this.#fontAtlasCache = fontAtlasCache;
+
+    this.#extensionManager.onExtensionActivated((metadata) => {
+      this.#handleExtensionActivated(metadata);
+    });
+    this.#extensionManager.onExtensionDeactivated((metadata) => {
+      this.#handleExtensionDeactivated(metadata);
+    });
 
     this.#pages = this.#createPages();
     this.#createUI(uiStyle);
@@ -143,12 +148,12 @@ export class SettingsTab implements Tab {
     let stackedWidget: QStackedWidget = null;
 
     const showPage = (row: number): void => {
-      if (!this.#pageToStackMapping.has(row)) {
-        stackedWidget.addWidget(this.#createPage(row));
-        this.#pageToStackMapping.set(row, this.#stackedWidgetCount);
-        this.#stackedWidgetCount++;
+      const settingsPage = this.#pages[row];
+      const page = settingsPage.getPage();
+      if (page.parent() == null) {
+        stackedWidget.addWidget(settingsPage.getPage());
       }
-      stackedWidget.setCurrentIndex(this.#pageToStackMapping.get(row));
+      stackedWidget.setCurrentWidget(page);
     };
 
     this.#contentWidget = Widget({
@@ -188,10 +193,6 @@ export class SettingsTab implements Tab {
     showPage(0);
   }
 
-  #createPage(index: number): QWidget {
-    return this.#pages[index].getPage();
-  }
-
   selectPageByName(name: string): void {
     for (let i=0; i<this.#pages.length; i++) {
       if (this.#pages[i].getName() === name) {
@@ -199,6 +200,43 @@ export class SettingsTab implements Tab {
         break;
       }
     }
+  }
+
+  #handleExtensionActivated(metadata: ExtensionMetadata): void {
+    const extensionName = metadata.name;
+    for (const contrib of this.#extensionManager.getSettingsTabContributions()) {
+      if (extensionName === contrib.internalExtensionContext.extensionMetadata.name) {
+        const page = new ExtensionHolderPage(contrib, this.#configDatabase, this.#window, this.#uiStyle);
+        this.#pages.push(page);
+
+        this.#pagesWidget.addItem(
+          ListWidgetItem({
+            icon: this.#uiStyle.getSettingsMenuIcon(page.getIconName()),
+            text: page.getMenuText(),
+            selected: false
+          })
+        );
+      }
+    }
+  }
+
+  #handleExtensionDeactivated(metadata: ExtensionMetadata): void {
+    const extensionName = metadata.name;
+    while(this.#removeOneExtensionPage(extensionName)) {
+    }
+  }
+
+  #removeOneExtensionPage(extensionName: string): boolean {
+    for (let i=0; i<this.#pages.length; i++) {
+      const page = this.#pages[i];
+      if (page instanceof ExtensionHolderPage && page.getExtensionName() === extensionName) {
+        this.#pagesWidget.takeItem(i);
+        page.getPage().setParent(null);
+        this.#pages.splice(i, 1);
+        return true;
+      }
+    }
+    return false;
   }
 }
 

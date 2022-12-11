@@ -55,7 +55,14 @@ export class ExtensionsPage implements SettingsPageType {
   }
 
   getPage(): QWidget {
-    this.#topLevelStack = StackedWidget({
+    if (this.#topLevelStack == null) {
+      this.#topLevelStack = this.#createPage();
+    }
+    return this.#topLevelStack;
+  }
+
+  #createPage(): QStackedWidget {
+    const topLevelStack = StackedWidget({
       children: [
         ScrollArea({
           cssClass: "settings-tab",
@@ -145,7 +152,7 @@ export class ExtensionsPage implements SettingsPageType {
         })
       ]
     });
-    return this.#topLevelStack;
+    return topLevelStack;
   }
 
   #createCards(): QWidget[] {

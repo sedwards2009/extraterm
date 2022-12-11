@@ -17,6 +17,7 @@ import { SettingsPageType } from "./SettingsPageType.js";
 export class GeneralPage implements SettingsPageType {
   private _log: Logger = null;
   #configDatabase: ConfigDatabase = null;
+  #page: QScrollArea = null;
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle) {
     this._log = getLogger("GeneralPage", this);
@@ -36,6 +37,13 @@ export class GeneralPage implements SettingsPageType {
   }
 
   getPage(): QScrollArea {
+    if (this.#page == null) {
+      this.#page = this.#createPage();
+    }
+    return this.#page;
+  }
+
+  #createPage(): QScrollArea {
     const updateGeneralConfig = (func: (generalConfig: GeneralConfig) => void): void => {
       const generalConfig = this.#configDatabase.getGeneralConfigCopy();
       func(generalConfig);
