@@ -97,12 +97,12 @@ export class FindControls {
             spacing: 0,
             contentsMargins: [0, 0, 0, 0],
             children: [
-              this.#caseSensitiveButton = PushButton({
+              PushButton({
                 icon: this.#style.createQIcon("fa-arrow-up"),
                 cssClass: ["small", "group-left"],
                 onClicked: () => this.#searchBackwards()
               }),
-              this.#regexButton = PushButton({
+              PushButton({
                 icon: this.#style.createQIcon("fa-arrow-down"),
                 cssClass: ["small", "group-right"],
                 onClicked: () => this.#searchForwards()
