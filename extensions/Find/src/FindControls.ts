@@ -5,7 +5,7 @@
  */
 import { Event, Logger, Style } from '@extraterm/extraterm-extension-api';
 import { AlignmentFlag, Direction, FocusReason, Key, QKeyEvent, QLineEdit, QPushButton, QWidget, TextFormat } from '@nodegui/nodegui';
-import { BoxLayout, Label, LineEdit, PushButton, Widget } from 'qt-construct';
+import { BoxLayout, Label, LineEdit, PushButton, setCssClasses, Widget } from 'qt-construct';
 import { EventEmitter } from "extraterm-event-emitter";
 
 
@@ -169,7 +169,24 @@ export class FindControls {
   }
 
   #searchTextChanged(text: string): void {
+    this.#updatePatternWarning(text);
     this.#onSearchTextChangedEventEmitter.fire(text);
+  }
+
+  #updatePatternWarning(pattern: string): void {
+    if (this.#regexButton.isChecked()) {
+      try {
+        new RegExp(pattern);
+      } catch (ex) {
+        this.#log.warn(ex.message);
+        this.#lineEdit.setToolTip(ex.message);
+        setCssClasses(this.#lineEdit, ["warning"]);
+        return;
+      }
+    }
+
+    this.#lineEdit.setToolTip(null);
+    setCssClasses(this.#lineEdit, []);
   }
 
   #caseSensitiveChanged(checked: boolean): void {
@@ -177,6 +194,7 @@ export class FindControls {
   }
 
   #regexChanged(checked: boolean): void {
+    this.#updatePatternWarning(this.getSearchText());
     this.#onRegexChangedEventEmitter.fire(checked);
   }
 

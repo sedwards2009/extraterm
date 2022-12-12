@@ -138,7 +138,11 @@ class FindExtension {
       const isRegex = this.#findControls.isRegex();
       const isCaseSensitive = this.#findControls.isCaseSensitive();
       const regexString = isRegex ? text : escapeStringRegexp(text);
-      regex = new RegExp(regexString, isCaseSensitive ? "g" : "gi");
+      try {
+        regex = new RegExp(regexString, isCaseSensitive ? "g" : "gi");
+      } catch(ex) {
+        log.warn(ex.message);
+      }
     }
     return regex;
   }
