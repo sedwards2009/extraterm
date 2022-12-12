@@ -450,7 +450,7 @@ __metadata:
     typedoc: ^0.22.3
     typescript: 4.7.4
   peerDependencies:
-    "@nodegui/nodegui": 0.57.0
+    "@nodegui/nodegui": 0.57.3
   languageName: unknown
   linkType: soft
 
@@ -785,9 +785,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:0.57.0":
-  version: 0.57.0
-  resolution: "@nodegui/nodegui@npm:0.57.0"
+"@nodegui/nodegui@npm:0.57.3":
+  version: 0.57.3
+  resolution: "@nodegui/nodegui@npm:0.57.3"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/qode": ^16.4.3
@@ -802,7 +802,7 @@ __metadata:
     tar: ^6.0.1
   bin:
     qode: scripts/qode.js
-  checksum: f9c62c4841df3ef79b5c97f00d0e816f1b18b1d1cb21bf5d4d6dd1e99817b97f2934bd9f84f67bab8d54871c78000f70524f48858fc7c49261c105fec121ad5f
+  checksum: 7d2ae225b2340ad694615f91450fbfd894a2bad86706a8faa445c09691f04cde88978fb4dc2eee84dfaa7a1b3a9756558d5ed7530d79befba1629dcab7af3938
   languageName: node
   linkType: hard
 
@@ -1746,7 +1746,7 @@ __metadata:
     "@types/jest": 27.0.1
     esbuild: ^0.15.5
     jest: 27.5.1
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     typescript: 4.7.4
   languageName: unknown
   linkType: soft
@@ -1759,7 +1759,7 @@ __metadata:
     "@types/jest": 27.0.1
     esbuild: ^0.15.5
     jest: 27.5.1
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     typescript: 4.7.4
   languageName: unknown
   linkType: soft
@@ -2859,7 +2859,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     esbuild: ^0.15.5
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     typescript: 4.7.4
   languageName: unknown
   linkType: soft
@@ -4095,7 +4095,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-char-render-canvas@workspace:packages/extraterm-char-render-canvas"
   dependencies:
-    "@nodegui/nodegui": 0.57.0
+    "@nodegui/nodegui": 0.57.3
     "@types/node": ^16.4.0
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
@@ -4254,7 +4254,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-timeoutqt@workspace:packages/extraterm-timeoutqt"
   dependencies:
-    "@nodegui/nodegui": 0.57.0
+    "@nodegui/nodegui": 0.57.3
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
@@ -4305,7 +4305,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm@workspace:."
   dependencies:
-    "@nodegui/nodegui": 0.57.0
+    "@nodegui/nodegui": 0.57.3
     "@yarnpkg/parsers": 2.5.0-rc.7
     commander: ^9.4.0
     extraterm-uuid: 1.0.0
@@ -4317,7 +4317,7 @@ __metadata:
     node-gyp: ^8.3.0
     qode: ^0.1.0
     readdirp: 3.6.0
-    shelljs: ^0.8.4
+    shelljs: ^0.8.5
     shx: ^0.3.4
     typescript: 4.7.4
     wsrun: 5.2.0
@@ -5373,7 +5373,7 @@ __metadata:
     "@extraterm/extraterm-extension-api": 0.15.0
     download-cli: ^1.1.1
     esbuild: ^0.15.5
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     typescript: 4.7.4
   languageName: unknown
   linkType: soft
@@ -6808,7 +6808,7 @@ __metadata:
   resolution: "main@workspace:main"
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
-    "@nodegui/nodegui": 0.57.0
+    "@nodegui/nodegui": 0.57.3
     "@types/dompurify": ^2.0.1
     "@types/he": ^1.1.1
     "@types/lodash-es": 4.17.6
@@ -6860,7 +6860,7 @@ __metadata:
     performance-now: 2.1.0
     qs: 6.3.2
     qt-construct: 0.1.0
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     shx: ^0.3.2
     smart-buffer: 4.0.2
     source-map-support: ^0.5.21
@@ -7782,7 +7782,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     esbuild: ^0.15.5
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     typescript: 4.7.4
   languageName: unknown
   linkType: soft
@@ -8539,14 +8539,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "qt-construct@workspace:packages/qt-construct"
   dependencies:
-    "@nodegui/nodegui": 0.57.0
+    "@nodegui/nodegui": 0.57.3
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     typescript: 4.7.4
   peerDependencies:
-    "@nodegui/nodegui": 0.57.0
+    "@nodegui/nodegui": 0.57.3
   languageName: unknown
   linkType: soft
 
@@ -9074,20 +9074,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"shelljs@npm:0.8.3":
-  version: 0.8.3
-  resolution: "shelljs@npm:0.8.3"
-  dependencies:
-    glob: ^7.0.0
-    interpret: ^1.0.0
-    rechoir: ^0.6.2
-  bin:
-    shjs: ./bin/shjs
-  checksum: 482df6006e7ea562702e149312a3ca829976606cbe945acfc664cc012999845e4aa6c010a1007701248e4da8c68ef105e3c4f33a85e73b021c37826c6faa5bd8
-  languageName: node
-  linkType: hard
-
-"shelljs@npm:^0.8.4, shelljs@npm:^0.8.5":
+"shelljs@npm:0.8.5, shelljs@npm:^0.8.5":
   version: 0.8.5
   resolution: "shelljs@npm:0.8.5"
   dependencies:
@@ -9934,7 +9921,7 @@ __metadata:
     download-cli: ^1.1.1
     esbuild: ^0.15.5
     jest: 27.5.1
-    shelljs: 0.8.3
+    shelljs: 0.8.5
     typescript: 4.7.4
   languageName: unknown
   linkType: soft

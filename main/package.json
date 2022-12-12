@@ -16,7 +16,7 @@
     "test": "yarn run build-code && yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.57.0",
+    "@nodegui/nodegui": "0.57.3",
     "nodegui-plugin-font-icon": "0.2.4",
     "nodegui-plugin-rich-text-delegate": "0.2.1",
     "nodegui-plugin-style-tweaker": "0.2.1"
@@ -71,7 +71,7 @@
     "performance-now": "2.1.0",
     "qs": "6.3.2",
     "qt-construct": "0.1.0",
-    "shelljs": "0.8.3",
+    "shelljs": "0.8.5",
     "shx": "^0.3.2",
     "smart-buffer": "4.0.2",
     "source-map-support": "^0.5.21",
