@@ -114,7 +114,7 @@ export class CommandRequestHandler implements RequestHandler {
 
     let result: any = null;
     try {
-      const tempState = this.#extensionManager.copyExtensionWindowState()
+      const tempState = this.#extensionManager.copyExtensionWindowState();
 
       const windowIdStr = jsonBody.window;
       let windowId: number = null;

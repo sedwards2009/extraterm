@@ -178,28 +178,28 @@
         "when": ""
       },
       {
-        "command": "extraterm:window.closeWindow",
+        "command": "extraterm:window.close",
         "title": "Close Window",
         "category": "window",
         "icon": "fa-times",
         "when": ""
       },
       {
-        "command": "extraterm:window.maximizeWindow",
+        "command": "extraterm:window.maximize",
         "title": "Maximize Window",
         "category": "window",
         "icon": "fa-window-maximize",
         "when": ""
       },
       {
-        "command": "extraterm:window.minimizeWindow",
+        "command": "extraterm:window.minimize",
         "title": "Minimize Window",
         "category": "window",
         "icon": "fa-window-minimize",
         "when": ""
       },
       {
-        "command": "extraterm:window.restoreWindow",
+        "command": "extraterm:window.restore",
         "title": "Restore Window",
         "category": "window",
         "when": ""

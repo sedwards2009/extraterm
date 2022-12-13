@@ -350,12 +350,12 @@ class Main {
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
-    commands.registerCommand("extraterm:window.closeWindow", () => this.commandCloseWindow());
+    commands.registerCommand("extraterm:window.close", () => this.commandCloseWindow());
     commands.registerCommand("extraterm:window.listAll", () => this.commandListWindows());
     commands.registerCommand("extraterm:window.moveTabToNewWindow", () => this.commandMoveTabToNewWindow());
-    commands.registerCommand("extraterm:window.maximizeWindow", () => this.commandMaximizeWindow());
-    commands.registerCommand("extraterm:window.minimizeWindow", () => this.commandMinimizeWindow());
-    commands.registerCommand("extraterm:window.restoreWindow", () => this.commandRestoreWindow());
+    commands.registerCommand("extraterm:window.maximize", () => this.commandMaximizeWindow());
+    commands.registerCommand("extraterm:window.minimize", () => this.commandMinimizeWindow());
+    commands.registerCommand("extraterm:window.restore", () => this.commandRestoreWindow());
     commands.registerCommand("extraterm:terminal.openLastFrame",() => this.commandOpenLastFrame());
 
     Terminal.registerCommands(extensionManager);
