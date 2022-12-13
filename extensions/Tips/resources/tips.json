@@ -37,12 +37,11 @@
   {
     "lines": [
       "<h2>",
-      {"icon": "fa-lightbulb"},
-      " Tip: Global Hot Key</h2>",
+      {"icon": "fa-eye-slash"},
+      " Computing Privacy</h2>",
       "<p>",
-      "It is possible in the Settings tab to configure a global hot key to show and focus the Extraterm window. ",
-      "Combine this with the system tray icon and \"Minimize window to tray\" options and you've got (almost) Quake ",
-      "Mode.",
+      "Extraterm doesn't contain advertisements or analytics, nor does it report your usage, be it anonymous or ",
+      "otherwise, nor does it require a special login to use.",
       "</p>"
     ]
   },
