@@ -45,6 +45,7 @@ import { FontAtlasCache } from "./terminal/FontAtlasCache.js";
 import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TerminalBlock } from "./terminal/TerminalBlock.js";
 import { BulkFile } from "./bulk_file_handling/BulkFile.js";
+import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler.js";
 
 
 sourceMapSupport.install();
@@ -58,6 +59,10 @@ const PACKAGE_JSON_PATH = "../../package.json";
 
 interface OpenSettingsArgs {
   select?: string;
+}
+
+interface WindowDescription {
+  id: string;
 }
 
 /**
@@ -152,7 +157,7 @@ class Main {
 
     // TODO: setupGlobalKeybindingsManager()
 
-    this.setupLocalHttpServer(this.#bulkFileStorage);
+    this.setupLocalHttpServer(extensionManager, this.#bulkFileStorage);
 
     this.registerCommands(extensionManager);
     this.startUpSessions(configDatabase, extensionManager);
@@ -311,7 +316,7 @@ class Main {
     return null;
   }
 
-  async setupLocalHttpServer(bulkFileStorage: BulkFileStorage): Promise<LocalHttpServer> {
+  async setupLocalHttpServer(extensionManager: ExtensionManager, bulkFileStorage: BulkFileStorage): Promise<LocalHttpServer> {
     const ipcFilePath = path.join(getUserSettingsDirectory(), IPC_FILENAME);
     const localHttpServer = new LocalHttpServer(ipcFilePath);
     await localHttpServer.start();
@@ -321,6 +326,17 @@ class Main {
     localHttpServer.registerRequestHandler("bulk", bulkFileRequestHandler);
     const pingHandler = new PingHandler();
     localHttpServer.registerRequestHandler("ping", pingHandler);
+
+    const getWindowById = (id: number): Window => {
+      for (const window of this.#windows) {
+        if (window.getId() === id) {
+          return window;
+        }
+      }
+      return null;
+    };
+    const commandRequestHandler = new CommandRequestHandler(extensionManager, getWindowById);
+    localHttpServer.registerRequestHandler("command", commandRequestHandler);
 
     return localHttpServer;
   }
@@ -335,6 +351,7 @@ class Main {
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
     commands.registerCommand("extraterm:window.closeWindow", () => this.commandCloseWindow());
+    commands.registerCommand("extraterm:window.listAll", () => this.commandListWindows());
     commands.registerCommand("extraterm:window.moveTabToNewWindow", () => this.commandMoveTabToNewWindow());
     commands.registerCommand("extraterm:window.maximizeWindow", () => this.commandMaximizeWindow());
     commands.registerCommand("extraterm:window.minimizeWindow", () => this.commandMinimizeWindow());
@@ -688,6 +705,12 @@ class Main {
   commandCloseWindow(): void {
     const win = this.#extensionManager.getActiveWindow();
     this.#disposeWindow(win);
+  }
+
+  commandListWindows(): WindowDescription[] {
+    return this.#windows.map(w => ({
+      id: `${w.getId()}`
+    }));
   }
 
   #disposeWindow(win: Window): void {

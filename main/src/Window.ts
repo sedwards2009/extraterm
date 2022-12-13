@@ -63,8 +63,11 @@ enum WindowOpenState {
   ClosedMinimized
 }
 
+let windowIdCounter = 0;
+
 export class Window implements Disposable {
   private _log: Logger = null;
+  #id = 0;
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
@@ -111,6 +114,8 @@ export class Window implements Disposable {
       keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle) {
 
     this._log = getLogger("Window", this);
+    ++windowIdCounter;
+    this.#id = windowIdCounter;
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
@@ -601,6 +606,10 @@ export class Window implements Disposable {
       screenWidthHintPx: 1024,  // FIXME
     };
     return terminalVisualConfig;
+  }
+
+  getId(): number {
+    return this.#id;
   }
 
   getDpi(): number {
