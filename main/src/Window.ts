@@ -718,6 +718,48 @@ export class Window implements Disposable {
     if (this.getDpi() !== this.#lastConfigDpi) {
       this.#updateTerminalVisualConfig();
     }
+    this.#moveOnScreen();
+  }
+
+  #moveOnScreen(): void {
+    const screenGeometry = this.#windowWidget.windowHandle().screen().geometry();
+    const windowGeometry = this.#windowWidget.geometry();
+
+    let changed = false;
+    let windowWidth = windowGeometry.width();
+    if (windowWidth > screenGeometry.width()) {
+      windowWidth = screenGeometry.width();
+      changed = true;
+    }
+
+    let windowHeight = windowGeometry.height();
+    if (windowHeight > screenGeometry.height()) {
+      windowHeight = screenGeometry.height();
+      changed = true;
+    }
+
+    let windowLeft = windowGeometry.left();
+    if (windowLeft < 0) {
+      windowLeft = 0;
+      changed = true;
+    }
+    if (windowLeft > screenGeometry.width() - windowWidth) {
+      windowLeft = screenGeometry.width() - windowWidth;
+    }
+
+    let windowTop = windowGeometry.top();
+    if (windowTop < 0) {
+      windowTop = 0;
+      changed = true;
+    }
+    if (windowTop > screenGeometry.height() - windowHeight) {
+      windowTop = screenGeometry.height() - windowHeight;
+      changed = true;
+    }
+
+    if (changed) {
+      this.#windowWidget.setGeometry(windowLeft, windowTop, windowWidth, windowHeight);
+    }
   }
 
   dispose(): void {
