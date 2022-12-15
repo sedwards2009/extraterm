@@ -179,7 +179,6 @@ class Main {
     });
 
     await this.openWindow();
-    await this.commandNewTerminal({});
   }
 
   #setApplicationStyle(uiScalePercent: number): void {
