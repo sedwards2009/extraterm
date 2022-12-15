@@ -823,7 +823,9 @@ export class Terminal implements Tab, Disposable {
       disposableHolder.add(blockFrame.onPopOutClicked((frame) => this.#handleBlockPopOutClicked(frame)));
     }
     this.#blockFrames.push({ frame: blockFrame, disposableHolder });
-    blockFrame.getBlock().setParent(this);
+    if (blockFrame.getBlock()) {
+      blockFrame.getBlock().setParent(this);
+    }
     this.scrollArea.appendBlockFrame(blockFrame);
   }
 
