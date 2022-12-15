@@ -62,6 +62,7 @@
           "extensions/About/resources/*",
           "extensions/TLDRPages/data/**/*",
           "extensions/ProxySessionBackend/dist/**/*",
+          "extensions/Tips/resources/**/*",
           "extensions/*/keybindings/*",
           "extensions/*/theme/**/*"
         ]
