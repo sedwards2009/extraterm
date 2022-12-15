@@ -17,7 +17,7 @@ jobs:
   - job: commands_zip
     displayName: "Build commands.zip"
     pool:
-      vmImage: 'Ubuntu-18.04'
+      vmImage: 'Ubuntu-20.04'
     steps:
       - script: |
           sudo apt-get update
@@ -47,7 +47,7 @@ jobs:
   - job: package_linux
     displayName: "Build Linux packages"
     pool:
-      vmImage: 'Ubuntu-18.04'
+      vmImage: 'Ubuntu-20.04'
     steps:
       - script: |
           sudo apt-get update
