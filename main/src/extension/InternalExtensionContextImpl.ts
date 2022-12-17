@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { EventEmitter } from "extraterm-event-emitter";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { SessionBackend } from "@extraterm/extraterm-extension-api";
 
@@ -29,6 +28,7 @@ import { BlockRegistry } from "./BlockRegistry.js";
 import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
 import { SettingsTabRegistry } from "./SettingsTabRegistry.js";
 import { ThemeManager } from "./../theme/ThemeManager.js";
+import { ErrorTolerantEventEmitter } from "./ErrorTolerantEventEmitter.js";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -50,19 +50,20 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   #sessionBackends: LoadedSessionBackendContribution[] = [];
   #terminalThemeProviders: LoadedTerminalThemeProviderContribution[] = [];
 
-  #onDidCreateTerminalEventEmitter = new EventEmitter<ExtensionApi.Terminal>();
+  #onDidCreateTerminalEventEmitter = null;
   onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
 
   constructor(extensionManager: ExtensionManager, extensionMetadata: ExtensionMetadata, configDatabase: ConfigDatabase,
       themeManager: ThemeManager, applicationVersion: string) {
 
     this._log = getLogger(`InternalExtensionContextImpl (${extensionMetadata.name})`);
+    this.#onDidCreateTerminalEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.Terminal>(
+      "onDidCreateTerminal", this._log);
+    this.onDidCreateTerminal = this.#onDidCreateTerminalEventEmitter.event;
 
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.extensionMetadata = extensionMetadata;
-
-    this.onDidCreateTerminal = this.#onDidCreateTerminalEventEmitter.event;
 
     this.commands = new CommandsRegistry(extensionManager, extensionMetadata.name,
       extensionMetadata.contributes.commands, extensionMetadata.contributes.menus);
@@ -295,7 +296,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       return null;
     }
     if (!this.#windowWrapMap.has(window)) {
-      const wrappedWindow = new WindowImpl(this, this.extensionMetadata, window, this.#configDatabase);
+      const wrappedWindow = new WindowImpl(this, this.extensionMetadata, window, this.#configDatabase, this._log);
       this.#windowWrapMap.set(window, wrappedWindow);
     }
     return this.#windowWrapMap.get(window);

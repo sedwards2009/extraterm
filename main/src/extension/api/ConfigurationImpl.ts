@@ -4,8 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { EventEmitter } from "extraterm-event-emitter";
-import { ConfigChangeEvent, ConfigDatabase } from "../../config/ConfigDatabase.js";
+import { ConfigDatabase } from "../../config/ConfigDatabase.js";
 
 
 export class ConfigurationImpl implements ExtensionApi.Configuration, ExtensionApi.Disposable {

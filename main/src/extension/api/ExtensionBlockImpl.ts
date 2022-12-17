@@ -12,6 +12,7 @@ import { getLogger, log, Logger } from "extraterm-logging";
 import { BulkFile } from "../../bulk_file_handling/BulkFile.js";
 import { Block } from "../../terminal/Block.js";
 import { InternalExtensionContext } from "../../InternalTypes.js";
+import { ErrorTolerantEventEmitter } from "../ErrorTolerantEventEmitter.js";
 
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
@@ -51,7 +52,7 @@ export class ExtensionBlockImpl implements Block {
     this.#bulkFile = bulkFile;
     if (this.#bulkFile != null) {
       bulkFile.ref();
-      this.#bulkFileWrapper = new BulkFileWrapper(bulkFile);
+      this.#bulkFileWrapper = new BulkFileWrapper(bulkFile, this._log);
     }
 
     this.#extensionBlockBlock = new ExtensionBlockBlock(this, this.#bulkFileWrapper);
@@ -140,16 +141,22 @@ class BulkFileWrapper implements ExtensionApi.BulkFileHandle {
 
   #bulkFile: BulkFile = null;
 
-  #onStateChangedEventEmitter = new EventEmitter<ExtensionApi.BulkFileState>();
+  #onStateChangedEventEmitter: ErrorTolerantEventEmitter<ExtensionApi.BulkFileState> = null;
   onStateChanged: ExtensionApi.Event<ExtensionApi.BulkFileState>;
 
-  #onAvailableSizeChangedEventEmitter = new EventEmitter<number>();
+  #onAvailableSizeChangedEventEmitter: ErrorTolerantEventEmitter<number> = null;
   onAvailableSizeChanged: ExtensionApi.Event<number>;
 
-  constructor(bulkFile: BulkFile) {
+  constructor(bulkFile: BulkFile, log: Logger) {
     this.#bulkFile = bulkFile;
+
+    this.#onStateChangedEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.BulkFileState>(
+      "onStateChanged", log);
     this.onStateChanged = this.#onStateChangedEventEmitter.event;
+
+    this.#onAvailableSizeChangedEventEmitter = new ErrorTolerantEventEmitter<number>("onAvailableSizeChanged", log);
     this.onAvailableSizeChanged = this.#onAvailableSizeChangedEventEmitter.event;
+
     this.#bulkFile.onAvailableSizeChanged(this.#handleOnAvailableSizeChanged.bind(this));
     this.#bulkFile.onStateChanged(this.#handleOnStateChanged.bind(this));
   }

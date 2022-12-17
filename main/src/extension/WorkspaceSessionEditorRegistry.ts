@@ -4,13 +4,13 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-import { EventEmitter } from 'extraterm-event-emitter';
 import * as _ from 'lodash-es';
 
 import { Logger, getLogger } from "extraterm-logging";
 import { ExtensionMetadata, ExtensionSessionEditorContribution } from './ExtensionMetadata.js';
 import { InternalSessionEditor, SessionConfigurationChange } from '../InternalTypes.js';
 import { QWidget } from '@nodegui/nodegui';
+import { ErrorTolerantEventEmitter } from './ErrorTolerantEventEmitter.js';
 
 
 export class WorkspaceSessionEditorRegistry {
@@ -59,7 +59,7 @@ export class WorkspaceSessionEditorRegistry {
       return null;
     }
 
-    const editorBase = new SessionEditorBaseImpl(sessionConfiguration, factory);
+    const editorBase = new SessionEditorBaseImpl(sessionConfiguration, factory, this._log);
     return editorBase;
   }
 }
@@ -67,14 +67,24 @@ export class WorkspaceSessionEditorRegistry {
 export class SessionEditorBaseImpl implements InternalSessionEditor {
   #sessionConfiguration: ExtensionApi.SessionConfiguration = null;
   onSessionConfigurationChanged: ExtensionApi.Event<SessionConfigurationChange>;
-  #onSettingsConfigurationChangedEventEmitter = new EventEmitter<SessionConfigurationChange>();
+  #onSettingsConfigurationChangedEventEmitter: ErrorTolerantEventEmitter<SessionConfigurationChange> = null;
+
   #widget: QWidget = null;
 
   constructor(sessionConfiguration: ExtensionApi.SessionConfiguration,
-      factory: ExtensionApi.SessionEditorFactory) {
+      factory: ExtensionApi.SessionEditorFactory, log: Logger) {
     this.#sessionConfiguration = _.cloneDeep(sessionConfiguration);
+
+    this.#onSettingsConfigurationChangedEventEmitter = new ErrorTolerantEventEmitter<SessionConfigurationChange>(
+      "onSessionConfigurationChanged", log);
     this.onSessionConfigurationChanged = this.#onSettingsConfigurationChangedEventEmitter.event;
-    this.#widget = factory.call(null, this);
+
+    try {
+      this.#widget = factory.call(null, this);
+    } catch(ex) {
+      log.warn(`An exception occurred while creating a new session editor: ${ex}`);
+      this.#widget = new QWidget();
+    }
   }
 
   _getWidget(): QWidget {

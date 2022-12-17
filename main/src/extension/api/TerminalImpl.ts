@@ -17,6 +17,7 @@ import { InternalExtensionContext } from "../../InternalTypes.js";
 import { BorderDirection, ExtensionMetadata, ExtensionTerminalBorderContribution } from "../ExtensionMetadata.js";
 import { Layer } from "packages/term-api/dist/TermApi.js";
 import { isDisposable } from "main/src/utils/DisposableUtils.js";
+import { ErrorTolerantEventEmitter } from "../ErrorTolerantEventEmitter.js";
 
 // import { ExtensionTerminalBorderContribution } from "../ExtensionMetadata";
 
@@ -38,14 +39,14 @@ export class TerminalImpl implements ExtensionApi.Disposable, ExtensionApi.Termi
   #extensionMetadata: ExtensionMetadata;
   #terminal: Terminal;
 
-  #onDidAppendBlockEventEmitter = new EventEmitter<ExtensionApi.Block>();
+  #onDidAppendBlockEventEmitter: ErrorTolerantEventEmitter<ExtensionApi.Block> = null;
   onDidAppendBlock: ExtensionApi.Event<ExtensionApi.Block>;
 
   onDidAppendScrollbackLines: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
-  _onDidAppendScrollbackLinesEventEmitter = new EventEmitter<ExtensionApi.LineRangeChange>();
+  _onDidAppendScrollbackLinesEventEmitter: ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange> = null;
 
   onDidScreenChange: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
-  _onDidScreenChangeEventEmitter = new EventEmitter<ExtensionApi.LineRangeChange>();
+  _onDidScreenChangeEventEmitter: ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange> = null;
 
   constructor(internalExtensionContext: InternalExtensionContext, extensionMetadata: ExtensionMetadata,
       terminal: Terminal) {
@@ -57,11 +58,20 @@ export class TerminalImpl implements ExtensionApi.Disposable, ExtensionApi.Termi
     this.#extensionMetadata = extensionMetadata;
 
     this.#terminal.onDispose(this.#handleTerminalDispose.bind(this));
-    this.environment = new TerminalEnvironmentImpl(this.#terminal);
-    this.viewport = new ViewportProxy(this.#terminal);
+    this.environment = new TerminalEnvironmentImpl(this.#terminal, this._log);
+    this.viewport = new ViewportProxy(this.#terminal, this._log);
     this.screen = new ScreenImpl(this.#extensionMetadata, this.#terminal);
+
+    this.#onDidAppendBlockEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.Block>(
+      "onDidAppendBlock", this._log);
     this.onDidAppendBlock = this.#onDidAppendBlockEventEmitter.event;
+
+    this._onDidAppendScrollbackLinesEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange>(
+      "onDidAppendScrollbackLines", this._log);
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
+
+    this._onDidScreenChangeEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange>(
+      "onDidScreenChange", this._log);
     this.onDidScreenChange = this._onDidScreenChangeEventEmitter.event;
 
     this.#sessionConfiguration = _.cloneDeep(this.#terminal.getSessionConfiguration());
@@ -193,11 +203,12 @@ export class TerminalImpl implements ExtensionApi.Disposable, ExtensionApi.Termi
 
 class TerminalEnvironmentImpl implements ExtensionApi.TerminalEnvironment {
   onChange: ExtensionApi.Event<string[]>;
-  _onChangeEventEmitter = new EventEmitter<string[]>();
+  _onChangeEventEmitter: ErrorTolerantEventEmitter<string[]> = null;
   #terminal: Terminal;
 
-  constructor(terminal: Terminal) {
+  constructor(terminal: Terminal, log: Logger) {
     this.#terminal = terminal;
+    this._onChangeEventEmitter = new ErrorTolerantEventEmitter<string[]>("onChange", log);
     this.onChange = this._onChangeEventEmitter.event;
   }
 
@@ -359,11 +370,12 @@ class ViewportProxy implements ExtensionApi.Viewport {
 
   #terminal: Terminal;
 
-  #onDidChangeEventEmitter = new EventEmitter<void>();
+  #onDidChangeEventEmitter: ErrorTolerantEventEmitter<void> = null;
   onDidChange: ExtensionApi.Event<void>;
 
-  constructor(terminal: Terminal) {
+  constructor(terminal: Terminal, log: Logger) {
     this.#terminal = terminal;
+    this.#onDidChangeEventEmitter = new ErrorTolerantEventEmitter<void>("onDidChange", log);
     this.onDidChange = this.#onDidChangeEventEmitter.event;
     this.#terminal.scrollArea.onViewportChanged(() => {
       this.#onDidChangeEventEmitter.fire();

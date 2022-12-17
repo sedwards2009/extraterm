@@ -10,6 +10,7 @@ import { BoxLayout, Widget } from "qt-construct";
 
 import { Tab } from "../../Tab.js";
 import { Window } from "../../Window.js";
+import { ErrorTolerantEventEmitter } from "../ErrorTolerantEventEmitter.js";
 
 
 export class ExtensionTabBridge implements Tab {
@@ -20,6 +21,8 @@ export class ExtensionTabBridge implements Tab {
   #onWindowTitleChangedEventEmitter = new EventEmitter<string>();
   onWindowTitleChanged: ExtensionApi.Event<string> = null;
 
+  #onDidCloseEventEmitter: ErrorTolerantEventEmitter<void> = null;
+
   #extensionTabImpl: ExtensionTabImpl;
   #containerWidget: QWidget;
   #containerLayout: QBoxLayout;
@@ -29,8 +32,9 @@ export class ExtensionTabBridge implements Tab {
 
   #isOpen = false;
 
-  constructor(window: Window) {
+  constructor(window: Window, log: ExtensionApi.Logger) {
     this.onWindowTitleChanged = this.#onWindowTitleChangedEventEmitter.event;
+    this.#onDidCloseEventEmitter = new ErrorTolerantEventEmitter<void>("onDidClose", log);
     this.#window = window;
     this.#extensionTabImpl = new ExtensionTabImpl(this);
     this.#window.onTabCloseRequest((t: Tab) => {
@@ -77,7 +81,6 @@ export class ExtensionTabBridge implements Tab {
     return this.#containerWidget;
   }
 
-  #onDidCloseEventEmitter = new EventEmitter<void>();
   getOnDidCloseEvent(): ExtensionApi.Event<void> {
     return this.#onDidCloseEventEmitter.event;
   }

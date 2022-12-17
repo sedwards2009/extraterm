@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
-import { EventEmitter } from 'extraterm-event-emitter';
 import * as _ from 'lodash-es';
 
 import { Logger, getLogger } from "extraterm-logging";
@@ -14,6 +13,7 @@ import { QWidget } from "@nodegui/nodegui";
 import { Window } from "../Window.js";
 import { StyleImpl } from "./api/StyleImpl.js";
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
+import { ErrorTolerantEventEmitter } from './ErrorTolerantEventEmitter.js';
 
 
 export class WorkspaceSessionSettingsEditorRegistry {
@@ -74,7 +74,7 @@ export class WorkspaceSessionSettingsEditorRegistry {
       }
 
       const editorBase = new SessionSettingsEditorBaseImpl(sessionSettingsMetadata.name, settingsConfigKey, settings,
-        this.#configDatabase, window, factory);
+        this.#configDatabase, window, factory, this._log);
       result.push(editorBase);
     }
     return result;
@@ -87,7 +87,7 @@ export class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEdi
   #settings: object;
 
   onSettingsChanged: ExtensionApi.Event<SessionSettingsChange>;
-  #onSettingsChangedEventEmitter = new EventEmitter<SessionSettingsChange>();
+  #onSettingsChangedEventEmitter: ErrorTolerantEventEmitter<SessionSettingsChange> = null;
 
   #configDatabase: ConfigDatabase;
   #widget: QWidget = null;
@@ -95,11 +95,14 @@ export class SessionSettingsEditorBaseImpl implements InternalSessionSettingsEdi
   #style: StyleImpl = null;
 
   constructor(name: string, key: string, settings: Object, configDatabase: ConfigDatabase, window: Window,
-      factory: ExtensionApi.SessionSettingsEditorFactory) {
+      factory: ExtensionApi.SessionSettingsEditorFactory, log: Logger) {
 
     this.#name = name;
     this.#key = key;
     this.#settings = settings;
+
+    this.#onSettingsChangedEventEmitter = new ErrorTolerantEventEmitter<SessionSettingsChange>(
+      "onSettingsChanged", log);
     this.onSettingsChanged = this.#onSettingsChangedEventEmitter.event;
     this.#configDatabase = configDatabase;
     this.#window = window;

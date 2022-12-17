@@ -13,14 +13,14 @@ import { StyleImpl } from "./StyleImpl.js";
 
 
 export class WindowImpl implements ExtensionApi.Window {
-
+  #log: ExtensionApi.Logger = null;
   #internalExtensionContext: InternalExtensionContext;
   #window: Window;
   #style: ExtensionApi.Style;
 
   constructor(internalExtensionContext: InternalExtensionContext, extensionMetadata: ExtensionMetadata,
-      window: Window, configDatabase: ConfigDatabase) {
-
+      window: Window, configDatabase: ConfigDatabase, log: ExtensionApi.Logger) {
+    this.#log = log;
     this.#internalExtensionContext = internalExtensionContext;
     this.#window = window;
     this.#style = new StyleImpl(configDatabase, window);
@@ -33,7 +33,7 @@ export class WindowImpl implements ExtensionApi.Window {
   onDidClose: ExtensionApi.Event<ExtensionApi.Window>;
 
   createExtensionTab(name: string): ExtensionApi.ExtensionTab {
-    const bridge = new ExtensionTabBridge(this.#window);
+    const bridge = new ExtensionTabBridge(this.#window, this.#log);
     return bridge.getExtensionTabImpl();
   }
 

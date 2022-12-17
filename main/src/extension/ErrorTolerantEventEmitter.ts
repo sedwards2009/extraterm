@@ -3,27 +3,22 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 
-/**
- * A resource which can later be freed by calling `dispose()`.
- */
-export interface Disposable {
-  dispose(): void;
-}
-
-/**
- * Function which represents a specific event which you can subscribe to.
- */
-export interface Event<T> {
-  (listener: (e: T) => any): Disposable;
-}
 
 /**
  * An event emitter which can be subscribed to receive events.
  */
-export class EventEmitter<T> implements Disposable {
+export class ErrorTolerantEventEmitter<T> implements ExtensionApi.Disposable {
 
   private _listeners: ((t: T) => void)[] = [];
+  #log: ExtensionApi.Logger = null;
+  #name: string = null;
+
+  constructor(name: string, logger: ExtensionApi.Logger) {
+    this.#log = logger;
+    this.#name = name;
+  }
 
   /**
    * Dispose of and disconnect all listeners.
@@ -38,7 +33,7 @@ export class EventEmitter<T> implements Disposable {
    * @param listener the function to call when this event is triggered.
    * @return a `Disposable` which when used disconnects this listener from the event.
    */
-  event: Event<T> = (listener: (t: T) => void): Disposable => {
+  event: ExtensionApi.Event<T> = (listener: (t: T) => void): ExtensionApi.Disposable => {
     this._listeners.push(listener);
     return {
       dispose: () => {
@@ -53,7 +48,13 @@ export class EventEmitter<T> implements Disposable {
    * @param t the payload of the event.
    */
   fire(t: T): void {
-    this._listeners.forEach(listener => listener(t));
+    this._listeners.forEach(listener => {
+      try {
+        listener(t);
+      } catch(ex) {
+        this.#log.warn(`An exception occured while sending '${this.#name}': ${ex}`);
+      }
+    });
   }
 
   /**
