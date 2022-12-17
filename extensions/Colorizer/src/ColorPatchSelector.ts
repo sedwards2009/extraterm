@@ -79,9 +79,6 @@ export class ColorPatchSelector {
   }
 
   #handleOnClicked(): void {
-    const widget = this.#colorPatchButton.getWidget();
-    const rect = widget.geometry();
-    const bottomLeft = widget.mapToGlobal(new QPoint(0, rect.height()));
     const colorPatchPopupWidget = this.#colorPatchPopup.getWidget();
     this.#colorPatchPopup.setSelectedIndex(this.#selectedIndex);
 
@@ -98,9 +95,24 @@ export class ColorPatchSelector {
     });
     const onCloseDisposable = this.#colorPatchPopup.onClosed(dispose);
 
-    const hint = colorPatchPopupWidget.sizeHint();
-    colorPatchPopupWidget.setGeometry(bottomLeft.x(), bottomLeft.y(), hint.width(), hint.height());
+    this.#positionAround(colorPatchPopupWidget, this.#colorPatchButton.getWidget());
+
     colorPatchPopupWidget.raise();
     colorPatchPopupWidget.show();
+  }
+
+  #positionAround(popup: QWidget, target: QWidget): void {
+    const rect = target.geometry();
+    const hint = popup.sizeHint();
+    const bottomLeft = target.mapToGlobal(new QPoint(0, rect.height()));
+    let x = bottomLeft.x();
+    let y = bottomLeft.y();
+    const screenGeometry = target.window().windowHandle().screen().geometry();
+    if (y + hint.height() > screenGeometry.height()) {
+      const topLeft = target.mapToGlobal(new QPoint(0, 0));
+      y = topLeft.y() - hint.height();
+    }
+    x = Math.min(x, screenGeometry.width() - hint.width());
+    popup.setGeometry(x, y, hint.width(), hint.height());
   }
 }
