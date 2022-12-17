@@ -818,6 +818,12 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       }
     });
 
+    newTerminal.onDispose(() => {
+      if (this.#commonExtensionWindowState.activeTerminal === newTerminal) {
+        this.#commonExtensionWindowState.activeTerminal = null;
+      }
+    });
+
     for (const activeExtension of this.#activeExtensions) {
       activeExtension.internalExtensionContext.newTerminalCreated(window, newTerminal);
     }
