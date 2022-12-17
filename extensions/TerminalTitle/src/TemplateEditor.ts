@@ -84,9 +84,7 @@ export class TemplateEditor {
             return;
           }
 
-          const rect = iconButton.geometry();
-          const bottomLeft = this.#widget.mapToGlobal(new QPoint(rect.left(), rect.top() + rect.height()));
-          iconPopup.setGeometry(bottomLeft.x(), bottomLeft.y(), rect.width(), 200);
+          this.#positionAround(iconPopup, iconButton);
           iconPopup.raise();
           iconPopup.show();
         }
@@ -292,5 +290,20 @@ QPushButton[cssClass~="terminal-title"]:hover {
       })
     });
     return iconPopup;
+  }
+
+  #positionAround(popup: QWidget, target: QWidget): void {
+    const rect = target.geometry();
+    const hint = popup.sizeHint();
+    const bottomLeft = target.mapToGlobal(new QPoint(0, rect.height()));
+    let x = bottomLeft.x();
+    let y = bottomLeft.y();
+    const screenGeometry = target.window().windowHandle().screen().geometry();
+    if (y + hint.height() > screenGeometry.height()) {
+      const topLeft = target.mapToGlobal(new QPoint(0, 0));
+      y = topLeft.y() - hint.height();
+    }
+    x = Math.min(x, screenGeometry.width() - hint.width());
+    popup.setGeometry(x, y, hint.width(), hint.height());
   }
 }
