@@ -500,6 +500,7 @@ class Main {
 
     window.focusTab(newTerminal);
     this.#extensionManager.newTerminalCreated(window, newTerminal);
+    newTerminal.start();
   }
 
   #getSessionByUuid(sessionUuid: string): SessionConfiguration {
