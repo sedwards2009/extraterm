@@ -1419,7 +1419,10 @@ export class Terminal implements Tab, Disposable {
         break;
 
       case BlockState.BOOKMARK_OPEN:
-        this.#exitBlockStateBookmarkOpen("");
+        const wasFramed = this.#exitBlockStateBookmarkOpen("");
+        if (wasFramed && ! needsFrame) {
+          this.#appendNewTerminalBlock();
+        }
         break;
     }
 
