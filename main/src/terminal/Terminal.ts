@@ -1405,6 +1405,10 @@ export class Terminal implements Tab, Disposable {
 
   #handleApplicationModeBracketStart(): void {
     const commandLine = this.#getBracketCommandLine();
+    if (commandLine === "") {
+      return;
+    }
+
     const needsFrame = this.#commandNeedsFrame(commandLine);
 
     switch (this.#blockState) {
