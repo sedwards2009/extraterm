@@ -344,6 +344,7 @@ class Main {
     const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
     commands.registerCommand("extraterm:application.openCommandPalette", () => this.commandOpenCommandPalette());
     commands.registerCommand("extraterm:application.newWindow", () => this.commandNewWindow());
+    commands.registerCommand("extraterm:application.quit", () => this.commandQuit());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettings(args));
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
@@ -429,6 +430,12 @@ class Main {
 
   commandNewWindow(): void {
     this.openWindow();
+  }
+
+  commandQuit(): void {
+    while (this.#windows.length !== 0) {
+      this.#disposeWindow(this.#windows[0]);
+    }
   }
 
   async commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): Promise<void> {
