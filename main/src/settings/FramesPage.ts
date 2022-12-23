@@ -20,9 +20,9 @@ import { SettingsPageType } from "./SettingsPageType.js";
 
 
 const frameActionOptions: {id: FrameRule, name: string}[] = [
-  { id: "always_frame", name: "Always frame command output" },
-  { id: "never_frame", name: "Never frame command output" },
-  { id: "frame_if_lines", name: "Frame command output if longer than" },
+  { id: "always_frame", name: "Always frame output" },
+  { id: "never_frame", name: "Never frame output" },
+  { id: "frame_if_lines", name: "Frame output if longer than" },
 ];
 
 export class FramesPage implements SettingsPageType {
