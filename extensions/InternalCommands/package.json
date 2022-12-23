@@ -139,28 +139,28 @@
         "category": "window",
         "order": 1100,
         "icon": "fa-window-close",
-        "when": ""
+        "when": "tabFocus"
       },
       {
         "command": "extraterm:window.focusTabLeft",
         "title": "Focus Tab Left",
         "category": "window",
         "order": 1200,
-        "when": ""
+        "when": "tabFocus"
       },
       {
         "command": "extraterm:window.focusTabRight",
         "title": "Focus Tab Right",
         "category": "window",
         "order": 1201,
-        "when": ""
+        "when": "tabFocus"
       },
       {
         "command": "extraterm:window.moveTabToNewWindow",
         "title": "Move Tab to New Window",
         "category": "window",
         "order": 1202,
-        "when": ""
+        "when": "tabFocus"
       },
       {
         "command": "extraterm:window.openSettings",

@@ -51,6 +51,7 @@ export type Category = "global" |
 export interface WhenVariables {
   true: boolean;
   false: boolean;
+  tabFocus: boolean;
   terminalFocus: boolean;
   connectedTerminalFocus: boolean;
   blockFocus: boolean;

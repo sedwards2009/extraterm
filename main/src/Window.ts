@@ -862,6 +862,13 @@ export class Window implements Disposable {
   }
 
   setCurrentTabIndex(index: number): void {
+    const noTabs = this.#tabs.length === 0;
+    if (noTabs) {
+      this.#windowWidget.setWindowTitle("Extraterm");
+      this.#onTabChangeEventEmitter.fire(null);
+      return;
+    }
+
     const currentIndex = this.getCurrentTabIndex();
     this.#tabs[currentIndex].tab.unfocus();
 
@@ -881,7 +888,6 @@ export class Window implements Disposable {
     tab.focus();
 
     this.#windowWidget.setWindowTitle(tab.getWindowTitle());
-
     this.#onTabChangeEventEmitter.fire(tab);
   }
 
@@ -989,9 +995,7 @@ export class Window implements Disposable {
         tabPlumbing.tab.setParent(null);
         tabPlumbing.disposableHolder.dispose();
         const newCurrentIndex = Math.max(0, index - 1);
-        if (this.#tabs.length !== 0) {
-          this.setCurrentTabIndex(newCurrentIndex);
-        }
+        this.setCurrentTabIndex(newCurrentIndex);
 
         return true;
       }

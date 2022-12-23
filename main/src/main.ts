@@ -607,6 +607,7 @@ class Main {
         this.#extensionManager.setActiveTerminal(null);
         this.#extensionManager.setActiveBlockFrame(null);
       }
+      this.#extensionManager.setActiveTab(tab);
     });
 
     const onWindowGeometryChanged = _.debounce(() => {

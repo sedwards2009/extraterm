@@ -3,6 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Tab } from "../Tab.js";
 import { BlockFrame } from "../terminal/BlockFrame.js";
 import { Terminal } from "../terminal/Terminal.js";
 import { Window } from "../Window.js";
@@ -11,6 +12,7 @@ import { Window } from "../Window.js";
 
 export interface CommonExtensionWindowState {
   activeWindow: Window;
+  activeTab: Tab;
   activeTerminal: Terminal;
   activeBlockFrame: BlockFrame;
   activeHyperlinkURL: string;

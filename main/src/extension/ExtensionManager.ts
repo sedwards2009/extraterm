@@ -81,6 +81,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #commonExtensionWindowState: CommonExtensionWindowState = {
     activeWindow: null,
     activeTerminal: null,
+    activeTab: null,
     activeBlockFrame: null,
     activeHyperlinkURL: null,
   };
@@ -496,7 +497,15 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeWindow;
   }
 
-  setActiveTerminal(terminal: Terminal):void {
+  setActiveTab(tab: Tab): void {
+    this.#commonExtensionWindowState.activeTab = tab;
+  }
+
+  getActiveTab(): Tab {
+    return this.#commonExtensionWindowState.activeTab;
+  }
+
+  setActiveTerminal(terminal: Terminal): void {
     this.#commonExtensionWindowState.activeTerminal = terminal;
   }
 
@@ -719,6 +728,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     const whenVariables: WhenVariables = {
       true: true,
       false: false,
+      tabFocus: false,
       terminalFocus: false,
       connectedTerminalFocus: false,
       blockFocus: false,
@@ -729,6 +739,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       hyperlinkDomain: null,
       hyperlinkFileExtension: null,
     };
+
+    whenVariables.tabFocus = state.activeTab != null;
 
     if (state.activeTerminal != null) {
       whenVariables.terminalFocus = true;

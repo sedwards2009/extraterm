@@ -58,6 +58,7 @@ class PackageParser {
     const variables: WhenVariables = {
       true: true,
       false: false,
+      tabFocus: false,
       terminalFocus: false,
       connectedTerminalFocus: false,
       blockFocus: false,
