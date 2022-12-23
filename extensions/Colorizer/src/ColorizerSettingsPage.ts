@@ -64,6 +64,9 @@ export class ColorizerSettingsPage {
       layout: BoxLayout({
         direction: Direction.TopToBottom,
         children:[
+          Label({
+            text: "Automatically color and highlight important words and text in the terminal using rules."
+          }),
           CheckBox({
             text: "Enabled",
             checked: this.#config.enabled,
