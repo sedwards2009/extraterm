@@ -11,10 +11,13 @@ import { ClipboardImpl } from "./ClipboardImpl.js";
 
 
 export class ApplicationImpl implements ExtensionApi.Application {
-  #clipboard = new ClipboardImpl();
+  #log: ExtensionApi.Logger = null;
+  #clipboard: ClipboardImpl = null;
   #version = "";
 
-  constructor(version: string) {
+  constructor(version: string, logger: ExtensionApi.Logger) {
+    this.#log = logger;
+    this.#clipboard = new ClipboardImpl(logger);
     this.#version = version;
   }
 

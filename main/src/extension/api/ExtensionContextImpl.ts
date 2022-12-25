@@ -38,10 +38,10 @@ export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, Exte
     this.#extensionMetadata = extensionMetadata;
     this.#internalExtensionContext = internalExtensionContext;
 
-    this.#application = new ApplicationImpl(applicationVersion);
+    this.#logger = getLogger(extensionMetadata.name);
+    this.#application = new ApplicationImpl(applicationVersion, this.#logger);
     this.#commands = new CommandsImpl(internalExtensionContext);
     this.#configuration = new ConfigurationImpl(configDatabase, extensionMetadata.name);
-    this.#logger = getLogger(extensionMetadata.name);
     this.#sessions = new SessionsImpl(internalExtensionContext);
     this.#settings = new SettingsImpl(internalExtensionContext, configDatabase, themeManager);
     this.#terminals = new TerminalsImpl(internalExtensionContext);
