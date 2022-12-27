@@ -5,7 +5,7 @@
   "build": {
     "packageManager": "yarn",
     "postBuild": [
-      "cd $fetchStep_sourcePath && node build_scripts/download_launcher_executables.mjs v14",
+      "cd $fetchStep_sourcePath && yarn run download-launcher-executable",
       {
         "platform": "linux",
         "commands": [
