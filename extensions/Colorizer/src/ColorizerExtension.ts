@@ -72,22 +72,22 @@ function loadConfig(): void {
       rules: [
         {
           uuid: "bf6e8a72-dd09-4b5a-93f2-6ac93c4af16d",
-          pattern: "error",
+          pattern: "(errors?)|(fail)|(critical)",
           foreground: 1,
           background: null,
           isCaseSensitive: false,
-          isRegex: false,
+          isRegex: true,
           isBold: false,
           isItalic: false,
           isUnderline: false
         },
         {
           uuid: "2b10fb23-7853-479e-8ac5-7900c52ba33f",
-          pattern: "warning",
+          pattern: "warnings?",
           foreground: 11,
           background: null,
           isCaseSensitive: false,
-          isRegex: false,
+          isRegex: true,
           isBold: false,
           isItalic: false,
           isUnderline: false
