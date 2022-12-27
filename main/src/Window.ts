@@ -806,6 +806,7 @@ export class Window implements Disposable {
   }
 
   raise(): void {
+    this.#windowWidget.activateWindow();
     this.#windowWidget.raise();
   }
 

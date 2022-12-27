@@ -756,7 +756,9 @@ class Main {
 
   commandShowWindow(): void {
     const win = this.#extensionManager.getActiveWindow();
-    win.restore();
+    if (win.isMinimized()) {
+      win.restore();
+    }
     win.raise();
   }
 
