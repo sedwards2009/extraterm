@@ -805,6 +805,10 @@ export class Window implements Disposable {
     this.#windowOpenState = WindowOpenState.Open;
   }
 
+  raise(): void {
+    this.#windowWidget.raise();
+  }
+
   #convertToMinimizeToTray(): void {
     if (this.#windowOpenState === WindowOpenState.Minimized) {
       this.#windowWidget.hide();

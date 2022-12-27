@@ -356,6 +356,7 @@ class Main {
     commands.registerCommand("extraterm:window.maximize", () => this.commandMaximizeWindow());
     commands.registerCommand("extraterm:window.minimize", () => this.commandMinimizeWindow());
     commands.registerCommand("extraterm:window.restore", () => this.commandRestoreWindow());
+    commands.registerCommand("extraterm:window.show", () => this.commandShowWindow());
     commands.registerCommand("extraterm:terminal.openLastFrame",() => this.commandOpenLastFrame());
 
     Terminal.registerCommands(extensionManager);
@@ -751,6 +752,12 @@ class Main {
   commandRestoreWindow(): void {
     const win = this.#extensionManager.getActiveWindow();
     win.restore();
+  }
+
+  commandShowWindow(): void {
+    const win = this.#extensionManager.getActiveWindow();
+    win.restore();
+    win.raise();
   }
 
   commandMaximizeAllWindows(): void {
