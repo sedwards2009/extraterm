@@ -178,6 +178,13 @@
         "when": ""
       },
       {
+        "command": "extraterm:window.showAll",
+        "title": "Show all windows",
+        "category": "application",
+        "order": 3000,
+        "when": ""
+      },
+      {
         "command": "extraterm:window.close",
         "title": "Close Window",
         "category": "window",
@@ -280,6 +287,10 @@
         },
         {
           "command": "extraterm:window.show",
+          "show": false
+        },
+        {
+          "command": "extraterm:window.showAll",
           "show": false
         }
       ],

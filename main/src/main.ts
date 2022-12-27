@@ -357,6 +357,7 @@ class Main {
     commands.registerCommand("extraterm:window.minimize", () => this.commandMinimizeWindow());
     commands.registerCommand("extraterm:window.restore", () => this.commandRestoreWindow());
     commands.registerCommand("extraterm:window.show", () => this.commandShowWindow());
+    commands.registerCommand("extraterm:window.showAll", () => this.commandShowAllWindows());
     commands.registerCommand("extraterm:terminal.openLastFrame",() => this.commandOpenLastFrame());
 
     Terminal.registerCommands(extensionManager);
@@ -760,6 +761,15 @@ class Main {
       win.restore();
     }
     win.raise();
+  }
+
+  commandShowAllWindows(): void {
+    for (const win of this.#windows) {
+      if (win.isMinimized()) {
+        win.restore();
+      }
+      win.raise();
+    }
   }
 
   commandMaximizeAllWindows(): void {
