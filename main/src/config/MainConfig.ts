@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 Simon Edwards <simon@simonzone.com>
+ * Copyright 2014-2022 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -18,6 +18,7 @@ import { LogicalKeybindingsName, AllLogicalKeybindingsNames } from "../keybindin
 import { PersistentConfigDatabase } from "./PersistentConfigDatabase.js";
 import { ConfigDatabase } from "./ConfigDatabase.js";
 import { ThemeManager } from "../theme/ThemeManager.js";
+import * as SourceDir from "../SourceDir.js";
 
 export const EXTRATERM_CONFIG_DIR = "extratermqt";
 const PATHS_CONFIG_FILENAME = "application_paths.json";
@@ -89,7 +90,6 @@ export function setupAppData(): void {
   }
 }
 
-
 let userSettingsPath: string = null;
 
 export function getUserSettingsDirectory(): string {
@@ -105,33 +105,31 @@ export function getUserSettingsDirectory(): string {
 }
 
 function getUserSettingsDirectoryFromPathsConfig(): string {
-  // FIXME
-
-  // const exeDir = path.dirname(app.getPath("exe"));
-  // const pathsConfigFilename = path.join(exeDir, PATHS_CONFIG_FILENAME);
-  // _log.info(`Looking for ${PATHS_CONFIG_FILENAME} at '${pathsConfigFilename}'`);
-  // if (fs.existsSync(pathsConfigFilename)) {
-  //   try {
-  //     const pathsConfigString = fs.readFileSync(pathsConfigFilename, {encoding: "utf8"});
-  //     const pathsConfig = JSON.parse(pathsConfigString);
-  //     const value = pathsConfig[PATHS_USER_SETTINGS_KEY];
-  //     if (value != null) {
-  //       if (typeof value !== "string") {
-  //         _log.warn(`Value of key ${PATHS_USER_SETTINGS_KEY} in file ${pathsConfigFilename} isn't a string.`);
-  //       } else {
-  //         if (value === "") {
-  //           _log.info(`Using default location for user settings because ${PATHS_USER_SETTINGS_KEY} in file ${pathsConfigFilename} is empty.`);
-  //           return null;
-  //         }
-  //         const userSettingsPath = path.join(exeDir, value);
-  //         _log.info(`Using '${userSettingsPath}' for storing user settings.`);
-  //         return userSettingsPath;
-  //       }
-  //     }
-  //   } catch(ex) {
-  //     _log.warn(`Unable to parse json file '${pathsConfigFilename}',`, ex);
-  //   }
-  // }
+  const exeDir = path.join(SourceDir.path, "..", "..");
+  const pathsConfigFilename = path.join(exeDir, PATHS_CONFIG_FILENAME);
+  _log.info(`Looking for ${PATHS_CONFIG_FILENAME} at '${pathsConfigFilename}'`);
+  if (fs.existsSync(pathsConfigFilename)) {
+    try {
+      const pathsConfigString = fs.readFileSync(pathsConfigFilename, {encoding: "utf8"});
+      const pathsConfig = JSON.parse(pathsConfigString);
+      const value = pathsConfig[PATHS_USER_SETTINGS_KEY];
+      if (value != null) {
+        if (typeof value !== "string") {
+          _log.warn(`Value of key ${PATHS_USER_SETTINGS_KEY} in file ${pathsConfigFilename} isn't a string.`);
+        } else {
+          if (value === "") {
+            _log.info(`Using default location for user settings because ${PATHS_USER_SETTINGS_KEY} in file ${pathsConfigFilename} is empty.`);
+            return null;
+          }
+          const userSettingsPath = path.join(exeDir, value);
+          _log.info(`Using '${userSettingsPath}' for storing user settings.`);
+          return userSettingsPath;
+        }
+      }
+    } catch(ex) {
+      _log.warn(`Unable to parse json file '${pathsConfigFilename}',`, ex);
+    }
+  }
   return null;
 }
 
