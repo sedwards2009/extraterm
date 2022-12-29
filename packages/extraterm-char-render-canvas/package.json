@@ -21,7 +21,7 @@
     "run": "false"
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.57.3",
+    "@nodegui/nodegui": "0.58.0-rc1",
     "extraterm-char-cell-line": "1.0.0",
     "extraterm-color-utilities": "1.0.0",
     "extraterm-data-structures": "1.0.0",
