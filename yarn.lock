@@ -450,7 +450,7 @@ __metadata:
     typedoc: ^0.22.3
     typescript: 4.7.4
   peerDependencies:
-    "@nodegui/nodegui": 0.58.0-rc1
+    "@nodegui/nodegui": 0.58.0-rc2
   languageName: unknown
   linkType: soft
 
@@ -785,9 +785,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:0.58.0-rc1":
-  version: 0.58.0-rc1
-  resolution: "@nodegui/nodegui@npm:0.58.0-rc1"
+"@nodegui/nodegui@npm:0.58.0-rc2":
+  version: 0.58.0-rc2
+  resolution: "@nodegui/nodegui@npm:0.58.0-rc2"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/qode": ^18.12.1-rc1
@@ -802,7 +802,7 @@ __metadata:
     tar: ^6.0.1
   bin:
     qode: scripts/qode.js
-  checksum: 33af4d307df5c04482b6e320295a505545cd18936a5bc50f8805c6fe258385ad4043d517eed06afd388a7f092355559b548702848afbb43e7f94331a43c9d9b9
+  checksum: 0a30700e0339c7311a2a46de119fecdb4aa5af55a7a11f7d1bdaf8f32faedeae6e9b8e8186bf9bd6352d8e42c2664d7dba117eec3d7155b39cb5080a1d6574d9
   languageName: node
   linkType: hard
 
@@ -4095,7 +4095,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-char-render-canvas@workspace:packages/extraterm-char-render-canvas"
   dependencies:
-    "@nodegui/nodegui": 0.58.0-rc1
+    "@nodegui/nodegui": 0.58.0-rc2
     "@types/node": ^16.4.0
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
@@ -4268,7 +4268,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-timeoutqt@workspace:packages/extraterm-timeoutqt"
   dependencies:
-    "@nodegui/nodegui": 0.58.0-rc1
+    "@nodegui/nodegui": 0.58.0-rc2
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
@@ -4319,7 +4319,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm@workspace:."
   dependencies:
-    "@nodegui/nodegui": 0.58.0-rc1
+    "@nodegui/nodegui": 0.58.0-rc2
     "@nodegui/qode": 18.12.1-rc1
     "@yarnpkg/parsers": 2.5.0-rc.7
     commander: ^9.4.0
@@ -6822,7 +6822,7 @@ __metadata:
   resolution: "main@workspace:main"
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
-    "@nodegui/nodegui": 0.58.0-rc1
+    "@nodegui/nodegui": 0.58.0-rc2
     "@types/dompurify": ^2.0.1
     "@types/he": ^1.1.1
     "@types/lodash-es": 4.17.6
@@ -8536,14 +8536,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "qt-construct@workspace:packages/qt-construct"
   dependencies:
-    "@nodegui/nodegui": 0.58.0-rc1
+    "@nodegui/nodegui": 0.58.0-rc2
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shelljs: 0.8.5
     typescript: 4.7.4
   peerDependencies:
-    "@nodegui/nodegui": 0.58.0-rc1
+    "@nodegui/nodegui": 0.58.0-rc2
   languageName: unknown
   linkType: soft
 
