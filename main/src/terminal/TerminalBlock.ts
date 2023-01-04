@@ -291,14 +291,14 @@ export class TerminalBlock implements Block {
       materializedRows = dims.materializedRows;
       this.#columns = dims.cols;
     }
-    const newHeightPx = (materializedRows + this.#scrollback.length) * metrics.heightPx;
+    const dpr = this.#terminalVisualConfig.windowDpr;
+    const newHeightPx = (materializedRows + this.#scrollback.length) * metrics.heightPx / dpr;
     if (newHeightPx === this.#heightPx) {
       return;
     }
 
-    const dpr = this.#widget.devicePixelRatio();
-    this.#widget.setMinimumSize(10 * metrics.widthPx / dpr, newHeightPx / dpr);
-    this.#widget.setMaximumSize(16777215, newHeightPx / dpr);
+    this.#widget.setMinimumSize(10 * metrics.widthPx / dpr, newHeightPx);
+    this.#widget.setMaximumSize(16777215, newHeightPx);
     this.#heightPx = newHeightPx;
   }
 

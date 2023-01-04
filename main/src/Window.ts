@@ -606,6 +606,7 @@ export class Window implements Disposable {
       transparentBackground,
       useLigatures: config.terminalDisplayLigatures,
       ligatureMarker,
+      windowDpr: this.getDpr(),
       screenHeightHintPx: 1024, // FIXME
       screenWidthHintPx: 1024,  // FIXME
     };
