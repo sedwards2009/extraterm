@@ -84,6 +84,7 @@ export class Window implements Disposable {
   #tabBar: QTabBar = null;
   #contentStack: QStackedWidget = null;
   #lastConfigDpi = -1;
+  #lastConfigDpr = -1;
 
   #hamburgerMenuButton: QToolButton = null;
   #hamburgerMenu: QMenu = null;
@@ -588,7 +589,10 @@ export class Window implements Disposable {
     ];
 
     this.#lastConfigDpi = this.getDpi();
-    const terminalFontSizePx = Math.round(this.#pointsToPx(config.terminalFontSize, this.#lastConfigDpi));
+    this.#lastConfigDpr = this.getDpr();
+
+    const scaledFontSize = config.terminalFontSize * this.#lastConfigDpr;
+    const terminalFontSizePx = Math.round(this.#pointsToPx(scaledFontSize, this.#lastConfigDpi));
 
     const terminalVisualConfig: TerminalVisualConfig = {
       cursorStyle: config.cursorStyle,
@@ -602,6 +606,7 @@ export class Window implements Disposable {
       transparentBackground,
       useLigatures: config.terminalDisplayLigatures,
       ligatureMarker,
+      windowDpr: this.getDpr(),
       screenHeightHintPx: 1024, // FIXME
       screenWidthHintPx: 1024,  // FIXME
     };
@@ -616,6 +621,12 @@ export class Window implements Disposable {
     const window = this.#windowWidget;
     const screen = window.isVisible() ? window.windowHandle().screen() : QApplication.primaryScreen();
     return screen.logicalDotsPerInch();
+  }
+
+  getDpr(): number {
+    const window = this.#windowWidget;
+    const screen = window.isVisible() ? window.windowHandle().screen() : QApplication.primaryScreen();
+    return screen.devicePixelRatio();
   }
 
   async #handleConfigChangeEvent(event: ConfigChangeEvent): Promise<void> {
@@ -715,7 +726,7 @@ export class Window implements Disposable {
     });
     this.#windowOpenState = WindowOpenState.Open;
 
-    if (this.getDpi() !== this.#lastConfigDpi) {
+    if (this.getDpi() !== this.#lastConfigDpi || this.getDpr() !== this.#lastConfigDpr) {
       this.#updateTerminalVisualConfig();
     }
     this.#moveOnScreen();

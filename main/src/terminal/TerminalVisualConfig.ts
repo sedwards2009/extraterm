@@ -21,6 +21,7 @@ export interface TerminalVisualConfig {
   transparentBackground: boolean;
   useLigatures: boolean;
   ligatureMarker: LigatureMarker;
+  windowDpr: number;
 
   screenWidthHintPx: number;
   screenHeightHintPx: number;

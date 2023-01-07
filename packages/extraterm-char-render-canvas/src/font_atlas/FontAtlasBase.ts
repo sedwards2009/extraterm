@@ -1,7 +1,7 @@
 /**
  * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
-import { QColor, QFont, QFontMetrics, QFontWeight, QImage, QImageFormat, QPainter, QPainterPath, QPen } from "@nodegui/nodegui";
+import { QApplication, QColor, QFont, QFontMetrics, QFontWeight, QImage, QImageFormat, QPainter, QPainterPath, QPen } from "@nodegui/nodegui";
 
 import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE,
   STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, STYLE_MASK_HYPERLINK_HIGHLIGHT, UNDERLINE_STYLE_NORMAL,
@@ -102,7 +102,6 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     this._pageImageHeight = this._atlasHeightInCells * (this._metrics.heightPx + this._safetyPadding * 2);
 
     this._pageImage = new QImage(this._pageImageWidth, this._pageImageHeight, QImageFormat.RGB32);
-
     this._initializeSlots();
 
     this._painter = new QPainter(); //{alpha: this._transparentBackground});
@@ -195,6 +194,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       fgRGBA: number, bgRGBA: number, xPx: number, yPx: number, widthPx: number, widthInCells: number): CG {
 
     const painter = this._painter;
+    this._pageImage.setDevicePixelRatio(1);
 
     painter.begin(this._pageImage);
     painter.save();

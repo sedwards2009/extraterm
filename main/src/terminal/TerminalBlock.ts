@@ -291,22 +291,25 @@ export class TerminalBlock implements Block {
       materializedRows = dims.materializedRows;
       this.#columns = dims.cols;
     }
-    const newHeightPx = (materializedRows + this.#scrollback.length) * metrics.heightPx;
+    const dpr = this.#terminalVisualConfig.windowDpr;
+    const newHeightPx = (materializedRows + this.#scrollback.length) * metrics.heightPx / dpr;
     if (newHeightPx === this.#heightPx) {
       return;
     }
 
-    this.#widget.setMinimumSize(10 * metrics.widthPx, newHeightPx);
+    this.#widget.setMinimumSize(10 * metrics.widthPx / dpr, newHeightPx);
     this.#widget.setMaximumSize(16777215, newHeightPx);
     this.#heightPx = newHeightPx;
   }
 
   getCellWidthPx(): number {
-    return this.#fontMetrics.widthPx;
+    const dpr = this.#widget.devicePixelRatio();
+    return this.#fontMetrics.widthPx / dpr;
   }
 
   getCellHeightPx(): number {
-    return this.#fontMetrics.heightPx;
+    const dpr = this.#widget.devicePixelRatio();
+    return this.#fontMetrics.heightPx / dpr;
   }
 
   setEmulator(emulator: Term.Emulator): void {
@@ -340,20 +343,28 @@ export class TerminalBlock implements Block {
     this.#widget.update();
   }
 
+  #toRealPixels(logicalPx: number): number {
+    return this.#widget.devicePixelRatio() * logicalPx;
+  }
+
+  #toLogicalPixels(logicalPx: number): number {
+    return logicalPx / this.#widget.devicePixelRatio();
+  }
+
   #handlePaintEvent(event: QPaintEvent): void {
     const paintRect = event.rect();
 
     const metrics = this.#fontMetrics;
     const heightPx = metrics.heightPx;
 
-    const topRenderRow = Math.floor(paintRect.top() / heightPx);
-    const heightRows = Math.ceil(paintRect.height() / heightPx) + 1;
+    const topRenderRow = Math.floor(this.#toRealPixels(paintRect.top()) / heightPx);
+    const heightRows = Math.ceil(this.#toRealPixels(paintRect.height()) / heightPx) + 1;
 
     const painter = new QPainter(this.#widget);
     const cursorStyle = this.#terminalVisualConfig.cursorStyle;
 
     const bgRGBA = this.#terminalVisualConfig.palette[PALETTE_BG_INDEX];
-    painter.fillRect(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(), RGBAToQColor(bgRGBA));
+    painter.fillRectF(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(), RGBAToQColor(bgRGBA));
 
     // Render any lines from the scrollback
     const scrollbackLength = this.#scrollback.length;
@@ -388,8 +399,9 @@ export class TerminalBlock implements Block {
 
   #renderSelection(painter: QPainter, topRenderRow: number, heightRows: number): void {
     const metrics = this.#fontMetrics;
-    const heightPx = metrics.heightPx;
-    const widthPx = metrics.widthPx;
+    const dpr = this.#widget.devicePixelRatio();
+    const heightPx = metrics.heightPx / dpr;
+    const widthPx = metrics.widthPx / dpr;
 
     let selectionStart = this.#selectionStart;
     let selectionEnd = this.#selectionEnd;
@@ -416,7 +428,7 @@ export class TerminalBlock implements Block {
       if (i === selectionStart.y) {
         if (selectionStart.y === selectionEnd.y) {
           // Small selection contained within one row.
-          painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
+          painter.fillRectF(selectionStart.x*widthPx, selectionStart.y*heightPx,
             (selectionEnd.x - selectionStart.x) * widthPx, heightPx, selectionQColor);
         } else {
           // Top row of the selection.
@@ -424,7 +436,7 @@ export class TerminalBlock implements Block {
           if (i < this.#scrollback.length) {
             rowLength = this.#scrollback[i].width;
           }
-          painter.fillRect(selectionStart.x*widthPx, selectionStart.y*heightPx,
+          painter.fillRectF(selectionStart.x*widthPx, selectionStart.y*heightPx,
             (rowLength - selectionStart.x) * widthPx, heightPx, selectionQColor);
         }
       } else {
@@ -434,10 +446,10 @@ export class TerminalBlock implements Block {
           if (i < this.#scrollback.length) {
             rowLength = this.#scrollback[i].width;
           }
-          painter.fillRect(0, i*heightPx, rowLength*widthPx, heightPx, selectionQColor);
+          painter.fillRectF(0, i*heightPx, rowLength*widthPx, heightPx, selectionQColor);
         } else {
           // The last row of a multi-row selection.
-          painter.fillRect(0, i*heightPx, selectionEnd.x*widthPx, heightPx, selectionQColor);
+          painter.fillRectF(0, i*heightPx, selectionEnd.x*widthPx, heightPx, selectionQColor);
         }
       }
     }
@@ -488,7 +500,9 @@ export class TerminalBlock implements Block {
       hoverLinkID = line.getLinkIDByURL(this.#hoveredURL, this.#hoveredGroup);
     }
 
-    let px = 0;
+    const dpr = this.#toRealPixels(1);
+
+    let xPx = 0;
     for (const column of normalizedCellIterator(line, normalizedCell)) {
       const codePoint = normalizedCell.codePoint;
       if (codePoint !== 0) {
@@ -521,10 +535,12 @@ export class TerminalBlock implements Block {
         } else {
           glyph = this.#fontAtlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
         }
-        painter.drawImage(px, y, qimage, glyph.xPixels + normalizedCell.segment * glyph.widthPx, glyph.yPixels,
-          glyph.widthPx, heightPx);
+        qimage.setDevicePixelRatio(dpr);
+        const sourceX = glyph.xPixels + normalizedCell.segment * glyph.widthPx;
+        const sourceY = glyph.yPixels;
+        painter.drawImageF(xPx / dpr, y / dpr, qimage, sourceX, sourceY, glyph.widthPx, heightPx);
       }
-      px += widthPx;
+      xPx += widthPx;
     }
   }
 
@@ -553,8 +569,8 @@ export class TerminalBlock implements Block {
     const dim = this.#emulator.getDimensions();
 
     const metrics= this.#fontMetrics;
-    const cellHeightPx = metrics.heightPx;
-    const cellWidthPx = metrics.widthPx;
+    const cellHeightPx = this.#toLogicalPixels(metrics.heightPx);
+    const cellWidthPx = this.#toLogicalPixels(metrics.widthPx);
 
     const xPx = dim.cursorX * cellWidthPx;
     const yPx = (dim.cursorY + this.#scrollback.length) * cellHeightPx;
@@ -568,8 +584,8 @@ export class TerminalBlock implements Block {
     }
 
     const metrics= this.#fontMetrics;
-    const cellHeightPx = metrics.heightPx;
-    const cellWidthPx = metrics.widthPx;
+    const cellHeightPx = this.#toLogicalPixels(metrics.heightPx);
+    const cellWidthPx = this.#toLogicalPixels(metrics.widthPx);
 
     const cursorColor = RGBAToQColor(this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX]);
     const pen = new QPen();
@@ -585,25 +601,25 @@ export class TerminalBlock implements Block {
         if (line.getStyle(i) & STYLE_MASK_CURSOR) {
           switch (cursorStyle) {
             case CursorStyle.BLOCK_OUTLINE:
-              painter.drawRect(i * cellWidthPx + outlinePenWidthPx, y + outlinePenWidthPx,
+              painter.drawRectF(i * cellWidthPx + outlinePenWidthPx, y + outlinePenWidthPx,
                 cellWidthPx - 2 * outlinePenWidthPx, cellHeightPx - 2 * outlinePenWidthPx);
               break;
 
             case CursorStyle.UNDERLINE:
-              painter.fillRect(i * cellWidthPx, y + cellHeightPx-3, cellWidthPx, 3, cursorColor);
+              painter.fillRectF(i * cellWidthPx, y + cellHeightPx-3, cellWidthPx, 3, cursorColor);
               break;
 
             case CursorStyle.UNDERLINE_OUTLINE:
-              painter.drawRect(i * cellWidthPx + outlinePenWidthPx, y + cellHeightPx - 2*outlinePenWidthPx,
+              painter.drawRectF(i * cellWidthPx + outlinePenWidthPx, y + cellHeightPx - 2*outlinePenWidthPx,
                 cellWidthPx-outlinePenWidthPx, 2);
               break;
 
             case CursorStyle.BEAM:
-              painter.fillRect(i * cellWidthPx, y, 2, cellHeightPx, cursorColor);
+              painter.fillRectF(i * cellWidthPx, y, 2, cellHeightPx, cursorColor);
               break;
 
             case CursorStyle.BEAM_OUTLINE:
-              painter.drawRect(i * cellWidthPx + outlinePenWidthPx,
+              painter.drawRectF(i * cellWidthPx + outlinePenWidthPx,
                 y + outlinePenWidthPx, 2, cellHeightPx - outlinePenWidthPx);
               break;
 
@@ -692,19 +708,22 @@ export class TerminalBlock implements Block {
   }
 
   #pixelToRowColumnEdge(x: number, y: number): TerminalCoord {
-    const gridY = Math.floor(y / this.#fontMetrics.heightPx);
-    const gridX = Math.round(x / this.#fontMetrics.widthPx);
+    const dpr = this.#widget.devicePixelRatio();
+    const gridY = Math.floor(y / (this.#fontMetrics.heightPx / dpr));
+    const gridX = Math.round(x / (this.#fontMetrics.widthPx / dpr));
     return { x: gridX, y: gridY };
   }
 
   pixelPointToCell(x: number, y: number): TerminalCoord {
-    const gridY = Math.floor(y / this.#fontMetrics.heightPx);
-    const gridX = Math.floor(x / this.#fontMetrics.widthPx);
+    const dpr = this.#widget.devicePixelRatio();
+    const gridY = Math.floor(y / (this.#fontMetrics.heightPx / dpr));
+    const gridX = Math.floor(x / (this.#fontMetrics.widthPx / dpr));
     return { x: gridX, y: gridY };
   }
 
   rowToPixel(rowNumber: number): number {
-    return this.#fontMetrics.heightPx * rowNumber;
+    const dpr = this.#widget.devicePixelRatio();
+    return this.#fontMetrics.heightPx * rowNumber * dpr;
   }
 
   #handleMouseButtonRelease(event: QMouseEvent): void {

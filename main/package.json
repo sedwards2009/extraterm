@@ -16,10 +16,10 @@
     "test": "yarn run build-code && yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.57.3",
-    "nodegui-plugin-font-icon": "0.2.4",
-    "nodegui-plugin-rich-text-delegate": "0.2.1",
-    "nodegui-plugin-style-tweaker": "0.2.1"
+    "@nodegui/nodegui": "0.58.0-rc2",
+    "nodegui-plugin-font-icon": "0.3.1",
+    "nodegui-plugin-rich-text-delegate": "0.3.0",
+    "nodegui-plugin-style-tweaker": "0.3.1"
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",

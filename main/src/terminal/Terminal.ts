@@ -564,10 +564,11 @@ export class Terminal implements Tab, Disposable {
     const maxViewportWidth = maxViewportSize.width() + currentMargins.left + currentMargins.right;
     const maxContentWidth = maxViewportWidth - spacing - spacing - 2 * this.#uiStyle.getFrameMarginLeftRightPx();
 
-    const columns = Math.floor(maxContentWidth / metrics.widthPx);
-    const rows = Math.floor(maxContentHeight / metrics.heightPx);
+    const dpr = this.#topContents.devicePixelRatio();
+    const columns = Math.floor(maxContentWidth  / (metrics.widthPx / dpr));
+    const rows = Math.floor(maxContentHeight / (metrics.heightPx / dpr));
 
-    const vGap = maxContentHeight % metrics.heightPx;
+    const vGap = maxContentHeight % (metrics.heightPx / dpr);
     const topGap = Math.floor(vGap / 2);
     const bottomGap = vGap - topGap;
 
