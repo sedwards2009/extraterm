@@ -4182,20 +4182,6 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"extraterm-fuzzy-rank@workspace:packages/extraterm-fuzzy-rank":
-  version: 0.0.0-use.local
-  resolution: "extraterm-fuzzy-rank@workspace:packages/extraterm-fuzzy-rank"
-  dependencies:
-    "@types/jest": 27.0.1
-    eslint: 8.13.0
-    eslint-config-extraterm: 1.0.0
-    eslint-plugin-unicorn: 42.0.0
-    jest: 27.5.1
-    shx: ^0.3.2
-    typescript: 4.7.4
-  languageName: unknown
-  linkType: soft
-
 "extraterm-later@1.0.0, extraterm-later@workspace:packages/extraterm-later":
   version: 0.0.0-use.local
   resolution: "extraterm-later@workspace:packages/extraterm-later"
