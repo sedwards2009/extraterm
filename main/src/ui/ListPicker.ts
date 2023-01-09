@@ -267,7 +267,8 @@ function cmpScore(a: EntryMetadata, b: EntryMetadata): number {
   if (a.score === b.score) {
     return 0;
   }
-  return a.score < b.score ? -1 : 1;
+  // Note: Higher scores should be shown first.
+  return a.score > b.score ? -1 : 1;
 }
 
 function reverseCmpScore(a: EntryMetadata, b: EntryMetadata): number {
@@ -321,7 +322,7 @@ class ContentModel extends QAbstractTableModel {
       }
     } else {
       for (const entry of entries) {
-        const result = fuzzyjs.match(searchText, entry.text, { withRanges: true });
+        const result = fuzzyjs.match(searchText, entry.text, { withRanges: true, withScore: true });
         if (result.match) {
           entry.score = result.score;
           const ranges = result.ranges;
@@ -335,12 +336,12 @@ class ContentModel extends QAbstractTableModel {
             }
           ));
         } else {
-          entry.score = -1;
+          entry.score = NaN;
           // entry.markedupLabel = entry;
         }
       }
 
-      const resultEntries = entries.filter(e => e.score !== -1);
+      const resultEntries = entries.filter(e => ! isNaN(e.score));
       resultEntries.sort(this.#isReverse ? reverseCmpScore : cmpScore);
       return resultEntries;
     }
