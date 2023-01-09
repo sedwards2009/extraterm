@@ -716,7 +716,7 @@ export class Window implements Disposable {
     this.#windowHandle = this.#windowWidget.windowHandle();
     this.#windowHandle.addEventListener("screenChanged", (screen: QScreen) => {
       this.#watchScreen(screen);
-      this.#handleLogicalDpiChanged(this.#screen.logicalDotsPerInch());
+      this.#handleDpiAndDprChanged(this.#screen.logicalDotsPerInch(), this.#screen.devicePixelRatio());
     });
     this.#windowHandle.addEventListener("visibilityChanged", (visibility: Visibility) => {
       this.#onWindowGeometryChangedEventEmitter.fire();
@@ -854,7 +854,11 @@ export class Window implements Disposable {
   #handleLogicalDpiChanged: (dpi: number) => void;
 
   #UnboundHandleLogicalDpiChanged(dpi: number): void {
-    if (dpi !== this.#lastConfigDpi) {
+    this.#handleDpiAndDprChanged(dpi, this.#screen.devicePixelRatio());
+  }
+
+  #handleDpiAndDprChanged(dpi: number, dpr: number): void {
+    if (dpi !== this.#lastConfigDpi || dpr !==this.#lastConfigDpr) {
       this.#updateTerminalVisualConfig();
       this.#repolishTabBar();
     }
