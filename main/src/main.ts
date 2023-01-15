@@ -78,7 +78,7 @@ class Main {
   #ptyManager: PtyManager = null;
   #extensionManager: ExtensionManager = null;
   #themeManager: ThemeManager = null;
-  #keybindingsIOManager: KeybindingsIOManager = null;
+  #keybindingsManager: KeybindingsIOManager = null;
   #uiStyle: UiStyle = null;
   #fontAtlasCache: FontAtlasCache = null;
   #bulkFileStorage: BulkFileStorage = null;
@@ -126,7 +126,7 @@ class Main {
     this.#extensionManager = extensionManager;
     this.#themeManager.init(this.#extensionManager);
 
-    this.#keybindingsIOManager = this.setupKeybindingsManager(configDatabase, extensionManager);
+    this.#keybindingsManager = this.setupKeybindingsManager(configDatabase, extensionManager);
 
 
     sanitizeAndInitializeConfigs(configDatabase, themeManager, availableFonts);
@@ -155,8 +155,6 @@ class Main {
     this.setupDesktopSupport();
     this.#showTrayIcon(this.#configDatabase.getGeneralConfig().showTrayIcon);
 
-    // TODO: setupGlobalKeybindingsManager()
-
     this.setupLocalHttpServer(extensionManager, this.#bulkFileStorage);
 
     this.registerCommands(extensionManager);
@@ -178,12 +176,17 @@ class Main {
       }
     });
 
+    this.#keybindingsManager.installGlobalShortcuts();
+    const qApplication = QApplication.instance();
+    qApplication.addEventListener("lastWindowClosed", () => {
+      this.#keybindingsManager.uninstallGlobalShortcuts();
+    });
     await this.openWindow();
   }
 
   #setApplicationStyle(uiScalePercent: number): void {
     let dpi = Math.min(0, ...this.#windows.map(w => w.getDpi()));
-    dpi = dpi === 0 ? QApplication.primaryScreen().logicalDotsPerInch() : dpi;
+    dpi = dpi === 0 ? QApplication.primaryScreen().logicalDotsPerInch() : dpi;  // TODO
 
     const qApplication = QApplication.instance();
     let uiScale = uiScalePercent / 100;
@@ -342,6 +345,10 @@ class Main {
 
   registerCommands(extensionManager: ExtensionManager): void {
     const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
+    commands.registerCommand("extraterm:global.globalMaximize", () => this.commandMaximizeAllWindows());
+    commands.registerCommand("extraterm:global.globalShow", () => this.commandRestoreAllWindows());
+    commands.registerCommand("extraterm:global.globalHide", () => this.commandMinimizeAllWindows());
+    commands.registerCommand("extraterm:global.globalToggleShowHide", () => this.commandToggleAllWindows());
     commands.registerCommand("extraterm:application.openCommandPalette", () => this.commandOpenCommandPalette());
     commands.registerCommand("extraterm:application.newWindow", () => this.commandNewWindow());
     commands.registerCommand("extraterm:application.quit", () => this.commandQuit());
@@ -426,7 +433,7 @@ class Main {
   commandOpenCommandPalette(): void {
     const win = this.#extensionManager.getActiveWindow();
     const tab = win.getTab(win.getCurrentTabIndex());
-    const commandPalette = new CommandPalette(this.#extensionManager, this.#keybindingsIOManager, this.#uiStyle);
+    const commandPalette = new CommandPalette(this.#extensionManager, this.#keybindingsManager, this.#uiStyle);
     commandPalette.show(win, tab);
   }
 
@@ -467,7 +474,7 @@ class Main {
     const window = this.#extensionManager.getActiveWindow() ?? this.#windows[0];
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
-      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
+      this.#keybindingsManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
       this.#bulkFileStorage);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
@@ -587,7 +594,7 @@ class Main {
   }
 
   async openWindow(): Promise<Window> {
-    const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsIOManager,
+    const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsManager,
       this.#themeManager, this.#uiStyle);
 
     const generalConfig = this.#configDatabase.getGeneralConfig();
@@ -673,7 +680,7 @@ class Main {
     const window = this.#extensionManager.getActiveWindow();
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#themeManager,
-        this.#keybindingsIOManager, window, this.#uiStyle, this.#fontAtlasCache);
+        this.#keybindingsManager, window, this.#uiStyle, this.#fontAtlasCache);
     }
 
     const openSettingsArgs: OpenSettingsArgs = args;
@@ -824,7 +831,7 @@ class Main {
     terminal.destroyFrame(frame);
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
-      this.#keybindingsIOManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
+      this.#keybindingsManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
       this.#bulkFileStorage);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);

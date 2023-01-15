@@ -7,6 +7,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { Logger, getLogger, log } from "extraterm-logging";
+import { QHotkey } from "nodegui-plugin-qhotkey";
+import { doLater } from "extraterm-timeoutqt";
 
 import { ExtensionManager } from "../extension/ExtensionManager.js";
 import { KeybindingsFileInfo } from "../config/Config.js";
@@ -14,6 +16,7 @@ import { KeybindingsSet, AllLogicalKeybindingsNames, LogicalKeybindingsName, Key
   CustomKeybindingsSet } from "./KeybindingsTypes.js";
 import { ConfigChangeEvent, ConfigDatabase } from "../config/ConfigDatabase.js";
 import { TermKeybindingsMapping } from "./KeybindingsManager.js";
+import { QKeySequence } from "@nodegui/nodegui";
 
 /**
  * Manages reading keybindings files and r/w keybinding customisation files.
@@ -29,6 +32,9 @@ export class KeybindingsIOManager {
   #userPath: string = null;
   #extensionManager: ExtensionManager = null;
   #termKeybindingsMapping: TermKeybindingsMapping = null;
+
+  #globalHotkeys: QHotkey[] = [];
+  #currentGlobalShortcutsHash: string = "";
 
   constructor(userPath: string, extensionManager: ExtensionManager, configDatabase: ConfigDatabase) {
     this._log = getLogger("KeybindingsIOManager", this);
@@ -46,6 +52,97 @@ export class KeybindingsIOManager {
         this.#initializeCaches();
       }
     });
+  }
+
+  installGlobalShortcuts(): void {
+    const newHash = this.#hashGlobalShortcuts();
+    if (this.#currentGlobalShortcutsHash === newHash) {
+      return;
+    }
+
+    this.uninstallGlobalShortcuts();
+
+    const currentMapping = this.getCurrentKeybindingsMapping();
+    const allCommands = this.#extensionManager.queryCommands({ });
+    for (const contrib of allCommands) {
+      if (contrib.category === "global") {
+        const keyStrokes = currentMapping.getKeyStrokesForCommand(contrib.command);
+        for (const keyStroke of keyStrokes) {
+          const qhotkey = new QHotkey(new QKeySequence(keyStroke.formatHumanReadable()));
+          const command = contrib.command;
+          qhotkey.addEventListener("activated", () => {
+            this.#handleHotkeyCommand(command);
+          });
+
+          qhotkey.setRegistered(true);
+          if ( ! qhotkey.isRegistered()) {
+            this._log.warn(`Unable registering global host '${keyStroke.formatHumanReadable()}' with the operating system.`);
+          }
+          this.#globalHotkeys.push(qhotkey);
+        }
+      }
+    }
+    this.#currentGlobalShortcutsHash = newHash;
+  }
+
+  uninstallGlobalShortcuts(): void {
+    for (const hotkey of this.#globalHotkeys) {
+      hotkey.setRegistered(false);
+    }
+    this.#globalHotkeys = [];
+  }
+
+  getCurrentKeybindingsMapping(): TermKeybindingsMapping {
+    return this.#termKeybindingsMapping;
+  }
+
+  /**
+   * Get the keybindings base set and customisations.
+   */
+  getStackedKeybindings(name: LogicalKeybindingsName): StackedKeybindingsSet {
+    return {
+      name,
+      keybindingsSet: this.#getBaseKeybindingsSet(name),
+      customKeybindingsSet: this.#getCustomKeybindingsFile(name)
+    };
+  }
+
+  /**
+   * Update a set of customisations and persist it.
+   */
+  updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): void {
+    this.#writeCustomKeybindingsFile(customKeybindingsFile);
+    this.#customKeybindingsMap.set(customKeybindingsFile.basedOn, customKeybindingsFile);
+    this.#initializeCaches();
+    this.installGlobalShortcuts();
+  }
+
+  //-----------------------------------------------------------------------
+
+  #handleHotkeyCommand(commandName: string): void {
+    doLater( () => {
+      try {
+        this.#extensionManager.executeCommand(commandName);
+      } catch(e) {
+        this._log.warn(e);
+      }
+    });
+  }
+
+  #hashGlobalShortcuts(): string {
+    const parts: string[] = [];
+    const currentMapping = this.getCurrentKeybindingsMapping();
+    const allCommands = this.#extensionManager.queryCommands({ });
+    for (const contrib of allCommands) {
+      if (contrib.category === "global") {
+        const keyStrokes = currentMapping.getKeyStrokesForCommand(contrib.command);
+        for (const keyStroke of keyStrokes) {
+          parts.push(keyStroke.formatHumanReadable());
+          parts.push(contrib.command);
+        }
+      }
+    }
+    return parts.join("\n");
   }
 
   #getKeybindingsFileList(): KeybindingsFileInfo[] {
@@ -67,12 +164,8 @@ export class KeybindingsIOManager {
     this.#customKeybindingsMap = new Map<LogicalKeybindingsName, CustomKeybindingsSet>();
     this.#keybindingsFileList = null;
 
-    const flatSet = this.getFlatKeybindingsSet(this.#configDatabase.getGeneralConfig().keybindingsName);
-    this.#termKeybindingsMapping = new TermKeybindingsMapping(flatSet, process.platform);
-  }
-
-  getCurrentKeybindingsMapping(): TermKeybindingsMapping {
-    return this.#termKeybindingsMapping;
+    const flatSet = this.#getFlatKeybindingsSet(this.#configDatabase.getGeneralConfig().keybindingsName);
+    this.#termKeybindingsMapping = new TermKeybindingsMapping(flatSet);
   }
 
   #clearBaseCaches(): void {
@@ -114,7 +207,7 @@ export class KeybindingsIOManager {
   /**
    * Get a keybindings set with the base set and customisations flatten together.
    */
-  getFlatKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
+  #getFlatKeybindingsSet(name: LogicalKeybindingsName): KeybindingsSet {
     const baseKeybindingsSet = this.#getBaseKeybindingsSet(name);
 
     // Hash the custom bindings for speed purposes
@@ -189,17 +282,6 @@ export class KeybindingsIOManager {
     return keyBindingsJSON;
   }
 
-  /**
-   * Get the keybindings base set and customisations.
-   */
-  getStackedKeybindings(name: LogicalKeybindingsName): StackedKeybindingsSet {
-    return {
-      name,
-      keybindingsSet: this.#getBaseKeybindingsSet(name),
-      customKeybindingsSet: this.#getCustomKeybindingsFile(name)
-    };
-  }
-
   #getCustomKeybindingsFile(name: LogicalKeybindingsName): CustomKeybindingsSet {
     if (this.#customKeybindingsMap.has(name)) {
       return this.#customKeybindingsMap.get(name);
@@ -233,15 +315,6 @@ export class KeybindingsIOManager {
         customBindings: []
       };
     }
-  }
-
-  /**
-   * Update a set of customisations and persist it.
-   */
-  updateCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): void {
-    this.#writeCustomKeybindingsFile(customKeybindingsFile);
-    this.#customKeybindingsMap.set(customKeybindingsFile.basedOn, customKeybindingsFile);
-    this.#initializeCaches();
   }
 
   #writeCustomKeybindingsFile(customKeybindingsFile: CustomKeybindingsSet): boolean {

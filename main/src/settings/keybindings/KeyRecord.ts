@@ -7,8 +7,8 @@ import { Key, QKeyEvent, QLineEdit, QSizePolicyPolicy, QWidget } from "@nodegui/
 import { LineEdit } from "qt-construct";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { qKeyEventToMinimalKeyboardEvent } from "../../keybindings/QKeyEventUtilities.js";
-import { eventKeyNameToConfigKeyName, KeyStroke } from "../../keybindings/KeybindingsMapping.js";
 import { Event, EventEmitter } from "extraterm-event-emitter";
+import { eventKeyNameToConfigKeyName } from "../../keybindings/KeybindingsManager.js";
 
 
 export class KeyRecord {
