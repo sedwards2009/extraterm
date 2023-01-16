@@ -16,6 +16,7 @@ import { ColorPatchPopup } from "./ColorPatchPopup";
 
 
 export class ColorPatchSelector {
+  #log: Logger = null;
 
   #onChangedEventEmitter = new EventEmitter<number>();
   onChanged: Event<number> = null;
@@ -28,6 +29,7 @@ export class ColorPatchSelector {
   #topWidget: QWidget = null;
 
   constructor(terminalTheme: TerminalTheme, colorPatchPopup: ColorPatchPopup, log: Logger) {
+    this.#log = log;
     this.onChanged = this.#onChangedEventEmitter.event;
     this.#colorPatchPopup = colorPatchPopup;
 
@@ -108,11 +110,12 @@ export class ColorPatchSelector {
     let x = bottomLeft.x();
     let y = bottomLeft.y();
     const screenGeometry = target.window().windowHandle().screen().geometry();
-    if (y + hint.height() > screenGeometry.height()) {
+    if (y + hint.height() > screenGeometry.top() + screenGeometry.height()) {
       const topLeft = target.mapToGlobal(new QPoint(0, 0));
       y = topLeft.y() - hint.height();
     }
-    x = Math.min(x, screenGeometry.width() - hint.width());
+    x = Math.min(x, screenGeometry.left() + screenGeometry.width() - hint.width());
+    x = Math.max(x, screenGeometry.left());
     popup.setGeometry(x, y, hint.width(), hint.height());
   }
 }
