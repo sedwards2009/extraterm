@@ -1,7 +1,7 @@
 name: $(Date:yyyyMMdd)$(Rev:.r)_$(SourceBranchName)
 
 variables:
-  nodeVersion: '16.6.2'
+  nodeVersion: '18.12.1'
 
 trigger:
   branches:
