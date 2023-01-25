@@ -165,7 +165,7 @@
   "dmg" : {
     "applicationIcon": "$pruneStep_trashDirectory/main/resources/logo/extraterm_small_logo.icns",
     "applicationTitle": "ExtratermQt",
-    "nsHumanReadableCopyright": "Copyright 2022 Simon Edwards",
+    "nsHumanReadableCopyright": "Copyright 2023 Simon Edwards",
     "cfBundleIdentifier": "com.extraterm.extraterm",
     "prePack": [
       "mv $dmgStep_dmgResourcesDirectory/extratermqt $dmgStep_dmgMacOSDirectory/"
