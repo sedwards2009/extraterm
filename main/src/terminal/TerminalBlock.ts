@@ -456,16 +456,17 @@ export class TerminalBlock implements Block {
   }
 
   #renderLines(painter: QPainter, lines: Line[], startY: number, renderCursor: boolean): void {
-    let y = startY;
     const metrics = this.#fontMetrics;
     const heightPx = metrics.heightPx;
 
+    let yCounter = 0;
     for (const line of lines) {
+      const y = startY + yCounter * heightPx;
       this.#renderSingleLine(painter, line, y, renderCursor);
       for (const layer of line.layers) {
         this.#renderSingleLine(painter, layer.line, y, renderCursor);
       }
-      y += heightPx;
+      yCounter++;
     }
   }
 
