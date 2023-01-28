@@ -19,6 +19,10 @@ if not isatty
   exit 0
 end
 
+if not status is-interactive
+  exit 0
+end
+
 echo "Setting up Extraterm support."
 
 set -l filedir (dirname (status -f))
