@@ -292,7 +292,7 @@ export class TerminalBlock implements Block {
       this.#columns = dims.cols;
     }
     const dpr = this.#terminalVisualConfig.windowDpr;
-    const newHeightPx = (materializedRows + this.#scrollback.length) * metrics.heightPx / dpr;
+    const newHeightPx = Math.ceil((materializedRows + this.#scrollback.length) * metrics.heightPx / dpr);
     if (newHeightPx === this.#heightPx) {
       return;
     }
