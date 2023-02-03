@@ -461,13 +461,37 @@ export class TerminalBlock implements Block {
 
     let yCounter = 0;
     for (const line of lines) {
-      const y = startY + yCounter * heightPx;
+      const y = startY + yCounter * heightPx + (1/128); // About 1/128, see below.
       this.#renderSingleLine(painter, line, y, renderCursor);
       for (const layer of line.layers) {
         this.#renderSingleLine(painter, layer.line, y, renderCursor);
       }
       yCounter++;
     }
+
+    // What is the extra 1/128?
+    //
+    // This is related to HiDPI and rounding errors. We want to render pixel
+    // perfect images and therefore compute most things in pixel coordinate
+    // space and then adjust for the Device Pixel Ratio. (i.e. px / dpr). On
+    // the drawing side Qt will then multiple by DPR to get from the logical
+    // coordinate space to real pixels before rendering. But in some
+    // situations this divide by DPR and then multiple DPR doesn't get us the
+    // pixel value we wanted. Some floating point rounding errors creep in.
+    // For example: pixel value 1302 with DPR=1.25 results in a render at 1
+    // pixel higher than desired. After the multiply the value is ever so
+    // slightly less than 1302 and gets round to an integer, the wrong
+    // integer. To counter act this effect, we add a small offset, 1/128,
+    // which counter acts the error just enough to get the right integer
+    // result.
+    //
+    // But why 1/128 in particular?
+    //
+    // Internal Qt uses fixed point math for drawing with 6 bits in the
+    // fractional part. This gives us a resolution of 1/64. Conversion to
+    // fixed point happens late in the process. Add 1/128 gets us the correct
+    // answer but gets effectively removed during the conversion to fixed
+    // point.
   }
 
   #renderSingleLine(painter: QPainter, line: Line, y: number, renderCursor: boolean): void {
