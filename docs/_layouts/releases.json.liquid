@@ -1,0 +1,14 @@
+---
+---
+{%- assign pages = site.posts | where_exp: "p", "p.categories contains 'release'" | where_exp: "p", "p.version != nil" | sort: "date" -%}
+
+[
+  {%- for p in pages %}
+  {
+    "date": {{ p.date | date_to_xmlschema | jsonify }},
+    "url": {{ p.url | jsonify }},
+    "version": {{ p.version | jsonify }},
+    "title": {{ p.title | markdownify | strip_html | jsonify }}
+  }{%- unless forloop.last %},{% endunless -%}
+  {% endfor %}
+]
