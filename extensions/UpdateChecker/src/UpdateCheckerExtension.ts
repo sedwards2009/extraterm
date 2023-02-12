@@ -9,6 +9,7 @@ import { ExtensionContext, Logger, SettingsTab } from '@extraterm/extraterm-exte
 // import { AlignmentFlag, QLabel, TextFormat } from '@nodegui/nodegui';
 import * as https from 'node:https';
 import { Config } from "./Config.js";
+import { UpdateCheckerSettingsPage } from './UpdateCheckerSettingsPage.js';
 
 
 let log: Logger = null;
@@ -19,8 +20,17 @@ let timerId: NodeJS.Timeout = null;
 
 const ONE_DAY_MILLIS = 24 * 60 * 60 * 1000;
 const ONE_WEEK_MILLIS = 7 * ONE_DAY_MILLIS;
-const RELEASE_URL = 'https://extraterm.org/releases.json';
+const RELEASES_URL = 'https://extraterm.org/releases.json';
 
+let settingsPage: UpdateCheckerSettingsPage = null;
+
+
+interface ReleaseInfo {
+  date: string;
+  url: string;
+  version: string;
+  title: string;
+}
 
 export function activate(_context: ExtensionContext): any {
   log = _context.logger;
@@ -30,7 +40,6 @@ export function activate(_context: ExtensionContext): any {
   context.settings.registerSettingsTab("update-checker-config", configTab);
 
   loadConfig();
-
 }
 
 function loadConfig(): void {
@@ -38,7 +47,9 @@ function loadConfig(): void {
   if (config == null) {
     config = {
       frequency: 'never',
-      lastCheck: 0
+      lastCheck: 0,
+      newVersion: null,
+      newUrl: null
     };
   }
 }
@@ -46,7 +57,6 @@ function loadConfig(): void {
 function setUpPoll(): void {
   timerId = setTimeout(pollAlarm, 60 * 1000);
 }
-
 
 function pollAlarm(): void {
   if (config.frequency !== 'never') {
@@ -59,41 +69,72 @@ function pollAlarm(): void {
   setUpPoll();
 }
 
-function checkCommand(): void {
+let isFetchingReleaseJSON = false;
+function setIsFetchingReleaseJSON(isFetching: boolean): void {
+  isFetchingReleaseJSON = isFetching;
+  if (settingsPage != null) {
+    settingsPage.setIsFetchingReleaseJSON(isFetching);
+  }
+}
+
+async function checkCommand(): Promise<void> {
   config.lastCheck = Date.now();
   context.configuration.set(config);
 
-  https.get(RELEASE_URL, (res) => {
-    const { statusCode } = res;
-    if (statusCode !== 200) {
-      log.warn(`Request to ${RELEASE_URL} failed. Status Code: ${statusCode}`);
-      res.resume();
-      return;
+  setIsFetchingReleaseJSON(true);
+  try {
+    const jsonBody = await fetchUrl(RELEASES_URL);
+    const releaseData: ReleaseInfo[] = JSON.parse(jsonBody);
+
+    const latestVersion = releaseData[releaseData.length-1];
+    if (latestVersion.version !== context.application.version) {
+      config.newUrl = latestVersion.url;
+      config.newVersion = latestVersion.version;
+
+      context.configuration.set(config);
     }
+  } catch(e) {
+    log.warn(e);
+  }
+  setIsFetchingReleaseJSON(false);
+}
 
-    res.setEncoding('utf8');
-    let rawData = '';
-    res.on('data', (chunk) => {
-      rawData += chunk;
-    });
-    res.on('end', () => {
-      try {
-        log.info(rawData);
-        const parsedData = JSON.parse(rawData);
-
-        log.info(parsedData);
-
-      } catch (e) {
-        log.warn(e.message);
+function fetchUrl(url: string): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    https.get(url, (res) => {
+      const { statusCode } = res;
+      if (statusCode !== 200) {
+        log.warn(`Request to ${url} failed. Status Code: ${statusCode}`);
+        res.resume();
+        return;
       }
+
+      res.setEncoding('utf8');
+      let rawData = '';
+      res.on('data', (chunk) => {
+        rawData += chunk;
+      });
+      res.on('end', () => {
+        try {
+          resolve(rawData);
+        } catch (e) {
+          log.warn(e.message);
+          reject(e);
+        }
+      });
+    }).on('error', (e) => {
+      log.warn(`Got error: ${e.message}`);
     });
-  }).on('error', (e) => {
-    log.warn(`Got error: ${e.message}`);
   });
 }
 
-
-
 function configTab(extensionTab: SettingsTab): void {
-
+  settingsPage = new UpdateCheckerSettingsPage(extensionTab, config, log);
+  settingsPage.onConfigChanged((config) => {
+    context.configuration.set(config);
+  });
+  settingsPage.onCheckNow(()=> {
+    checkCommand();
+  });
+  settingsPage.setIsFetchingReleaseJSON(isFetchingReleaseJSON);
 }

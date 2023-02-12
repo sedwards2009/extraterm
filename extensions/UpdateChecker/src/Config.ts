@@ -9,4 +9,6 @@ export type CheckFrequency = 'never' | 'daily' | 'weekly';
 export interface Config {
   frequency: CheckFrequency;
   lastCheck: number;
+  newVersion: string;
+  newUrl: string;
 }

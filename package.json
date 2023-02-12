@@ -61,6 +61,7 @@
       "extensions/TerminalTitle",
       "extensions/Tips",
       "extensions/TLDRPages",
+      "extensions/UpdateChecker",
       "extensions/WindowsConsoleSessionBackend",
       "extensions/WindowsConsoleSessionEditor"
     ],
