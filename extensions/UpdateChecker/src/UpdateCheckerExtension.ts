@@ -5,7 +5,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { ExtensionContext, Logger, SettingsTab } from '@extraterm/extraterm-extension-api';
+import { ExtensionContext, Logger, SettingsTab, Terminal } from '@extraterm/extraterm-extension-api';
 // import { AlignmentFlag, QLabel, TextFormat } from '@nodegui/nodegui';
 import * as https from 'node:https';
 import { Config } from "./Config.js";
@@ -19,7 +19,6 @@ let config: Config = null;
 let timerId: NodeJS.Timeout = null;
 
 const ONE_DAY_MILLIS = 24 * 60 * 60 * 1000;
-const ONE_WEEK_MILLIS = 7 * ONE_DAY_MILLIS;
 const RELEASES_URL = 'https://extraterm.org/releases.json';
 
 let settingsPage: UpdateCheckerSettingsPage = null;
@@ -39,14 +38,20 @@ export function activate(_context: ExtensionContext): any {
   context.commands.registerCommand("update-checker:check", checkCommand);
   context.settings.registerSettingsTab("update-checker-config", configTab);
 
+
   loadConfig();
+  if ( ! config.requestedPermission) {
+    context.terminals.onDidCreateTerminal(handleNewTerminal);
+  }
+  setUpPoll();
 }
 
 function loadConfig(): void {
   config = context.configuration.get();
   if (config == null) {
     config = {
-      frequency: 'never',
+      checkOn: false,
+      requestedPermission: false,
       lastCheck: 0,
       newVersion: null,
       newUrl: null
@@ -54,13 +59,32 @@ function loadConfig(): void {
   }
 }
 
+async function handleNewTerminal(newTerminal: Terminal): Promise<void> {
+  if (config.requestedPermission) {
+    return;
+  }
+
+  const result = await newTerminal.tab.showDialog({
+    message: `${newTerminal.tab.window.style.htmlStyleTag}
+<h2>May Extraterm periodically check for updates?</h2>
+<p>(This is private. No personal information, tracking IDs, or other codes are sent!)</p>
+`,
+    isHtml: true,
+    options: ["Yes", "No"]
+  });
+
+  config.requestedPermission = true;
+  config.checkOn = result === 0;
+  context.configuration.set(config);
+}
+
 function setUpPoll(): void {
-  timerId = setTimeout(pollAlarm, 60 * 1000);
+  timerId = setTimeout(pollAlarm, 60 * 1000 * 10);
 }
 
 function pollAlarm(): void {
-  if (config.frequency !== 'never') {
-    const deadline = config.lastCheck + (config.frequency === 'daily' ? ONE_DAY_MILLIS : ONE_WEEK_MILLIS);
+  if (config.checkOn) {
+    const deadline = config.lastCheck + ONE_DAY_MILLIS;
     const now = Date.now();
     if (now > deadline) {
       checkCommand();

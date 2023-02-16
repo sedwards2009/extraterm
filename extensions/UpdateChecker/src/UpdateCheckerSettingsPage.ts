@@ -8,15 +8,11 @@ import {
   Logger,
   SettingsTab
 } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, ComboBox, Label, PushButton, Widget } from "qt-construct";
+import { BoxLayout, CheckBox, ComboBox, Label, PushButton, Widget } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 import { AlignmentFlag, Direction, QLabel, QPushButton, QWidget, SizeAdjustPolicy, TextFormat } from "@nodegui/nodegui";
 
-import { CheckFrequency, Config } from "./Config.js";
-
-
-const CheckFrequencyValues: readonly CheckFrequency[] = ["never", "daily", "weekly"];
-const CheckFrequencyLabels: string[] = ["Never", "Daily", "Weekly"];
+import { Config } from "./Config.js";
 
 const WEBSITE_ROOT = "https://extraterm.org/";
 
@@ -52,7 +48,6 @@ export class UpdateCheckerSettingsPage {
   }
 
   #createUI(): QWidget {
-    const frequency = this.#config.frequency;
     return Widget({
       maximumWidth: 800,
       layout: BoxLayout({
@@ -71,15 +66,14 @@ export class UpdateCheckerSettingsPage {
               spacing: 0,
               contentsMargins: [0, 0, 0, 0],
               children: [
-                "Check for updates: ",
-                ComboBox({
-                  items: CheckFrequencyLabels,
-                  currentIndex: CheckFrequencyValues.indexOf(frequency),
-                  onCurrentTextChanged: (newText: string) => {
-                    const frequency = CheckFrequencyValues[CheckFrequencyLabels.indexOf(newText)];
-                    this.#config.frequency = frequency;
+                CheckBox({
+                  text: "Check for updates",
+                  checkable: true,
+                  checked: this.#config.checkOn,
+                  onClicked: (checked) => {
+                    this.#config.checkOn = checked;
                     this.#onConfigChangedEventEmitter.fire(this.#config);
-                  }
+                  },
                 }),
                 {
                   widget: Widget({}),

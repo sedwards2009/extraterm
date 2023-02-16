@@ -4,10 +4,9 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-export type CheckFrequency = 'never' | 'daily' | 'weekly';
-
 export interface Config {
-  frequency: CheckFrequency;
+  checkOn: boolean;
+  requestedPermission: boolean;
   lastCheck: number;
   newVersion: string;
   newUrl: string;
