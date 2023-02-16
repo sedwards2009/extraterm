@@ -96,8 +96,13 @@ export interface NumberInputOptions {
   maximum?: number;
 }
 
+export interface ButtonOptions {
+  label: string;
+  type?: 'success' | 'info' | 'danger' | 'warning';
+}
+
 export interface DialogOptions {
   message: string;
   isHtml?: boolean;
-  options: string[];
+  buttonOptions: (string | ButtonOptions)[];
 }

@@ -131,10 +131,21 @@ export class DialogPopOver {
     this.#optionButtons = [];
 
     let i = 0;
-    for (const option of options.options) {
+    for (const option of options.buttonOptions) {
       const index = i;
+      let label = "";
+      let cssClass: string[] = [];
+      if (typeof option === "string") {
+        label = option;
+      } else {
+        label = option.label;
+        if (option.type != null) {
+          cssClass = [option.type];
+        }
+      }
       const newButton = PushButton({
-        text: option,
+        text: label,
+        cssClass,
         onClicked: () => {
           this.#sendResult(index);
         }
