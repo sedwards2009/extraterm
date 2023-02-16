@@ -67,7 +67,7 @@ export class UpdateCheckerSettingsPage {
               contentsMargins: [0, 0, 0, 0],
               children: [
                 CheckBox({
-                  text: "Check for updates",
+                  text: "Regularly check for updates",
                   checkable: true,
                   checked: this.#config.checkOn,
                   onClicked: (checked) => {

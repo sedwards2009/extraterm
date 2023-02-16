@@ -64,13 +64,17 @@ async function handleNewTerminal(newTerminal: Terminal): Promise<void> {
     return;
   }
 
+  const questionHtml = newTerminal.tab.window.style.createHtmlIcon("fa-question-circle");
   const result = await newTerminal.tab.showDialog({
     message: `${newTerminal.tab.window.style.htmlStyleTag}
-<h2>May Extraterm periodically check for updates?</h2>
-<p>(This is private. No personal information, tracking IDs, or other codes are sent!)</p>
+<h2>${questionHtml} May Extraterm regularly check for updates?</h2>
+<p>No personal information, profiles, tracking IDs, cookies, or other codes are sent when checking for updates.</p>
 `,
     isHtml: true,
-    options: ["Yes", "No"]
+    buttonOptions: [
+      { label: "Yes", type: "success" },
+      "No"
+    ]
   });
 
   config.requestedPermission = true;
