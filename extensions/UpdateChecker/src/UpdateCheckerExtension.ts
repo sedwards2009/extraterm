@@ -4,12 +4,11 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-
-import { ExtensionContext, Logger, SettingsTab, Terminal } from '@extraterm/extraterm-extension-api';
-// import { AlignmentFlag, QLabel, TextFormat } from '@nodegui/nodegui';
-import * as https from 'node:https';
+import { ExtensionContext, Logger, SettingsTab, Terminal } from "@extraterm/extraterm-extension-api";
+import * as https from "node:https";
+import { Banner } from "./Banner.js";
 import { Config } from "./Config.js";
-import { UpdateCheckerSettingsPage } from './UpdateCheckerSettingsPage.js';
+import { UpdateCheckerSettingsPage } from "./UpdateCheckerSettingsPage.js";
 
 
 let log: Logger = null;
@@ -19,7 +18,8 @@ let config: Config = null;
 let timerId: NodeJS.Timeout = null;
 
 const ONE_DAY_MILLIS = 24 * 60 * 60 * 1000;
-const RELEASES_URL = 'https://extraterm.org/releases.json';
+const RELEASES_URL = "https://extraterm.org/releases.json";
+const BASE_VERSION_URL = "https://extraterm.org/";
 
 let settingsPage: UpdateCheckerSettingsPage = null;
 
@@ -54,7 +54,8 @@ function loadConfig(): void {
       requestedPermission: false,
       lastCheck: 0,
       newVersion: null,
-      newUrl: null
+      newUrl: null,
+      lastDismissedVersion: null
     };
   }
 }
@@ -91,7 +92,7 @@ function pollAlarm(): void {
     const deadline = config.lastCheck + ONE_DAY_MILLIS;
     const now = Date.now();
     if (now > deadline) {
-      checkCommand();
+      checkNow();
     }
   }
   setUpPoll();
@@ -106,6 +107,14 @@ function setIsFetchingReleaseJSON(isFetching: boolean): void {
 }
 
 async function checkCommand(): Promise<void> {
+  // The user requested a check so flush the old data and make sure a new banner will appear.
+  config.lastDismissedVersion = null;
+  config.newVersion = null;
+  config.newUrl = null;
+  await checkNow();
+}
+
+async function checkNow(): Promise<void> {
   config.lastCheck = Date.now();
   context.configuration.set(config);
 
@@ -120,6 +129,11 @@ async function checkCommand(): Promise<void> {
       config.newVersion = latestVersion.version;
 
       context.configuration.set(config);
+
+      if (settingsPage != null) {
+        settingsPage.configChanged();
+      }
+      showBanner();
     }
   } catch(e) {
     log.warn(e);
@@ -137,12 +151,12 @@ function fetchUrl(url: string): Promise<string> {
         return;
       }
 
-      res.setEncoding('utf8');
-      let rawData = '';
-      res.on('data', (chunk) => {
+      res.setEncoding("utf8");
+      let rawData = "";
+      res.on("data", (chunk) => {
         rawData += chunk;
       });
-      res.on('end', () => {
+      res.on("end", () => {
         try {
           resolve(rawData);
         } catch (e) {
@@ -150,7 +164,7 @@ function fetchUrl(url: string): Promise<string> {
           reject(e);
         }
       });
-    }).on('error', (e) => {
+    }).on("error", (e) => {
       log.warn(`Got error: ${e.message}`);
     });
   });
@@ -165,4 +179,28 @@ function configTab(extensionTab: SettingsTab): void {
     checkCommand();
   });
   settingsPage.setIsFetchingReleaseJSON(isFetchingReleaseJSON);
+}
+
+let banner: Banner = null;
+
+function showBanner(): void {
+  if (context.activeTerminal == null ||config.newVersion === config.lastDismissedVersion) {
+    return;
+  }
+
+  if (banner != null) {
+    banner.updateConfig();
+    return;
+  }
+
+  banner = new Banner(context.activeTerminal, config);
+  banner.onDismissClicked(() => {
+    config.lastDismissedVersion = config.newVersion;
+    context.configuration.set(config);
+    banner.close();
+  });
+  banner.onViewClicked(() => {
+    context.application.openExternal(BASE_VERSION_URL + config.newUrl );
+  });
+  banner.open();
 }

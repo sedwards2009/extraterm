@@ -10,4 +10,5 @@ export interface Config {
   lastCheck: number;
   newVersion: string;
   newUrl: string;
+  lastDismissedVersion: string;
 }

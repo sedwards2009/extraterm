@@ -40,6 +40,12 @@
         "title": "Updates",
         "icon": "fa-gift"
       }
+    ],
+    "terminalBorderWidgets": [
+      {
+        "name": "new-update",
+        "border": "north"
+      }
     ]
   }
 }

@@ -95,15 +95,13 @@ export class UpdateCheckerSettingsPage {
 
   #updateMessage(): void {
     let msg = "";
-    // const newVersion = this.#config.newVersion;
-    const newVersion = "1.0.0";
+    const newVersion = this.#config.newVersion;
     const style = this.#extensionTab.style;
     if (newVersion == null) {
       msg = `${style.htmlStyleTag}<h3>All up to date</h3>
       <hr>`;
     } else {
-      // const url = WEBSITE_ROOT + this.#config.newUrl;
-      const url = WEBSITE_ROOT + "/foo.html";
+      const url = WEBSITE_ROOT + this.#config.newUrl;
       const externalLinkIcon = style.createHtmlIcon("fa-external-link-alt");
       msg = `${style.htmlStyleTag}<h2>Version ${newVersion} is available!</h2>
       <p>Read more here: <a href="${url}">${url} ${externalLinkIcon}</a></p>
