@@ -94,6 +94,21 @@ function main(): void {
 
           ComboBox({items: ["One", "Two"]}),
 
+          Widget({layout:
+            BoxLayout({
+              direction:Direction.LeftToRight,
+              spacing: 0,
+              children: [
+                "Some tens:",
+                ComboBox({items: ["Ten", "Twenty", "Thirty"]}),
+                {
+                  widget: Widget({}),
+                  stretch: 1
+                }
+              ]
+            })
+          }),
+
           CheckBox({text: "Checkbox"}),
           CheckBox({text: "Select Checkbox", checkState: true}),
           CheckBox({text: "Disabled Checkbox", enabled: false}),

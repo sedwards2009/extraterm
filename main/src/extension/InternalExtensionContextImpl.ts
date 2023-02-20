@@ -207,6 +207,10 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     }
   }
 
+  async showDialog(tab: Tab, options: ExtensionApi.DialogOptions): Promise<number | undefined> {
+    return this.#extensionManager.showDialog(tab, options);
+  }
+
   async showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number> {
     return this.#extensionManager.showListPicker(tab, options);
   }

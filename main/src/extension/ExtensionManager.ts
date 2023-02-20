@@ -27,6 +27,7 @@ import { InternalExtensionContext, InternalSessionEditor, InternalSessionSetting
 import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl.js";
 import { Tab } from "../Tab.js";
 import { ListPickerPopOver } from "./ListPickerPopOver.js";
+import { DialogPopOver } from "./DialogPopOver.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { BlockFrame } from "../terminal/BlockFrame.js";
 import { TerminalBlock } from "../terminal/TerminalBlock.js";
@@ -89,6 +90,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #allWindows: Window[] = [];
 
   #listPickerPopOver: ListPickerPopOver = null;
+  #dialogPopOver: DialogPopOver = null;
 
   constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager, uiStyle: UiStyle, extensionPaths: string[],
       applicationVersion: string) {
@@ -850,6 +852,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   getAllWindows(): Window[] {
     return this.#allWindows;
+  }
+
+  async showDialog(tab: Tab, options: ExtensionApi.DialogOptions): Promise<number | undefined> {
+    if (this.#dialogPopOver == null) {
+      this.#dialogPopOver = new DialogPopOver(this.#uiStyle);
+    }
+    const win = this.getWindowForTab(tab);
+    return this.#dialogPopOver.show(win, {...options, containingRect: win.getTabGlobalGeometry(tab)});
   }
 
   async showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number> {

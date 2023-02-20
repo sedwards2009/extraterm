@@ -27,6 +27,10 @@ export class TabImpl implements ExtensionApi.Tab {
     return null;
   }
 
+  showDialog(options: ExtensionApi.DialogOptions): Promise<number | undefined> {
+    return this.#internalExtensionContext.showDialog(this.#tab, options);
+  }
+
   showNumberInput(options: ExtensionApi.NumberInputOptions): Promise<number> {
     throw new Error("Method not implemented.");
   }

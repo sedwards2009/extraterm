@@ -20,6 +20,9 @@ export interface Tab {
    */
   readonly terminal: Terminal;
 
+
+  showDialog(options: DialogOptions): Promise<number | undefined>;
+
   /**
    * Show an input box requesting a number.
    *
@@ -91,4 +94,15 @@ export interface NumberInputOptions {
    * The maximum acceptable value.
    */
   maximum?: number;
+}
+
+export interface ButtonOptions {
+  label: string;
+  type?: 'success' | 'info' | 'danger' | 'warning';
+}
+
+export interface DialogOptions {
+  message: string;
+  isHtml?: boolean;
+  buttonOptions: (string | ButtonOptions)[];
 }
