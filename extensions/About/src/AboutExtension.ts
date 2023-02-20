@@ -51,7 +51,7 @@ function aboutCommand(): void {
   <h3>version ${context.application.version}</h3>
   <p>Copyright &copy; 2015-2022 Simon Edwards &lt;simon@simonzone.com&gt;</p>
   <p>Published under the MIT license</p>
-  <p>See <a href="http://extraterm.org">extraterm.org</a> and <a href="https://github.com/sedwards2009/extraterm">https://github.com/sedwards2009/extraterm</a></p>
+  <p>See <a href="https://extraterm.org">extraterm.org</a> and <a href="https://github.com/sedwards2009/extraterm">https://github.com/sedwards2009/extraterm</a></p>
   <hr>
   <p>Extraterm logos were designed and provided by <a href="https://github.com/g-harel">Gabriel Harel (https://github.com/g-harel)</a>.</p>
   <p>This software uses Twemoji for color emoji under the Creative Commons Attribution 4.0 International (CC BY 4.0) license. <a href="https://twemoji.twitter.com/">https://twemoji.twitter.com/</a></p>
