@@ -82,11 +82,25 @@ export class UpdateCheckerSettingsPage {
               ]
             })
           }),
-          this.#checkNowButton = PushButton({
-            text: "Check now",
-            onClicked: () => {
-              this.#onCheckNowEventEmitter.fire();
-            }
+
+          Widget({
+            layout: BoxLayout({
+              direction: Direction.LeftToRight,
+              spacing: 0,
+              contentsMargins: [0, 0, 0, 0],
+              children: [
+                this.#checkNowButton = PushButton({
+                  text: "Check Now",
+                  onClicked: () => {
+                    this.#onCheckNowEventEmitter.fire();
+                  }
+                }),
+                {
+                  widget: Widget({}),
+                  stretch: 1,
+                }
+              ]
+            })
           })
         ]
       })

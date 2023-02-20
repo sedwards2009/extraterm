@@ -38,7 +38,6 @@ export function activate(_context: ExtensionContext): any {
   context.commands.registerCommand("update-checker:check", checkCommand);
   context.settings.registerSettingsTab("update-checker-config", configTab);
 
-
   loadConfig();
   if ( ! config.requestedPermission) {
     context.terminals.onDidCreateTerminal(handleNewTerminal);
@@ -112,6 +111,9 @@ async function checkCommand(): Promise<void> {
   config.newVersion = null;
   config.newUrl = null;
   await checkNow();
+  context.commands.executeCommand("extraterm:window.openSettings", {
+    select: "update-checker:update-checker-config"
+  });
 }
 
 async function checkNow(): Promise<void> {
@@ -184,7 +186,7 @@ function configTab(extensionTab: SettingsTab): void {
 let banner: Banner = null;
 
 function showBanner(): void {
-  if (context.activeTerminal == null ||config.newVersion === config.lastDismissedVersion) {
+  if (context.activeTerminal == null || config.newVersion === config.lastDismissedVersion) {
     return;
   }
 
