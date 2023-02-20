@@ -293,7 +293,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     background-color: ${inputBackgroundColor};
     color: ${textColor};
 
-    padding: ${emToPx(0.25)}px ${emToPx(0.5)}px;
+    padding: ${emToPx(0.25)}px ${emToPx(1)}px;
 
     border: ${inputBorderWidth} solid ${inputBorderColor};
     border-radius: ${borderRadius};
@@ -763,7 +763,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   QRadioButton::indicator {
     width: ${emToPx(1)}px;
     height: ${emToPx(1)}px;
-    border-radius: ${emToPx(0.5)}px;
+    border-radius: ${Math.floor(emToPx(1)/ 2)}px;
     background-color: ${componentBackgroundColor};
   }
 
