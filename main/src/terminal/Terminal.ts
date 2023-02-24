@@ -1421,6 +1421,9 @@ export class Terminal implements Tab, Disposable {
 
       case BlockState.FRAME_OPEN:
         this.#exitBlockStateFrameOpen("");
+        if ( ! needsFrame) {
+          this.#appendNewTerminalBlock();
+        }
         break;
 
       case BlockState.BOOKMARK_OPEN:
