@@ -858,19 +858,22 @@ export class TerminalBlock implements Block {
   }
 
   getSelectionText(): string {
-    let selectionStart = this.#selectionStart;
-    let selectionEnd = this.#selectionEnd;
-    if (selectionStart == null || selectionEnd == null) {
+    return this.getTextRange(this.#selectionStart, this.#selectionEnd);
+  }
+
+  getTextRange(start: TerminalCoord, end: TerminalCoord): string {
+    if (start == null || end == null) {
       return null;
     }
 
-    if ((selectionEnd.y < selectionStart.y) || (selectionEnd.y === selectionStart.y && selectionEnd.x < selectionStart.x)) {
-      selectionStart = this.#selectionEnd;
-      selectionEnd = this.#selectionStart;
+    if ((end.y < start.y) || (end.y === start.y && end.x < start.x)) {
+      const tmp = end;
+      end = start;
+      start = tmp;
     }
 
-    const firstRow = Math.max(selectionStart.y, 0);
-    const lastRow = selectionEnd.y + 1;
+    const firstRow = Math.max(start.y, 0);
+    const lastRow = end.y + 1;
 
     const lineText: string[] = [];
 
@@ -878,23 +881,23 @@ export class TerminalBlock implements Block {
 
     for (let i=firstRow; i<lastRow; i++) {
       const line = this.getLine(i);
-      if (i === selectionStart.y) {
-        if (selectionStart.y === selectionEnd.y) {
+      if (i === start.y) {
+        if (start.y === end.y) {
           // Small selection contained within one row.
-          lineText.push(line.getString(selectionStart.x, selectionEnd.x - selectionStart.x).trim());
+          lineText.push(line.getString(start.x, end.x - start.x).trim());
         } else {
           // Top row of the selection.
-          lineText.push(line.getString(selectionStart.x, line.width-selectionStart.x).trim());
+          lineText.push(line.getString(start.x, line.width-start.x).trim());
         }
       } else {
         if ( ! isLastLineWrapped) {
           lineText.push("\n");
         }
-        if (i !== selectionEnd.y) {
+        if (i !== end.y) {
           lineText.push(line.getString(0, line.width).trim());
         } else {
           // The last row of a multi-row selection.
-          lineText.push(line.getString(0, selectionEnd.x));
+          lineText.push(line.getString(0, end.x));
         }
       }
       isLastLineWrapped = line.isWrapped;

@@ -131,6 +131,12 @@ enum BlockState {
                   // moved into this frame.
 }
 
+interface TerminalPositionBookmark {
+  isLive: boolean;
+  row: number;
+  column: number;
+}
+
 
 export class Terminal implements Tab, Disposable {
   private _log: Logger = null;
@@ -217,11 +223,15 @@ export class Terminal implements Tab, Disposable {
 
   #bracketStyle: string = null;
 
+  #allTerminalBookmarks: TerminalPositionBookmark[] = [];
+
   // The command line string of the last command started.
   #lastCommandLine: string = null;
-  #bookmarkTerminalRow = -1;
+  #frameStartBookmark: TerminalPositionBookmark = { isLive: false, row: 0, column: 0 };
   #latestTerminalFrame: SpacerFrame = null;
   #openDecoratedFrame: DecoratedFrame = null;
+
+  #promptEndBookmark: TerminalPositionBookmark = { isLive: false, row: 0, column: 0 };
 
   environment = new TerminalEnvironmentImpl([
     { key: TerminalEnvironment.TERM_ROWS, value: "" },
@@ -267,6 +277,10 @@ export class Terminal implements Tab, Disposable {
       frameFinder: FrameFinder, bulkFileStorage: BulkFileStorage) {
 
     this._log = getLogger("Terminal", this);
+
+    this.#allTerminalBookmarks.push(this.#frameStartBookmark);
+    this.#allTerminalBookmarks.push(this.#promptEndBookmark);
+
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this.#onDidScreenChangeEventEmitter.event;
@@ -954,6 +968,23 @@ export class Terminal implements Tab, Disposable {
       end: this.#handleApplicationModeEnd.bind(this)
     };
     emulator.registerApplicationModeHandler(applicationModeHandler);
+
+    emulator.onPromptStart(() => {
+      this.#handleVSCodePromptStart();
+    });
+    emulator.onPromptEnd(() => {
+      this.#handleVSCodePromptEnd();
+    });
+    emulator.onPreexecution(() => {
+      this.#handleVSCodePreexecution();
+    });
+    emulator.onEndExecution((returnCode: string): void => {
+      this.#handleVSCodeEndExecution(returnCode);
+    });
+    emulator.onCommandLineSet((commandLine: string): void => {
+      this.#handleVSCodeCommandLineSet(commandLine);
+    });
+
     emulator.onWriteBufferSize(this.#handleWriteBufferSize.bind(this));
     // if (this._terminalVisualConfig != null) {
     //   emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
@@ -1218,8 +1249,9 @@ export class Terminal implements Tab, Disposable {
     this.#emulator.moveRowsAboveCursorToScrollback();
     this.#emulator.flushRenderQueue();
 
-    this.#bookmarkTerminalRow = (<TerminalBlock>this.#latestTerminalFrame.getBlock())
+    this.#frameStartBookmark.row = (<TerminalBlock>this.#latestTerminalFrame.getBlock())
                                       .getScrollbackLength();
+    this.#frameStartBookmark.isLive = true;
     this.#lastCommandLine = commandLine;
 
     this.#updateEnvironmentWithCommandLine(commandLine);
@@ -1231,7 +1263,7 @@ export class Terminal implements Tab, Disposable {
     this.#moveCursorToFreshLine();
 
     const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
-    const scrollbackOutputLength = terminalBlock.getScrollbackLength() - this.#bookmarkTerminalRow;
+    const scrollbackOutputLength = terminalBlock.getScrollbackLength() - this.#frameStartBookmark.row;
     const effectiveScreenLength = this.#emulator.getCursorRow();
 
     const commandShouldBeFramed = returnCode !== "0" || this.#commandNeedsFrame(this.#lastCommandLine,
@@ -1243,7 +1275,7 @@ export class Terminal implements Tab, Disposable {
       const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null);
       decoratedFrame.setBlock(newTerminalBlock);
 
-      const scrollbackLines = terminalBlock.takeScrollbackFrom(this.#bookmarkTerminalRow);
+      const scrollbackLines = terminalBlock.takeScrollbackFrom(this.#frameStartBookmark.row);
       newTerminalBlock.setScrollbackLines(scrollbackLines);
       const returnCodeInt = Number.parseInt(returnCode, 10);
       newTerminalBlock.setReturnCode(returnCodeInt);
@@ -1254,7 +1286,7 @@ export class Terminal implements Tab, Disposable {
       this.#latestTerminalFrame = null;
     }
 
-    this.#bookmarkTerminalRow = -1;
+    this.#frameStartBookmark.isLive = false;
 
     this.#updateEnvironmentWithOldCommandLine();
     return commandShouldBeFramed;
@@ -1409,7 +1441,10 @@ export class Terminal implements Tab, Disposable {
     if (commandLine === "") {
       return;
     }
+    this.#handleCommandOutputStart(commandLine);
+  }
 
+  #handleCommandOutputStart(commandLine: string): void {
     const needsFrame = this.#commandNeedsFrame(commandLine);
 
     switch (this.#blockState) {
@@ -1443,7 +1478,10 @@ export class Terminal implements Tab, Disposable {
 
   #handleApplicationModeBracketEnd(): void {
     const returnCode = this.#applicationModeData;
+    this.#handleCommandOutputEnd(returnCode);
+  }
 
+  #handleCommandOutputEnd(returnCode: string): void {
     switch (this.#blockState) {
       case BlockState.START:
       case BlockState.PLAIN:
@@ -1461,6 +1499,67 @@ export class Terminal implements Tab, Disposable {
           this.#appendNewTerminalBlock();
         }
         this.#enterBlockStatePlain();
+        break;
+    }
+  }
+
+  #handleVSCodePromptStart(): void {
+    this.#promptEndBookmark.isLive = false;
+  }
+
+  #handleVSCodePromptEnd(): void {
+    const dim = this.#emulator.getDimensions();
+
+    const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
+    this.#promptEndBookmark.row = dim.cursorY + terminalBlock.getScrollbackLength();
+    this.#promptEndBookmark.column = dim.cursorX;
+    this.#promptEndBookmark.isLive = true;
+  }
+
+  #handleVSCodePreexecution(): void {
+    let commandLine = "";
+    if (this.#promptEndBookmark.isLive) {
+      const dim = this.#emulator.getDimensions();
+
+      const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
+      commandLine = terminalBlock.getTextRange({
+        x: this.#promptEndBookmark.column,
+        y: this.#promptEndBookmark.row,
+      },
+      {
+        x: dim.cursorX,
+        y: dim.cursorY + terminalBlock.getScrollbackLength()
+      });
+      commandLine = commandLine ?? "";
+      commandLine = commandLine.replaceAll("\n", "").trim();
+    }
+    this.#handleCommandOutputStart(commandLine);
+  }
+
+  #handleVSCodeEndExecution(returnCode: string): void {
+    this.#handleCommandOutputEnd(returnCode);
+  }
+
+  #handleVSCodeCommandLineSet(commandLine: string): void {
+    switch (this.#blockState) {
+      case BlockState.START:
+      case BlockState.PLAIN:
+        this.#handleCommandOutputStart(commandLine);
+        break;
+
+      case BlockState.FRAME_OPEN:
+        const defaultMetadata: BlockMetadata = {
+          title: commandLine,
+          posture: BlockPosture.RUNNING,
+          icon: "fa-cog",
+          moveable: false,
+          deleteable: false
+        };
+        this.#openDecoratedFrame.setDefaultMetadata(defaultMetadata);
+        break;
+
+      case BlockState.BOOKMARK_OPEN:
+        this.#lastCommandLine = commandLine;
         break;
     }
   }
@@ -1705,8 +1804,12 @@ export class Terminal implements Tab, Disposable {
       // The mark for the start of the last command output may
       // need to be adjusted if we chopped its block.
       const isLastBlock = blockIndex === this.#blockFrames.length -1;
-      if (isLastBlock && this.#bookmarkTerminalRow !== -1) {
-        this.#bookmarkTerminalRow = Math.max(0, this.#bookmarkTerminalRow - lineCount);
+      if (isLastBlock) {
+        for (const bookmark of this.#allTerminalBookmarks) {
+          if (bookmark.isLive) {
+            bookmark.row = Math.max(0, bookmark.row - lineCount);
+          }
+        }
       }
     }
     blockIndex--;

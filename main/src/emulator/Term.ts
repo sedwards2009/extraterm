@@ -1,7 +1,7 @@
 /**
  * term.js - an xterm emulator
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
- * Copyright (c) 2014-2020, Simon Edwards <simon@simonzone.com>
+ * Copyright (c) 2014-2023, Simon Edwards <simon@simonzone.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -271,6 +271,35 @@ export class Emulator implements EmulatorApi {
   onBell: Event<BellEvent>;
   #onBellEventEmitter = new EventEmitter<BellEvent>();
 
+  // Events to support OSC 133 shell intergration codes as documented here:
+  //   https://iterm2.com/documentation-escape-codes.html
+  // and also for OSC 633 codes as documented here:
+  //   https://code.visualstudio.com/docs/terminal/shell-integration
+
+  // OSC 133 ; A ST
+  // OSC 633 ; A ST
+  onPromptStart: Event<void>;
+  #onPromptStartEventEmitter = new EventEmitter<void>();
+
+  // OSC 133 ; B ST
+  // OSC 633 ; B ST
+  onPromptEnd: Event<void>;
+  #onPromptEndEventEmitter = new EventEmitter<void>();
+
+  // OSC 133 ; C ST
+  // OSC 633 ; C ST
+  onPreexecution: Event<void>;
+  #onPreexecutionEventEmitter = new EventEmitter<void>();
+
+  // OSC 133 ; D ST
+  // OSC 633 ; D ST
+  onEndExecution: Event<string>;
+  #onEndExecutionEventEmitter = new EventEmitter<string>();
+
+  // OSC 633 ; E ST
+  onCommandLineSet: Event<string>;
+  #onCommandLineSetEventEmitter = new EventEmitter<string>();
+
   onData: Event<DataEvent>;
   #onDataEventEmitter = new EventEmitter<DataEvent>();
 
@@ -303,6 +332,13 @@ export class Emulator implements EmulatorApi {
     this.onRender = this.#onRenderEventEmitter.event;
     this.onScreenChange = this.#onScreenChangeEventEmitter.event;
     this.onBell = this.#onBellEventEmitter.event;
+
+    this.onPromptStart = this.#onPromptStartEventEmitter.event;
+    this.onPromptEnd = this.#onPromptEndEventEmitter.event;
+    this.onPreexecution = this.#onPreexecutionEventEmitter.event;
+    this.onEndExecution = this.#onEndExecutionEventEmitter.event;
+    this.onCommandLineSet = this.#onCommandLineSetEventEmitter.event;
+
     this.onData = this.#onDataEventEmitter.event;
     this.onTitleChange = this.#onTitleChangeEventEmitter.event;
     this.onWriteBufferSize = this.#onWriteBufferSizeEventEmitter.event;
@@ -1800,6 +1836,10 @@ export class Emulator implements EmulatorApi {
         case 118:
           // reset colors
           break;
+        case 133:
+        case 633:
+          this.#executeShellIntegration(this._params);
+          break;
       }
 
       this._params = new ControlSequenceParameters();
@@ -1821,6 +1861,45 @@ export class Emulator implements EmulatorApi {
       }
     }
     return i;
+  }
+
+  #executeShellIntegration(params: ControlSequenceParameters): void {
+    if (params.length === 1) {
+      this.log("No parameters were given to OSC 133 or OSC 633 command.");
+      return;
+    }
+
+    this._dispatchRenderEvent();  // Flush any rendering and buffers, sync everything up.
+    const command = params[1].stringValue;
+    switch (command) {
+      case 'A':
+        this.#onPromptStartEventEmitter.fire();
+        break;
+
+      case 'B':
+        this.#onPromptEndEventEmitter.fire();
+        break;
+
+      case 'C':
+        this.#onPreexecutionEventEmitter.fire();
+        break;
+
+      case 'D':
+        this.#onEndExecutionEventEmitter.fire(params.length === 2 ? "" : params[2].stringValue);
+        break;
+
+      case 'E':
+        if (params.length !== 3) {
+          this.log("Wrong number of parameters were given to OSC 133 E or OSC 633 E command.");
+          return;
+        }
+        this.#onCommandLineSetEventEmitter.fire(params[2].stringValue);
+        break;
+
+      default:
+        this.log("Unknown command code given to OSC 133 or OSC 633 command.");
+        break;
+    }
   }
 
   private _processDataDCS(ch: string, i: number): number {
