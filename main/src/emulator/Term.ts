@@ -1516,7 +1516,7 @@ export class Emulator implements EmulatorApi {
       // Delete P s Column(s) (default = 1) (DECDC), VT420 and up
 
       default:
-        this.log('Unknown CSI code: %s (%s).', ch, "" + ch.charCodeAt(0));
+        this.log(`Unknown CSI code: ${ch} (${"" + ch.charCodeAt(0)}).`);
         break;
     }
   }
@@ -1699,7 +1699,7 @@ export class Emulator implements EmulatorApi {
 
       default:
         this.state = ParserState.NORMAL;
-        this.error('Unknown ESC control: %s.', ch);
+        this.error(`Unknown ESC control: ${ch}.`);
         break;
     }
     return i;
@@ -1968,7 +1968,7 @@ export class Emulator implements EmulatorApi {
             break;
 
           default:
-            this.error('Unknown DCS Pt: %s.', "" + pt);
+            this.error(`Unknown DCS Pt: ${""+pt}.`);
             replyPt = '';
             break;
         }
@@ -1994,7 +1994,7 @@ export class Emulator implements EmulatorApi {
         break;
 
       default:
-        this.error('Unknown DCS prefix: %s.', this._params.prefix);
+        this.error(`Unknown DCS prefix: ${this._params.prefix}.`);
         break;
     }
   }
@@ -3126,7 +3126,7 @@ export class Emulator implements EmulatorApi {
         setCellBgClutFlag(this.curAttr, true);
 
       } else {
-        this.error('Unknown SGR attribute: %s.', "" + p);
+        this.error(`Unknown SGR attribute: ${"" + p}.`);
       }
     }
   }
