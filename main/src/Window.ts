@@ -500,6 +500,7 @@ export class Window implements Disposable {
     doLater( () => {
       try {
         this.#extensionManager.executeCommandWithExtensionWindowState(context, commandName);
+        // ^ Let any Promise here run to completion by itself.
         this.#contextMenuState = null;
       } catch(e) {
         this._log.warn(e);

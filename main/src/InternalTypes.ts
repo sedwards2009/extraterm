@@ -61,7 +61,7 @@ export interface ExtensionManager {
   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
 
   executeCommand(command: string, args?: any): any;
-  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): any;
+  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): Promise<any>;
 
   copyExtensionWindowState(): CommonExtensionWindowState;
   createExtensionBlockWithBulkFile(terminal: Terminal, mimeType: string, bulkFile: BulkFile): Block;
@@ -100,6 +100,8 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   blockRegistry: BlockRegistry;
   settingsTabRegistry: SettingsTabRegistry;
 
+  setOverrideWindowState(state: CommonExtensionWindowState): void;
+  getOverrideWindowState(): CommonExtensionWindowState;
   getActiveBlock(): ExtensionApi.Block;
   getActiveTerminal(): ExtensionApi.Terminal;
   getActiveHyperlinkURL(): string;

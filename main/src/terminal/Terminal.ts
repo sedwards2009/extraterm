@@ -827,6 +827,7 @@ export class Terminal implements Tab, Disposable {
 
     const commandName = entries[0].command;
     this.#extensionManager.executeCommandWithExtensionWindowState(contextWindowState, commandName);
+    // ^ Let any Promise here run to completion by itself.
   }
 
   dispose(): void {

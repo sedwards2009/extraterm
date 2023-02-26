@@ -21,7 +21,7 @@ export interface CommandMenuEntry {
 export class CommandsRegistry {
 
   private _log: Logger;
-  #commandToFunctionMap = new Map<string, (args: any) => any>();
+  #commandToFunctionMap = new Map<string, (args: any) => Promise<any>>();
   #commandToCustomizerFunctionMap = new Map<string, () => ExtensionApi.CustomizedCommand>();
   #commandToMenuEntryMap: Map<string, CommandMenuEntry[]> = null;
   #extensionManager: ExtensionManager;
@@ -84,7 +84,7 @@ export class CommandsRegistry {
     return index;
   }
 
-  registerCommand(name: string, commandFunc: (args: any) => any, customizer?: () => ExtensionApi.CustomizedCommand): void {
+  registerCommand(name: string, commandFunc: (args: any) => Promise<any>, customizer?: () => ExtensionApi.CustomizedCommand): void {
     if ( ! this.#commandToMenuEntryMap.has(name)) {
       this._log.warn(`registerCommand() attempted on unknown command '${name}' from extension '${this.#extensionName}'.`);
       return;
@@ -121,7 +121,7 @@ export class CommandsRegistry {
     };
   }
 
-  getCommandFunction(name: string): (args: any) => any {
+  getCommandFunction(name: string): (args: any) => Promise<any> {
     return this.#commandToFunctionMap.get(name);
   }
 

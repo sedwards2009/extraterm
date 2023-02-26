@@ -29,6 +29,7 @@ import { ExtensionBlockImpl } from "./api/ExtensionBlockImpl.js";
 import { SettingsTabRegistry } from "./SettingsTabRegistry.js";
 import { ThemeManager } from "./../theme/ThemeManager.js";
 import { ErrorTolerantEventEmitter } from "./ErrorTolerantEventEmitter.js";
+import { CommonExtensionWindowState } from "./CommonExtensionState.js";
 
 
 export class InternalExtensionContextImpl implements InternalExtensionContext {
@@ -37,6 +38,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
   #extensionContext: ExtensionContextImpl;
   #extensionManager: ExtensionManager;
   #configDatabase: ConfigDatabase;
+  #windowState: CommonExtensionWindowState = null;
 
   commands: CommandsRegistry;
   sessionEditorRegistry: WorkspaceSessionEditorRegistry;
@@ -77,19 +79,39 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     this.settingsTabRegistry = new SettingsTabRegistry(this, extensionMetadata);
   }
 
+  setOverrideWindowState(state: CommonExtensionWindowState): void {
+    this.#windowState = state;
+  }
+
+  getOverrideWindowState(): CommonExtensionWindowState {
+    return this.#windowState;
+  }
+
   getActiveBlock(): ExtensionApi.Block {
+    if (this.#windowState != null) {
+      return this.wrapBlock(this.#windowState.activeBlockFrame);
+    }
     return this.wrapBlock(this.#extensionManager.getActiveBlockFrame());
   }
 
   getActiveTerminal(): ExtensionApi.Terminal {
+    if (this.#windowState != null) {
+      return this.wrapTerminal(this.#windowState.activeTerminal);
+    }
     return this.wrapTerminal(this.#extensionManager.getActiveTerminal());
   }
 
   getActiveHyperlinkURL(): string {
+    if (this.#windowState != null) {
+      return this.#windowState.activeHyperlinkURL;
+    }
     return this.#extensionManager.getActiveHyperlinkURL();
   }
 
   getActiveWindow(): ExtensionApi.Window {
+    if (this.#windowState != null) {
+      return this.wrapWindow(this.#windowState.activeWindow);
+    }
     return this.wrapWindow(this.#extensionManager.getActiveWindow());
   }
 
