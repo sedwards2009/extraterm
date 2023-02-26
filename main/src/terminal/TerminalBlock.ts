@@ -703,10 +703,20 @@ export class TerminalBlock implements Block {
     }
 
     if (termEvent.leftButton) {
-      this.#selectionStart = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
-      this.#selectionEnd = this.#selectionStart;
-      this.#selectionMode = SelectionMode.NORMAL;
-      this.#isWordSelection = false;
+      const newCoord = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
+      if (termEvent.shiftKey && this.#selectionStart != null) {
+        // Selection extension
+        if (terminalCoordLessThan(newCoord, this.#selectionStart)) {
+          this.#selectionStart = newCoord;
+        } else {
+          this.#selectionEnd = newCoord;
+        }
+      } else {
+        this.#selectionStart = newCoord;
+        this.#selectionEnd = this.#selectionStart;
+        this.#selectionMode = SelectionMode.NORMAL;
+        this.#isWordSelection = false;
+      }
 
       this.#onSelectionChangedEventEmitter.fire();
 
