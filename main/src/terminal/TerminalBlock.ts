@@ -858,25 +858,29 @@ export class TerminalBlock implements Block {
   }
 
   #handleSelectionMouseMove(termEvent: ExpandedMouseEventOptions): void {
+    const eventColumn = termEvent.column;
+    const emulatorRows = this.#emulator != null ? this.#emulator.getDimensions().materializedRows : 0;
+    const eventRow = Math.min(termEvent.row, emulatorRows -1);
+
     if (this.#selectionStart == null) {
-      this.#selectionStart = { x: termEvent.column, y: termEvent.row + this.#scrollback.length };
+      this.#selectionStart = { x: eventColumn, y: eventRow + this.#scrollback.length };
       this.#selectionEnd = this.#selectionStart;
     }
 
-    if (termEvent.column === this.#selectionStart.x && termEvent.row === this.#selectionStart.y) {
+    if (eventColumn === this.#selectionStart.x && eventRow === this.#selectionStart.y) {
       return;
     }
 
     if (this.#isWordSelection) {
-      const isBeforeSelection = terminalCoordLessThan({x: termEvent.column, y: termEvent.row + this.#scrollback.length},
+      const isBeforeSelection = terminalCoordLessThan({x: eventColumn, y: eventRow + this.#scrollback.length},
                                                   this.#selectionStart);
       if (isBeforeSelection) {
-        this.#selectionEnd = { x: this.#extendXWordLeft(termEvent), y: termEvent.row + this.#scrollback.length };
+        this.#selectionEnd = { x: this.#extendXWordLeft(termEvent), y: eventRow + this.#scrollback.length };
       } else {
-        this.#selectionEnd = { x: this.#extendXWordRight(termEvent), y: termEvent.row + this.#scrollback.length };
+        this.#selectionEnd = { x: this.#extendXWordRight(termEvent), y: eventRow + this.#scrollback.length };
       }
     } else {
-      this.#selectionEnd = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
+      this.#selectionEnd = { x: termEvent.nearestColumnEdge, y: eventRow + this.#scrollback.length };
     }
     this.#widget.update();
   }
