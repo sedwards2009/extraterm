@@ -329,6 +329,9 @@ export class TerminalBlock implements Block {
   }
 
   #handleRenderEvent(event: RenderEvent): void {
+    const newScrollbackLength = this.#scrollback.length + event.scrollbackLines.length;
+    this.#stompSelection(event.refreshStartRow + newScrollbackLength, event.refreshEndRow + newScrollbackLength);
+
     this.#updateWidgetSize();
 
     if (event.scrollbackLines.length !== 0) {
@@ -341,6 +344,17 @@ export class TerminalBlock implements Block {
     }
 
     this.#widget.update();
+  }
+
+  #stompSelection(startRow: number, endRow: number): void {
+    if ( ! this.hasSelection()) {
+      return;
+    }
+
+    if (this.#selectionEnd.y < startRow || this.#selectionStart.y >= endRow) {
+      return;
+    }
+    this.clearSelection();
   }
 
   #toRealPixels(logicalPx: number): number {
