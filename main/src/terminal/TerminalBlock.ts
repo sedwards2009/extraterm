@@ -6,7 +6,8 @@
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode,
   QPen,
   ContextMenuPolicy,
-  QRect} from "@nodegui/nodegui";
+  QRect,
+  QColor} from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice,
@@ -438,6 +439,19 @@ export class TerminalBlock implements Block {
 
     painter.setCompositionMode(CompositionMode.CompositionMode_Screen);
 
+    if (this.#selectionMode === SelectionMode.NORMAL) {
+      this.#renderNormalSelection(painter, selectionStart, selectionEnd, firstRow, lastRow, widthPx, heightPx,
+        selectionQColor, emulatorWidth);
+    } else {
+      this.#renderBlockSelection(painter, selectionStart, selectionEnd, firstRow, lastRow, widthPx, heightPx,
+        selectionQColor, emulatorWidth);
+    }
+  }
+
+  #renderNormalSelection(painter: QPainter, selectionStart: TerminalCoord, selectionEnd: TerminalCoord,
+      firstRow: number, lastRow: number, widthPx: number, heightPx: number, selectionQColor: QColor,
+      emulatorWidth: number): void {
+
     for (let i=firstRow; i<lastRow; i++) {
       if (i === selectionStart.y) {
         if (selectionStart.y === selectionEnd.y) {
@@ -466,6 +480,24 @@ export class TerminalBlock implements Block {
           painter.fillRectF(0, i*heightPx, selectionEnd.x*widthPx, heightPx, selectionQColor);
         }
       }
+    }
+  }
+
+  #renderBlockSelection(painter: QPainter, selectionStart: TerminalCoord, selectionEnd: TerminalCoord,
+      firstRow: number, lastRow: number, widthPx: number, heightPx: number, selectionQColor: QColor,
+      emulatorWidth: number): void {
+
+    const leftX = selectionStart.x;
+    const rightX = selectionEnd.x;
+
+    for (let i=firstRow; i<lastRow; i++) {
+      // A row within a multi-row selection.
+      let rowLength = emulatorWidth;
+      if (i < this.#scrollback.length) {
+        rowLength = Math.min(this.#scrollback[i].width, rightX);
+      }
+      painter.fillRectF(leftX*widthPx, i*heightPx,
+        (rowLength - leftX) * widthPx, heightPx, selectionQColor);
     }
   }
 
@@ -718,7 +750,7 @@ export class TerminalBlock implements Block {
 
     if (termEvent.leftButton) {
       const newCoord = { x: termEvent.nearestColumnEdge, y: termEvent.row + this.#scrollback.length };
-      if (termEvent.shiftKey && this.#selectionStart != null) {
+      if (termEvent.shiftKey && this.#selectionStart != null && this.#selectionEnd != null) {
         // Selection extension
         if (terminalCoordLessThan(newCoord, this.#selectionStart)) {
           this.#selectionStart = newCoord;
@@ -727,8 +759,8 @@ export class TerminalBlock implements Block {
         }
       } else {
         this.#selectionStart = newCoord;
-        this.#selectionEnd = this.#selectionStart;
-        this.#selectionMode = SelectionMode.NORMAL;
+        this.#selectionEnd = null;
+        this.#selectionMode = termEvent.shiftKey ? SelectionMode.BLOCK : SelectionMode.NORMAL;
         this.#isWordSelection = false;
       }
 
@@ -871,22 +903,30 @@ export class TerminalBlock implements Block {
       return;
     }
 
+    let newSelectionEnd: TerminalCoord = null;
     if (this.#isWordSelection) {
       const isBeforeSelection = terminalCoordLessThan({x: eventColumn, y: eventRow + this.#scrollback.length},
                                                   this.#selectionStart);
       if (isBeforeSelection) {
-        this.#selectionEnd = { x: this.#extendXWordLeft(termEvent), y: eventRow + this.#scrollback.length };
+        newSelectionEnd = { x: this.#extendXWordLeft(termEvent), y: eventRow + this.#scrollback.length };
       } else {
-        this.#selectionEnd = { x: this.#extendXWordRight(termEvent), y: eventRow + this.#scrollback.length };
+        newSelectionEnd = { x: this.#extendXWordRight(termEvent), y: eventRow + this.#scrollback.length };
       }
     } else {
-      this.#selectionEnd = { x: termEvent.nearestColumnEdge, y: eventRow + this.#scrollback.length };
+      newSelectionEnd = { x: termEvent.nearestColumnEdge, y: eventRow + this.#scrollback.length };
+    }
+    if ( ! terminalCoordEqual(this.#selectionStart, newSelectionEnd)) {
+      this.#selectionEnd = newSelectionEnd;
     }
     this.#widget.update();
   }
 
   getSelectionText(): string {
-    return this.getTextRange(this.#selectionStart, this.#selectionEnd);
+    if (this.#selectionMode === SelectionMode.NORMAL) {
+      return this.getTextRange(this.#selectionStart, this.#selectionEnd);
+    } else {
+      return this.getTextBlock(this.#selectionStart, this.#selectionEnd);
+    }
   }
 
   getTextRange(start: TerminalCoord, end: TerminalCoord): string {
@@ -931,6 +971,32 @@ export class TerminalBlock implements Block {
       isLastLineWrapped = line.isWrapped;
     }
     return lineText.join("");
+  }
+
+  getTextBlock(start: TerminalCoord, end: TerminalCoord): string {
+    if (start == null || end == null) {
+      return null;
+    }
+
+    if ((end.y < start.y) || (end.y === start.y && end.x < start.x)) {
+      const tmp = end;
+      end = start;
+      start = tmp;
+    }
+
+    const firstRow = Math.max(start.y, 0);
+    const lastRow = end.y + 1;
+
+    const lineText: string[] = [];
+
+    const startX = start.x;
+    const endX = end.x;
+
+    for (let i=firstRow; i<lastRow; i++) {
+      const line = this.getLine(i);
+      lineText.push(line.getString(startX, Math.min(endX - startX, line.width)).trim());
+    }
+    return lineText.join("\n");
   }
 
   getLine(row: number): Line {
