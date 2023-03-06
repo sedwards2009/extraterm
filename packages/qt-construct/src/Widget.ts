@@ -27,6 +27,8 @@ export interface WidgetOptions {
   onEnter?: () => void;
   onFocusIn?: () => void;
   onFocusOut?: () => void;
+  onInputMethod?: (nativeEvent /* NativeQEvent */) => void;
+  onInputMethodQuery?: (nativeEvent /* NativeQEvent */) => void;
   onKeyPress?: (nativeEvent /* NativeQEvent */) => void;
   onLayoutRequest?: () => void;
   onLeave?: () => void;
@@ -48,9 +50,10 @@ export interface WidgetOptions {
 export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
-    objectName, onClose, onEnter, onFocusIn, onFocusOut, onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress,
-    onMouseMove, onMove, onPaint, onResize, onWheel, sizePolicy, styleSheet, windowIcon, windowTitle, maximumHeight,
-    maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle, toolTip, visible
+    objectName, onClose, onEnter, onFocusIn, onFocusOut, onInputMethod, onInputMethodQuery, onLayoutRequest, onLeave,
+    onKeyPress, onMouseButtonPress, onMouseMove, onMove, onPaint, onResize, onWheel, sizePolicy, styleSheet,
+    windowIcon, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle,
+    toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
@@ -96,6 +99,14 @@ export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): voi
   }
   if (onFocusOut !== undefined) {
     widget.addEventListener(WidgetEventTypes.FocusOut, onFocusOut);
+  }
+  if (onInputMethod !== undefined) {
+    widget.addEventListener(WidgetEventTypes.InputMethod, onInputMethod);
+  }
+  if (onInputMethodQuery !== undefined) {
+    widget.addEventListener(WidgetEventTypes.InputMethodQuery, onInputMethodQuery, {
+      afterDefault: true
+    });
   }
   if (onLayoutRequest !== undefined) {
     widget.addEventListener(WidgetEventTypes.LayoutRequest, onLayoutRequest);
