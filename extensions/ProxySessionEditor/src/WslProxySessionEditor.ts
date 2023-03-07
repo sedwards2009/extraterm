@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020-2023 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,7 +7,7 @@ import * as _ from "lodash-es";
 import * as child_process from "node:child_process";
 
 import { Logger, SessionConfiguration, SessionEditorBase } from "@extraterm/extraterm-extension-api";
-import { Direction, QComboBox, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";
+import { Direction, QLineEdit, QRadioButton, QWidget } from "@nodegui/nodegui";
 import { BoxLayout, ComboBox, GridLayout, LineEdit, RadioButton, setCssClasses, Widget } from "qt-construct";
 
 
@@ -18,18 +18,11 @@ interface WslProxySessionConfiguration extends SessionConfiguration {
 }
 
 export function init(): void {
-  readEtcShellsSpawn();
   readDistributionsSpawn();
 }
 
 export function wslProxySessionEditorFactory(log: Logger, sessionEditorBase: SessionEditorBase): QWidget {
   return new EditorUi(sessionEditorBase).getWidget();
-}
-
-let etcShells: string[] = [];
-
-function readEtcShellsSpawn(): void {
-  spawnWsl(["cat", "/etc/shells"], "utf8", splitEtcShells);
 }
 
 function spawnWsl(parameters: string[], encoding: string, onExit: (text: string) => void): void {
@@ -45,17 +38,6 @@ function spawnWsl(parameters: string[], encoding: string, onExit: (text: string)
     onExit(text);
   });
   wslProcess.stdin.end();
-}
-
-function splitEtcShells(shellText: string): void {
-  const lines = shellText.split("\n");
-  const result: string[] = [];
-  for (const line of lines) {
-    if ( ! line.startsWith("#") && line.trim() !== "") {
-      result.push(line);
-    }
-  }
-  etcShells = result;
 }
 
 let distributions: string[] = [];
@@ -79,12 +61,10 @@ function splitDistributions(text: string): void {
 const DEFAULT_DISTRO = "<Default>";
 
 class EditorUi {
-
   #widget: QWidget = null;
   #defaultShellRadioButton: QRadioButton = null;
   #otherRadioButton: QRadioButton = null;
-  #otherShellComboBox: QComboBox = null;
-  #initialDirectoryLineEdit: QLineEdit = null;
+  #otherShellLineEdit: QLineEdit = null;
 
   #sessionEditorBase: SessionEditorBase = null;
   #config: WslProxySessionConfiguration = null;
@@ -98,8 +78,6 @@ class EditorUi {
     this.#config.distribution = this.#config.distribution ?? "";
     this.#config.useDefaultShell = this.#config.useDefaultShell ?? true;
     this.#config.shell = this.#config.shell ?? "";
-
-    const otherShellItems = etcShells.includes(this.#config.shell) ? etcShells : [this.#config.shell, ...etcShells];
 
     this.#widget = Widget({
       layout: GridLayout({
@@ -156,12 +134,10 @@ class EditorUi {
                 },
                 {
                   widget:
-                  this.#otherShellComboBox = ComboBox({
+                  this.#otherShellLineEdit = LineEdit({
                     enabled: ! this.#config.useDefaultShell,
-                    currentIndex: otherShellItems.indexOf(this.#config.shell),
-                    editable: true,
-                    items: otherShellItems,
-                    onCurrentTextChanged: (newText: string): void => {
+                    text: this.#config.shell ?? "",
+                    onTextEdited: (newText: string): void => {
                       this.#config.shell = newText;
                       sessionEditorBase.setSessionConfiguration(this.#config);
                     }
@@ -182,7 +158,7 @@ class EditorUi {
           }),
 
           "Initial Directory:",
-          this.#initialDirectoryLineEdit = LineEdit({
+          LineEdit({
             text: this.#config.initialDirectory,
             onTextEdited: (text: string) => {
               this.#config.initialDirectory = text;
@@ -201,9 +177,9 @@ class EditorUi {
   #updateShellRadio(useDefault: boolean): void {
     this.#defaultShellRadioButton.setChecked(useDefault);
     this.#otherRadioButton.setChecked(!useDefault);
-    this.#otherShellComboBox.setEnabled(!useDefault);
+    this.#otherShellLineEdit.setEnabled(!useDefault);
     if (useDefault) {
-      setCssClasses(this.#otherShellComboBox, []);
+      setCssClasses(this.#otherShellLineEdit, []);
     }
 
     this.#config.useDefaultShell = useDefault;
