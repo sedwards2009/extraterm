@@ -1073,8 +1073,11 @@ export class Terminal implements Tab, Disposable {
   }
 
   #getCursorGeometry(global: boolean): QRect | null {
-    const frame = this.#findLastBareTerminalBlockFrame();
-    const block = <TerminalBlock> frame.getBlock();
+    if (this.#latestTerminalFrame == null) {
+      return new QRect(0, 0, 1, 1);
+    }
+
+    const block = <TerminalBlock> this.#latestTerminalFrame.getBlock();
     const geo = block.getCursorGeometry();
     if (geo == null) {
       return null;
