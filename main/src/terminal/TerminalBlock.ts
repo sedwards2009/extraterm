@@ -500,9 +500,11 @@ export class TerminalBlock implements Block {
 
     for (let i=firstRow; i<lastRow; i++) {
       // A row within a multi-row selection.
-      let rowLength = emulatorWidth;
+      let rowLength: number;
       if (i < this.#scrollback.length) {
         rowLength = Math.min(this.#scrollback[i].width, rightX);
+      } else {
+        rowLength = Math.min(emulatorWidth, rightX);
       }
       painter.fillRectF(leftX*widthPx, i*heightPx,
         (rowLength - leftX) * widthPx, heightPx, selectionQColor);
