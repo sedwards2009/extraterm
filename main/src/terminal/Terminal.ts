@@ -22,11 +22,15 @@ import {
 } from "@extraterm/extraterm-extension-api";
 import {
   Direction,
+  InputMethodHint,
+  InputMethodQuery,
   KeyboardModifier,
   MouseButton,
   QApplication,
   QBoxLayout,
   QClipboardMode,
+  QInputMethodEvent,
+  QInputMethodQueryEvent,
   QKeyEvent,
   QLabel,
   QMouseEvent,
@@ -35,6 +39,7 @@ import {
   QScrollBar,
   QSizePolicyPolicy,
   QWidget,
+  WidgetAttribute,
   WidgetEventTypes
 } from "@nodegui/nodegui";
 import { performance } from "node:perf_hooks";
@@ -69,6 +74,7 @@ import { BulkFileStorage } from "../bulk_file_handling/BulkFileStorage.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
 import { Block } from "./Block.js";
+import { QEvent } from "@nodegui/nodegui/dist/lib/QtGui/QEvent/QEvent.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -311,6 +317,12 @@ export class Terminal implements Tab, Disposable {
   #createUi() : void {
     this.scrollArea = new TerminalScrollArea({
       objectName: "content",
+      onInputMethod: (nativeEvent) => {
+        this.#handleInputMethod(new QInputMethodEvent(nativeEvent));
+      },
+      onInputMethodQuery: (nativeEvent) => {
+        this.#handleInputMethodQuery(new QInputMethodQueryEvent(nativeEvent));
+      },
       onKeyPress: (nativeEvent) => {
         this.#handleKeyPress(new QKeyEvent(nativeEvent));
       },
@@ -318,10 +330,13 @@ export class Terminal implements Tab, Disposable {
         this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
       },
     });
-    this.scrollArea.getWidget().addEventListener(WidgetEventTypes.Resize, () => {
+    this.scrollArea.getContentWidget().setAttribute(WidgetAttribute.WA_InputMethodEnabled, true);
+
+    const scrollAreaWidget = this.scrollArea.getWidget();
+    scrollAreaWidget.addEventListener(WidgetEventTypes.Resize, () => {
       this.#handleResize();
     });
-    this.scrollArea.getWidget().addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
+    scrollAreaWidget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
       this.#handleMouseButtonPressBelowFrames(new QMouseEvent(nativeEvent));
     });
     this.#contentWidget = this.scrollArea.getContentWidget();
@@ -654,7 +669,10 @@ export class Terminal implements Tab, Disposable {
 
   #handleKeyPress(event: QKeyEvent): void {
     const ev = qKeyEventToMinimalKeyboardEvent(event);
+    this.#handleTermKeyboardEvent(event, ev);
+  }
 
+  #handleTermKeyboardEvent(event: QEvent, ev: TermApi.MinimalKeyboardEvent): void {
     const commands = this.#keybindingsIOManager.getCurrentKeybindingsMapping().mapEventToCommands(ev);
     const filteredCommands = this.#extensionManager.queryCommands({
       commands,
@@ -672,6 +690,45 @@ export class Terminal implements Tab, Disposable {
     if (emulatorHandled) {
       this.#scrollToBottom();
     }
+  }
+
+  #handleInputMethod(event: QInputMethodEvent): void {
+    this.scrollArea.getContentWidget().updateMicroFocus();
+    if (event.commitString() !== "") {
+      const termEvent: TermApi.MinimalKeyboardEvent = {
+        altKey: false,
+        ctrlKey: false,
+        metaKey: false,
+        shiftKey: false,
+        key: event.commitString(),
+        isComposing: false
+      };
+      this.#handleTermKeyboardEvent(event, termEvent);
+
+      const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
+      terminalBlock.setPreeditString(null);
+    } else {
+      const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
+      terminalBlock.setPreeditString(event.preeditString());
+    }
+  }
+
+  #handleInputMethodQuery(event: QInputMethodQueryEvent): void {
+    const query = event.queries();
+    if (query & InputMethodQuery.ImEnabled) {
+      event.setValue(InputMethodQuery.ImEnabled, true);
+    }
+    if (query & InputMethodQuery.ImCursorRectangle) {
+      const rect = this.#getCursorContentWidgetGeometry();
+      event.setValue(InputMethodQuery.ImCursorRectangle, rect);
+    }
+    if (query & InputMethodQuery.ImReadOnly) {
+      event.setValue(InputMethodQuery.ImReadOnly, false);
+    }
+    if (query & InputMethodQuery.ImHints) {
+      event.setValue(InputMethodQuery.ImHints, InputMethodHint.ImhSensitiveData | InputMethodHint.ImhNoAutoUppercase);
+    }
+    event.accept();
   }
 
   #handleMouseButtonPressBelowFrames(mouseEvent: QMouseEvent): void {
@@ -1008,15 +1065,31 @@ export class Terminal implements Tab, Disposable {
   }
 
   getCursorGlobalGeometry(): QRect | null {
-    const frame = this.#findLastBareTerminalBlockFrame();
-    const block = <TerminalBlock> frame.getBlock();
+    return this.#getCursorGeometry(true);
+  }
+
+  #getCursorContentWidgetGeometry(): QRect | null {
+    return this.#getCursorGeometry(false);
+  }
+
+  #getCursorGeometry(global: boolean): QRect | null {
+    if (this.#latestTerminalFrame == null) {
+      return new QRect(0, 0, 1, 1);
+    }
+
+    const block = <TerminalBlock> this.#latestTerminalFrame.getBlock();
     const geo = block.getCursorGeometry();
     if (geo == null) {
       return null;
     }
 
-    const globalPos = block.getWidget().mapToGlobal(new QPoint(geo.left(), geo.top()));
-    return new QRect(globalPos.x(), globalPos.y(), geo.width(), geo.height());
+    let pos: QPoint;
+    if (global) {
+      pos = block.getWidget().mapToGlobal(new QPoint(geo.left(), geo.top()));
+    } else {
+      pos = block.getWidget().mapTo(this.scrollArea.getContentWidget(), new QPoint(geo.left(), geo.top()));
+    }
+    return new QRect(pos.x(), pos.y(), geo.width(), geo.height());
   }
 
   #handleScreenChange(event: TermApi.ScreenChangeEvent): void {

@@ -18,6 +18,7 @@ import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
 import { BlockMetadata, BlockPosture } from "@extraterm/extraterm-extension-api";
 import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
+import { LineImpl } from "term-api-lineimpl";
 
 import { Block } from "./Block.js";
 import * as Term from "../emulator/Term.js";
@@ -53,6 +54,7 @@ export class TerminalBlock implements Block {
   #parent: any = null;
   #widget: QWidget = null;
   #emulator: Term.Emulator = null;
+  #preeditString: string = null;
 
   #columns = 0;
 
@@ -166,6 +168,11 @@ export class TerminalBlock implements Block {
     }
     this.#selectionStart = null;
     this.#selectionEnd = null;
+    this.#widget.update();
+  }
+
+  setPreeditString(text: string): void {
+    this.#preeditString = text;
     this.#widget.update();
   }
 
@@ -405,6 +412,7 @@ export class TerminalBlock implements Block {
       const startY = (screenTopRow + scrollbackLength) * heightPx;
       this.#renderLines(painter, lines, startY, cursorStyle === "block");
       this.#renderCursors(painter, lines, startY);
+      this.#renderPreexitString(painter);
     }
 
     this.#renderSelection(painter, topRenderRow, heightRows);
@@ -492,9 +500,11 @@ export class TerminalBlock implements Block {
 
     for (let i=firstRow; i<lastRow; i++) {
       // A row within a multi-row selection.
-      let rowLength = emulatorWidth;
+      let rowLength: number;
       if (i < this.#scrollback.length) {
         rowLength = Math.min(this.#scrollback[i].width, rightX);
+      } else {
+        rowLength = Math.min(emulatorWidth, rightX);
       }
       painter.fillRectF(leftX*widthPx, i*heightPx,
         (rowLength - leftX) * widthPx, heightPx, selectionQColor);
@@ -712,6 +722,21 @@ export class TerminalBlock implements Block {
       case "beam":
         return CursorStyle.BEAM;
     }
+  }
+
+  #renderPreexitString(painter: QPainter): void {
+    if (this.#emulator == null || this.#preeditString == null || this.#preeditString === "") {
+      return;
+    }
+    const dim = this.#emulator.getDimensions();
+    const y = (dim.cursorY + this.#scrollback.length) * this.#fontMetrics.heightPx + (1/128);
+    // About 1/128, see else where.
+
+    const line = new LineImpl(dim.cols, this.#terminalVisualConfig.palette, 0);
+    line.setString(dim.cursorX, this.#preeditString);
+    line.setBgClutIndex(dim.cursorX, 15); // white
+    line.setFgClutIndex(dim.cursorX, 0);  // black
+    this.#renderSingleLine(painter, line, y, false);
   }
 
   // private _configCursorStyleToHollowRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {
