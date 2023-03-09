@@ -1152,6 +1152,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/semver-compare@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@types/semver-compare@npm:1.0.1"
+  checksum: a144766e3bad1fc6e94df2f1964f3ce84cab27bff25e7175f31c5408190e49b17f407e82c6a814b6d7f0ad9f02e7355166bca67b5eb68bd3da116ee996f40c64
+  languageName: node
+  linkType: hard
+
 "@types/source-map-support@npm:0.2.28":
   version: 0.2.28
   resolution: "@types/source-map-support@npm:0.2.28"
@@ -8986,6 +8993,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"semver-compare@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "semver-compare@npm:1.0.0"
+  checksum: dd1d7e2909744cf2cf71864ac718efc990297f9de2913b68e41a214319e70174b1d1793ac16e31183b128c2b9812541300cb324db8168e6cf6b570703b171c68
+  languageName: node
+  linkType: hard
+
 "semver@npm:2 || 3 || 4 || 5, semver@npm:^5.0.3, semver@npm:^5.3.0, semver@npm:^5.5.0":
   version: 5.7.1
   resolution: "semver@npm:5.7.1"
@@ -10411,10 +10425,12 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     "@types/node": ^16.4.0
+    "@types/semver-compare": ^1.0.1
     esbuild: ^0.15.5
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
+    semver-compare: ^1.0.0
     typescript: 4.7.4
   languageName: unknown
   linkType: soft

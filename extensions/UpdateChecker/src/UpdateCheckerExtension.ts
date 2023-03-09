@@ -6,6 +6,7 @@
  */
 import { ExtensionContext, Logger, SettingsTab, Terminal } from "@extraterm/extraterm-extension-api";
 import * as https from "node:https";
+import {default as semverCmp} from 'semver-compare';
 import { Banner } from "./Banner.js";
 import { Config } from "./Config.js";
 import { UpdateCheckerSettingsPage } from "./UpdateCheckerSettingsPage.js";
@@ -126,7 +127,7 @@ async function checkNow(): Promise<void> {
     const releaseData: ReleaseInfo[] = JSON.parse(jsonBody);
 
     const latestVersion = releaseData[releaseData.length-1];
-    if (latestVersion.version !== context.application.version) {
+    if (semverCmp(latestVersion.version, context.application.version) === 1) {
       config.newUrl = latestVersion.url;
       config.newVersion = latestVersion.version;
 
