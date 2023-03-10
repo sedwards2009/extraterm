@@ -72,6 +72,7 @@ export class UpdateCheckerSettingsPage {
                   checked: this.#config.checkOn,
                   onClicked: (checked) => {
                     this.#config.checkOn = checked;
+                    this.#updateMessage();
                     this.#onConfigChangedEventEmitter.fire(this.#config);
                   },
                 }),
@@ -112,8 +113,13 @@ export class UpdateCheckerSettingsPage {
     const newVersion = this.#config.newVersion;
     const style = this.#extensionTab.style;
     if (newVersion == null) {
-      msg = `${style.htmlStyleTag}<h3>All up to date</h3>
-      <hr>`;
+      if (this.#config.lastCheck == null) {
+        msg = "";
+      } else {
+        const lastCheck = new Date(this.#config.lastCheck);
+        msg = `${style.htmlStyleTag}<h3>All up to date as of ${lastCheck.toDateString()}</h3>
+        <hr>`;
+      }
     } else {
       const url = WEBSITE_ROOT + this.#config.newUrl;
       const externalLinkIcon = style.createHtmlIcon("fa-external-link-alt");

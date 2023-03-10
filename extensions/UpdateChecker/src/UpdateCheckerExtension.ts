@@ -132,11 +132,11 @@ async function checkNow(): Promise<void> {
       config.newVersion = latestVersion.version;
 
       context.configuration.set(config);
-
-      if (settingsPage != null) {
-        settingsPage.configChanged();
-      }
       showBanner();
+    }
+
+    if (settingsPage != null) {
+      settingsPage.configChanged();
     }
   } catch(e) {
     log.warn(e);
