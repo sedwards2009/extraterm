@@ -116,8 +116,13 @@ export class UpdateCheckerSettingsPage {
       if (this.#config.lastCheck == null) {
         msg = "";
       } else {
-        const lastCheck = new Date(this.#config.lastCheck);
-        msg = `${style.htmlStyleTag}<h3>All up to date as of ${lastCheck.toDateString()}</h3>
+        let lastCheckMsg = "";
+        const lastCheckTimestamp = this.#config.lastCheck;
+        if (lastCheckTimestamp != null && lastCheckTimestamp !== 0) {
+          const lastCheck = new Date(this.#config.lastCheck);
+          lastCheckMsg = ` as of ${lastCheck.toDateString()}`;
+        }
+        msg = `${style.htmlStyleTag}<h3>All up to date${lastCheckMsg}</h3>
         <hr>`;
       }
     } else {

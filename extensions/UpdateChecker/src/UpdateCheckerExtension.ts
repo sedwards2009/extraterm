@@ -42,6 +42,11 @@ export function activate(_context: ExtensionContext): any {
   loadConfig();
   if ( ! config.requestedPermission) {
     context.terminals.onDidCreateTerminal(handleNewTerminal);
+    context.terminals.onDidCreateTerminal((terminal: Terminal) => {
+      if ( ! isDismissed()) {
+        openBannerInTerminal(terminal);
+      }
+    });
   }
   setUpPoll();
 }
@@ -132,7 +137,9 @@ async function checkNow(): Promise<void> {
       config.newVersion = latestVersion.version;
 
       context.configuration.set(config);
-      showBanner();
+      if ( ! isDismissed()) {
+        showAllBanners();
+      }
     }
 
     if (settingsPage != null) {
@@ -184,26 +191,49 @@ function configTab(extensionTab: SettingsTab): void {
   settingsPage.setIsFetchingReleaseJSON(isFetchingReleaseJSON);
 }
 
-let banner: Banner = null;
+const bannerMap = new WeakMap<Terminal, Banner>();
 
-function showBanner(): void {
-  if (context.activeTerminal == null || config.newVersion === config.lastDismissedVersion) {
-    return;
+function isDismissed(): boolean {
+  return config.newVersion === config.lastDismissedVersion;
+}
+
+function showAllBanners(): void {
+  for (const terminal of context.terminals.terminals) {
+    openBannerInTerminal(terminal);
   }
+}
 
-  if (banner != null) {
-    banner.updateConfig();
-    return;
+function openBannerInTerminal(terminal: Terminal): void {
+  let banner: Banner = null;
+  if (bannerMap.has(terminal)) {
+    banner = bannerMap.get(terminal);
+  } else {
+    banner = createBanner(terminal);
+    bannerMap.set(terminal, banner);
   }
+  banner.updateConfig();
+  banner.open();
+}
 
-  banner = new Banner(context.activeTerminal, config);
+function closeAllBanners(): void {
+  for (const terminal of context.terminals.terminals) {
+    let banner: Banner = null;
+    if (bannerMap.has(terminal)) {
+      banner = bannerMap.get(terminal);
+      banner.close();
+    }
+  }
+}
+
+function createBanner(terminal: Terminal): Banner {
+  const banner = new Banner(terminal, config);
   banner.onDismissClicked(() => {
     config.lastDismissedVersion = config.newVersion;
     context.configuration.set(config);
-    banner.close();
+    closeAllBanners();
   });
   banner.onViewClicked(() => {
     context.application.openExternal(BASE_VERSION_URL + config.newUrl );
   });
-  banner.open();
+  return banner;
 }
