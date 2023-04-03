@@ -33,7 +33,6 @@ export function qKeyEventToMinimalKeyboardEvent(event: QKeyEvent): MinimalKeyboa
     metaKey,
     shiftKey,
     key: mapQKeyEventToDOMKey(event),
-    isComposing: false,
   };
   return ev;
 }

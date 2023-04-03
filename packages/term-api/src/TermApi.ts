@@ -1,7 +1,7 @@
 /**
  * term.js - an xterm emulator
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
- * Copyright (c) 2014-2019, Simon Edwards <simon@simonzone.com>
+ * Copyright (c) 2014-2023, Simon Edwards <simon@simonzone.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -76,7 +76,7 @@ export interface ScreenChangeEvent {
 
   refreshStartRow: number;  // The start row of a range on the screen which needs to be refreshed.
                             // -1 indicates no refresh needed.
-  refreshEndRow: number;    // The end row of a range on the screen which needds to be refreshed.
+  refreshEndRow: number;    // The end row of a range on the screen which needs to be refreshed.
 
   cursorRow: number;
   cursorColumn: number;
@@ -194,7 +194,6 @@ export interface MinimalKeyboardEvent {
   metaKey: boolean;
   shiftKey: boolean;
   key: string;
-  isComposing: boolean;
 }
 
 

@@ -701,7 +701,6 @@ export class Terminal implements Tab, Disposable {
         metaKey: false,
         shiftKey: false,
         key: event.commitString(),
-        isComposing: false
       };
       this.#handleTermKeyboardEvent(event, termEvent);
 

@@ -2136,7 +2136,6 @@ export class Emulator implements EmulatorApi {
         shiftKey: false,
         altKey: ev.altKey,
         ctrlKey: ev.ctrlKey,
-        isComposing: ev.isComposing,
         key: ev.key,
         metaKey: ev.metaKey,
       };
@@ -2160,11 +2159,6 @@ export class Emulator implements EmulatorApi {
   private static _translateKey(platform: Platform, ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursorKeys: boolean): string {
     const isMac = platform === "darwin";
     let key: string = null;
-
-    if (ev.isComposing) {
-      // Electron on macOS reports key events even when the IME menu is shown.
-      return null;
-    }
 
     const altKey = ev.altKey;
     const ctrlKey = ev.ctrlKey;
