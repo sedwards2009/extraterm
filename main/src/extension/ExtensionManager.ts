@@ -500,6 +500,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return ext.internalExtensionContext.commands.getCommandFunction(command);
   }
 
+  @log
   setActiveWindow(window: Window): void {
     this.#commonExtensionWindowState.activeWindow = window;
   }
@@ -508,6 +509,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeWindow;
   }
 
+  @log
   setActiveTab(tab: Tab): void {
     this.#commonExtensionWindowState.activeTab = tab;
   }
@@ -516,6 +518,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeTab;
   }
 
+  @log
   setActiveTerminal(terminal: Terminal): void {
     this.#commonExtensionWindowState.activeTerminal = terminal;
   }
@@ -524,6 +527,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.#commonExtensionWindowState.activeTerminal;
   }
 
+  @log
   setActiveBlockFrame(blockFrame: BlockFrame): void {
     this.#commonExtensionWindowState.activeBlockFrame = blockFrame;
   }

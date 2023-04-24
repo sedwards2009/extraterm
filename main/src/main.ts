@@ -13,11 +13,12 @@ import * as path from "node:path";
 import { FileLogWriter, getLogger, addLogWriter, Logger, log } from "extraterm-logging";
 import { CreateSessionOptions, SessionConfiguration, TerminalEnvironment} from '@extraterm/extraterm-extension-api';
 import { Menu } from "qt-construct";
-import { QAction, QApplication, QFontDatabase, QIcon, QRect, QSize, QStylePixelMetric, QSystemTrayIcon } from "@nodegui/nodegui";
+import { QAction, QApplication, QFontDatabase, QIcon, QLabel, QRect, QSize, QStylePixelMetric, QSystemTrayIcon, QWidget, wrapperCache } from "@nodegui/nodegui";
 import { StyleTweaker } from "nodegui-plugin-style-tweaker";
+import { CDockAreaWidget, CDockManager, CDockWidget, CFloatingDockContainer, DockWidgetFeature, eConfigFlag } from "nodegui-plugin-qads";
 import { doLater } from "extraterm-timeoutqt";
 
-import { PopOutClickedDetails, Window } from "./Window.js";
+import { PopOutClickedDetails, Window, createWindow, getAllWindows, handleNewCDockAreaWidget, handleNewFloatingDockContainer } from "./Window.js";
 import { GENERAL_CONFIG, SESSION_CONFIG, WindowConfiguration } from "./config/Config.js";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
 import { ExtensionCommandContribution } from "./extension/ExtensionMetadata.js";
@@ -73,6 +74,8 @@ interface WindowDescription {
 class Main {
 
   private _log: Logger = null;
+  #dummyWindow: QWidget = null;
+  #dockManager: CDockManager = null;
   #windows: Window[] = [];
   #configDatabase: ConfigDatabase = null;
   #ptyManager: PtyManager = null;
@@ -181,11 +184,12 @@ class Main {
     qApplication.addEventListener("lastWindowClosed", () => {
       this.#keybindingsManager.uninstallGlobalShortcuts();
     });
+    this.#setupDockManager();
     await this.openWindow();
   }
 
   #setApplicationStyle(uiScalePercent: number): void {
-    let dpi = Math.min(0, ...this.#windows.map(w => w.getDpi()));
+    let dpi = Math.min(0, ...getAllWindows().map(w => w.getDpi()));
     dpi = dpi === 0 ? QApplication.primaryScreen().logicalDotsPerInch() : dpi;  // TODO
 
     const qApplication = QApplication.instance();
@@ -303,7 +307,7 @@ class Main {
       return null;
     }
 
-    for (const win of this.#windows) {
+    for (const win of getAllWindows()) {
       const tc = win.getTabCount();
       for (let i=0; i<tc; i++) {
         const tab = win.getTab(i);
@@ -330,7 +334,7 @@ class Main {
     localHttpServer.registerRequestHandler("ping", pingHandler);
 
     const getWindowById = (id: number): Window => {
-      for (const window of this.#windows) {
+      for (const window of getAllWindows()) {
         if (window.getId() === id) {
           return window;
         }
@@ -341,6 +345,39 @@ class Main {
     localHttpServer.registerRequestHandler("command", commandRequestHandler);
 
     return localHttpServer;
+  }
+
+  // TODO: Move into Window.ts
+  #setupDockManager(): void {
+    CDockManager.setConfigFlag(eConfigFlag.FocusHighlighting, true);
+    CDockManager.setConfigFlag(eConfigFlag.DockAreaHasCloseButton, false);
+    CDockManager.setConfigFlag(eConfigFlag.DockAreaHasUndockButton, false);
+    CDockManager.setConfigFlag(eConfigFlag.AlwaysShowTabs, true);
+    CDockManager.setConfigFlag(eConfigFlag.AllTabsHaveCloseButton, true);
+    CDockManager.setConfigFlag(eConfigFlag.FloatingContainerIndependent, true);
+
+    this.#dummyWindow = new QWidget();
+    this.#dockManager = new CDockManager(this.#dummyWindow);
+    this.#dockManager.addEventListener("dockAreaCreated", (dockArea: any) => {
+      handleNewCDockAreaWidget(this.#extensionManager,this.#keybindingsManager,
+        this.#uiStyle, wrapperCache.getWrapper(dockArea) as CDockAreaWidget);
+    });
+    this.#dockManager.addEventListener("floatingWidgetCreated", (floatingDockContainer: any) => {
+      handleNewFloatingDockContainer(wrapperCache.getWrapper(floatingDockContainer) as CFloatingDockContainer,
+        this.#dockManager, this.#configDatabase, this.#extensionManager, this.#keybindingsManager, this.#themeManager,
+        this.#uiStyle);
+    });
+
+    this.#dockManager.addEventListener("dockWidgetAboutToBeRemoved", (dockWidget: any /* ads::CDockWidget */) => {
+      const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
+      this._log.debug(`dockWidgetAboutToBeRemoved`);
+    });
+
+    this.#dockManager.addEventListener("focusedDockWidgetChanged", (dockWidget: any /* ads::CDockWidget */) => {
+      const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
+      this._log.debug(`focusedDockWidgetChanged`, dw);
+
+    });
   }
 
   registerCommands(extensionManager: ExtensionManager): void {
@@ -371,9 +408,10 @@ class Main {
   }
 
   setupDesktopSupport(): void {
-    QApplication.instance().addEventListener('focusWindowChanged', () => {
+    QApplication.instance().addEventListener("focusWindowChanged", () => {
+this._log.debug(`focusWindowChanged`);
       let activeWindow: Window = null;
-      for (const window of this.#windows) {
+      for (const window of getAllWindows()) {
         if (window.isActiveWindow()) {
           activeWindow = window;
         }
@@ -442,8 +480,8 @@ class Main {
   }
 
   commandQuit(): void {
-    while (this.#windows.length !== 0) {
-      this.#disposeWindow(this.#windows[0]);
+    while (getAllWindows().length !== 0) {
+      this.#disposeWindow(getAllWindows()[0]);
     }
   }
 
@@ -471,7 +509,7 @@ class Main {
       }
     }
 
-    const window = this.#extensionManager.getActiveWindow() ?? this.#windows[0];
+    const window = this.#extensionManager.getActiveWindow() ?? getAllWindows()[0];
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
@@ -547,9 +585,10 @@ class Main {
   }
 
   #disposeTerminalTab(terminal: Terminal): void {
+this._log.debug(`#disposeTerminalTab()`);
     terminal.dispose();
 
-    for (const window of this.#windows) {
+    for (const window of getAllWindows()) {
       window.removeTab(terminal);
     }
   }
@@ -594,14 +633,13 @@ class Main {
   }
 
   async openWindow(): Promise<Window> {
-    const win = new Window(this.#configDatabase, this.#extensionManager, this.#keybindingsManager,
-      this.#themeManager, this.#uiStyle);
+    const win = createWindow(this.#dockManager);
 
     const generalConfig = this.#configDatabase.getGeneralConfig();
     let geometry: QRect = null;
     let showMaximized = false;
     if (generalConfig.windowConfiguration != null) {
-      const winConfig = generalConfig.windowConfiguration[this.#windows.length];
+      const winConfig = generalConfig.windowConfiguration[getAllWindows().length];
       if (winConfig != null) {
         geometry = new QRect(winConfig.x, winConfig.y, winConfig.width, winConfig.height);
         showMaximized = winConfig.isMaximized === true;
@@ -611,6 +649,7 @@ class Main {
     await win.init(geometry);
 
     win.onTabCloseRequest((tab: Tab): void => {
+this._log.info(`win.onTabCloseRequest()`);
       this.#closeTab(win, tab);
     });
 
@@ -627,7 +666,7 @@ class Main {
     });
 
     const onWindowGeometryChanged = _.debounce(() => {
-      if (!this.#windows.includes(win)) {
+      if (!getAllWindows().includes(win)) {
         return;
       }
       this.#saveWindowGeometry();
@@ -645,19 +684,19 @@ class Main {
       });
     });
 
-    this.#windows.push(win);
+    getAllWindows().push(win);
     win.open();
     if (showMaximized) {
       win.maximize();
     }
-    this.#extensionManager.newWindowCreated(win, this.#windows);
+    this.#extensionManager.newWindowCreated(win, getAllWindows());
     return win;
   }
 
   #saveWindowGeometry(): void {
     const generalConfig = this.#configDatabase.getGeneralConfigCopy();
     const winConfig: WindowConfiguration = {};
-    for (const [index, win] of this.#windows.entries()) {
+    for (const [index, win] of getAllWindows().entries()) {
       const geo = win.getGeometry();
       winConfig[index] = {
         isMaximized: win.isMaximized(),
@@ -672,6 +711,7 @@ class Main {
   }
 
   #closeTab(win: Window, tab: Tab): void {
+this._log.debug(`#closeTab()`);
     win.removeTab(tab);
     tab.dispose();
   }
@@ -688,7 +728,7 @@ class Main {
       this.#settingsTab.selectPageByName(openSettingsArgs.select);
     }
 
-    for (const win of this.#windows) {
+    for (const win of getAllWindows()) {
       if (win.hasTab(this.#settingsTab)) {
         win.focus();
         win.focusTab(this.#settingsTab);
@@ -700,23 +740,23 @@ class Main {
   }
 
   commandFocusTabLeft(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    const tabCount = win.getTabCount();
-    const index = win.getCurrentTabIndex() - 1;
-    win.setCurrentTabIndex(index < 0 ? tabCount - 1 : index);
+    // const win = this.#extensionManager.getActiveWindow();
+    // const tabCount = win.getTabCount();
+    // const index = win.getCurrentTabIndex() - 1;
+    // win.setCurrentTabIndex(index < 0 ? tabCount - 1 : index);
   }
 
   commandFocusTabRight(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    const tabCount = win.getTabCount();
-    const index = win.getCurrentTabIndex() + 1;
-    win.setCurrentTabIndex(index >= tabCount ? 0 : index);
+    // const win = this.#extensionManager.getActiveWindow();
+    // const tabCount = win.getTabCount();
+    // const index = win.getCurrentTabIndex() + 1;
+    // win.setCurrentTabIndex(index >= tabCount ? 0 : index);
   }
 
   commandCloseTab(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    const tab = win.getTab(win.getCurrentTabIndex());
-    this.#closeTab(win, tab);
+    // const win = this.#extensionManager.getActiveWindow();
+    // const tab = win.getTab(win.getCurrentTabIndex());
+    // this.#closeTab(win, tab);
   }
 
   commandCloseWindow(): void {
@@ -725,26 +765,26 @@ class Main {
   }
 
   commandListWindows(): WindowDescription[] {
-    return this.#windows.map(w => ({
+    return getAllWindows().map(w => ({
       id: `${w.getId()}`
     }));
   }
 
   #disposeWindow(win: Window): void {
     win.dispose();
-    const i = this.#windows.indexOf(win);
-    this.#windows.splice(i, 1);
+    const i = getAllWindows().indexOf(win);
+    getAllWindows().splice(i, 1);
   }
 
   async commandMoveTabToNewWindow(): Promise<void> {
-    const win = this.#extensionManager.getActiveWindow();
-    const tab = win.getTab(win.getCurrentTabIndex());
-    const newWindow = await this.openWindow();
+    // const win = this.#extensionManager.getActiveWindow();
+    // const tab = win.getTab(win.getCurrentTabIndex());
+    // const newWindow = await this.openWindow();
 
-    win.removeTab(tab);
-    newWindow.addTab(tab);
-    newWindow.focus();
-    newWindow.focusTab(tab);
+    // win.removeTab(tab);
+    // newWindow.addTab(tab);
+    // newWindow.focus();
+    // newWindow.focusTab(tab);
   }
 
   commandMaximizeWindow(): void {
@@ -771,7 +811,7 @@ class Main {
   }
 
   commandShowAllWindows(): void {
-    for (const win of this.#windows) {
+    for (const win of getAllWindows()) {
       if (win.isMinimized()) {
         win.restore();
       }
@@ -780,25 +820,25 @@ class Main {
   }
 
   commandMaximizeAllWindows(): void {
-    for (const win of this.#windows) {
+    for (const win of getAllWindows()) {
       win.maximize();
     }
   }
 
   commandMinimizeAllWindows(): void {
-    for (const win of this.#windows) {
+    for (const win of getAllWindows()) {
       win.minimize();
     }
   }
 
   commandRestoreAllWindows(): void {
-    for (const win of this.#windows) {
+    for (const win of getAllWindows()) {
       win.restore();
     }
   }
 
   commandToggleAllWindows(): void {
-    if (this.#windows.some((win) => win.isMinimized())) {
+    if (getAllWindows().some((win) => win.isMinimized())) {
       this.commandRestoreAllWindows();
     } else {
       this.commandMinimizeAllWindows();

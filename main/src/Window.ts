@@ -1,26 +1,27 @@
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2023 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as path from "node:path";
 import { Logger, log, getLogger } from "extraterm-logging";
+import { CDockAreaWidget, CDockManager, CDockWidget, CFloatingDockContainer, DockWidgetFeature, DockWidgetTabFeature,
+  TitleBarButton } from "nodegui-plugin-qads";
 import { FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-timeoutqt";
 import { Event, EventEmitter } from "extraterm-event-emitter";
-import { Direction, QStackedWidget, QTabBar, QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction,
-  FocusPolicy, QKeyEvent, WidgetAttribute, QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication,
-  ContextMenuPolicy, QSizePolicyPolicy, QBoxLayout, AlignmentFlag, ButtonPosition, QLabel, TextFormat, QMouseEvent,
-  MouseButton, Visibility, QIcon, QSize, WindowState } from "@nodegui/nodegui";
+import { QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, QKeyEvent, WidgetAttribute,
+  QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QBoxLayout, QLabel, TextFormat,
+  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes } from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, StackedWidget, Menu, TabBar, ToolButton, Widget, Label, repolish } from "qt-construct";
+import { Menu, ToolButton, Label } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import he from "he";
 import { hasEmojiPresentation } from "extraterm-unicode-utilities";
 
 import * as SourceDir from "./SourceDir.js";
-import { FontInfo, GeneralConfig, GENERAL_CONFIG, TitleBarStyle } from "./config/Config.js";
+import { FontInfo, GeneralConfig, GENERAL_CONFIG } from "./config/Config.js";
 import { ConfigChangeEvent, ConfigDatabase } from "./config/ConfigDatabase.js";
 import { Tab } from "./Tab.js";
 import { Terminal } from "./terminal/Terminal.js";
@@ -32,8 +33,6 @@ import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilitie
 import { UiStyle } from "./ui/UiStyle.js";
 import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker.js";
 import { DisposableHolder } from "./utils/DisposableUtils.js";
-import { HoverPushButton } from "./ui/QtConstructExtra.js";
-import { BorderlessWindowSupport } from "./BorderlessWindowSupport.js";
 import { createHtmlIcon } from "./ui/Icons.js";
 import { SettingsTab } from "./settings/SettingsTab.js";
 import { ContextMenuEvent } from "./ContextMenuEvent.js";
@@ -43,17 +42,118 @@ import { BlockFrame } from "./terminal/BlockFrame.js";
 import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
 
 
+export function setupWindowManager(): void {
+
+}
+
+
 export interface PopOutClickedDetails {
   window: Window;
   frame: DecoratedFrame;
   terminal: Terminal;
 }
 
-interface TabPlumbing {
-  tab: Tab;
-  disposableHolder: DisposableHolder;
-  titleLabel: QLabel;
-  titleWidget: QWidget;
+const allWindows: Window[] = [];
+const allTabs: TabPlumbing[] = [];
+
+export function getAllWindows(): Window[] {
+  return allWindows;
+}
+
+function getTabPlumbingForTab(tab: Tab): TabPlumbing {
+  for (const tabPlumbing of allTabs) {
+    if (tabPlumbing.tab === tab) {
+      return tabPlumbing;
+    }
+  }
+  return null;
+}
+
+function getTabPlumbingForDockWidget(dockWidget: CDockWidget): TabPlumbing {
+  for (const tabPlumbing of allTabs) {
+    if (tabPlumbing.dockWidget === dockWidget) {
+      return tabPlumbing;
+    }
+  }
+  return null;
+}
+
+function getWindowForTab(tab: Tab): Window {
+  for (const win of allWindows) {
+    if (win.hasTab(tab)) {
+      return win;
+    }
+  }
+  return null;
+}
+
+
+class TabPlumbing implements Disposable {
+  private _log: Logger = null;
+
+  tab: Tab = null;
+  #disposableHolder = new DisposableHolder();
+  titleLabel: QLabel = null;
+  titleWidget: QWidget = null;
+  dockWidget: CDockWidget = null;
+
+  constructor(tab: Tab) {
+    this._log = getLogger("TabPlumbing", this);
+    this.tab = tab;
+
+    const dockWidget = new CDockWidget(tab.getWindowTitle());
+    dockWidget.setFeature(DockWidgetFeature.CustomCloseHandling, true);
+    dockWidget.setWidget(tab.getContents());
+
+    const tabWidget = dockWidget.tabWidget();
+    tabWidget.setFeature(DockWidgetTabFeature.DockWidgetTabTitle, false);
+    tabWidget.setFeature(DockWidgetTabFeature.DockWidgetTabContextMenu, false);
+
+    this.dockWidget = dockWidget;
+
+    if (tab instanceof Terminal) {
+      this.#disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
+        const window = getWindowForTab(tab);
+        window.openContextMenu(ev.terminal, ev.blockFrame, ev.x, ev.y);
+      }));
+
+      this.#disposableHolder.add(tab.onPopOutClicked((details) => {
+        const window = getWindowForTab(tab);
+        window.tabPopOutClicked(details);
+      }));
+    }
+
+    this.#disposableHolder.add(tab.onWindowTitleChanged((title: string) => {
+      const window = getWindowForTab(tab);
+      window.handleTabWindowTitleChanged(tab, title);
+    }));
+
+    dockWidget.addEventListener("closeRequested", () => {
+      const window = getWindowForTab(tab);
+      window.handleTabCloseClicked(tab);
+    });
+
+    this.#disposableHolder.add(tab.onWindowTitleChanged((title: string) => {
+      this.dockWidget.setWindowTitle(title);
+    }));
+
+    tabWidget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
+      this._log.debug(`WidgetEventTypes.MouseButtonPress`);
+      const ev = new QMouseEvent(nativeEvent);
+      const window = getWindowForTab(tab);
+      window.handleTabMouseButtonPress(tab, ev);
+    });
+
+    tab.getContents().addEventListener(WidgetEventTypes.FocusIn, (nativeEvent) => {
+      this._log.debug(`WidgetEventTypes.FocusIn`);
+    });
+  }
+
+  dispose(): void {
+    this.dockWidget.closeDockWidget();
+    this.#disposableHolder.dispose();
+    allTabs.splice(allTabs.indexOf(this), 1);
+  }
 }
 
 enum WindowOpenState {
@@ -65,33 +165,174 @@ enum WindowOpenState {
 
 let windowIdCounter = 0;
 
+export function handleNewCDockAreaWidget(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager,
+  uiStyle: UiStyle, dockAreaWidget: CDockAreaWidget): void {
+
+  new DockAreaMenu(extensionManager, keybindingsIOManager, uiStyle, dockAreaWidget);
+}
+
+class DockAreaMenu {
+  private _log: Logger = null;
+  #dockAreaWidget: CDockAreaWidget = null;
+
+  #extensionManager: ExtensionManager = null;
+  #keybindingsIOManager: KeybindingsIOManager = null;
+  #uiStyle: UiStyle = null;
+
+  #hamburgerMenuButton: QToolButton = null;
+  #hamburgerMenu: QMenu = null;
+
+  constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager,
+    uiStyle: UiStyle, dockAreaWidget: CDockAreaWidget) {
+
+    this._log = getLogger("DockAreaMenu", this);
+
+    this.#dockAreaWidget = dockAreaWidget;
+    this.#extensionManager = extensionManager;
+    this.#keybindingsIOManager = keybindingsIOManager;
+    this.#uiStyle = uiStyle;
+
+    this.#init();
+  }
+
+  #init(): void {
+    const menu = this.#createHamburgerMenu();
+    const titleBar = this.#dockAreaWidget.titleBar();
+    const index = titleBar.indexOf(titleBar.button(TitleBarButton.TitleBarButtonTabsMenu));
+    titleBar.insertWidget(index + 1, menu);
+  }
+
+  #createHamburgerMenu(): QToolButton {
+    const iconPair = this.#uiStyle.getToolbarButtonIconPair("fa-bars");
+
+    this.#hamburgerMenuButton = ToolButton({
+      icon: iconPair.normal,
+      popupMode: ToolButtonPopupMode.InstantPopup,
+      onEnter: () => {
+        this.#hamburgerMenuButton.setIcon(iconPair.hover);
+      },
+      onLeave: () => {
+        this.#hamburgerMenuButton.setIcon(iconPair.normal);
+      },
+      onMouseButtonPress: () => {
+        this.#updateHamburgerMenu(this.#uiStyle);
+      },
+      menu: this.#hamburgerMenu = Menu({
+        attribute: [WidgetAttribute.WA_TranslucentBackground],
+        onTriggered: (nativeAction) => {
+          const action = new QAction(nativeAction);
+          this.#handleWindowMenuTriggered(action.data().toString());
+        }
+      })
+    });
+
+    this.#updateHamburgerMenu(this.#uiStyle);
+
+    return this.#hamburgerMenuButton;
+  }
+
+  #updateHamburgerMenu(uiStyle: UiStyle): void {
+    const options: CommandQueryOptions = {
+      when: true,
+      windowMenu: true,
+    };
+    this.#updateMenu(this.#hamburgerMenu, uiStyle, options);
+  }
+
+  #updateMenu(menu: QMenu, uiStyle: UiStyle, options: CommandQueryOptions, context?: CommonExtensionWindowState): void {
+    menu.clear();
+
+    if (context == null) {
+      context = this.#extensionManager.copyExtensionWindowState();
+    }
+    const entries = this.#extensionManager.queryCommandsWithExtensionWindowState(options, context);
+    if (entries.length === 0) {
+      return;
+    }
+
+    const termKeybindingsMapping = this.#keybindingsIOManager.getCurrentKeybindingsMapping();
+    let category = entries[0].category;
+    for (const entry of entries) {
+      if (entry.category !== category) {
+        menu.addSeparator();
+        category = entry.category;
+      }
+
+      const action = menu.addAction(entry.title);
+      action.setData(new QVariant(entry.command));
+      if (entry.icon != null && entry.icon !== "") {
+        const icon = uiStyle.getMenuIcon(entry.icon);
+        if (icon != null) {
+          action.setIcon(icon);
+        }
+      }
+
+      const shortcuts = termKeybindingsMapping.getKeyStrokesForCommand(entry.command);
+      if (shortcuts.length !== 0) {
+        const shortcut = shortcuts.length !== 0 ? shortcuts[0].formatHumanReadable() : "";
+        action.setShortcut(new QKeySequence(shortcut));
+      }
+    }
+  }
+
+  #handleWindowMenuTriggered(commandName: string): void {
+    doLater( () => {
+      try {
+        this.#extensionManager.executeCommand(commandName);
+      } catch(e) {
+        this._log.warn(e);
+      }
+    });
+  }
+}
+
+
+export function createWindow(dockManager: CDockManager): Window {
+  const label = new QLabel();
+  label.setText("Empty area");
+
+  const emptyDockWidget = new CDockWidget("Extraterm");
+  emptyDockWidget.setWidget(label);
+  emptyDockWidget.setFeature(DockWidgetFeature.NoTab, true);
+
+  const dockContainer = dockManager.addDockWidgetFloating(emptyDockWidget);
+  // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
+
+  for (const win of getAllWindows()) {
+    if (win.dockContainer === dockContainer) {
+      return win;
+    }
+  }
+  return null;
+}
+
+export function handleNewFloatingDockContainer(floatingDockContainer: CFloatingDockContainer,
+    dockManager: CDockManager, configDatabase: ConfigDatabase,extensionManager: ExtensionManager,
+    keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle): void {
+
+  const newWindow = new Window(floatingDockContainer, dockManager, configDatabase, extensionManager,
+    keybindingsIOManager, themeManager, uiStyle);
+  allWindows.push(newWindow);
+}
+
 export class Window implements Disposable {
   private _log: Logger = null;
   #id = 0;
+  #dockManager: CDockManager = null;
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
 
   #windowOpenState = WindowOpenState.Closed;
-  #windowWidget: QWidget = null;
+  dockContainer: CFloatingDockContainer = null;
 
-  #borderlessWindowSupport: BorderlessWindowSupport = null;
   #windowHandle: QWindow = null;
   #screen: QScreen = null;
-  #topLayout: QBoxLayout = null;
-  #tabBarLayout: QBoxLayout = null;
-  #topBar: QWidget = null;
-  #tabBar: QTabBar = null;
-  #contentStack: QStackedWidget = null;
   #lastConfigDpi = -1;
   #lastConfigDpr = -1;
 
-  #hamburgerMenuButton: QToolButton = null;
-  #hamburgerMenu: QMenu = null;
-
   #contextMenu: QMenu = null;
 
-  #tabs: TabPlumbing[] = [];
   #terminalVisualConfig: TerminalVisualConfig = null;
   #themeManager: ThemeManager = null;
   #uiStyle: UiStyle = null;
@@ -111,12 +352,15 @@ export class Window implements Disposable {
   #onWindowCloseEventEmitter = new EventEmitter<Window>();
   onWindowClosed: Event<Window> = null;
 
-  constructor(configDatabase: ConfigDatabase, extensionManager: ExtensionManager,
-      keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle) {
+  constructor(dockContainer: CFloatingDockContainer, dockManager: CDockManager, configDatabase: ConfigDatabase,
+      extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager,
+      uiStyle: UiStyle) {
 
     this._log = getLogger("Window", this);
     ++windowIdCounter;
     this.#id = windowIdCounter;
+    this.#dockManager = dockManager;
+    this.dockContainer = dockContainer;
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
     this.#keybindingsIOManager = keybindingsIOManager;
@@ -136,97 +380,47 @@ export class Window implements Disposable {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
-    this.#windowWidget = Widget({
-      windowTitle: "Extraterm Qt",
-      focusPolicy: FocusPolicy.ClickFocus,
-      contextMenuPolicy: ContextMenuPolicy.PreventContextMenu,
-      cssClass: ["window-background"],
-      onClose: () => {
-        this.#windowOpenState = WindowOpenState.Closed;
-        this.#onWindowCloseEventEmitter.fire(this);
-      },
-      onKeyPress: (nativeEvent) => {
-        this.#handleKeyPress(new QKeyEvent(nativeEvent));
-      },
-      onMove: (nativeEvent) => {
-        this.#onWindowGeometryChangedEventEmitter.fire();
-      },
-      onResize:(nativeEvent) => {
-        this.#onWindowGeometryChangedEventEmitter.fire();
-      },
-      windowIcon: this.#createWindowIcon(),
-      mouseTracking: true,
-      layout: this.#topLayout = BoxLayout({
-        direction: Direction.TopToBottom,
-        contentsMargins: 0,
-        spacing: 0,
-        children: [
-          Widget({
-            layout: BoxLayout({
-              direction: Direction.LeftToRight,
-              contentsMargins: [0, 0, 0, 0],
-              spacing: 0,
-              children: [
-                {
-                  widget: this.#tabBar = TabBar({
-                    expanding: false,
-                    cssClass: ["top-level"],
-                    tabs: [],
-                    onCurrentChanged: (index: number) => {
-                      this.#handleTabBarChanged(index);
-                    },
-                    tabsClosable: true,
-                    onTabCloseRequested: (index: number) => {
-                      this.#handleTabBarCloseClicked(index);
-                    },
-                    onMouseButtonPress: (nativeEvent) => {
-                      this.#handleTabMouseButtonPress(new QMouseEvent(nativeEvent));
-                    }
-                  }),
-                  stretch: 0
-                },
-
-                {
-                  widget: Widget({
-                    cssClass: ["tabbar-gap"],
-                    layout: this.#tabBarLayout = BoxLayout({
-                      direction: Direction.LeftToRight,
-                      contentsMargins: [0, 0, 0, 0],
-                      spacing: 0,
-                      children: [
-                        {
-                          widget: this.#createDragAreaWidget(),
-                          stretch: 1
-                        },
-                        {
-                          widget: this.#createHamburgerMenu(this.#uiStyle),
-                          stretch: 0,
-                          alignment: AlignmentFlag.AlignTop
-                        },
-                      ]
-                    })
-                  }),
-                  stretch: 1
-                }
-              ]
-            })
-          }),
-          this.#contentStack = StackedWidget({children: []})
-        ]
-      })
+    this.dockContainer.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
+      this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
 
+    this.dockContainer.addEventListener(WidgetEventTypes.Close, () => {
+      this.#windowOpenState = WindowOpenState.Closed;
+      this.#onWindowCloseEventEmitter.fire(this);
+    });
+    this.dockContainer.setWindowIcon(this.#createWindowIcon());
+    this.dockContainer.setMouseTracking(true);
+    this.dockContainer.setContextMenuPolicy(ContextMenuPolicy.PreventContextMenu);
+    this.dockContainer.setFocusPolicy(FocusPolicy.ClickFocus);
+
+    // this.#windowWidget = Widget({
+    //   windowTitle: "Extraterm Qt",
+    //   focusPolicy: FocusPolicy.ClickFocus,
+    //   contextMenuPolicy: ContextMenuPolicy.PreventContextMenu,
+    //   cssClass: ["window-background"],
+    //   onClose: () => {
+    //     this.#windowOpenState = WindowOpenState.Closed;
+    //     this.#onWindowCloseEventEmitter.fire(this);
+    //   },
+    //   onKeyPress: (nativeEvent) => {
+    //     this.#handleKeyPress(new QKeyEvent(nativeEvent));
+    //   },
+    //   onMove: (nativeEvent) => {
+    //     this.#onWindowGeometryChangedEventEmitter.fire();
+    //   },
+    //   onResize:(nativeEvent) => {
+    //     this.#onWindowGeometryChangedEventEmitter.fire();
+    //   },
+    //   windowIcon: this.#createWindowIcon(),
+    //   mouseTracking: true,
+
     if (geometry != null) {
-      this.#windowWidget.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
+      this.dockContainer.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
     } else {
-      this.#windowWidget.resize(800, 480);
+      this.dockContainer.resize(800, 480);
     }
 
-    this.#borderlessWindowSupport = new BorderlessWindowSupport(this.#windowWidget);
-    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, this.#hamburgerMenuButton);
-    this.#setWindowFrame(generalConfig.titleBarStyle);
-
-    this.#loadStyleSheet(generalConfig.uiScalePercent/100);
+    // this.#loadStyleSheet(generalConfig.uiScalePercent/100);
 
     this.#initContextMenu();
 
@@ -234,17 +428,17 @@ export class Window implements Disposable {
   }
 
   #loadStyleSheet(uiScale: number): void {
-    this.#windowWidget.setStyleSheet("", false);
-    this.#hamburgerMenu.setStyleSheet("", false);
+    this.dockContainer.setStyleSheet("", false);
+    // this.#hamburgerMenu.setStyleSheet("", false);
     if (process.platform === "darwin") {
       uiScale *= 1.5; // Make everything bigger on macOS to more closely match native apps.
                       // Note: This factor appears in main.ts:#setApplicationStyle too.
     }
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
-    this.#windowWidget.setStyleSheet(sheet, false);
-    this.#hamburgerMenu.setStyleSheet(sheet, false);
+    this.dockContainer.setStyleSheet(sheet, false);
+    // this.#hamburgerMenu.setStyleSheet(sheet, false);
 
-    this.#repolishTabBar();
+    // this.#repolishTabBar();
   }
 
   #createWindowIcon(): QIcon {
@@ -256,176 +450,13 @@ export class Window implements Disposable {
     return windowIcon;
   }
 
-  #repolishTabBar(): void {
-    repolish(this.#tabBar);
-
-    // This is a hack to force a repolish of the widgets inside the tabs.
-    for (const [index, tabInfo] of this.#tabs.entries()) {
-      this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, null);
-      this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, tabInfo.titleWidget);
-    }
-  }
-
-  #createDragAreaWidget(): QWidget {
-    return Widget({
-      onMouseButtonPress: (ev) => {
-        this.#windowWidget.windowHandle().startSystemMove();
-      },
-    });
-  }
-
-  #createTopBar(): QWidget {
-    let minimizeButton: QWidget = null;
-    let maximizeButton: QWidget = null;
-    let closeButton: QWidget = null;
-
-    const topBarWidget = Widget({
-      contentsMargins: 0,
-      layout: BoxLayout({
-        direction: Direction.LeftToRight,
-        spacing: 0,
-        contentsMargins: 0,
-        children: [
-          {
-            widget: Widget({
-              minimumHeight: 11,
-              minimumWidth: 16,
-              onMouseButtonPress: (ev) => {
-                this.#windowWidget.windowHandle().startSystemMove();
-              }
-            }),
-            stretch: 1
-          },
-          {
-            widget: minimizeButton = HoverPushButton({
-              cssClass: ["window-control", "plain"],
-              iconPair: this.#uiStyle.getToolbarButtonIconPair("extraicons-minimize"),
-              sizePolicy: {
-                horizontal: QSizePolicyPolicy.Fixed,
-                vertical: QSizePolicyPolicy.Fixed,
-              },
-              onClicked: () => {
-                this.#windowWidget.showMinimized();
-              },
-            }),
-            stretch: 0
-          },
-          {
-            widget: maximizeButton = HoverPushButton({
-              cssClass: ["window-control", "plain"],
-              iconPair: this.#uiStyle.getToolbarButtonIconPair("extraicons-maximize"),
-              sizePolicy: {
-                horizontal: QSizePolicyPolicy.Fixed,
-                vertical: QSizePolicyPolicy.Fixed,
-              },
-              onClicked: () => {
-                if (this.#windowWidget.isMaximized()) {
-                  this.#windowWidget.showNormal();
-                } else {
-                  this.#windowWidget.showMaximized();
-                }
-              }
-            }),
-            stretch: 0
-          },
-          {
-            widget: closeButton = HoverPushButton({
-              cssClass: ["window-control", "danger"],
-              iconPair: this.#uiStyle.getToolbarButtonIconPair("fa-times"),
-              sizePolicy: {
-                horizontal: QSizePolicyPolicy.Fixed,
-                vertical: QSizePolicyPolicy.Fixed,
-              },
-              onClicked: () => {
-                this.#onWindowCloseEventEmitter.fire(this);
-              }
-            }),
-            stretch: 0
-          },
-        ]
-      })
-    });
-
-    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, minimizeButton);
-    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, maximizeButton);
-    this.#borderlessWindowSupport.registerDecoration(this.#windowWidget, closeButton);
-
-    return topBarWidget;
-  }
-
-  #setWindowFrame(titleBarStyle: TitleBarStyle): void {
-    switch(titleBarStyle) {
-      case "native":
-        this.#windowWidget.setContentsMargins(0, 8, 0, 0);
-        this.#borderlessWindowSupport.disable();
-        if (this.#topBar != null) {
-          this.#topBar.setParent(null);
-        }
-        break;
-
-      case "theme":
-        this.#windowWidget.setContentsMargins(0, 0, 0, 0);
-        this.#borderlessWindowSupport.enable();
-
-        if (this.#topBar == null) {
-          this.#topBar = this.#createTopBar();
-        }
-        this.#topBar.setParent(null);
-
-        this.#topLayout.insertWidget(0, this.#topBar, 0);
-
-        break;
-
-      case "compact":
-        this.#windowWidget.setContentsMargins(0, 0, 0, 0);
-        this.#borderlessWindowSupport.enable();
-
-        if (this.#topBar == null) {
-          this.#topBar = this.#createTopBar();
-        }
-        this.#topBar.setParent(null);
-
-        this.#tabBarLayout.addWidget(this.#topBar, 0, AlignmentFlag.AlignTop);
-        break;
-    }
-  }
-
-  #createHamburgerMenu(uiStyle: UiStyle): QToolButton {
-    const iconPair = uiStyle.getToolbarButtonIconPair("fa-bars");
-
-    this.#hamburgerMenuButton = ToolButton({
-      icon: iconPair.normal,
-      popupMode: ToolButtonPopupMode.InstantPopup,
-      onEnter: () => {
-        this.#hamburgerMenuButton.setIcon(iconPair.hover);
-      },
-      onLeave: () => {
-        this.#hamburgerMenuButton.setIcon(iconPair.normal);
-      },
-      onMouseButtonPress: () => {
-        this.#updateHamburgerMenu(uiStyle);
-      },
-      menu: this.#hamburgerMenu = Menu({
-        attribute: [WidgetAttribute.WA_TranslucentBackground],
-        onTriggered: (nativeAction) => {
-          const action = new QAction(nativeAction);
-          this.#handleWindowMenuTriggered(action.data().toString());
-        }
-      })
-    });
-
-    this.#updateHamburgerMenu(uiStyle);
-
-    return this.#hamburgerMenuButton;
-  }
-
-  #updateHamburgerMenu(uiStyle: UiStyle): void {
-    const options: CommandQueryOptions = {
-      when: true,
-      windowMenu: true,
-    };
-    this.#updateMenu(this.#hamburgerMenu, uiStyle, options);
-  }
+  // #updateHamburgerMenu(uiStyle: UiStyle): void {
+  //   const options: CommandQueryOptions = {
+  //     when: true,
+  //     windowMenu: true,
+  //   };
+  //   this.#updateMenu(this.#hamburgerMenu, uiStyle, options);
+  // }
 
   #updateMenu(menu: QMenu, uiStyle: UiStyle, options: CommandQueryOptions, context?: CommonExtensionWindowState): void {
     menu.clear();
@@ -479,7 +510,7 @@ export class Window implements Disposable {
     this.#contextMenu.hide();
   }
 
-  #openContextMenu(uiStyle: UiStyle, terminal: Terminal, blockFrame: BlockFrame, x: number, y: number): void {
+  openContextMenu(terminal: Terminal, blockFrame: BlockFrame, x: number, y: number): void {
     const options: CommandQueryOptions = {
       when: true,
       contextMenu: true,
@@ -489,7 +520,7 @@ export class Window implements Disposable {
     state.activeTerminal = terminal;
     state.activeBlockFrame = blockFrame;
     this.#contextMenuState = state;
-    this.#updateMenu(this.#contextMenu, uiStyle, options, state);
+    this.#updateMenu(this.#contextMenu, this.#uiStyle, options, state);
 
     this.#contextMenu.popup(new QPoint(x, y));
   }
@@ -508,25 +539,15 @@ export class Window implements Disposable {
     });
   }
 
-  #handleWindowMenuTriggered(commandName: string): void {
-    doLater( () => {
-      try {
-        this.#extensionManager.executeCommand(commandName);
-      } catch(e) {
-        this._log.warn(e);
-      }
-    });
-  }
-
-  #handleTabMouseButtonPress(ev: QMouseEvent): void {
+  handleTabMouseButtonPress(tab: Tab, ev: QMouseEvent): void {
     const isContextMenu = ev.button() === MouseButton.RightButton;
     if (!isContextMenu) {
       return;
     }
 
-    const tabIndex = this.#tabBar.tabAt(new QPoint(ev.x(), ev.y()));
-    this.setCurrentTabIndex(tabIndex);
+    this.focusTab(tab);
 
+    ev.accept();
     const options: CommandQueryOptions = {
       when: true,
       terminalTitleMenu: true,
@@ -535,18 +556,12 @@ export class Window implements Disposable {
     this.#contextMenu.popup(new QPoint(ev.globalX(), ev.globalY()));
   }
 
-  #handleTabBarChanged(index: number): void {
-    if (index < 0 || index >= this.#tabs.length) {
-      return;
-    }
-    this.setCurrentTabIndex(index);
-  }
-
-  #handleTabBarCloseClicked(index: number): void {
-    this.#onTabCloseRequestEventEmitter.fire(this.#tabs[index].tab);
+  handleTabCloseClicked(tab: Tab): void {
+    this.#onTabCloseRequestEventEmitter.fire(tab);
   }
 
   #handleKeyPress(event: QKeyEvent): void {
+    this._log.debug(`#handleKeyPress()`);
     const ev = qKeyEventToMinimalKeyboardEvent(event);
     const commands = this.#keybindingsIOManager.getCurrentKeybindingsMapping().mapEventToCommands(ev);
     const filteredCommands = this.#extensionManager.queryCommands({
@@ -619,13 +634,13 @@ export class Window implements Disposable {
   }
 
   getDpi(): number {
-    const window = this.#windowWidget;
+    const window = this.dockContainer;
     const screen = window.isVisible() ? window.windowHandle().screen() : QApplication.primaryScreen();
     return screen.logicalDotsPerInch();
   }
 
   getDpr(): number {
-    const window = this.#windowWidget;
+    const window = this.dockContainer;
     const screen = window.isVisible() ? window.windowHandle().screen() : QApplication.primaryScreen();
     return screen.devicePixelRatio();
   }
@@ -651,7 +666,7 @@ export class Window implements Disposable {
     }
 
     if (oldConfig.titleBarStyle !== newConfig.titleBarStyle) {
-      this.#setWindowFrame(newConfig.titleBarStyle);
+      // this.#setWindowFrame(newConfig.titleBarStyle);
     }
 
     if (oldConfig.minimizeToTray !== newConfig.minimizeToTray) {
@@ -665,15 +680,15 @@ export class Window implements Disposable {
   }
 
   async #updateTerminalVisualConfig(): Promise<void> {
-    this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
-    for (const tab of this.#tabs) {
-      if (tab.tab instanceof Terminal) {
-        tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
-      }
-      if (tab.tab instanceof SettingsTab) {
-        tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
-      }
-    }
+    // this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
+    // for (const tab of this.#tabs) {
+    //   if (tab.tab instanceof Terminal) {
+    //     tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+    //   }
+    //   if (tab.tab instanceof SettingsTab) {
+    //     tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+    //   }
+    // }
   }
 
   #extractPalette(terminalTheme: TerminalTheme, transparentBackground: boolean): number[] {
@@ -712,9 +727,9 @@ export class Window implements Disposable {
   }
 
   open(): void {
-    this.#windowWidget.show();
+    this.dockContainer.show();
 
-    this.#windowHandle = this.#windowWidget.windowHandle();
+    this.#windowHandle = this.dockContainer.windowHandle();
     this.#windowHandle.addEventListener("screenChanged", (screen: QScreen) => {
       this.#watchScreen(screen);
       this.#handleDpiAndDprChanged(this.#screen.logicalDotsPerInch(), this.#screen.devicePixelRatio());
@@ -734,8 +749,8 @@ export class Window implements Disposable {
   }
 
   #moveOnScreen(): void {
-    const screenGeometry = this.#windowWidget.windowHandle().screen().geometry();
-    const windowGeometry = this.#windowWidget.geometry();
+    const screenGeometry = this.dockContainer.windowHandle().screen().geometry();
+    const windowGeometry = this.dockContainer.geometry();
 
     let changed = false;
     let windowWidth = windowGeometry.width();
@@ -770,20 +785,20 @@ export class Window implements Disposable {
     }
 
     if (changed) {
-      this.#windowWidget.setGeometry(windowLeft, windowTop, windowWidth, windowHeight);
+      this.dockContainer.setGeometry(windowLeft, windowTop, windowWidth, windowHeight);
     }
   }
 
   dispose(): void {
     // Terminate any running terminal tabs.
-    for (const tab of this.#tabs) {
-      this.removeTab(tab.tab);
-      tab.tab.dispose();
-    }
+    // for (const tab of this.#tabs) {
+    //   this.removeTab(tab.tab);
+    //   tab.tab.dispose();
+    // }
 
     if (this.#windowOpenState !== WindowOpenState.Closed &&
         this.#windowOpenState !== WindowOpenState.ClosedMinimized) {
-      this.#windowWidget.close();
+      this.dockContainer.close();
     }
   }
 
@@ -792,17 +807,17 @@ export class Window implements Disposable {
   }
 
   maximize(): void {
-    this.#windowWidget.showMaximized();
+    this.dockContainer.showMaximized();
     this.#windowOpenState = WindowOpenState.Open;
   }
 
   minimize(): void {
     const config = this.#configDatabase.getGeneralConfig();
     if (config.showTrayIcon && config.minimizeToTray) {
-      this.#windowWidget.hide();
+      this.dockContainer.hide();
       this.#windowOpenState = WindowOpenState.ClosedMinimized;
     } else {
-      this.#windowWidget.showMinimized();
+      this.dockContainer.showMinimized();
       this.#windowOpenState = WindowOpenState.Minimized;
     }
   }
@@ -812,26 +827,26 @@ export class Window implements Disposable {
   }
 
   restore(): void {
-    this.#windowWidget.hide();
-    this.#windowWidget.showNormal();
+    this.dockContainer.hide();
+    this.dockContainer.showNormal();
     this.#windowOpenState = WindowOpenState.Open;
   }
 
   raise(): void {
-    this.#windowWidget.activateWindow();
-    this.#windowWidget.raise();
+    this.dockContainer.activateWindow();
+    this.dockContainer.raise();
   }
 
   #convertToMinimizeToTray(): void {
     if (this.#windowOpenState === WindowOpenState.Minimized) {
-      this.#windowWidget.hide();
+      this.dockContainer.hide();
       this.#windowOpenState = WindowOpenState.ClosedMinimized;
     }
   }
 
   #convertToNormalMinimize(): void {
     if (this.#windowOpenState === WindowOpenState.ClosedMinimized) {
-      this.#windowWidget.showMinimized();
+      this.dockContainer.showMinimized();
       this.#windowOpenState = WindowOpenState.Minimized;
     }
   }
@@ -840,7 +855,7 @@ export class Window implements Disposable {
     if (windowState === WindowState.WindowMinimized) {
       const config = this.#configDatabase.getGeneralConfig();
       if (config.showTrayIcon && config.minimizeToTray) {
-        this.#windowWidget.hide();
+        this.dockContainer.hide();
         this.#windowOpenState = WindowOpenState.ClosedMinimized;
       } else {
         this.#windowOpenState = WindowOpenState.Minimized;
@@ -849,7 +864,7 @@ export class Window implements Disposable {
   }
 
   getGeometry(): QRect {
-    return this.#windowWidget.geometry();
+    return this.dockContainer.geometry();
   }
 
   #handleLogicalDpiChanged: (dpi: number) => void;
@@ -861,7 +876,6 @@ export class Window implements Disposable {
   #handleDpiAndDprChanged(dpi: number, dpr: number): void {
     if (dpi !== this.#lastConfigDpi || dpr !==this.#lastConfigDpr) {
       this.#updateTerminalVisualConfig();
-      this.#repolishTabBar();
     }
   }
 
@@ -875,83 +889,85 @@ export class Window implements Disposable {
   }
 
   isActiveWindow(): boolean {
-    return this.#windowWidget.isActiveWindow();
+    return this.dockContainer.isActiveWindow();
   }
 
   getWidget(): QWidget {
-    return this.#windowWidget;
+    return this.dockContainer;
   }
 
+  @log
   setCurrentTabIndex(index: number): void {
-    const noTabs = this.#tabs.length === 0;
+    const tabs = this.#getTabs();
+    const noTabs = tabs.length === 0;
     if (noTabs) {
-      this.#windowWidget.setWindowTitle("Extraterm");
       this.#onTabChangeEventEmitter.fire(null);
       return;
     }
 
     const currentIndex = this.getCurrentTabIndex();
-    this.#tabs[currentIndex].tab.unfocus();
+    tabs[currentIndex].unfocus();
 
-    for (let i=0; i<this.#tabs.length; i++) {
-      const tabPlumbing =  this.#tabs[i];
+    for (let i=0; i<tabs.length; i++) {
+      const tab = tabs[i];
       const isCurrent = i === index;
-      if (tabPlumbing.titleLabel != null) {
-        tabPlumbing.titleLabel.setProperty("cssClass", isCurrent ? ["tab-title", "tab-title-selected"] : ["tab-title"]);
-        repolish(tabPlumbing.titleLabel);
-      }
-      tabPlumbing.tab.setIsCurrent(isCurrent);
+      // if (tabPlumbing.titleLabel != null) {
+      //   tabPlumbing.titleLabel.setProperty("cssClass", isCurrent ? ["tab-title", "tab-title-selected"] : ["tab-title"]);
+      //   repolish(tabPlumbing.titleLabel);
+      // }
+      tab.setIsCurrent(isCurrent);
     }
+    const currentTab = tabs[index];
+    currentTab.focus();
 
-    this.#tabBar.setCurrentIndex(index);
-    this.#contentStack.setCurrentIndex(index);
-    const tab = this.#tabs[index].tab;
-    tab.focus();
+    this.#onTabChangeEventEmitter.fire(currentTab);
+  }
 
-    this.#windowWidget.setWindowTitle(tab.getWindowTitle());
-    this.#onTabChangeEventEmitter.fire(tab);
+
+  #getTabs(): Tab[] {
+    const result: Tab[] = [];
+    for (const dockWidget of this.dockContainer.dockWidgets()) {
+      const plumbing = getTabPlumbingForDockWidget(dockWidget);
+      if (plumbing != null) {
+        result.push(plumbing.tab);
+      }
+    }
+    return result;
   }
 
   getCurrentTabIndex(): number {
-    return this.#tabBar.currentIndex();
+    return this.dockContainer.dockContainer().dockArea(0).currentIndex() -1;
   }
 
   getTabCount(): number {
-    return this.#tabs.length;
+    return this.#getTabs().length;
   }
 
   getTab(index: number): Tab {
-    return this.#tabs[index]?.tab;
+    return this.#getTabs()[index];
   }
 
   addTab(tab: Tab, preTabHeader?: () => void): void {
-    if (this.#tabs.map(t => t.tab).includes(tab)) {
+    if (allTabs.map(t => t.tab).includes(tab)) {
       return;
     }
-    const tabPlumbing: TabPlumbing = { tab, disposableHolder: new DisposableHolder(), titleLabel: null,
-      titleWidget: null };
+
+    const tabPlumbing = new TabPlumbing(tab);
     tab.setParent(this);
-    this.#tabs.push(tabPlumbing);
+    allTabs.push(tabPlumbing);
 
     if (tab instanceof Terminal) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
-      tabPlumbing.disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
-        this.#openContextMenu(this.#uiStyle, ev.terminal, ev.blockFrame, ev.x, ev.y);
-      }));
-    }
-    if (tab instanceof Terminal) {
-      tabPlumbing.disposableHolder.add(tab.onPopOutClicked((details) => {
-        this.#onPopOutClickedEventEmitter.fire({
-          window: this,
-          terminal: details.terminal,
-          frame: details.frame
-        });
-      }));
     }
     if (tab instanceof SettingsTab) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
     }
-    this.#contentStack.addWidget(tab.getContents());
+
+    const dockAreaWidget = this.dockContainer.dockContainer().dockArea(0);
+    if (tab.getTitle() != null) {
+      tabPlumbing.dockWidget.setWindowTitle(tab.getTitle());
+    }
+    this.#dockManager.addDockWidgetTabToArea(tabPlumbing.dockWidget, dockAreaWidget);
 
     if (preTabHeader != null) {
       preTabHeader();
@@ -973,27 +989,29 @@ export class Window implements Disposable {
     }
     tabPlumbing.titleWidget = tabTitleWidget;
 
-    const index = this.#tabBar.addTab(null, "");
-    this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, tabTitleWidget);
-
-    tabPlumbing.disposableHolder.add(tab.onWindowTitleChanged((title: string) => {
-      this.#handleTabWindowTitleChanged(tab, title);
-    }));
+    const tabWidget = tabPlumbing.dockWidget.tabWidget();
+    const layout = <QBoxLayout> tabWidget.layout();
+    layout.insertWidget(0, tabPlumbing.titleWidget);
   }
 
-  #handleTabWindowTitleChanged(tab: Tab, title: string): void {
-    if (this.#tabs.length === 0) {
-      return;
-    }
-    if (this.#tabs[this.#tabBar.currentIndex()].tab !== tab) {
-      return;
-    }
-    this.#windowWidget.setWindowTitle(title);
+  tabPopOutClicked(details: {frame: DecoratedFrame, terminal: Terminal}): void {
+    this.#onPopOutClickedEventEmitter.fire({
+      window: this,
+      terminal: details.terminal,
+      frame: details.frame
+    });
+  }
+
+  handleTabWindowTitleChanged(tab: Tab, title: string): void {
+    // TODO: Should this just be moved into TabPlumbing directly?
+    const tabPlumbing = getTabPlumbingForTab(tab);
+    tabPlumbing.dockWidget.setWindowTitle(title);
   }
 
   hasTab(targetTab: Tab): boolean {
-    for (const [index, tabPlumbing] of this.#tabs.entries()) {
-      if (targetTab === tabPlumbing.tab) {
+    for (const dockWidget of this.dockContainer.dockWidgets()) {
+      const plumbing = getTabPlumbingForDockWidget(dockWidget);
+      if (plumbing != null && plumbing.tab === targetTab) {
         return true;
       }
     }
@@ -1001,49 +1019,38 @@ export class Window implements Disposable {
   }
 
   focus(): void {
-    this.#windowWidget.setFocus();
-    this.#windowWidget.raise();
+    this.dockContainer.setFocus();
+    this.dockContainer.raise();
   }
 
-  removeTab(targetTab: Tab): boolean {
-    for (const [index, tabPlumbing] of this.#tabs.entries()) {
-      if (targetTab === tabPlumbing.tab) {
-        this.#tabBar.setTabButton(index, ButtonPosition.LeftSide, null);
-        tabPlumbing.titleWidget.setParent(null);
-        this.#tabBar.removeTab(index);
-        this.#contentStack.removeWidget(tabPlumbing.tab.getContents());
-        this.#tabs.splice(index, 1);
-        tabPlumbing.tab.setParent(null);
-        tabPlumbing.disposableHolder.dispose();
-        const newCurrentIndex = Math.max(0, index - 1);
-        this.setCurrentTabIndex(newCurrentIndex);
-
-        return true;
-      }
+  removeTab(targetTab: Tab): void {
+    const tabPlumbing = getTabPlumbingForTab(targetTab);
+    if (tabPlumbing == null) {
+      return;
     }
-    return false;
+    tabPlumbing.dispose();
   }
 
   focusTab(tab: Tab): void {
-    const index = this.#tabs.map(t => t.tab).indexOf(tab);
-    if (index === -1) {
-      return;
-    }
-    this.setCurrentTabIndex(index);
+    const tabPlumbing = getTabPlumbingForTab(tab);
+    tabPlumbing.dockWidget.dockAreaWidget().setCurrentDockWidget(tabPlumbing.dockWidget);
     tab.focus();
+    // FIXME: update any context related state
   }
 
   getTabGlobalGeometry(tab: Tab): QRect {
-    const localGeometry = this.#contentStack.geometry();
-    const topLeftGlobal = this.#windowWidget.mapToGlobal(new QPoint(localGeometry.left(), localGeometry.top()));
+    const tabPlumbing = getTabPlumbingForTab(tab);
+    const localGeometry = tabPlumbing.dockWidget.geometry();
+    const topLeftGlobal = this.dockContainer.mapToGlobal(new QPoint(localGeometry.left(), localGeometry.top()));
     return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
   }
 
   getTerminals(): Terminal[] {
     const result: Terminal[] = [];
-    for (const tp of this.#tabs) {
-      if (tp.tab instanceof Terminal) {
-        result.push(tp.tab);
+    for (const dockWidget of this.dockContainer.dockWidgets()) {
+      const plumbing = getTabPlumbingForDockWidget(dockWidget);
+      if (plumbing != null && plumbing.tab instanceof Terminal) {
+        result.push(plumbing.tab);
       }
     }
     return result;
