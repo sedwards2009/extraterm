@@ -115,7 +115,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     return this.wrapWindow(this.#extensionManager.getActiveWindow());
   }
 
-  newWindowCreated(window: Window, allWindows: Window[]): void {
+  newWindowCreated(window: Window): void {
     // throw new Error("Method not implemented.");
   }
 

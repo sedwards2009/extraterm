@@ -6,14 +6,14 @@
 import * as path from "node:path";
 import { Logger, log, getLogger } from "extraterm-logging";
 import { CDockAreaWidget, CDockManager, CDockWidget, CFloatingDockContainer, DockWidgetFeature, DockWidgetTabFeature,
-  TitleBarButton } from "nodegui-plugin-qads";
+  TitleBarButton, eConfigFlag} from "nodegui-plugin-qads";
 import { FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { doLater } from "extraterm-timeoutqt";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, QKeyEvent, WidgetAttribute,
   QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QBoxLayout, QLabel, TextFormat,
-  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes } from "@nodegui/nodegui";
+  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache } from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { Menu, ToolButton, Label } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
@@ -42,10 +42,219 @@ import { BlockFrame } from "./terminal/BlockFrame.js";
 import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
 
 
-export function setupWindowManager(): void {
-
+export function setupWindowManager(extensionManager: ExtensionManager, keybindingsManager: KeybindingsIOManager,
+    configDatabase: ConfigDatabase, themeManager: ThemeManager, uiStyle: UiStyle): WindowManager {
+  const windowManager = new WindowManager(extensionManager, keybindingsManager, configDatabase, themeManager, uiStyle);
+  windowManager.init();
+  return windowManager;
 }
 
+export class WindowManager {
+  private _log: Logger = null;
+  #extensionManager: ExtensionManager = null;
+  #keybindingsManager: KeybindingsIOManager = null;
+  #configDatabase: ConfigDatabase = null;
+  #themeManager: ThemeManager = null;
+  #uiStyle: UiStyle = null;
+
+  #dummyWindow: QWidget = null;
+  #dockManager: CDockManager = null;
+  #allWindows: Window[] = [];
+  #allTabs: TabPlumbing[] = [];
+
+  #emptyDockWidgets = new Set<CDockWidget>();
+
+  onNewWindow: Event<Window> = null;
+  #onNewWindowEventEmitter = new EventEmitter<Window>();
+
+  constructor(extensionManager: ExtensionManager,keybindingsManager: KeybindingsIOManager,
+        configDatabase: ConfigDatabase, themeManager: ThemeManager, uiStyle: UiStyle) {
+    this._log = getLogger("WindowManager", this);
+    this.#extensionManager = extensionManager;
+    this.#keybindingsManager = keybindingsManager;
+    this.#configDatabase = configDatabase;
+    this.#themeManager = themeManager;
+    this.#uiStyle = uiStyle;
+
+    this.onNewWindow = this.#onNewWindowEventEmitter.event;
+  }
+
+  init(): void {
+    CDockManager.setConfigFlag(eConfigFlag.FocusHighlighting, true);
+    CDockManager.setConfigFlag(eConfigFlag.DockAreaHasCloseButton, false);
+    CDockManager.setConfigFlag(eConfigFlag.DockAreaHasUndockButton, false);
+    CDockManager.setConfigFlag(eConfigFlag.AlwaysShowTabs, true);
+    CDockManager.setConfigFlag(eConfigFlag.AllTabsHaveCloseButton, true);
+    CDockManager.setConfigFlag(eConfigFlag.FloatingContainerIndependent, true);
+
+    this.#dummyWindow = new QWidget();
+    this.#dockManager = new CDockManager(this.#dummyWindow);
+
+    this.#dockManager.addEventListener("dockAreaCreated", (dockArea: any) => {
+      const dockAreaWidget = wrapperCache.getWrapper(dockArea) as CDockAreaWidget;
+      new DockAreaMenu(this.#extensionManager, this.#keybindingsManager, this.#uiStyle, dockAreaWidget);
+    });
+
+    this.#dockManager.addEventListener("floatingWidgetCreated", (nativeFloatingDockContainer: any) => {
+      const floatingDockContainer = wrapperCache.getWrapper(nativeFloatingDockContainer) as CFloatingDockContainer;
+      this.#handleFloatingDockContainer(floatingDockContainer);
+    });
+
+    this.#dockManager.addEventListener("floatingWidgetAboutToBeRemoved", (nativeFloatingDockContainer: any) => {
+      const floatingDockContainer = wrapperCache.getWrapper(nativeFloatingDockContainer) as CFloatingDockContainer;
+      this.#handleFloatingDockDestroy(floatingDockContainer);
+    });
+
+    this.#dockManager.addEventListener("dockWidgetAboutToBeRemoved", (dockWidget: any /* ads::CDockWidget */) => {
+      const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
+      this._log.debug(`dockWidgetAboutToBeRemoved`);
+    });
+
+    this.#dockManager.addEventListener("dockWidgetAdded", (dockWidget: any /* ads::CDockWidget */) => {
+      const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
+      this._log.debug(`dockWidgetAdded`);
+      this.#removeSpacers(dw.dockAreaWidget());
+    });
+
+    this.#dockManager.addEventListener("dockWidgetRemoved", (dockWidget: any /* ads::CDockWidget */) => {
+      const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
+      this._log.debug(`dockWidgetRemoved`);
+    });
+
+    this.#dockManager.addEventListener("focusedDockWidgetChanged", (oldDockWidget: any /* ads::CDockWidget */,
+        newDockWidget: any /* ads::CDockWidget */) => {
+      const dw = wrapperCache.getWrapper(newDockWidget) as CDockWidget;
+      this.#handleFocusedDockWidgetChanged(dw);
+    });
+  }
+
+  #handleFocusedDockWidgetChanged(dw: CDockWidget): void {
+    this._log.debug(`#handleFocusedDockWidgetChanged()`);
+    const tabPlumbing = this.getTabPlumbingForDockWidget(dw);
+    if (tabPlumbing == null) {
+      return;
+    }
+    const window = this.getWindowForTab(tabPlumbing.tab);
+    this.#extensionManager.setActiveTab(tabPlumbing.tab);
+
+    // const tab = tabPlumbing.tab;
+    // if (tab instanceof Terminal) {
+    //   this.#extensionManager.setActiveTerminal(tab);
+    // } else {
+    //   this.#extensionManager.setActiveTerminal(null);
+    // }
+
+    this.#extensionManager.setActiveWindow(window);
+    window.handleTabFocusChanged(tabPlumbing.tab);
+    this._log.debug(`exit #handleFocusedDockWidgetChanged()`);
+  }
+
+  async #handleFloatingDockContainer(floatingDockContainer: CFloatingDockContainer): Promise<void> {
+    this._log.debug(`#handleFloatingDockContainer()`);
+
+    let newWindow = this.#getWindowByFloatingDockContainer(floatingDockContainer);
+    if (newWindow == null) {
+      newWindow = new Window(this, floatingDockContainer, this.#configDatabase, this.#extensionManager,
+        this.#keybindingsManager, this.#themeManager, this.#uiStyle);
+      this.#allWindows.push(newWindow);
+    }
+    newWindow.init();
+    this.#onNewWindowEventEmitter.fire(newWindow);
+  }
+
+  #handleFloatingDockDestroy(floatingDockContainer: CFloatingDockContainer): void {
+    this._log.debug(`handleFloatingDockDestroy()`);
+    const window = this.#getWindowByFloatingDockContainer(floatingDockContainer);
+    window.dispose();
+    this.#allWindows = this.#allWindows.filter(w => w !== window);
+  }
+
+  #getWindowByFloatingDockContainer(dockContainer: CFloatingDockContainer): Window {
+    for (const win of this.#allWindows) {
+      if (win.dockContainer === dockContainer) {
+        return win;
+      }
+    }
+    return null;
+  }
+
+  getDockManager(): CDockManager {
+    return this.#dockManager;
+  }
+
+  createWindow(): Window {
+    const label = new QLabel();
+    label.setText("Empty area");
+
+    const emptyDockWidget = new CDockWidget("Extraterm");
+    this.#emptyDockWidgets.add(emptyDockWidget);
+    emptyDockWidget.setWidget(label);
+    emptyDockWidget.setFeature(DockWidgetFeature.NoTab, true);
+
+    const dockContainer = this.#dockManager.addDockWidgetFloating(emptyDockWidget);
+    // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
+    return this.#getWindowByFloatingDockContainer(dockContainer);
+  }
+
+  #removeSpacers(dw: CDockAreaWidget): void {
+    const openedDockWidgets = dw.openedDockWidgets();
+    if (openedDockWidgets.length <= 1) {
+      return;
+    }
+    for (const dockWidget of openedDockWidgets) {
+      if (this.#emptyDockWidgets.has(dockWidget)) {
+        this.#emptyDockWidgets.delete(dockWidget);
+        dockWidget.closeDockWidget();
+        break;
+      }
+    }
+  }
+
+  getAllWindows(): Window[] {
+    return this.#allWindows;
+  }
+
+  getTabPlumbingForTab(tab: Tab): TabPlumbing {
+    for (const tabPlumbing of this.#allTabs) {
+      if (tabPlumbing.tab === tab) {
+        return tabPlumbing;
+      }
+    }
+    return null;
+  }
+
+  getTabPlumbingForDockWidget(dockWidget: CDockWidget): TabPlumbing {
+    for (const tabPlumbing of this.#allTabs) {
+      if (tabPlumbing.dockWidget === dockWidget) {
+        return tabPlumbing;
+      }
+    }
+    return null;
+  }
+
+  getWindowForTab(tab: Tab): Window {
+    for (const win of this.#allWindows) {
+      if (win.hasTab(tab)) {
+        return win;
+      }
+    }
+    return null;
+  }
+
+  hasTab(tab: Tab): boolean {
+    return this.#allTabs.map(t => t.tab).includes(tab);
+  }
+
+  prepareTab(tab: Tab): TabPlumbing {
+    const tabPlumbing = new TabPlumbing(this, tab);
+    this.#allTabs.push(tabPlumbing);
+    return tabPlumbing;
+  }
+
+  disposeTabPlumbing(tabPlumbing: TabPlumbing): void {
+    this.#allTabs.splice(this.#allTabs.indexOf(tabPlumbing), 1);
+  }
+}
 
 export interface PopOutClickedDetails {
   window: Window;
@@ -53,52 +262,20 @@ export interface PopOutClickedDetails {
   terminal: Terminal;
 }
 
-const allWindows: Window[] = [];
-const allTabs: TabPlumbing[] = [];
-
-export function getAllWindows(): Window[] {
-  return allWindows;
-}
-
-function getTabPlumbingForTab(tab: Tab): TabPlumbing {
-  for (const tabPlumbing of allTabs) {
-    if (tabPlumbing.tab === tab) {
-      return tabPlumbing;
-    }
-  }
-  return null;
-}
-
-function getTabPlumbingForDockWidget(dockWidget: CDockWidget): TabPlumbing {
-  for (const tabPlumbing of allTabs) {
-    if (tabPlumbing.dockWidget === dockWidget) {
-      return tabPlumbing;
-    }
-  }
-  return null;
-}
-
-function getWindowForTab(tab: Tab): Window {
-  for (const win of allWindows) {
-    if (win.hasTab(tab)) {
-      return win;
-    }
-  }
-  return null;
-}
-
 
 class TabPlumbing implements Disposable {
   private _log: Logger = null;
 
   tab: Tab = null;
+  #windowManager: WindowManager = null;
   #disposableHolder = new DisposableHolder();
   titleLabel: QLabel = null;
   titleWidget: QWidget = null;
   dockWidget: CDockWidget = null;
 
-  constructor(tab: Tab) {
+  constructor(windowManager: WindowManager, tab: Tab) {
     this._log = getLogger("TabPlumbing", this);
+    this.#windowManager = windowManager;
     this.tab = tab;
 
     const dockWidget = new CDockWidget(tab.getWindowTitle());
@@ -113,23 +290,24 @@ class TabPlumbing implements Disposable {
 
     if (tab instanceof Terminal) {
       this.#disposableHolder.add(tab.onContextMenu((ev: ContextMenuEvent) => {
-        const window = getWindowForTab(tab);
+        const window = this.#windowManager.getWindowForTab(tab);
         window.openContextMenu(ev.terminal, ev.blockFrame, ev.x, ev.y);
       }));
 
       this.#disposableHolder.add(tab.onPopOutClicked((details) => {
-        const window = getWindowForTab(tab);
+        const window = this.#windowManager.getWindowForTab(tab);
         window.tabPopOutClicked(details);
       }));
     }
 
     this.#disposableHolder.add(tab.onWindowTitleChanged((title: string) => {
-      const window = getWindowForTab(tab);
+      const window = this.#windowManager.getWindowForTab(tab);
       window.handleTabWindowTitleChanged(tab, title);
     }));
 
     dockWidget.addEventListener("closeRequested", () => {
-      const window = getWindowForTab(tab);
+      this._log.debug(`closeRequested event`);
+      const window = this.#windowManager.getWindowForTab(tab);
       window.handleTabCloseClicked(tab);
     });
 
@@ -140,7 +318,7 @@ class TabPlumbing implements Disposable {
     tabWidget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
       this._log.debug(`WidgetEventTypes.MouseButtonPress`);
       const ev = new QMouseEvent(nativeEvent);
-      const window = getWindowForTab(tab);
+      const window = this.#windowManager.getWindowForTab(tab);
       window.handleTabMouseButtonPress(tab, ev);
     });
 
@@ -150,9 +328,9 @@ class TabPlumbing implements Disposable {
   }
 
   dispose(): void {
-    this.dockWidget.closeDockWidget();
+    this.dockWidget.deleteDockWidget();
     this.#disposableHolder.dispose();
-    allTabs.splice(allTabs.indexOf(this), 1);
+    this.#windowManager.disposeTabPlumbing(this);
   }
 }
 
@@ -165,11 +343,6 @@ enum WindowOpenState {
 
 let windowIdCounter = 0;
 
-export function handleNewCDockAreaWidget(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager,
-  uiStyle: UiStyle, dockAreaWidget: CDockAreaWidget): void {
-
-  new DockAreaMenu(extensionManager, keybindingsIOManager, uiStyle, dockAreaWidget);
-}
 
 class DockAreaMenu {
   private _log: Logger = null;
@@ -287,38 +460,10 @@ class DockAreaMenu {
 }
 
 
-export function createWindow(dockManager: CDockManager): Window {
-  const label = new QLabel();
-  label.setText("Empty area");
-
-  const emptyDockWidget = new CDockWidget("Extraterm");
-  emptyDockWidget.setWidget(label);
-  emptyDockWidget.setFeature(DockWidgetFeature.NoTab, true);
-
-  const dockContainer = dockManager.addDockWidgetFloating(emptyDockWidget);
-  // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
-
-  for (const win of getAllWindows()) {
-    if (win.dockContainer === dockContainer) {
-      return win;
-    }
-  }
-  return null;
-}
-
-export function handleNewFloatingDockContainer(floatingDockContainer: CFloatingDockContainer,
-    dockManager: CDockManager, configDatabase: ConfigDatabase,extensionManager: ExtensionManager,
-    keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager, uiStyle: UiStyle): void {
-
-  const newWindow = new Window(floatingDockContainer, dockManager, configDatabase, extensionManager,
-    keybindingsIOManager, themeManager, uiStyle);
-  allWindows.push(newWindow);
-}
-
 export class Window implements Disposable {
   private _log: Logger = null;
   #id = 0;
-  #dockManager: CDockManager = null;
+  #windowManager: WindowManager = null;
   #configDatabase: ConfigDatabase = null;
   #extensionManager: ExtensionManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
@@ -352,14 +497,14 @@ export class Window implements Disposable {
   #onWindowCloseEventEmitter = new EventEmitter<Window>();
   onWindowClosed: Event<Window> = null;
 
-  constructor(dockContainer: CFloatingDockContainer, dockManager: CDockManager, configDatabase: ConfigDatabase,
+  constructor(windowManager: WindowManager, dockContainer: CFloatingDockContainer, configDatabase: ConfigDatabase,
       extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager,
       uiStyle: UiStyle) {
 
     this._log = getLogger("Window", this);
     ++windowIdCounter;
     this.#id = windowIdCounter;
-    this.#dockManager = dockManager;
+    this.#windowManager = windowManager;
     this.dockContainer = dockContainer;
     this.#configDatabase = configDatabase;
     this.#extensionManager = extensionManager;
@@ -376,7 +521,7 @@ export class Window implements Disposable {
     this.onWindowClosed = this.#onWindowCloseEventEmitter.event;
   }
 
-  async init(geometry: QRect): Promise<void> {
+  async init( /* geometry: QRect */ ): Promise<void> {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
@@ -414,17 +559,34 @@ export class Window implements Disposable {
     //   windowIcon: this.#createWindowIcon(),
     //   mouseTracking: true,
 
-    if (geometry != null) {
-      this.dockContainer.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
-    } else {
-      this.dockContainer.resize(800, 480);
-    }
+    // if (geometry != null) {
+    //   this.dockContainer.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
+    // } else {
+    //   this.dockContainer.resize(800, 480);
+    // }
 
     // this.#loadStyleSheet(generalConfig.uiScalePercent/100);
 
     this.#initContextMenu();
 
     this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
+
+    this.#windowHandle = this.dockContainer.windowHandle();
+    this.#windowHandle.addEventListener("screenChanged", (screen: QScreen) => {
+      this.#watchScreen(screen);
+      this.#handleDpiAndDprChanged(this.#screen.logicalDotsPerInch(), this.#screen.devicePixelRatio());
+    });
+    this.#windowHandle.addEventListener("visibilityChanged", (visibility: Visibility) => {
+      this.#onWindowGeometryChangedEventEmitter.fire();
+    });
+    this.#windowHandle.addEventListener("windowStateChanged", (windowState: WindowState) => {
+      this.#handleWindowStateChanged(windowState);
+    });
+    this.#windowOpenState = WindowOpenState.Open;
+
+    if (this.getDpi() !== this.#lastConfigDpi || this.getDpr() !== this.#lastConfigDpr) {
+      this.#updateTerminalVisualConfig();
+    }
   }
 
   #loadStyleSheet(uiScale: number): void {
@@ -449,14 +611,6 @@ export class Window implements Disposable {
     }
     return windowIcon;
   }
-
-  // #updateHamburgerMenu(uiStyle: UiStyle): void {
-  //   const options: CommandQueryOptions = {
-  //     when: true,
-  //     windowMenu: true,
-  //   };
-  //   this.#updateMenu(this.#hamburgerMenu, uiStyle, options);
-  // }
 
   #updateMenu(menu: QMenu, uiStyle: UiStyle, options: CommandQueryOptions, context?: CommonExtensionWindowState): void {
     menu.clear();
@@ -728,23 +882,6 @@ export class Window implements Disposable {
 
   open(): void {
     this.dockContainer.show();
-
-    this.#windowHandle = this.dockContainer.windowHandle();
-    this.#windowHandle.addEventListener("screenChanged", (screen: QScreen) => {
-      this.#watchScreen(screen);
-      this.#handleDpiAndDprChanged(this.#screen.logicalDotsPerInch(), this.#screen.devicePixelRatio());
-    });
-    this.#windowHandle.addEventListener("visibilityChanged", (visibility: Visibility) => {
-      this.#onWindowGeometryChangedEventEmitter.fire();
-    });
-    this.#windowHandle.addEventListener("windowStateChanged", (windowState: WindowState) => {
-      this.#handleWindowStateChanged(windowState);
-    });
-    this.#windowOpenState = WindowOpenState.Open;
-
-    if (this.getDpi() !== this.#lastConfigDpi || this.getDpr() !== this.#lastConfigDpr) {
-      this.#updateTerminalVisualConfig();
-    }
     this.#moveOnScreen();
   }
 
@@ -791,15 +928,16 @@ export class Window implements Disposable {
 
   dispose(): void {
     // Terminate any running terminal tabs.
-    // for (const tab of this.#tabs) {
-    //   this.removeTab(tab.tab);
-    //   tab.tab.dispose();
+    // for (const tab of this.#getTabs()) {
+    //   this.removeTab(tab);
+    //   tab.dispose();
     // }
 
-    if (this.#windowOpenState !== WindowOpenState.Closed &&
-        this.#windowOpenState !== WindowOpenState.ClosedMinimized) {
-      this.dockContainer.close();
-    }
+    // if (this.#windowOpenState !== WindowOpenState.Closed &&
+    //     this.#windowOpenState !== WindowOpenState.ClosedMinimized) {
+    //   this.dockContainer.close();
+    // }
+    // FIXME: ^^^ this probably isn't needed.
   }
 
   isMaximized(): boolean {
@@ -923,11 +1061,15 @@ export class Window implements Disposable {
     this.#onTabChangeEventEmitter.fire(currentTab);
   }
 
+  @log
+  handleTabFocusChanged(tab: Tab): void {
+    this.#onTabChangeEventEmitter.fire(tab);
+  }
 
   #getTabs(): Tab[] {
     const result: Tab[] = [];
     for (const dockWidget of this.dockContainer.dockWidgets()) {
-      const plumbing = getTabPlumbingForDockWidget(dockWidget);
+      const plumbing = this.#windowManager.getTabPlumbingForDockWidget(dockWidget);
       if (plumbing != null) {
         result.push(plumbing.tab);
       }
@@ -947,14 +1089,14 @@ export class Window implements Disposable {
     return this.#getTabs()[index];
   }
 
+  @log
   addTab(tab: Tab, preTabHeader?: () => void): void {
-    if (allTabs.map(t => t.tab).includes(tab)) {
+    if (this.#windowManager.hasTab(tab)) {
       return;
     }
 
-    const tabPlumbing = new TabPlumbing(tab);
+    const tabPlumbing = this.#windowManager.prepareTab(tab);
     tab.setParent(this);
-    allTabs.push(tabPlumbing);
 
     if (tab instanceof Terminal) {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
@@ -967,7 +1109,7 @@ export class Window implements Disposable {
     if (tab.getTitle() != null) {
       tabPlumbing.dockWidget.setWindowTitle(tab.getTitle());
     }
-    this.#dockManager.addDockWidgetTabToArea(tabPlumbing.dockWidget, dockAreaWidget);
+    this.#windowManager.getDockManager().addDockWidgetTabToArea(tabPlumbing.dockWidget, dockAreaWidget);
 
     if (preTabHeader != null) {
       preTabHeader();
@@ -1004,13 +1146,13 @@ export class Window implements Disposable {
 
   handleTabWindowTitleChanged(tab: Tab, title: string): void {
     // TODO: Should this just be moved into TabPlumbing directly?
-    const tabPlumbing = getTabPlumbingForTab(tab);
+    const tabPlumbing = this.#windowManager.getTabPlumbingForTab(tab);
     tabPlumbing.dockWidget.setWindowTitle(title);
   }
 
   hasTab(targetTab: Tab): boolean {
     for (const dockWidget of this.dockContainer.dockWidgets()) {
-      const plumbing = getTabPlumbingForDockWidget(dockWidget);
+      const plumbing = this.#windowManager.getTabPlumbingForDockWidget(dockWidget);
       if (plumbing != null && plumbing.tab === targetTab) {
         return true;
       }
@@ -1023,8 +1165,9 @@ export class Window implements Disposable {
     this.dockContainer.raise();
   }
 
+  @log
   removeTab(targetTab: Tab): void {
-    const tabPlumbing = getTabPlumbingForTab(targetTab);
+    const tabPlumbing = this.#windowManager.getTabPlumbingForTab(targetTab);
     if (tabPlumbing == null) {
       return;
     }
@@ -1032,14 +1175,14 @@ export class Window implements Disposable {
   }
 
   focusTab(tab: Tab): void {
-    const tabPlumbing = getTabPlumbingForTab(tab);
+    const tabPlumbing = this.#windowManager.getTabPlumbingForTab(tab);
     tabPlumbing.dockWidget.dockAreaWidget().setCurrentDockWidget(tabPlumbing.dockWidget);
     tab.focus();
     // FIXME: update any context related state
   }
 
   getTabGlobalGeometry(tab: Tab): QRect {
-    const tabPlumbing = getTabPlumbingForTab(tab);
+    const tabPlumbing = this.#windowManager.getTabPlumbingForTab(tab);
     const localGeometry = tabPlumbing.dockWidget.geometry();
     const topLeftGlobal = this.dockContainer.mapToGlobal(new QPoint(localGeometry.left(), localGeometry.top()));
     return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
@@ -1048,7 +1191,7 @@ export class Window implements Disposable {
   getTerminals(): Terminal[] {
     const result: Terminal[] = [];
     for (const dockWidget of this.dockContainer.dockWidgets()) {
-      const plumbing = getTabPlumbingForDockWidget(dockWidget);
+      const plumbing = this.#windowManager.getTabPlumbingForDockWidget(dockWidget);
       if (plumbing != null && plumbing.tab instanceof Terminal) {
         result.push(plumbing.tab);
       }

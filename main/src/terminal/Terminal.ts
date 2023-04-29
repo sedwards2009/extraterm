@@ -893,7 +893,7 @@ export class Terminal implements Tab, Disposable {
         block.dispose();
       }
     }
-
+    this.#enforceScrollbackSizeLater.cancel();
     this.#onDisposeEventEmitter.fire();
     this.#onDisposeEventEmitter.dispose();
 
