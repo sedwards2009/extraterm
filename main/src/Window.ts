@@ -13,7 +13,7 @@ import { doLater } from "extraterm-timeoutqt";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, QKeyEvent, WidgetAttribute,
   QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QBoxLayout, QLabel, TextFormat,
-  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache } from "@nodegui/nodegui";
+  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache, TextInteractionFlag } from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { Menu, ToolButton, Label } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
@@ -86,6 +86,8 @@ export class WindowManager {
     CDockManager.setConfigFlag(eConfigFlag.AlwaysShowTabs, true);
     CDockManager.setConfigFlag(eConfigFlag.AllTabsHaveCloseButton, true);
     CDockManager.setConfigFlag(eConfigFlag.FloatingContainerIndependent, true);
+    CDockManager.setConfigFlag(eConfigFlag.DockWidgetTabTitle, false);
+    CDockManager.setConfigFlag(eConfigFlag.DockWidgetTabContextMenu, false);
 
     this.#dummyWindow = new QWidget();
     this.#dockManager = new CDockManager(this.#dummyWindow);
@@ -283,8 +285,6 @@ class TabPlumbing implements Disposable {
     dockWidget.setWidget(tab.getContents());
 
     const tabWidget = dockWidget.tabWidget();
-    tabWidget.setFeature(DockWidgetTabFeature.DockWidgetTabTitle, false);
-    tabWidget.setFeature(DockWidgetTabFeature.DockWidgetTabContextMenu, false);
 
     this.dockWidget = dockWidget;
 
@@ -1120,14 +1120,14 @@ export class Window implements Disposable {
       const iconName = tab.getIconName();
       const iconHtml = iconName != null ? createHtmlIcon(iconName) + "  " : "";
       const titleHtml = `${iconHtml}${he.escape(tab.getTitle() ?? "")}`;
-      const tabTitleLabel = Label({
+      tabPlumbing.titleLabel = Label({
         cssClass: ["tab-title"],
         contentsMargins: [8, 0, 0, 0],
         text: titleHtml,
-        textFormat: TextFormat.RichText
+        textFormat: TextFormat.RichText,
+        textInteractionFlag: TextInteractionFlag.NoTextInteraction,
       });
-      tabTitleWidget = tabTitleLabel;
-      tabPlumbing.titleLabel = tabTitleLabel;
+      tabTitleWidget = tabPlumbing.titleLabel;
     }
     tabPlumbing.titleWidget = tabTitleWidget;
 

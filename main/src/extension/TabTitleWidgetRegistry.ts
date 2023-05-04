@@ -7,7 +7,7 @@ import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { Logger, getLogger } from "extraterm-logging";
 
 import { ExtensionMetadata, ExtensionTabTitlesWidgetContribution } from './ExtensionMetadata.js';
-import { QLabel } from '@nodegui/nodegui';
+import { QLabel, TextFormat, TextInteractionFlag } from '@nodegui/nodegui';
 
 
 export class TabTitleWidgetRegistry {
@@ -43,7 +43,11 @@ export class TabTitleWidgetRegistry {
   createTabTitleWidgets(terminal: ExtensionApi.Terminal): QLabel[] {
     const widgets: QLabel[] = [];
     for (const factory of this.#registeredTabTitleWidgetFactories.values()) {
-      widgets.push(factory(terminal));
+      const label = factory(terminal);
+      label.setTextInteractionFlags(TextInteractionFlag.NoTextInteraction);
+      // ^ Don't allow any interaction for labels inside tabs. It breaks drag and drop of tabs.
+
+      widgets.push(label);
     }
     return widgets;
   }
