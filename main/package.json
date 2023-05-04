@@ -18,7 +18,7 @@
   "dependencies": {
     "@nodegui/nodegui": "0.59.2",
     "nodegui-plugin-font-icon": "0.3.1",
-    "nodegui-plugin-qads": "^0.9.2",
+    "nodegui-plugin-qads": "^0.9.3",
     "nodegui-plugin-qhotkey": "^0.1.1",
     "nodegui-plugin-rich-text-delegate": "0.3.0",
     "nodegui-plugin-style-tweaker": "0.3.1"

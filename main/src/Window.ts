@@ -132,12 +132,30 @@ export class WindowManager {
 
   #handleFocusedDockWidgetChanged(dw: CDockWidget): void {
     this._log.debug(`#handleFocusedDockWidgetChanged()`);
+
+    let window: Window = null;
+    let tab: Tab = null;
+
     const tabPlumbing = this.getTabPlumbingForDockWidget(dw);
-    if (tabPlumbing == null) {
-      return;
+    if (tabPlumbing != null) {
+      this.#extensionManager.setActiveTab(tabPlumbing.tab);
+      window = this.getWindowForTab(tabPlumbing.tab);
+      tab = tabPlumbing.tab;
+    } else {
+      // Empty "spacer" tab to hold the window open.
+      const container = dw.dockContainer();
+      // FIXME: We might need the top level container.
+      if (container.isFloating()) {
+        window = this.#getWindowByFloatingDockContainer(container.floatingWidget());
+        if (window == null) {
+          return;
+        }
+      } else {
+        return;
+      }
     }
-    const window = this.getWindowForTab(tabPlumbing.tab);
-    this.#extensionManager.setActiveTab(tabPlumbing.tab);
+
+    this.#extensionManager.setActiveTab(tab);
 
     // const tab = tabPlumbing.tab;
     // if (tab instanceof Terminal) {
@@ -147,7 +165,8 @@ export class WindowManager {
     // }
 
     this.#extensionManager.setActiveWindow(window);
-    window.handleTabFocusChanged(tabPlumbing.tab);
+    window.handleTabFocusChanged(tab);
+
     this._log.debug(`exit #handleFocusedDockWidgetChanged()`);
   }
 
