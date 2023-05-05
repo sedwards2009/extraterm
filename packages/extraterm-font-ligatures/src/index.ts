@@ -1,4 +1,3 @@
-import * as util from 'node:util';
 import * as opentype from 'opentype.js';
 import * as fontFinder from 'font-finder';
 import lru from 'lru-cache';
@@ -322,7 +321,7 @@ export async function load(name: string, options?: Options): Promise<Font> {
  * @param path Path to the file containing the font
  */
 export async function loadFile(path: string, options?: Options): Promise<Font> {
-  const font = await util.promisify<string, opentype.Font>(opentype.load as any)(path);
+  const font = await opentype.load(path);
   return new FontImpl(font, {
     cacheSize: 0,
     ...options
