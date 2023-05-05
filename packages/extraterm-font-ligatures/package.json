@@ -33,7 +33,7 @@
     "@types/lru-cache": "^4.1.0",
     "@types/node": "^16.4.0",
     "@types/opentype.js": "^1.3.3",
-    "ava": "4.1.0",
+    "ava": "5.2.0",
     "chalk": "^2.4.1",
     "codecov": "^3.6.5",
     "columnify": "^1.5.4",
