@@ -1082,6 +1082,9 @@ export class Window implements Disposable {
 
   @log
   handleTabFocusChanged(tab: Tab): void {
+    if (tab != null) {
+      tab.focus();
+    }
     this.#onTabChangeEventEmitter.fire(tab);
   }
 
