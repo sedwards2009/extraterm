@@ -13,9 +13,9 @@ import { doLater } from "extraterm-timeoutqt";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, QKeyEvent, WidgetAttribute,
   QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QBoxLayout, QLabel, TextFormat,
-  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache, TextInteractionFlag } from "@nodegui/nodegui";
+  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache, TextInteractionFlag, ShortcutContext, QAbstractButton, QAbstractButtonSignals, QSizePolicyPolicy } from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
-import { Menu, ToolButton, Label } from "qt-construct";
+import { Menu, ToolButton, Label, Widget, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
 import he from "he";
 import { hasEmojiPresentation } from "extraterm-unicode-utilities";
@@ -82,6 +82,7 @@ export class WindowManager {
   init(): void {
     CDockManager.setConfigFlag(eConfigFlag.FocusHighlighting, true);
     CDockManager.setConfigFlag(eConfigFlag.DockAreaHasCloseButton, false);
+    CDockManager.setConfigFlag(eConfigFlag.DockAreaHasTabsMenuButton, false);
     CDockManager.setConfigFlag(eConfigFlag.DockAreaHasUndockButton, false);
     CDockManager.setConfigFlag(eConfigFlag.AlwaysShowTabs, true);
     CDockManager.setConfigFlag(eConfigFlag.AllTabsHaveCloseButton, true);
@@ -91,6 +92,7 @@ export class WindowManager {
 
     this.#dummyWindow = new QWidget();
     this.#dockManager = new CDockManager(this.#dummyWindow);
+    this.#dockManager.setStyleSheet("", false);
 
     this.#dockManager.addEventListener("dockAreaCreated", (dockArea: any) => {
       const dockAreaWidget = wrapperCache.getWrapper(dockArea) as CDockAreaWidget;
@@ -126,24 +128,31 @@ export class WindowManager {
     this.#dockManager.addEventListener("focusedDockWidgetChanged", (oldDockWidget: any /* ads::CDockWidget */,
         newDockWidget: any /* ads::CDockWidget */) => {
       const dw = wrapperCache.getWrapper(newDockWidget) as CDockWidget;
-      this.#handleFocusedDockWidgetChanged(dw);
+      const oldDw = wrapperCache.getWrapper(oldDockWidget) as CDockWidget;
+      this.#handleFocusedDockWidgetChanged(dw, oldDw);
     });
   }
 
-  #handleFocusedDockWidgetChanged(dw: CDockWidget): void {
+  #handleFocusedDockWidgetChanged(dockWidget: CDockWidget, previousDockWidget: CDockWidget): void {
     this._log.debug(`#handleFocusedDockWidgetChanged()`);
 
     let window: Window = null;
     let tab: Tab = null;
 
-    const tabPlumbing = this.getTabPlumbingForDockWidget(dw);
+    const oldTabPlumbing = this.getTabPlumbingForDockWidget(previousDockWidget);
+    if (oldTabPlumbing != null) {
+      oldTabPlumbing.setIsCurrent(false);
+    }
+
+    const tabPlumbing = this.getTabPlumbingForDockWidget(dockWidget);
     if (tabPlumbing != null) {
       this.#extensionManager.setActiveTab(tabPlumbing.tab);
+      tabPlumbing.setIsCurrent(true);
       window = this.getWindowForTab(tabPlumbing.tab);
       tab = tabPlumbing.tab;
     } else {
       // Empty "spacer" tab to hold the window open.
-      const container = dw.dockContainer();
+      const container = dockWidget.dockContainer();
       // FIXME: We might need the top level container.
       if (container.isFloating()) {
         window = this.#getWindowByFloatingDockContainer(container.floatingWidget());
@@ -204,8 +213,9 @@ export class WindowManager {
   }
 
   createWindow(): Window {
-    const label = new QLabel();
-    label.setText("Empty area");
+    const label = Widget({
+      cssClass: "window-background"
+    });
 
     const emptyDockWidget = new CDockWidget("Extraterm");
     this.#emptyDockWidgets.add(emptyDockWidget);
@@ -346,6 +356,10 @@ class TabPlumbing implements Disposable {
     });
   }
 
+  setIsCurrent(isCurrent: boolean): void {
+    this.tab.setIsCurrent(isCurrent);
+  }
+
   dispose(): void {
     this.dockWidget.deleteDockWidget();
     this.#disposableHolder.dispose();
@@ -373,6 +387,8 @@ class DockAreaMenu {
 
   #hamburgerMenuButton: QToolButton = null;
   #hamburgerMenu: QMenu = null;
+  #tabsMenuButton:QToolButton = null;
+  #tabsMenu: QMenu = null;
 
   constructor(extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager,
     uiStyle: UiStyle, dockAreaWidget: CDockAreaWidget) {
@@ -392,6 +408,9 @@ class DockAreaMenu {
     const titleBar = this.#dockAreaWidget.titleBar();
     const index = titleBar.indexOf(titleBar.button(TitleBarButton.TitleBarButtonTabsMenu));
     titleBar.insertWidget(index + 1, menu);
+
+    const tabsMenu = this.#createTabsMenu();
+    titleBar.insertWidget(index + 1, tabsMenu);
   }
 
   #createHamburgerMenu(): QToolButton {
@@ -452,6 +471,7 @@ class DockAreaMenu {
 
       const action = menu.addAction(entry.title);
       action.setData(new QVariant(entry.command));
+      action.setShortcutContext(ShortcutContext.WidgetShortcut);
       if (entry.icon != null && entry.icon !== "") {
         const icon = uiStyle.getMenuIcon(entry.icon);
         if (icon != null) {
@@ -475,6 +495,56 @@ class DockAreaMenu {
         this._log.warn(e);
       }
     });
+  }
+
+  #createTabsMenu(): QToolButton {
+    const iconPair = this.#uiStyle.getToolbarButtonIconPair("fa-caret-down");
+
+    this.#tabsMenuButton = ToolButton({
+      icon: iconPair.normal,
+      popupMode: ToolButtonPopupMode.InstantPopup,
+      onEnter: () => {
+        this.#tabsMenuButton.setIcon(iconPair.hover);
+      },
+      onLeave: () => {
+        this.#tabsMenuButton.setIcon(iconPair.normal);
+      },
+      onMouseButtonPress: () => {
+        this.#updateHamburgerMenu(this.#uiStyle);
+      },
+      menu: this.#tabsMenu = Menu({
+        attribute: [WidgetAttribute.WA_TranslucentBackground],
+        onAboutToShow: () => {
+          this.#handleTabsMenuAboutToShow();
+        },
+        onTriggered: (nativeAction) => {
+          const action = new QAction(nativeAction);
+          this.#handleTabsMenuTriggered(action.data().toInt());
+        }
+      })
+    });
+    return this.#tabsMenuButton;
+  }
+
+  #handleTabsMenuAboutToShow(): void {
+    this.#tabsMenu.clear();
+    const tabBar = this.#dockAreaWidget.titleBar().tabBar();
+
+    for (let i = 0; i < tabBar.count(); ++i) {
+      if (!tabBar.isTabOpen(i)) {
+        continue;
+      }
+
+      const tab = tabBar.tab(i);
+      const action = new QAction();
+      action.setText(tab.text());
+      this.#tabsMenu.addAction(action);
+      action.setData(new QVariant(i));
+    }
+  }
+
+  #handleTabsMenuTriggered(index: number): void {
+    this.#dockAreaWidget.setCurrentIndex(index);
   }
 }
 
@@ -584,7 +654,7 @@ export class Window implements Disposable {
     //   this.dockContainer.resize(800, 480);
     // }
 
-    // this.#loadStyleSheet(generalConfig.uiScalePercent/100);
+    this.#loadStyleSheet(generalConfig.uiScalePercent/100);
 
     this.#initContextMenu();
 
@@ -618,8 +688,6 @@ export class Window implements Disposable {
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
     this.dockContainer.setStyleSheet(sheet, false);
     // this.#hamburgerMenu.setStyleSheet(sheet, false);
-
-    // this.#repolishTabBar();
   }
 
   #createWindowIcon(): QIcon {
@@ -652,6 +720,7 @@ export class Window implements Disposable {
 
       const action = menu.addAction(entry.title);
       action.setData(new QVariant(entry.command));
+      action.setShortcutContext(ShortcutContext.WidgetShortcut);
       if (entry.icon != null && entry.icon !== "") {
         const icon = uiStyle.getMenuIcon(entry.icon);
         if (icon != null) {
@@ -1053,7 +1122,6 @@ export class Window implements Disposable {
     return this.dockContainer;
   }
 
-  @log
   setCurrentTabIndex(index: number): void {
     const tabs = this.#getTabs();
     const noTabs = tabs.length === 0;
@@ -1067,12 +1135,8 @@ export class Window implements Disposable {
 
     for (let i=0; i<tabs.length; i++) {
       const tab = tabs[i];
-      const isCurrent = i === index;
-      // if (tabPlumbing.titleLabel != null) {
-      //   tabPlumbing.titleLabel.setProperty("cssClass", isCurrent ? ["tab-title", "tab-title-selected"] : ["tab-title"]);
-      //   repolish(tabPlumbing.titleLabel);
-      // }
-      tab.setIsCurrent(isCurrent);
+      const tabPlumbing = this.#windowManager.getTabPlumbingForTab(tab);
+      tabPlumbing.setIsCurrent(i === index);
     }
     const currentTab = tabs[index];
     currentTab.focus();
@@ -1080,7 +1144,6 @@ export class Window implements Disposable {
     this.#onTabChangeEventEmitter.fire(currentTab);
   }
 
-  @log
   handleTabFocusChanged(tab: Tab): void {
     if (tab != null) {
       tab.focus();
@@ -1111,7 +1174,6 @@ export class Window implements Disposable {
     return this.#getTabs()[index];
   }
 
-  @log
   addTab(tab: Tab, preTabHeader?: () => void): void {
     if (this.#windowManager.hasTab(tab)) {
       return;
@@ -1156,6 +1218,9 @@ export class Window implements Disposable {
     const tabWidget = tabPlumbing.dockWidget.tabWidget();
     const layout = <QBoxLayout> tabWidget.layout();
     layout.insertWidget(0, tabPlumbing.titleWidget);
+    tabPlumbing.setIsCurrent(true);
+
+    this.dockContainer.dumpObjectTree();
   }
 
   tabPopOutClicked(details: {frame: DecoratedFrame, terminal: Terminal}): void {
@@ -1187,7 +1252,6 @@ export class Window implements Disposable {
     this.dockContainer.raise();
   }
 
-  @log
   removeTab(targetTab: Tab): void {
     const tabPlumbing = this.#windowManager.getTabPlumbingForTab(targetTab);
     if (tabPlumbing == null) {

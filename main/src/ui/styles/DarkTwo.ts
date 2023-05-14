@@ -985,7 +985,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     min-width: ${emToPx(tabInsideWidthEm)}px;
   }
 
-  QWidget[cssClass~="tab-title-selected"] {
+  NCDockWidgetTab[focused~="true"] QWidget[cssClass~="tab-title"] {
     color: ${tabTextColorActive};
   }
 
@@ -1263,6 +1263,100 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   `;
     }
 
+    function QadsStyleSheet(): string {
+      return `
+
+  NCFloatingDockContainer {
+    background-color: ${level3Color};
+    padding: 0px;
+    margin: 0px;
+  }
+
+  #tabsContainerWidget {
+    background-color: ${tabBackgroundColor};
+  }
+
+  ads--CDockWidgetTab {
+    height: ${emToPx(2.4)}px;
+    margin: 0px;
+
+    width: ${emToPx(tabOuterWidthEm)}px;
+
+    padding-left: 1px;
+    border-radius: 0px;
+
+    color: ${toHex(tabTextColor)};
+    background-color: ${toHex(tabBackgroundColor)};
+
+    border-top: 1px solid ${tabBorderColor};
+    border-left: 1px solid ${tabBorderColor};
+    border-bottom: 1px solid ${tabBorderColor};
+  }
+
+  ads--CSpacerWidget {
+    height: ${emToPx(2.4)}px;
+  }
+
+  ads--CDockWidgetTab[activeTab="true"] {
+    color: ${tabTextColorActive};
+    background-color: ${tabBackgroundColorActive};
+
+    padding-left: 0px;
+    border-left: 2px solid ${accentColor};
+    border-bottom: 1px solid ${tabBackgroundColorActive};
+  }
+
+  #tabCloseButton {
+    background-color: transparent;
+
+    padding: ${emToPx(0.1)}px ${emToPx(0)}px ${emToPx(0.1)}px ${emToPx(0.1)}px;
+    margin: ${emToPx(0.5)}px;
+    border-radius: ${borderRadius};
+    border: 0px;
+    width: ${emToPx(1.25)}px;
+    max-width: ${emToPx(1.25)}px;
+    min-width: ${emToPx(1.25)}px;
+
+    height: ${emToPx(1.25)}px;
+    max-height: ${emToPx(1.25)}px;
+    min-height: ${emToPx(1.25)}px;
+
+    image: url(${resourceDirectory}/close_normal.svg);
+    qproperty-icon: none;
+  }
+
+  #tabCloseButton:hover {
+    background-color: ${buttonPrimaryBgColor};
+    image: url(${resourceDirectory}/close_hover.svg);
+  }
+
+  ads--CDockAreaWidget {
+    border: 0px;
+    padding: 0px;
+    margin: 0px;
+  }
+
+  NCDockAreaTitleBar {
+    min-height: ${emToPx(2.6)}px;
+
+    background-color: ${tabBackgroundColor};
+    border: 0px;
+    margin: 0px;
+  }
+
+  QSplitterHandle:hover {}
+  /* ^Work around for bug https://bugreports.qt.io/browse/QTBUG-13768 */
+
+  QSplitter::handle {
+    background-color: ${level3Color};
+  }
+
+  QSplitter::handle:hover {
+    background-color: ${textColorSubtle};
+  }
+    `;
+    }
+
     return BodyStyleSheet() +
       QWidgetStyleSheet() +
       QCheckBoxStyleSheet(resourceDirectory) +
@@ -1278,6 +1372,7 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
       QTabBarStyleSheet(resourceDirectory) +
       QToolButtonStyleSheet() +
       ApplicationSpecificStyleSheet() +
+      QadsStyleSheet() +
       "";
   }
 
