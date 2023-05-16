@@ -9,7 +9,7 @@
     "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
     "build-code": "tsc",
     "build-icons": "node resources/extra_icons/build.js",
-    "build-bundle": "esbuild build/main.js --bundle --outfile=dist/main.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
+    "build-bundle": "esbuild build/main.js --sourcemap --bundle --outfile=dist/main.cjs --platform=node --format=cjs --external:@nodegui/nodegui \"--external:nodegui-plugin-*\"",
     "clean": "shx rm -rf build dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
