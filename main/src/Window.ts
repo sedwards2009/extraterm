@@ -146,9 +146,12 @@ export class WindowManager {
 
     const tabPlumbing = this.getTabPlumbingForDockWidget(dockWidget);
     if (tabPlumbing != null) {
+      window = this.getWindowForTab(tabPlumbing.tab);
+      if (window == null) {
+        return;
+      }
       this.#extensionManager.setActiveTab(tabPlumbing.tab);
       tabPlumbing.setIsCurrent(true);
-      window = this.getWindowForTab(tabPlumbing.tab);
       tab = tabPlumbing.tab;
     } else {
       // Empty "spacer" tab to hold the window open.
@@ -331,6 +334,9 @@ class TabPlumbing implements Disposable {
 
     this.#disposableHolder.add(tab.onWindowTitleChanged((title: string) => {
       const window = this.#windowManager.getWindowForTab(tab);
+      if (window == null) {
+        return;
+      }
       window.handleTabWindowTitleChanged(tab, title);
     }));
 
@@ -1219,8 +1225,6 @@ export class Window implements Disposable {
     const layout = <QBoxLayout> tabWidget.layout();
     layout.insertWidget(0, tabPlumbing.titleWidget);
     tabPlumbing.setIsCurrent(true);
-
-    this.dockContainer.dumpObjectTree();
   }
 
   tabPopOutClicked(details: {frame: DecoratedFrame, terminal: Terminal}): void {
