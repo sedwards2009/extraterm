@@ -55,7 +55,7 @@ See the more detailed [features list](https://extraterm.org/features.html).
 
 Extraterm is available in two flavours: the classic Extraterm is based on Electron, and the lighter faster Qt based version which is the future of Extraterm but is in development and lacking features. Both can run on Linux, Windows, and macOS.
 
-* Try the classic version here](https://github.com/sedwards2009/extraterm/releases/tag/v0.59.4) (versions before 0.60.0)
+* [Try the classic version here](https://github.com/sedwards2009/extraterm/releases/tag/v0.59.4) (versions before 0.60.0)
 * [Try the latest Qt based version here](https://github.com/sedwards2009/extraterm/releases) (version 0.60.0 and later
 
 Both can be installed at the same time, without problems.
