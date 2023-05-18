@@ -1274,7 +1274,7 @@ export class Window implements Disposable {
   getTabGlobalGeometry(tab: Tab): QRect {
     const tabPlumbing = this.#windowManager.getTabPlumbingForTab(tab);
     const localGeometry = tabPlumbing.dockWidget.geometry();
-    const topLeftGlobal = this.dockContainer.mapToGlobal(new QPoint(localGeometry.left(), localGeometry.top()));
+    const topLeftGlobal = tabPlumbing.dockWidget.mapToGlobal(new QPoint(0, 0));
     return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
   }
 

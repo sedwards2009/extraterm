@@ -480,7 +480,7 @@ this._log.debug(`onWindowGeometryChanged()`);
 
   commandOpenCommandPalette(): void {
     const win = this.#extensionManager.getActiveWindow();
-    const tab = win.getTab(win.getCurrentTabIndex());
+    const tab = this.#extensionManager.getActiveTab();
     const commandPalette = new CommandPalette(this.#extensionManager, this.#keybindingsManager, this.#uiStyle);
     commandPalette.show(win, tab);
   }
