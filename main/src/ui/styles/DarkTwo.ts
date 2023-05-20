@@ -1302,8 +1302,12 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     background-color: ${tabBackgroundColorActive};
 
     padding-left: 0px;
-    border-left: 2px solid ${accentColor};
+    border-left: 2px solid ${toHex(textColor)};
     border-bottom: 1px solid ${tabBackgroundColorActive};
+  }
+
+  ads--CDockWidgetTab[activeTab="true"][focused~="true"] {
+    border-left: 2px solid ${accentColor};
   }
 
   #tabCloseButton {
