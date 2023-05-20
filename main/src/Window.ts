@@ -628,6 +628,11 @@ export class Window implements Disposable {
       this.#windowOpenState = WindowOpenState.Closed;
       this.#onWindowCloseEventEmitter.fire(this);
     });
+    this.dockContainer.addEventListener(WidgetEventTypes.Hide, () => {
+      doLater(() => {
+        this.#checkForEmptyWindow();
+      });
+    });
     this.dockContainer.setWindowIcon(this.#createWindowIcon());
     this.dockContainer.setMouseTracking(true);
     this.dockContainer.setContextMenuPolicy(ContextMenuPolicy.PreventContextMenu);
@@ -694,6 +699,12 @@ export class Window implements Disposable {
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
     this.dockContainer.setStyleSheet(sheet, false);
     // this.#hamburgerMenu.setStyleSheet(sheet, false);
+  }
+
+  #checkForEmptyWindow(): void {
+    if (this.#getTabs().length === 0) {
+      this.dockContainer.close();
+    }
   }
 
   #createWindowIcon(): QIcon {

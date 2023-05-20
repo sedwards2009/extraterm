@@ -184,11 +184,19 @@ class Main {
     });
 
     this.#keybindingsManager.installGlobalShortcuts();
-    const qApplication = QApplication.instance();
-    qApplication.addEventListener("lastWindowClosed", () => {
-      this.#keybindingsManager.uninstallGlobalShortcuts();
+
+    QApplication.instance().addEventListener("lastWindowClosed", () => {
+      this.#cleanupAndExit();
     });
+
     await this.openWindow();
+  }
+
+  #cleanupAndExit(): void {
+    this.#keybindingsManager.uninstallGlobalShortcuts();
+    doLater(() => {
+      QApplication.instance().quit();
+    });
   }
 
   #setApplicationStyle(uiScalePercent: number): void {
@@ -219,7 +227,6 @@ class Main {
 
   #handleNewWindow(window: Window): void {
     window.onTabCloseRequest((tab: Tab): void => {
-this._log.info(`win.onTabCloseRequest()`);
       this.#closeTab(window, tab);
     });
 
@@ -253,6 +260,9 @@ this._log.debug(`onWindowGeometryChanged()`);
     window.onWindowClosed((win: Window): void => {
       doLater(() => {
         this.#disposeWindow(win);
+        if (this.#windowManager.getAllWindows().length === 0) {
+          this.#cleanupAndExit();
+        }
       });
     });
   }
