@@ -1224,7 +1224,15 @@ export class Window implements Disposable {
       tab.setTerminalVisualConfig(this.#terminalVisualConfig);
     }
 
-    const dockAreaWidget = this.dockContainer.dockContainer().dockArea(0);
+    let dockAreaWidget: CDockAreaWidget = null;
+    const currentTab = this.#extensionManager.getActiveTab();
+    if (this.#extensionManager.getActiveWindow() === this && currentTab != null) {
+      const plumbing = this.#windowManager.getTabPlumbingForTab(currentTab);
+      dockAreaWidget = plumbing.dockWidget.dockAreaWidget();
+    } else {
+      dockAreaWidget = this.dockContainer.dockContainer().dockArea(0);
+    }
+
     if (tab.getTitle() != null) {
       tabPlumbing.dockWidget.setWindowTitle(tab.getTitle());
     }
