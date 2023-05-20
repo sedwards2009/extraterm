@@ -1156,6 +1156,10 @@ export class Window implements Disposable {
       tabPlumbing.setIsCurrent(i === index);
     }
     const currentTab = tabs[index];
+
+    const tabPlumbing = this.#windowManager.getTabPlumbingForTab(currentTab);
+    tabPlumbing.dockWidget.setAsCurrentTab();
+
     currentTab.focus();
 
     this.#onTabChangeEventEmitter.fire(currentTab);
@@ -1180,7 +1184,21 @@ export class Window implements Disposable {
   }
 
   getCurrentTabIndex(): number {
-    return this.dockContainer.dockContainer().dockArea(0).currentIndex() -1;
+    let currentTab: Tab = null;
+    const tabs = this.#getTabs();
+
+    if (this.#extensionManager.getActiveWindow() === this) {
+      currentTab = this.#extensionManager.getActiveTab()
+    } else {
+      for (const tab of tabs) {
+        const plumbing = this.#windowManager.getTabPlumbingForTab(tab);
+        if (plumbing.dockWidget.isCurrentTab()) {
+          currentTab = tab;
+          break;
+        }
+      }
+    }
+    return currentTab == null ? 0 : tabs.indexOf(currentTab);
   }
 
   getTabCount(): number {

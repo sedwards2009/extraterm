@@ -722,23 +722,23 @@ this._log.debug(`#closeTab()`);
   }
 
   commandFocusTabLeft(): void {
-    // const win = this.#extensionManager.getActiveWindow();
-    // const tabCount = win.getTabCount();
-    // const index = win.getCurrentTabIndex() - 1;
-    // win.setCurrentTabIndex(index < 0 ? tabCount - 1 : index);
+    const win = this.#extensionManager.getActiveWindow();
+    const tabCount = win.getTabCount();
+    const index = win.getCurrentTabIndex() - 1;
+    win.setCurrentTabIndex(index < 0 ? tabCount - 1 : index);
   }
 
   commandFocusTabRight(): void {
-    // const win = this.#extensionManager.getActiveWindow();
-    // const tabCount = win.getTabCount();
-    // const index = win.getCurrentTabIndex() + 1;
-    // win.setCurrentTabIndex(index >= tabCount ? 0 : index);
+    const win = this.#extensionManager.getActiveWindow();
+    const tabCount = win.getTabCount();
+    const index = win.getCurrentTabIndex() + 1;
+    win.setCurrentTabIndex(index >= tabCount ? 0 : index);
   }
 
   commandCloseTab(): void {
-    // const win = this.#extensionManager.getActiveWindow();
-    // const tab = win.getTab(win.getCurrentTabIndex());
-    // this.#closeTab(win, tab);
+    const win = this.#extensionManager.getActiveWindow();
+    const tab = win.getTab(win.getCurrentTabIndex());
+    this.#closeTab(win, tab);
   }
 
   commandCloseWindow(): void {
