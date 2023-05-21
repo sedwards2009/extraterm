@@ -259,7 +259,7 @@ this._log.debug(`onWindowGeometryChanged()`);
 
     window.onWindowClosed((win: Window): void => {
       doLater(() => {
-        this.#disposeWindow(win);
+        this.#windowManager.disposeWindow(win);
         if (this.#windowManager.getAllWindows().length === 0) {
           this.#cleanupAndExit();
         }
@@ -501,7 +501,7 @@ this._log.debug(`onWindowGeometryChanged()`);
 
   commandQuit(): void {
     while (this.#windowManager.getAllWindows().length !== 0) {
-      this.#disposeWindow(this.#windowManager.getAllWindows()[0]);
+      this.#windowManager.disposeWindow(this.#windowManager.getAllWindows()[0]);
     }
   }
 
@@ -743,19 +743,13 @@ this._log.debug(`#closeTab()`);
 
   commandCloseWindow(): void {
     const win = this.#extensionManager.getActiveWindow();
-    this.#disposeWindow(win);
+    this.#windowManager.disposeWindow(win);
   }
 
   commandListWindows(): WindowDescription[] {
     return this.#windowManager.getAllWindows().map(w => ({
       id: `${w.getId()}`
     }));
-  }
-
-  #disposeWindow(win: Window): void {
-    win.dispose();
-    const i = this.#windowManager.getAllWindows().indexOf(win);
-    this.#windowManager.getAllWindows().splice(i, 1);
   }
 
   async commandMoveTabToNewWindow(): Promise<void> {

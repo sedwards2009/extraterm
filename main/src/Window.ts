@@ -4,16 +4,17 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as path from "node:path";
-import { Logger, log, getLogger } from "extraterm-logging";
-import { CDockAreaWidget, CDockManager, CDockWidget, CFloatingDockContainer, DockWidgetFeature, DockWidgetTabFeature,
+import { Logger, log, getLogger, objectName } from "extraterm-logging";
+import { CDockAreaWidget, CDockManager, CDockWidget, CFloatingDockContainer, CFloatingDockContainerSignals, DockWidgetFeature, DockWidgetTabFeature,
   TitleBarButton, eConfigFlag} from "nodegui-plugin-qads";
 import { FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
-import { doLater } from "extraterm-timeoutqt";
+import { DebouncedDoLater, doLater } from "extraterm-timeoutqt";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 import { QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, QKeyEvent, WidgetAttribute,
   QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QBoxLayout, QLabel, TextFormat,
-  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache, TextInteractionFlag, ShortcutContext, QAbstractButton, QAbstractButtonSignals, QSizePolicyPolicy } from "@nodegui/nodegui";
+  QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache, TextInteractionFlag,
+  ShortcutContext } from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { Menu, ToolButton, Label, Widget, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
@@ -32,7 +33,7 @@ import { KeybindingsIOManager } from "./keybindings/KeybindingsIOManager.js";
 import { qKeyEventToMinimalKeyboardEvent } from "./keybindings/QKeyEventUtilities.js";
 import { UiStyle } from "./ui/UiStyle.js";
 import { CachingLigatureMarker, LigatureMarker } from "./CachingLigatureMarker.js";
-import { DisposableHolder } from "./utils/DisposableUtils.js";
+import { DisposableEventHolder, DisposableHolder } from "./utils/DisposableUtils.js";
 import { createHtmlIcon } from "./ui/Icons.js";
 import { SettingsTab } from "./settings/SettingsTab.js";
 import { ContextMenuEvent } from "./ContextMenuEvent.js";
@@ -198,8 +199,7 @@ export class WindowManager {
   #handleFloatingDockDestroy(floatingDockContainer: CFloatingDockContainer): void {
     this._log.debug(`handleFloatingDockDestroy()`);
     const window = this.#getWindowByFloatingDockContainer(floatingDockContainer);
-    window.dispose();
-    this.#allWindows = this.#allWindows.filter(w => w !== window);
+    this.disposeWindow(window);
   }
 
   #getWindowByFloatingDockContainer(dockContainer: CFloatingDockContainer): Window {
@@ -228,6 +228,15 @@ export class WindowManager {
     const dockContainer = this.#dockManager.addDockWidgetFloating(emptyDockWidget);
     // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
     return this.#getWindowByFloatingDockContainer(dockContainer);
+  }
+
+  disposeWindow(window: Window): void {
+    if ( ! this.#allWindows.includes(window)) {
+      this._log.warn(`Double disposeWindow() on ${objectName(window)}`);
+      return;
+    }
+    window.dispose();
+    this.#allWindows = this.#allWindows.filter(w => w !== window);
   }
 
   #removeSpacers(dw: CDockAreaWidget): void {
@@ -341,8 +350,10 @@ class TabPlumbing implements Disposable {
     }));
 
     dockWidget.addEventListener("closeRequested", () => {
-      this._log.debug(`closeRequested event`);
       const window = this.#windowManager.getWindowForTab(tab);
+      if (window == null) {
+        return;
+      }
       window.handleTabCloseClicked(tab);
     });
 
@@ -563,6 +574,10 @@ export class Window implements Disposable {
   #extensionManager: ExtensionManager = null;
   #keybindingsIOManager: KeybindingsIOManager = null;
 
+  #disposables: DisposableHolder = null;
+  #dockContainerEventHolder: DisposableEventHolder<CFloatingDockContainerSignals> = null;
+  #checkForEmptyWindowLater: DebouncedDoLater = null;
+
   #windowOpenState = WindowOpenState.Closed;
   dockContainer: CFloatingDockContainer = null;
 
@@ -607,6 +622,14 @@ export class Window implements Disposable {
     this.#themeManager = themeManager;
     this.#uiStyle = uiStyle;
 
+    this.#disposables = new DisposableHolder();
+    this.#dockContainerEventHolder = new DisposableEventHolder<CFloatingDockContainerSignals>(dockContainer);
+    this.#disposables.add(this.#dockContainerEventHolder);
+    this.#checkForEmptyWindowLater = new DebouncedDoLater(() => {
+      this.#checkForEmptyWindow();
+    });
+    this.#disposables.add(this.#checkForEmptyWindowLater);
+
     this.#handleLogicalDpiChanged = this.#UnboundHandleLogicalDpiChanged.bind(this);
 
     this.onTabCloseRequest = this.#onTabCloseRequestEventEmitter.event;
@@ -620,18 +643,17 @@ export class Window implements Disposable {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
-    this.dockContainer.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
+    this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.KeyPress, (nativeEvent) => {
       this.#handleKeyPress(new QKeyEvent(nativeEvent));
     });
 
-    this.dockContainer.addEventListener(WidgetEventTypes.Close, () => {
+    this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Close, () => {
       this.#windowOpenState = WindowOpenState.Closed;
       this.#onWindowCloseEventEmitter.fire(this);
     });
-    this.dockContainer.addEventListener(WidgetEventTypes.Hide, () => {
-      doLater(() => {
-        this.#checkForEmptyWindow();
-      });
+
+    this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Hide, () => {
+      this.#checkForEmptyWindowLater.trigger();
     });
     this.dockContainer.setWindowIcon(this.#createWindowIcon());
     this.dockContainer.setMouseTracking(true);
@@ -1033,10 +1055,12 @@ export class Window implements Disposable {
 
   dispose(): void {
     // Terminate any running terminal tabs.
-    // for (const tab of this.#getTabs()) {
-    //   this.removeTab(tab);
-    //   tab.dispose();
-    // }
+    for (const tab of this.#getTabs()) {
+      this.removeTab(tab);
+      tab.dispose();
+    }
+
+    this.#disposables.dispose();
 
     // if (this.#windowOpenState !== WindowOpenState.Closed &&
     //     this.#windowOpenState !== WindowOpenState.ClosedMinimized) {

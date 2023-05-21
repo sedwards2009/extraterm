@@ -5,6 +5,7 @@
  */
 
 import {Disposable} from '@extraterm/extraterm-extension-api';
+import { WidgetEventTypes } from '@nodegui/nodegui';
 
 /**
  * Type guard to detecting objects which support the Disposable interface.
@@ -25,7 +26,7 @@ export class DisposableHolder implements Disposable {
 
   /**
    * Add an object to the list of objects.
-   * 
+   *
    * @param d a Disposable object to hold on to.
    * @return the object which was added.
    */
@@ -73,5 +74,41 @@ export class DisposableItemList<T> {
 
   map<R>(func: (t: T) => R): R[] {
     return this._things.map<R>(pair => func(pair.thing));
+  }
+}
+
+export interface EventEmitter<Signals> {
+  addEventListener<SignalType extends keyof Signals>(signalType: SignalType | WidgetEventTypes, callback: Signals[SignalType]): void;
+  removeEventListener  <SignalType extends keyof Signals>(signalType: SignalType | WidgetEventTypes, callback: Signals[SignalType]): void;
+}
+
+/**
+ * A disposable holder for holding and disposing of registered event
+ * listeners.
+ *
+ * This class wraps instances which implements the `EventEmitter` interface,
+ * and exposes a `addEventListener()` method which also remembers the
+ * registation and can unregister event listeners when `dispose()` is called.
+ */
+export class DisposableEventHolder<Signals> implements Disposable {
+  #emitter: EventEmitter<Signals> = null;
+  #disposableHolder: DisposableHolder = null;
+
+  constructor(emitter: EventEmitter<Signals>) {
+    this.#emitter = emitter;
+    this.#disposableHolder = new DisposableHolder();
+  }
+
+  addEventListener<SignalType extends keyof Signals>(signalType: SignalType | WidgetEventTypes, callback: Signals[SignalType]): void {
+    this.#emitter.addEventListener(signalType, callback);
+    this.#disposableHolder.add({
+      dispose: () => {
+        this.#emitter.removeEventListener(signalType, callback);
+      }
+    });
+  }
+
+  dispose(): void {
+    this.#disposableHolder.dispose();
   }
 }
