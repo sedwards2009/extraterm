@@ -866,7 +866,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   getAllWindows(): Window[] {
-    return this.#windowManager.getAllWindows();
+    return this.#windowManager == null ? [] : this.#windowManager.getAllWindows();
   }
 
   async showDialog(tab: Tab, options: ExtensionApi.DialogOptions): Promise<number | undefined> {
