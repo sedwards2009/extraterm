@@ -660,27 +660,6 @@ export class Window implements Disposable {
     this.dockContainer.setContextMenuPolicy(ContextMenuPolicy.PreventContextMenu);
     this.dockContainer.setFocusPolicy(FocusPolicy.ClickFocus);
 
-    // this.#windowWidget = Widget({
-    //   windowTitle: "Extraterm Qt",
-    //   focusPolicy: FocusPolicy.ClickFocus,
-    //   contextMenuPolicy: ContextMenuPolicy.PreventContextMenu,
-    //   cssClass: ["window-background"],
-    //   onClose: () => {
-    //     this.#windowOpenState = WindowOpenState.Closed;
-    //     this.#onWindowCloseEventEmitter.fire(this);
-    //   },
-    //   onKeyPress: (nativeEvent) => {
-    //     this.#handleKeyPress(new QKeyEvent(nativeEvent));
-    //   },
-    //   onMove: (nativeEvent) => {
-    //     this.#onWindowGeometryChangedEventEmitter.fire();
-    //   },
-    //   onResize:(nativeEvent) => {
-    //     this.#onWindowGeometryChangedEventEmitter.fire();
-    //   },
-    //   windowIcon: this.#createWindowIcon(),
-    //   mouseTracking: true,
-
     // if (geometry != null) {
     //   this.dockContainer.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
     // } else {
@@ -961,15 +940,15 @@ export class Window implements Disposable {
   }
 
   async #updateTerminalVisualConfig(): Promise<void> {
-    // this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
-    // for (const tab of this.#tabs) {
-    //   if (tab.tab instanceof Terminal) {
-    //     tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
-    //   }
-    //   if (tab.tab instanceof SettingsTab) {
-    //     tab.tab.setTerminalVisualConfig(this.#terminalVisualConfig);
-    //   }
-    // }
+    this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
+    for (const tab of this.#getTabs()) {
+      if (tab instanceof Terminal) {
+        tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+      }
+      if (tab instanceof SettingsTab) {
+        tab.setTerminalVisualConfig(this.#terminalVisualConfig);
+      }
+    }
   }
 
   #extractPalette(terminalTheme: TerminalTheme, transparentBackground: boolean): number[] {
