@@ -693,7 +693,6 @@ this._log.debug(`#disposeTerminalTab()`);
   }
 
   #closeTab(win: Window, tab: Tab): void {
-this._log.debug(`#closeTab()`);
     win.removeTab(tab);
     tab.dispose();
   }

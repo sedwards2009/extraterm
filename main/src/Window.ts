@@ -184,8 +184,6 @@ export class WindowManager {
   }
 
   async #handleFloatingDockContainer(floatingDockContainer: CFloatingDockContainer): Promise<void> {
-    this._log.debug(`#handleFloatingDockContainer()`);
-
     let newWindow = this.#getWindowByFloatingDockContainer(floatingDockContainer);
     if (newWindow == null) {
       newWindow = new Window(this, floatingDockContainer, this.#configDatabase, this.#extensionManager,
@@ -197,9 +195,10 @@ export class WindowManager {
   }
 
   #handleFloatingDockDestroy(floatingDockContainer: CFloatingDockContainer): void {
-    this._log.debug(`handleFloatingDockDestroy()`);
     const window = this.#getWindowByFloatingDockContainer(floatingDockContainer);
-    this.disposeWindow(window);
+    if (window != null) {
+      this.disposeWindow(window);
+    }
   }
 
   #getWindowByFloatingDockContainer(dockContainer: CFloatingDockContainer): Window {
@@ -296,6 +295,40 @@ export class WindowManager {
 
   disposeTabPlumbing(tabPlumbing: TabPlumbing): void {
     this.#allTabs.splice(this.#allTabs.indexOf(tabPlumbing), 1);
+  }
+
+  getSafeWindowTabs(window: Window): Tab[] {
+    // This is a work around for some flakey behaviour in QADS where a
+    // `FloatingDockContainer` keeps its tabs during event firing when it
+    // is being destroyed and its tabs redistributed to other windows.
+    // Really, these references to tabs it no longer should own, should
+    // have been removed from the `FloatingDockContainer` instance.
+    // They're 'ghost' pointers.
+
+    const windowTabs = this.#getWindowTabs(window);
+
+    const otherTabs = new Set<Tab>();
+    for (const w of this.#allWindows) {
+      if (w !== window) {
+        for (const tab of this.#getWindowTabs(w)) {
+          otherTabs.add(tab);
+        }
+      }
+    }
+
+    // Remove any tabs which also appear to belong to other windows.
+    return windowTabs.filter(t => ! otherTabs.has(t));
+  }
+
+  #getWindowTabs(window: Window): Tab[] {
+    const result: Tab[] = [];
+    for (const dockWidget of window.dockContainer.dockWidgets()) {
+      const plumbing = this.getTabPlumbingForDockWidget(dockWidget);
+      if (plumbing != null) {
+        result.push(plumbing.tab);
+      }
+    }
+    return result;
   }
 }
 
@@ -1038,7 +1071,9 @@ export class Window implements Disposable {
     // Terminate any running terminal tabs.
     for (const tab of this.#getTabs()) {
       this.removeTab(tab);
-      tab.dispose();
+      if (tab instanceof Terminal) {
+        tab.dispose();
+      }
     }
 
     this.#disposables.dispose();
@@ -1178,14 +1213,7 @@ export class Window implements Disposable {
   }
 
   #getTabs(): Tab[] {
-    const result: Tab[] = [];
-    for (const dockWidget of this.dockContainer.dockWidgets()) {
-      const plumbing = this.#windowManager.getTabPlumbingForDockWidget(dockWidget);
-      if (plumbing != null) {
-        result.push(plumbing.tab);
-      }
-    }
-    return result;
+    return this.#windowManager.getSafeWindowTabs(this);
   }
 
   getCurrentTabIndex(): number {
