@@ -1320,6 +1320,12 @@ export class Window implements Disposable {
     return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
   }
 
+  getWindowGlobalGeometry(): QRect {
+    const localGeometry = this.dockContainer.geometry()
+    const topLeftGlobal = this.dockContainer.mapToGlobal(new QPoint(0, 0));
+    return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
+  }
+
   getTerminals(): Terminal[] {
     const result: Terminal[] = [];
     for (const dockWidget of this.dockContainer.dockWidgets()) {
