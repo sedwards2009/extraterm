@@ -378,6 +378,8 @@ class TabPlumbing implements Disposable {
   }
 
   dispose(): void {
+    this.dockWidget.takeWidget();
+    this.tab.setParent(null);
     this.dockWidget.deleteDockWidget();
     this.#disposableHolder.dispose();
     this.#windowManager.disposeTabPlumbing(this);
