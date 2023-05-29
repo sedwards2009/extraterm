@@ -247,8 +247,7 @@ this._log.debug(`onWindowGeometryChanged()`);
       if (!this.#windowManager.getAllWindows().includes(window)) {
         return;
       }
-      // FIXME
-      // this.#saveWindowGeometry();
+      this.#saveWindowGeometry();
     }, 500);
 
     window.onWindowGeometryChanged(onWindowGeometryChanged);
@@ -569,8 +568,6 @@ this._log.debug(`onWindowGeometryChanged()`);
       });
       newTerminal.setPty(pty);
     });
-    // this._setUpNewTerminalEventHandlers(newTerminal);
-    // this._sendTabOpenedEvent();
 
     window.focusTab(newTerminal);
     this.#extensionManager.newTerminalCreated(window, newTerminal);
@@ -654,7 +651,6 @@ this._log.debug(`#disposeTerminalTab()`);
 
   async openWindow(): Promise<Window> {
     this._log.debug(`async openWindow()`);
-    const win = this.#windowManager.createWindow();
 
     const generalConfig = this.#configDatabase.getGeneralConfig();
     let geometry: QRect = null;
@@ -666,6 +662,8 @@ this._log.debug(`#disposeTerminalTab()`);
         showMaximized = winConfig.isMaximized === true;
       }
     }
+
+    const win = this.#windowManager.createWindow(geometry);
 
     win.open();
     if (showMaximized) {

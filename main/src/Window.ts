@@ -214,7 +214,7 @@ export class WindowManager {
     return this.#dockManager;
   }
 
-  createWindow(): Window {
+  createWindow(geometry: QRect): Window {
     const label = Widget({
       cssClass: "window-background"
     });
@@ -226,6 +226,11 @@ export class WindowManager {
 
     const dockContainer = this.#dockManager.addDockWidgetFloating(emptyDockWidget);
     // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
+
+    if (geometry != null) {
+      dockContainer.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
+    }
+
     return this.#getWindowByFloatingDockContainer(dockContainer);
   }
 
@@ -674,7 +679,7 @@ export class Window implements Disposable {
     this.onWindowClosed = this.#onWindowCloseEventEmitter.event;
   }
 
-  async init( /* geometry: QRect */ ): Promise<void> {
+  async init(): Promise<void> {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     this.#configDatabase.onChange((event: ConfigChangeEvent) => this.#handleConfigChangeEvent(event));
 
@@ -695,12 +700,6 @@ export class Window implements Disposable {
     this.dockContainer.setContextMenuPolicy(ContextMenuPolicy.PreventContextMenu);
     this.dockContainer.setFocusPolicy(FocusPolicy.ClickFocus);
 
-    // if (geometry != null) {
-    //   this.dockContainer.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
-    // } else {
-    //   this.dockContainer.resize(800, 480);
-    // }
-
     this.#loadStyleSheet(generalConfig.uiScalePercent/100);
 
     this.#initContextMenu();
@@ -715,6 +714,14 @@ export class Window implements Disposable {
     this.#windowHandle.addEventListener("visibilityChanged", (visibility: Visibility) => {
       this.#onWindowGeometryChangedEventEmitter.fire();
     });
+    this.#windowHandle.addEventListener(WidgetEventTypes.Move, () => {
+      this.#onWindowGeometryChangedEventEmitter.fire();
+    });
+    this.#windowHandle.addEventListener(WidgetEventTypes.Resize, () => {
+      this.#onWindowGeometryChangedEventEmitter.fire();
+    });
+    this.#onWindowGeometryChangedEventEmitter.fire();
+
     this.#windowHandle.addEventListener("windowStateChanged", (windowState: WindowState) => {
       this.#handleWindowStateChanged(windowState);
     });
