@@ -750,14 +750,10 @@ this._log.debug(`#disposeTerminalTab()`);
   }
 
   async commandMoveTabToNewWindow(): Promise<void> {
-    // const win = this.#extensionManager.getActiveWindow();
-    // const tab = win.getTab(win.getCurrentTabIndex());
-    // const newWindow = await this.openWindow();
-
-    // win.removeTab(tab);
-    // newWindow.addTab(tab);
-    // newWindow.focus();
-    // newWindow.focusTab(tab);
+    const win = this.#extensionManager.getActiveWindow();
+    const tab = win.getTab(win.getCurrentTabIndex());
+    this.#windowManager.moveTabIntoFloatingWindow(tab);
+    tab.focus();
   }
 
   commandMaximizeWindow(): void {

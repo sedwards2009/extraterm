@@ -335,6 +335,11 @@ export class WindowManager {
     }
     return result;
   }
+
+  moveTabIntoFloatingWindow(tab: Tab): void {
+    const plumbing = this.getTabPlumbingForTab(tab);
+    this.#dockManager.addDockWidgetFloating(plumbing.dockWidget);
+  }
 }
 
 export interface PopOutClickedDetails {
@@ -706,6 +711,7 @@ export class Window implements Disposable {
 
     this.#terminalVisualConfig = await this.#createTerminalVisualConfig();
 
+    this.dockContainer.show();
     this.#windowHandle = this.dockContainer.windowHandle();
     this.#windowHandle.addEventListener("screenChanged", (screen: QScreen) => {
       this.#watchScreen(screen);
@@ -720,7 +726,6 @@ export class Window implements Disposable {
     this.#windowHandle.addEventListener(WidgetEventTypes.Resize, () => {
       this.#onWindowGeometryChangedEventEmitter.fire();
     });
-    this.#onWindowGeometryChangedEventEmitter.fire();
 
     this.#windowHandle.addEventListener("windowStateChanged", (windowState: WindowState) => {
       this.#handleWindowStateChanged(windowState);
