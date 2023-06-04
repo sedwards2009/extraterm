@@ -1229,7 +1229,7 @@ export class Window implements Disposable {
     const tabs = this.#getTabs();
 
     if (this.#extensionManager.getActiveWindow() === this) {
-      currentTab = this.#extensionManager.getActiveTab()
+      currentTab = this.#extensionManager.getActiveTab();
     } else {
       for (const tab of tabs) {
         const plumbing = this.#windowManager.getTabPlumbingForTab(tab);
@@ -1355,7 +1355,7 @@ export class Window implements Disposable {
   }
 
   getWindowGlobalGeometry(): QRect {
-    const localGeometry = this.dockContainer.geometry()
+    const localGeometry = this.dockContainer.geometry();
     const topLeftGlobal = this.dockContainer.mapToGlobal(new QPoint(0, 0));
     return new QRect(topLeftGlobal.x(), topLeftGlobal.y(), localGeometry.width(), localGeometry.height());
   }

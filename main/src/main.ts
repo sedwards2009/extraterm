@@ -243,7 +243,6 @@ class Main {
     });
 
     const onWindowGeometryChanged = _.debounce(() => {
-this._log.debug(`onWindowGeometryChanged()`);
       if (!this.#windowManager.getAllWindows().includes(window)) {
         return;
       }
@@ -602,7 +601,6 @@ this._log.debug(`onWindowGeometryChanged()`);
   }
 
   #disposeTerminalTab(terminal: Terminal): void {
-this._log.debug(`#disposeTerminalTab()`);
     terminal.dispose();
 
     for (const window of this.#windowManager.getAllWindows()) {
