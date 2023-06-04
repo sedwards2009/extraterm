@@ -37,7 +37,14 @@ export interface CommandQueryOptions {
 
 export interface ExtensionManager {
   getActiveWindow(): Window;
+  setActiveWindow(window: Window): void;
+
+  getActiveTab(): Tab;
+  setActiveTab(tab: Tab): void;
+
   getActiveTerminal(): Terminal;
+  setActiveTerminal(terminal: Terminal): void;
+
   getActiveHyperlinkURL(): string;
   getActiveBlockFrame(): BlockFrame;
   getAllExtensions(): ExtensionMetadata[];
@@ -120,7 +127,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void;
 
   newTerminalCreated(window: Window, newTerminal: Terminal): void;
-  newWindowCreated(window: Window, allWindows: Window[]): void;
+  newWindowCreated(window: Window): void;
 
   showDialog(tab: Tab, options: ExtensionApi.DialogOptions): Promise<number | undefined>;
   showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;

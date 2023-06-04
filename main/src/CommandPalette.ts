@@ -103,9 +103,13 @@ export class CommandPalette {
 
     this.#listPicker.setEntries([FieldType.ICON_NAME, FieldType.TEXT, FieldType.SECONDARY_TEXT_RIGHT], entries);
 
-    this.#containingRect = window.getTabGlobalGeometry(tab);
+    if (tab != null) {
+      this.#containingRect = window.getTabGlobalGeometry(tab);
+    } else {
+      this.#containingRect = window.getWindowGlobalGeometry();
+    }
     this.#windowPopOver.position(window, {
-        containingRect: window.getTabGlobalGeometry(tab)
+        containingRect: this.#containingRect
     });
     this.#updateHeight();
     this.#windowPopOver.show();

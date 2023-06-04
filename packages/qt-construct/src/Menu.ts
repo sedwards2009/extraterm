@@ -15,6 +15,9 @@ export interface ActionOptions {
 }
 
 export interface MenuOptions extends WidgetOptions {
+  onAboutToHide?: () => void;
+  onAboutToShow?: () => void;
+  onHovered?: (nativeAction) => void;
   onTriggered?: (nativeAction) => void;
   items?: ActionOptions[];
 }
@@ -24,7 +27,17 @@ export function Menu(options: MenuOptions): QMenu {
 
   ApplyWidgetOptions(menu, options);
 
-  const { onTriggered, items } = options;
+  const { onAboutToHide, onAboutToShow, onHovered, onTriggered, items } = options;
+
+  if (onAboutToHide !== undefined) {
+    menu.addEventListener("aboutToHide", onAboutToHide);
+  }
+  if (onAboutToShow !== undefined) {
+    menu.addEventListener("aboutToShow", onAboutToShow);
+  }
+  if (onHovered !== undefined) {
+    menu.addEventListener("hovered", onHovered);
+  }
   if (onTriggered !== undefined) {
     menu.addEventListener("triggered", onTriggered);
   }

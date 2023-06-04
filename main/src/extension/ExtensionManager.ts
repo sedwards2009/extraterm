@@ -21,7 +21,7 @@ import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import * as InternalTypes from "../InternalTypes.js";
 import { CommonExtensionWindowState } from "./CommonExtensionState.js";
 import { CommandMenuEntry } from "../CommandsRegistry.js";
-import { Window } from "../Window.js";
+import { Window, WindowManager } from "../Window.js";
 import { LineRangeChange, Terminal } from "../terminal/Terminal.js";
 import { InternalExtensionContext, InternalSessionEditor, InternalSessionSettingsEditor } from "../InternalTypes.js";
 import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl.js";
@@ -62,6 +62,8 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #themeManager: ThemeManager = null;
   #uiStyle: UiStyle = null;
 
+  #windowManager: WindowManager = null;
+
   #extensionMetadata: ExtensionMetadata[] = [];
   #desiredState: ExtensionDesiredState = null;
 
@@ -87,8 +89,6 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     activeHyperlinkURL: null,
   };
 
-  #allWindows: Window[] = [];
-
   #listPickerPopOver: ListPickerPopOver = null;
   #dialogPopOver: DialogPopOver = null;
 
@@ -110,6 +110,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     // Note: We are passing `applicationVersion` in instead of getting it from `ConfigDatabase` because
     // ConfigDatabase doesn't have a system config ready in time for us to read.
     this.#applicationVersion = applicationVersion;
+  }
+
+  setWindowManager(windowManager: WindowManager): void {
+    this.#windowManager = windowManager;
   }
 
   async startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): Promise<void> {
@@ -553,13 +557,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   getWindowForTab(tab: Tab): Window {
-    for (const window of this.#allWindows) {
-      const tabCount = window.getTabCount();
-      for (let i=0; i<tabCount; i++) {
-        const windowTab = window.getTab(i);
-        if (windowTab === tab) {
-          return window;
-        }
+    for (const window of this.#windowManager.getAllWindows()) {
+      if (window.hasTab(tab)) {
+        return window;
       }
     }
     return null;
@@ -859,15 +859,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
   }
 
-  newWindowCreated(window: Window, allWindows: Window[]): void {
-    this.#allWindows = allWindows;
+  newWindowCreated(window: Window): void {
     for (const activeExtension of this.#activeExtensions) {
-      activeExtension.internalExtensionContext.newWindowCreated(window, allWindows);
+      activeExtension.internalExtensionContext.newWindowCreated(window);
     }
   }
 
   getAllWindows(): Window[] {
-    return this.#allWindows;
+    return this.#windowManager == null ? [] : this.#windowManager.getAllWindows();
   }
 
   async showDialog(tab: Tab, options: ExtensionApi.DialogOptions): Promise<number | undefined> {
@@ -890,7 +889,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     if (this.#listPickerPopOver == null) {
       this.#listPickerPopOver = new ListPickerPopOver(this.#uiStyle);
     }
-    for (const win of this.#allWindows) {
+    for (const win of this.#windowManager.getAllWindows()) {
       win.getTerminals().includes(terminal);
     }
     const win = this.getWindowForTab(terminal);
