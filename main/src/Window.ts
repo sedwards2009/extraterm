@@ -113,18 +113,15 @@ export class WindowManager {
 
     this.#dockManager.addEventListener("dockWidgetAboutToBeRemoved", (dockWidget: any /* ads::CDockWidget */) => {
       const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
-      this._log.debug(`dockWidgetAboutToBeRemoved`);
     });
 
     this.#dockManager.addEventListener("dockWidgetAdded", (dockWidget: any /* ads::CDockWidget */) => {
       const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
-      this._log.debug(`dockWidgetAdded`);
       this.#removeSpacers(dw.dockAreaWidget());
     });
 
     this.#dockManager.addEventListener("dockWidgetRemoved", (dockWidget: any /* ads::CDockWidget */) => {
       const dw = wrapperCache.getWrapper(dockWidget) as CDockWidget;
-      this._log.debug(`dockWidgetRemoved`);
     });
 
     this.#dockManager.addEventListener("focusedDockWidgetChanged", (oldDockWidget: any /* ads::CDockWidget */,
@@ -136,8 +133,6 @@ export class WindowManager {
   }
 
   #handleFocusedDockWidgetChanged(dockWidget: CDockWidget, previousDockWidget: CDockWidget): void {
-    this._log.debug(`#handleFocusedDockWidgetChanged()`);
-
     let window: Window = null;
     let tab: Tab = null;
 
@@ -180,8 +175,6 @@ export class WindowManager {
 
     this.#extensionManager.setActiveWindow(window);
     window.handleTabFocusChanged(tab);
-
-    this._log.debug(`exit #handleFocusedDockWidgetChanged()`);
   }
 
   async #handleFloatingDockContainer(floatingDockContainer: CFloatingDockContainer): Promise<void> {
@@ -406,14 +399,13 @@ class TabPlumbing implements Disposable {
     }));
 
     tabWidget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
-      this._log.debug(`WidgetEventTypes.MouseButtonPress`);
       const ev = new QMouseEvent(nativeEvent);
       const window = this.#windowManager.getWindowForTab(tab);
       window.handleTabMouseButtonPress(tab, ev);
     });
 
     tab.getContents().addEventListener(WidgetEventTypes.FocusIn, (nativeEvent) => {
-      this._log.debug(`WidgetEventTypes.FocusIn`);
+      // TODO: remove?
     });
   }
 
@@ -869,7 +861,6 @@ export class Window implements Disposable {
   }
 
   #handleKeyPress(event: QKeyEvent): void {
-    this._log.debug(`#handleKeyPress()`);
     const ev = qKeyEventToMinimalKeyboardEvent(event);
     const commands = this.#keybindingsIOManager.getCurrentKeybindingsMapping().mapEventToCommands(ev);
     const filteredCommands = this.#extensionManager.queryCommands({
