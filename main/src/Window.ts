@@ -90,6 +90,7 @@ export class WindowManager {
     CDockManager.setConfigFlag(eConfigFlag.FloatingContainerIndependent, true);
     CDockManager.setConfigFlag(eConfigFlag.DockWidgetTabTitle, false);
     CDockManager.setConfigFlag(eConfigFlag.DockWidgetTabContextMenu, false);
+    CDockManager.setConfigFlag(eConfigFlag.EqualSplitOnInsertion, true);
 
     this.#dummyWindow = new QWidget();
     this.#dockManager = new CDockManager(this.#dummyWindow);
