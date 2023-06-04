@@ -28,7 +28,7 @@ export default function getGlyphClass(table: ClassDefTable, glyphId: number | [n
 function getRangeGlyphClass(table: ClassDefTable.Format2, glyphId: [number, number]): Map<number | [number, number], number | null> {
   const classStart: number = glyphId[0];
   const currentClass: number | null = getIndividualGlyphClass(table, classStart);
-  const search: number = glyphId[0] + 1;
+  let search: number = glyphId[0] + 1;
 
   const result = new Map<[number, number] | number, number | null>();
 
@@ -41,6 +41,7 @@ function getRangeGlyphClass(table: ClassDefTable.Format2, glyphId: [number, numb
         result.set([classStart, search], currentClass);
       }
     }
+    search++;
   }
 
   if (search - classStart <= 1) {

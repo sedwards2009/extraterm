@@ -1,4 +1,3 @@
-import * as util from 'node:util';
 import * as opentype from 'opentype.js';
 import * as fontFinder from 'font-finder';
 import lru from 'lru-cache';
@@ -39,13 +38,13 @@ class FontImpl implements Font {
       });
     }
 
-    const caltFeatures = this._font.tables.gsub.features.filter(f => f.tag === 'calt');
+    const caltFeatures =
+      this._font.tables.gsub == null ? [] : this._font.tables.gsub.features.filter(f => f.tag === 'calt');
     const lookupIndices: number[] = caltFeatures
       .reduce((acc, val) => [...acc, ...val.feature.lookupListIndexes], []);
-    const lookupGroups = this._font.tables.gsub.lookups
-      .filter((l, i) => lookupIndices.some(idx => idx === i));
 
-    const allLookups = this._font.tables.gsub.lookups;
+    const allLookups = this._font.tables.gsub == null ? [] : this._font.tables.gsub.lookups;
+    const lookupGroups = allLookups.filter((l, i) => lookupIndices.some(idx => idx === i));
 
     const glyphLookupsFastFailCache = new Uint8Array(this._font.glyphs.length);
     this._glyphLookupsFastFailCache = glyphLookupsFastFailCache;
@@ -322,7 +321,7 @@ export async function load(name: string, options?: Options): Promise<Font> {
  * @param path Path to the file containing the font
  */
 export async function loadFile(path: string, options?: Options): Promise<Font> {
-  const font = await util.promisify<string, opentype.Font>(opentype.load as any)(path);
+  const font = await opentype.load(path);
   return new FontImpl(font, {
     cacheSize: 0,
     ...options

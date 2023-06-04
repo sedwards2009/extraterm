@@ -886,9 +886,13 @@ export class Window implements Disposable {
 
     let ligatureMarker: LigatureMarker = null;
     if (config.terminalDisplayLigatures && fontInfo.path != null) {
-      const plainLigatureMarker = await loadFontFile(fontInfo.path);
-      if (plainLigatureMarker != null) {
-        ligatureMarker = new CachingLigatureMarker(plainLigatureMarker);
+      try {
+        const plainLigatureMarker = await loadFontFile(fontInfo.path);
+        if (plainLigatureMarker != null) {
+          ligatureMarker = new CachingLigatureMarker(plainLigatureMarker);
+        }
+      } catch(ex) {
+        this._log.warn(`Unable to read ligature data from font. Error was '${ex.message}'`);
       }
     }
 
