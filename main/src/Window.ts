@@ -152,7 +152,7 @@ export class WindowManager {
       if (window == null) {
         return;
       }
-      this.#extensionManager.setActiveTab(tabPlumbing.tab);
+
       tabPlumbing.setIsCurrent(true);
       tab = tabPlumbing.tab;
     } else {
@@ -1279,9 +1279,7 @@ export class Window implements Disposable {
       dockAreaWidget = this.dockContainer.dockContainer().dockArea(0);
     }
 
-    if (tab.getTitle() != null) {
-      tabPlumbing.dockWidget.setWindowTitle(tab.getTitle());
-    }
+    CDockManager.setFloatingContainersTitle(tab.getTitle() ?? "ExtratermQt");
     this.#windowManager.getDockManager().addDockWidgetTabToArea(tabPlumbing.dockWidget, dockAreaWidget);
 
     if (preTabHeader != null) {

@@ -785,9 +785,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:0.59.2":
-  version: 0.59.2
-  resolution: "@nodegui/nodegui@npm:0.59.2"
+"@nodegui/nodegui@npm:0.60.0":
+  version: 0.60.0
+  resolution: "@nodegui/nodegui@npm:0.60.0"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/qode": ^18.12.1
@@ -802,7 +802,7 @@ __metadata:
     tar: ^6.0.1
   bin:
     qode: scripts/qode.js
-  checksum: 9c4a2ddfac26e7f366d8cee8831c7174c7c554493730a30fc872160ea06264b776a9f7915032c1328531484a94ccffb17d201b5336b29e6f60cf43967d1b3e92
+  checksum: 3b29ad28a13daa1c30fd2b043a8970abe3179eb31b1f17391f20dd51fdc1c6f77c9d889939d0bdf070e1b737aeb69f21d0ee3e3d1e2fc2833420fcfc7337c4ea
   languageName: node
   linkType: hard
 
@@ -4102,7 +4102,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-char-render-canvas@workspace:packages/extraterm-char-render-canvas"
   dependencies:
-    "@nodegui/nodegui": 0.59.2
+    "@nodegui/nodegui": 0.60.0
     "@types/node": ^16.4.0
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
@@ -4261,7 +4261,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-timeoutqt@workspace:packages/extraterm-timeoutqt"
   dependencies:
-    "@nodegui/nodegui": 0.59.2
+    "@nodegui/nodegui": 0.60.0
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
@@ -4312,7 +4312,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm@workspace:."
   dependencies:
-    "@nodegui/nodegui": 0.59.2
+    "@nodegui/nodegui": 0.60.0
     "@nodegui/qode": 18.12.1
     "@yarnpkg/parsers": 2.5.0-rc.7
     commander: ^9.4.0
@@ -6815,7 +6815,7 @@ __metadata:
   resolution: "main@workspace:main"
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
-    "@nodegui/nodegui": 0.59.2
+    "@nodegui/nodegui": 0.60.0
     "@types/dompurify": ^2.0.1
     "@types/he": ^1.1.1
     "@types/lodash-es": 4.17.6
@@ -6859,7 +6859,7 @@ __metadata:
     lru-cache: ^4.1.3
     mime-types: ^2.1.21
     nodegui-plugin-font-icon: 0.3.1
-    nodegui-plugin-qads: ^0.8.0
+    nodegui-plugin-qads: ^0.11.2
     nodegui-plugin-qhotkey: ^0.1.1
     nodegui-plugin-rich-text-delegate: 0.3.0
     nodegui-plugin-style-tweaker: 0.3.1
@@ -7549,15 +7549,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodegui-plugin-qads@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "nodegui-plugin-qads@npm:0.8.0"
+"nodegui-plugin-qads@npm:^0.11.2":
+  version: 0.11.2
+  resolution: "nodegui-plugin-qads@npm:0.11.2"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/nodegui": ^0.59.2
     node-addon-api: ^3.0.0
     tar: ^6.0.1
-  checksum: 2a252031f5072e2f292f405fc28aac2bad2f78b34f45c3c6a515e55b60b34b281c7bc1aeb4ed3e1ca157d0f6604b71582676f64630a95ddb7434808245bdc9c3
+  checksum: 1be17f8f8d42ee79dafc0197e7c6436a32cc9cbcf704741d2d705c2d6d5ba35f16dbcd455661ff300b28a96571d939d764b5cbb05c7e247b2f566a663249c94b
   languageName: node
   linkType: hard
 
@@ -8555,14 +8555,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "qt-construct@workspace:packages/qt-construct"
   dependencies:
-    "@nodegui/nodegui": 0.59.2
+    "@nodegui/nodegui": 0.60.0
     eslint: 8.13.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shelljs: 0.8.5
     typescript: 4.7.4
   peerDependencies:
-    "@nodegui/nodegui": 0.59.2
+    "@nodegui/nodegui": 0.60.0
   languageName: unknown
   linkType: soft
 
