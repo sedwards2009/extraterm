@@ -342,6 +342,14 @@ export interface PopOutClickedDetails {
   terminal: Terminal;
 }
 
+function createWindowIcon(): QIcon {
+  const windowIcon = new QIcon();
+  for (const size of [16, 22, 32, 64, 256]) {
+    const iconPath = path.join(SourceDir.path, `../resources/logo/extraterm_small_logo_${size}x${size}.png`);
+    windowIcon.addFile(iconPath, new QSize(size, size));
+  }
+  return windowIcon;
+}
 
 class TabPlumbing implements Disposable {
   private _log: Logger = null;
@@ -361,7 +369,7 @@ class TabPlumbing implements Disposable {
     const dockWidget = new CDockWidget(tab.getWindowTitle());
     dockWidget.setFeature(DockWidgetFeature.CustomCloseHandling, true);
     dockWidget.setWidget(tab.getContents());
-
+    dockWidget.setWindowIcon(createWindowIcon());
     const tabWidget = dockWidget.tabWidget();
 
     this.dockWidget = dockWidget;
@@ -693,7 +701,7 @@ export class Window implements Disposable {
     this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Hide, () => {
       this.#checkForEmptyWindowLater.trigger();
     });
-    this.dockContainer.setWindowIcon(this.#createWindowIcon());
+    this.dockContainer.setWindowIcon(createWindowIcon());
     this.dockContainer.setMouseTracking(true);
     this.dockContainer.setContextMenuPolicy(ContextMenuPolicy.PreventContextMenu);
     this.dockContainer.setFocusPolicy(FocusPolicy.ClickFocus);
@@ -746,15 +754,6 @@ export class Window implements Disposable {
     if (this.#getTabs().length === 0) {
       this.dockContainer.close();
     }
-  }
-
-  #createWindowIcon(): QIcon {
-    const windowIcon = new QIcon();
-    for (const size of [16, 22, 32, 64, 256]) {
-      const iconPath = path.join(SourceDir.path, `../resources/logo/extraterm_small_logo_${size}x${size}.png`);
-      windowIcon.addFile(iconPath, new QSize(size, size));
-    }
-    return windowIcon;
   }
 
   #updateMenu(menu: QMenu, uiStyle: UiStyle, options: CommandQueryOptions, context?: CommonExtensionWindowState): void {
