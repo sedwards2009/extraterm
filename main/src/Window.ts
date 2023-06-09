@@ -733,9 +733,7 @@ export class Window implements Disposable {
     });
     this.#windowOpenState = WindowOpenState.Open;
 
-    if (this.getDpi() !== this.#lastConfigDpi || this.getDpr() !== this.#lastConfigDpr) {
-      this.#updateTerminalVisualConfig();
-    }
+    this.#updateTerminalVisualConfig();
   }
 
   #loadStyleSheet(uiScale: number): void {
