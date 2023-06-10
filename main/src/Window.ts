@@ -91,6 +91,8 @@ export class WindowManager {
     CDockManager.setConfigFlag(eConfigFlag.DockWidgetTabTitle, false);
     CDockManager.setConfigFlag(eConfigFlag.DockWidgetTabContextMenu, false);
     CDockManager.setConfigFlag(eConfigFlag.EqualSplitOnInsertion, true);
+    CDockManager.setConfigFlag(eConfigFlag.FloatingContainerHasWidgetIcon, true);
+    QApplication.setWindowIcon(createWindowIcon());
 
     this.#dummyWindow = new QWidget();
     this.#dockManager = new CDockManager(this.#dummyWindow);
@@ -369,7 +371,6 @@ class TabPlumbing implements Disposable {
     const dockWidget = new CDockWidget(tab.getWindowTitle());
     dockWidget.setFeature(DockWidgetFeature.CustomCloseHandling, true);
     dockWidget.setWidget(tab.getContents());
-    dockWidget.setWindowIcon(createWindowIcon());
     const tabWidget = dockWidget.tabWidget();
 
     this.dockWidget = dockWidget;
