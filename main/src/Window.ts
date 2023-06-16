@@ -102,6 +102,23 @@ export class WindowManager {
       const dockAreaWidget = wrapperCache.getWrapper(dockArea) as CDockAreaWidget;
       new DockAreaMenu(this.#extensionManager, this.#keybindingsManager, this.#uiStyle, dockAreaWidget);
     });
+    this.#dockManager.addEventListener("dockAreaAboutToBeRemoved", (dockArea: any) => {
+      const dockAreaWidget = wrapperCache.getWrapper(dockArea) as CDockAreaWidget;
+      const container = dockAreaWidget.dockContainer();
+
+      // This is a work-around for a thing which only affects Linux. When a
+      // split/DockArea is removed, focus isn't automatically set on a remaining tab.
+      if (process.platform === "linux" && container.isFloating()) {
+        const win = this.getWindowForFloatingContainer(container.floatingWidget());
+        doLater(() => {
+          win.focus();
+          if (win.getTabCount() !== 0) {
+            const i = win.getCurrentTabIndex();
+            win.focusTab(win.getTab(win.getCurrentTabIndex()));
+          }
+        });
+      }
+    });
 
     this.#dockManager.addEventListener("floatingWidgetCreated", (nativeFloatingDockContainer: any) => {
       const floatingDockContainer = wrapperCache.getWrapper(nativeFloatingDockContainer) as CFloatingDockContainer;
@@ -270,6 +287,15 @@ export class WindowManager {
     for (const tabPlumbing of this.#allTabs) {
       if (tabPlumbing.dockWidget === dockWidget) {
         return tabPlumbing;
+      }
+    }
+    return null;
+  }
+
+  getWindowForFloatingContainer(floatingContainer: CFloatingDockContainer): Window {
+    for (const win of this.#allWindows) {
+      if (win.dockContainer === floatingContainer) {
+        return win;
       }
     }
     return null;
@@ -1335,6 +1361,16 @@ export class Window implements Disposable {
     if (tabPlumbing == null) {
       return;
     }
+
+    if (this.#extensionManager.getActiveTab() === targetTab) {
+      if (this.getTabCount()=== 1) {
+        this.#extensionManager.setActiveTab(null);
+      } else {
+        const nextTab = this.getTab(Math.max(this.getCurrentTabIndex()-1, 0));
+        this.focusTab(nextTab);
+      }
+    }
+
     tabPlumbing.dispose();
   }
 
