@@ -95,6 +95,7 @@ class Main {
 
   async init(): Promise<void> {
     setupAppData();
+    QApplication.setApplicationDisplayName("Extraterm");
 
     const sharedMap = new SharedMap();
     const configDatabase = new PersistentConfigDatabase(getUserSettingsDirectory(), sharedMap);
