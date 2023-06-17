@@ -6900,7 +6900,7 @@ __metadata:
     lru-cache: ^4.1.3
     mime-types: ^2.1.21
     nodegui-plugin-font-icon: 0.3.1
-    nodegui-plugin-qads: ^0.11.3
+    nodegui-plugin-qads: ^0.12.0
     nodegui-plugin-qhotkey: ^0.1.1
     nodegui-plugin-rich-text-delegate: 0.3.0
     nodegui-plugin-style-tweaker: 0.3.1
@@ -7590,15 +7590,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nodegui-plugin-qads@npm:^0.11.3":
-  version: 0.11.3
-  resolution: "nodegui-plugin-qads@npm:0.11.3"
+"nodegui-plugin-qads@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "nodegui-plugin-qads@npm:0.12.0"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/nodegui": ^0.59.2
     node-addon-api: ^3.0.0
     tar: ^6.0.1
-  checksum: cad3e277eff3b99240687a2e49adc3099ddb624dc1998d34462f4a241b1446bcbdd017f644443710c2ea303a7a30899f720ac82cf314cfe11893aae1a23619d4
+  checksum: 82fea72f5901ca9414298141d1a1ce85980be5a27ae4fd6ff4b5cd807c20958a444dde553cbe4bd96242f3df9f0339d2c8042119bfb5f7869bacd087dc1da40f
   languageName: node
   linkType: hard
 
