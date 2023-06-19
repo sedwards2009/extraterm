@@ -270,6 +270,8 @@ export class Terminal implements Tab, Disposable {
       () => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
     commands.registerCommand("extraterm:terminal.resetVT",
       () => extensionManager.getActiveTerminal().commandResetVT());
+    commands.registerCommand("extraterm:terminal.clearScrollback",
+      () => extensionManager.getActiveTerminal().commandClearScrollback());
     commands.registerCommand("extraterm:terminal.increaseFontSize",
       (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
     commands.registerCommand("extraterm:terminal.decreaseFontSize",
@@ -1237,6 +1239,10 @@ export class Terminal implements Tab, Disposable {
 
   commandResetVT(): void {
     this.resetVT();
+  }
+
+  commandClearScrollback(): void {
+    this.#enforceScrollbackLinesSize(0);
   }
 
   commandFontSizeIncrease(): void {
