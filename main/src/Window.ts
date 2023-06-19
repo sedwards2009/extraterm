@@ -111,6 +111,9 @@ export class WindowManager {
       if (process.platform === "linux" && container.isFloating()) {
         const win = this.getWindowForFloatingContainer(container.floatingWidget());
         doLater(() => {
+          if ( ! this.#allWindows.includes(win)) {
+            return;
+          }
           win.focus();
           if (win.getTabCount() !== 0) {
             const i = win.getCurrentTabIndex();
