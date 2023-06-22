@@ -1103,6 +1103,10 @@ export class Window implements Disposable {
   }
 
   dispose(): void {
+    if (this.#windowOpenState !== WindowOpenState.Closed) {
+      this.#onWindowCloseEventEmitter.fire(this);
+    }
+
     // Terminate any running terminal tabs.
     for (const tab of this.#getTabs()) {
       this.removeTab(tab);
@@ -1112,12 +1116,6 @@ export class Window implements Disposable {
     }
 
     this.#disposables.dispose();
-
-    // if (this.#windowOpenState !== WindowOpenState.Closed &&
-    //     this.#windowOpenState !== WindowOpenState.ClosedMinimized) {
-    //   this.dockContainer.close();
-    // }
-    // FIXME: ^^^ this probably isn't needed.
   }
 
   isMaximized(): boolean {
