@@ -680,8 +680,8 @@ export class Window implements Disposable {
   #onPopOutClickedEventEmitter = new EventEmitter<PopOutClickedDetails>();
   onPopOutClicked: Event<PopOutClickedDetails> = null;
 
-  #onWindowCloseEventEmitter = new EventEmitter<Window>();
-  onWindowClosed: Event<Window> = null;
+  #onWindowDisposeEventEmitter = new EventEmitter<Window>();
+  onWindowDispose: Event<Window> = null;
 
   constructor(windowManager: WindowManager, dockContainer: CFloatingDockContainer, configDatabase: ConfigDatabase,
       extensionManager: ExtensionManager, keybindingsIOManager: KeybindingsIOManager, themeManager: ThemeManager,
@@ -712,7 +712,7 @@ export class Window implements Disposable {
     this.onTabChange = this.#onTabChangeEventEmitter.event;
     this.onWindowGeometryChanged = this.#onWindowGeometryChangedEventEmitter.event;
     this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
-    this.onWindowClosed = this.#onWindowCloseEventEmitter.event;
+    this.onWindowDispose = this.#onWindowDisposeEventEmitter.event;
   }
 
   async init(): Promise<void> {
@@ -725,7 +725,14 @@ export class Window implements Disposable {
 
     this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Close, () => {
       this.#windowOpenState = WindowOpenState.Closed;
-      this.#onWindowCloseEventEmitter.fire(this);
+      doLater(() => {
+        if ( ! this.#windowManager.getAllWindows().includes(this)) {
+          return; // Window has already been disposed.
+        }
+        if (this.#getTabs().length === 0) {
+          this.#windowManager.disposeWindow(this);
+        }
+      });
     });
 
     this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Hide, () => {
@@ -1103,10 +1110,6 @@ export class Window implements Disposable {
   }
 
   dispose(): void {
-    if (this.#windowOpenState !== WindowOpenState.Closed) {
-      this.#onWindowCloseEventEmitter.fire(this);
-    }
-
     // Terminate any running terminal tabs.
     for (const tab of this.#getTabs()) {
       this.removeTab(tab);
@@ -1114,6 +1117,7 @@ export class Window implements Disposable {
         tab.dispose();
       }
     }
+    this.#onWindowDisposeEventEmitter.fire(this);
 
     this.#disposables.dispose();
   }
@@ -1144,7 +1148,13 @@ export class Window implements Disposable {
 
   restore(): void {
     this.dockContainer.hide();
+    this.dockContainer.show();
     this.dockContainer.showNormal();
+
+    for (const dockWidget of this.dockContainer.dockWidgets()) {
+      dockWidget.toggleView(true);
+    }
+
     this.#windowOpenState = WindowOpenState.Open;
   }
 

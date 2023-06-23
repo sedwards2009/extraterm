@@ -256,9 +256,8 @@ class Main {
       this.#handlePopOutClicked(details.window, details.terminal, details.frame);
     });
 
-    window.onWindowClosed((win: Window): void => {
+    window.onWindowDispose((win: Window): void => {
       doLater(() => {
-        this.#windowManager.disposeWindow(win);
         if (this.#windowManager.getAllWindows().length === 0) {
           this.#cleanupAndExit();
         }

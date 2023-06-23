@@ -631,7 +631,7 @@ export class Terminal implements Tab, Disposable {
 
   #internalResizeTerminalArea(): void {
     const size = this.#computeTerminalSize();
-    if (size == null) {
+    if (size == null || size.rows === 0 || size.columns === 0) {
       return;
     }
 
