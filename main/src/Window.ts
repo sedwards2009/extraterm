@@ -441,10 +441,6 @@ class TabPlumbing implements Disposable {
       const window = this.#windowManager.getWindowForTab(tab);
       window.handleTabMouseButtonPress(tab, ev);
     });
-
-    tab.getContents().addEventListener(WidgetEventTypes.FocusIn, (nativeEvent) => {
-      // TODO: remove?
-    });
   }
 
   setIsCurrent(isCurrent: boolean): void {
@@ -656,6 +652,7 @@ export class Window implements Disposable {
 
   #windowOpenState = WindowOpenState.Closed;
   dockContainer: CFloatingDockContainer = null;
+  #initialEmptyState = true;
 
   #windowHandle: QWindow = null;
   #screen: QScreen = null;
@@ -725,14 +722,7 @@ export class Window implements Disposable {
 
     this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Close, () => {
       this.#windowOpenState = WindowOpenState.Closed;
-      doLater(() => {
-        if ( ! this.#windowManager.getAllWindows().includes(this)) {
-          return; // Window has already been disposed.
-        }
-        if (this.#getTabs().length === 0) {
-          this.#windowManager.disposeWindow(this);
-        }
-      });
+      this.#checkForEmptyWindowLater.trigger();
     });
 
     this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Hide, () => {
@@ -786,8 +776,14 @@ export class Window implements Disposable {
   }
 
   #checkForEmptyWindow(): void {
+    if ( ! this.#windowManager.getAllWindows().includes(this)) {
+      return; // Window has already been disposed.
+    }
+    if (this.#initialEmptyState) {
+      return;
+    }
     if (this.#getTabs().length === 0) {
-      this.dockContainer.close();
+      this.#windowManager.disposeWindow(this);
     }
   }
 
@@ -1289,6 +1285,7 @@ export class Window implements Disposable {
     if (this.#windowManager.hasTab(tab)) {
       return;
     }
+    this.#initialEmptyState = false;
 
     const tabPlumbing = this.#windowManager.prepareTab(tab);
     tab.setParent(this);
@@ -1383,6 +1380,8 @@ export class Window implements Disposable {
     }
 
     tabPlumbing.dispose();
+
+    this.#checkForEmptyWindowLater.trigger();
   }
 
   focusTab(tab: Tab): void {
