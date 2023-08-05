@@ -14,7 +14,8 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, QKeyEvent, WidgetAttribute,
   QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QBoxLayout, QLabel, TextFormat,
   QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache, TextInteractionFlag,
-  ShortcutContext } from "@nodegui/nodegui";
+  ShortcutContext, 
+  QWheelEvent} from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { Menu, ToolButton, Label, Widget, repolish } from "qt-construct";
 import { loadFile as loadFontFile} from "extraterm-font-ligatures";
@@ -440,6 +441,12 @@ class TabPlumbing implements Disposable {
       const ev = new QMouseEvent(nativeEvent);
       const window = this.#windowManager.getWindowForTab(tab);
       window.handleTabMouseButtonPress(tab, ev);
+    });
+
+    tabWidget.addEventListener(WidgetEventTypes.Wheel, (nativeEvent) => {
+      const ev = new QWheelEvent(nativeEvent);
+      const hScrollBar = dockWidget.dockAreaWidget().titleBar().tabBar().horizontalScrollBar();
+      hScrollBar.setValue(hScrollBar.value() - ev.pixelDelta().y);
     });
   }
 
