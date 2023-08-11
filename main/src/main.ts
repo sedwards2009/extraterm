@@ -409,6 +409,10 @@ class Main {
     commands.registerCommand("extraterm:application.quit", () => this.commandQuit());
     commands.registerCommand("extraterm:window.newTerminal", (args: any) => this.commandNewTerminal(args));
     commands.registerCommand("extraterm:window.openSettings", (args: any) => this.commandOpenSettings(args));
+    commands.registerCommand("extraterm:window.focusPaneLeft", () => this.commandFocusPaneLeft());
+    commands.registerCommand("extraterm:window.focusPaneRight", () => this.commandFocusPaneRight());
+    commands.registerCommand("extraterm:window.focusPaneAbove", () => this.commandFocusPaneAbove());
+    commands.registerCommand("extraterm:window.focusPaneBelow", () => this.commandFocusPaneBelow());
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
@@ -728,6 +732,22 @@ class Main {
     const tabCount = win.getTabCount();
     const index = win.getCurrentTabIndex() + 1;
     win.setCurrentTabIndex(index >= tabCount ? 0 : index);
+  }
+
+  commandFocusPaneLeft(): void {
+    this.#extensionManager.getActiveWindow().focusPaneLeft();
+  }
+
+  commandFocusPaneRight(): void {
+    this.#extensionManager.getActiveWindow().focusPaneRight();
+  }
+
+  commandFocusPaneAbove(): void {
+    this.#extensionManager.getActiveWindow().focusPaneAbove();
+  }
+
+  commandFocusPaneBelow(): void {
+    this.#extensionManager.getActiveWindow().focusPaneBelow();
   }
 
   commandCloseTab(): void {

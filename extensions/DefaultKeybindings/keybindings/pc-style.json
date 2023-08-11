@@ -14,6 +14,30 @@
       ]
     },
     {
+      "command": "extraterm:window.focusPaneLeft",
+      "keys": [
+        "Ctrl-Shift-<"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusPaneRight",
+      "keys": [
+        "Ctrl-Shift->"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusPaneAbove",
+      "keys": [
+        "Ctrl-Shift-:"
+      ]
+    },
+    {
+      "command": "extraterm:window.focusPaneBelow",
+      "keys": [
+        "Ctrl-Shift-?"
+      ]
+    },
+    {
       "command": "extraterm:window.newTerminal",
       "keys": [
         "Ctrl-Shift-T"

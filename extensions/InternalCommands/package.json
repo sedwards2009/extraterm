@@ -156,10 +156,38 @@
         "when": "tabFocus"
       },
       {
+        "command": "extraterm:window.focusPaneLeft",
+        "title": "Focus Pane Left",
+        "category": "window",
+        "order": 1202,
+        "when": "tabFocus"
+      },
+      {
+        "command": "extraterm:window.focusPaneRight",
+        "title": "Focus Pane Right",
+        "category": "window",
+        "order": 1203,
+        "when": "tabFocus"
+      },
+      {
+        "command": "extraterm:window.focusPaneAbove",
+        "title": "Focus Pane Above",
+        "category": "window",
+        "order": 1204,
+        "when": "tabFocus"
+      },
+      {
+        "command": "extraterm:window.focusPaneBelow",
+        "title": "Focus Pane Below",
+        "category": "window",
+        "order": 1205,
+        "when": "tabFocus"
+      },
+      {
         "command": "extraterm:window.moveTabToNewWindow",
         "title": "Move Tab to New Window",
         "category": "window",
-        "order": 1202,
+        "order": 1206,
         "when": "tabFocus"
       },
       {

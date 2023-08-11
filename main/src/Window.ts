@@ -5,7 +5,7 @@
  */
 import * as path from "node:path";
 import { Logger, log, getLogger, objectName } from "extraterm-logging";
-import { CDockAreaWidget, CDockManager, CDockWidget, CFloatingDockContainer, CFloatingDockContainerSignals, DockWidgetFeature, DockWidgetTabFeature,
+import { CDockAreaWidget, CDockContainerWidget, CDockManager, CDockWidget, CFloatingDockContainer, CFloatingDockContainerSignals, DockWidgetFeature, DockWidgetTabFeature,
   TitleBarButton, eConfigFlag} from "nodegui-plugin-qads";
 import { FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
@@ -42,6 +42,7 @@ import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TWEMOJI_FAMILY } from "./TwemojiConstants.js";
 import { BlockFrame } from "./terminal/BlockFrame.js";
 import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
+import { Direction, nextDockAreaInDirection } from "./utils/QadsNext.js";
 
 
 export function setupWindowManager(extensionManager: ExtensionManager, keybindingsManager: KeybindingsIOManager,
@@ -1424,6 +1425,41 @@ export class Window implements Disposable {
 
   getUiStyle(): UiStyle {
     return this.#uiStyle;
+  }
+
+  #focusPaneInDirection(direction: Direction): void {
+    const activeTabPlumbing = this.#getCurrentTabPlumping();
+    if (activeTabPlumbing == null) {
+      return;
+    }
+    const dockArea = nextDockAreaInDirection(activeTabPlumbing.dockWidget.dockAreaWidget(),
+      this.dockContainer.dockContainer(), direction);
+    if (dockArea == null) {
+      return;
+    }
+    dockArea.currentDockWidget().setFocus();
+  }
+
+  focusPaneLeft(): void {
+    this.#focusPaneInDirection(Direction.LEFT);
+  }
+  focusPaneRight(): void {
+    this.#focusPaneInDirection(Direction.RIGHT);
+  }
+  focusPaneAbove(): void {
+    this.#focusPaneInDirection(Direction.ABOVE);
+  }
+  focusPaneBelow(): void {
+    this.#focusPaneInDirection(Direction.BELOW);
+  }
+
+  #getCurrentTabPlumping(): TabPlumbing {
+    if (this.#extensionManager.getActiveWindow() === this) {
+      const currentTab = this.#extensionManager.getActiveTab();
+      return this.#windowManager.getTabPlumbingForTab(currentTab);
+    } else {
+      return null;
+    }
   }
 }
 
