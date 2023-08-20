@@ -5,8 +5,8 @@
  */
 import * as path from "node:path";
 import { Logger, log, getLogger, objectName } from "extraterm-logging";
-import { CDockAreaWidget, CDockContainerWidget, CDockManager, CDockWidget, CFloatingDockContainer, CFloatingDockContainerSignals, DockWidgetFeature, DockWidgetTabFeature,
-  TitleBarButton, eConfigFlag} from "nodegui-plugin-qads";
+import { CDockAreaWidget, CDockManager, CDockWidget, CFloatingDockContainer, CFloatingDockContainerSignals,
+  DockWidgetFeature, DockWidgetArea, TitleBarButton, eConfigFlag} from "nodegui-plugin-qads";
 import { FontSlice } from "extraterm-char-render-canvas";
 import { Color } from "extraterm-color-utilities";
 import { DebouncedDoLater, doLater } from "extraterm-timeoutqt";
@@ -43,6 +43,7 @@ import { TWEMOJI_FAMILY } from "./TwemojiConstants.js";
 import { BlockFrame } from "./terminal/BlockFrame.js";
 import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
 import { Direction, nextDockAreaInDirection } from "./utils/QadsNext.js";
+import { EmptyPaneTab } from "./EmptyPaneTab.js";
 
 
 export function setupWindowManager(extensionManager: ExtensionManager, keybindingsManager: KeybindingsIOManager,
@@ -117,9 +118,13 @@ export class WindowManager {
             return;
           }
           win.focus();
-          if (win.getTabCount() !== 0) {
-            const i = win.getCurrentTabIndex();
-            win.focusTab(win.getTab(win.getCurrentTabIndex()));
+          const tabCount = win.getTabCount();
+          if (tabCount !== 0) {
+            const i = Math.min(tabCount-1, win.getCurrentTabIndex());
+            const tab = win.getTab(i);
+            if (tab != null) {
+              win.focusTab(tab);
+            }
           }
         });
       }
@@ -232,7 +237,7 @@ export class WindowManager {
     return this.#dockManager;
   }
 
-  createWindow(geometry: QRect): Window {
+  createEmptyDockWidget(): CDockWidget {
     const label = Widget({
       cssClass: "window-background"
     });
@@ -241,8 +246,15 @@ export class WindowManager {
     this.#emptyDockWidgets.add(emptyDockWidget);
     emptyDockWidget.setWidget(label);
     emptyDockWidget.setFeature(DockWidgetFeature.NoTab, true);
+    return emptyDockWidget;
+  }
 
-    const dockContainer = this.#dockManager.addDockWidgetFloating(emptyDockWidget);
+  createWindow(geometry: QRect): Window {
+    const emptyPaneTab = new EmptyPaneTab();
+    const plumbing = this.prepareTab(emptyPaneTab);
+    plumbing.dockWidget.setFeature(DockWidgetFeature.NoTab, true);
+
+    const dockContainer = this.#dockManager.addDockWidgetFloating(plumbing.dockWidget);
     // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
 
     if (geometry != null) {
@@ -267,9 +279,10 @@ export class WindowManager {
       return;
     }
     for (const dockWidget of openedDockWidgets) {
-      if (this.#emptyDockWidgets.has(dockWidget)) {
-        this.#emptyDockWidgets.delete(dockWidget);
-        dockWidget.closeDockWidget();
+      const plumbing = this.getTabPlumbingForDockWidget(dockWidget);
+      if (plumbing.tab instanceof EmptyPaneTab) {
+        const win = this.getWindowForTab(plumbing.tab);
+        win.removeTab(plumbing.tab);
         break;
       }
     }
@@ -656,7 +669,6 @@ export class Window implements Disposable {
 
   #disposables: DisposableHolder = null;
   #dockContainerEventHolder: DisposableEventHolder<CFloatingDockContainerSignals> = null;
-  #checkForEmptyWindowLater: DebouncedDoLater = null;
 
   #windowOpenState = WindowOpenState.Closed;
   dockContainer: CFloatingDockContainer = null;
@@ -706,10 +718,6 @@ export class Window implements Disposable {
     this.#disposables = new DisposableHolder();
     this.#dockContainerEventHolder = new DisposableEventHolder<CFloatingDockContainerSignals>(dockContainer);
     this.#disposables.add(this.#dockContainerEventHolder);
-    this.#checkForEmptyWindowLater = new DebouncedDoLater(() => {
-      this.#checkForEmptyWindow();
-    });
-    this.#disposables.add(this.#checkForEmptyWindowLater);
 
     this.#handleLogicalDpiChanged = this.#UnboundHandleLogicalDpiChanged.bind(this);
 
@@ -730,12 +738,8 @@ export class Window implements Disposable {
 
     this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Close, () => {
       this.#windowOpenState = WindowOpenState.Closed;
-      this.#checkForEmptyWindowLater.trigger();
     });
 
-    this.#dockContainerEventHolder.addEventListener(WidgetEventTypes.Hide, () => {
-      this.#checkForEmptyWindowLater.trigger();
-    });
     this.dockContainer.setWindowIcon(createWindowIcon());
     this.dockContainer.setMouseTracking(true);
     this.dockContainer.setContextMenuPolicy(ContextMenuPolicy.PreventContextMenu);
@@ -781,18 +785,6 @@ export class Window implements Disposable {
     const sheet = this.#uiStyle.getApplicationStyleSheet(uiScale, this.getDpi());
     this.dockContainer.setStyleSheet(sheet, false);
     // this.#hamburgerMenu.setStyleSheet(sheet, false);
-  }
-
-  #checkForEmptyWindow(): void {
-    if ( ! this.#windowManager.getAllWindows().includes(this)) {
-      return; // Window has already been disposed.
-    }
-    if (this.#initialEmptyState) {
-      return;
-    }
-    if (this.#getTabs().length === 0) {
-      this.#windowManager.disposeWindow(this);
-    }
   }
 
   #updateMenu(menu: QMenu, uiStyle: UiStyle, options: CommandQueryOptions, context?: CommonExtensionWindowState): void {
@@ -1122,7 +1114,6 @@ export class Window implements Disposable {
       }
     }
     this.#onWindowDisposeEventEmitter.fire(this);
-
     this.#disposables.dispose();
   }
 
@@ -1388,8 +1379,6 @@ export class Window implements Disposable {
     }
 
     tabPlumbing.dispose();
-
-    this.#checkForEmptyWindowLater.trigger();
   }
 
   focusTab(tab: Tab): void {
@@ -1451,6 +1440,23 @@ export class Window implements Disposable {
   }
   focusPaneBelow(): void {
     this.#focusPaneInDirection(Direction.BELOW);
+  }
+
+  #split(panePosition: DockWidgetArea): void {
+    const activeTabPlumbing = this.#getCurrentTabPlumping();
+    if (activeTabPlumbing == null) {
+      return;
+    }
+    activeTabPlumbing.dockWidget.dockContainer().addDockWidget(panePosition,
+      this.#windowManager.createEmptyDockWidget());
+  }
+
+  horizontalSplit(): void {
+    this.#split(DockWidgetArea.BottomDockWidgetArea);
+  }
+
+  verticalSplit(): void {
+    this.#split(DockWidgetArea.RightDockWidgetArea);
   }
 
   #getCurrentTabPlumping(): TabPlumbing {

@@ -413,6 +413,8 @@ class Main {
     commands.registerCommand("extraterm:window.focusPaneRight", () => this.commandFocusPaneRight());
     commands.registerCommand("extraterm:window.focusPaneAbove", () => this.commandFocusPaneAbove());
     commands.registerCommand("extraterm:window.focusPaneBelow", () => this.commandFocusPaneBelow());
+    commands.registerCommand("extraterm:window.horizontalSplit", () => this.commandHorizontalSplit());
+    commands.registerCommand("extraterm:window.verticalSplit", () => this.commandVerticalSplit());
     commands.registerCommand("extraterm:window.focusTabLeft", () => this.commandFocusTabLeft());
     commands.registerCommand("extraterm:window.focusTabRight", () => this.commandFocusTabRight());
     commands.registerCommand("extraterm:window.closeTab", () => this.commandCloseTab());
@@ -652,8 +654,6 @@ class Main {
   }
 
   async openWindow(): Promise<Window> {
-    this._log.debug(`async openWindow()`);
-
     const generalConfig = this.#configDatabase.getGeneralConfig();
     let geometry: QRect = null;
     let showMaximized = false;
@@ -748,6 +748,14 @@ class Main {
 
   commandFocusPaneBelow(): void {
     this.#extensionManager.getActiveWindow().focusPaneBelow();
+  }
+
+  commandHorizontalSplit(): void {
+    this.#extensionManager.getActiveWindow().horizontalSplit();
+  }
+
+  commandVerticalSplit(): void {
+    this.#extensionManager.getActiveWindow().verticalSplit();
   }
 
   commandCloseTab(): void {

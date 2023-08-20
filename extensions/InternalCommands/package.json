@@ -184,10 +184,32 @@
         "when": "tabFocus"
       },
       {
+        "command": "extraterm:window.horizontalSplit",
+        "title": "Horizontal Split",
+        "category": "window",
+        "order": 1206,
+        "when": "tabFocus"
+      },
+      {
+        "command": "extraterm:window.verticalSplit",
+        "title": "Vertical Split",
+        "category": "window",
+        "order": 1207,
+        "when": "tabFocus"
+      },
+      {
+        "command": "extraterm:window.closePane",
+        "title": "Close Pane",
+        "category": "window",
+        "order": 1208,
+        "icon": "far fa-window-close",
+        "when": "isWindowSplit"
+      },
+      {
         "command": "extraterm:window.moveTabToNewWindow",
         "title": "Move Tab to New Window",
         "category": "window",
-        "order": 1206,
+        "order": 1209,
         "when": "tabFocus"
       },
       {
