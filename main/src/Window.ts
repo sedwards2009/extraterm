@@ -14,7 +14,7 @@ import { Event, EventEmitter } from "extraterm-event-emitter";
 import { QWidget, QToolButton, ToolButtonPopupMode, QMenu, QVariant, QAction, FocusPolicy, QKeyEvent, WidgetAttribute,
   QPoint, QRect, QKeySequence, QWindow, QScreen, QApplication, ContextMenuPolicy, QBoxLayout, QLabel, TextFormat,
   QMouseEvent, MouseButton, Visibility, QIcon, QSize, WindowState, WidgetEventTypes, wrapperCache, TextInteractionFlag,
-  ShortcutContext, 
+  ShortcutContext,
   QWheelEvent} from "@nodegui/nodegui";
 import { Disposable, TerminalTheme } from "@extraterm/extraterm-extension-api";
 import { Menu, ToolButton, Label, Widget, repolish } from "qt-construct";
@@ -162,46 +162,27 @@ export class WindowManager {
   }
 
   #handleFocusedDockWidgetChanged(dockWidget: CDockWidget, previousDockWidget: CDockWidget): void {
-    let window: Window = null;
-    let tab: Tab = null;
-
     const oldTabPlumbing = this.getTabPlumbingForDockWidget(previousDockWidget);
     if (oldTabPlumbing != null) {
       oldTabPlumbing.setIsCurrent(false);
     }
 
     const tabPlumbing = this.getTabPlumbingForDockWidget(dockWidget);
-    if (tabPlumbing != null) {
-      window = this.getWindowForTab(tabPlumbing.tab);
-      if (window == null) {
-        return;
-      }
-
-      tabPlumbing.setIsCurrent(true);
-      tab = tabPlumbing.tab;
-    } else {
-      // Empty "spacer" tab to hold the window open.
-      const container = dockWidget.dockContainer();
-      // FIXME: We might need the top level container.
-      if (container.isFloating()) {
-        window = this.#getWindowByFloatingDockContainer(container.floatingWidget());
-        if (window == null) {
-          return;
-        }
-      } else {
-        return;
-      }
+    if (tabPlumbing == null) {
+      this._log.warn(`#handleFocusedDockWidgetChanged(): tabPlumbing is null`);
+      return;
     }
 
+    const window = this.getWindowForTab(tabPlumbing.tab);
+    if (window == null) {
+      this._log.warn(`#handleFocusedDockWidgetChanged(): window is null`);
+      return;
+    }
+
+    tabPlumbing.setIsCurrent(true);
+    const tab = tabPlumbing.tab;
+
     this.#extensionManager.setActiveTab(tab);
-
-    // const tab = tabPlumbing.tab;
-    // if (tab instanceof Terminal) {
-    //   this.#extensionManager.setActiveTerminal(tab);
-    // } else {
-    //   this.#extensionManager.setActiveTerminal(null);
-    // }
-
     this.#extensionManager.setActiveWindow(window);
     window.handleTabFocusChanged(tab);
   }
@@ -238,23 +219,14 @@ export class WindowManager {
   }
 
   createEmptyDockWidget(): CDockWidget {
-    const label = Widget({
-      cssClass: "window-background"
-    });
-
-    const emptyDockWidget = new CDockWidget("Extraterm");
-    this.#emptyDockWidgets.add(emptyDockWidget);
-    emptyDockWidget.setWidget(label);
-    emptyDockWidget.setFeature(DockWidgetFeature.NoTab, true);
-    return emptyDockWidget;
-  }
-
-  createWindow(geometry: QRect): Window {
     const emptyPaneTab = new EmptyPaneTab();
     const plumbing = this.prepareTab(emptyPaneTab);
     plumbing.dockWidget.setFeature(DockWidgetFeature.NoTab, true);
+    return plumbing.dockWidget;
+  }
 
-    const dockContainer = this.#dockManager.addDockWidgetFloating(plumbing.dockWidget);
+  createWindow(geometry: QRect): Window {
+    const dockContainer = this.#dockManager.addDockWidgetFloating(this.createEmptyDockWidget());
     // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
 
     if (geometry != null) {
