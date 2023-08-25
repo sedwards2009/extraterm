@@ -614,18 +614,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     const extensionContext: InternalExtensionContext = this.getExtensionContextByCommandName(command);
 
     let result: Promise<any> = undefined;
-    this.#executeAsyncFuncWithExtensionWindowState(extensionContext, tempState, async () => {
+    this.#executeFuncWithExtensionWindowState(extensionContext, tempState, () => {
       result = this.executeCommand(command, args);
     });
     return result;
-  }
-
-  /**
-   * Execute a function with a different temporary extension context.
-   */
-  #executeAsyncFuncWithExtensionWindowState(extensionContext: InternalExtensionContext,
-      tempState: CommonExtensionWindowState, func: () => Promise<void>): Promise<any> {
-    return this.#executeFuncWithExtensionWindowState(extensionContext, tempState, func);
   }
 
   /**

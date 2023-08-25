@@ -66,8 +66,6 @@ export class WindowManager {
   #allWindows: Window[] = [];
   #allTabs: TabPlumbing[] = [];
 
-  #emptyDockWidgets = new Set<CDockWidget>();
-
   onNewWindow: Event<Window> = null;
   #onNewWindowEventEmitter = new EventEmitter<Window>();
 
@@ -218,22 +216,25 @@ export class WindowManager {
     return this.#dockManager;
   }
 
-  createEmptyDockWidget(): CDockWidget {
-    const emptyPaneTab = new EmptyPaneTab();
+  createEmptyPaneTab(): TabPlumbing {
+    const emptyPaneTab = new EmptyPaneTab(this.#extensionManager, this.#keybindingsManager, this.#uiStyle);
     const plumbing = this.prepareTab(emptyPaneTab);
     plumbing.dockWidget.setFeature(DockWidgetFeature.NoTab, true);
-    return plumbing.dockWidget;
+    return plumbing;
   }
 
   createWindow(geometry: QRect): Window {
-    const dockContainer = this.#dockManager.addDockWidgetFloating(this.createEmptyDockWidget());
+    const emptyPaneTabPlumbing = this.createEmptyPaneTab();
+    const dockContainer = this.#dockManager.addDockWidgetFloating(emptyPaneTabPlumbing.dockWidget);
     // ^ This will hit `handleNewFloatingDockContainer()` below via an event.
 
     if (geometry != null) {
       dockContainer.setGeometry(geometry.left(), geometry.top(), geometry.width(), geometry.height());
     }
 
-    return this.#getWindowByFloatingDockContainer(dockContainer);
+    const win = this.#getWindowByFloatingDockContainer(dockContainer);
+    (<EmptyPaneTab> emptyPaneTabPlumbing.tab).populateMenu(win);
+    return win;
   }
 
   disposeWindow(window: Window): void {
@@ -1252,7 +1253,7 @@ export class Window implements Disposable {
     return this.#getTabs()[index];
   }
 
-  addTab(tab: Tab, preTabHeader?: () => void): void {
+  addTab(tab: Tab, preTabHeader?: () => void, besideTab: Tab = null): void {
     if (this.#windowManager.hasTab(tab)) {
       return;
     }
@@ -1269,8 +1270,8 @@ export class Window implements Disposable {
     }
 
     let dockAreaWidget: CDockAreaWidget = null;
-    const currentTab = this.#extensionManager.getActiveTab();
-    if (this.#extensionManager.getActiveWindow() === this && currentTab != null) {
+    const currentTab = besideTab ?? this.#extensionManager.getActiveTab();
+    if (currentTab != null) {
       const plumbing = this.#windowManager.getTabPlumbingForTab(currentTab);
       dockAreaWidget = plumbing.dockWidget.dockAreaWidget();
     } else {
@@ -1419,8 +1420,13 @@ export class Window implements Disposable {
     if (activeTabPlumbing == null) {
       return;
     }
+    const emptyPaneTabPlumbing = this.#windowManager.createEmptyPaneTab();
     activeTabPlumbing.dockWidget.dockContainer().addDockWidget(panePosition,
-      this.#windowManager.createEmptyDockWidget());
+      emptyPaneTabPlumbing.dockWidget);
+
+    const win = this.#windowManager.getWindowForTab(activeTabPlumbing.tab);
+    (<EmptyPaneTab> emptyPaneTabPlumbing.tab).populateMenu(win);
+    activeTabPlumbing.tab.focus();
   }
 
   horizontalSplit(): void {

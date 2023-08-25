@@ -523,6 +523,9 @@ class Main {
       }
     }
 
+    const activeTab = this.#extensionManager.getActiveTab();
+    const window = this.#extensionManager.getActiveWindow() ?? this.#windowManager.getAllWindows()[0];
+
     let workingDirectory: string = null;
     if (args.workingDirectory != null) {
       workingDirectory = args.workingDirectory;
@@ -532,8 +535,6 @@ class Main {
         workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
       }
     }
-
-    const window = this.#extensionManager.getActiveWindow() ?? this.#windowManager.getAllWindows()[0];
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
@@ -572,7 +573,7 @@ class Main {
         this.#disposeTerminalTab(newTerminal);
       });
       newTerminal.setPty(pty);
-    });
+    }, activeTab);
 
     window.focusTab(newTerminal);
     this.#extensionManager.newTerminalCreated(window, newTerminal);
