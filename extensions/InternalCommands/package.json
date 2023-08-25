@@ -188,6 +188,7 @@
         "title": "Horizontal Split",
         "category": "window",
         "order": 1206,
+        "icon": "extraicons-rows",
         "when": "tabFocus"
       },
       {
@@ -195,6 +196,7 @@
         "title": "Vertical Split",
         "category": "window",
         "order": 1207,
+        "icon": "fa-columns",
         "when": "tabFocus"
       },
       {
