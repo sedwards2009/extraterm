@@ -153,7 +153,7 @@ export class CommandRequestHandler implements RequestHandler {
         };
       }
 
-      result = this.#extensionManager.executeCommandWithExtensionWindowState(tempState, commandName, this.#collectArgs(jsonBody));
+      result = await this.#extensionManager.executeCommandWithExtensionWindowState(tempState, commandName, this.#collectArgs(jsonBody));
     } catch(ex) {
       this._log.warn(`Exception occurred while processing command ${commandName}.`, ex);
       return {
@@ -161,26 +161,6 @@ export class CommandRequestHandler implements RequestHandler {
         statusCode: INTERNAL_SERVER_ERROR_500,
         body: "" + ex
       };
-    }
-
-    if (result == null) {
-      return {
-        commandName,
-        statusCode: NO_CONTENT_204
-      };
-    }
-
-    if (result instanceof Promise) {
-      try {
-        result = await result;
-      } catch(ex) {
-        this._log.warn(`Exception occurred while processing command ${commandName}.`, ex);
-        return {
-          commandName,
-          statusCode: INTERNAL_SERVER_ERROR_500,
-          body: "" + ex
-        };
-      }
     }
 
     if (result == null) {

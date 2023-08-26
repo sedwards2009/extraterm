@@ -125,8 +125,8 @@ class ImageUI {
       painter.setRenderHint(RenderHint.SmoothPixmapTransform, true);
       const zoomRatio = this.#zoomPercent / 100;
       painter.setTransform([
-        zoomRatio, 0, // a, b 
-        0, zoomRatio, // c, d 
+        zoomRatio, 0, // a, b
+        0, zoomRatio, // c, d
         0, 0          // tx, ty
       ]);
     }
@@ -156,7 +156,7 @@ class ImageUI {
   }
 
   async #downloadImage(): Promise<void> {
-    const imageBuffer = await downloadURL(this.#extensionBlock.bulkFile. url); 
+    const imageBuffer = await downloadURL(this.#extensionBlock.bulkFile. url);
     this.#image = new QImage();
     this.#image.loadFromData(imageBuffer);
     if (this.#image.isNull()) {
@@ -226,7 +226,7 @@ class ImageUI {
   }
 
   #setZoomPercent(zoomPercent: number): void {
-    this.#zoomPercent = zoomPercent;  
+    this.#zoomPercent = zoomPercent;
     this.#updateLayout();
     this.#imageWidget.update();
     this.#updateMetadata();
@@ -263,7 +263,7 @@ function downloadURL(url: string): Promise<Buffer> {
   });
 }
 
-function commandZoomIn(): void {
+async function commandZoomIn(): Promise<void> {
   const block = context.activeBlock;
   if (block.type !== "image-block:image-block") {
     return;
@@ -271,7 +271,7 @@ function commandZoomIn(): void {
   block.details.zoomIn();
 }
 
-function commandZoomOut(): void {
+async function commandZoomOut(): Promise<void> {
   const block = context.activeBlock;
   if (block.type !== "image-block:image-block") {
     return;

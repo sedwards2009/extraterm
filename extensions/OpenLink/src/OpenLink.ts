@@ -45,6 +45,6 @@ function shortenURL(url: string): string {
   }
 }
 
-function openLinkCommand(): void {
+async function openLinkCommand(): Promise<void> {
   context.application.openExternal(context.activeHyperlinkURL);
 }

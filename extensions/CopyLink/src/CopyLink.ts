@@ -27,7 +27,7 @@ function commandNameFunc(): CustomizedCommand {
   }
 }
 
-function copyLinkCommand(): void {
+async function copyLinkCommand(): Promise<void> {
   let text = context.activeHyperlinkURL;
   try {
     const url = new URL(text);

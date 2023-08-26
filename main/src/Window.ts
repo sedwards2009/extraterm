@@ -831,7 +831,7 @@ export class Window implements Disposable {
   #contextMenuState: CommonExtensionWindowState = null;
 
   #handleContextMenuTriggered(context: CommonExtensionWindowState, commandName: string): void {
-    doLater( () => {
+    doLater( async () => {
       try {
         this.#extensionManager.executeCommandWithExtensionWindowState(context, commandName);
         // ^ Let any Promise here run to completion by itself.
@@ -1259,6 +1259,8 @@ export class Window implements Disposable {
     }
     this.#initialEmptyState = false;
 
+    const currentTab = besideTab ?? this.#extensionManager.getActiveTab();
+
     const tabPlumbing = this.#windowManager.prepareTab(tab);
     tab.setParent(this);
 
@@ -1270,7 +1272,6 @@ export class Window implements Disposable {
     }
 
     let dockAreaWidget: CDockAreaWidget = null;
-    const currentTab = besideTab ?? this.#extensionManager.getActiveTab();
     if (currentTab != null) {
       const plumbing = this.#windowManager.getTabPlumbingForTab(currentTab);
       dockAreaWidget = plumbing.dockWidget.dockAreaWidget();

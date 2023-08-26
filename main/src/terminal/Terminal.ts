@@ -255,29 +255,29 @@ export class Terminal implements Tab, Disposable {
     const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
 
     commands.registerCommand("extraterm:terminal.deleteLastFrame",
-      () => extensionManager.getActiveTerminal().commandDeleteLastFrame());
+      async () => extensionManager.getActiveTerminal().commandDeleteLastFrame());
     commands.registerCommand("extraterm:terminal.scrollPageDown",
-      () => extensionManager.getActiveTerminal().scrollPageDown());
+      async () => extensionManager.getActiveTerminal().scrollPageDown());
     commands.registerCommand("extraterm:terminal.scrollPageUp",
-      () => extensionManager.getActiveTerminal().scrollPageUp());
+      async () => extensionManager.getActiveTerminal().scrollPageUp());
     commands.registerCommand("extraterm:terminal.pasteFromClipboard",
-      () => extensionManager.getActiveTerminal().commandPasteFromClipboard());
+      async () => extensionManager.getActiveTerminal().commandPasteFromClipboard());
     commands.registerCommand("extraterm:terminal.copyToClipboard",
-      () => extensionManager.getActiveTerminal().commandCopyToClipboard());
+      async () => extensionManager.getActiveTerminal().commandCopyToClipboard());
     commands.registerCommand("extraterm:terminal.goToNextFrame",
-      () => extensionManager.getActiveTerminal().commandGoToNextFrame());
+      async () => extensionManager.getActiveTerminal().commandGoToNextFrame());
     commands.registerCommand("extraterm:terminal.goToPreviousFrame",
-      () => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
+      async () => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
     commands.registerCommand("extraterm:terminal.resetVT",
-      () => extensionManager.getActiveTerminal().commandResetVT());
+      async () => extensionManager.getActiveTerminal().commandResetVT());
     commands.registerCommand("extraterm:terminal.clearScrollback",
-      () => extensionManager.getActiveTerminal().commandClearScrollback());
+      async () => extensionManager.getActiveTerminal().commandClearScrollback());
     commands.registerCommand("extraterm:terminal.increaseFontSize",
-      (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
+      async (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
     commands.registerCommand("extraterm:terminal.decreaseFontSize",
-      (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
+      async (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
     commands.registerCommand("extraterm:terminal.resetFontSize",
-      (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
+      async (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
   }
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,

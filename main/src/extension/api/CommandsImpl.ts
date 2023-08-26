@@ -5,6 +5,7 @@
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
 import { InternalExtensionContext } from "../../InternalTypes.js";
+import { CommandFunction } from "../../CommandsRegistry.js";
 
 
 export class CommandsImpl implements ExtensionApi.Commands {
@@ -14,7 +15,7 @@ export class CommandsImpl implements ExtensionApi.Commands {
     this.#internalExtensionContext = internalExtensionContext;
   }
 
-  registerCommand(name: string, commandFunc: (args: any) => any, customizer?: () => ExtensionApi.CustomizedCommand): void {
+  registerCommand(name: string, commandFunc: CommandFunction, customizer?: () => ExtensionApi.CustomizedCommand): void {
     return this.#internalExtensionContext.commands.registerCommand(name, commandFunc, customizer);
   }
 

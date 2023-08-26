@@ -67,7 +67,7 @@ export interface ExtensionManager {
   queryCommands(options: CommandQueryOptions): ExtensionCommandContribution[];
   queryCommandsWithExtensionWindowState(options: CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[];
 
-  executeCommand(command: string, args?: any): any;
+  executeCommand(command: string, args?: any): Promise<any>;
   executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): Promise<any>;
 
   copyExtensionWindowState(): CommonExtensionWindowState;

@@ -19,7 +19,7 @@ export function activate(_context: ExtensionContext): any {
 
 let aboutTab: ExtensionTab = null;
 
-function aboutCommand(): void {
+async function aboutCommand(): Promise<void> {
   if (aboutTab != null) {
     aboutTab.open();
     return;

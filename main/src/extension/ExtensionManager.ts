@@ -20,7 +20,7 @@ import { LoadedSessionBackendContribution, LoadedTerminalThemeProviderContributi
 import { ConfigDatabase } from "../config/ConfigDatabase.js";
 import * as InternalTypes from "../InternalTypes.js";
 import { CommonExtensionWindowState } from "./CommonExtensionState.js";
-import { CommandMenuEntry } from "../CommandsRegistry.js";
+import { CommandFunction, CommandMenuEntry } from "../CommandsRegistry.js";
 import { Window, WindowManager } from "../Window.js";
 import { LineRangeChange, Terminal } from "../terminal/Terminal.js";
 import { InternalExtensionContext, InternalSessionEditor, InternalSessionSettingsEditor } from "../InternalTypes.js";
@@ -610,12 +610,12 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     throw new Error(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
   }
 
-  executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): Promise<any> {
+  async executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): Promise<any> {
     const extensionContext: InternalExtensionContext = this.getExtensionContextByCommandName(command);
 
     let result: Promise<any> = undefined;
-    this.#executeFuncWithExtensionWindowState(extensionContext, tempState, () => {
-      result = this.executeCommand(command, args);
+    await this.#executeFuncWithExtensionWindowState(extensionContext, tempState, async () => {
+      result = await this.executeCommand(command, args);
     });
     return result;
   }
@@ -623,17 +623,19 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   /**
    * Execute a function with a different temporary extension context.
    */
-  #executeFuncWithExtensionWindowState(extensionContext: InternalExtensionContext, tempState: CommonExtensionWindowState, func: () => any): any {
+  async #executeFuncWithExtensionWindowState(extensionContext: InternalExtensionContext,
+      tempState: CommonExtensionWindowState, func: () => any): Promise<any> {
+
     const oldOverride = extensionContext.getOverrideWindowState();
     extensionContext.setOverrideWindowState(tempState);
     try {
-      return func();
+      return await func();
     } finally {
       extensionContext.setOverrideWindowState(oldOverride);
     }
   }
 
-  async #runCommandFunc(name: string, commandFunc: (args: any) => Promise<any>, args: any): Promise<any> {
+  async #runCommandFunc(name: string, commandFunc: CommandFunction, args: any): Promise<any> {
     try {
       return await commandFunc(args);
     } catch(ex) {
@@ -646,7 +648,9 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return this.queryCommandsWithExtensionWindowState(options, this.#commonExtensionWindowState);
   }
 
-  queryCommandsWithExtensionWindowState(options: InternalTypes.CommandQueryOptions, context: CommonExtensionWindowState): ExtensionCommandContribution[] {
+  queryCommandsWithExtensionWindowState(options: InternalTypes.CommandQueryOptions,
+      context: CommonExtensionWindowState): ExtensionCommandContribution[] {
+
     const truePredicate = (command: CommandMenuEntry): boolean => true;
 
     let commandPalettePredicate = truePredicate;

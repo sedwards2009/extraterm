@@ -1,12 +1,12 @@
 /*
- * Copyright 2019-2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2019-2023 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { Logger, getLogger, log } from 'extraterm-logging';
 import { ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata.js";
-import { ExtensionManager, InternalExtensionContext } from "./InternalTypes.js";
+import { ExtensionManager } from "./InternalTypes.js";
 
 export interface CommandMenuEntry {
   commandContribution: ExtensionCommandContribution;
@@ -17,11 +17,12 @@ export interface CommandMenuEntry {
   windowMenu: boolean;
 }
 
+export type CommandFunction = (args: any) => Promise<any>;
 
 export class CommandsRegistry {
 
   private _log: Logger;
-  #commandToFunctionMap = new Map<string, (args: any) => Promise<any>>();
+  #commandToFunctionMap = new Map<string, CommandFunction>();
   #commandToCustomizerFunctionMap = new Map<string, () => ExtensionApi.CustomizedCommand>();
   #commandToMenuEntryMap: Map<string, CommandMenuEntry[]> = null;
   #extensionManager: ExtensionManager;
@@ -84,7 +85,7 @@ export class CommandsRegistry {
     return index;
   }
 
-  registerCommand(name: string, commandFunc: (args: any) => Promise<any>, customizer?: () => ExtensionApi.CustomizedCommand): void {
+  registerCommand(name: string, commandFunc: CommandFunction, customizer?: () => ExtensionApi.CustomizedCommand): void {
     if ( ! this.#commandToMenuEntryMap.has(name)) {
       this._log.warn(`registerCommand() attempted on unknown command '${name}' from extension '${this.#extensionName}'.`);
       return;
@@ -121,7 +122,7 @@ export class CommandsRegistry {
     };
   }
 
-  getCommandFunction(name: string): (args: any) => Promise<any> {
+  getCommandFunction(name: string): CommandFunction {
     return this.#commandToFunctionMap.get(name);
   }
 

@@ -17,7 +17,7 @@ export interface Commands {
    * @param commandFunc the function to execute when the command is selected.
    * @param customizer an optional function to customize the title or state of the command.
    */
-  registerCommand(name: string, commandFunc: (args: any) => any, customizer?: () => (CustomizedCommand | null)): void;
+  registerCommand(name: string, commandFunc: (args: any) => Promise<any>, customizer?: () => (CustomizedCommand | null)): void;
 
   /**
    * Execute a command by name.

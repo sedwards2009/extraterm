@@ -92,6 +92,9 @@ export class EmptyPaneTab implements Tab {
   }
 
   populateMenu(window: Window): void {
+    const widthPx = Math.round(300 * window.getDpi() / 96);
+    this.#listPicker.getWidget().setFixedWidth(widthPx);
+
     this.#state = {
       activeBlockFrame: null,
       activeHyperlinkURL: null,
