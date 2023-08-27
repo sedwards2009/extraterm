@@ -75,6 +75,7 @@ import { BulkFile } from "../bulk_file_handling/BulkFile.js";
 import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
 import { Block } from "./Block.js";
 import { QEvent } from "@nodegui/nodegui/dist/lib/QtGui/QEvent/QEvent.js";
+import { CommonExtensionWindowState } from "../extension/CommonExtensionState.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -252,32 +253,31 @@ export class Terminal implements Tab, Disposable {
   ]);
 
   static registerCommands(extensionManager: ExtensionManager): void {
-    const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
-
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
     commands.registerCommand("extraterm:terminal.deleteLastFrame",
-      async () => extensionManager.getActiveTerminal().commandDeleteLastFrame());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandDeleteLastFrame());
     commands.registerCommand("extraterm:terminal.scrollPageDown",
-      async () => extensionManager.getActiveTerminal().scrollPageDown());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.scrollPageDown());
     commands.registerCommand("extraterm:terminal.scrollPageUp",
-      async () => extensionManager.getActiveTerminal().scrollPageUp());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.scrollPageUp());
     commands.registerCommand("extraterm:terminal.pasteFromClipboard",
-      async () => extensionManager.getActiveTerminal().commandPasteFromClipboard());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandPasteFromClipboard());
     commands.registerCommand("extraterm:terminal.copyToClipboard",
-      async () => extensionManager.getActiveTerminal().commandCopyToClipboard());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandCopyToClipboard());
     commands.registerCommand("extraterm:terminal.goToNextFrame",
-      async () => extensionManager.getActiveTerminal().commandGoToNextFrame());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandGoToNextFrame());
     commands.registerCommand("extraterm:terminal.goToPreviousFrame",
-      async () => extensionManager.getActiveTerminal().commandGoToPreviousFrame());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandGoToPreviousFrame());
     commands.registerCommand("extraterm:terminal.resetVT",
-      async () => extensionManager.getActiveTerminal().commandResetVT());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandResetVT());
     commands.registerCommand("extraterm:terminal.clearScrollback",
-      async () => extensionManager.getActiveTerminal().commandClearScrollback());
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandClearScrollback());
     commands.registerCommand("extraterm:terminal.increaseFontSize",
-      async (args: any) => extensionManager.getActiveTerminal().commandFontSizeIncrease());
+      async (state: CommonExtensionWindowState, args: any) => state.activeTerminal.commandFontSizeIncrease());
     commands.registerCommand("extraterm:terminal.decreaseFontSize",
-      async (args: any) => extensionManager.getActiveTerminal().commandFontSizeDecrease());
+      async (state: CommonExtensionWindowState, args: any) => state.activeTerminal.commandFontSizeDecrease());
     commands.registerCommand("extraterm:terminal.resetFontSize",
-      async (args: any) => extensionManager.getActiveTerminal().commandFontSizeReset());
+      async (state: CommonExtensionWindowState, args: any) => state.activeTerminal.commandFontSizeReset());
   }
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,

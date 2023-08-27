@@ -33,7 +33,7 @@ export class WindowImpl implements ExtensionApi.Window {
   onDidClose: ExtensionApi.Event<ExtensionApi.Window>;
 
   createExtensionTab(name: string): ExtensionApi.ExtensionTab {
-    const bridge = new ExtensionTabBridge(this.#window, this.#log);
+    const bridge = new ExtensionTabBridge(this.#internalExtensionContext, this.#window, this.#log);
     return bridge.getExtensionTabImpl();
   }
 

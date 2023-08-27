@@ -46,6 +46,7 @@ import { DecoratedFrame } from "./terminal/DecoratedFrame.js";
 import { TerminalBlock } from "./terminal/TerminalBlock.js";
 import { BulkFile } from "./bulk_file_handling/BulkFile.js";
 import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler.js";
+import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
 
 
 sourceMapSupport.install();
@@ -399,34 +400,55 @@ class Main {
   }
 
   registerCommands(extensionManager: ExtensionManager): void {
-    const commands = extensionManager.getExtensionContextByName("internal-commands").getExtensionContext().commands;
+    const commands = extensionManager.getExtensionContextByName("internal-commands").commands;
     commands.registerCommand("extraterm:global.globalMaximize", async () => this.commandMaximizeAllWindows());
     commands.registerCommand("extraterm:global.globalShow", async () => this.commandRestoreAllWindows());
     commands.registerCommand("extraterm:global.globalHide", async () => this.commandMinimizeAllWindows());
     commands.registerCommand("extraterm:global.globalToggleShowHide", async () => this.commandToggleAllWindows());
-    commands.registerCommand("extraterm:application.openCommandPalette", async () => this.commandOpenCommandPalette());
+    commands.registerCommand("extraterm:application.openCommandPalette",
+      async (state: CommonExtensionWindowState) => this.commandOpenCommandPalette(state));
     commands.registerCommand("extraterm:application.newWindow", async () => this.commandNewWindow());
     commands.registerCommand("extraterm:application.quit", async () => this.commandQuit());
-    commands.registerCommand("extraterm:window.newTerminal", async (args: any) => this.commandNewTerminal(args));
-    commands.registerCommand("extraterm:window.openSettings", async (args: any) => this.commandOpenSettings(args));
-    commands.registerCommand("extraterm:window.focusPaneLeft", async () => this.commandFocusPaneLeft());
-    commands.registerCommand("extraterm:window.focusPaneRight", async () => this.commandFocusPaneRight());
-    commands.registerCommand("extraterm:window.focusPaneAbove", async () => this.commandFocusPaneAbove());
-    commands.registerCommand("extraterm:window.focusPaneBelow", async () => this.commandFocusPaneBelow());
-    commands.registerCommand("extraterm:window.horizontalSplit", async () => this.commandHorizontalSplit());
-    commands.registerCommand("extraterm:window.verticalSplit", async () => this.commandVerticalSplit());
-    commands.registerCommand("extraterm:window.focusTabLeft", async () => this.commandFocusTabLeft());
-    commands.registerCommand("extraterm:window.focusTabRight", async () => this.commandFocusTabRight());
-    commands.registerCommand("extraterm:window.closeTab", async () => this.commandCloseTab());
-    commands.registerCommand("extraterm:window.close", async () => this.commandCloseWindow());
-    commands.registerCommand("extraterm:window.listAll", async () => this.commandListWindows());
-    commands.registerCommand("extraterm:window.moveTabToNewWindow", async () => this.commandMoveTabToNewWindow());
-    commands.registerCommand("extraterm:window.maximize", async () => this.commandMaximizeWindow());
-    commands.registerCommand("extraterm:window.minimize", async () => this.commandMinimizeWindow());
-    commands.registerCommand("extraterm:window.restore", async () => this.commandRestoreWindow());
-    commands.registerCommand("extraterm:window.show", async () => this.commandShowWindow());
-    commands.registerCommand("extraterm:window.showAll", async () => this.commandShowAllWindows());
-    commands.registerCommand("extraterm:terminal.openLastFrame",async () => this.commandOpenLastFrame());
+    commands.registerCommand("extraterm:window.newTerminal",
+      async (state: CommonExtensionWindowState, args: any) => this.commandNewTerminal(state, args));
+    commands.registerCommand("extraterm:window.openSettings",
+      async (state: CommonExtensionWindowState, args: any) => this.commandOpenSettings(state, args));
+    commands.registerCommand("extraterm:window.focusPaneLeft",
+      async (state: CommonExtensionWindowState) => this.commandFocusPaneLeft(state));
+    commands.registerCommand("extraterm:window.focusPaneRight",
+      async (state: CommonExtensionWindowState) => this.commandFocusPaneRight(state));
+    commands.registerCommand("extraterm:window.focusPaneAbove",
+      async (state: CommonExtensionWindowState) => this.commandFocusPaneAbove(state));
+    commands.registerCommand("extraterm:window.focusPaneBelow",
+      async (state: CommonExtensionWindowState) => this.commandFocusPaneBelow(state));
+    commands.registerCommand("extraterm:window.horizontalSplit",
+      async (state: CommonExtensionWindowState) => this.commandHorizontalSplit(state));
+    commands.registerCommand("extraterm:window.verticalSplit",
+      async (state: CommonExtensionWindowState) => this.commandVerticalSplit(state));
+    commands.registerCommand("extraterm:window.focusTabLeft",
+      async (state: CommonExtensionWindowState) => this.commandFocusTabLeft(state));
+    commands.registerCommand("extraterm:window.focusTabRight",
+      async (state: CommonExtensionWindowState) => this.commandFocusTabRight(state));
+    commands.registerCommand("extraterm:window.closeTab",
+      async (state: CommonExtensionWindowState) => this.commandCloseTab(state));
+    commands.registerCommand("extraterm:window.close",
+      async (state: CommonExtensionWindowState) => this.commandCloseWindow(state));
+    commands.registerCommand("extraterm:window.listAll",
+      async () => this.commandListWindows());
+    commands.registerCommand("extraterm:window.moveTabToNewWindow",
+      async (state: CommonExtensionWindowState) => this.commandMoveTabToNewWindow(state));
+    commands.registerCommand("extraterm:window.maximize",
+      async (state: CommonExtensionWindowState) => this.commandMaximizeWindow(state));
+    commands.registerCommand("extraterm:window.minimize",
+      async (state: CommonExtensionWindowState) => this.commandMinimizeWindow(state));
+    commands.registerCommand("extraterm:window.restore",
+      async (state: CommonExtensionWindowState) => this.commandRestoreWindow(state));
+    commands.registerCommand("extraterm:window.show",
+      async (state: CommonExtensionWindowState) => this.commandShowWindow(state));
+    commands.registerCommand("extraterm:window.showAll",
+      async () => this.commandShowAllWindows());
+    commands.registerCommand("extraterm:terminal.openLastFrame",
+      async (state: CommonExtensionWindowState) => this.commandOpenLastFrame(state));
 
     Terminal.registerCommands(extensionManager);
   }
@@ -492,11 +514,9 @@ class Main {
     }
   }
 
-  commandOpenCommandPalette(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    const tab = this.#extensionManager.getActiveTab();
+  commandOpenCommandPalette(state: CommonExtensionWindowState): void {
     const commandPalette = new CommandPalette(this.#extensionManager, this.#keybindingsManager, this.#uiStyle);
-    commandPalette.show(win, tab);
+    commandPalette.show(state.activeWindow, state.activeTab);
   }
 
   commandNewWindow(): void {
@@ -509,7 +529,9 @@ class Main {
     }
   }
 
-  async commandNewTerminal(args: {sessionUuid?: string, sessionName?: string, workingDirectory?: string}): Promise<void> {
+  async commandNewTerminal(state: CommonExtensionWindowState, args: {sessionUuid?: string, sessionName?: string,
+      workingDirectory?: string}): Promise<void> {
+
     let sessionConfiguration: SessionConfiguration = this.#configDatabase.getSessionConfig()[0];
     if (args.sessionUuid != null) {
       sessionConfiguration = this.#getSessionByUuid(args.sessionUuid);
@@ -523,14 +545,14 @@ class Main {
       }
     }
 
-    const activeTab = this.#extensionManager.getActiveTab();
-    const window = this.#extensionManager.getActiveWindow() ?? this.#windowManager.getAllWindows()[0];
+    const activeTab = state.activeTab;
+    const window = state.activeWindow ?? this.#windowManager.getAllWindows()[0];
 
     let workingDirectory: string = null;
     if (args.workingDirectory != null) {
       workingDirectory = args.workingDirectory;
     } else {
-      const activeTerminal = this.#extensionManager.getActiveTerminal();
+      const activeTerminal = state.activeTerminal;
       if (activeTerminal != null && activeTerminal.getSessionConfiguration().type === sessionConfiguration.type) {
         workingDirectory = await activeTerminal.getPty().getWorkingDirectory();
       }
@@ -603,7 +625,7 @@ class Main {
   #handleTerminalSelectionChanged(newTerminal: Terminal): void {
     const generalConfig = this.#configDatabase.getGeneralConfig();
     if (generalConfig.autoCopySelectionToClipboard) {
-      this.commandCopyToClipboard();
+      this.commandCopyToClipboard(this.#extensionManager.copyExtensionWindowState());
     }
   }
 
@@ -698,8 +720,8 @@ class Main {
     tab.dispose();
   }
 
-  commandOpenSettings(args: any): void {
-    const window = this.#extensionManager.getActiveWindow();
+  commandOpenSettings(state: CommonExtensionWindowState, args: any): void {
+    const window = state.activeWindow;
     if (this.#settingsTab == null) {
       this.#settingsTab = new SettingsTab(this.#configDatabase, this.#extensionManager, this.#themeManager,
         this.#keybindingsManager, window, this.#uiStyle, this.#fontAtlasCache);
@@ -717,57 +739,56 @@ class Main {
         return;
       }
     }
-    window.addTab(this.#settingsTab);
+    window.addTab(this.#settingsTab, null, state.activeTab);
     window.focusTab(this.#settingsTab);
   }
 
-  commandFocusTabLeft(): void {
-    const win = this.#extensionManager.getActiveWindow();
+  async commandFocusTabLeft(state: CommonExtensionWindowState): Promise<void> {
+    const win = state.activeWindow;
     const tabCount = win.getTabCount();
     const index = win.getCurrentTabIndex() - 1;
     win.setCurrentTabIndex(index < 0 ? tabCount - 1 : index);
   }
 
-  commandFocusTabRight(): void {
-    const win = this.#extensionManager.getActiveWindow();
+  async commandFocusTabRight(state: CommonExtensionWindowState): Promise<void> {
+    const win = state.activeWindow;
     const tabCount = win.getTabCount();
     const index = win.getCurrentTabIndex() + 1;
     win.setCurrentTabIndex(index >= tabCount ? 0 : index);
   }
 
-  commandFocusPaneLeft(): void {
-    this.#extensionManager.getActiveWindow().focusPaneLeft();
+  async commandFocusPaneLeft(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.focusPaneLeft();
   }
 
-  commandFocusPaneRight(): void {
-    this.#extensionManager.getActiveWindow().focusPaneRight();
+  async commandFocusPaneRight(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.focusPaneRight();
   }
 
-  commandFocusPaneAbove(): void {
-    this.#extensionManager.getActiveWindow().focusPaneAbove();
+  async commandFocusPaneAbove(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.focusPaneAbove();
   }
 
-  commandFocusPaneBelow(): void {
-    this.#extensionManager.getActiveWindow().focusPaneBelow();
+  async commandFocusPaneBelow(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.focusPaneBelow();
   }
 
-  commandHorizontalSplit(): void {
-    this.#extensionManager.getActiveWindow().horizontalSplit();
+  async commandHorizontalSplit(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.horizontalSplit();
   }
 
-  commandVerticalSplit(): void {
-    this.#extensionManager.getActiveWindow().verticalSplit();
+  async commandVerticalSplit(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.verticalSplit();
   }
 
-  commandCloseTab(): void {
-    const win = this.#extensionManager.getActiveWindow();
+  async commandCloseTab(state: CommonExtensionWindowState): Promise<void> {
+    const win = state.activeWindow;
     const tab = win.getTab(win.getCurrentTabIndex());
     this.#closeTab(win, tab);
   }
 
-  commandCloseWindow(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    this.#windowManager.disposeWindow(win);
+  async commandCloseWindow(state: CommonExtensionWindowState): Promise<void> {
+    this.#windowManager.disposeWindow(state.activeWindow);
   }
 
   commandListWindows(): WindowDescription[] {
@@ -776,30 +797,27 @@ class Main {
     }));
   }
 
-  async commandMoveTabToNewWindow(): Promise<void> {
-    const win = this.#extensionManager.getActiveWindow();
+  commandMoveTabToNewWindow(state: CommonExtensionWindowState): void {
+    const win = state.activeWindow;
     const tab = win.getTab(win.getCurrentTabIndex());
     this.#windowManager.moveTabIntoFloatingWindow(tab);
     tab.focus();
   }
 
-  commandMaximizeWindow(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    win.maximize();
+  async commandMaximizeWindow(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.maximize();
   }
 
-  commandMinimizeWindow(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    win.minimize();
+  async commandMinimizeWindow(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.minimize();
   }
 
-  commandRestoreWindow(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    win.restore();
+  async commandRestoreWindow(state: CommonExtensionWindowState): Promise<void> {
+    state.activeWindow.restore();
   }
 
-  commandShowWindow(): void {
-    const win = this.#extensionManager.getActiveWindow();
+  async commandShowWindow(state: CommonExtensionWindowState): Promise<void> {
+    const win = state.activeWindow;
     if (win.isMinimized()) {
       win.restore();
     }
@@ -841,17 +859,17 @@ class Main {
     }
   }
 
-  commandCopyToClipboard(): void {
-    const terminal = this.#extensionManager.getActiveTerminal();
+  commandCopyToClipboard(state: CommonExtensionWindowState): void {
+    const terminal = state.activeTerminal;
     if (terminal == null) {
       return;
     }
     terminal.commandCopyToClipboard();
   }
 
-  commandOpenLastFrame(): void {
-    const win = this.#extensionManager.getActiveWindow();
-    const terminal = this.#extensionManager.getActiveTerminal();
+  commandOpenLastFrame(state: CommonExtensionWindowState): void {
+    const win = state.activeWindow;
+    const terminal = state.activeTerminal;
     if (win == null || terminal == null) {
       return;
     }

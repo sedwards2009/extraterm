@@ -495,7 +495,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     return extensionName;
   }
 
-  #getCommand(command: string): (args: any) => Promise<any> {
+  #getCommand(command: string): CommandFunction {
     const extensionName = this.#getExtensionNameFromCommand(command);
     const ext = this.#getActiveExtension(extensionName);
     if (ext == null) {
@@ -570,52 +570,59 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   }
 
   async executeCommand(command: string, args?: any): Promise<any> {
-    let commandName = command;
-    let argsString: string = null;
-
-    const qIndex = command.indexOf("?");
-    if (qIndex !== -1) {
-      commandName = command.slice(0, qIndex);
-      argsString = command.slice(qIndex+1);
-    }
-
-    const parts = commandName.split(":");
-    if (parts.length !== 2) {
-      throw new Error(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
-    }
-
-    let extensionName = parts[0];
-    if (extensionName === "extraterm") {
-      extensionName = "internal-commands";
-    }
-
-    const internalExtensionContext = this.getExtensionContextByName(extensionName);
-    if (internalExtensionContext != null) {
-      const commandFunc = internalExtensionContext.commands.getCommandFunction(commandName);
-      if (commandFunc == null) {
-        throw new Error(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
-      }
-
-      if (args === undefined) {
-        if (argsString != null) {
-          args = JSON.parse(decodeURIComponent(argsString));
-        } else {
-          args = {};
-        }
-      }
-
-      return await this.#runCommandFunc(commandName, commandFunc, args);
-    }
-
-    throw new Error(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
+    return this.executeCommandWithExtensionWindowState(this.#commonExtensionWindowState, command, args);
   }
 
-  async executeCommandWithExtensionWindowState(tempState: CommonExtensionWindowState, command: string, args?: any): Promise<any> {
+  async executeCommandWithExtensionWindowState(state: CommonExtensionWindowState, command: string, args?: any): Promise<any> {
     const extensionContext: InternalExtensionContext = this.getExtensionContextByCommandName(command);
 
     let result: Promise<any> = undefined;
-    await this.#executeFuncWithExtensionWindowState(extensionContext, tempState, async () => {
-      result = await this.executeCommand(command, args);
+    await this.#executeFuncWithExtensionWindowState(extensionContext, state, async () => {
+      let commandName = command;
+      let argsString: string = null;
+
+      const qIndex = command.indexOf("?");
+      if (qIndex !== -1) {
+        commandName = command.slice(0, qIndex);
+        argsString = command.slice(qIndex+1);
+      }
+
+      const parts = commandName.split(":");
+      if (parts.length !== 2) {
+        throw new Error(`Command '${command}' does have the right form. (Wrong numer of colons.)`);
+      }
+
+      let extensionName = parts[0];
+      if (extensionName === "extraterm") {
+        extensionName = "internal-commands";
+      }
+
+      const internalExtensionContext = this.getExtensionContextByName(extensionName);
+      if (internalExtensionContext != null) {
+        const commandFunc = internalExtensionContext.commands.getCommandFunction(commandName);
+        if (commandFunc == null) {
+          throw new Error(`Unable to find command '${commandName}' in extension '${extensionName}'.`);
+        }
+
+        if (args === undefined) {
+          if (argsString != null) {
+            args = JSON.parse(decodeURIComponent(argsString));
+          } else {
+            args = {};
+          }
+        }
+
+        try {
+          result = await commandFunc(state, args);
+          return;
+        } catch(ex) {
+          this._log.warn(`Command '${commandName}' threw an exception.`, ex);
+          result = ex;
+          return;
+        }
+      }
+
+      throw new Error(`Unable to find extension with name '${extensionName}' for command '${commandName}'.`);
     });
     return result;
   }
@@ -632,15 +639,6 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       return await func();
     } finally {
       extensionContext.setOverrideWindowState(oldOverride);
-    }
-  }
-
-  async #runCommandFunc(name: string, commandFunc: CommandFunction, args: any): Promise<any> {
-    try {
-      return await commandFunc(args);
-    } catch(ex) {
-      this._log.warn(`Command '${name}' threw an exception.`, ex);
-      return ex;
     }
   }
 

@@ -11,6 +11,7 @@ import { BoxLayout, Widget } from "qt-construct";
 import { Tab } from "../../Tab.js";
 import { Window } from "../../Window.js";
 import { ErrorTolerantEventEmitter } from "../ErrorTolerantEventEmitter.js";
+import { InternalExtensionContext } from "../../InternalTypes.js";
 
 
 export class ExtensionTabBridge implements Tab {
@@ -27,12 +28,14 @@ export class ExtensionTabBridge implements Tab {
   #containerWidget: QWidget;
   #containerLayout: QBoxLayout;
   #extensionWidget: QWidget = null;
+  #internalExtensionContext: InternalExtensionContext = null;
   #window: Window;
   #windowTitle = "";
 
   #isOpen = false;
 
-  constructor(window: Window, log: ExtensionApi.Logger) {
+  constructor(internalExtensionContext: InternalExtensionContext, window: Window, log: ExtensionApi.Logger) {
+    this.#internalExtensionContext = internalExtensionContext;
     this.onWindowTitleChanged = this.#onWindowTitleChangedEventEmitter.event;
     this.#onDidCloseEventEmitter = new ErrorTolerantEventEmitter<void>("onDidClose", log);
     this.#window = window;
@@ -118,7 +121,7 @@ export class ExtensionTabBridge implements Tab {
 
   open(): void {
     if (!this.#isOpen) {
-      this.#window.addTab(this);
+      this.#window.addTab(this, null, this.#internalExtensionContext.getActiveInternalTab());
     }
     this.#window.focus();
     this.#window.focusTab(this);

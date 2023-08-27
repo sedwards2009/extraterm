@@ -113,6 +113,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   getActiveTerminal(): ExtensionApi.Terminal;
   getActiveHyperlinkURL(): string;
   getActiveWindow(): ExtensionApi.Window;
+  getActiveInternalTab(): Tab;
   getAllTerminals(): ExtensionApi.Terminal[];
   getExtensionContext(): ExtensionApi.ExtensionContext;
   getSessionBackends(): LoadedSessionBackendContribution[];

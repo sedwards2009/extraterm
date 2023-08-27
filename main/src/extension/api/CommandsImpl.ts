@@ -15,7 +15,9 @@ export class CommandsImpl implements ExtensionApi.Commands {
     this.#internalExtensionContext = internalExtensionContext;
   }
 
-  registerCommand(name: string, commandFunc: CommandFunction, customizer?: () => ExtensionApi.CustomizedCommand): void {
+  registerCommand(name: string, commandFunc: (args: any) => Promise<any>,
+      customizer?: () => ExtensionApi.CustomizedCommand): void {
+
     return this.#internalExtensionContext.commands.registerCommand(name, commandFunc, customizer);
   }
 

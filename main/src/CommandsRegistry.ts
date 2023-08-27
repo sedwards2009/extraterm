@@ -7,6 +7,7 @@ import * as ExtensionApi from '@extraterm/extraterm-extension-api';
 import { Logger, getLogger, log } from 'extraterm-logging';
 import { ExtensionCommandContribution, ExtensionMenusContribution } from "./extension/ExtensionMetadata.js";
 import { ExtensionManager } from "./InternalTypes.js";
+import { CommonExtensionWindowState } from './extension/CommonExtensionState.js';
 
 export interface CommandMenuEntry {
   commandContribution: ExtensionCommandContribution;
@@ -17,7 +18,7 @@ export interface CommandMenuEntry {
   windowMenu: boolean;
 }
 
-export type CommandFunction = (args: any) => Promise<any>;
+export type CommandFunction = (state: CommonExtensionWindowState, args: any) => Promise<any>;
 
 export class CommandsRegistry {
 
