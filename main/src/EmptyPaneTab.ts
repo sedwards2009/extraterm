@@ -49,13 +49,16 @@ export class EmptyPaneTab implements Tab {
           direction: Direction.LeftToRight,
           children: [
             { widget: Widget({}), stretch: 1},
-            BoxLayout({
-              direction: Direction.TopToBottom,
-              children: [
-                Label({text: "Pane Menu"}),
-                this.#listPicker.getWidget()
-              ]
-            }),
+            { layout:
+              BoxLayout({
+                direction: Direction.TopToBottom,
+                children: [
+                  Label({text: "Pane Menu"}),
+                  this.#listPicker.getWidget()
+                ]
+              }),
+              stretch: 1,
+            },
             { widget: Widget({}), stretch: 1},
           ]
         })
@@ -92,8 +95,10 @@ export class EmptyPaneTab implements Tab {
   }
 
   populateMenu(window: Window): void {
-    const widthPx = Math.round(300 * window.getDpi() / 96);
-    this.#listPicker.getWidget().setFixedWidth(widthPx);
+    const minimumWidthPx = Math.round(300 * window.getDpi() / 96);
+    const maximumWidthPx = Math.round(450 * window.getDpi() / 96);
+    this.#listPicker.getWidget().setMinimumWidth(minimumWidthPx);
+    this.#listPicker.getWidget().setMaximumWidth(maximumWidthPx);
 
     this.#state = {
       activeBlockFrame: null,
