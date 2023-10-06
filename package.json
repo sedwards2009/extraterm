@@ -9,7 +9,7 @@
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "scripts": {
-    "run": "qode main/dist/main.cjs",
+    "run": "QT_SCALE_FACTOR_ROUNDING_POLICY=RoundPreferFloor qode main/dist/main.cjs",
     "run-valgrind": "valgrind qode main/dist/main.js",
     "run-strace": "strace -f -o strace.log qode main/dist/main.js",
     "run-theme-test": "qode main/build/ThemeTestUtility.js",
