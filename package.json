@@ -15,7 +15,7 @@
     "run-theme-test": "qode main/build/ThemeTestUtility.js",
     "build": "wsrun --concurrency 5 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
-    "download-launcher-executable": "node build_scripts/download_launcher_executables.mjs v17",
+    "download-launcher-executable": "node build_scripts/download_launcher_executables.mjs v18",
     "download-deploy-tool": "node build_scripts/download_deploy_tool.mjs",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
