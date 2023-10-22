@@ -587,8 +587,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
   }
 
   QPushButton[cssClass~="group-left"] {
-  border-top-right-radius: 0px;
-  border-bottom-right-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
   }
 
   QPushButton[cssClass~="group-middle"] {
@@ -1346,6 +1346,47 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     background-color: ${tabBackgroundColor};
     border: 0px;
     margin: 0px;
+  }
+
+  #floatingTitleLabel {
+    color: ${textHighlightColor};
+    font-weight: bold;
+  }
+
+  #floatingTitleMinimizeButton, #floatingTitleMaximizeButton, #floatingTitleCloseButton {
+    border-radius : 0px;
+    border: 0px;
+    min-height: ${emToPx(1)}px;
+    icon-size: ${emToPx(smallFactor)}px;
+    padding: ${emToPx(0.1)}px ${emToPx(0.3)}px;
+    background-color: transparent;
+  }
+
+  #floatingTitleMinimizeButton {
+    icon: url(${resourceDirectory}/minimize_icon_normal.svg);
+  }
+
+  #floatingTitleMinimizeButton:hover {
+    icon: url(${resourceDirectory}/minimize_icon_hover.svg);
+    background-color: ${buttonDefaultBgColor};
+  }
+
+  #floatingTitleMaximizeButton {
+    icon: url(${resourceDirectory}/maximize_icon_normal.svg);
+  }
+
+  #floatingTitleMaximizeButton:hover {
+    icon: url(${resourceDirectory}/maximize_icon_hover.svg);
+    background-color: ${buttonDefaultBgColor};
+  }
+
+  #floatingTitleCloseButton {
+    icon: url(${resourceDirectory}/close_icon_normal.svg);
+  }
+
+  #floatingTitleCloseButton:hover {
+    icon: url(${resourceDirectory}/close_icon_hover.svg);
+    background-color: ${styleBrandDanger};
   }
 
   QSplitterHandle:hover {}

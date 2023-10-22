@@ -43,7 +43,6 @@ const uiScalePercentOptions: {id: number, name: string}[] = [
 const titleBarOptions: {id: TitleBarStyle, name: string}[] = [
   { id: "native", name: "Native" },
   { id: "theme", name: "Theme" },
-  { id: "compact", name: "Compact Theme" },
 ];
 
 const PREVIEW_WIDTH_CELLS = 45;
@@ -114,7 +113,7 @@ export class AppearancePage implements SettingsPageType {
       mutator(generalConfig);
       this.#configDatabase.setGeneralConfig(generalConfig);
     };
-    const showTitleBar = (<Term.Platform> process.platform) === "linux";
+
     const marginSizes: TerminalMarginStyle[] = [
       "none",
       "thin",
@@ -122,6 +121,8 @@ export class AppearancePage implements SettingsPageType {
       "thick"
     ];
     this.#initPreview();
+    let titleBarWarningLabel: QLabel = null;
+    const originalTitleBarStyle = generalConfig.titleBarStyle;
 
     const page = ScrollArea({
       cssClass: "settings-tab",
@@ -276,14 +277,29 @@ export class AppearancePage implements SettingsPageType {
                   }
                 })),
 
-                showTitleBar && "Window Title Bar:",
-                showTitleBar && shrinkWrap(ComboBox({
-                  currentIndex: titleBarOptions.map(option => option.id).indexOf(generalConfig.titleBarStyle),
-                  items: titleBarOptions.map(item => item.name),
-                  onActivated: (index) => {
-                    update(config => config.titleBarStyle = titleBarOptions[index].id);
-                  }
-                })),
+                "Window Title Bar:",
+
+                BoxLayout({
+                  direction: Direction.LeftToRight,
+                  spacing: 0,
+                  contentsMargins: [0, 0, 0, 0],
+                  children: [
+                    {
+                      widget: ComboBox({
+                        currentIndex: titleBarOptions.map(option => option.id).indexOf(generalConfig.titleBarStyle),
+                        items: titleBarOptions.map(item => item.name),
+                        onActivated: (index) => {
+                          const newTitleBarStyle = titleBarOptions[index].id;
+                          update(config => config.titleBarStyle = newTitleBarStyle);
+                          titleBarWarningLabel.setText(originalTitleBarStyle === newTitleBarStyle
+                            ? "" : " ⚠️ Restart required");
+                        }
+                      }),
+                      stretch: 0,
+                    },
+                    { widget: titleBarWarningLabel = Label({text: ""}), stretch: 1 },
+                  ]
+                }),
 
                 "",
                 CheckBox({

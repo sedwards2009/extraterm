@@ -93,6 +93,14 @@ export class WindowManager {
     CDockManager.setConfigFlag(eConfigFlag.DockWidgetTabContextMenu, false);
     CDockManager.setConfigFlag(eConfigFlag.EqualSplitOnInsertion, true);
     CDockManager.setConfigFlag(eConfigFlag.FloatingContainerHasWidgetIcon, true);
+
+    const generalConfig = this.#configDatabase.getGeneralConfig();
+    if (generalConfig.titleBarStyle === "native") {
+      CDockManager.setConfigFlag(eConfigFlag.FloatingContainerForceNativeTitleBar, true);
+    } else {
+      CDockManager.setConfigFlag(eConfigFlag.FloatingContainerForceQWidgetTitleBar, true);
+    }
+
     QApplication.setWindowIcon(createWindowIcon());
 
     this.#dummyWindow = new QWidget();
