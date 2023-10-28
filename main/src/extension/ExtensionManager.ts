@@ -746,6 +746,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       blockFocus: false,
       blockType: null,
       isHyperlink: false,
+      isWindowSplit: false,
       hyperlinkURL: null,
       hyperlinkProtocol: null,
       hyperlinkDomain: null,
@@ -782,6 +783,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
         whenVariables.hyperlinkDomain = "";
         whenVariables.hyperlinkFileExtension = this.#getExtensionFromPath(state.activeHyperlinkURL);
       }
+    }
+
+    if (state.activeWindow != null) {
+      whenVariables.isWindowSplit = state.activeWindow.isSplit();
     }
     return whenVariables;
   }

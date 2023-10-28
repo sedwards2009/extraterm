@@ -1122,6 +1122,10 @@ export class Window implements Disposable {
     return this.#windowOpenState === WindowOpenState.Minimized || this.#windowOpenState === WindowOpenState.ClosedMinimized;
   }
 
+  isSplit(): boolean {
+    return this.dockContainer.dockContainer().dockAreaCount() !== 1;
+  }
+
   restore(): void {
     this.dockContainer.hide();
     this.dockContainer.show();

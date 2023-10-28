@@ -57,6 +57,7 @@ export interface WhenVariables {
   blockFocus: boolean;
   blockType: string;
   isHyperlink: boolean;
+  isWindowSplit: boolean;
   hyperlinkURL: string;
   hyperlinkProtocol: string;
   hyperlinkDomain: string;

@@ -64,6 +64,7 @@ class PackageParser {
       blockFocus: false,
       blockType: null,
       isHyperlink: false,
+      isWindowSplit: false,
       hyperlinkURL: null,
       hyperlinkProtocol: null,
       hyperlinkDomain: null,
