@@ -92,13 +92,12 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
   #listPickerPopOver: ListPickerPopOver = null;
   #dialogPopOver: DialogPopOver = null;
 
-  constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager, uiStyle: UiStyle, extensionPaths: string[],
+  constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager, extensionPaths: string[],
       applicationVersion: string) {
 
     this._log = getLogger("ExtensionManager", this);
     this.#configDatabase = configDatabase;
     this.#themeManager = themeManager;
-    this.#uiStyle = uiStyle;
 
     this.#extensionPaths = extensionPaths;
     this.onDesiredStateChanged = this.#onDesiredStateChangedEventEmitter.event;
@@ -114,6 +113,10 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   setWindowManager(windowManager: WindowManager): void {
     this.#windowManager = windowManager;
+  }
+
+  setUiStyle(uiStyle: UiStyle): void {
+    this.#uiStyle = uiStyle;
   }
 
   async startUpExtensions(activeExtensionsConfig: {[name: string]: boolean;}, startByDefault: boolean=true): Promise<void> {

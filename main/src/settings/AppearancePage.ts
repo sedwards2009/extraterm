@@ -43,6 +43,7 @@ const uiScalePercentOptions: {id: number, name: string}[] = [
 const titleBarOptions: {id: TitleBarStyle, name: string}[] = [
   { id: "native", name: "Native" },
   { id: "theme", name: "Theme" },
+  { id: "compact", name: "Theme Compact" },
 ];
 
 const PREVIEW_WIDTH_CELLS = 45;

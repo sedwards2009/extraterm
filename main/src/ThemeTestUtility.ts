@@ -36,7 +36,7 @@ function main(): void {
   win.setWindowTitle("Theme Test");
 
   const dpi = QApplication.primaryScreen().logicalDotsPerInch();
-  const uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
+  const uiStyle = createUiStyle(path.posix.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"), "native");
 
   let guiScale = 1;
   function applyStyleSheet(): void {

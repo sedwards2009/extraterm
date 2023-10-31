@@ -99,6 +99,8 @@ export class WindowManager {
       CDockManager.setConfigFlag(eConfigFlag.FloatingContainerForceNativeTitleBar, true);
     } else {
       CDockManager.setConfigFlag(eConfigFlag.FloatingContainerForceQWidgetTitleBar, true);
+      CDockManager.setConfigFlag(eConfigFlag.FloatingContainerShowWidgetTitle,
+        generalConfig.titleBarStyle === "theme");
     }
 
     QApplication.setWindowIcon(createWindowIcon());

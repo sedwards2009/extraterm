@@ -17,7 +17,7 @@ function main(): void {
   const win = new QMainWindow();
   win.setWindowTitle("List Picker Test");
 
-  const uiStyle = createUiStyle(path.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"));
+  const uiStyle = createUiStyle(path.join(SourceDir.posixPath, "../resources/theme_ui/DarkTwo/"), "native");
 
   const styleSheet = uiStyle.getApplicationStyleSheet(1, QApplication.primaryScreen().logicalDotsPerInch());
   const listPicker = new ListPicker(uiStyle);

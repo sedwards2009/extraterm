@@ -8,13 +8,14 @@ import { blue, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate,
 
 import { createIcon } from "../Icons.js";
 import { IconPair, UiStyle } from "../UiStyle.js";
+import { TitleBarStyle } from "../../config/Config.js";
 
 
 function toRgba(color: string): number {
   return (red(color) << 24) | (green(color) << 16) | (blue(color) << 8) | 0xff;
 }
 
-export function createUiStyle(resourceDirectory: string): UiStyle {
+export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBarStyle): UiStyle {
   let styleTextColor = "";
   let styleDropdownLinkHoverColor = "";
   let StyleLinkLabelCSS;
@@ -1348,11 +1349,29 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     margin: 0px;
   }
 
+  ads--CFloatingWidgetTitleBar {
+    padding: 0px 0px;
+  }
+
   #floatingTitleLabel {
     color: ${textHighlightColor};
     font-weight: bold;
+    padding: ${emToPx(0.1)}px ${emToPx(0.3)}px;
+    qproperty-visible: false;
   }
-
+` + (titleBarStyle === "theme" ?
+`
+  #floatingTitleMinimizeButton, #floatingTitleMaximizeButton, #floatingTitleCloseButton {
+    border-radius : 0px;
+    border: 0px;
+    min-height: ${emToPx(1.5 * 1)}px;
+    icon-size: ${emToPx(smallFactor)}px;
+    padding: ${emToPx(2 * 0.1)}px ${emToPx(2 * 0.3)}px;
+    background-color: transparent;
+  }
+`
+:
+`
   #floatingTitleMinimizeButton, #floatingTitleMaximizeButton, #floatingTitleCloseButton {
     border-radius : 0px;
     border: 0px;
@@ -1361,7 +1380,8 @@ export function createUiStyle(resourceDirectory: string): UiStyle {
     padding: ${emToPx(0.1)}px ${emToPx(0.3)}px;
     background-color: transparent;
   }
-
+`
+) + `
   #floatingTitleMinimizeButton {
     icon: url(${resourceDirectory}/minimize_icon_normal.svg);
   }
