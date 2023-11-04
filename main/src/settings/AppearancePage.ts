@@ -122,6 +122,9 @@ export class AppearancePage implements SettingsPageType {
       "thick"
     ];
     this.#initPreview();
+
+    const showTitleBar = process.platform !== "darwin";
+
     let titleBarWarningLabel: QLabel = null;
     const originalTitleBarStyle = generalConfig.titleBarStyle;
 
@@ -278,9 +281,9 @@ export class AppearancePage implements SettingsPageType {
                   }
                 })),
 
-                "Window Title Bar:",
+                showTitleBar && "Window Title Bar:",
 
-                BoxLayout({
+                showTitleBar && BoxLayout({
                   direction: Direction.LeftToRight,
                   spacing: 0,
                   contentsMargins: [0, 0, 0, 0],
