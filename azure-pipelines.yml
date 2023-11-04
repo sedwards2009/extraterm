@@ -141,6 +141,10 @@ jobs:
     pool:
       vmImage: 'macos-11'
     steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.11'
+          architecture: 'x64'
       - task: NodeTool@0
         inputs:
           versionSpec: $(nodeVersion)
