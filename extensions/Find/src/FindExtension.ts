@@ -177,8 +177,8 @@ class FindExtension {
         continue;
       }
       const details = <TerminalOutputDetails> block.details;
-
-      const scrollbackRange = this.#clipScreenToViewport(terminal, details, details.scrollback.height, RowPositionType.IN_SCROLLBACK);
+      const scrollbackRange = this.#clipScreenToViewport(terminal, details, details.scrollback.height,
+        RowPositionType.IN_SCROLLBACK, [RowPositionType.BELOW, RowPositionType.IN_SCREEN]);
       if (scrollbackRange != null) {
         if (regex != null) {
           this.#scanAndHighlight(regex, details.scrollback, scrollbackRange.topRow, scrollbackRange.bottomRow);
@@ -188,7 +188,8 @@ class FindExtension {
       }
 
       if (details.hasPty) {
-        const screenRange = this.#clipScreenToViewport(terminal, details, terminal.screen.materializedHeight, RowPositionType.IN_SCREEN);
+        const screenRange = this.#clipScreenToViewport(terminal, details, terminal.screen.materializedHeight,
+          RowPositionType.IN_SCREEN, [RowPositionType.BELOW]);
         if (screenRange != null) {
           if (regex != null) {
             this.#scanAndHighlight(regex, terminal.screen, screenRange.topRow, screenRange.bottomRow);
@@ -201,13 +202,13 @@ class FindExtension {
   }
 
   #clipScreenToViewport(terminal: Terminal, blockDetails: TerminalOutputDetails, height: number,
-      inside: RowPositionType): {topRow: number, bottomRow: number} {
+      inside: RowPositionType, below: RowPositionType[]): {topRow: number, bottomRow: number} {
 
     const viewport = terminal.viewport;
     let topRow = 0;
     let bottomRow = height;
     const topPosResult = blockDetails.positionToRow(viewport.position);
-    if (topPosResult.where === RowPositionType.BELOW) {
+    if (below.includes(topPosResult.where)) {
       return null;
     }
     if (topPosResult.where === inside) {
