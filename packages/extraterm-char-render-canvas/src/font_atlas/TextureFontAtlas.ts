@@ -17,8 +17,8 @@ export interface TextureCachedGlyph extends CachedGlyph {
  */
 export class TextureFontAtlas extends FontAtlasBase<TextureCachedGlyph> {
 
-  private _proxyCodePointMapping = new ArrayKeyTrie<number>();
-  private _nextFreeCodePoint = 0x11000000;
+  #proxyCodePointMapping = new ArrayKeyTrie<number>();
+  #nextFreeCodePoint = 0x11000000;
 
   protected _createCachedGlyphStruct(cg: CachedGlyph): TextureCachedGlyph {
     const textureXpx = cg.xPixels / this._pageImageWidth;
@@ -38,11 +38,11 @@ export class TextureFontAtlas extends FontAtlasBase<TextureCachedGlyph> {
   loadCombiningCodePoints(codePoints: number[], style: StyleCode, fontIndex: number, fgRGBA: number,
     bgRGBA: number): TextureCachedGlyph {
 
-    let proxyCodePoint = this._proxyCodePointMapping.get(codePoints);
+    let proxyCodePoint = this.#proxyCodePointMapping.get(codePoints);
     if (proxyCodePoint == null) {
-      proxyCodePoint = this._nextFreeCodePoint;
-      this._nextFreeCodePoint++;
-      this._proxyCodePointMapping.set(codePoints, proxyCodePoint);
+      proxyCodePoint = this.#nextFreeCodePoint;
+      this.#nextFreeCodePoint++;
+      this.#proxyCodePointMapping.set(codePoints, proxyCodePoint);
     }
 
     return this._getGlyph(proxyCodePoint, codePoints, style, fontIndex, fgRGBA, bgRGBA);

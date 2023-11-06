@@ -1,7 +1,7 @@
 /**
  * Copyright 2021 Simon Edwards <simon@simonzone.com>
  */
-import { QApplication, QColor, QFont, QFontMetrics, QFontWeight, QImage, QImageFormat, QPainter, QPainterPath, QPen } from "@nodegui/nodegui";
+import { QColor, QFont, QFontMetrics, QFontWeight, QImage, QImageFormat, QPainter, QPainterPath, QPen } from "@nodegui/nodegui";
 
 import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH, STYLE_MASK_UNDERLINE,
   STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, STYLE_MASK_HYPERLINK_HIGHLIGHT, UNDERLINE_STYLE_NORMAL,
@@ -45,64 +45,73 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   protected _pageImageHeight = 0;
   protected _painter: QPainter = null;
 
-  private _atlasWidthInCells: number;
-  private _atlasHeightInCells: number;
-  private _atlasFlushCellCount: number;
+  #atlasWidthInCells: number;
+  #atlasHeightInCells: number;
+  #atlasFlushCellCount: number;
 
-  private _safetyPadding: number = 0;
+  #safetyPadding: number = 0;
 
-  private _glyphCellMap: CachedGlyph[][] = null;
+  #glyphCellMap: CachedGlyph[][] = null;
 
-  private _monoTime = 1;
-  private _nextEmptyCellX: number = 0;
-  private _nextEmptyCellY: number = 0;
-  private _lookupTable = new TripleKeyMap<number, number, number, CG>();
+  #monoTime = 1;
+  #nextEmptyCellX: number = 0;
+  #nextEmptyCellY: number = 0;
+  #lookupTable = new TripleKeyMap<number, number, number, CG>();
 
-  private _qfont: QFont = null;
-  private _qmetrics: QFontMetrics = null;
-  private _extraQfonts: QFont[] = [];
-  private _extraQmetrics: QFontMetrics[] = [];
+  #qfont: QFont = null;
+  #qmetrics: QFontMetrics = null;
+  #extraQfonts: QFont[] = [];
+  #extraQmetrics: QFontMetrics[] = [];
 
-  constructor(protected readonly _metrics: MonospaceFontMetrics,
-      protected readonly _extraFonts: MonospaceFontMetrics[],
-      protected readonly _transparentBackground: boolean,
-      protected readonly _screenWidthHintPx: number,
-      protected readonly _screenHeightHintPx: number) {
+  protected _metrics: MonospaceFontMetrics;
+  protected _extraFonts: MonospaceFontMetrics[];
+  protected _transparentBackground: boolean;
+  protected _screenWidthHintPx: number;
+  protected _screenHeightHintPx: number;
+
+  constructor(metrics: MonospaceFontMetrics, extraFonts: MonospaceFontMetrics[],
+      transparentBackground: boolean, screenWidthHintPx: number, screenHeightHintPx: number) {
 
     this._log = getLogger("FontAtlasPage", this);
 
-    this._qfont = new QFont();
-    this._qfont.setFamily(this._metrics.fontFamily);
-    this._qfont.setPixelSize(this._metrics.fontSizePx);
-    this._qmetrics = new QFontMetrics(this._qfont);
+    this._metrics = metrics;
+    this._extraFonts = extraFonts;
+    this._transparentBackground = transparentBackground;
+    this._screenWidthHintPx = screenWidthHintPx;
+    this._screenHeightHintPx = screenHeightHintPx;
+
+    this.#qfont = new QFont();
+    this.#qfont.setFamily(this._metrics.fontFamily);
+    this.#qfont.setPixelSize(this._metrics.fontSizePx);
+    this.#qmetrics = new QFontMetrics(this.#qfont);
 
     for (const extraFont of this._extraFonts) {
       const font = new QFont();
       font.setFamily(extraFont.fontFamily);
       font.setPixelSize(extraFont.fontSizePx);
-      this._extraQfonts.push(font);
+      this.#extraQfonts.push(font);
 
       const qmetrics = new QFontMetrics(font);
-      this._extraQmetrics.push(qmetrics);
+      this.#extraQmetrics.push(qmetrics);
     }
 
     // this._log.debug(`FontAtlasPage cellWidth: ${this._metrics.widthPx}, cellHeight: ${this._metrics.heightPx}`);
-    this._initialize();
+    this.#initialize();
   }
 
-  private _initialize(): void {
-    this._atlasWidthInCells = Math.ceil(this._screenWidthHintPx / this._metrics.widthPx);
-    this._atlasHeightInCells = Math.ceil(this._screenHeightHintPx / this._metrics.heightPx);
-    this._atlasFlushCellCount = Math.floor(this._atlasWidthInCells * this._atlasHeightInCells *
+  #initialize(): void {
+    this.#atlasWidthInCells = Math.ceil(this._screenWidthHintPx / this._metrics.widthPx);
+    this.#atlasHeightInCells = Math.ceil(this._screenHeightHintPx / this._metrics.heightPx);
+    this.#atlasFlushCellCount = Math.floor(this.#atlasWidthInCells * this.#atlasHeightInCells *
                                   FRACTION_CELLS_TO_CLEAR_ON_FLUSH);
 
-    this._safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) / 6);
+    this.#safetyPadding = Math.ceil(Math.max(this._metrics.widthPx, this._metrics.heightPx) / 6);
 
-    this._pageImageWidth = this._atlasWidthInCells * (this._metrics.widthPx + this._safetyPadding * 2);
-    this._pageImageHeight = this._atlasHeightInCells * (this._metrics.heightPx + this._safetyPadding * 2);
+    this._pageImageWidth = this.#atlasWidthInCells * (this._metrics.widthPx + this.#safetyPadding * 2);
+    this._pageImageHeight = this.#atlasHeightInCells * (this._metrics.heightPx + this.#safetyPadding * 2);
 
     this._pageImage = new QImage(this._pageImageWidth, this._pageImageHeight, QImageFormat.RGB32);
-    this._initializeSlots();
+    this.#initializeSlots();
 
     this._painter = new QPainter(); //{alpha: this._transparentBackground});
     this._painter.begin(this._pageImage);
@@ -110,10 +119,10 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     this._painter.end();
   }
 
-  private _initializeSlots(): void {
+  #initializeSlots(): void {
     const slotsMap: CachedGlyph[][] = [];
-    const atlasWidthInCells = this._atlasWidthInCells;
-    for (let j=0; j<this._atlasHeightInCells; j++) {
+    const atlasWidthInCells = this.#atlasWidthInCells;
+    for (let j=0; j<this.#atlasHeightInCells; j++) {
       const slotRow = new Array(atlasWidthInCells);
       for (let i=0; i<atlasWidthInCells; i++) {
         slotRow[i] = null;
@@ -121,7 +130,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       slotsMap.push(slotRow);
     }
 
-    this._glyphCellMap = slotsMap;
+    this.#glyphCellMap = slotsMap;
   }
 
   getCanvas(): HTMLCanvasElement {
@@ -137,26 +146,26 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   }
 
   getChangeCounter(): number {
-    return this._monoTime;
+    return this.#monoTime;
   }
 
-  private _makeLookupKey(codePoint: number, style: StyleCode): number {
+  #makeLookupKey(codePoint: number, style: StyleCode): number {
     return style * TWO_TO_THE_24 + codePoint;
   }
 
   protected _getGlyph(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
       fgRGBA: number, bgRGBA: number): CG {
 
-    let cachedGlyph = this._lookupTable.get(fgRGBA, bgRGBA, this._makeLookupKey(codePoint, style));
+    let cachedGlyph = this.#lookupTable.get(fgRGBA, bgRGBA, this.#makeLookupKey(codePoint, style));
     if (cachedGlyph == null) {
-      cachedGlyph = this._insertChar(codePoint, alternateCodePoints, style, fontIndex, fgRGBA, bgRGBA);
+      cachedGlyph = this.#insertChar(codePoint, alternateCodePoints, style, fontIndex, fgRGBA, bgRGBA);
     }
-    cachedGlyph.lastUse = this._monoTime;
-    this._monoTime++;
+    cachedGlyph.lastUse = this.#monoTime;
+    this.#monoTime++;
     return cachedGlyph;
   }
 
-  private _insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
+  #insertChar(codePoint: number, alternateCodePoints: number[], style: StyleCode, fontIndex: number,
       fgRGBA: number, bgRGBA: number): CG {
 
     const widthPx = this._metrics.widthPx;
@@ -169,23 +178,23 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       }
     }
 
-    this._computeNextEmptyCell(widthInCells);
+    this.#computeNextEmptyCell(widthInCells);
 
-    const xPx = this._nextEmptyCellX * (this._metrics.widthPx + this._safetyPadding*2) + this._safetyPadding;
-    const yPx = this._nextEmptyCellY * (this._metrics.heightPx + this._safetyPadding*2) + this._safetyPadding;
+    const xPx = this.#nextEmptyCellX * (this._metrics.widthPx + this.#safetyPadding*2) + this.#safetyPadding;
+    const yPx = this.#nextEmptyCellY * (this._metrics.heightPx + this.#safetyPadding*2) + this.#safetyPadding;
 
     const cachedGlyph = this._insertCharAt(codePoint, alternateCodePoints, style, fontIndex, fgRGBA, bgRGBA, xPx, yPx,
       widthPx, widthInCells);
-    cachedGlyph.atlasX = this._nextEmptyCellX;
-    cachedGlyph.atlasY = this._nextEmptyCellY;
+    cachedGlyph.atlasX = this.#nextEmptyCellX;
+    cachedGlyph.atlasY = this.#nextEmptyCellY;
 
-    const key3 = this._makeLookupKey(codePoint, style);
+    const key3 = this.#makeLookupKey(codePoint, style);
     cachedGlyph.key1 = fgRGBA;
     cachedGlyph.key2 = bgRGBA;
     cachedGlyph.key3 = key3;
-    this._lookupTable.set(fgRGBA, bgRGBA, key3, cachedGlyph);
+    this.#lookupTable.set(fgRGBA, bgRGBA, key3, cachedGlyph);
     for (let i=0; i<widthInCells; i++) {
-      this._glyphCellMap[this._nextEmptyCellY][this._nextEmptyCellX + i] = cachedGlyph;
+      this.#glyphCellMap[this.#nextEmptyCellY][this.#nextEmptyCellX + i] = cachedGlyph;
     }
     return cachedGlyph;
   }
@@ -208,11 +217,11 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     if (isBoxCharacter(codePoint)) {
       drawBoxCharacter(painter, codePoint, xPx, yPx, this._metrics.widthPx, this._metrics.heightPx, fgColor);
     } else {
-      this._drawPlainCharacter(painter, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx, widthInCells);
+      this.#drawPlainCharacter(painter, codePoint, alternateCodePoints, style, fontIndex, xPx, yPx, widthInCells);
     }
 
     for (let i=0; i<widthInCells; i++) {
-      this._drawDecoration(painter, style, xPx + i * widthPx, yPx, widthPx, fgRGBA);
+      this.#drawDecoration(painter, style, xPx + i * widthPx, yPx, widthPx, fgRGBA);
     }
 
     const cachedGlyph = this._createCachedGlyphStruct({
@@ -236,7 +245,7 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     return cachedGlyph;
   }
 
-  private _drawPlainCharacter(painter: QPainter, codePoint: number, alternateCodePoints: number[],
+  #drawPlainCharacter(painter: QPainter, codePoint: number, alternateCodePoints: number[],
       style: StyleCode, fontIndex: number, xPx: number, yPx: number, widthInCells: number): void {
 
     let str: string;
@@ -248,9 +257,9 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
 
     let font: QFont = null;
     if (fontIndex === 0) {
-      font = this._qfont;
+      font = this.#qfont;
     } else {
-      font = this._extraQfonts[fontIndex-1];
+      font = this.#extraQfonts[fontIndex-1];
     }
 
     font.setWeight(style & STYLE_MASK_BOLD ? QFontWeight.Bold : QFontWeight.Normal);
@@ -267,13 +276,13 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     const textYPx = yPx + this._metrics.fillTextYOffset;
 
     let shrink = false;
-    if (widthInCells === 1 && (fontIndex !== 0 || this._isSymbol(codePoint))) {
+    if (widthInCells === 1 && (fontIndex !== 0 || this.#isSymbol(codePoint))) {
       // Probe and possibly scale glyphs which fall outside their 1 cell.
       // * Symbols have a habit of being too big even if the font is meant
       //   to be a monospace and the glyph is meant to be just one cell.
       // * Extra fonts often have different width compared to our base font.
       //   We chell all of them.
-      const qmetrics = fontIndex === 0 ? this._qmetrics : this._extraQmetrics[fontIndex-1];
+      const qmetrics = fontIndex === 0 ? this.#qmetrics : this.#extraQmetrics[fontIndex-1];
       const charWidthPx = qmetrics.horizontalAdvance(str);
       if (charWidthPx > 1.25 * this._metrics.widthPx) {
         // We give a 25% leniency to avoid catching glyphs which render
@@ -312,11 +321,11 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     }
   }
 
-  private _isSymbol(codePoint: number): boolean {
+  #isSymbol(codePoint: number): boolean {
     return  (codePoint >= 0x2000 && codePoint < 0x2c00) || (codePoint & 0x1f000) === 0x1f000;
   }
 
-  private _drawDecoration(painter: QPainter, style: StyleCode, xPx: number, yPx: number,
+  #drawDecoration(painter: QPainter, style: StyleCode, xPx: number, yPx: number,
       widthPx: number, fgRGBA: number): void {
 
     const fgColor = RGBAToQColor(fgRGBA);
@@ -368,25 +377,25 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
 
   protected abstract _createCachedGlyphStruct(cg: CachedGlyph): CG;
 
-  private _computeNextEmptyCell(widthInCells: number): void {
-    const coord = this._findNextEmptyCell(this._glyphCellMap, this._nextEmptyCellX, this._nextEmptyCellY, widthInCells);
+  #computeNextEmptyCell(widthInCells: number): void {
+    const coord = this.#findNextEmptyCell(this.#glyphCellMap, this.#nextEmptyCellX, this.#nextEmptyCellY, widthInCells);
     if (coord != null) {
-      this._nextEmptyCellX = coord.x;
-      this._nextEmptyCellY = coord.y;
+      this.#nextEmptyCellX = coord.x;
+      this.#nextEmptyCellY = coord.y;
       return;
     }
 
-    this._flushLRU();
+    this.#flushLRU();
 
-    const coord2 = this._findNextEmptyCell(this._glyphCellMap, this._nextEmptyCellX, this._nextEmptyCellY, widthInCells);
-    this._nextEmptyCellX = coord2.x;
-    this._nextEmptyCellY = coord2.y;
+    const coord2 = this.#findNextEmptyCell(this.#glyphCellMap, this.#nextEmptyCellX, this.#nextEmptyCellY, widthInCells);
+    this.#nextEmptyCellX = coord2.x;
+    this.#nextEmptyCellY = coord2.y;
   }
 
-  private _findNextEmptyCell(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): {x: number, y: number} {
-    for (let j=y; j<this._atlasHeightInCells; j++) {
-      for (let i=x; i<this._atlasWidthInCells; i++) {
-        if (this._isCellFreeAt(glyphCellMap, i, j, widthInCells)) {
+  #findNextEmptyCell(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): {x: number, y: number} {
+    for (let j=y; j<this.#atlasHeightInCells; j++) {
+      for (let i=x; i<this.#atlasWidthInCells; i++) {
+        if (this.#isCellFreeAt(glyphCellMap, i, j, widthInCells)) {
           return {x: i, y: j};
         }
       }
@@ -398,8 +407,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   /**
    * Is there room at a `x`,`y` coord for a cell of `widthInCells` cells wide?
    */
-  private _isCellFreeAt(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): boolean {
-    if (x + widthInCells > this._atlasWidthInCells) {
+  #isCellFreeAt(glyphCellMap: CachedGlyph[][], x: number, y: number, widthInCells: number): boolean {
+    if (x + widthInCells > this.#atlasWidthInCells) {
       return false;
     }
     for (let i=0; i<widthInCells; i++) {
@@ -414,8 +423,8 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
   /**
    * Delete the $FLUSH_COUNT oldest glyphs from the atlas.
    */
-  private _flushLRU(): void {
-    const cachedGlyphsArray = Array.from(this._lookupTable.values());
+  #flushLRU(): void {
+    const cachedGlyphsArray = Array.from(this.#lookupTable.values());
 
     const cmp = function(a: CG, b: CG): -1 | 0 | 1 {
       if (a.lastUse === b.lastUse) {
@@ -424,19 +433,19 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
       return a.lastUse < b.lastUse ? -1 : 1;
     };
 
-    const cutOff = select(cachedGlyphsArray, this._atlasFlushCellCount, cmp);
+    const cutOff = select(cachedGlyphsArray, this.#atlasFlushCellCount, cmp);
     const cutOffLastUse = cutOff.lastUse;
 
     for(const cachedGlyph of cachedGlyphsArray) {
       if (cachedGlyph.lastUse <= cutOffLastUse) {
         for (let i=0; i<cachedGlyph.widthCells; i++) {
-          this._glyphCellMap[cachedGlyph.atlasY][cachedGlyph.atlasX + i] = null;
+          this.#glyphCellMap[cachedGlyph.atlasY][cachedGlyph.atlasX + i] = null;
         }
-        this._lookupTable.delete(cachedGlyph.key1, cachedGlyph.key2, cachedGlyph.key3);
+        this.#lookupTable.delete(cachedGlyph.key1, cachedGlyph.key2, cachedGlyph.key3);
       }
     }
 
-    this._nextEmptyCellX = 0;
-    this._nextEmptyCellY = 0;
+    this.#nextEmptyCellX = 0;
+    this.#nextEmptyCellY = 0;
   }
 }
