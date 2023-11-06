@@ -1357,7 +1357,6 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     color: ${textHighlightColor};
     font-weight: bold;
     padding: ${emToPx(0.1)}px ${emToPx(0.3)}px;
-    qproperty-visible: false;
   }
 ` + (titleBarStyle === "theme" ?
 `
@@ -1381,7 +1380,7 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     background-color: transparent;
   }
 `
-) + `
+      ) + `
   #floatingTitleMinimizeButton {
     icon: url(${resourceDirectory}/minimize_icon_normal.svg);
   }

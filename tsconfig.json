@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
-        "target": "esnext",
+        "target": "es2022",
         "module": "ES2020",
         "declaration": true,
         "moduleResolution": "node",

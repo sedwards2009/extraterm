@@ -21,11 +21,11 @@
     "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "devDependencies": {
-    "eslint": "8.13.0",
+    "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
     "jest": "27.5.1",
     "shx": "^0.3.2",
-    "typescript": "4.7.4"
+    "typescript": "5.2.2"
   }
 }

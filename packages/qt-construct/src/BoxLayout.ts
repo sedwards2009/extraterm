@@ -54,7 +54,7 @@ export function BoxLayout(options: BoxLayoutOptions): QBoxLayout {
       } else if (isBoxLayoutItem(child)) {
         if (child.widget !== undefined) {
           boxLayout.addWidget(child.widget, child.stretch === undefined ? 0 : child.stretch,
-            child.alignment === undefined ? 0 : child.alignment);
+            child.alignment === undefined ? 0 as AlignmentFlag : child.alignment);
         } else if (child.layout !== undefined) {
           boxLayout.addLayout(child.layout, child.stretch === undefined ? 0 : child.stretch);
         }

@@ -29,7 +29,7 @@
   },
   "resolutions": {
     "@types/node": "18.11.18",
-    "typescript": "4.7.4",
+    "typescript": "5.2.2",
     "@nodegui/nodegui": "0.61.1",
     "7zip-bin": "5.1.1"
   },
@@ -86,7 +86,7 @@
     "readdirp": "3.6.0",
     "shelljs": "^0.8.5",
     "shx": "^0.3.4",
-    "typescript": "4.7.4",
+    "typescript": "5.2.2",
     "wsrun": "5.2.0"
   },
   "packageManager": "yarn@3.2.1"
