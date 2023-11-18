@@ -67,7 +67,7 @@
         "category": "terminal",
         "order": 1501,
         "icon": "fa-clipboard",
-        "when": "connectedTerminalFocus && blockType == 'extraterm:terminal-output'"
+        "when": "connectedTerminalFocus"
       },
       {
         "command": "extraterm:terminal.openLastFrame",
