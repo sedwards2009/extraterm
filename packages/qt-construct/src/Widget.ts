@@ -24,6 +24,8 @@ export interface WidgetOptions {
   mouseTracking?: boolean;
   objectName?: string;
   onClose?: () => void;
+  onDragEnter?: (nativeEvent /* NativeQEvent */) => void;
+  onDrop?: (nativeEvent /* NativeQEvent */) => void;
   onEnter?: () => void;
   onFocusIn?: () => void;
   onFocusOut?: () => void;
@@ -50,10 +52,10 @@ export interface WidgetOptions {
 export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): void {
   const {
     attribute, contentsMargins, contextMenuPolicy, cursor, enabled, cssClass, focusPolicy, layout, mouseTracking,
-    objectName, onClose, onEnter, onFocusIn, onFocusOut, onInputMethod, onInputMethodQuery, onLayoutRequest, onLeave,
-    onKeyPress, onMouseButtonPress, onMouseMove, onMove, onPaint, onResize, onWheel, sizePolicy, styleSheet,
-    windowIcon, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth, windowFlag, inlineStyle,
-    toolTip, visible
+    objectName, onClose, onDragEnter, onDrop, onEnter, onFocusIn, onFocusOut, onInputMethod, onInputMethodQuery,
+    onLayoutRequest, onLeave, onKeyPress, onMouseButtonPress, onMouseMove, onMove, onPaint, onResize, onWheel,
+    sizePolicy, styleSheet, windowIcon, windowTitle, maximumHeight, maximumWidth, minimumHeight, minimumWidth,
+    windowFlag, inlineStyle, toolTip, visible
   } = options;
 
   if (enabled !== undefined) {
@@ -90,6 +92,12 @@ export function ApplyWidgetOptions(widget: QWidget, options: WidgetOptions): voi
   }
   if (onClose !== undefined) {
     widget.addEventListener(WidgetEventTypes.Close, onClose);
+  }
+  if (onDragEnter !== undefined) {
+    widget.addEventListener(WidgetEventTypes.DragEnter, onDragEnter);
+  }
+  if (onDrop !== undefined) {
+    widget.addEventListener(WidgetEventTypes.Drop, onDrop);
   }
   if (onEnter !== undefined) {
     widget.addEventListener(WidgetEventTypes.Enter, onEnter);

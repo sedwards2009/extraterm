@@ -29,6 +29,8 @@ import {
   QApplication,
   QBoxLayout,
   QClipboardMode,
+  QDragEnterEvent,
+  QDropEvent,
   QInputMethodEvent,
   QInputMethodQueryEvent,
   QKeyEvent,
@@ -341,6 +343,9 @@ export class Terminal implements Tab, Disposable {
     scrollAreaWidget.addEventListener(WidgetEventTypes.MouseButtonPress, (nativeEvent) => {
       this.#handleMouseButtonPressBelowFrames(new QMouseEvent(nativeEvent));
     });
+
+    this.#installDragDropHanlders(scrollAreaWidget);
+
     this.#contentWidget = this.scrollArea.getContentWidget();
 
     this.#topContents = Widget({
@@ -440,6 +445,32 @@ export class Terminal implements Tab, Disposable {
       this.scrollArea.setScrollPosition(value);
     });
 
+  }
+
+  #installDragDropHanlders(widget: QWidget): void {
+    widget.setAcceptDrops(true);
+    widget.addEventListener(WidgetEventTypes.Drop, (native) => {
+      const ev = new QDropEvent(native);
+      const mimeData = ev.mimeData();
+      if (mimeData.hasUrls()) {
+        const formattedUrls: string[] = [];
+        for (const url of mimeData.urls()) {
+          let urlString = url.toString();
+          if (urlString.startsWith("file://")) {
+            urlString = urlString.slice(7);
+          }
+          formattedUrls.push(urlString);
+        }
+        this.pasteText(formattedUrls.join(" "));
+      }
+    });
+    widget.addEventListener(WidgetEventTypes.DragEnter, (native) => {
+      const ev = new QDragEnterEvent(native);
+      const mimeData = ev.mimeData();
+      if (mimeData.hasUrls()) {
+        ev.accept();
+      }
+    });
   }
 
   start(): void {
