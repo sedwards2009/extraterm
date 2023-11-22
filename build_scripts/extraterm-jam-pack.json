@@ -143,6 +143,7 @@
     "appTitle": "ExtratermQt",
     "installerIcon": "$pruneStep_trashDirectory/main/resources/logo/extraterm_small_logo.ico",
     "uninstallerIcon": "$pruneStep_trashDirectory/main/resources/logo/extraterm_small_logo.ico",
+    "shortcutIcon": "$pruneStep_trashDirectory/main/resources/logo/extraterm_small_logo.ico",
 
     "extraInstallCommands": [
       "# Set up Windows Explorer menu items",

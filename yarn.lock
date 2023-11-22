@@ -1683,7 +1683,6 @@ __metadata:
     repeat-string: ^1.5.4
   bin:
     appdmg: bin/appdmg.js
-  checksum: 97f95f0cb56c77643a335004e5ad41ff71bfd39625222058e9a0dba86ea83ad97d0dea04fcf98afa2cc8418779b5718c85486a974405e2e9c6d19bc450ef6067
   conditions: os=darwin
   languageName: node
   linkType: hard
@@ -4428,7 +4427,7 @@ __metadata:
     extraterm-uuid: 1.0.0
     fs-extra: ^10.0.0
     git-repo-info: ^1.4.1
-    jam-pack-nodegui: 0.15.0
+    jam-pack-nodegui: 0.19.0
     jest: 27.5.1
     modclean: 3.0.0-beta.1
     node-gyp: ^8.3.0
@@ -4812,7 +4811,6 @@ __metadata:
   resolution: "fs-xattr@npm:0.3.1"
   dependencies:
     node-gyp: latest
-  checksum: 34ea354d3a61457a62b1447c765c710b8c8b3cf3cd130e6bb4e2747582a47607361e8c9c2c19ceabca491b93155ef0a972917443d6dead77c0139f07d5e84fde
   conditions: "!os=win32"
   languageName: node
   linkType: hard
@@ -5943,9 +5941,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jam-pack-nodegui@npm:0.15.0":
-  version: 0.15.0
-  resolution: "jam-pack-nodegui@npm:0.15.0"
+"jam-pack-nodegui@npm:0.19.0":
+  version: 0.19.0
+  resolution: "jam-pack-nodegui@npm:0.19.0"
   dependencies:
     "@yarnpkg/shell": ^3.2.4
     appdmg: ^0.6.4
@@ -5955,9 +5953,14 @@ __metadata:
     readdirp: ^3.6.0
     recursive-copy: ^2.0.14
     shelljs: ^0.8.5
+  dependenciesMeta:
+    appdmg:
+      optional: true
+    rcedit:
+      optional: true
   bin:
     jam-pack-nodegui: ./dist/main.js
-  checksum: 12d36efb3dbb63e356e3df48f9ba36cce7175614c5e27ce288abcfc0174f4ea2a8d9b6b444447b5a3c886c8926b792936e1d57f9a4e7f1af4c999c12832d414a
+  checksum: 7c97f40ede9c12ffb2ddafdc7dc6d6dbc1981d0418439c9f8ca5cea6b50f6084896efa66dddc542e5fb11aac906b34ad0e46661b27194862b02d01a747516199
   languageName: node
   linkType: hard
 
@@ -6947,7 +6950,6 @@ __metadata:
   dependencies:
     nan: ^2.4.0
     node-gyp: latest
-  checksum: b9ab2e2b7365b4a5a8572382deebc9fe8b0708e8cdf1e0d2748570cbf96a45832b03b33e5708d3861f01f5b16058cee02bb7fcd40add0f00ec102075b7a71332
   conditions: os=darwin
   languageName: node
   linkType: hard
