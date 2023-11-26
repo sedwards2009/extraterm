@@ -3,15 +3,11 @@
 - [Getting Started](#getting-started)
   - [Installation](#installation)
 - [Basics](#basics)
-  - [Cursor Mode](#cursor-mode)
-  - [Command Palette](#command-palette)
 - [Shell Integration](#shell-integration)
   - [The 'show' Command](#the-show-command)
   - [The 'from' Command](#the-from-command)
-  - [Executing Commands from Cursor Mode](#executing-commands-from-cursor-mode)
 - [Splits and Panes](#splits-and-panes)
   - [Drag and Drop](#drag-and-drop)
-- [Editing in Cursor Mode](#editing-in-cursor-mode)
 - [Viewing content with the Show Command](#viewing-content-with-the-show-command)
   - [Frames viewing Text](#frames-viewing-text)
 - [Settings](#settings)
@@ -20,13 +16,27 @@
   - [Appearance](#appearance)
     - [Terminal](#terminal)
     - [Interface](#interface)
-    - [Text Viewer](#text-viewer)
   - [Session Types](#session-types)
     - [Tab Title](#tab-title)
   - [Keybindings](#keybindings)
   - [Frames](#frames)
   - [Extensions](#extensions)
-- [Tips](#tips)
+  - [About](#about)
+  - [Autocomplete](#autocomplete)
+  - [Autolink](#autolink)
+  - [Colorizer](#colorizer)
+  - [Copy Block](#copy-block)
+  - [Copy Link](#copy-link)
+  - [Directory Commands](#directory-commands)
+  - [Find](#find)
+  - [Image Block](#image-block)
+  - [Insert Emoji](#insert-emoji)
+  - [Open Link](#open-link)
+  - [TLDR Pages](#tldr-pages)
+  - [Terminal Title](#terminal-title)
+  - [Tips](#tips)
+  - [Update Checker](#update-checker)
+- [Tips](#tips-1)
   - [Keyboard Shortcuts](#keyboard-shortcuts)
   - [Mouse selections when an app grabs the mouse](#mouse-selections-when-an-app-grabs-the-mouse)
   - [Changing where the configuration settings are stored](#changing-where-the-configuration-settings-are-stored)
@@ -46,40 +56,29 @@ Extraterm supports Linux, macOS, and Windows. The [download page](download.md) d
 
 # Basics
 
-When Extraterm starts it opens one tab and runs your default shell inside it. If you have used any terminal before, then the basic functionality will be familiar.
+When Extraterm starts it opens one tab and runs your default shell sessioninside it. If you have used any other terminal before, then this basic functionality will be familiar.
 
-Multiple terminals can be open at the same time in different tabs. The plus button at the top, next to the tabs, opens new terminal tabs (shortcut `Ctrl+Shift+T`). Close a tab by using the little cross icon/button on the right side of the tab, or just exit the shell. `Ctrl+Shift+Q` is the shortcut for closing a tab directly.
+New terminal sessions can be opened using the window or "hamburger" menu in the top right on the window. It also provides access to the Settings.
 
-Use the `Ctrl+,` and `Ctrl+.` shortcuts to move left and right between tabs.
+![Window Menu](window_menu.png)
+
+They open up in different tabs. A tab can be closed using the little cross button on the right side of the tab. The shortcut `Ctrl+Shift+Q` will close a tab immediately.
+
+Use the `Ctrl+,` and `Ctrl+.` shortcuts to navigate left and right between tabs.
 
 Selections can be made with the mouse and are automatically copied to the system clipboard. `Ctrl+Shift+C` will also copy a selection. `Ctrl+Shift+V`, `Ctrl+Insert` or the middle mouse button pastes the contents of the clipboard into the terminal.
 
 The scrollbar on the right or `Shift+PageUp` and `Shift+PageDown` let you can scroll through and view previous output.
 
-The "hamburger" menu in the top right corner of the Window provides access to new windows, new terminal tabs, and the Settings.
-
-The right mouse button opens context menus. The context menu for the plus button on the tab bar shows alternate terminal sessions. Tabs themselves also have options for customizing the tab. The contents of a terminal tab also supports context menus.
+The right mouse button on different elements in the window opens the context menu. Tabs themselves also have options for customizing the tab in their context menu. Terminal contents also have different options in the context menu.
 
 Files and directories can be dropped onto Extraterm terminals. The path of the dropped file or directory will be typed into the terminal.
 
-## Cursor Mode
-
-Extraterm features a cursor mode where you can navigate the screen and scrollback contents and select text in the terminal without having to reach for the mouse.
-
-To go into cursor mode press `Ctrl+Shift+Space`. The block cursor will remain in place but there will also be a blinking vertical bar cursor. This is Extraterm's cursor mode cursor. It works the same as the cursor in a typical desktop text editor. Cursor keys work the same and `shift` + cursor creates selections.
-
-`Ctrl+Shift+C` (or just `Ctrl+C`) copies the selection to the clipboard. The cursor can be placed using the mouse. When in cursor mode no keyboard input is sent to your shell.
-
-The `Ctrl+Shift+Space` shortcut acts as a toggle between cursor mode and normal terminal mode. Press it again to go back to terminal mode.
-
-See [Executing Commands from Cursor Mode](#executing-commands-from-cursor-mode) also.
-
-## Command Palette
-
-The Command Palette is a pop up menu of commands which can be easily searched and selected from via the keyboard. It grants direct access to all of Extraterm's commands and actions. Open it using `Ctrl+Shift+P`. Commands which are specific to the current context appear at the top of the menu. Cursor up/down and PageUp/PageDown keys move the selection. The `Enter` key executes the selected command, while the escape key closes the palette. The items in the menu can be filtered by entering search text.
+All of Extraterm's features and commands can be accessed via the Command Palette.
 
 ![Command palette](command_palette.png)
 
+The Command Palette is a pop up menu of commands which can be easily searched and selected from via the keyboard. It grants direct access to all of Extraterm's commands and actions. Open it using `Ctrl+Shift+P`. Commands which are specific to the current context appear at the top of the menu. Cursor up/down and PageUp/PageDown keys move the selection. The `Enter` key executes the selected command, while the escape key closes the palette. The items in the menu can be filtered by entering search text.
 
 -----------
 
@@ -160,21 +159,15 @@ With a shell pipe and `xargs` I can give the list of documents to the `wc` (word
 
 Using the `--save` or `-s` option `from` can directly write the frame contents to disk using the file's original filename.
 
-
-## Executing Commands from Cursor Mode
-
-Command output in a frame can be edited directly. Extraterm also has some shortcuts to make this capability even more useful.
-
-* `Ctrl+Enter` will type the currently selected text into the shell.
-* `Ctrl+Shift+Enter` will type the currently select text into the shell and press the enter key. Effectively it executes the selection in the shell. Use with care.
-
 -----------
 
 # Splits and Panes
 
-Each terminal is contained in its own tab. New tabs can be opened by clicking on the new tab button '+' up in the tab bar, or using `Ctrl+Shift+T`. Tabs can be 'split' half horizontally or vertically using the `Horizontal Split` and `Vertical Split` commands which can be found in the [Command Palette](#command-palette). When a tab is split, it is moved to the side and the Pane Menu appears in the remaining space or 'pane'. The menu allows you to create a new terminal, more splits or to close the pane.
+Each terminal is contained in its own tab. Tabs can be arranged, 'split', horizontally or vertically using the `Horizontal Split` and `Vertical Split` commands in the [Command Palette](#command-palette). When a tab is split, it is moved to the side and the Pane Menu appears in the remaining space or 'pane'. The menu allows you to create a new terminal, more splits or to close the pane.
 
 ![Tiling and panes](splits_and_panes.png)
+
+Tabs can be dragged in and out of windows into their own independent windows. They can also be dragged to split and tile them.
 
 ## Drag and Drop
 
@@ -184,13 +177,6 @@ Extraterm supports mouse based gestures for rearranging tabs in the tab bar, mov
 * Frames can be dragged by their title bars up into a group of tabs to move them out of their terminal and into their own tab.
 * The main content area of every tab can be split different ways depending on where a tab or frame is dropped. Drops towards the top or bottom will split it horizontally, while drops to the far left or right will split it vertically. A drop in the center of the content will simply move the tab or frame up into the tab group.
 * Frames can also be dragged right out of Extraterm and dropped on other applications which will accept text.
-
-
------------
-
-# Editing in Cursor Mode
-
-TODO
 
 -----------
 
@@ -210,12 +196,10 @@ The Settings tab is accessible via the "hamburger" menu in the top right corner 
 
 ![settings_general.png](settings_general.png)
 
-* **Show Tips** - Sets how often Tips are shown inside new terminals. Options are: *Everytime*, *Daily*, and *Never*.
 * **Max. Scrollback Lines** - Sets the maximum number of lines the scrollback area (the lines of text which have moved up out of the window) can be before rows are deleted.
 * **Max. Scrollback Frames** - Sets the maximum number of frames permitted in the scrollback area before they are deleted.
 * **Automatically copy selection to clipboard** - If this is on, then any selection is automatically copied to the system clipboard.
 * **Close the window after closing the last tab** - If this is on, then the window will automatically close once the last tab has been closed. Otherwise the window will remain open.
-* **Reduce graphic effects** - Some graphics hardware and drivers can show incorrect colors in some parts of the Extraterm interface. Turning this on will reduce the use of graphic features which may cause trouble.
 
 ### Mouse Button Actions
 
@@ -243,7 +227,6 @@ Settings related to how terminal tabs and their contents appear.
 * **Enable ligatures** - If your terminal font support ligatures and this is enabled, then ligatures will be applied to text inside the terminal. See "What are ligatures?" below.
 * **Theme** - The color theme for terminals can be selected here. The button "User themes" opens the directory in the system file manger where your own theme files can be placed. The reload button rescans this directory. The list of different theme file formats is shown below the buttons.
 * **Cursor Style** - Sets the cursor style to use inside terminals. Options are *block*, *lower bar*, and *vertical bar*.
-* **Blink Cursor** - If this on, then cursor will blink. Defaults to off.
 * **Margin** - Sets the size of the margin surrounding the terminal text and edge of the tab containing it. Options are *None*, *Thin*, *Normal*, and *Thick*.
 * **Preview** - The colored text below the options show a preview of the selected theme, font, cursor and ligature settings.
 
@@ -255,22 +238,10 @@ Ligatures are visual replacements for groups of characters (actually called "gly
 
 Settings related to the general appearance of the whole application.
 
-![settings_appearance_2.png](settings_appearance_2.png)
-
-* **Theme** - The theme for the interface. Defaults to *Two Dark UI theme*, a modern dark and mostly flat theme which also integrates with the terminal color theme. It is based on the *One Dark* them from the Atom text editor. Other themes are *Atomic Light UI theme* and *Atomic Dark UI theme* which are also based on similar themes from Atom.
 * **Zoom** - Increases or decreases the size of all elements and text in the user interface of the whole application.
-* **Window Title Bar** - Sets type of title bar for the Extraterm window. *Native* is just the normal operating system title bar. *Theme* is a themed title bar. *Compact Theme* is also themed but is more compact with tabs integrated into the bar itself and the window controls.
+* **Window Title Bar** - Sets type of title bar for the Extraterm window. *Native* is just the normal operating system title bar. *Theme* is a themed title bar. *Theme Compact* is also themed but is more compact and doesn't show the window title.
 * **Show icon in system tray** - If this is on, then Extraterm icon will appear in the desktop tray.
 * **Minimize window to tray** - If this is on, then the Extraterm window will disappear from your desktop taskbar when it is minimized. The window can be shown again by using the icon in the system tray.
-
-
-### Text Viewer
-
-Extraterm's `show` command can display text in its own custom viewer. This viewer supports syntax highlighting and has its own themes.
-
-* **Theme** - The theme for the text viewer. The button "User themes" opens the directory in the system file manger where your own theme files can be placed. The reload button rescans this directory. The list of different theme file formats is shown below the buttons.
-* **Preview** - Preview text is also shown. Example text for different file types can be selected.
-
 
 ## Session Types
 
@@ -353,6 +324,53 @@ The details button on each extension card gives more information about how the e
 
 Extensions can be enabled or disabled by the button in the bottom right corner of the extension card.
 
+## About
+
+This extension simply adds the About tab. Yes, the About tab is just an extension.
+
+## Autocomplete
+
+## Autolink
+
+Autolink detects links in the terminal output and turns them into real links which have proper context menus and can be opened using Ctrl+Click.
+
+## Colorizer
+
+Colorizer scans the terminal output for certain patterns and words and colors them. This is useful for highlighting important text in command output such as "error" or "warning".
+
+![settings_colorizer.png](settings_colorizer.png)
+
+This extension has an area in the Setting tabs where it can be configured. The whole extension can be easily enabled/disabled using the checkbox. Most of the configuration is the list of rules defining text pattersn to match and highligt.
+
+
+
+## Copy Block
+
+## Copy Link
+
+## Directory Commands
+
+## Find
+
+## Image Block
+
+
+## Insert Emoji
+
+
+## Open Link
+
+## TLDR Pages
+
+## Terminal Title
+
+## Tips
+
+![settings_tips.png](settings_tips.png)
+
+## Update Checker
+
+![settings_updates.png](settings_updates.png)
 
 -----------
 
