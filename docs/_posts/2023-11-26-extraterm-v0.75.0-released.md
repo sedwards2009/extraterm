@@ -1,6 +1,6 @@
 ---
 title: Extraterm Qt v0.75.0 released
-date: 2023-11-26 10::20:00 +0200
+date: 2023-11-26 10:20:00 +0200
 categories: release
 version: 0.75.0
 ---
