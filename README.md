@@ -39,11 +39,11 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * Global shortcuts
 * Unicode support
 * Search
+* [Easily insert Emoji](https://extraterm.org/guide.html#insert-emoji)
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
 * Easy uploads and downloads using the shell integration
 * Previous command output can be used as input for new commands
 * Supports iTerm2 and TextMate themes
-* [Easily insert Emoji](https://extraterm.org/guide.html#insert-emoji)
 * [MIT license](LICENSE.txt)
 
 See the more detailed [features list](https://extraterm.org/features.html).
