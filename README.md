@@ -33,7 +33,9 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * Font ligatures
 * Keyboard friendly "Command Palette"
 * Text zoom
-* Configurable key bindings
+* [Output colorizing](https://extraterm.org/guide.html#colorizer)
+* [Multiple windows and tiling](https://extraterm.org/guide.html#splits-and-panes)
+* [Configurable key bindings](https://extraterm.org/guide.html#keybindings)
 * Global shortcuts
 * Unicode support
 * Search
@@ -41,9 +43,8 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * Easy uploads and downloads using the shell integration
 * Previous command output can be used as input for new commands
 * Supports iTerm2 and TextMate themes
-* Multiple windows
+* [Easily insert Emoji](https://extraterm.org/guide.html#insert-emoji)
 * [MIT license](LICENSE.txt)
-* [...much more to come](https://github.com/sedwards2009/extraterm/issues/30)
 
 See the more detailed [features list](https://extraterm.org/features.html).
 

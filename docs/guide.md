@@ -338,10 +338,13 @@ Autolink detects links in the terminal output and turns them into real links whi
 
 Colorizer scans the terminal output for certain patterns and words and colors them. This is useful for highlighting important text in command output such as "error" or "warning".
 
-![settings_colorizer.png](settings_colorizer.png)
+For example:
+
+![colorizer_example.png](colorizer_example.png)
 
 This extension has an area in the Setting tabs where it can be configured. The whole extension can be easily enabled/disabled using the checkbox. Most of the configuration is the list of rules defining text pattersn to match and highligt.
 
+![settings_colorizer.png](settings_colorizer.png)
 
 
 ## Copy Block
@@ -357,6 +360,9 @@ This extension has an area in the Setting tabs where it can be configured. The w
 
 ## Insert Emoji
 
+The "Insert Emoji" command is available in the Command Palette. It opens a list of emoji from which you can select one to insert into the current terminal.
+
+![insert_emoji_qt.png](insert_emoji_qt.png)
 
 ## Open Link
 
