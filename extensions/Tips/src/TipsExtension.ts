@@ -36,6 +36,9 @@ export function activate(_context: ExtensionContext): any {
 }
 
 function handleNewTerminal(newTerminal: Terminal): void {
+  if ( !newTerminal.isConnected) {
+    return;
+  }
   const config = getConfig();
   switch (config.frequency) {
     case "every":
