@@ -35,7 +35,7 @@ export class StoredBulkFile implements BulkFile, Disposable {
   #cryptoKey: Buffer = null;
   #cryptoIV: Buffer = null;
 
-  #succeess = false;
+  #success = false;
 
   #onStateChangedEventEmitter = new EventEmitter<BulkFileState>();
   onStateChanged: Event<BulkFileState>;
@@ -138,12 +138,12 @@ export class StoredBulkFile implements BulkFile, Disposable {
     if (this.#writeStreamOpen) {
       return BulkFileState.DOWNLOADING;
     }
-    return this.#succeess ? BulkFileState.COMPLETED : BulkFileState.FAILED;
+    return this.#success ? BulkFileState.COMPLETED : BulkFileState.FAILED;
   }
 
   setSuccess(success: boolean): void {
     this.#checkIsAlive();
-    this.#succeess = success;
+    this.#success = success;
     if (this.#writeStreamOpen) {
       return;
     }
@@ -163,7 +163,7 @@ export class StoredBulkFile implements BulkFile, Disposable {
     this.#onReferenceCountChangedEventEmitter.fire(this);
     return this.#referenceCount;
   }
-  
+
   getRefCount(): number {
     this.#checkIsAlive();
     return this.#referenceCount;
