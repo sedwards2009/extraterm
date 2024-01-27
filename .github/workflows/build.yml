@@ -3,7 +3,7 @@ name: build
 on: [push]
 
 env:
-  nodeVersion: '20.11.0'
+  nodeVersion: '18.12.1'
 
 jobs:
   build-linux:
