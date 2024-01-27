@@ -17,6 +17,7 @@
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
     "download-launcher-executable": "node build_scripts/download_launcher_executables.mjs v18",
     "download-deploy-tool": "node build_scripts/download_deploy_tool.mjs",
+    "download-extraterm-commands": "node build_scripts/download_extraterm-commands.mjs v0.9.4",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
     "package": "jam-pack-nodegui --config build_scripts/extraterm-jam-pack.json -D build.applicationName=extratermqt -D build.applicationVersion=$(git describe --tags | shx sed 's/v//')",
