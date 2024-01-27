@@ -1,0 +1,105 @@
+name: build
+
+on: [push]
+
+env:
+  nodeVersion: '20.11.0'
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install development packages
+        run: |
+          apt-get update
+          apt-get install pkg-config build-essential cmake make sudo apt-get \
+            install xserver-xorg-core mesa-common-dev libglu1-mesa-dev \
+            libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-render-util0 libxcb-xinerama0
+      - name: Set up pkg2appimage
+        run: |
+            wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage--x86_64.AppImage
+            chmod +x ./pkg2appimage-*.AppImage
+            mv pkg2appimage-*.AppImage pkg2appimage.AppImage
+            sudo mv pkg2appimage.AppImage /usr/local/bin
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.nodeVersion }}
+      - name: Install dependencies
+        run: yarn install
+      - name: Download launcher executable
+        run: yarn run download-launcher-executable
+      - name: Lint strict
+        run: yarn run lint-strict
+      - name: Build
+        run: yarn run build
+      - name: Test
+        run: yarn run test
+      - name: Package
+        run: yarn run package
+      - name: Copy files
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux-build-output
+          path: |
+            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.deb
+            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.AppImage
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Install nsis
+        run: choco install nsis -y
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.nodeVersion }}
+      - name: Install dependencies
+        run: yarn install
+      - name: Download launcher executable
+        run: yarn run download-launcher-executable
+      - name: Lint strict
+        run: yarn run lint-strict
+      - name: Build
+        run: yarn run build
+      - name: Test
+        run: yarn run test
+      - name: Package
+        run: yarn run package
+      - name: Copy files
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-build-output
+          path: |
+            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.nodeVersion }}
+      - name: Install dependencies
+        run: yarn install
+      - name: Download launcher executable
+        run: yarn run download-launcher-executable
+      - name: Lint strict
+        run: yarn run lint-strict
+      - name: Build
+        run: yarn run build
+      - name: Test
+        run: yarn run test
+      - name: Package
+        run: yarn run package
+      - name: Copy files
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS-build-output
+          path: |
+            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
