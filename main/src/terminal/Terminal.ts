@@ -737,11 +737,15 @@ export class Terminal implements Tab, Disposable {
       };
       this.#handleTermKeyboardEvent(event, termEvent);
 
-      const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
-      terminalBlock.setPreeditString(null);
+      if (this.#latestTerminalFrame != null) {
+        const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
+        terminalBlock.setPreeditString(null);
+      }
     } else {
-      const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
-      terminalBlock.setPreeditString(event.preeditString());
+      if (this.#latestTerminalFrame != null) {
+        const terminalBlock = <TerminalBlock> this.#latestTerminalFrame.getBlock();
+        terminalBlock.setPreeditString(event.preeditString());
+      }
     }
   }
 
