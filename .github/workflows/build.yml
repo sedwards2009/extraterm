@@ -12,17 +12,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install development packages
         run: |
-          apt-get update
-          apt-get install pkg-config build-essential cmake make sudo apt-get \
-            install xserver-xorg-core mesa-common-dev libglu1-mesa-dev \
+          sudo apt-get update
+          sudo apt-get install pkg-config build-essential cmake make \
+            xserver-xorg-core mesa-common-dev libglu1-mesa-dev \
             libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-render-util0 libxcb-xinerama0
       - name: Set up pkg2appimage
         run: |
-            wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage--x86_64.AppImage
-            chmod +x ./pkg2appimage-*.AppImage
-            mv pkg2appimage-*.AppImage pkg2appimage.AppImage
-            sudo mv pkg2appimage.AppImage /usr/local/bin
+          wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage--x86_64.AppImage
+          chmod +x ./pkg2appimage-*.AppImage
+          mv pkg2appimage-*.AppImage pkg2appimage.AppImage
+          sudo mv pkg2appimage.AppImage /usr/local/bin
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
