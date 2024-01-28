@@ -15,7 +15,7 @@ jobs:
       - name: Install development packages
         run: |
           sudo apt-get update
-          sudo apt-get install pkg-config build-essential cmake make \
+          sudo apt-get install pkg-config build-essential cmake make fuse \
             xserver-xorg-core mesa-common-dev libglu1-mesa-dev \
             libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
             libxcb-render-util0 libxcb-xinerama0
@@ -58,6 +58,8 @@ jobs:
           fetch-depth: 0
       - name: Install nsis
         run: choco install nsis -y
+      - name: Install zip
+        run: choco install zip -y
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
@@ -88,6 +90,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
