@@ -6,8 +6,23 @@ env:
   nodeVersion: '18.12.1'
 
 jobs:
+
+  create-release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Create GH release
+        run: |
+          gh release create "${{github.ref_name}}" \
+            --draft \
+            --title="${{github.ref_name}}" \
+            --repo="$GITHUB_REPOSITORY"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-linux:
     runs-on: ubuntu-latest
+    needs: create-release
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,8 +65,24 @@ jobs:
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.deb
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.AppImage
 
+      - name: Download extraterm-commands
+        if: startsWith(github.ref, 'refs/tags/')
+        run: yarn run download-extraterm-commands
+
+      - name: Upload to GH release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+            gh release upload "${{github.ref_name}}" \
+              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip \
+              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.deb \
+              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.AppImage \
+              ./downloads/extraterm-commands*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
   build-windows:
     runs-on: windows-latest
+    needs: create-release
     steps:
       - uses: actions/checkout@v4
         with:
@@ -84,8 +115,17 @@ jobs:
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.exe
 
+      - name: Upload to GH release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+            gh release upload "${{github.ref_name}}" \
+              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
   build-macos:
     runs-on: macos-latest
+    needs: create-release
     steps:
       - uses: actions/checkout@v4
         with:
@@ -116,3 +156,12 @@ jobs:
           path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
+
+      - name: Upload to GH release
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+            gh release upload "${{github.ref_name}}" \
+              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip \
+              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
