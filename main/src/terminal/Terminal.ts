@@ -1380,7 +1380,8 @@ export class Terminal implements Tab, Disposable {
     const scrollbackOutputLength = terminalBlock.getScrollbackLength() - this.#frameStartBookmark.row;
     const effectiveScreenLength = this.#emulator.getCursorRow();
 
-    const commandShouldBeFramed = returnCode !== "0" || this.#commandNeedsFrame(this.#lastCommandLine,
+    const isSuccess = returnCode === "0" || returnCode === "";
+    const commandShouldBeFramed = !isSuccess || this.#commandNeedsFrame(this.#lastCommandLine,
       scrollbackOutputLength + effectiveScreenLength);
     if (commandShouldBeFramed) {
       this.#disconnectLastTerminalFrameFromEmulator();
