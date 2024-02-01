@@ -21,7 +21,6 @@
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
     "lint-strict": "wsrun --concurrency 2 --exclude-missing --stages lint-strict",
     "package": "jam-pack-nodegui --config build_scripts/extraterm-jam-pack.json -D build.applicationName=extratermqt -D build.applicationVersion=$(git describe --tags | shx sed 's/v//')",
-    "package-commands-zip": "node build_scripts/package_commands_zip.mjs",
     "test": "wsrun --concurrency 2 --exclude-missing --stages test",
     "timeout_test": "qode timeout_test.js"
   },
