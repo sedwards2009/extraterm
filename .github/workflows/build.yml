@@ -56,15 +56,24 @@ jobs:
         run: yarn run test
       - name: Package
         run: yarn run package
-      - name: Copy files
+      - name: Copy Linux-build-zip-output
         uses: actions/upload-artifact@v4
         with:
-          name: Linux-build-output
+          name: Linux-build-zip-output
           path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+      - name: Copy Linux-build-deb-output
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux-build-deb-output
+          path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.deb
+      - name: Copy Linux-build-appimage-output
+        uses: actions/upload-artifact@v4
+        with:
+          name: Linux-build-appimage-output
+          path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.AppImage
-
       - name: Download extraterm-commands
         if: startsWith(github.ref, 'refs/tags/')
         run: yarn run download-extraterm-commands
@@ -79,7 +88,7 @@ jobs:
               ./downloads/extraterm-commands*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
   build-windows:
     runs-on: windows-latest
     needs: create-release
@@ -107,14 +116,18 @@ jobs:
         run: yarn run test
       - name: Package
         run: yarn run package
-      - name: Copy files
+      - name: Copy Windows-build-zip-output
         uses: actions/upload-artifact@v4
         with:
-          name: Windows-build-output
+          name: Windows-build-zip-output
           path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+      - name: Copy Windows-build-exe-output
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-build-exe-output
+          path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.exe
-
       - name: Upload to GH release
         if: startsWith(github.ref, 'refs/tags/')
         run: |
@@ -122,7 +135,7 @@ jobs:
               ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+
   build-macos:
     runs-on: macos-latest
     needs: create-release
@@ -149,14 +162,18 @@ jobs:
         run: yarn run test
       - name: Package
         run: yarn run package
-      - name: Copy files
+      - name: Copy macOS-build-zip-output
         uses: actions/upload-artifact@v4
         with:
-          name: macOS-build-output
+          name: macOS-build-zip-output
           path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+      - name: Copy macOS-build-dmg-output
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS-build-dmg-output
+          path: |
             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
-
       - name: Upload to GH release
         if: startsWith(github.ref, 'refs/tags/')
         run: |
