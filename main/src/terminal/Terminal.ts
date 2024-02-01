@@ -1727,6 +1727,7 @@ export class Terminal implements Tab, Disposable {
 
       case BlockState.FRAME_OPEN:
         this.#exitBlockStateFrameOpen("");
+        this.#disconnectLastTerminalFrameFromEmulator();
         appendExtensionBlock();
         this.#appendNewTerminalBlock();
         this.#enterBlockStatePlain();
@@ -1734,6 +1735,7 @@ export class Terminal implements Tab, Disposable {
 
       case BlockState.BOOKMARK_OPEN:
         this.#exitBlockStateBookmarkOpen("");
+        this.#disconnectLastTerminalFrameFromEmulator();
         appendExtensionBlock();
         this.#appendNewTerminalBlock();
         this.#enterBlockStatePlain();
