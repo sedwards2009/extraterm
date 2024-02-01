@@ -977,17 +977,17 @@ export class TerminalBlock implements Block {
       if (i === start.y) {
         if (start.y === end.y) {
           // Small selection contained within one row.
-          lineText.push(line.getString(start.x, end.x - start.x).trim());
+          lineText.push(line.getString(start.x, end.x - start.x).trimEnd());
         } else {
           // Top row of the selection.
-          lineText.push(line.getString(start.x, line.width-start.x).trim());
+          lineText.push(line.getString(start.x, line.width-start.x).trimEnd());
         }
       } else {
         if ( ! isLastLineWrapped) {
           lineText.push("\n");
         }
         if (i !== end.y) {
-          lineText.push(line.getString(0, line.width).trim());
+          lineText.push(line.getString(0, line.width).trimEnd());
         } else {
           // The last row of a multi-row selection.
           lineText.push(line.getString(0, end.x));
@@ -1019,7 +1019,7 @@ export class TerminalBlock implements Block {
 
     for (let i=firstRow; i<lastRow; i++) {
       const line = this.getLine(i);
-      lineText.push(line.getString(startX, Math.min(endX - startX, line.width)).trim());
+      lineText.push(line.getString(startX, Math.min(endX - startX, line.width)).trimEnd());
     }
     return lineText.join("\n");
   }
@@ -1127,7 +1127,7 @@ export class TerminalBlock implements Block {
     const len = this.#scrollback.length;
     for (let y=0; y<len; y++) {
       const line = this.#scrollback[y];
-      lines.push(line.getString(0));
+      lines.push(line.getString(0).trimEnd());
       if ( ! line.isWrapped) {
         lines.push("\n");
       }
