@@ -482,7 +482,7 @@ __metadata:
     typedoc: ^0.22.3
     typescript: 5.2.2
   peerDependencies:
-    "@nodegui/nodegui": 0.63.0
+    "@nodegui/nodegui": 0.64.0
   languageName: unknown
   linkType: soft
 
@@ -824,9 +824,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nodegui/nodegui@npm:0.63.0":
-  version: 0.63.0
-  resolution: "@nodegui/nodegui@npm:0.63.0"
+"@nodegui/nodegui@npm:0.64.0":
+  version: 0.64.0
+  resolution: "@nodegui/nodegui@npm:0.64.0"
   dependencies:
     "@nodegui/artifact-installer": ^1.1.0
     "@nodegui/qode": ^18.12.1
@@ -841,7 +841,7 @@ __metadata:
     tar: ^6.0.1
   bin:
     qode: scripts/qode.js
-  checksum: 474060ab0d53f4468335b8fb4ed9ce4d7abb7fdb6c2c957e46f8dec234f38adaf17b60970d40ec388791d062ecc62bb13204f27459b5bc15b7ea329ac5adf34d
+  checksum: 057b6ca7bb8ef89e376cfc3002d84c89c1d05731ecb8803c7f5c46874265359361ef82152be11bb94ef7cc3cb2997d1d051e46d1a7a9613980e8fb308ddddfa0
   languageName: node
   linkType: hard
 
@@ -4210,7 +4210,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-char-render-canvas@workspace:packages/extraterm-char-render-canvas"
   dependencies:
-    "@nodegui/nodegui": 0.63.0
+    "@nodegui/nodegui": 0.64.0
     "@types/node": ^18.15.3
     eslint: 8.53.0
     eslint-config-extraterm: 1.0.0
@@ -4369,7 +4369,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-timeoutqt@workspace:packages/extraterm-timeoutqt"
   dependencies:
-    "@nodegui/nodegui": 0.63.0
+    "@nodegui/nodegui": 0.64.0
     eslint: 8.53.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
@@ -4420,7 +4420,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm@workspace:."
   dependencies:
-    "@nodegui/nodegui": 0.63.0
+    "@nodegui/nodegui": 0.64.0
     "@nodegui/qode": 18.12.1
     "@yarnpkg/parsers": 2.5.0-rc.7
     commander: ^9.4.0
@@ -6959,7 +6959,7 @@ __metadata:
   resolution: "main@workspace:main"
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
-    "@nodegui/nodegui": 0.63.0
+    "@nodegui/nodegui": 0.64.0
     "@types/dompurify": ^2.0.1
     "@types/he": ^1.1.1
     "@types/lodash-es": 4.17.10
@@ -8708,14 +8708,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "qt-construct@workspace:packages/qt-construct"
   dependencies:
-    "@nodegui/nodegui": 0.63.0
+    "@nodegui/nodegui": 0.64.0
     eslint: 8.53.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     shelljs: 0.8.5
     typescript: 5.2.2
   peerDependencies:
-    "@nodegui/nodegui": 0.63.0
+    "@nodegui/nodegui": 0.64.0
   languageName: unknown
   linkType: soft
 

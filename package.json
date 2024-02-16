@@ -30,7 +30,7 @@
   "resolutions": {
     "@types/node": "18.11.18",
     "typescript": "5.2.2",
-    "@nodegui/nodegui": "0.63.0",
+    "@nodegui/nodegui": "0.64.0",
     "7zip-bin": "5.1.1"
   },
   "private": true,
@@ -70,7 +70,7 @@
     ]
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.63.0",
+    "@nodegui/nodegui": "0.64.0",
     "@nodegui/qode": "18.12.1",
     "node-gyp": "^8.3.0"
   },
