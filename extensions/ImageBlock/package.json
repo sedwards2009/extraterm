@@ -47,6 +47,12 @@
         "category": "terminal",
         "icon": "fa-search-minus",
         "when": "blockFocus && blockType == 'image-block:image-block'"
+      },
+      {
+        "command": "image-block:copyImageToClipboard",
+        "title": "Copy Image to Clipboard",
+        "category": "terminal",
+        "when": "blockFocus && blockType == 'image-block:image-block'"
       }
     ],
     "menus": {
@@ -57,6 +63,10 @@
         },
         {
           "command": "image-block:zoomOut",
+          "show": true
+        },
+        {
+          "command": "image-block:copyImageToClipboard",
           "show": true
         }
       ]

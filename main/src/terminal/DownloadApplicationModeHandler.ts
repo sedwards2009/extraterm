@@ -6,6 +6,7 @@
 
 import * as crypto from 'node:crypto';
 import {BulkFileHandle, Event, Disposable} from '@extraterm/extraterm-extension-api';
+import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
 import { EventEmitter } from "extraterm-event-emitter";
 import {Logger, getLogger} from "extraterm-logging";
 import { log } from "extraterm-logging";
@@ -157,6 +158,18 @@ class DownloadSession {
     if (this.#bulkFile !== null) {
       this.#bulkFile.getWritableStream().end();
       this.#bulkFile.deref();
+
+      const {mimeType, charset} = BulkFileUtils.guessMimetype(this.#bulkFile);
+      if (mimeType != null) {
+        const metadata = this.#bulkFile.getMetadata();
+        if (metadata["mimeType"] == null) {
+          this.#bulkFile.setMetadataField("mimeType", mimeType);
+          if (charset != null) {
+            this.#bulkFile.setMetadataField("charset", charset);
+          }
+        }
+      }
+
       this.#bulkFile = null;
     }
   }

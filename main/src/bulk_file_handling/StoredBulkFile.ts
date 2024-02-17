@@ -22,7 +22,7 @@ export class StoredBulkFile implements BulkFile, Disposable {
   private _log: Logger;
 
   #isAlive = true;
-  #metadata: BulkFileMetadata = null;
+  #metadata: object = null;
   #filePath: string = null;
   #url: string = null;
   #totalSize = -1;
@@ -59,7 +59,7 @@ export class StoredBulkFile implements BulkFile, Disposable {
     this.onStateChanged = this.#onStateChangedEventEmitter.event;
     this.onReferenceCountChanged = this.#onReferenceCountChangedEventEmitter.event;
 
-    this.#metadata = metadata;
+    this.#metadata = Object.assign({}, metadata);
     this.#filePath = filePath;
     this.#cryptoKey = crypto.randomBytes(32); // 256bit AES, thus 32 bytes
     this.#cryptoIV = crypto.randomBytes(16);  // 128bit block size, thus 16 bytes
@@ -171,7 +171,11 @@ export class StoredBulkFile implements BulkFile, Disposable {
 
   getMetadata(): BulkFileMetadata {
     this.#checkIsAlive();
-    return this.#metadata;
+    return <BulkFileMetadata> this.#metadata;
+  }
+
+  setMetadataField(key: string, value: string): void {
+    this.#metadata[key] = value;
   }
 
   getPeekBuffer(): Buffer {

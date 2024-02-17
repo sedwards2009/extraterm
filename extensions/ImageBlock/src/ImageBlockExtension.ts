@@ -27,6 +27,7 @@ export function activate(_context: ExtensionContext): any {
   context.terminals.registerBlock("image-block", newImageBlock);
   context.commands.registerCommand("image-block:zoomIn", commandZoomIn);
   context.commands.registerCommand("image-block:zoomOut", commandZoomOut);
+  context.commands.registerCommand("image-block:copyImageToClipboard", commandCopyImageToClipboard);
 }
 
 function newImageBlock(extensionBlock: ExtensionBlock): void {
@@ -155,15 +156,20 @@ class ImageUI {
     this.#setZoomPercent(ImageUI.ZoomPercentsArray[i]);
   }
 
+  async copyToClipboard(): Promise<void> {
+    const buffer = await downloadURL(this.#extensionBlock.bulkFile.url);
+    const mimeType = this.#extensionBlock.bulkFile.metadata["mimeType"];
+    context.application.clipboard.writeBuffer(mimeType, buffer);
+  }
+
   async #downloadImage(): Promise<void> {
-    const imageBuffer = await downloadURL(this.#extensionBlock.bulkFile. url);
+    const imageBuffer = await downloadURL(this.#extensionBlock.bulkFile.url);
     this.#image = new QImage();
     this.#image.loadFromData(imageBuffer);
     if (this.#image.isNull()) {
       log.warn(`Unable to load image into QImage.`);
       return;
     }
-
 
     let scaleIndex = ImageUI.ZoomPercentsArray.indexOf(100);
 
@@ -268,7 +274,7 @@ async function commandZoomIn(): Promise<void> {
   if (block.type !== "image-block:image-block") {
     return;
   }
-  block.details.zoomIn();
+  (<ImageUI> block.details).zoomIn();
 }
 
 async function commandZoomOut(): Promise<void> {
@@ -276,5 +282,13 @@ async function commandZoomOut(): Promise<void> {
   if (block.type !== "image-block:image-block") {
     return;
   }
-  block.details.zoomOut();
+  (<ImageUI> block.details).zoomOut();
+}
+
+async function commandCopyImageToClipboard(): Promise<void> {
+  const block = context.activeBlock;
+  if (block.type !== "image-block:image-block") {
+    return;
+  }
+  (<ImageUI> block.details).copyToClipboard();
 }
