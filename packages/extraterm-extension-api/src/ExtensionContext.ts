@@ -20,6 +20,8 @@ export interface Clipboard {
    * Write some text to the clipboard.
    */
   writeText(text: string): void;
+
+  writeBuffer(mimeType: string, buffer: Buffer): void;
 }
 
 /**
