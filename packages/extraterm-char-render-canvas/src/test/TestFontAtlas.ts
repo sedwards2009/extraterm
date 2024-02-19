@@ -3,9 +3,9 @@ import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH
   STYLE_MASK_OVERLINE, STYLE_MASK_HYPERLINK, STYLE_MASK_HYPERLINK_HIGHLIGHT, UNDERLINE_STYLE_NORMAL,
   UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-line";
 
-import { TextureFontAtlas } from "../../font_atlas/TextureFontAtlas.js";
-import { computeFontMetrics } from "../FontMeasurement.js";
-import { MonospaceFontMetrics } from "../MonospaceFontMetrics.js";
+import { TextureFontAtlas } from "../font_atlas/TextureFontAtlas.js";
+import { computeFontMetrics } from "../font_metrics/FontMeasurement.js";
+import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics.js";
 
 const log = console.log.bind(console);
 
