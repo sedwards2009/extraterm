@@ -1,7 +1,7 @@
 /**
  * term.js - an xterm emulator
  * Copyright (c) 2012-2013, Christopher Jeffrey (MIT License)
- * Copyright (c) 2014-2023, Simon Edwards <simon@simonzone.com>
+ * Copyright (c) 2014-2024, Simon Edwards <simon@simonzone.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -205,6 +205,9 @@ export class Emulator implements EmulatorApi {
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
     bgRGBA: 0x00000000,
+    imageID: 0,
+    imageX: 0,
+    imageY: 0,
   };
 
   // Current character style.
@@ -219,6 +222,9 @@ export class Emulator implements EmulatorApi {
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
     bgRGBA: 0x00000000,
+    imageID: 0,
+    imageX: 0,
+    imageY: 0,
   };
 
   private readonly savedCurAttr: CellWithHyperlink = {
@@ -232,6 +238,9 @@ export class Emulator implements EmulatorApi {
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
     bgRGBA: 0x00000000,
+    imageID: 0,
+    imageX: 0,
+    imageY: 0,
   };
 
   private _params = new ControlSequenceParameters();

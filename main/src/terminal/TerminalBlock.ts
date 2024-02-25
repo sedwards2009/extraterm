@@ -4,15 +4,12 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode,
-  QPen,
-  ContextMenuPolicy,
-  QRect,
-  QColor} from "@nodegui/nodegui";
+  QPen, ContextMenuPolicy, QRect, QColor} from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
-import { normalizedCellIterator, NormalizedCell, TextureFontAtlas, RGBAToQColor, TextureCachedGlyph, FontSlice,
-  CursorStyle, MonospaceFontMetrics } from "extraterm-char-render-canvas";
-import { STYLE_MASK_CURSOR, STYLE_MASK_HYPERLINK_HIGHLIGHT, STYLE_MASK_INVERSE } from "extraterm-char-cell-line";
+import { TextureFontAtlas, RGBAToQColor, FontSlice, CursorStyle, MonospaceFontMetrics,
+  CellPainter } from "extraterm-char-render-canvas";
+import { STYLE_MASK_CURSOR } from "extraterm-char-cell-line";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
@@ -27,6 +24,7 @@ import { ConfigCursorStyle } from "../config/Config.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
 import { BlobBulkFile } from "../bulk_file_handling/BlobBulkFile.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
+import { TerminalEmbeddedImages } from "./TerminalEmbeddedImages.js";
 
 
 enum SelectionMode {
@@ -67,6 +65,7 @@ export class TerminalBlock implements Block {
   #heightPx = 1;
   #fontMetrics: MonospaceFontMetrics = null;
   #extraFontMetrics: MonospaceFontMetrics[] = [];
+  #terminalEmbeddedImages: TerminalEmbeddedImages = null;
 
   #scrollback: Line[] = [];
 
@@ -99,6 +98,8 @@ export class TerminalBlock implements Block {
   constructor(fontAtlasCache: FontAtlasCache) {
     this._log = getLogger("TerminalBlock", this);
     this.#fontAtlasCache = fontAtlasCache;
+    this.#terminalEmbeddedImages = new TerminalEmbeddedImages();
+
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
     this.onHyperlinkHover = this.#onHyperlinkHoverEventEmitter.event;
@@ -388,13 +389,23 @@ export class TerminalBlock implements Block {
     const bgRGBA = this.#terminalVisualConfig.palette[PALETTE_BG_INDEX];
     painter.fillRectF(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(), RGBAToQColor(bgRGBA));
 
+    const cellPainter = new CellPainter(
+      painter,
+      this.#fontAtlas,
+      this.#fontMetrics,
+      this.#toRealPixels(1),
+      this.#terminalVisualConfig.palette,
+      this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX],
+      this.#fontSlices
+    );
+
     // Render any lines from the scrollback
     const scrollbackLength = this.#scrollback.length;
     if (topRenderRow < scrollbackLength) {
       const lastRenderRow = Math.min(topRenderRow + heightRows, scrollbackLength);
       const lines = this.#scrollback.slice(topRenderRow, lastRenderRow);
       const startY = topRenderRow * heightPx;
-      this.#renderLines(painter, lines, startY, false);
+      this.#renderLines(cellPainter, lines, startY, false);
       this.#renderCursors(painter, lines, startY);
     }
 
@@ -410,9 +421,10 @@ export class TerminalBlock implements Block {
         lines.push(line);
       }
       const startY = (screenTopRow + scrollbackLength) * heightPx;
-      this.#renderLines(painter, lines, startY, cursorStyle === "block");
+
+      this.#renderLines(cellPainter, lines, startY, cursorStyle === "block");
       this.#renderCursors(painter, lines, startY);
-      this.#renderPreexitString(painter);
+      this.#renderPreeditString(cellPainter);
     }
 
     this.#renderSelection(painter, topRenderRow, heightRows);
@@ -511,16 +523,16 @@ export class TerminalBlock implements Block {
     }
   }
 
-  #renderLines(painter: QPainter, lines: Line[], startY: number, renderCursor: boolean): void {
+  #renderLines(cellPainter: CellPainter, lines: Line[], startY: number, renderCursor: boolean): void {
     const metrics = this.#fontMetrics;
     const heightPx = metrics.heightPx;
 
     let yCounter = 0;
     for (const line of lines) {
       const y = startY + yCounter * heightPx + (1/128); // About 1/128, see below.
-      this.#renderSingleLine(painter, line, y, renderCursor);
+      this.#renderSingleLine(cellPainter, line, y, renderCursor);
       for (const layer of line.layers) {
-        this.#renderSingleLine(painter, layer.line, y, renderCursor);
+        this.#renderSingleLine(cellPainter, layer.line, y, renderCursor);
       }
       yCounter++;
     }
@@ -550,27 +562,8 @@ export class TerminalBlock implements Block {
     // point.
   }
 
-  #renderSingleLine(painter: QPainter, line: Line, y: number, renderCursor: boolean): void {
-    const qimage = this.#fontAtlas.getQImage();
-    const metrics= this.#fontMetrics;
-    const widthPx = metrics.widthPx;
-    const heightPx = metrics.heightPx;
-    const palette = this.#terminalVisualConfig.palette;
+  #renderSingleLine(cellPainter: CellPainter, line: Line, y: number, renderCursor: boolean): void {
     const ligatureMarker = this.#terminalVisualConfig.ligatureMarker;
-    const cursorColor = this.#terminalVisualConfig.palette[PALETTE_CURSOR_INDEX];
-    const normalizedCell: NormalizedCell = {
-      x: 0,
-      segment: 0,
-      codePoint: 0,
-      extraFontFlag: false,
-      isLigature: false,
-      ligatureCodePoints: null,
-      linkID: 0,
-    };
-
-    line.setPalette(palette); // TODO: Maybe the palette should pushed up into the emulator.
-    this.#updateCharGridFlags(line);
-
     if (ligatureMarker != null) {
       const text = line.getString(0);
       ligatureMarker.markLigaturesCharCellLine(line, text);
@@ -581,66 +574,7 @@ export class TerminalBlock implements Block {
       hoverLinkID = line.getLinkIDByURL(this.#hoveredURL, this.#hoveredGroup);
     }
 
-    const dpr = this.#toRealPixels(1);
-
-    let xPx = 0;
-    for (const column of normalizedCellIterator(line, normalizedCell)) {
-      const codePoint = normalizedCell.codePoint;
-      if (codePoint !== 0) {
-        const fontIndex = normalizedCell.extraFontFlag ? 1 : 0;
-
-        let fgRGBA = line.getFgRGBA(column);
-        let bgRGBA = line.getBgRGBA(column);
-
-        let style = line.getStyle(column);
-        if ((style & STYLE_MASK_CURSOR) && renderCursor) {
-          fgRGBA = bgRGBA;
-          bgRGBA = cursorColor;
-        } else {
-          if (style & STYLE_MASK_INVERSE) {
-            const tmp = fgRGBA;
-            fgRGBA = bgRGBA;
-            bgRGBA = tmp;
-          }
-        }
-        fgRGBA |= 0x000000ff;
-
-        if ((hoverLinkID !== 0) && (normalizedCell.linkID === hoverLinkID)) {
-          style |= STYLE_MASK_HYPERLINK_HIGHLIGHT;
-        }
-
-        let glyph: TextureCachedGlyph;
-        if (normalizedCell.isLigature) {
-          glyph = this.#fontAtlas.loadCombiningCodePoints(normalizedCell.ligatureCodePoints, style,
-            fontIndex, fgRGBA, bgRGBA);
-        } else {
-          glyph = this.#fontAtlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
-        }
-        qimage.setDevicePixelRatio(dpr);
-        const sourceX = glyph.xPixels + normalizedCell.segment * glyph.widthPx;
-        const sourceY = glyph.yPixels;
-        painter.drawImageF(xPx / dpr, y / dpr, qimage, sourceX, sourceY, glyph.widthPx, heightPx);
-      }
-      xPx += widthPx;
-    }
-  }
-
-  #updateCharGridFlags(line: Line): void {
-    const width = line.width;
-    const fontSlices = this.#fontSlices;
-    for (let i=0; i<width; i++) {
-      const codePoint = line.getCodePoint(i);
-      let isExtra = false;
-      for (const fontSlice of fontSlices) {
-        if (fontSlice.containsCodePoint(codePoint)) {
-          line.setExtraFontsFlag(i, true);
-          isExtra = true;
-          break;
-        }
-      }
-      line.setExtraFontsFlag(i, isExtra);
-      line.setLigature(i, 0);
-    }
+    cellPainter.renderLine(line, y, renderCursor, this.#terminalEmbeddedImages.getMap(), hoverLinkID);
   }
 
   getCursorGeometry(): QRect | null {
@@ -724,7 +658,7 @@ export class TerminalBlock implements Block {
     }
   }
 
-  #renderPreexitString(painter: QPainter): void {
+  #renderPreeditString(cellPainter: CellPainter): void {
     if (this.#emulator == null || this.#preeditString == null || this.#preeditString === "") {
       return;
     }
@@ -736,7 +670,7 @@ export class TerminalBlock implements Block {
     line.setString(dim.cursorX, this.#preeditString);
     line.setBgClutIndex(dim.cursorX, 15); // white
     line.setFgClutIndex(dim.cursorX, 0);  // black
-    this.#renderSingleLine(painter, line, y, false);
+    this.#renderSingleLine(cellPainter, line, y, false);
   }
 
   // private _configCursorStyleToHollowRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {

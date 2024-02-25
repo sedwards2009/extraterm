@@ -8,7 +8,7 @@ import { stringToCodePointArray, isWide, utf16LengthOfCodePoint } from "extrater
 /**
  * Cell schema:
  *
- * 4 bytes  - Unicode code point
+ * 4 byte   - Unicode code point
  * 1 byte   - Flags
  *            * 0x1 (bit 0) - true if using foreground CLUT
  *            * 0x2 (bit 1) - true if using background CLUT
@@ -31,8 +31,11 @@ import { stringToCodePointArray, isWide, utf16LengthOfCodePoint } from "extrater
  *            * 0x1000 (bit 12) - true if hyperlink highlight style
  * 2 byte   - Foreground Colour Lookup Table (palette / CLUT) index
  * 2 byte   - Background Colour Lookup Table (palette / CLUT) index
- * 4 bytes  - Foreground RGBA bytes
- * 4 bytes  - Background RGBA bytes
+ * 4 byte   - Foreground RGBA bytes
+ * 4 byte   - Background RGBA bytes
+ * 2 byte   - Image ID
+ * 2 byte   - Image cell X
+ * 2 byte   - Image cell Y
  */
 
 export const FLAG_MASK_FG_CLUT = 1;
@@ -63,7 +66,7 @@ export const UNDERLINE_STYLE_CURLY = 3;
 
 export type StyleCode = number;
 
-const CELL_SIZE_BYTES = 20;
+const CELL_SIZE_BYTES = 28;
 const CELL_SIZE_UINT32 = CELL_SIZE_BYTES/4; // If this changes, then update pasteGrid().
 
 const OFFSET_CODEPOINT = 0;
@@ -75,6 +78,9 @@ const OFFSET_BG_CLUT_INDEX = 10;
 
 const OFFSET_FG = 12;
 const OFFSET_BG = 16;
+const OFFSET_IMAGE_ID = 20;
+const OFFSET_IMAGE_X = 22;
+const OFFSET_IMAGE_Y = 24;
 
 /**
  * The expanded contents of one cell from the grid including all attributes.
@@ -89,6 +95,10 @@ export interface Cell {
 
   fgClutIndex: number;
   bgClutIndex: number;
+
+  imageID: number;
+  imageX: number;
+  imageY: number;
 }
 
 export function setCellFgClutFlag(cell: Cell, useClut: boolean): void {
@@ -132,6 +142,9 @@ const SpaceCell: Cell = {
   bgClutIndex: BG_COLOR_INDEX,
   fgRGBA: 0xffffffff,
   bgRGBA: 0x00000000,
+  imageID: 0,
+  imageX: 0,
+  imageY: 0,
 };
 
 /**
@@ -252,7 +265,7 @@ export class CharCellLine {
   }
 
   /**
-   * Get the completecontents of a cell.
+   * Get the complete contents of a cell.
    */
   getCell(x: number): Cell {
     const offset = x * CELL_SIZE_BYTES;
@@ -265,6 +278,9 @@ export class CharCellLine {
       bgClutIndex: this.#dataView.getUint16(offset + OFFSET_BG_CLUT_INDEX),
       fgRGBA: this.#dataView.getUint32(offset + OFFSET_FG),
       bgRGBA: this.#dataView.getUint32(offset + OFFSET_BG),
+      imageID: this.#dataView.getUint16(offset + OFFSET_IMAGE_ID),
+      imageX: this.#dataView.getUint16(offset + OFFSET_IMAGE_X),
+      imageY: this.#dataView.getUint16(offset + OFFSET_IMAGE_Y),
     };
     return cell;
   }
@@ -290,6 +306,11 @@ export class CharCellLine {
     this.#dataView.setUint16(offset + OFFSET_BG_CLUT_INDEX, cell.bgClutIndex);
     this.#dataView.setUint32(offset + OFFSET_FG, cell.fgRGBA);
     this.#dataView.setUint32(offset + OFFSET_BG, cell.bgRGBA);
+
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_ID, cell.imageID);
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_X, cell.imageX);
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_Y, cell.imageY);
+
     this.#dirtyFlag = true;
   }
 
@@ -303,6 +324,9 @@ export class CharCellLine {
       `codePoint: ${this.getCodePoint(x)}, ` +
       `extraWidth: ${this.getCharExtraWidth(x)}, ` +
       `ligature: ${this.getLigature(x)}, ` +
+      `imageID: ${this.getImageID(x)}, ` +
+      `imageX: ${this.getImageX(x)}, ` +
+      `imageY: ${this.getImageY(x)}, ` +
       `}`);
   }
 
@@ -323,6 +347,7 @@ export class CharCellLine {
     this.#dataView.setUint8(offset + OFFSET_FLAGS, newFlags);
 
     this.#dataView.setUint32(offset + OFFSET_CODEPOINT, codePoint);
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_ID, 0);
     this.#dirtyFlag = true;
   }
 
@@ -616,6 +641,36 @@ export class CharCellLine {
     return this.#dataView.getUint8(offset + OFFSET_LINK_ID);
   }
 
+  getImageID(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
+    return this.#dataView.getUint16(offset + OFFSET_IMAGE_ID);
+  }
+
+  setImageID(x :number, imageID: number): void {
+    const offset = x * CELL_SIZE_BYTES;
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_ID, imageID);
+  }
+
+  getImageX(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
+    return this.#dataView.getUint16(offset + OFFSET_IMAGE_X);
+  }
+
+  setImageX(x: number, imageX: number): void {
+    const offset = x * CELL_SIZE_BYTES;
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_X, imageX);
+  }
+
+  getImageY(x: number): number {
+    const offset = x * CELL_SIZE_BYTES;
+    return this.#dataView.getUint16(offset + OFFSET_IMAGE_Y);
+  }
+
+  setImageY(x: number, imageY: number): void {
+    const offset = x * CELL_SIZE_BYTES;
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_Y, imageY);
+  }
+
   shiftCellsRight(x: number, shiftCount: number): void {
     const moveCount = this.width - x - shiftCount;
     if (moveCount <= 0) {
@@ -665,7 +720,15 @@ export class CharCellLine {
     let sourceOffset = sx * CELL_SIZE_UINT32;
     let destOffset = x * CELL_SIZE_UINT32;
     for (let h=x; h<endH; h++) {
-      // Unrolled copy loop for when CELL_SIZE_UINT32 is 5
+      // Unrolled copy loop for when CELL_SIZE_UINT32 is 7
+      uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
+      uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
+      destOffset++;
+      sourceOffset++;
+
       uint32ArrayDest[destOffset] = uint32ArraySource[sourceOffset];
       destOffset++;
       sourceOffset++;

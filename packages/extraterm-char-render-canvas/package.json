@@ -17,7 +17,8 @@
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
-    "run:test-font-atlas": "yarn run build-fast && qode ./dist/font_metrics/test/TestFontAtlas.js",
+    "run:test-font-atlas": "yarn run build-fast && qode ./dist/test/TestFontAtlas.js",
+    "run:test-cell-rendering": "yarn run build-fast && qode ./dist/test/TestCellRendering.js",
     "run": "false"
   },
   "dependencies": {
