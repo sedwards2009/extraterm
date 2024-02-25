@@ -154,44 +154,44 @@ const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
 export class Emulator implements EmulatorApi {
   private _log: Logger = null;
-  private cols = 80;
-  private rows = 24;
+  #cols = 80;
+  #rows = 24;
 
-  private state = ParserState.NORMAL;
+  #state = ParserState.NORMAL;
 
-  private _mouseEncoder = new MouseEncoder();
+  #mouseEncoder = new MouseEncoder();
 
-  private x = 0;      // Cursor x position
-  private y = 0;      // Cursor y position
-  private savedX = 0;
-  private savedY = 0;
+  #x = 0;      // Cursor x position
+  #y = 0;      // Cursor y position
+  #savedX = 0;
+  #savedY = 0;
 
-  private oldy = 0;
+  #oldy = 0;
 
-  private _cursorBlinkState = false;
+  #cursorBlinkState = false;
 
-  private cursorHidden = false;
-  private _hasFocus = false;
+  #cursorHidden = false;
+  #hasFocus = false;
 
-  private queue = '';
-  private scrollTop = 0;
-  private scrollBottom = 23;
+  #queue = '';
+  #scrollTop = 0;
+  #scrollBottom = 23;
 
   // modes
-  private applicationKeypad = false;
-  private applicationCursorKeys = false;
-  private originMode = false;
-  private insertMode = false;
-  private wraparoundMode = false;
-  private normalSavedState: SavedState = null;
-  private _bracketedPaste = false;  // See https://cirw.in/blog/bracketed-paste
+  #applicationKeypad = false;
+  #applicationCursorKeys = false;
+  #originMode = false;
+  #insertMode = false;
+  #wraparoundMode = false;
+  #normalSavedState: SavedState = null;
+  #bracketedPaste = false;  // See https://cirw.in/blog/bracketed-paste
 
   // charset
-  private charset: CharSet = null;
-  private savedCharset: CharSet = null;
-  private gcharset: number = null;
-  private glevel = 0;
-  private charsets: CharSet[] = [null];
+  #charset: CharSet = null;
+  #savedCharset: CharSet = null;
+  #gcharset: number = null;
+  #glevel = 0;
+  #charsets: CharSet[] = [null];
 
   // Default character style
   static defAttr: CellWithHyperlink = {
@@ -211,7 +211,7 @@ export class Emulator implements EmulatorApi {
   };
 
   // Current character style.
-  private readonly curAttr: CellWithHyperlink = {
+  readonly #curAttr: CellWithHyperlink = {
     codePoint: " ".codePointAt(0),
     flags: FLAG_MASK_FG_CLUT | FLAG_MASK_BG_CLUT,
     style: 0,
@@ -227,7 +227,7 @@ export class Emulator implements EmulatorApi {
     imageY: 0,
   };
 
-  private readonly savedCurAttr: CellWithHyperlink = {
+  readonly #savedCurAttr: CellWithHyperlink = {
     codePoint: " ".codePointAt(0),
     flags: 0,
     style: 0,
@@ -243,36 +243,36 @@ export class Emulator implements EmulatorApi {
     imageY: 0,
   };
 
-  private _params = new ControlSequenceParameters();
-  private _blinkIntervalId: null | number = null;
-  private lines: LineImpl[] = [];
-  private cursorBlink: boolean = false;
+  #params = new ControlSequenceParameters();
+  #blinkIntervalId: null | number = null;
+  #lines: LineImpl[] = [];
+  #isCursorBlink: boolean = false;
   debug: boolean;
 
-  private applicationModeCookie: string;
-  private _applicationModeHandler: ApplicationModeHandler = null;
+  #applicationModeCookie: string;
+  #applicationModeHandler: ApplicationModeHandler = null;
 
-  private _platform: Platform = "linux";
+  #platform: Platform = "linux";
 
-  private _writeBuffers: string[] = [];         // Buffer for incoming data waiting to be processed.
-  private _processWriteChunkTimer: any = null;  // Timer ID for our write chunk timer.
-  private _paused = false;
-  private _refreshTimer: any = null;            // Timer ID for triggering an on scren refresh.
-  private _performanceNow: () => number = null;
+  #writeBuffers: string[] = [];         // Buffer for incoming data waiting to be processed.
+  #processWriteChunkTimer: any = null;  // Timer ID for our write chunk timer.
+  #paused = false;
+  #refreshTimer: any = null;            // Timer ID for triggering an on scren refresh.
+  #performanceNow: () => number = null;
 
   #setTimeout: (func: () => void, delayMs: number) => number = null;
   #clearTimeout: (timerId: number) => void = null;
 
-  private _scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
-  private _refreshStart = REFRESH_START_NULL;
-  private _refreshEnd = REFRESH_END_NULL;
+  #scrollbackLineQueue: Line[] = [];  // Queue of scrollback lines which need to sent via an event.
+  #refreshStart = REFRESH_START_NULL;
+  #refreshEnd = REFRESH_END_NULL;
 
-  private tabs: { [key: number]: boolean };
-  private sendFocus = false;
+  #tabs: { [key: number]: boolean };
+  #sendFocus = false;
 
-  private _blinker: Function = null;
-  private savedCols: number;
-  private title: string = "";
+  #blinker: Function = null;
+  #savedCols: number;
+  #title: string = "";
 
   onRender: Event<RenderEvent>;
   #onRenderEventEmitter = new EventEmitter<RenderEvent>();
@@ -323,20 +323,20 @@ export class Emulator implements EmulatorApi {
 
   constructor(options: Options) {
     this._log = getLogger("Emulator", this);
-    this.rows = options.rows === undefined ? 24 : options.rows;
-    this.cols = options.columns === undefined ? 80 : options.columns;
+    this.#rows = options.rows === undefined ? 24 : options.rows;
+    this.#cols = options.columns === undefined ? 80 : options.columns;
     this.debug = options.debug === undefined ? false : options.debug;
-    this.applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
+    this.#applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
     if (options.performanceNowFunc == null) {
-      this._performanceNow = window.performance.now.bind(window.performance);
+      this.#performanceNow = window.performance.now.bind(window.performance);
     } else {
-      this._performanceNow = options.performanceNowFunc;
+      this.#performanceNow = options.performanceNowFunc;
     }
 
     this.#setTimeout = options.setTimeout ?? setTimeout;
     this.#clearTimeout = options.clearTimeout ?? clearTimeout;
 
-    this._platform = options.platform;
+    this.#platform = options.platform;
 
     this.onRender = this.#onRenderEventEmitter.event;
     this.onScreenChange = this.#onScreenChangeEventEmitter.event;
@@ -352,86 +352,86 @@ export class Emulator implements EmulatorApi {
     this.onTitleChange = this.#onTitleChangeEventEmitter.event;
     this.onWriteBufferSize = this.#onWriteBufferSizeEventEmitter.event;
 
-    this.state = ParserState.NORMAL;
+    this.#state = ParserState.NORMAL;
 
-    this._resetVariables();
-    this._hasFocus = false;
+    this.#resetVariables();
+    this.#hasFocus = false;
 
-    this._writeBuffers = [];  // Buffer for incoming data waiting to be processed.
-    this._processWriteChunkTimer = null;  // Timer ID for our write chunk timer.
+    this.#writeBuffers = [];  // Buffer for incoming data waiting to be processed.
+    this.#processWriteChunkTimer = null;  // Timer ID for our write chunk timer.
 
-    this._refreshTimer = null;  // Timer ID for triggering an on scren refresh.
+    this.#refreshTimer = null;  // Timer ID for triggering an on scren refresh.
 
-    this._startBlink();
+    this.#startBlink();
   }
 
   destroy(): void {
-    if (this._processWriteChunkTimer !== null) {
-      this.#clearTimeout(this._processWriteChunkTimer);
-      this._processWriteChunkTimer = null;
+    if (this.#processWriteChunkTimer !== null) {
+      this.#clearTimeout(this.#processWriteChunkTimer);
+      this.#processWriteChunkTimer = null;
     }
 
-    if (this._refreshTimer !== null) {
-      this.#clearTimeout(this._refreshTimer);
+    if (this.#refreshTimer !== null) {
+      this.#clearTimeout(this.#refreshTimer);
     }
 
     this.handler = function() {};
     this.write = () => ( { bufferSize: 0 } );
-    this._applicationModeHandler = null;
+    this.#applicationModeHandler = null;
   }
 
-  private _resetVariables(): void {
-    this.x = 0;
-    this._setCursorY(0);
-    this.oldy = 0;
+  #resetVariables(): void {
+    this.#x = 0;
+    this.#setCursorY(0);
+    this.#oldy = 0;
 
-    this._cursorBlinkState = true;       // Cursor blink state.
+    this.#cursorBlinkState = true;       // Cursor blink state.
 
-    this.cursorHidden = false;
-    this._hasFocus = false;
+    this.#cursorHidden = false;
+    this.#hasFocus = false;
 
   //  this.convertEol;
 
-    this.queue = '';
-    this.scrollTop = 0;
-    this.scrollBottom = this.rows - 1;
+    this.#queue = '';
+    this.#scrollTop = 0;
+    this.#scrollBottom = this.#rows - 1;
 
     // modes
-    this.applicationKeypad = false;
-    this.applicationCursorKeys = false;
-    this.originMode = false;
-    this.insertMode = false;
-    this.wraparoundMode = false;
-    this.normalSavedState = null;
-    this._bracketedPaste = false;
+    this.#applicationKeypad = false;
+    this.#applicationCursorKeys = false;
+    this.#originMode = false;
+    this.#insertMode = false;
+    this.#wraparoundMode = false;
+    this.#normalSavedState = null;
+    this.#bracketedPaste = false;
 
     // charset
-    this.charset = null;
-    this.gcharset = null;
-    this.glevel = 0;
-    this.charsets = [null];
+    this.#charset = null;
+    this.#gcharset = null;
+    this.#glevel = 0;
+    this.#charsets = [null];
 
-    copyCell(Emulator.defAttr, this.curAttr); // Current character style.
+    copyCell(Emulator.defAttr, this.#curAttr); // Current character style.
 
-    this._params = new ControlSequenceParameters();
-    this.lines = [];
-    this.setupStops();
+    this.#params = new ControlSequenceParameters();
+    this.#lines = [];
+    this.#setupStops();
 
-    this._mouseEncoder = new MouseEncoder();
+    this.#mouseEncoder = new MouseEncoder();
   }
 
   // back_color_erase feature for xterm.
   eraseAttr(): Cell {
-    return this.curAttr;
+    return this.#curAttr;
   }
 
   focus(): void {
-    if (this.sendFocus) {
-      this.send('\x1b[I');
+    if (this.#sendFocus) {
+      this.#send('\x1b[I');
     }
-    this._hasFocus = true;
-    this._showCursor();
-    this._dispatchRenderEvent();
+    this.#hasFocus = true;
+    this.#showCursor();
+    this.#dispatchRenderEvent();
   }
 
   /**
@@ -440,30 +440,30 @@ export class Emulator implements EmulatorApi {
    * @return true if the terminal has the focus.
    */
   hasFocus(): boolean {
-    return this._hasFocus;
+    return this.#hasFocus;
   }
 
   getCursorRow(): number {
-    return this.y;
+    return this.#y;
   }
 
   blur(): void {
-    if (!this._hasFocus) {
+    if (!this.#hasFocus) {
       return;
     }
 
-    this.markRowRangeForRefresh(this.y, this.y);
-    if (this.sendFocus) {
-      this.send('\x1b[O');
+    this.#markRowRangeForRefresh(this.#y, this.#y);
+    if (this.#sendFocus) {
+      this.#send('\x1b[O');
     }
-    this._hasFocus = false;
-    this._dispatchRenderEvent();
+    this.#hasFocus = false;
+    this.#dispatchRenderEvent();
   }
 
   mouseDown(ev: MouseEventOptions): boolean {
-    const sequence = this._mouseEncoder.mouseDown(ev);
+    const sequence = this.#mouseEncoder.mouseDown(ev);
     if (sequence != null) {
-      this.send(sequence);
+      this.#send(sequence);
       return true;
     } else {
       return false;
@@ -471,9 +471,9 @@ export class Emulator implements EmulatorApi {
   }
 
   mouseMove(ev: MouseEventOptions): boolean {
-    const sequence = this._mouseEncoder.mouseMove(ev);
+    const sequence = this.#mouseEncoder.mouseMove(ev);
     if (sequence != null) {
-      this.send(sequence);
+      this.#send(sequence);
       return true;
     } else {
       return false;
@@ -481,9 +481,9 @@ export class Emulator implements EmulatorApi {
   }
 
   mouseUp(ev: MouseEventOptions): boolean {
-    const sequence = this._mouseEncoder.mouseUp(ev);
+    const sequence = this.#mouseEncoder.mouseUp(ev);
     if (sequence != null) {
-      this.send(sequence);
+      this.#send(sequence);
       return true;
     } else {
       return false;
@@ -491,9 +491,9 @@ export class Emulator implements EmulatorApi {
   }
 
   mouseWheelUp(ev: MouseEventOptions): boolean {
-    const sequence = this._mouseEncoder.wheelUp(ev);
+    const sequence = this.#mouseEncoder.wheelUp(ev);
     if (sequence != null) {
-      this.send(sequence);
+      this.#send(sequence);
       return true;
     } else {
       return false;
@@ -501,9 +501,9 @@ export class Emulator implements EmulatorApi {
   }
 
   mouseWheelDown(ev: MouseEventOptions): boolean {
-    const sequence = this._mouseEncoder.wheelDown(ev);
+    const sequence = this.#mouseEncoder.wheelDown(ev);
     if (sequence != null) {
-      this.send(sequence);
+      this.#send(sequence);
       return true;
     } else {
       return false;
@@ -511,59 +511,59 @@ export class Emulator implements EmulatorApi {
   }
 
   refreshScreen(): void {
-    this.markRowRangeForRefresh(0, this.lines.length);
-    this._dispatchRenderEvent();
+    this.#markRowRangeForRefresh(0, this.#lines.length);
+    this.#dispatchRenderEvent();
   }
 
   /**
    * Moves all of the rows above the cursor into the physical scrollback area.
    */
   moveRowsAboveCursorToScrollback(): void {
-    const lines = this.lines.slice(0, this.y);
-    const newLines = this.lines.slice(this.y);
+    const lines = this.#lines.slice(0, this.#y);
+    const newLines = this.#lines.slice(this.#y);
 
-    lines.forEach(line => this._scrollbackLineQueue.push(line));
+    lines.forEach(line => this.#scrollbackLineQueue.push(line));
 
-    this.lines = newLines;
+    this.#lines = newLines;
 
-    this.markAllRowsForRefresh();
-    this._setCursorY(0);
-    this.oldy = 0;
+    this.#markAllRowsForRefresh();
+    this.#setCursorY(0);
+    this.#oldy = 0;
 
-    this._scheduleRefresh(true);
+    this.#scheduleRefresh(true);
   }
 
   flushRenderQueue(): void {
-    this._dispatchRenderEvent();
+    this.#dispatchRenderEvent();
   }
 
-  private _getRow(row: number): LineImpl {
-    while (row >= this.lines.length) {
-      this.lines.push(this.blankLine());
+  #getRow(row: number): LineImpl {
+    while (row >= this.#lines.length) {
+      this.#lines.push(this.#blankLine());
     }
-    return this.lines[row];
+    return this.#lines[row];
   }
 
   // Fetch the LineCell at row 'row' if it exists, else return null.
-  private _tryGetRow(row: number): LineImpl {
-    return row >= this.lines.length ? null : this.lines[row];
+  #tryGetRow(row: number): LineImpl {
+    return row >= this.#lines.length ? null : this.#lines[row];
   }
 
   getDimensions(): { rows: number; cols: number; materializedRows: number; cursorX: number; cursorY: number; } {
     return {
-      rows: this.rows,
-      cols: this.cols,
-      materializedRows: this.lines.length,
-      cursorX: this.x,
-      cursorY: this.y
+      rows: this.#rows,
+      cols: this.#cols,
+      materializedRows: this.#lines.length,
+      cursorX: this.#x,
+      cursorY: this.#y
     };
   }
 
   getLineText(y: number): string {
-    if (y <0 || y >= this.lines.length) {
+    if (y <0 || y >= this.#lines.length) {
       return null;
     }
-    const row = this.lines[y];
+    const row = this.#lines[y];
     return row.getString(0);
   }
 
@@ -576,11 +576,11 @@ export class Emulator implements EmulatorApi {
    *
    * @param {boolean} immediate True if the refresh should occur as soon as possible. False if a slight delay is permitted.
    */
-  private _scheduleRefresh(immediate: boolean): void {
-    if (this._refreshTimer === null) {
-      this._refreshTimer = this.#setTimeout(() => {
-        this._refreshTimer = null;
-        this._refreshFrame();
+  #scheduleRefresh(immediate: boolean): void {
+    if (this.#refreshTimer === null) {
+      this.#refreshTimer = this.#setTimeout(() => {
+        this.#refreshTimer = null;
+        this.#refreshFrame();
       }, immediate ? 0 : REFRESH_DELAY);
     }
   }
@@ -590,10 +590,10 @@ export class Emulator implements EmulatorApi {
    *
    * Usually call via a timer.
    */
-  private _refreshFrame(): void {
-    this._dispatchRenderEvent();
-    this._refreshStart = REFRESH_START_NULL;
-    this._refreshEnd = REFRESH_END_NULL;
+  #refreshFrame(): void {
+    this.#dispatchRenderEvent();
+    this.#refreshStart = REFRESH_START_NULL;
+    this.#refreshEnd = REFRESH_END_NULL;
   }
 
   /**
@@ -602,26 +602,26 @@ export class Emulator implements EmulatorApi {
    * @param {number} start start row to refresh
    * @param {number} end   end row (INCLUSIVE!) to refresh
    */
-  private markRowRangeForRefresh(start: number, end: number): void {
-    this._refreshStart = Math.min(start, this._refreshStart);
-    this._refreshEnd = Math.max(end + 1, this._refreshEnd);
+  #markRowRangeForRefresh(start: number, end: number): void {
+    this.#refreshStart = Math.min(start, this.#refreshStart);
+    this.#refreshEnd = Math.max(end + 1, this.#refreshEnd);
   }
 
   lineAtRow(row: number): Line {
-    if (row < 0 || row >= this.rows) {
+    if (row < 0 || row >= this.#rows) {
       return null;
     }
 
-    const line = this._getRow(row);
+    const line = this.#getRow(row);
 
     // Place the cursor in the row.
-    if (row === this.y &&
-        this._cursorBlinkState &&
-        ! this.cursorHidden &&
-        this.x < this.cols) {
+    if (row === this.#y &&
+        this.#cursorBlinkState &&
+        ! this.#cursorHidden &&
+        this.#x < this.#cols) {
 
       const newLine = line.clone();
-      newLine.setStyle(this.x, newLine.getStyle(this.x) | STYLE_MASK_CURSOR);
+      newLine.setStyle(this.#x, newLine.getStyle(this.#x) | STYLE_MASK_CURSOR);
       newLine.layers = line.layers;
       return newLine;
     }
@@ -629,24 +629,24 @@ export class Emulator implements EmulatorApi {
   }
 
   applyHyperlink(row: number, column: number, length: number, url: string, group: string=""): void {
-    if (row < 0 || row >= this.rows) {
+    if (row < 0 || row >= this.#rows) {
       return;
     }
 
-    const line = this._getRow(row);
+    const line = this.#getRow(row);
     const linkID = line.getOrCreateLinkIDForURL(url, group);
     for (let i = 0; i < length; i++) {
       line.setLinkID(column + i, linkID);
     }
-    this.markRowForRefresh(row);
+    this.#markRowForRefresh(row);
   }
 
   removeHyperlinks(row: number, group: string=""): void {
-    if (row < 0 || row >= this.rows) {
+    if (row < 0 || row >= this.#rows) {
       return;
     }
 
-    const line = this._getRow(row);
+    const line = this.#getRow(row);
     const width = line.width;
     let didRemove = false;
     if (group === "") {
@@ -672,33 +672,33 @@ export class Emulator implements EmulatorApi {
     }
 
     if (didRemove) {
-      this.markRowForRefresh(row);
+      this.#markRowForRefresh(row);
     }
   }
 
-  private _cursorBlink(): void {
+  #XcursorBlink(): void {
     if ( ! this.hasFocus()) {
       return;
     }
-    this._cursorBlinkState = ! this._cursorBlinkState;
-    this.markRowForRefresh(this.y);
-    this._scheduleRefresh(true);
+    this.#cursorBlinkState = ! this.#cursorBlinkState;
+    this.#markRowForRefresh(this.#y);
+    this.#scheduleRefresh(true);
   }
 
-  private _showCursor(): void {
-    if ( ! this.cursorBlink) {
+  #showCursor(): void {
+    if ( ! this.#isCursorBlink) {
       return;
     }
 
-    if (this._blinkIntervalId !== null) {
-      clearInterval(this._blinkIntervalId);
+    if (this.#blinkIntervalId !== null) {
+      clearInterval(this.#blinkIntervalId);
     }
-    this._blinkIntervalId = setInterval(this._blinker, BLINK_INTERVAL_MS);
+    this.#blinkIntervalId = setInterval(this.#blinker, BLINK_INTERVAL_MS);
 
-    this._cursorBlinkState = true;
-    this._getRow(this.y);
-    this.markRowForRefresh(this.y);
-    this._scheduleRefresh(true);
+    this.#cursorBlinkState = true;
+    this.#getRow(this.#y);
+    this.#markRowForRefresh(this.#y);
+    this.#scheduleRefresh(true);
   }
 
   /**
@@ -707,132 +707,132 @@ export class Emulator implements EmulatorApi {
    * @param {boolean} blink True if the cursor should blink.
    */
   setCursorBlink(blink: boolean): void {
-    if (blink === this.cursorBlink) {
+    if (blink === this.#isCursorBlink) {
       return;
     }
 
-    if (this._blinkIntervalId !== null) {
-      clearInterval(this._blinkIntervalId);
-      this._blinkIntervalId = null;
+    if (this.#blinkIntervalId !== null) {
+      clearInterval(this.#blinkIntervalId);
+      this.#blinkIntervalId = null;
     }
 
-    this.cursorBlink = blink;
+    this.#isCursorBlink = blink;
     if (blink) {
-      this._startBlink();
+      this.#startBlink();
     } else {
-      this._cursorBlinkState = true;
-      this._getRow(this.y);
-      this.markRowForRefresh(this.y);
-      this._scheduleRefresh(true);
+      this.#cursorBlinkState = true;
+      this.#getRow(this.#y);
+      this.#markRowForRefresh(this.#y);
+      this.#scheduleRefresh(true);
     }
   }
 
-  private _startBlink(): void {
-    this._blinker = () => this._cursorBlink();
-    this._showCursor();
+  #startBlink(): void {
+    this.#blinker = () => this.#XcursorBlink();
+    this.#showCursor();
   }
 
-  private scroll(): void {
+  #scroll(): void {
     // Drop the oldest line into the scrollback buffer.
-    if (this.scrollTop === 0) {
-      this._scrollbackLineQueue.push(this.lines[0]);
+    if (this.#scrollTop === 0) {
+      this.#scrollbackLineQueue.push(this.#lines[0]);
     }
 
     // last line
-    const lastline = this.rows - 1;
+    const lastline = this.#rows - 1;
 
     // subtract the bottom scroll region
-    const insertRow = lastline - this.rows + 1 + this.scrollBottom;
+    const insertRow = lastline - this.#rows + 1 + this.#scrollBottom;
 
-    this.lines.splice(this.scrollTop, 1);
+    this.#lines.splice(this.#scrollTop, 1);
 
     // add our new line
-    this.lines.splice(insertRow, 0, this.blankLine());
+    this.#lines.splice(insertRow, 0, this.#blankLine());
 
-    this.markRowForRefresh(this.scrollTop);
-    this.markRowForRefresh(this.scrollBottom);
+    this.#markRowForRefresh(this.#scrollTop);
+    this.#markRowForRefresh(this.#scrollBottom);
   }
 
   write(data: string): WriteBufferStatus {
-    this._writeBuffers.push(data);
-    this._scheduleProcessWriteChunk();
-    return this._writeBufferStatus();
+    this.#writeBuffers.push(data);
+    this.#scheduleProcessWriteChunk();
+    return this.#writeBufferStatus();
   }
 
-  private _writeBufferStatus(): WriteBufferStatus {
-    const size = this._writeBuffers.map( (buf) => buf.length ).reduce( (accu, x) => accu + x, 0);
+  #writeBufferStatus(): WriteBufferStatus {
+    const size = this.#writeBuffers.map( (buf) => buf.length ).reduce( (accu, x) => accu + x, 0);
     return { bufferSize: MAX_WRITE_BUFFER_SIZE - size };
   }
 
-  private _emitWriteBufferSizeEvent(): void {
+  #emitWriteBufferSizeEvent(): void {
     this.#onWriteBufferSizeEventEmitter.fire({
       instance: this,
-      status: this._writeBufferStatus()
+      status: this.#writeBufferStatus()
     });
   }
 
   /**
    * Schedule the write chunk process to run the next time the event loop is entered.
    */
-  private _scheduleProcessWriteChunk(): void {
-    if (this._processWriteChunkTimer === null) {
-      this._processWriteChunkTimer = this.#setTimeout(() => {
-        this._processWriteChunkTimer = null;
-        this._processWriteChunkRealTime();
+  #scheduleProcessWriteChunk(): void {
+    if (this.#processWriteChunkTimer === null) {
+      this.#processWriteChunkTimer = this.#setTimeout(() => {
+        this.#processWriteChunkTimer = null;
+        this.#processWriteChunkRealTime();
       }, 0);
     }
   }
 
   pauseProcessing(): void {
-    if (this._paused) {
+    if (this.#paused) {
       return;
     }
 
-    this._paused = true;
-    if (this._processWriteChunkTimer === null) {
-      this.#clearTimeout(this._processWriteChunkTimer);
-      this._processWriteChunkTimer = null;
+    this.#paused = true;
+    if (this.#processWriteChunkTimer === null) {
+      this.#clearTimeout(this.#processWriteChunkTimer);
+      this.#processWriteChunkTimer = null;
     }
   }
 
   resumeProcessing(): void {
-    if ( ! this._paused) {
+    if ( ! this.#paused) {
       return;
     }
 
-    this._paused = false;
-    this._scheduleProcessWriteChunk();
-    this._emitWriteBufferSizeEvent();
+    this.#paused = false;
+    this.#scheduleProcessWriteChunk();
+    this.#emitWriteBufferSizeEvent();
   }
 
   isProcessingPaused(): boolean {
-    return this._paused;
+    return this.#paused;
   }
 
   /**
    * Process the next chunk of data to written into a the line array.
    */
-  private _processWriteChunkRealTime(): void {
-    const starttime = this._performanceNow();
+  #processWriteChunkRealTime(): void {
+    const starttime = this.#performanceNow();
   //console.log("++++++++ _processWriteChunk() start time: " + starttime);
 
     // Schedule a call back just in case. setTimeout(.., 0) still carries a ~4ms delay.
-    this._scheduleProcessWriteChunk();
+    this.#scheduleProcessWriteChunk();
 
-    while (! this._paused) {
-      if (this._processOneWriteChunk() === false) {
-        this.#clearTimeout(this._processWriteChunkTimer);
-        this._processWriteChunkTimer = null;
+    while (! this.#paused) {
+      if (this.#processOneWriteChunk() === false) {
+        this.#clearTimeout(this.#processWriteChunkTimer);
+        this.#processWriteChunkTimer = null;
 
-        this._scheduleRefresh(true);
-        this._emitWriteBufferSizeEvent();
+        this.#scheduleRefresh(true);
+        this.#emitWriteBufferSizeEvent();
         break;
       }
 
-      const nowtime = this._performanceNow();
+      const nowtime = this.#performanceNow();
       if ((nowtime - starttime) > MAX_BATCH_TIME) {
-        this._scheduleRefresh(false);
-        this._emitWriteBufferSizeEvent();
+        this.#scheduleRefresh(false);
+        this.#emitWriteBufferSizeEvent();
         break;
       }
     }
@@ -844,31 +844,31 @@ export class Emulator implements EmulatorApi {
    *
    * @returns {boolean} True if there are extra chunks available which need processing.
    */
-  private _processOneWriteChunk(): boolean {
-    if (this._writeBuffers.length === 0) {
+  #processOneWriteChunk(): boolean {
+    if (this.#writeBuffers.length === 0) {
       return false; // Nothing to do.
     }
 
-    let chunk = this._writeBuffers[0];
+    let chunk = this.#writeBuffers[0];
     if (chunk.length <= MAX_PROCESS_WRITE_SIZE) {
-      this._writeBuffers.splice(0, 1);
+      this.#writeBuffers.splice(0, 1);
     } else {
-      this._writeBuffers[0] = chunk.slice(MAX_PROCESS_WRITE_SIZE);
+      this.#writeBuffers[0] = chunk.slice(MAX_PROCESS_WRITE_SIZE);
       chunk = chunk.slice(0, MAX_PROCESS_WRITE_SIZE);
     }
 
-    const remainingPartOfChunk = this._processWriteData(chunk);
+    const remainingPartOfChunk = this.#processWriteData(chunk);
     if (remainingPartOfChunk != null && remainingPartOfChunk.length !== 0) {
-      this._writeBuffers.splice(0, 0, remainingPartOfChunk);
+      this.#writeBuffers.splice(0, 0, remainingPartOfChunk);
     }
-    return this._writeBuffers.length !== 0;
+    return this.#writeBuffers.length !== 0;
   }
 
-  private _flushWriteBuffer(): void {
-    while(this._processOneWriteChunk()) {
+  #flushWriteBuffer(): void {
+    while(this.#processOneWriteChunk()) {
       // Keep on going until it is all done.
     }
-    this._emitWriteBufferSizeEvent();
+    this.#emitWriteBufferSizeEvent();
   }
 
   /**
@@ -876,16 +876,16 @@ export class Emulator implements EmulatorApi {
    *
    * @param data the string of characters and control sequences to process.
    */
-  private _processWriteData(data: string): string {
+  #processWriteData(data: string): string {
   //console.log("write() data.length: " + data.length);
   //var starttime = window.performance.now();
   //var endtime;
   //console.log("write() start time: " + starttime);
 
-    this.oldy = this.y;
+    this.#oldy = this.#y;
 
     let i = 0;
-    for (i=0; i < data.length && ! this._paused; i++) {
+    for (i=0; i < data.length && ! this.#paused; i++) {
       let ch = data[i];
 
       let codePoint = 0;
@@ -903,7 +903,7 @@ export class Emulator implements EmulatorApi {
         codePoint = ch.codePointAt(0);
       }
 
-      switch (this.state) {
+      switch (this.#state) {
         case ParserState.NORMAL:
           switch (ch) {
             // '\0'
@@ -913,7 +913,7 @@ export class Emulator implements EmulatorApi {
 
             // '\a'
             case '\x07':
-              this.bell();
+              this.#bell();
               break;
 
             // '\n', '\v', '\f'
@@ -930,78 +930,78 @@ export class Emulator implements EmulatorApi {
 
             // '\b'
             case '\x08':
-              if (this.x > 0) {
-                this.x--;
+              if (this.#x > 0) {
+                this.#x--;
               }
               break;
 
             // '\t'
             case '\t':
-              this.x = this.nextStop();
+              this.#x = this.#nextStop();
               break;
 
             // shift out
             case '\x0e':
-              this.setgLevel(1);
+              this.#setgLevel(1);
               break;
 
             // shift in
             case '\x0f':
-              this.setgLevel(0);
+              this.#setgLevel(0);
               break;
 
             // '\e'
             case '\x1b':
-              this.state = ParserState.ESCAPE;
+              this.#state = ParserState.ESCAPE;
               break;
 
             default:
               // ' '
               if (ch >= ' ') {
-                if (this.charset && this.charset[ch]) {
-                  ch = this.charset[ch];
+                if (this.#charset && this.#charset[ch]) {
+                  ch = this.#charset[ch];
                   codePoint = ch.codePointAt(0);
                 }
 
-                if (this.x >= this.cols) {
-                  this.x = 0;
-                  this.markRowForRefresh(this.y);
-                  this.markRowAsWrapped(this.y);
-                  if (this.y+1 > this.scrollBottom) {
-                    this.scroll();
+                if (this.#x >= this.#cols) {
+                  this.#x = 0;
+                  this.#markRowForRefresh(this.#y);
+                  this.#markRowAsWrapped(this.#y);
+                  if (this.#y+1 > this.#scrollBottom) {
+                    this.#scroll();
                   } else {
-                    this._setCursorY(this.y+1);
+                    this.#setCursorY(this.#y+1);
                   }
                 }
 
-                const line = this._getRow(this.y);
-                if (this.insertMode) {
+                const line = this.#getRow(this.#y);
+                if (this.#insertMode) {
                   // Push the characters out of the way to make space.
-                  line.shiftCellsRight(this.x, 1);
-                  line.setCodePoint(this.x, " ".codePointAt(0));
+                  line.shiftCellsRight(this.#x, 1);
+                  line.setCodePoint(this.#x, " ".codePointAt(0));
                   if (isWide(codePoint)) {
-                    line.shiftCellsRight(this.x, 1);
-                    line.setCodePoint(this.x, " ".codePointAt(0));
+                    line.shiftCellsRight(this.#x, 1);
+                    line.setCodePoint(this.#x, " ".codePointAt(0));
                   }
                 }
 
-                line.setCellAndLink(this.x, this.curAttr);
-                line.setCodePoint(this.x, codePoint);
+                line.setCellAndLink(this.#x, this.#curAttr);
+                line.setCodePoint(this.#x, codePoint);
 
-                this.x++;
-                this.markRowForRefresh(this.y);
+                this.#x++;
+                this.#markRowForRefresh(this.#y);
 
                 if (isWide(codePoint)) {
-                  const j = this.y;
-                  const line = this._getRow(j);
-                  if (this.cols < 2 || this.x >= this.cols) {
-                    line.setCellAndLink(this.x - 1, this.curAttr);
-                    line.setCodePoint(this.x - 1, " ".codePointAt(0));
+                  const j = this.#y;
+                  const line = this.#getRow(j);
+                  if (this.#cols < 2 || this.#x >= this.#cols) {
+                    line.setCellAndLink(this.#x - 1, this.#curAttr);
+                    line.setCodePoint(this.#x - 1, " ".codePointAt(0));
                     break;
                   }
-                  line.setCellAndLink(this.x, this.curAttr);
-                  line.setCodePoint(this.x, " ".codePointAt(0));
-                  this.x++;
+                  line.setCellAndLink(this.#x, this.#curAttr);
+                  line.setCodePoint(this.#x, " ".codePointAt(0));
+                  this.#x++;
                 }
               }
               break;
@@ -1009,51 +1009,51 @@ export class Emulator implements EmulatorApi {
           break;
 
         case ParserState.ESCAPE:
-          i = this._processDataEscape(ch, i);
+          i = this.#processDataEscape(ch, i);
           break;
 
         case ParserState.CHARSET:
-          i = this._processDataCharset(ch, i);
+          i = this.#processDataCharset(ch, i);
           break;
 
         case ParserState.OSC:
-          i = this._processDataOSC(ch, i);
+          i = this.#processDataOSC(ch, i);
           break;
 
         case ParserState.CSI_START:
         case ParserState.CSI_PARAMS:
-          i = this._processDataCSI(ch, i);
+          i = this.#processDataCSI(ch, i);
           break;
 
         case ParserState.DCS_START:
         case ParserState.DCS_STRING:
-          i = this._processDataDCS(ch, i);
+          i = this.#processDataDCS(ch, i);
           break;
 
         case ParserState.IGNORE:
-          i = this._processDataIgnore(ch, i);
+          i = this.#processDataIgnore(ch, i);
           break;
 
         case ParserState.APPLICATION_START:
-          this._processDataApplicationStart(ch);
+          this.#processDataApplicationStart(ch);
           break;
 
         case ParserState.APPLICATION_END:
-          [data, i] = this._processDataApplicationEnd(data, i);
+          [data, i] = this.#processDataApplicationEnd(data, i);
           break;
 
         case ParserState.DEC_HASH:
-          this._processDataDecHash(ch);
+          this.#processDataDecHash(ch);
           break;
       }
 
-      if (this.y !== this.oldy) {
-        this.markRowForRefresh(this.oldy);
-        this.markRowForRefresh(this.y);
-        this.oldy = this.y;
+      if (this.#y !== this.#oldy) {
+        this.#markRowForRefresh(this.#oldy);
+        this.#markRowForRefresh(this.#y);
+        this.#oldy = this.#y;
       }
     }
-    this.markRowForRefresh(this.y);
+    this.#markRowForRefresh(this.#y);
 
   //  endtime = window.performance.now();
   //console.log("write() end time: " + endtime);
@@ -1064,23 +1064,23 @@ export class Emulator implements EmulatorApi {
     return null;
   }
 
-  private _processDataCSI(ch: string, i: number): number {
-    switch (this.state) {
+  #processDataCSI(ch: string, i: number): number {
+    switch (this.#state) {
       case ParserState.CSI_START:
         // '?', '>', '!'
         if (ch === '?' || ch === '>' || ch === '!') {
-          this._params.prefix = ch;
+          this.#params.prefix = ch;
         } else {
           // Push this char back and try again.
           i--;
         }
-        this.state = ParserState.CSI_PARAMS;
+        this.#state = ParserState.CSI_PARAMS;
         return i;
 
       case ParserState.CSI_PARAMS:
         // 0 - 9
         if (ch >= '0' && ch <= '9') {
-          this._params.appendDigit(ch);
+          this.#params.appendDigit(ch);
           return i;
         }
 
@@ -1089,31 +1089,31 @@ export class Emulator implements EmulatorApi {
           return i;
         }
 
-        this._params.nextParameter();
+        this.#params.nextParameter();
 
         if (ch === ';') {
           return i;
         }
 
         if (ch === ':') {
-          this._params.startSubparameter();
+          this.#params.startSubparameter();
           return i;
         }
 
-        this._executeCSICommand(this._params, ch);
-        this.state = ParserState.NORMAL;
+        this.#executeCSICommand(this.#params, ch);
+        this.#state = ParserState.NORMAL;
         break;
     }
     return i;
   }
 
-  private _executeCSICommand(params: ControlSequenceParameters, ch: string): void {
+  #executeCSICommand(params: ControlSequenceParameters, ch: string): void {
     switch (ch) {
       // CSI Ps A
       // Cursor Up Ps Times (default = 1) (CUU).
       case 'A':
         if (params.prefix === "") {
-          this.cursorUp(params);
+          this.#cursorUp(params);
         }
         break;
 
@@ -1121,7 +1121,7 @@ export class Emulator implements EmulatorApi {
       // Cursor Down Ps Times (default = 1) (CUD).
       case 'B':
         if (params.prefix === "") {
-          this.cursorDown(params);
+          this.#cursorDown(params);
         }
         break;
 
@@ -1129,7 +1129,7 @@ export class Emulator implements EmulatorApi {
       // Cursor Forward Ps Times (default = 1) (CUF).
       case 'C':
         if (params.prefix === "") {
-          this.cursorForward(params);
+          this.#cursorForward(params);
         }
         break;
 
@@ -1137,7 +1137,7 @@ export class Emulator implements EmulatorApi {
       // Cursor Backward Ps Times (default = 1) (CUB).
       case 'D':
         if (params.prefix === "") {
-          this.cursorBackward(params);
+          this.#cursorBackward(params);
         }
         break;
 
@@ -1145,7 +1145,7 @@ export class Emulator implements EmulatorApi {
       // Cursor Position [row;column] (default = [1,1]) (CUP).
       case 'H':
         if (params.prefix === "") {
-          this.cursorPos(params);
+          this.#cursorPos(params);
         }
         break;
 
@@ -1154,7 +1154,7 @@ export class Emulator implements EmulatorApi {
       //   Erase in Display (DECSED).
       case 'J':
         if (params.prefix === "") {
-          this.eraseInDisplay(params);
+          this.#eraseInDisplay(params);
         }
         break;
 
@@ -1162,20 +1162,20 @@ export class Emulator implements EmulatorApi {
       // CSI ? Ps K
       //   Erase in Line (DECSEL).
       case 'K':
-        this.eraseInLine(params);
+        this.#eraseInLine(params);
         break;
 
       // CSI Pm m  Character Attributes (SGR).
       case 'm':
         if ( ! params.prefix) {
-          this.charAttributes(params);
+          this.#charAttributes(params);
         }
         break;
 
       // CSI Ps n  Device Status Report (DSR).
       case 'n':
         if ( ! params.prefix) {
-          this.deviceStatus(params);
+          this.#deviceStatus(params);
         }
         break;
 
@@ -1187,7 +1187,7 @@ export class Emulator implements EmulatorApi {
       // Insert Ps (Blank) Character(s) (default = 1) (ICH).
       case '@':
         if (params.prefix === "") {
-          this.insertChars(params);
+          this.#insertChars(params);
         }
         break;
 
@@ -1195,7 +1195,7 @@ export class Emulator implements EmulatorApi {
       // Cursor Next Line Ps Times (default = 1) (CNL).
       case 'E':
         if (params.prefix === "") {
-          this.cursorNextLine(params);
+          this.#cursorNextLine(params);
         }
         break;
 
@@ -1203,7 +1203,7 @@ export class Emulator implements EmulatorApi {
       // Cursor Preceding Line Ps Times (default = 1) (CNL).
       case 'F':
         if (params.prefix === "") {
-          this.cursorPrecedingLine(params);
+          this.#cursorPrecedingLine(params);
         }
         break;
 
@@ -1211,7 +1211,7 @@ export class Emulator implements EmulatorApi {
       // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
       case 'G':
         if (params.prefix === "") {
-          this.cursorCharAbsolute(params);
+          this.#cursorCharAbsolute(params);
         }
         break;
 
@@ -1219,7 +1219,7 @@ export class Emulator implements EmulatorApi {
       // Insert Ps Line(s) (default = 1) (IL).
       case 'L':
         if (params.prefix === "") {
-          this.insertLines(params);
+          this.#insertLines(params);
         }
         break;
 
@@ -1227,7 +1227,7 @@ export class Emulator implements EmulatorApi {
       // Delete Ps Line(s) (default = 1) (DL).
       case 'M':
         if (params.prefix === "") {
-          this.deleteLines(params);
+          this.#deleteLines(params);
         }
         break;
 
@@ -1235,7 +1235,7 @@ export class Emulator implements EmulatorApi {
       // Delete Ps Character(s) (default = 1) (DCH).
       case 'P':
         if (params.prefix === "") {
-          this.deleteChars(params);
+          this.#deleteChars(params);
         }
         break;
 
@@ -1243,7 +1243,7 @@ export class Emulator implements EmulatorApi {
       // Erase Ps Character(s) (default = 1) (ECH).
       case 'X':
         if (params.prefix === "") {
-          this.eraseChars(params);
+          this.#eraseChars(params);
         }
         break;
 
@@ -1251,7 +1251,7 @@ export class Emulator implements EmulatorApi {
       //   [column] (default = [row,1]) (HPA).
       case '`':
         if (params.prefix === "") {
-          this.charPosAbsolute(params);
+          this.#charPosAbsolute(params);
         }
         break;
 
@@ -1259,7 +1259,7 @@ export class Emulator implements EmulatorApi {
       // Horizontal Position Relative
       case 'a':
         if (params.prefix === "") {
-          this.HPositionRelative(params);
+          this.#HPositionRelative(params);
         }
         break;
 
@@ -1268,21 +1268,21 @@ export class Emulator implements EmulatorApi {
       // CSI > P s c
       // Send Device Attributes (Secondary DA)
       case 'c':
-        this.sendDeviceAttributes(params);
+        this.#sendDeviceAttributes(params);
         break;
 
       // CSI Pm d
       // Line Position Absolute  [row] (default = [1,column]) (VPA).
       case 'd':
         if (params.prefix === "") {
-          this.linePosAbsolute(params);
+          this.#linePosAbsolute(params);
         }
         break;
 
       // 145 65 e * VPR - Vertical Position Relative
       case 'e':
         if (params.prefix === "") {
-          this.VPositionRelative(params);
+          this.#VPositionRelative(params);
         }
         break;
 
@@ -1291,20 +1291,20 @@ export class Emulator implements EmulatorApi {
       //   [1,1]) (HVP).
       case 'f':
         if (params.prefix === "") {
-          this.HVPosition(params);
+          this.#HVPosition(params);
         }
         break;
 
       // CSI Pm h  Set Mode (SM).
       // CSI ? Pm h - mouse escape codes, cursor escape codes
       case 'h':
-        this.setMode(params);
+        this.#setMode(params);
         break;
 
       // CSI Pm l  Reset Mode (RM).
       // CSI ? Pm l
       case 'l':
-        this.resetMode(params);
+        this.#resetMode(params);
         break;
 
       // CSI Ps ; Ps r
@@ -1312,16 +1312,16 @@ export class Emulator implements EmulatorApi {
       //   dow) (DECSTBM).
       // CSI ? Pm r
       case 'r':
-        this.setScrollRegion(params);
+        this.#setScrollRegion(params);
         break;
 
       // CSI s     Save cursor (ANSI.SYS).
       // CSI ? Pm s
       case 's':
         if (params.prefix === '?') {
-          this.savePrivateValues(params);
+          this.#savePrivateValues(params);
         } else if (params.prefix === '') {
-          this.saveCursor();
+          this.#saveCursor();
         }
         break;
 
@@ -1404,7 +1404,7 @@ export class Emulator implements EmulatorApi {
       //   Restore cursor (ANSI.SYS).
       case 'u':
         if (params.prefix === '') {
-          this.restoreCursor();
+          this.#restoreCursor();
         }
         break;
 
@@ -1416,14 +1416,14 @@ export class Emulator implements EmulatorApi {
       // Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
       case 'I':
         if (params.prefix === '') {
-          this.cursorForwardTab(params);
+          this.#cursorForwardTab(params);
         }
         break;
 
       // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
       case 'S':
         if (params.prefix === '') {
-          this.scrollUp(params);
+          this.#scrollUp(params);
         }
         break;
 
@@ -1432,7 +1432,7 @@ export class Emulator implements EmulatorApi {
       // CSI > Ps; Ps T
       case 'T':
         if (params.length < 2 && !params.prefix) {
-          this.scrollDown(params);
+          this.#scrollDown(params);
         }
         break;
 
@@ -1440,21 +1440,21 @@ export class Emulator implements EmulatorApi {
       // Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
       case 'Z':
         if (params.prefix === '') {
-          this.cursorBackwardTab(params);
+          this.#cursorBackwardTab(params);
         }
         break;
 
       // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
       case 'b':
         if (params.prefix === '') {
-          this.repeatPrecedingCharacter(params);
+          this.#repeatPrecedingCharacter(params);
         }
         break;
 
       // CSI Ps g  Tab Clear (TBC).
       case 'g':
         if (params.prefix === '') {
-          this.tabClear(params);
+          this.#tabClear(params);
         }
         break;
 
@@ -1477,7 +1477,7 @@ export class Emulator implements EmulatorApi {
       case 'p':
         switch (params.prefix) {
           case '!':
-            this.softReset(params);
+            this.#softReset(params);
             break;
           default:
             break;
@@ -1530,70 +1530,70 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  private _processDataEscape(ch: string, i: number): number {
+  #processDataEscape(ch: string, i: number): number {
     switch (ch) {
       // ESC [ Control Sequence Introducer ( CSI is 0x9b).
       case '[':
-        this._params = new ControlSequenceParameters();
-        this.state = ParserState.CSI_START;
+        this.#params = new ControlSequenceParameters();
+        this.#state = ParserState.CSI_START;
         break;
 
       // ESC ] Operating System Command ( OSC is 0x9d).
       case ']':
-        this._params = new ControlSequenceParameters();
-        this.state = ParserState.OSC;
+        this.#params = new ControlSequenceParameters();
+        this.#state = ParserState.OSC;
         break;
 
       // ESC & Application mode
       case '&':
-        this._params = new ControlSequenceParameters();
-        this.state = ParserState.APPLICATION_START;
+        this.#params = new ControlSequenceParameters();
+        this.#state = ParserState.APPLICATION_START;
         break;
 
       // ESC P Device Control String ( DCS is 0x90).
       case 'P':
-        this._params = new ControlSequenceParameters();
-        this.state = ParserState.DCS_START;
+        this.#params = new ControlSequenceParameters();
+        this.#state = ParserState.DCS_START;
         break;
 
       // ESC _ Application Program Command ( APC is 0x9f).
       case '_':
-        this.state = ParserState.IGNORE;
+        this.#state = ParserState.IGNORE;
         break;
 
       // ESC ^ Privacy Message ( PM is 0x9e).
       case '^':
-        this.state = ParserState.IGNORE;
+        this.#state = ParserState.IGNORE;
         break;
 
       // ESC c Full Reset (RIS).
       case 'c':
-        this._fullReset();
+        this.#fullReset();
         break;
 
       // ESC E Next Line ( NEL is 0x85).
       case 'E':
-        this.x = 0;
-        this.index();
+        this.#x = 0;
+        this.#index();
         break;
 
       // ESC D Index ( IND is 0x84).
       case 'D':
-        this.index();
+        this.#index();
         break;
 
       // ESC M Reverse Index ( RI is 0x8d).
       case 'M':
-        this.reverseIndex();
+        this.#reverseIndex();
         break;
 
       // ESC % Select default/utf-8 character set.
       // @ = default, G = utf-8
       case '%':
         //this.charset = null;
-        this.setgLevel(0);
-        this.setgCharset(0, Emulator.charsets.US);
-        this.state = ParserState.NORMAL;
+        this.#setgLevel(0);
+        this.#setgCharset(0, Emulator.charsets.US);
+        this.#state = ParserState.NORMAL;
         i++;
         break;
 
@@ -1606,33 +1606,33 @@ export class Emulator implements EmulatorApi {
       case '.':
         switch (ch) {
           case '(':
-            this.gcharset = 0;
+            this.#gcharset = 0;
             break;
           case ')':
-            this.gcharset = 1;
+            this.#gcharset = 1;
             break;
           case '*':
-            this.gcharset = 2;
+            this.#gcharset = 2;
             break;
           case '+':
-            this.gcharset = 3;
+            this.#gcharset = 3;
             break;
           case '-':
-            this.gcharset = 1;
+            this.#gcharset = 1;
             break;
           case '.':
-            this.gcharset = 2;
+            this.#gcharset = 2;
             break;
         }
-        this.state = ParserState.CHARSET;
+        this.#state = ParserState.CHARSET;
         break;
 
       // Designate G3 Character Set (VT300).
       // A = ISO Latin-1 Supplemental.
       // Not implemented.
       case '/':
-        this.gcharset = 3;
-        this.state = ParserState.CHARSET;
+        this.#gcharset = 3;
+        this.#state = ParserState.CHARSET;
         i--;
         break;
 
@@ -1649,72 +1649,72 @@ export class Emulator implements EmulatorApi {
       // ESC n
       // Invoke the G2 Character Set as GL (LS2).
       case 'n':
-        this.setgLevel(2);
+        this.#setgLevel(2);
         break;
       // ESC o
       // Invoke the G3 Character Set as GL (LS3).
       case 'o':
-        this.setgLevel(3);
+        this.#setgLevel(3);
         break;
       // ESC |
       // Invoke the G3 Character Set as GR (LS3R).
       case '|':
-        this.setgLevel(3);
+        this.#setgLevel(3);
         break;
       // ESC }
       // Invoke the G2 Character Set as GR (LS2R).
       case '}':
-        this.setgLevel(2);
+        this.#setgLevel(2);
         break;
       // ESC ~
       // Invoke the G1 Character Set as GR (LS1R).
       case '~':
-        this.setgLevel(1);
+        this.#setgLevel(1);
         break;
 
       // ESC 7 Save Cursor (DECSC).
       case '7':
-        this.saveCursor();
-        this.state = ParserState.NORMAL;
+        this.#saveCursor();
+        this.#state = ParserState.NORMAL;
         break;
 
       // ESC 8 Restore Cursor (DECRC).
       case '8':
-        this.restoreCursor();
-        this.state = ParserState.NORMAL;
+        this.#restoreCursor();
+        this.#state = ParserState.NORMAL;
         break;
 
       // ESC # 3 DEC line height/width
       case '#':
-        this.state = ParserState.DEC_HASH;
+        this.#state = ParserState.DEC_HASH;
         break;
 
       // ESC H Tab Set (HTS is 0x88).
       case 'H':
-        this.tabSet();
+        this.#tabSet();
         break;
 
       // ESC = Application Keypad (DECPAM).
       case '=':
-        this.applicationKeypad = true;
-        this.state = ParserState.NORMAL;
+        this.#applicationKeypad = true;
+        this.#state = ParserState.NORMAL;
         break;
 
       // ESC > Normal Keypad (DECPNM).
       case '>':
-        this.applicationKeypad = false;
-        this.state = ParserState.NORMAL;
+        this.#applicationKeypad = false;
+        this.#state = ParserState.NORMAL;
         break;
 
       default:
-        this.state = ParserState.NORMAL;
-        this.error(`Unknown ESC control: ${ch}.`);
+        this.#state = ParserState.NORMAL;
+        this.#error(`Unknown ESC control: ${ch}.`);
         break;
     }
     return i;
   }
 
-  private _processDataCharset(ch: string, i: number): number {
+  #processDataCharset(ch: string, i: number): number {
     let cs;
     switch (ch) {
       case '0': // DEC Special Character and Line Drawing Set.
@@ -1767,13 +1767,13 @@ export class Emulator implements EmulatorApi {
         cs = Emulator.charsets.US;
         break;
     }
-    this.setgCharset(this.gcharset, cs);
-    this.gcharset = null;
-    this.state = ParserState.NORMAL;
+    this.#setgCharset(this.#gcharset, cs);
+    this.#gcharset = null;
+    this.#state = ParserState.NORMAL;
     return i;
   }
 
-  private _processDataOSC(ch: string, i: number): number {
+  #processDataOSC(ch: string, i: number): number {
     // OSC Ps ; Pt ST
     // OSC Ps ; Pt BEL
     //   Set Text Parameters.
@@ -1782,15 +1782,15 @@ export class Emulator implements EmulatorApi {
         i++;
       }
 
-      this._params.nextParameter();
+      this.#params.nextParameter();
 
-      switch (this._params[0].intValue) {
+      switch (this.#params[0].intValue) {
         case 0:
         case 1:
         case 2:
-          if (this._params[1]) {
-            this.title = this._params[1].stringValue;
-            this.handleTitle(this.title);
+          if (this.#params[1]) {
+            this.#title = this.#params[1].stringValue;
+            this.#handleTitle(this.#title);
           }
           break;
         case 3:
@@ -1802,11 +1802,11 @@ export class Emulator implements EmulatorApi {
           break;
         case 8:
           // Hyperlink
-          let url = this._params[2].rawStringValue;
+          let url = this.#params[2].rawStringValue;
           if (url === "") {
             url = null;
           }
-          this.curAttr.hyperlinkURL = url;
+          this.#curAttr.hyperlinkURL = url;
           break;
         case 10:
         case 11:
@@ -1847,25 +1847,25 @@ export class Emulator implements EmulatorApi {
           break;
         case 133:
         case 633:
-          this.#executeShellIntegration(this._params);
+          this.#executeShellIntegration(this.#params);
           break;
       }
 
-      this._params = new ControlSequenceParameters();
-      this.state = ParserState.NORMAL;
+      this.#params = new ControlSequenceParameters();
+      this.#state = ParserState.NORMAL;
 
     } else {
-      if (this._params.length === 0) {
+      if (this.#params.length === 0) {
         if (ch >= '0' && ch <= '9') {
-          this._params.appendDigit(ch);
+          this.#params.appendDigit(ch);
         } else if (ch === ';') {
-          this._params.nextParameter();
+          this.#params.nextParameter();
         }
       } else {
         if (ch === ';') {
-          this._params.nextParameter();
+          this.#params.nextParameter();
         } else {
-          this._params.appendString(ch);
+          this.#params.appendString(ch);
         }
       }
     }
@@ -1878,7 +1878,7 @@ export class Emulator implements EmulatorApi {
       return;
     }
 
-    this._dispatchRenderEvent();  // Flush any rendering and buffers, sync everything up.
+    this.#dispatchRenderEvent();  // Flush any rendering and buffers, sync everything up.
     const command = params[1].stringValue;
     switch (command) {
       case 'A':
@@ -1911,28 +1911,28 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  private _processDataDCS(ch: string, i: number): number {
-    switch (this.state) {
+  #processDataDCS(ch: string, i: number): number {
+    switch (this.#state) {
       case ParserState.DCS_START:
-        this._params.appendPrefix(ch);
-        if (this._params.prefix.length === 2) {
-          this.state = ParserState.DCS_STRING;
+        this.#params.appendPrefix(ch);
+        if (this.#params.prefix.length === 2) {
+          this.#state = ParserState.DCS_STRING;
         }
         break;
 
       case ParserState.DCS_STRING:
         const isStringTerminator = ch === '\x1b' || ch === '\x07';
         if ( ! isStringTerminator) {
-          this._params.appendString(ch);
+          this.#params.appendString(ch);
         } else {
           if (ch === '\x1b') {
             i++;
           }
-          this._params.nextParameter();
-          this._executeDCSCommand(this._params);
+          this.#params.nextParameter();
+          this.#executeDCSCommand(this.#params);
 
-          this._params = new ControlSequenceParameters();
-          this.state = ParserState.NORMAL;
+          this.#params = new ControlSequenceParameters();
+          this.#state = ParserState.NORMAL;
         }
         break;
 
@@ -1942,8 +1942,8 @@ export class Emulator implements EmulatorApi {
     return i;
   }
 
-  private _executeDCSCommand(params: ControlSequenceParameters): void {
-    switch (this._params.prefix) {
+  #executeDCSCommand(params: ControlSequenceParameters): void {
+    switch (this.#params.prefix) {
       // User-Defined Keys (DECUDK).
       case '':
         break;
@@ -1968,7 +1968,7 @@ export class Emulator implements EmulatorApi {
 
           // DECSTBM
           case 'r':
-            replyPt = '' + (this.scrollTop + 1) + ';' + (this.scrollBottom + 1) + 'r';
+            replyPt = '' + (this.#scrollTop + 1) + ';' + (this.#scrollBottom + 1) + 'r';
             break;
 
           // SGR
@@ -1977,12 +1977,12 @@ export class Emulator implements EmulatorApi {
             break;
 
           default:
-            this.error(`Unknown DCS Pt: ${""+pt}.`);
+            this.#error(`Unknown DCS Pt: ${""+pt}.`);
             replyPt = '';
             break;
         }
 
-        this.send('\x1bP' + (valid ? 1 : 0) + '$r' + replyPt + '\x1b\\');
+        this.#send('\x1bP' + (valid ? 1 : 0) + '$r' + replyPt + '\x1b\\');
         break;
 
       // Set Termcap/Terminfo Data (xterm, experimental).
@@ -2003,72 +2003,72 @@ export class Emulator implements EmulatorApi {
         break;
 
       default:
-        this.error(`Unknown DCS prefix: ${this._params.prefix}.`);
+        this.#error(`Unknown DCS prefix: ${this.#params.prefix}.`);
         break;
     }
   }
 
-  private _processDataIgnore(ch: string, i: number): number {
+  #processDataIgnore(ch: string, i: number): number {
     // For PM and APC.
     if (ch === '\x1b' || ch === '\x07') {
       if (ch === '\x1b') {
         i++;
       }
-      this.state = ParserState.NORMAL;
+      this.#state = ParserState.NORMAL;
     }
     return i;
   }
 
   registerApplicationModeHandler(handler: ApplicationModeHandler): void {
-    this._applicationModeHandler = handler;
+    this.#applicationModeHandler = handler;
   }
 
-  private _processDataApplicationStart(ch: string): void {
+  #processDataApplicationStart(ch: string): void {
     if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch === '-'
         || ch === '/') {
 
       // Add to the current parameter.
-      this._params.appendString(ch);  // FIXME don't absorb infinite data here.
+      this.#params.appendString(ch);  // FIXME don't absorb infinite data here.
 
     } else if (ch === ';') {
       // Parameter separator.
-      this._params.nextParameter();
+      this.#params.nextParameter();
 
     } else if (ch === '\x07') {
       // End of parameters.
-      this._params.nextParameter();
-      if (this._params[0].stringValue === this.applicationModeCookie) {
-        this.state = ParserState.APPLICATION_END;
-        this._dispatchRenderEvent();
-        if (this._applicationModeHandler != null) {
-          const response = this._applicationModeHandler.start(this._params.getStringList());
+      this.#params.nextParameter();
+      if (this.#params[0].stringValue === this.#applicationModeCookie) {
+        this.#state = ParserState.APPLICATION_END;
+        this.#dispatchRenderEvent();
+        if (this.#applicationModeHandler != null) {
+          const response = this.#applicationModeHandler.start(this.#params.getStringList());
           if (response.action === ApplicationModeResponseAction.ABORT) {
-            this.state = ParserState.NORMAL;
+            this.#state = ParserState.NORMAL;
           } else if (response.action === ApplicationModeResponseAction.PAUSE) {
             this.pauseProcessing();
           }
         }
       } else {
         this.log("Invalid application mode cookie.");
-        this.state = ParserState.NORMAL;
+        this.#state = ParserState.NORMAL;
       }
     } else {
       // Invalid application start.
-      this.state = ParserState.NORMAL;
+      this.#state = ParserState.NORMAL;
       this.log("Invalid application mode start command.");
     }
   }
 
-  private _processDataApplicationEnd(data: string, i: number): [string, number] {
+  #processDataApplicationEnd(data: string, i: number): [string, number] {
     // Efficiently look for an end-mode character.
     const nextzero = data.indexOf('\x00', i);
     if (nextzero === -1) {
       // Send all of the data on right now.
-      if (this._applicationModeHandler != null) {
+      if (this.#applicationModeHandler != null) {
         const effectiveString = data.slice(i);
-        const response = this._applicationModeHandler.data(effectiveString);
+        const response = this.#applicationModeHandler.data(effectiveString);
         if (response.action === ApplicationModeResponseAction.ABORT) {
-          this.state = ParserState.NORMAL;
+          this.#state = ParserState.NORMAL;
 
           if (response.remainingData != null) {
             return [response.remainingData, 0];
@@ -2085,25 +2085,25 @@ export class Emulator implements EmulatorApi {
 
     } else if (nextzero === i) {
       // We are already at the end-mode character.
-      this._dispatchRenderEvent();
-      if (this._applicationModeHandler != null) {
-        const response = this._applicationModeHandler.end();
+      this.#dispatchRenderEvent();
+      if (this.#applicationModeHandler != null) {
+        const response = this.#applicationModeHandler.end();
         if (response.action === ApplicationModeResponseAction.ABORT) {
           if (response.remainingData != null) {
-            this.state = ParserState.NORMAL;
+            this.#state = ParserState.NORMAL;
             return [response.remainingData, 0];
           }
         }
       }
-      this.state = ParserState.NORMAL;
+      this.#state = ParserState.NORMAL;
 
     } else {
       // Incoming end-mode character. Send the last piece of data.
-      this._dispatchRenderEvent();
-      if (this._applicationModeHandler != null) {
-        const response = this._applicationModeHandler.data(data.slice(i, nextzero));
+      this.#dispatchRenderEvent();
+      if (this.#applicationModeHandler != null) {
+        const response = this.#applicationModeHandler.data(data.slice(i, nextzero));
         if (response.action === ApplicationModeResponseAction.ABORT) {
-          this.state = ParserState.NORMAL;
+          this.#state = ParserState.NORMAL;
         } else if (response.action === ApplicationModeResponseAction.PAUSE) {
           this.pauseProcessing();
         }
@@ -2114,19 +2114,19 @@ export class Emulator implements EmulatorApi {
   }
 
   // ESC # variations
-  private _processDataDecHash(ch: string): void {
+  #processDataDecHash(ch: string): void {
     switch(ch) {
       // ESC # 8
       // Screen Alignment Display (DECALN)
       case '8':
-        this.fillScreen('E');
+        this.#fillScreen('E');
         break;
 
       default:
         break;
     }
 
-    this.state = ParserState.NORMAL;
+    this.#state = ParserState.NORMAL;
   }
 
   writeln(data: string): void {
@@ -2165,7 +2165,7 @@ export class Emulator implements EmulatorApi {
   /**
    * @return true if the event and key was understood and handled.
    */
-  private static _translateKey(platform: Platform, ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursorKeys: boolean): string {
+  static _translateKey(platform: Platform, ev: MinimalKeyboardEvent, applicationKeypad: boolean, applicationCursorKeys: boolean): string {
     const isMac = platform === "darwin";
     let key: string = null;
 
@@ -2378,45 +2378,45 @@ export class Emulator implements EmulatorApi {
   }
 
   keyDown(ev: MinimalKeyboardEvent): boolean {
-    const key = Emulator._translateKey(this._platform, ev, this.applicationKeypad, this.applicationCursorKeys);
+    const key = Emulator._translateKey(this.#platform, ev, this.#applicationKeypad, this.#applicationCursorKeys);
     if (key === null) {
       return false;
     }
-    this._showCursor();
+    this.#showCursor();
     this.handler(key);
     return true;
   }
 
-  private setgLevel(g: number): void {
-    this.glevel = g;
-    this.charset = this.charsets[g];
+  #setgLevel(g: number): void {
+    this.#glevel = g;
+    this.#charset = this.#charsets[g];
   }
 
-  private setgCharset(g: number, charset): void {
-    this.charsets[g] = charset;
-    if (this.glevel === g) {
-      this.charset = charset;
+  #setgCharset(g: number, charset): void {
+    this.#charsets[g] = charset;
+    if (this.#glevel === g) {
+      this.#charset = charset;
     }
   }
 
   plainKeyPress(key: string): boolean {
-    this._showCursor();
+    this.#showCursor();
     this.handler(key);
     return true;
   }
 
-  private send(data: string): void {
-    if (!this.queue) {
+  #send(data: string): void {
+    if (!this.#queue) {
       this.#setTimeout(() => {
-        this.handler(this.queue);
-        this.queue = '';
+        this.handler(this.#queue);
+        this.#queue = '';
       }, 1);
     }
 
-    this.queue += data;
+    this.#queue += data;
   }
 
-  private bell(): void {
+  #bell(): void {
     this.#onBellEventEmitter.fire({instance: this});
   }
 
@@ -2424,17 +2424,17 @@ export class Emulator implements EmulatorApi {
     // TODO: Implement eat_newline_glitch.
     // if (this.realX >= this.cols) break;
     // this.realX = 0;
-    if (this.y+1 > this.scrollBottom) {
-      this.scroll();
+    if (this.#y+1 > this.#scrollBottom) {
+      this.#scroll();
     } else {
-      this._setCursorY(this.y+1);
+      this.#setCursorY(this.#y+1);
     }
   }
 
   carriageReturn(): void {
-    this._getRow(this.y);
-    this.x = 0;
-    this.markRowRangeForRefresh(this.y, this.y);
+    this.#getRow(this.#y);
+    this.#x = 0;
+    this.#markRowRangeForRefresh(this.#y, this.#y);
   }
 
   pasteText(text: string): void {
@@ -2443,13 +2443,13 @@ export class Emulator implements EmulatorApi {
     }
 
     const fixedEndingText = text.replace(/\x0a/g, "\r");
-    if (this._bracketedPaste) {
-      this.send("\x1b[200~");
+    if (this.#bracketedPaste) {
+      this.#send("\x1b[200~");
       const cleanText = fixedEndingText.replace(/\x1b[[]201~/g, "");
-      this.send(cleanText);
-      this.send("\x1b[201~");
+      this.#send(cleanText);
+      this.#send("\x1b[201~");
     } else {
-      this.send(fixedEndingText);
+      this.#send(fixedEndingText);
     }
   }
 
@@ -2462,7 +2462,7 @@ export class Emulator implements EmulatorApi {
     console.log.apply(console, ["[TERM] "+ args]);
   }
 
-  private error(...args: string[]): void {
+  #error(...args: string[]): void {
     if (!this.debug) {
       return;
     }
@@ -2471,7 +2471,7 @@ export class Emulator implements EmulatorApi {
   }
 
   size(): TerminalSize {
-    return { rows: this.rows, columns: this.cols };
+    return { rows: this.#rows, columns: this.#cols };
   }
 
   resize(newSize: TerminalSize): void {
@@ -2479,8 +2479,8 @@ export class Emulator implements EmulatorApi {
     const newrows = Math.max(newSize.rows, 1);
 
     // resize cols
-    for (let i = 0; i< this.lines.length; i++) {
-      const line = this.lines[i];
+    for (let i = 0; i< this.#lines.length; i++) {
+      const line = this.#lines[i];
       const newLine = new LineImpl(newcols);
       newLine.pasteLine(line, 0);
 
@@ -2488,50 +2488,50 @@ export class Emulator implements EmulatorApi {
         newLine.setCellAndLink(j, Emulator.defAttr);
       }
 
-      this.lines[i] = newLine;
+      this.#lines[i] = newLine;
     }
 
-    this.setupStops(newcols);
-    this.cols = newcols;
+    this.#setupStops(newcols);
+    this.#cols = newcols;
 
     // resize rows
-    if (this.rows < newrows) {
+    if (this.#rows < newrows) {
 
-    } else if (this.rows > newrows) {
+    } else if (this.#rows > newrows) {
 
       // Remove rows to match the new smaller rows value.
-      while (this.lines.length > newrows) {
-        this._scrollbackLineQueue.push(this.lines.shift());
+      while (this.#lines.length > newrows) {
+        this.#scrollbackLineQueue.push(this.#lines.shift());
       }
     }
-    this.rows = newrows;
+    this.#rows = newrows;
 
     // make sure the cursor stays on screen
-    if (this.y >= newrows) {
-      this._setCursorY(newrows - 1);
+    if (this.#y >= newrows) {
+      this.#setCursorY(newrows - 1);
     }
-    if (this.x >= newcols) {
-      this.x = newcols - 1;
+    if (this.#x >= newcols) {
+      this.#x = newcols - 1;
     }
 
-    this.scrollTop = 0;
-    this.scrollBottom = newrows - 1;
+    this.#scrollTop = 0;
+    this.#scrollBottom = newrows - 1;
 
     // it's a real nightmare trying
     // to resize the original
     // screen buffer. just set it
     // to null for now.
-    this.normalSavedState = null;
-    this._mouseEncoder.sendCursorKeysForWheel = false;
+    this.#normalSavedState = null;
+    this.#mouseEncoder.sendCursorKeysForWheel = false;
 
-    this.markRowRangeForRefresh(0, this.lines.length-1);
+    this.#markRowRangeForRefresh(0, this.#lines.length-1);
 
-    this._dispatchRenderEvent();
+    this.#dispatchRenderEvent();
   }
 
-  private _dispatchRenderEvent(): void {
-    let checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
-    let checkedRefreshStart = this._refreshStart;
+  #dispatchRenderEvent(): void {
+    let checkedRefreshEnd = Math.min(this.#refreshEnd, this.#lines.length);
+    let checkedRefreshStart = this.#refreshStart;
     if (checkedRefreshEnd === REFRESH_END_NULL || checkedRefreshStart === checkedRefreshEnd) {
       // Don't signal to refresh anything. This can happen when there are no realized rows yet.
       checkedRefreshEnd = -1;
@@ -2541,19 +2541,19 @@ export class Emulator implements EmulatorApi {
     const screenChangeEvent: ScreenChangeEvent = {
       instance: this,
 
-      rows: this.rows,
-      columns: this.cols,
-      realizedRows: this.lines.length,
+      rows: this.#rows,
+      columns: this.#cols,
+      realizedRows: this.#lines.length,
 
       refreshStartRow: checkedRefreshStart,
       refreshEndRow: checkedRefreshEnd,
-      cursorRow: this.y,
-      cursorColumn: this.x
+      cursorRow: this.#y,
+      cursorColumn: this.#x
     };
     this.#onScreenChangeEventEmitter.fire(screenChangeEvent);
 
-    checkedRefreshEnd = Math.min(this._refreshEnd, this.lines.length);
-    checkedRefreshStart = this._refreshStart;
+    checkedRefreshEnd = Math.min(this.#refreshEnd, this.#lines.length);
+    checkedRefreshStart = this.#refreshStart;
     if (checkedRefreshEnd === REFRESH_END_NULL || checkedRefreshStart === checkedRefreshEnd) {
       // Don't signal to refresh anything. This can happen when there are no realized rows yet.
       checkedRefreshEnd = -1;
@@ -2563,103 +2563,103 @@ export class Emulator implements EmulatorApi {
     const renderEvent: RenderEvent = {
       instance: this,
 
-      rows: this.rows,
-      columns: this.cols,
-      realizedRows: this.lines.length,
+      rows: this.#rows,
+      columns: this.#cols,
+      realizedRows: this.#lines.length,
 
       refreshStartRow: checkedRefreshStart,
       refreshEndRow: checkedRefreshEnd,
-      scrollbackLines: this._scrollbackLineQueue,
-      cursorRow: this.y,
-      cursorColumn: this.x
+      scrollbackLines: this.#scrollbackLineQueue,
+      cursorRow: this.#y,
+      cursorColumn: this.#x
     };
 
-    this._refreshStart = REFRESH_START_NULL;
-    this._refreshEnd = REFRESH_END_NULL;
-    this._scrollbackLineQueue = [];
+    this.#refreshStart = REFRESH_START_NULL;
+    this.#refreshEnd = REFRESH_END_NULL;
+    this.#scrollbackLineQueue = [];
 
     this.#onRenderEventEmitter.fire(renderEvent);
   }
 
-  private markRowForRefresh(y: number): void {
-    this.markRowRangeForRefresh(y, y);
+  #markRowForRefresh(y: number): void {
+    this.#markRowRangeForRefresh(y, y);
   }
 
-  private markRowAsWrapped(y: number): void {
-    const line = this._getRow(y);
+  #markRowAsWrapped(y: number): void {
+    const line = this.#getRow(y);
     line.isWrapped = true;
   }
 
-  private _setCursorY(newY: number): void {
-    this._getRow(newY);
-    this.y = newY;
-    this.markRowRangeForRefresh(newY, newY);
+  #setCursorY(newY: number): void {
+    this.#getRow(newY);
+    this.#y = newY;
+    this.#markRowRangeForRefresh(newY, newY);
   }
 
-  private markAllRowsForRefresh(): void {
-    this.markRowRangeForRefresh(0, this.rows-1);
+  #markAllRowsForRefresh(): void {
+    this.#markRowRangeForRefresh(0, this.#rows-1);
   }
 
-  private setupStops(maxCols?: number): void {
-    const cols = maxCols === undefined ? this.cols : maxCols;
-    this.tabs = {};
+  #setupStops(maxCols?: number): void {
+    const cols = maxCols === undefined ? this.#cols : maxCols;
+    this.#tabs = {};
     for (let i = 0; i < cols; i += 8) {
-      this.tabs[i] = true;
+      this.#tabs[i] = true;
     }
   }
 
-  private prevStop(x?: number): number {
+  #prevStop(x?: number): number {
     if (x === undefined) {
-      x = this.x;
+      x = this.#x;
     }
     x--;
-    while (!this.tabs[x] && x > 0) {
+    while (!this.#tabs[x] && x > 0) {
       x--;
     }
-    return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
+    return x >= this.#cols ? this.#cols - 1 : (x < 0 ? 0 : x);
   }
 
-  private nextStop(x?: number): number {
+  #nextStop(x?: number): number {
     if (x === undefined) {
-      x = this.x;
+      x = this.#x;
     }
     x++;
-    while (!this.tabs[x] && x < this.cols) {
+    while (!this.#tabs[x] && x < this.#cols) {
       x++;
     }
-    return x >= this.cols ? this.cols - 1 : (x < 0 ? 0 : x);
+    return x >= this.#cols ? this.#cols - 1 : (x < 0 ? 0 : x);
   }
 
-  private eraseRight(x: number, y: number): void {
-    this.fillRight(x, y);
+  #eraseRight(x: number, y: number): void {
+    this.#fillRight(x, y);
   }
 
-  private fillRight(x: number, y: number, ch: string = ' '): void {
-    const line = this._tryGetRow(y);
+  #fillRight(x: number, y: number, ch: string = ' '): void {
+    const line = this.#tryGetRow(y);
     if (line === null) {
       return;
     }
 
     const chCodePoint = ch.codePointAt(0);
-    for (; x < this.cols; x++) {
-      line.setCellAndLink(x, this.curAttr);
+    for (; x < this.#cols; x++) {
+      line.setCellAndLink(x, this.#curAttr);
       line.setCodePoint(x, chCodePoint);
     }
 
-    this.markRowForRefresh(y);
+    this.#markRowForRefresh(y);
   }
 
-  private fillScreen(fillChar: string = ' '): void {
-    let j = this.rows;
+  #fillScreen(fillChar: string = ' '): void {
+    let j = this.#rows;
     while (j--) {
-      this.fillRight(0, j, fillChar);
+      this.#fillRight(0, j, fillChar);
     }
   }
 
-  private eraseLeft(x: number, y: number): void {
-    const line = this._getRow(y);
+  #eraseLeft(x: number, y: number): void {
+    const line = this.#getRow(y);
 
-    const clearCellAttrs = { ...this.curAttr };
+    const clearCellAttrs = { ...this.#curAttr };
     clearCellAttrs.style = 0;
 
     x++;
@@ -2668,22 +2668,22 @@ export class Emulator implements EmulatorApi {
       line.setCellAndLink(x, clearCellAttrs);
     }
 
-    this.markRowForRefresh(y);
+    this.#markRowForRefresh(y);
   }
 
-  private eraseLine(y: number): void {
-    this.eraseRight(0, y);
+  #eraseLine(y: number): void {
+    this.#eraseRight(0, y);
   }
 
-  private blankLine(cur?: boolean): LineImpl {
-    return new LineImpl(this.cols);
+  #blankLine(cur?: boolean): LineImpl {
+    return new LineImpl(this.#cols);
   }
 
-  private handler(data: string): void {
+  handler(data: string): void {
     this.#onDataEventEmitter.fire({instance: this, data});
   }
 
-  private handleTitle(title: string): void {
+  #handleTitle(title: string): void {
     this.#onTitleChangeEventEmitter.fire({instance: this, title});
   }
 
@@ -2692,50 +2692,50 @@ export class Emulator implements EmulatorApi {
    */
 
   // ESC D Index (IND is 0x84).
-  private index(): void {
-    if (this.y+1 > this.scrollBottom) {
-      this.scroll();
+  #index(): void {
+    if (this.#y+1 > this.#scrollBottom) {
+      this.#scroll();
     } else {
-      this._setCursorY(this.y+1);
+      this.#setCursorY(this.#y+1);
     }
-    this.state = ParserState.NORMAL;
+    this.#state = ParserState.NORMAL;
   }
 
   // ESC M Reverse Index (RI is 0x8d).
-  private reverseIndex(): void {
-    if (this.y-1 < this.scrollTop) {
+  #reverseIndex(): void {
+    if (this.#y-1 < this.#scrollTop) {
       // possibly move the code below to term.reverseScroll();
       // test: echo -ne '\e[1;1H\e[44m\eM\e[0m'
       // blankLine(true) is xterm/linux behavior
-      this.lines.splice(this.y, 0, this.blankLine(true));
-      const j = this.rows - 1 - this.scrollBottom;
-      this.lines.splice(this.rows - 1 - j + 1, 1);
+      this.#lines.splice(this.#y, 0, this.#blankLine(true));
+      const j = this.#rows - 1 - this.#scrollBottom;
+      this.#lines.splice(this.#rows - 1 - j + 1, 1);
 
-      this.markRowForRefresh(this.scrollTop);
-      this.markRowForRefresh(this.scrollBottom);
+      this.#markRowForRefresh(this.#scrollTop);
+      this.#markRowForRefresh(this.#scrollBottom);
     } else {
-      this._setCursorY(this.y-1);
+      this.#setCursorY(this.#y-1);
     }
-    this.state = ParserState.NORMAL;
+    this.#state = ParserState.NORMAL;
   }
 
   reset(): void {
-    this._fullReset();
-    this.x = 0;
-    this._setCursorY(0);
-    this._dispatchRenderEvent();
+    this.#fullReset();
+    this.#x = 0;
+    this.#setCursorY(0);
+    this.#dispatchRenderEvent();
   }
 
   // ESC c Full Reset (RIS).
-  _fullReset(): void {
-    this._resetVariables();
-    this.eraseAllRows();
+  #fullReset(): void {
+    this.#resetVariables();
+    this.#eraseAllRows();
   }
 
   // ESC H Tab Set (HTS is 0x88).
-  private tabSet(): void {
-    this.tabs[this.x] = true;
-    this.state = ParserState.NORMAL;
+  #tabSet(): void {
+    this.#tabs[this.#x] = true;
+    this.#state = ParserState.NORMAL;
   }
 
   /**
@@ -2744,81 +2744,81 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps A
   // Cursor Up Ps Times (default = 1) (CUU).
-  private cursorUp(params: ControlSequenceParameters): void {
+  #cursorUp(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
 
-    if (this.y-param < this.scrollTop) {
-      this._setCursorY(this.scrollTop);
+    if (this.#y-param < this.#scrollTop) {
+      this.#setCursorY(this.#scrollTop);
     } else {
-      this._setCursorY(this.y - param);
+      this.#setCursorY(this.#y - param);
     }
   }
 
   // CSI Ps B
   // Cursor Down Ps Times (default = 1) (CUD).
-  private cursorDown(params: ControlSequenceParameters): void {
+  #cursorDown(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
 
-    const bottom = this.scrollBottom !== 0  ? this.scrollBottom : this.rows -1;
-    if (this.y+param > bottom) {
-      this._setCursorY(bottom);
+    const bottom = this.#scrollBottom !== 0  ? this.#scrollBottom : this.#rows -1;
+    if (this.#y+param > bottom) {
+      this.#setCursorY(bottom);
     } else {
-      this._setCursorY(this.y + param);
+      this.#setCursorY(this.#y + param);
     }
   }
 
   // CSI Ps C
   // Cursor Forward Ps Times (default = 1) (CUF).
-  private cursorForward(params: ControlSequenceParameters): void {
+  #cursorForward(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    this.x += param;
-    if (this.x >= this.cols) {
-      this.x = this.cols - 1;
+    this.#x += param;
+    if (this.#x >= this.#cols) {
+      this.#x = this.#cols - 1;
     }
   }
 
   // CSI Ps D
   // Cursor Backward Ps Times (default = 1) (CUB).
-  private cursorBackward(params: ControlSequenceParameters): void {
+  #cursorBackward(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    this.x -= param;
-    if (this.x < 0) {
-      this.x = 0;
+    this.#x -= param;
+    if (this.#x < 0) {
+      this.#x = 0;
     }
   }
 
   // CSI Ps ; Ps H
   // Cursor Position [row;column] (default = [1,1]) (CUP).
-  private cursorPos(params: ControlSequenceParameters): void {
-    let y = params[0].intValue - 1 + (this.originMode ? this.scrollTop : 0);
+  #cursorPos(params: ControlSequenceParameters): void {
+    let y = params[0].intValue - 1 + (this.#originMode ? this.#scrollTop : 0);
     let x = (params.length >= 2) ? params[1].intValue - 1 : 0;
 
     if (y < 0) {
       y = 0;
-    } else if (y >= this.rows) {
-      y = this.rows - 1;
+    } else if (y >= this.#rows) {
+      y = this.#rows - 1;
     }
 
     if (x < 0) {
       x = 0;
-    } else if (x >= this.cols) {
-      x = this.cols - 1;
+    } else if (x >= this.#cols) {
+      x = this.#cols - 1;
     }
 
-    this.x = x;
-    this._setCursorY(y);
+    this.#x = x;
+    this.#setCursorY(y);
   }
 
   // CSI Ps J  Erase in Display (ED).
@@ -2831,25 +2831,25 @@ export class Emulator implements EmulatorApi {
   //     Ps = 0  -> Selective Erase Below (default).
   //     Ps = 1  -> Selective Erase Above.
   //     Ps = 2  -> Selective Erase All.
-  private eraseInDisplay(params: ControlSequenceParameters): void {
+  #eraseInDisplay(params: ControlSequenceParameters): void {
     let j: number;
     switch (params[0].intValue) {
       case 0:
-        this.eraseRight(this.x, this.y);
-        j = this.y + 1;
-        for (; j < this.rows; j++) {
-          this.eraseLine(j);
+        this.#eraseRight(this.#x, this.#y);
+        j = this.#y + 1;
+        for (; j < this.#rows; j++) {
+          this.#eraseLine(j);
         }
         break;
       case 1:
-        this.eraseLeft(this.x, this.y);
-        j = this.y;
+        this.#eraseLeft(this.#x, this.#y);
+        j = this.#y;
         while (j--) {
-          this.eraseLine(j);
+          this.#eraseLine(j);
         }
         break;
       case 2:
-        this.eraseAllRows();
+        this.#eraseAllRows();
         break;
       case 3:
         // no saved lines
@@ -2857,11 +2857,11 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  private eraseAllRows(): void {
-    let j = this.rows;
+  #eraseAllRows(): void {
+    let j = this.#rows;
     while (j--) {
-      this._getRow(j);
-      this.eraseLine(j);
+      this.#getRow(j);
+      this.#eraseLine(j);
     }
   }
 
@@ -2874,16 +2874,16 @@ export class Emulator implements EmulatorApi {
   //     Ps = 0  -> Selective Erase to Right (default).
   //     Ps = 1  -> Selective Erase to Left.
   //     Ps = 2  -> Selective Erase All.
-  private eraseInLine(params: ControlSequenceParameters): void {
+  #eraseInLine(params: ControlSequenceParameters): void {
     switch (params[0].intValue) {
       case 0:
-        this.eraseRight(this.x, this.y);
+        this.#eraseRight(this.#x, this.#y);
         break;
       case 1:
-        this.eraseLeft(this.x, this.y);
+        this.#eraseLeft(this.#x, this.#y);
         break;
       case 2:
-        this.eraseLine(this.y);
+        this.#eraseLine(this.#y);
         break;
     }
   }
@@ -2953,10 +2953,10 @@ export class Emulator implements EmulatorApi {
   //     Ps.
   //     Ps = 4 8  ; 5  ; Ps -> Set background color to the second
   //     Ps.
-  private charAttributes(params: ControlSequenceParameters): void {
+  #charAttributes(params: ControlSequenceParameters): void {
     // Optimize a single SGR0.
     if (params.length === 1 && params[0].intValue === 0) {
-      copyCell(Emulator.defAttr, this.curAttr);
+      copyCell(Emulator.defAttr, this.#curAttr);
       return;
     }
 
@@ -2969,13 +2969,13 @@ export class Emulator implements EmulatorApi {
       if (p >= 30 && p <= 37) {
         // fg color 8
         fg = p - 30;
-        this.curAttr.fgClutIndex = fg;
-        setCellFgClutFlag(this.curAttr, true);
+        this.#curAttr.fgClutIndex = fg;
+        setCellFgClutFlag(this.#curAttr, true);
       } else if (p >= 40 && p <= 47) {
         // bg color 8
         bg = p - 40;
-        this.curAttr.bgClutIndex = bg;
-        setCellBgClutFlag(this.curAttr, true);
+        this.#curAttr.bgClutIndex = bg;
+        setCellBgClutFlag(this.#curAttr, true);
       } else if (p === 58 || p === 59) {
         // DECO. set/reset the color of character decorations.
         // Not supported here.
@@ -2984,50 +2984,50 @@ export class Emulator implements EmulatorApi {
         // fg color 16
         p += 8;
         fg = p - 90;
-        this.curAttr.fgClutIndex = fg;
-        setCellFgClutFlag(this.curAttr, true);
+        this.#curAttr.fgClutIndex = fg;
+        setCellFgClutFlag(this.#curAttr, true);
       } else if (p >= 100 && p <= 107) {
         // bg color 16
         p += 8;
         bg = p - 100;
-        this.curAttr.bgClutIndex = bg;
-        setCellBgClutFlag(this.curAttr, true);
+        this.#curAttr.bgClutIndex = bg;
+        setCellBgClutFlag(this.#curAttr, true);
       } else if (p === 0) {
         // default
-        copyCell(Emulator.defAttr, this.curAttr);
+        copyCell(Emulator.defAttr, this.#curAttr);
       } else if (p === 1) {
         // bold text
-        this.curAttr.style |= STYLE_MASK_BOLD;
+        this.#curAttr.style |= STYLE_MASK_BOLD;
 
       } else if (p === 2) {
         // Faint, decreased intensity (ISO 6429).
-        this.curAttr.style |= STYLE_MASK_FAINT;
+        this.#curAttr.style |= STYLE_MASK_FAINT;
 
       } else if (p === 3) {
         // Italic
-        this.curAttr.style |= STYLE_MASK_ITALIC;
+        this.#curAttr.style |= STYLE_MASK_ITALIC;
 
       } else if (p === 4) {
         // underlined text
         if (params[i].subparameters.length === 0) {
-          this.curAttr.style |= UNDERLINE_STYLE_NORMAL;
+          this.#curAttr.style |= UNDERLINE_STYLE_NORMAL;
         } else {
           switch (params[i].subparameters[0].intValue) {
             case 0:
               // not underlined
-              this.curAttr.style &= ~STYLE_MASK_UNDERLINE;
+              this.#curAttr.style &= ~STYLE_MASK_UNDERLINE;
               break;
             case 1:
               // Plain underline
-              this.curAttr.style |= UNDERLINE_STYLE_NORMAL;
+              this.#curAttr.style |= UNDERLINE_STYLE_NORMAL;
               break;
             case 2:
               // Double underline
-              this.curAttr.style |= UNDERLINE_STYLE_DOUBLE;
+              this.#curAttr.style |= UNDERLINE_STYLE_DOUBLE;
               break;
             case 3:
               // Curly underline
-              this.curAttr.style |= UNDERLINE_STYLE_CURLY;
+              this.#curAttr.style |= UNDERLINE_STYLE_CURLY;
               break;
             default:
               break;
@@ -3036,105 +3036,105 @@ export class Emulator implements EmulatorApi {
 
       } else if (p === 5) {
         // blink
-        this.curAttr.style |= STYLE_MASK_BLINK;
+        this.#curAttr.style |= STYLE_MASK_BLINK;
 
       } else if (p === 7) {
         // inverse and positive
         // test with: echo -e '\e[31m\e[42mhello\e[7mworld\e[27mhi\e[m'
-        this.curAttr.style |= STYLE_MASK_INVERSE;
+        this.#curAttr.style |= STYLE_MASK_INVERSE;
 
       } else if (p === 8) {
         // invisible
-        this.curAttr.style |= STYLE_MASK_INVISIBLE;
+        this.#curAttr.style |= STYLE_MASK_INVISIBLE;
 
       } else if (p === 9) {
         // Crossed-out characters (ISO 6429).
-        this.curAttr.style |= STYLE_MASK_STRIKETHROUGH;
+        this.#curAttr.style |= STYLE_MASK_STRIKETHROUGH;
 
       } else if (p >= 10 && p <= 20) {
         // Font setting. Ignore
 
       } else if (p === 21) {
         // Double underline
-        this.curAttr.style |= UNDERLINE_STYLE_DOUBLE;
+        this.#curAttr.style |= UNDERLINE_STYLE_DOUBLE;
 
       } else if (p === 22) {
         // not bold and not faint.
-        this.curAttr.style &= ~STYLE_MASK_BOLD;
-        this.curAttr.style &= ~STYLE_MASK_FAINT;
+        this.#curAttr.style &= ~STYLE_MASK_BOLD;
+        this.#curAttr.style &= ~STYLE_MASK_FAINT;
 
       } else if (p === 23) {
         // not italic
-        this.curAttr.style &= ~STYLE_MASK_ITALIC;
+        this.#curAttr.style &= ~STYLE_MASK_ITALIC;
 
       } else if (p === 24) {
         // not underlined
-        this.curAttr.style &= ~STYLE_MASK_UNDERLINE;
+        this.#curAttr.style &= ~STYLE_MASK_UNDERLINE;
 
       } else if (p === 25) {
         // not blink
-        this.curAttr.style &= ~STYLE_MASK_BLINK;
+        this.#curAttr.style &= ~STYLE_MASK_BLINK;
 
       } else if (p === 27) {
         // not inverse
-        this.curAttr.style &= ~STYLE_MASK_INVERSE;
+        this.#curAttr.style &= ~STYLE_MASK_INVERSE;
 
       } else if (p === 28) {
         // not invisible
-        this.curAttr.style &= ~STYLE_MASK_INVISIBLE;
+        this.#curAttr.style &= ~STYLE_MASK_INVISIBLE;
 
       } else if (p === 29) {
         // not strike through
-        this.curAttr.style &= ~STYLE_MASK_STRIKETHROUGH;
+        this.#curAttr.style &= ~STYLE_MASK_STRIKETHROUGH;
 
       } else if (p === 39) {
         // reset fg
-        this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
-        setCellFgClutFlag(this.curAttr, true);
+        this.#curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
+        setCellFgClutFlag(this.#curAttr, true);
 
       } else if (p === 49) {
         // reset bg
-        this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
-        setCellBgClutFlag(this.curAttr, true);
+        this.#curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
+        setCellBgClutFlag(this.#curAttr, true);
 
       } else if (p === 38) {
         // fg color 256
         if (params[i].subparameters.length === 0) {
-          i = this._setForegroundColorFromParams(params, i);
+          i = this.#setForegroundColorFromParams(params, i);
         } else {
-          this._setForegroundColorFromParams(params[i].subparameters, -1);
+          this.#setForegroundColorFromParams(params[i].subparameters, -1);
         }
 
       } else if (p === 48) {
         // bg color 256
         if (params[i].subparameters.length === 0) {
-          i = this._setBackgroundColorFromParams(params, i);
+          i = this.#setBackgroundColorFromParams(params, i);
         } else {
-          this._setBackgroundColorFromParams(params[i].subparameters, -1);
+          this.#setBackgroundColorFromParams(params[i].subparameters, -1);
         }
 
       } else if (p === 53) {
         // Overline style
-        this.curAttr.style |= STYLE_MASK_OVERLINE;
+        this.#curAttr.style |= STYLE_MASK_OVERLINE;
 
       } else if (p === 55) {
         // Reset overline style
-        this.curAttr.style &= ~STYLE_MASK_OVERLINE;
+        this.#curAttr.style &= ~STYLE_MASK_OVERLINE;
 
       } else if (p === 100) {
         // reset fg/bg
-        this.curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
-        this.curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
-        setCellFgClutFlag(this.curAttr, true);
-        setCellBgClutFlag(this.curAttr, true);
+        this.#curAttr.fgClutIndex = Emulator.defAttr.fgClutIndex;
+        this.#curAttr.bgClutIndex = Emulator.defAttr.bgClutIndex;
+        setCellFgClutFlag(this.#curAttr, true);
+        setCellBgClutFlag(this.#curAttr, true);
 
       } else {
-        this.error(`Unknown SGR attribute: ${"" + p}.`);
+        this.#error(`Unknown SGR attribute: ${"" + p}.`);
       }
     }
   }
 
-  private _setForegroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
+  #setForegroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
     // fg color 256
     if (params.getDefaultInt(paramIndex + 1, -1) === 2) {  // Set to RGB color
       paramIndex += 2;
@@ -3143,19 +3143,19 @@ export class Emulator implements EmulatorApi {
             ((params.getDefaultInt(paramIndex + 2, 0) & 0xff) << 8) |
             0xff;
       paramIndex += 2;
-      this.curAttr.fgRGBA = fg;
-      setCellFgClutFlag(this.curAttr, false);
+      this.#curAttr.fgRGBA = fg;
+      setCellFgClutFlag(this.#curAttr, false);
 
     } else if (params.getDefaultInt(paramIndex + 1, -1) === 5) { // Set to index color
       paramIndex += 2;
       const p = params.getDefaultInt(paramIndex, 0) & 0xff;
-      this.curAttr.fgClutIndex = p;
-      setCellFgClutFlag(this.curAttr, true);
+      this.#curAttr.fgClutIndex = p;
+      setCellFgClutFlag(this.#curAttr, true);
     }
     return paramIndex;
   }
 
-  private _setBackgroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
+  #setBackgroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
     // bg color 256
     if (params.getDefaultInt(paramIndex + 1, -1) === 2) {  // Set to RGB color
       paramIndex += 2;
@@ -3164,14 +3164,14 @@ export class Emulator implements EmulatorApi {
             ((params.getDefaultInt(paramIndex + 2, 0) & 0xff) << 8) |
             0xff;
       paramIndex += 2;
-      this.curAttr.bgRGBA = fg;
-      setCellBgClutFlag(this.curAttr, false);
+      this.#curAttr.bgRGBA = fg;
+      setCellBgClutFlag(this.#curAttr, false);
 
     } else if (params.getDefaultInt(paramIndex + 1, -1) === 5) { // Set to index color
       paramIndex += 2;
       const p = params.getDefaultInt(paramIndex, 0) & 0xff;
-      this.curAttr.bgClutIndex = p;
-      setCellBgClutFlag(this.curAttr, true);
+      this.#curAttr.bgClutIndex = p;
+      setCellBgClutFlag(this.#curAttr, true);
     }
     return paramIndex;
   }
@@ -3197,16 +3197,16 @@ export class Emulator implements EmulatorApi {
   //     Ps = 5 3  -> Report Locator status as
   //   CSI ? 5 3  n  Locator available, if compiled-in, or
   //   CSI ? 5 0  n  No Locator, if not.
-  private deviceStatus(params: ControlSequenceParameters): void {
+  #deviceStatus(params: ControlSequenceParameters): void {
     if ( ! params.prefix) {
       switch (params.getDefaultInt(0, 0)) {
         case 5:
           // status report
-          this.send('\x1b[0n');
+          this.#send('\x1b[0n');
           break;
         case 6:
           // cursor position
-          this.send('\x1b[' + (this.y + 1) + ';' + (this.x + 1) + 'R');
+          this.#send('\x1b[' + (this.#y + 1) + ';' + (this.#x + 1) + 'R');
           break;
       }
     } else if (params.prefix === '?') {
@@ -3215,7 +3215,7 @@ export class Emulator implements EmulatorApi {
       switch (params.getDefaultInt(0, 0)) {
         case 6:
           // cursor position
-          this.send('\x1b[?' + (this.y + 1) + ';' + (this.x + 1) + 'R');
+          this.#send('\x1b[?' + (this.#y + 1) + ';' + (this.#x + 1) + 'R');
           break;
         case 15:
           // no printer
@@ -3243,20 +3243,20 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps @
   // Insert Ps (Blank) Character(s) (default = 1) (ICH).
-  private insertChars(params: ControlSequenceParameters): void {
+  #insertChars(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
 
-    const row = this.y;
-    let j = this.x;
+    const row = this.#y;
+    let j = this.#x;
     const eraseCell = this.eraseAttr();
-    const line = this._getRow(row);
+    const line = this.#getRow(row);
 
     line.shiftCellsRight(j, param);
 
-    while (param-- && j < this.cols) {
+    while (param-- && j < this.#cols) {
       line.setCell(j, eraseCell);
       j++;
     }
@@ -3265,101 +3265,101 @@ export class Emulator implements EmulatorApi {
   // CSI Ps E
   // Cursor Next Line Ps Times (default = 1) (CNL).
   // same as CSI Ps B ?
-  private cursorNextLine(params: ControlSequenceParameters): void {
+  #cursorNextLine(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    if (this.y+param >= this.rows) {
-      this._setCursorY(this.rows - 1);
+    if (this.#y+param >= this.#rows) {
+      this.#setCursorY(this.#rows - 1);
     } else {
-      this._setCursorY(this.y + param);
+      this.#setCursorY(this.#y + param);
     }
-    this.x = 0;
+    this.#x = 0;
   }
 
   // CSI Ps F
   // Cursor Preceding Line Ps Times (default = 1) (CNL).
   // reuse CSI Ps A ?
-  private cursorPrecedingLine(params: ControlSequenceParameters): void {
+  #cursorPrecedingLine(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    if (this.y-param < 0) {
-      this._setCursorY(0);
+    if (this.#y-param < 0) {
+      this.#setCursorY(0);
     } else {
-      this._setCursorY(this.y - param);
+      this.#setCursorY(this.#y - param);
     }
-    this.x = 0;
+    this.#x = 0;
   }
 
   // CSI Ps G
   // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
-  private cursorCharAbsolute(params: ControlSequenceParameters): void {
+  #cursorCharAbsolute(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    this.x = param - 1;
+    this.#x = param - 1;
   }
 
   // CSI Ps L
   // Insert Ps Line(s) (default = 1) (IL).
-  private insertLines(params: ControlSequenceParameters): void {
+  #insertLines(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    const row = this.y;
-    const j = this.scrollBottom + 1;
+    const row = this.#y;
+    const j = this.#scrollBottom + 1;
     while (param--) {
       // test: echo -e '\e[44m\e[1L\e[0m'
       // blankLine(true) - xterm/linux behavior
-      this._getRow(row);
-      this.lines.splice(row, 0, this.blankLine(true));
-      this.lines.splice(j, 1);
+      this.#getRow(row);
+      this.#lines.splice(row, 0, this.#blankLine(true));
+      this.#lines.splice(j, 1);
     }
 
-    this.markRowForRefresh(this.y);
-    this.markRowForRefresh(this.scrollBottom);
+    this.#markRowForRefresh(this.#y);
+    this.#markRowForRefresh(this.#scrollBottom);
   }
 
   // CSI Ps M
   // Delete Ps Line(s) (default = 1) (DL).
-  private deleteLines(params: ControlSequenceParameters): void {
+  #deleteLines(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    const row = this.y;
-    const j = this.scrollBottom;
+    const row = this.#y;
+    const j = this.#scrollBottom;
 
     while (param--) {
       // test: echo -e '\e[44m\e[1M\e[0m'
       // blankLine(true) - xterm/linux behavior
-      this._getRow(j + 1);
-      this.lines.splice(j + 1, 0, this.blankLine(true));
-      this.lines.splice(row, 1);
+      this.#getRow(j + 1);
+      this.#lines.splice(j + 1, 0, this.#blankLine(true));
+      this.#lines.splice(row, 1);
     }
 
-    this.markRowForRefresh(this.y);
-    this.markRowForRefresh(this.scrollBottom);
+    this.#markRowForRefresh(this.#y);
+    this.#markRowForRefresh(this.#scrollBottom);
   }
 
   // CSI Ps P
   // Delete Ps Character(s) (default = 1) (DCH).
-  private deleteChars(params: ControlSequenceParameters): void {
+  #deleteChars(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
 
-    const row = this.y;
+    const row = this.#y;
     const emptyCell = this.eraseAttr();
-    const line = this.lines[row];
+    const line = this.#lines[row];
 
-    line.shiftCellsLeft(this.x, param);
+    line.shiftCellsLeft(this.#x, param);
 
     while (param--) {
       line.setCell(line.width-1-param, emptyCell);
@@ -3368,17 +3368,17 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps X
   // Erase Ps Character(s) (default = 1) (ECH).
-  private eraseChars(params: ControlSequenceParameters): void {
+  #eraseChars(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
 
-    const row = this.y;
-    let j = this.x;
+    const row = this.#y;
+    let j = this.#x;
     const emptyCell = this.eraseAttr();
-    const line = this._getRow(row);
-    while (param-- && j < this.cols) {
+    const line = this.#getRow(row);
+    while (param-- && j < this.#cols) {
       line.setCell(j, emptyCell);
       j++;
     }
@@ -3386,28 +3386,28 @@ export class Emulator implements EmulatorApi {
 
   // CSI Pm `  Character Position Absolute
   //   [column] (default = [row,1]) (HPA).
-  private charPosAbsolute(params: ControlSequenceParameters): void {
+  #charPosAbsolute(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    this.x = param - 1;
-    if (this.x >= this.cols) {
-      this.x = this.cols - 1;
+    this.#x = param - 1;
+    if (this.#x >= this.#cols) {
+      this.#x = this.#cols - 1;
     }
   }
 
   // 141 61 a * HPR -
   // Horizontal Position Relative
   // reuse CSI Ps C ?
-  private HPositionRelative(params: ControlSequenceParameters): void {
+  #HPositionRelative(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    this.x += param;
-    if (this.x >= this.cols) {
-      this.x = this.cols - 1;
+    this.#x += param;
+    if (this.#x >= this.#cols) {
+      this.#x = this.#cols - 1;
     }
   }
 
@@ -3446,53 +3446,53 @@ export class Emulator implements EmulatorApi {
   // More information:
   //   xterm/charproc.c - line 2012, for more information.
   //   vim responds with ^[[?0c or ^[[?1c after the terminal's response (?)
-  private sendDeviceAttributes(params: ControlSequenceParameters): void {
+  #sendDeviceAttributes(params: ControlSequenceParameters): void {
     if (params.getDefaultInt(0, 0) > 0) {
       return;
     }
 
     if ( ! params.prefix) {
       // Primary Device Attributes
-      this.send('\x1b[?1;2c');
+      this.#send('\x1b[?1;2c');
     } else if (params.prefix === '>') {
       // Secondary Device Attributes
-      this.send('\x1b[>1;1;0c'); // VT220
+      this.#send('\x1b[>1;1;0c'); // VT220
     }
   }
 
   // CSI Pm d
   // Line Position Absolute  [row] (default = [1,column]) (VPA).
-  private linePosAbsolute(params: ControlSequenceParameters): void {
+  #linePosAbsolute(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    let y = param - 1 + (this.originMode ? this.scrollTop : 0);
-    if (y >= this.rows) {
-      y = this.rows - 1;
+    let y = param - 1 + (this.#originMode ? this.#scrollTop : 0);
+    if (y >= this.#rows) {
+      y = this.#rows - 1;
     }
-    this._setCursorY(y);
+    this.#setCursorY(y);
   }
 
   // 145 65 e * VPR - Vertical Position Relative
   // reuse CSI Ps B ?
-  private VPositionRelative(params: ControlSequenceParameters): void {
+  #VPositionRelative(params: ControlSequenceParameters): void {
     let param = params[0].intValue;
     if (param < 1) {
       param = 1;
     }
-    if (this.y+param >= this.rows) {
-      this._setCursorY(this.rows - 1);
+    if (this.#y+param >= this.#rows) {
+      this.#setCursorY(this.#rows - 1);
     } else {
-      this._setCursorY(this.y + param);
+      this.#setCursorY(this.#y + param);
     }
   }
 
   // CSI Ps ; Ps f
   //   Horizontal and Vertical Position [row;column] (default =
   //   [1,1]) (HVP).
-  private HVPosition(params: ControlSequenceParameters): void {
-    this.cursorPos(params);
+  #HVPosition(params: ControlSequenceParameters): void {
+    this.#cursorPos(params);
   }
 
   // CSI Pm h  Set Mode (SM).
@@ -3579,12 +3579,12 @@ export class Emulator implements EmulatorApi {
   //     Ps = 2 0 0 4  -> Set bracketed paste mode.
   // Modes:
   //   http://vt100.net/docs/vt220-rm/chapter4.html
-  private setMode(params: ControlSequenceParameters): void {
+  #setMode(params: ControlSequenceParameters): void {
     for (let i=0; i < params.length; i++) {
       if (params.prefix === '') {
         switch (params[i].intValue) {
           case 4:
-            this.insertMode = true;
+            this.#insertMode = true;
             break;
           case 20:
             //this.convertEol = true;
@@ -3593,54 +3593,54 @@ export class Emulator implements EmulatorApi {
       } else if (params.prefix === '?') {
         switch (params[i].intValue) {
           case 1:
-            this.applicationCursorKeys = true;
+            this.#applicationCursorKeys = true;
             break;
           case 2:
-            this.setgCharset(0, Emulator.charsets.US);
-            this.setgCharset(1, Emulator.charsets.US);
-            this.setgCharset(2, Emulator.charsets.US);
-            this.setgCharset(3, Emulator.charsets.US);
+            this.#setgCharset(0, Emulator.charsets.US);
+            this.#setgCharset(1, Emulator.charsets.US);
+            this.#setgCharset(2, Emulator.charsets.US);
+            this.#setgCharset(3, Emulator.charsets.US);
             // set VT100 mode here
             break;
           case 3: // 132 col mode
-            this.savedCols = this.cols;
-            this.resize( { rows:this.rows, columns: 132 } );
+            this.#savedCols = this.#cols;
+            this.resize( { rows:this.#rows, columns: 132 } );
             break;
           case 6:
-            this.originMode = true;
-            this.x = 0;
-            this._setCursorY(this.scrollTop);
+            this.#originMode = true;
+            this.#x = 0;
+            this.#setCursorY(this.#scrollTop);
             break;
           case 7:
-            this.wraparoundMode = true;
+            this.#wraparoundMode = true;
             break;
           case 12:
             // this.cursorBlink = true;
             break;
           case 66:
-            this.applicationKeypad = true;
+            this.#applicationKeypad = true;
             break;
           case 9: // X10 Mouse
             // no release, no motion, no wheel, no modifiers.
-            this._mouseEncoder.mouseProtocol = MouseProtocol.X10;
+            this.#mouseEncoder.mouseProtocol = MouseProtocol.X10;
             break;
           case 1000: // vt200 mouse
             // no motion.
             // no modifiers, except control on the wheel.
-            this._mouseEncoder.mouseProtocol = MouseProtocol.VT200;
+            this.#mouseEncoder.mouseProtocol = MouseProtocol.VT200;
             break;
           case 1002: // button event mouse
-            this._mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
+            this.#mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
             break;
           case 1003: // any event mouse
             // any event - sends motion events,
             // even if there is no button held down.
-            this._mouseEncoder.mouseProtocol = MouseProtocol.ANY_EVENTS;
+            this.#mouseEncoder.mouseProtocol = MouseProtocol.ANY_EVENTS;
             break;
           case 1004: // send focusin/focusout events
             // focusin: ^[[I
             // focusout: ^[[O
-            this.sendFocus = true;
+            this.#sendFocus = true;
             break;
           case 1005: // utf8 ext mode mouse
             this._log.warn("Escape sequence for UTF8 mouse was received, but is unsupported. (1005)");
@@ -3648,7 +3648,7 @@ export class Emulator implements EmulatorApi {
             // simply encodes large values as utf8 characters
             break;
           case 1006: // sgr ext mode mouse
-            this._mouseEncoder.mouseEncoding = MouseProtocolEncoding.SGR;
+            this.#mouseEncoder.mouseEncoding = MouseProtocolEncoding.SGR;
             // for wide terminals
             // does not add 32 to fields
             // press: ^[[<b;x;yM
@@ -3662,54 +3662,54 @@ export class Emulator implements EmulatorApi {
             // motion: ^[[b;x;yT
             break;
           case 25: // show cursor
-            this.cursorHidden = false;
+            this.#cursorHidden = false;
             break;
           case 1049: // alt screen buffer cursor
-            this.saveCursor();
+            this.#saveCursor();
             // FALL-THROUGH
           case 47: // alt screen buffer
           case 1047: // alt screen buffer
-            if (this.normalSavedState == null) {
+            if (this.#normalSavedState == null) {
               const normalSavedState: SavedState = {
-                cols: this.cols,
-                rows: this.rows,
-                lines: this.lines,
-                x: this.x,
-                y: this.y,
-                scrollTop: this.scrollTop,
-                scrollBottom: this.scrollBottom,
-                tabs: this.tabs,
+                cols: this.#cols,
+                rows: this.#rows,
+                lines: this.#lines,
+                x: this.#x,
+                y: this.#y,
+                scrollTop: this.#scrollTop,
+                scrollBottom: this.#scrollBottom,
+                tabs: this.#tabs,
               };
 
               // Preserve these variables during the reset().
-              const previousCharset = this.charset;
-              const previousGlevel = this.glevel;
-              const previousCharsets = this.charsets;
+              const previousCharset = this.#charset;
+              const previousGlevel = this.#glevel;
+              const previousCharsets = this.#charsets;
 
-              const previousMouseEncoder = this._mouseEncoder;
-              this._fullReset();
-              this._mouseEncoder = previousMouseEncoder;
-              this._mouseEncoder.sendCursorKeysForWheel = true;
+              const previousMouseEncoder = this.#mouseEncoder;
+              this.#fullReset();
+              this.#mouseEncoder = previousMouseEncoder;
+              this.#mouseEncoder.sendCursorKeysForWheel = true;
 
-              this.charset = previousCharset;
-              this.glevel = previousGlevel;
-              this.charsets = previousCharsets;
+              this.#charset = previousCharset;
+              this.#glevel = previousGlevel;
+              this.#charsets = previousCharsets;
 
               // Materialize the same number of rows as the normal lines array to ensure that
               // the new screen buffer is rendered over all of the previous screen.
-              while (this.lines.length < normalSavedState.lines.length) {
-                this._getRow(this.lines.length);
+              while (this.#lines.length < normalSavedState.lines.length) {
+                this.#getRow(this.#lines.length);
               }
 
-              this.normalSavedState = normalSavedState;
-              this.markRowRangeForRefresh(0, this.rows - 1);
+              this.#normalSavedState = normalSavedState;
+              this.#markRowRangeForRefresh(0, this.#rows - 1);
 
-              this._showCursor();
+              this.#showCursor();
             }
             break;
 
           case 2004:  // Bracketed paste
-            this._bracketedPaste = true;
+            this.#bracketedPaste = true;
             break;
         }
       }
@@ -3796,13 +3796,13 @@ export class Emulator implements EmulatorApi {
   //     Ps = 1 0 6 0  -> Reset legacy keyboard emulation (X11R6).
   //     Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style.
   //     Ps = 2 0 0 4  -> Reset bracketed paste mode.
-  private resetMode(params: ControlSequenceParameters): void {
+  #resetMode(params: ControlSequenceParameters): void {
     for (let i=0; i < params.length; i++) {
 
       if ( ! params.prefix) {
         switch (params[i].intValue) {
           case 4:
-            this.insertMode = false;
+            this.#insertMode = false;
             break;
           case 20:
             //this.convertEol = false;
@@ -3811,49 +3811,49 @@ export class Emulator implements EmulatorApi {
       } else if (params.prefix === '?') {
         switch (params[i].intValue) {
           case 1:
-            this.applicationCursorKeys = false;
+            this.#applicationCursorKeys = false;
             break;
 
           // 80 Column Mode (DECCOLM).
           case 3:
-            this.fillScreen();
-            this.x = 0;
-            this._setCursorY(0);
+            this.#fillScreen();
+            this.#x = 0;
+            this.#setCursorY(0);
 
-            if (this.cols === 132 && this.savedCols) {
-              this.resize( { rows: this.rows, columns: this.savedCols } );
+            if (this.#cols === 132 && this.#savedCols) {
+              this.resize( { rows: this.#rows, columns: this.#savedCols } );
             }
             break;
           case 6:
-            this.originMode = false;
-            this.x = 0;
-            this._setCursorY(0);
+            this.#originMode = false;
+            this.#x = 0;
+            this.#setCursorY(0);
             break;
           case 7:
-            this.wraparoundMode = false;
+            this.#wraparoundMode = false;
             break;
           case 12:
             // this.cursorBlink = false;
             break;
           case 25: // hide cursor
-            this.cursorHidden = true;
+            this.#cursorHidden = true;
             break;
           case 66:
-            this.applicationKeypad = false;
+            this.#applicationKeypad = false;
             break;
           case 9: // X10 Mouse
           case 1000: // vt200 mouse
           case 1002: // button event mouse
           case 1003: // any event mouse
-            this._mouseEncoder.mouseProtocol = MouseProtocol.NONE;
+            this.#mouseEncoder.mouseProtocol = MouseProtocol.NONE;
             break;
           case 1004: // send focusin/focusout events
-            this.sendFocus = false;
+            this.#sendFocus = false;
             break;
           case 1005: // utf8 ext mode mouse
             break;
           case 1006: // sgr ext mode mouse
-            this._mouseEncoder.mouseEncoding = MouseProtocolEncoding.NORMAL;
+            this.#mouseEncoder.mouseEncoding = MouseProtocolEncoding.NORMAL;
             break;
           case 1015: // urxvt ext mode mouse
             break;
@@ -3861,34 +3861,34 @@ export class Emulator implements EmulatorApi {
             // FALL-THROUGH
           case 47: // normal screen buffer
           case 1047: // normal screen buffer - clearing it first
-            if (this.normalSavedState != null) {
-              const currentcols = this.cols;
-              const currentrows = this.rows;
+            if (this.#normalSavedState != null) {
+              const currentcols = this.#cols;
+              const currentrows = this.#rows;
 
-              this.lines = this.normalSavedState.lines;
-              this.cols = this.normalSavedState.cols;
-              this.rows = this.normalSavedState.rows;
-              this.x = this.normalSavedState.x;
-              this._setCursorY(this.normalSavedState.y);
-              this.scrollTop = this.normalSavedState.scrollTop;
-              this.scrollBottom = this.normalSavedState.scrollBottom;
-              this.tabs = this.normalSavedState.tabs;
+              this.#lines = this.#normalSavedState.lines;
+              this.#cols = this.#normalSavedState.cols;
+              this.#rows = this.#normalSavedState.rows;
+              this.#x = this.#normalSavedState.x;
+              this.#setCursorY(this.#normalSavedState.y);
+              this.#scrollTop = this.#normalSavedState.scrollTop;
+              this.#scrollBottom = this.#normalSavedState.scrollBottom;
+              this.#tabs = this.#normalSavedState.tabs;
 
-              this.normalSavedState = null;
-              this._mouseEncoder.sendCursorKeysForWheel = false;
+              this.#normalSavedState = null;
+              this.#mouseEncoder.sendCursorKeysForWheel = false;
 
               // if (params === 1049) {
               //   this.x = this.savedX;
               //   this._setCursorY(this.savedY);
               // }
               this.resize( { rows: currentrows, columns: currentcols } );
-              this.markRowRangeForRefresh(0, this.rows - 1);
-              this._showCursor();
+              this.#markRowRangeForRefresh(0, this.#rows - 1);
+              this.#showCursor();
             }
             break;
 
           case 2004:  // Bracketed paste
-            this._bracketedPaste = false;
+            this.#bracketedPaste = false;
             break;
         }
       }
@@ -3899,37 +3899,37 @@ export class Emulator implements EmulatorApi {
   //   Set Scrolling Region [top;bottom] (default = full size of win-
   //   dow) (DECSTBM).
   // CSI ? Pm r
-  private setScrollRegion(params: ControlSequenceParameters): void {
+  #setScrollRegion(params: ControlSequenceParameters): void {
     if (params.prefix === '') {
       const top = Math.max(1, params.getDefaultInt(0, 1)) - 1;
-      const bottom = Math.max(1, params.getDefaultInt(1, this.rows)) - 1;
-      if ( ! (top >= 0 && bottom < this.rows && top < bottom)) {
+      const bottom = Math.max(1, params.getDefaultInt(1, this.#rows)) - 1;
+      if ( ! (top >= 0 && bottom < this.#rows && top < bottom)) {
         return;
       }
-      this.scrollTop = top;
-      this.scrollBottom = bottom;
-      this.x = 0;
-      this._setCursorY(this.originMode ? this.scrollTop : 0);
+      this.#scrollTop = top;
+      this.#scrollBottom = bottom;
+      this.#x = 0;
+      this.#setCursorY(this.#originMode ? this.#scrollTop : 0);
     }
   }
 
   // CSI s
   //   Save cursor (ANSI.SYS).
-  private saveCursor(): void {
-    this.savedX = this.x;
-    this.savedY = this.y;
-    this.savedCharset = this.charset;
-    copyCell(this.curAttr, this.savedCurAttr);
+  #saveCursor(): void {
+    this.#savedX = this.#x;
+    this.#savedY = this.#y;
+    this.#savedCharset = this.#charset;
+    copyCell(this.#curAttr, this.#savedCurAttr);
   }
 
   // CSI u
   //   Restore cursor (ANSI.SYS).
-  private restoreCursor(): void {
-    this.x = this.savedX;
-    this._setCursorY(this.savedY);
-    this.charset = this.savedCharset;
+  #restoreCursor(): void {
+    this.#x = this.#savedX;
+    this.#setCursorY(this.#savedY);
+    this.#charset = this.#savedCharset;
 
-    copyCell(this.savedCurAttr, this.curAttr);
+    copyCell(this.#savedCurAttr, this.#curAttr);
   }
 
   /**
@@ -3938,57 +3938,57 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps I
   //   Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
-  private cursorForwardTab(params: ControlSequenceParameters): void {
+  #cursorForwardTab(params: ControlSequenceParameters): void {
     let param = params[0].intValue || 1;
     while (param--) {
-      this.x = this.nextStop();
+      this.#x = this.#nextStop();
     }
   }
 
   // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
-  private scrollUp(params: ControlSequenceParameters): void {
+  #scrollUp(params: ControlSequenceParameters): void {
     let param = params[0].intValue || 1;
     while (param--) {
-      this.lines.splice(this.scrollTop, 1);
-      this.lines.splice(this.scrollBottom, 0, this.blankLine());
+      this.#lines.splice(this.#scrollTop, 1);
+      this.#lines.splice(this.#scrollBottom, 0, this.#blankLine());
     }
     // this.maxRange();
-    this.markRowForRefresh(this.scrollTop);
-    this.markRowForRefresh(this.scrollBottom);
+    this.#markRowForRefresh(this.#scrollTop);
+    this.#markRowForRefresh(this.#scrollBottom);
   }
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
-  private scrollDown(params: ControlSequenceParameters): void {
+  #scrollDown(params: ControlSequenceParameters): void {
     let param = params[0].intValue || 1;
     while (param--) {
-      this.lines.splice(this.scrollBottom, 1);
-      this.lines.splice(this.scrollTop, 0, this.blankLine());
+      this.#lines.splice(this.#scrollBottom, 1);
+      this.#lines.splice(this.#scrollTop, 0, this.#blankLine());
     }
     // this.maxRange();
-    this.markRowForRefresh(this.scrollTop);
-    this.markRowForRefresh(this.scrollBottom);
+    this.#markRowForRefresh(this.#scrollTop);
+    this.#markRowForRefresh(this.#scrollBottom);
   }
 
   // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
-  private cursorBackwardTab(params: ControlSequenceParameters): void {
+  #cursorBackwardTab(params: ControlSequenceParameters): void {
     let param = params[0].intValue || 1;
     while (param--) {
-      this.x = this.prevStop();
+      this.#x = this.#prevStop();
     }
   }
 
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
-  private repeatPrecedingCharacter(params: ControlSequenceParameters): void {
+  #repeatPrecedingCharacter(params: ControlSequenceParameters): void {
     let param = params[0].intValue || 1;
-    const line = this._getRow(this.y);
+    const line = this.#getRow(this.#y);
 
-    const cell = this.x === 0 ? Emulator.defAttr : line.getCellAndLink(this.x-1, 0);
-    const chCodePoint = this.x === 0 ? ' '.codePointAt(0) : line.getCodePoint(this.x-1);
+    const cell = this.#x === 0 ? Emulator.defAttr : line.getCellAndLink(this.#x-1, 0);
+    const chCodePoint = this.#x === 0 ? ' '.codePointAt(0) : line.getCodePoint(this.#x-1);
 
     while (param--) {
-      line.setCellAndLink(this.x, cell);
-      line.setCodePoint(this.x, chCodePoint);
-      this.x++;
+      line.setCellAndLink(this.#x, cell);
+      line.setCodePoint(this.#x, chCodePoint);
+      this.#x++;
     }
   }
 
@@ -3998,39 +3998,39 @@ export class Emulator implements EmulatorApi {
   // Potentially:
   //   Ps = 2  -> Clear Stops on Line.
   //   http://vt100.net/annarbor/aaa-ug/section6.html
-  private tabClear(params: ControlSequenceParameters): void {
+  #tabClear(params: ControlSequenceParameters): void {
     const param = params.getDefaultInt(0, 0);
     if (param <= 0) {
-      delete this.tabs[this.x];
+      delete this.#tabs[this.#x];
     } else if (param === 3) {
-      this.tabs = {};
+      this.#tabs = {};
     }
   }
 
   // CSI ! p   Soft terminal reset (DECSTR).
   // http://vt100.net/docs/vt220-rm/table4-10.html
-  private softReset(params: ControlSequenceParameters): void {
-    this.cursorHidden = false;
-    this.insertMode = false;
-    this.originMode = false;
-    this.wraparoundMode = false; // autowrap
-    this.applicationKeypad = false; // ?
-    this.applicationCursorKeys = false;
-    this._bracketedPaste = false;
-    this.scrollTop = 0;
-    this.scrollBottom = this.rows - 1;
-    copyCell(Emulator.defAttr, this.curAttr);
-    this.x = 0;
-    this._setCursorY(0);
-    this.charset = null;
-    this.glevel = 0; // ??
-    this.charsets = [null]; // ??
+  #softReset(params: ControlSequenceParameters): void {
+    this.#cursorHidden = false;
+    this.#insertMode = false;
+    this.#originMode = false;
+    this.#wraparoundMode = false; // autowrap
+    this.#applicationKeypad = false; // ?
+    this.#applicationCursorKeys = false;
+    this.#bracketedPaste = false;
+    this.#scrollTop = 0;
+    this.#scrollBottom = this.#rows - 1;
+    copyCell(Emulator.defAttr, this.#curAttr);
+    this.#x = 0;
+    this.#setCursorY(0);
+    this.#charset = null;
+    this.#glevel = 0; // ??
+    this.#charsets = [null]; // ??
   }
 
   // CSI ? Pm s
   //   Save DEC Private Mode Values.  Ps values are the same as for
   //   DECSET.
-  private savePrivateValues(params: ControlSequenceParameters): void {
+  #savePrivateValues(params: ControlSequenceParameters): void {
   }
 
   /**
@@ -4096,7 +4096,7 @@ export class Emulator implements EmulatorApi {
   };
 
   dumpLines(): void {
-    for (let y=0; y<this.lines.length; y++) {
+    for (let y=0; y<this.#lines.length; y++) {
       this.log(""+y+": "+this.getLineText(y));
     }
   }
