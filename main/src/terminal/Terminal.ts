@@ -679,7 +679,7 @@ export class Terminal implements Tab, Disposable {
       this.#pty.resize(columns, rows);
     }
 
-    this.#emulator.resize({rows, columns});
+    this.#emulator.resize({rows, columns, cellWidthPixels: size.cellWidthPx, cellHeightPixels: size.cellHeightPx});
 
     const heightPx = size.rows * size.cellHeightPx;
     const widthPx = size.columns * size.cellWidthPx;

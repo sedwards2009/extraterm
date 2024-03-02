@@ -156,6 +156,8 @@ export class Emulator implements EmulatorApi {
   private _log: Logger = null;
   #cols = 80;
   #rows = 24;
+  #cellWidthPixels = 8;
+  #cellHeightPixels = 8;
 
   #state = ParserState.NORMAL;
 
@@ -1397,7 +1399,19 @@ export class Emulator implements EmulatorApi {
       //           Pt; Pl; Pb; Pr denotes the rectangle.
       //           Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
       case 't':
-        // ignore these
+        switch (params[0].intValue) {
+          case 16:  // Report the pixel size of a cell
+            this.#send(`\x1b[6;${this.#cellWidthPixels};${this.#cellHeightPixels}t`);
+            break;
+
+          case 14:
+          case 18:  // Report the size of the text area in characters.
+            this.#send(`\x1b[8;${this.#cols};${this.#rows}t`);
+            break;
+          default:
+            // ignore the rest
+            break;
+        }
         break;
 
       // CSI u
@@ -2471,12 +2485,15 @@ export class Emulator implements EmulatorApi {
   }
 
   size(): TerminalSize {
-    return { rows: this.#rows, columns: this.#cols };
+    return { rows: this.#rows, columns: this.#cols,
+      cellWidthPixels: this.#cellWidthPixels, cellHeightPixels: this.#cellHeightPixels };
   }
 
   resize(newSize: TerminalSize): void {
     const newcols = Math.max(newSize.columns, 1);
     const newrows = Math.max(newSize.rows, 1);
+    this.#cellWidthPixels = newSize.cellWidthPixels;
+    this.#cellHeightPixels = newSize.cellHeightPixels;
 
     // resize cols
     for (let i = 0; i< this.#lines.length; i++) {
@@ -3604,7 +3621,8 @@ export class Emulator implements EmulatorApi {
             break;
           case 3: // 132 col mode
             this.#savedCols = this.#cols;
-            this.resize( { rows:this.#rows, columns: 132 } );
+            this.resize( { rows:this.#rows, columns: 132,
+              cellWidthPixels: this.#cellWidthPixels, cellHeightPixels: this.#cellHeightPixels } );
             break;
           case 6:
             this.#originMode = true;
@@ -3821,7 +3839,8 @@ export class Emulator implements EmulatorApi {
             this.#setCursorY(0);
 
             if (this.#cols === 132 && this.#savedCols) {
-              this.resize( { rows: this.#rows, columns: this.#savedCols } );
+              this.resize( { rows: this.#rows, columns: this.#savedCols,
+                cellWidthPixels: this.#cellWidthPixels, cellHeightPixels: this.#cellHeightPixels } );
             }
             break;
           case 6:
@@ -3881,7 +3900,8 @@ export class Emulator implements EmulatorApi {
               //   this.x = this.savedX;
               //   this._setCursorY(this.savedY);
               // }
-              this.resize( { rows: currentrows, columns: currentcols } );
+              this.resize( { rows: currentrows, columns: currentcols,
+                cellWidthPixels: this.#cellWidthPixels, cellHeightPixels: this.#cellHeightPixels } );
               this.#markRowRangeForRefresh(0, this.#rows - 1);
               this.#showCursor();
             }

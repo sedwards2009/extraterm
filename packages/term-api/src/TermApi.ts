@@ -65,6 +65,8 @@ export interface TerminalCoord {
 export interface TerminalSize {
   rows: number;
   columns: number;
+  cellWidthPixels: number;
+  cellHeightPixels: number;
 }
 
 export interface ScreenChangeEvent {
