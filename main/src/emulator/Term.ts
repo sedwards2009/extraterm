@@ -104,7 +104,9 @@ enum ParserState {
   ESCAPE,
   CSI_START,
   CSI_PARAMS,
-  OSC,
+  OSC_CODE,
+  OSC_ITERM_PARMS,
+  OSC_PARAMS,
   CHARSET,
   DCS_START,
   DCS_STRING,
@@ -149,7 +151,7 @@ interface SavedState {
   tabs: { [i: number]: boolean;  };
 }
 
-const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
+export const MAX_WRITE_BUFFER_SIZE = 1024 * 100;  // 100 KB
 
 
 export class Emulator implements EmulatorApi {
@@ -761,6 +763,10 @@ export class Emulator implements EmulatorApi {
     return this.#writeBufferStatus();
   }
 
+  getWriteBufferStatus(): WriteBufferStatus {
+    return this.#writeBufferStatus();
+  }
+
   #writeBufferStatus(): WriteBufferStatus {
     const size = this.#writeBuffers.map( (buf) => buf.length ).reduce( (accu, x) => accu + x, 0);
     return { bufferSize: MAX_WRITE_BUFFER_SIZE - size };
@@ -1018,7 +1024,9 @@ export class Emulator implements EmulatorApi {
           i = this.#processDataCharset(ch, i);
           break;
 
-        case ParserState.OSC:
+        case ParserState.OSC_CODE:
+        case ParserState.OSC_ITERM_PARMS:
+        case ParserState.OSC_PARAMS:
           i = this.#processDataOSC(ch, i);
           break;
 
@@ -1555,7 +1563,7 @@ export class Emulator implements EmulatorApi {
       // ESC ] Operating System Command ( OSC is 0x9d).
       case ']':
         this.#params = new ControlSequenceParameters();
-        this.#state = ParserState.OSC;
+        this.#state = ParserState.OSC_CODE;
         break;
 
       // ESC & Application mode
@@ -1791,99 +1799,102 @@ export class Emulator implements EmulatorApi {
     // OSC Ps ; Pt ST
     // OSC Ps ; Pt BEL
     //   Set Text Parameters.
-    if (ch === '\x1b' || ch === '\x07') {
-      if (ch === '\x1b') {
-        i++;
-      }
+    const isTerminator = ch === '\x1b' || ch === '\x07';
 
-      this.#params.nextParameter();
-
-      switch (this.#params[0].intValue) {
-        case 0:
-        case 1:
-        case 2:
-          if (this.#params[1]) {
-            this.#title = this.#params[1].stringValue;
-            this.#handleTitle(this.#title);
-          }
-          break;
-        case 3:
-          // set X property
-          break;
-        case 4:
-        case 5:
-          // change dynamic colors
-          break;
-        case 8:
-          // Hyperlink
-          let url = this.#params[2].rawStringValue;
-          if (url === "") {
-            url = null;
-          }
-          this.#curAttr.hyperlinkURL = url;
-          break;
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
-        case 17:
-        case 18:
-        case 19:
-          // change dynamic ui colors
-          break;
-        case 46:
-          // change log file
-          break;
-        case 50:
-          // dynamic font
-          break;
-        case 51:
-          // emacs shell
-          break;
-        case 52:
-          // manipulate selection data
-          break;
-        case 104:
-        case 105:
-        case 110:
-        case 111:
-        case 112:
-        case 113:
-        case 114:
-        case 115:
-        case 116:
-        case 117:
-        case 118:
-          // reset colors
-          break;
-        case 133:
-        case 633:
-          this.#executeShellIntegration(this.#params);
-          break;
-      }
-
-      this.#params = new ControlSequenceParameters();
-      this.#state = ParserState.NORMAL;
-
-    } else {
-      if (this.#params.length === 0) {
+    switch (this.#state) {
+      case ParserState.OSC_CODE:
         if (ch >= '0' && ch <= '9') {
           this.#params.appendDigit(ch);
         } else if (ch === ';') {
           this.#params.nextParameter();
+          if (this.#params[0].intValue === 1337) {
+            this.#state = ParserState.OSC_ITERM_PARMS;
+          } else {
+            this.#state = ParserState.OSC_PARAMS;
+          }
+        } else {
+          if (isTerminator) {
+            this.#params.nextParameter();
+            this.#executeOSC();
+            this.#params = new ControlSequenceParameters();
+          }
+          this.#state = ParserState.NORMAL;
         }
-      } else {
+        break;
+
+      case ParserState.OSC_PARAMS:
         if (ch === ';') {
           this.#params.nextParameter();
-        } else {
+        } else if (! isTerminator) {
           this.#params.appendString(ch);
+        } else {
+          this.#params.nextParameter();
+          this.#executeOSC();
+          this.#params = new ControlSequenceParameters();
+          this.#state = ParserState.NORMAL;
         }
-      }
+        break;
+
+      case ParserState.OSC_ITERM_PARMS:
+        // TODO
+        break;
     }
     return i;
+  }
+
+  #executeOSC(): void {
+    switch (this.#params[0].intValue) {
+      case 0:
+      case 1:
+      case 2:
+        if (this.#params[1]) {
+          this.#title = this.#params[1].stringValue;
+          this.#handleTitle(this.#title);
+        }
+        break;
+      case 3: // set X property
+      case 4:
+      case 5: // change dynamic colors
+        break;
+      case 8:
+        // Hyperlink
+        let url = this.#params[2].rawStringValue;
+        if (url === "") {
+          url = null;
+        }
+        this.#curAttr.hyperlinkURL = url;
+        break;
+      case 10:
+      case 11:
+      case 12:
+      case 13:
+      case 14:
+      case 15:
+      case 16:
+      case 17:
+      case 18:
+      case 19:  // change dynamic ui colors
+      case 46:  // change log file
+      case 50:  // dynamic font
+      case 51:  // emacs shell
+      case 52:  // manipulate selection data
+      case 104:
+      case 105:
+      case 110:
+      case 111:
+      case 112:
+      case 113:
+      case 114:
+      case 115:
+      case 116:
+      case 117:
+      case 118: // reset colors
+        break;
+      case 133:
+      case 633:
+        this.#executeShellIntegration(this.#params);
+        break;
+    }
   }
 
   #executeShellIntegration(params: ControlSequenceParameters): void {

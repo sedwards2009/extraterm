@@ -1,12 +1,13 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { performance } from "node:perf_hooks";
-import {Emulator, Platform} from "./Term.js";
+import {Emulator, MAX_WRITE_BUFFER_SIZE, Platform} from "./Term.js";
 import {RenderEvent, Line, MinimalKeyboardEvent, DataEvent} from "term-api";
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-line";
+import fs from "node:fs";
 
 
 test("basic", done => {
@@ -151,6 +152,25 @@ test("Move rows above cursor to scrollback", done => {
   testMoveRowsAboveCursorToScrollback();
 });
 
+test("hyperlink", done => {
+  async function testHyperlink(): Promise<void> {
+    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: () => performance.now()});
+    const device = new RenderDevice();
+    emulator.onRender(device.renderEventHandler.bind(device));
+    emulator.write('\x1b]8;;https://extraterm.org\x07Extraterm\r\n');
+    await waitOnEmulator(emulator);
+
+    const row = emulator.lineAtRow(0);
+    expect(lineToString(row).trim()).toBe('Extraterm');
+    expect(row.getCell(0).linkID).not.toBe(0);
+    expect(row.getAllLinkIDs("").length).toBe(1);
+
+    done();
+  }
+  testHyperlink();
+});
+
 describe.each([
   [{key: "a", altKey: false, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: false}, "a"],
 ])("Keyboard input keyPress()", (ev: MinimalKeyboardEvent, output: string) => {
@@ -221,6 +241,22 @@ function waitOnEmulator(emulator: Emulator): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, 200);
   });
+}
+
+async function waitOnEmulator(emulator: Emulator): Promise<void> {
+  let done = false;
+  if (emulator.getWriteBufferStatus().bufferSize === MAX_WRITE_BUFFER_SIZE) {
+    return;
+  }
+  emulator.onWriteBufferSize((e) => {
+    if (e.status.bufferSize === MAX_WRITE_BUFFER_SIZE) {
+      done = true;
+    }
+  });
+
+  while (! done) {
+    await sleep(100);
+  }
 }
 
 function readEmulatorScreenString(emulator: Emulator): string {

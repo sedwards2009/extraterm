@@ -250,6 +250,7 @@ export interface EmulatorApi {
   pasteText(text: string): void;
 
   write(data: string): WriteBufferStatus;
+  getWriteBufferStatus(): WriteBufferStatus;
 
   focus(): void;
   blur(): void;
