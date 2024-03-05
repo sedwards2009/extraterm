@@ -116,6 +116,32 @@ test("move cursor", done => {
   testMoveCursor();
 });
 
+describe.each([
+  ["One write", ['\uD801\uDC37\r\n']],
+  ["Split write", ['\uD801', '\uDC37\r\n']]
+])("UTF-16 surrogate handling", (name, dataList) => {
+
+  test(`UTF-16 surrogate handling: ${name}`, done => {
+    async function testSurrogateHandling(): Promise<void> {
+      const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+        performanceNowFunc: () => performance.now()});
+      const device = new RenderDevice();
+      emulator.onRender(device.renderEventHandler.bind(device));
+
+      for (const data of dataList) {
+        emulator.write(data);
+      }
+      await waitOnEmulator(emulator);
+
+      const row = emulator.lineAtRow(0);
+      expect(row.getCodePoint(0)).toBe(0x10437);
+      expect(lineToString(row).trim()).toBe('\uD801\uDC37');
+      done();
+    }
+    testSurrogateHandling();
+  });
+});
+
 test("Move rows above cursor to scrollback", done => {
   async function testMoveRowsAboveCursorToScrollback(): Promise<void> {
     const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,

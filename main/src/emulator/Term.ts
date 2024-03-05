@@ -247,6 +247,7 @@ export class Emulator implements EmulatorApi {
     imageY: 0,
   };
 
+  #highSurrogate = 0;
   #params = new ControlSequenceParameters();
   #blinkIntervalId: null | number = null;
   #lines: LineImpl[] = [];
@@ -892,24 +893,21 @@ export class Emulator implements EmulatorApi {
 
     this.#oldy = this.#y;
 
+    let highSurrogate = this.#highSurrogate;
+
     let i = 0;
     for (i=0; i < data.length && ! this.#paused; i++) {
       let ch = data[i];
-
-      let codePoint = 0;
+      let codePoint = ch.charCodeAt(0);
 
       // Unicode UTF-16 surrogate handling.
-      if ((ch.charCodeAt(0) & 0xFC00) === 0xD800) { // High surrogate.
-        const highSurrogate = ch.charCodeAt(0);
-        i++;
-        if (i < data.length) {
-          const lowSurrogate = data[i].charCodeAt(0);
-          codePoint = ((highSurrogate & 0x03FF) << 10) | (lowSurrogate & 0x03FF) + 0x10000;
-        }
-        ch = ' '; // fake it just enough to hit the right code below.
-      } else {
-        codePoint = ch.codePointAt(0);
+      if ((codePoint & 0xFC00) === 0xD800) { // High surrogate.
+        highSurrogate = ((codePoint & 0x03FF) << 10) + 0x10000;
+        continue;
       }
+
+      codePoint = (codePoint & 0x03FF) | highSurrogate;
+      highSurrogate = 0;
 
       switch (this.#state) {
         case ParserState.NORMAL:
@@ -1068,6 +1066,7 @@ export class Emulator implements EmulatorApi {
   //  endtime = window.performance.now();
   //console.log("write() end time: " + endtime);
   //  console.log("duration: " + (endtime - starttime) + "ms");
+    this.#highSurrogate = highSurrogate;
     if (i < data.length) {
       return data.slice(i);
     }
