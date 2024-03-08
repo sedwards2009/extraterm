@@ -118,6 +118,155 @@ enum ParserState {
 
 const MAX_PROCESS_WRITE_SIZE = 4096;
 
+const CODEPOINT_BEL = 0x07;
+const CODEPOINT_BS = 0x08;
+const CODEPOINT_LF = 0x0a;
+const CODEPOINT_VT = 0x0b;
+const CODEPOINT_FF = 0x0c;
+const CODEPOINT_CR = 0x0d;
+const CODEPOINT_HT = 0x09;
+const CODEPOINT_SO = 0x0e;
+const CODEPOINT_SI = 0x0f;
+const CODEPOINT_ESC = 0x1b;
+const CODEPOINT_SP = 0x20;
+const CODEPOINT_EXC = 0x21;
+const CODEPOINT_QUO = 0x22;
+const CODEPOINT_HASH = 0x23;
+const CODEPOINT_DOLLAR = 0x24;
+const CODEPOINT_AMP = 0x24;
+const CODEPOINT_PERCENT = 0x25;
+const CODEPOINT_APOS = 0x27;
+const CODEPOINT_LEFT_BRACKET = 0x28;
+const CODEPOINT_RIGHT_BRACKET = 0x29;
+const CODEPOINT_ASTERISK = 0x2a;
+
+const CODEPOINT_PLUS = 0x2b;
+const CODEPOINT_COMMA = 0x2c;
+const CODEPOINT_MINUS = 0x2d;
+const CODEPOINT_PERIOD = 0x2e;
+const CODEPOINT_SLASH = 0x2f;
+const CODEPOINT_ZERO = 0x30;
+const CODEPOINT_ONE = 0x31;
+const CODEPOINT_TWO = 0x32;
+const CODEPOINT_THREE = 0x33;
+const CODEPOINT_FOUR = 0x34;
+const CODEPOINT_FIVE = 0x35;
+const CODEPOINT_SIX = 0x36;
+const CODEPOINT_SEVEN = 0x37;
+const CODEPOINT_EIGHT = 0x38;
+const CODEPOINT_NINE = 0x39;
+
+const CODEPOINT_COLON = 0x3a;
+const CODEPOINT_SEMICOLON = 0x3b;
+const CODEPOINT_LT = 0x3c;
+const CODEPOINT_EQUALS = 0x3d;
+const CODEPOINT_GT = 0x3e;
+const CODEPOINT_QUESTION = 0x3f;
+
+const CODEPOINT_AT = 0x40;
+const CODEPOINT_A = 0x41;
+const CODEPOINT_B = 0x42;
+const CODEPOINT_C = 0x43;
+const CODEPOINT_D = 0x44;
+const CODEPOINT_E = 0x45;
+const CODEPOINT_F = 0x46;
+const CODEPOINT_G = 0x47;
+const CODEPOINT_H = 0x48;
+const CODEPOINT_I = 0x49;
+const CODEPOINT_J = 0x4a;
+const CODEPOINT_K = 0x4b;
+const CODEPOINT_L = 0x4c;
+const CODEPOINT_M = 0x4d;
+const CODEPOINT_N = 0x4e;
+const CODEPOINT_O = 0x4f;
+const CODEPOINT_P = 0x50;
+const CODEPOINT_Q = 0x51;
+const CODEPOINT_R = 0x52;
+const CODEPOINT_S = 0x53;
+const CODEPOINT_T = 0x54;
+const CODEPOINT_U = 0x55;
+const CODEPOINT_V = 0x56;
+const CODEPOINT_W = 0x57;
+const CODEPOINT_X = 0x58;
+const CODEPOINT_Y = 0x59;
+const CODEPOINT_Z = 0x5a;
+
+const CODEPOINT_CIRCUMFLEX = 0x5e;
+const CODEPOINT_LOW_LINE = 0x5f;
+
+const CODEPOINT_GRAVE = 0x60;
+const CODEPOINT_SMALL_A = 0x61;
+const CODEPOINT_SMALL_B = 0x62;
+const CODEPOINT_SMALL_C = 0x63;
+const CODEPOINT_SMALL_D = 0x64;
+const CODEPOINT_SMALL_E = 0x65;
+const CODEPOINT_SMALL_F = 0x66;
+const CODEPOINT_SMALL_G = 0x67;
+const CODEPOINT_SMALL_H = 0x68;
+const CODEPOINT_SMALL_I = 0x69;
+const CODEPOINT_SMALL_J = 0x6a;
+const CODEPOINT_SMALL_K = 0x6b;
+const CODEPOINT_SMALL_L = 0x6c;
+const CODEPOINT_SMALL_M = 0x6d;
+const CODEPOINT_SMALL_N = 0x6e;
+const CODEPOINT_SMALL_O = 0x6f;
+const CODEPOINT_SMALL_P = 0x70;
+const CODEPOINT_SMALL_Q = 0x71;
+const CODEPOINT_SMALL_R = 0x72;
+const CODEPOINT_SMALL_S = 0x73;
+const CODEPOINT_SMALL_T = 0x74;
+const CODEPOINT_SMALL_U = 0x75;
+const CODEPOINT_SMALL_V = 0x76;
+const CODEPOINT_SMALL_W = 0x77;
+const CODEPOINT_SMALL_X = 0x78;
+const CODEPOINT_SMALL_Y = 0x79;
+const CODEPOINT_SMALL_Z = 0x7a;
+
+const CODEPOINT_LEFT_SB = 0x5b;
+const CODEPOINT_RIGHT_SB = 0x5d;
+
+const CODEPOINT_BRACE_LEFT = 0x7b;
+const CODEPOINT_VERTICAL_BAR = 0x7c;
+const CODEPOINT_BRACE_RIGHT = 0x7d;
+const CODEPOINT_TILDE = 0x7e;
+
+function scld(): Map<number, number> {
+  const result = new Map<number, number>();
+  result.set('`'.codePointAt(0), 0x25c6); // '◆'
+  result.set('a'.codePointAt(0), 0x2592); // '▒'
+  result.set('b'.codePointAt(0), 0x0009); // '\t'
+  result.set('c'.codePointAt(0), 0x000c); // '\f'
+  result.set('d'.codePointAt(0), 0x000d); // '\r'
+  result.set('e'.codePointAt(0), 0x000a); // '\n'
+  result.set('f'.codePointAt(0), 0x00b0); // '°'
+  result.set('g'.codePointAt(0), 0x00b1); // '±'
+  result.set('h'.codePointAt(0), 0x2424); // '\u2424' (NL)
+  result.set('i'.codePointAt(0), 0x000b); // '\v'
+  result.set('j'.codePointAt(0), 0x2518); // '┘'
+  result.set('k'.codePointAt(0), 0x2510); // '┐'
+  result.set('l'.codePointAt(0), 0x250c); // '┌'
+  result.set('m'.codePointAt(0), 0x2514); // '└'
+  result.set('n'.codePointAt(0), 0x253c); // '┼'
+  result.set('o'.codePointAt(0), 0x23ba); // '⎺'
+  result.set('p'.codePointAt(0), 0x23bb); // '⎻'
+  result.set('q'.codePointAt(0), 0x2500); // '─'
+  result.set('r'.codePointAt(0), 0x23bc); // '⎼'
+  result.set('s'.codePointAt(0), 0x23bd); // '⎽'
+  result.set('t'.codePointAt(0), 0x251c); // '├'
+  result.set('u'.codePointAt(0), 0x2524); // '┤'
+  result.set('v'.codePointAt(0), 0x2534); // '┴'
+  result.set('w'.codePointAt(0), 0x252c); // '┬'
+  result.set('x'.codePointAt(0), 0x2502); // '│'
+  result.set('y'.codePointAt(0), 0x2264); // '≤'
+  result.set('z'.codePointAt(0), 0x2265); // '≥'
+  result.set('{'.codePointAt(0), 0x03c0); // 'π'
+  result.set('|'.codePointAt(0), 0x2260); // '≠'
+  result.set('}'.codePointAt(0), 0x00a3); // '£'
+  result.set('~'.codePointAt(0), 0x00b7); // '·'
+  return result;
+}
+
+
 /*************************************************************************/
 
 export type Platform = "linux" | "win32" | "darwin";
@@ -136,9 +285,7 @@ interface Options {
   clearTimeout?: (timerId: any) => void;
 };
 
-interface CharSet {
-  [key: string]: string;
-}
+type CharSet = Map<number, number>;
 
 interface SavedState {
   lines: LineImpl[];
@@ -895,154 +1042,156 @@ export class Emulator implements EmulatorApi {
 
     let highSurrogate = this.#highSurrogate;
 
+    let ch = "";
+
     let i = 0;
-    for (i=0; i < data.length && ! this.#paused; i++) {
-      let ch = data[i];
-      let codePoint = ch.charCodeAt(0);
+    const dataLength = data.length;
+    for (i=0; i < dataLength && ! this.#paused; i++) {
+      let codePoint = data.charCodeAt(i) | 0;
 
       // Unicode UTF-16 surrogate handling.
       if ((codePoint & 0xFC00) === 0xD800) { // High surrogate.
         highSurrogate = ((codePoint & 0x03FF) << 10) + 0x10000;
         continue;
       }
-
       codePoint = (codePoint & 0x03FF) | highSurrogate;
       highSurrogate = 0;
 
       switch (this.#state) {
         case ParserState.NORMAL:
-          switch (ch) {
-            // '\0'
-            // case '\0':
-            // case '\200':l
-            //   break;
+          if (codePoint >= CODEPOINT_SP) {
+            if (this.#charset && this.#charset.has(codePoint)) {
+              codePoint = this.#charset.get(codePoint);
+            }
 
-            // '\a'
-            case '\x07':
-              this.#bell();
-              break;
-
-            // '\n', '\v', '\f'
-            case '\n':
-            case '\x0b':
-            case '\x0c':
-              this.newLine();
-              break;
-
-            // '\r'
-            case '\r':
-              this.carriageReturn();
-              break;
-
-            // '\b'
-            case '\x08':
-              if (this.#x > 0) {
-                this.#x--;
+            if (this.#x >= this.#cols) {
+              this.#x = 0;
+              this.#markRowForRefresh(this.#y);
+              this.#markRowAsWrapped(this.#y);
+              if (this.#y+1 > this.#scrollBottom) {
+                this.#scroll();
+              } else {
+                this.#setCursorY(this.#y+1);
               }
-              break;
+            }
 
-            // '\t'
-            case '\t':
-              this.#x = this.#nextStop();
-              break;
-
-            // shift out
-            case '\x0e':
-              this.#setgLevel(1);
-              break;
-
-            // shift in
-            case '\x0f':
-              this.#setgLevel(0);
-              break;
-
-            // '\e'
-            case '\x1b':
-              this.#state = ParserState.ESCAPE;
-              break;
-
-            default:
-              // ' '
-              if (ch >= ' ') {
-                if (this.#charset && this.#charset[ch]) {
-                  ch = this.#charset[ch];
-                  codePoint = ch.codePointAt(0);
-                }
-
-                if (this.#x >= this.#cols) {
-                  this.#x = 0;
-                  this.#markRowForRefresh(this.#y);
-                  this.#markRowAsWrapped(this.#y);
-                  if (this.#y+1 > this.#scrollBottom) {
-                    this.#scroll();
-                  } else {
-                    this.#setCursorY(this.#y+1);
-                  }
-                }
-
-                const line = this.#getRow(this.#y);
-                if (this.#insertMode) {
-                  // Push the characters out of the way to make space.
-                  line.shiftCellsRight(this.#x, 1);
-                  line.setCodePoint(this.#x, " ".codePointAt(0));
-                  if (isWide(codePoint)) {
-                    line.shiftCellsRight(this.#x, 1);
-                    line.setCodePoint(this.#x, " ".codePointAt(0));
-                  }
-                }
-
-                line.setCellAndLink(this.#x, this.#curAttr);
-                line.setCodePoint(this.#x, codePoint);
-
-                this.#x++;
-                this.#markRowForRefresh(this.#y);
-
-                if (isWide(codePoint)) {
-                  const j = this.#y;
-                  const line = this.#getRow(j);
-                  if (this.#cols < 2 || this.#x >= this.#cols) {
-                    line.setCellAndLink(this.#x - 1, this.#curAttr);
-                    line.setCodePoint(this.#x - 1, " ".codePointAt(0));
-                    break;
-                  }
-                  line.setCellAndLink(this.#x, this.#curAttr);
-                  line.setCodePoint(this.#x, " ".codePointAt(0));
-                  this.#x++;
-                }
+            const line = this.#getRow(this.#y);
+            if (this.#insertMode) {
+              // Push the characters out of the way to make space.
+              line.shiftCellsRight(this.#x, 1);
+              line.setCodePoint(this.#x, CODEPOINT_SP);
+              if (isWide(codePoint)) {
+                line.shiftCellsRight(this.#x, 1);
+                line.setCodePoint(this.#x, CODEPOINT_SP);
               }
-              break;
+            }
+
+            line.setCellAndLink(this.#x, this.#curAttr);
+            line.setCodePoint(this.#x, codePoint);
+
+            this.#x++;
+            this.#markRowForRefresh(this.#y);
+
+            if (isWide(codePoint)) {
+              const j = this.#y;
+              const line = this.#getRow(j);
+              if (this.#cols < 2 || this.#x >= this.#cols) {
+                line.setCellAndLink(this.#x - 1, this.#curAttr);
+                line.setCodePoint(this.#x - 1, CODEPOINT_SP);
+                break;
+              }
+              line.setCellAndLink(this.#x, this.#curAttr);
+              line.setCodePoint(this.#x, CODEPOINT_SP);
+              this.#x++;
+            }
+          } else {
+            switch (codePoint) {
+              // '\0'
+              // case '\0':
+              // case '\200':l
+              //   break;
+
+              // '\a'
+              case CODEPOINT_BEL:
+                this.#bell();
+                break;
+
+              // '\n', '\v', '\f'
+              case CODEPOINT_LF:
+              case CODEPOINT_VT:
+              case CODEPOINT_FF:
+                this.newLine();
+                break;
+
+              // '\r'
+              case CODEPOINT_CR:
+                this.carriageReturn();
+                break;
+
+              // '\b'
+              case CODEPOINT_BS:
+                if (this.#x > 0) {
+                  this.#x--;
+                }
+                break;
+
+              // '\t'
+              case CODEPOINT_HT:
+                this.#x = this.#nextStop();
+                break;
+
+              // shift out
+              case CODEPOINT_SO:
+                this.#setgLevel(1);
+                break;
+
+              // shift in
+              case CODEPOINT_SI:
+                this.#setgLevel(0);
+                break;
+
+              // '\e'
+              case CODEPOINT_ESC:
+                this.#state = ParserState.ESCAPE;
+                break;
+
+              default:
+                break;
+            }
           }
           break;
 
         case ParserState.ESCAPE:
-          i = this.#processDataEscape(ch, i);
+          i = this.#processDataEscape(codePoint, i);
           break;
 
         case ParserState.CHARSET:
-          i = this.#processDataCharset(ch, i);
+          i = this.#processDataCharset(codePoint, i);
           break;
 
         case ParserState.OSC_CODE:
         case ParserState.OSC_ITERM_PARMS:
         case ParserState.OSC_PARAMS:
-          i = this.#processDataOSC(ch, i);
+          i = this.#processDataOSC(codePoint, i);
           break;
 
         case ParserState.CSI_START:
         case ParserState.CSI_PARAMS:
-          i = this.#processDataCSI(ch, i);
+          i = this.#processDataCSI(codePoint, i);
           break;
 
         case ParserState.DCS_START:
         case ParserState.DCS_STRING:
+          ch = String.fromCodePoint(codePoint);
           i = this.#processDataDCS(ch, i);
           break;
 
         case ParserState.IGNORE:
-          i = this.#processDataIgnore(ch, i);
+          i = this.#processDataIgnore(codePoint, i);
           break;
 
         case ParserState.APPLICATION_START:
+          ch = String.fromCodePoint(codePoint);
           this.#processDataApplicationStart(ch);
           break;
 
@@ -1051,7 +1200,7 @@ export class Emulator implements EmulatorApi {
           break;
 
         case ParserState.DEC_HASH:
-          this.#processDataDecHash(ch);
+          this.#processDataDecHash(codePoint);
           break;
       }
 
@@ -1073,12 +1222,12 @@ export class Emulator implements EmulatorApi {
     return null;
   }
 
-  #processDataCSI(ch: string, i: number): number {
+  #processDataCSI(codePoint: number, i: number): number {
     switch (this.#state) {
       case ParserState.CSI_START:
         // '?', '>', '!'
-        if (ch === '?' || ch === '>' || ch === '!') {
-          this.#params.prefix = ch;
+        if (codePoint === CODEPOINT_QUESTION || codePoint === CODEPOINT_GT || codePoint === CODEPOINT_EXC) {
+          this.#params.prefix = String.fromCodePoint(codePoint);
         } else {
           // Push this char back and try again.
           i--;
@@ -1088,39 +1237,39 @@ export class Emulator implements EmulatorApi {
 
       case ParserState.CSI_PARAMS:
         // 0 - 9
-        if (ch >= '0' && ch <= '9') {
-          this.#params.appendDigit(ch);
+        if (codePoint >= CODEPOINT_ZERO && codePoint <= CODEPOINT_NINE) {
+          this.#params.appendDigit(String.fromCodePoint(codePoint));
           return i;
         }
 
         // '$', '"', ' ', '\''
-        if (ch === '$' || ch === '"' || ch === ' ' || ch === '\'') {
+        if (codePoint === CODEPOINT_DOLLAR || codePoint === CODEPOINT_QUO || codePoint === CODEPOINT_SP || codePoint === CODEPOINT_APOS) {
           return i;
         }
 
         this.#params.nextParameter();
 
-        if (ch === ';') {
+        if (codePoint === CODEPOINT_SEMICOLON) {
           return i;
         }
 
-        if (ch === ':') {
+        if (codePoint === CODEPOINT_COLON) {
           this.#params.startSubparameter();
           return i;
         }
 
-        this.#executeCSICommand(this.#params, ch);
+        this.#executeCSICommand(this.#params, codePoint);
         this.#state = ParserState.NORMAL;
         break;
     }
     return i;
   }
 
-  #executeCSICommand(params: ControlSequenceParameters, ch: string): void {
-    switch (ch) {
+  #executeCSICommand(params: ControlSequenceParameters, codePoint: number): void {
+    switch (codePoint) {
       // CSI Ps A
       // Cursor Up Ps Times (default = 1) (CUU).
-      case 'A':
+      case CODEPOINT_A:
         if (params.prefix === "") {
           this.#cursorUp(params);
         }
@@ -1128,7 +1277,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps B
       // Cursor Down Ps Times (default = 1) (CUD).
-      case 'B':
+      case CODEPOINT_B:
         if (params.prefix === "") {
           this.#cursorDown(params);
         }
@@ -1136,7 +1285,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps C
       // Cursor Forward Ps Times (default = 1) (CUF).
-      case 'C':
+      case CODEPOINT_C:
         if (params.prefix === "") {
           this.#cursorForward(params);
         }
@@ -1144,7 +1293,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps D
       // Cursor Backward Ps Times (default = 1) (CUB).
-      case 'D':
+      case CODEPOINT_D:
         if (params.prefix === "") {
           this.#cursorBackward(params);
         }
@@ -1152,7 +1301,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps ; Ps H
       // Cursor Position [row;column] (default = [1,1]) (CUP).
-      case 'H':
+      case CODEPOINT_H:
         if (params.prefix === "") {
           this.#cursorPos(params);
         }
@@ -1161,7 +1310,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps J  Erase in Display (ED).
       // CSI ? Ps J
       //   Erase in Display (DECSED).
-      case 'J':
+      case CODEPOINT_J:
         if (params.prefix === "") {
           this.#eraseInDisplay(params);
         }
@@ -1170,19 +1319,19 @@ export class Emulator implements EmulatorApi {
       // CSI Ps K  Erase in Line (EL).
       // CSI ? Ps K
       //   Erase in Line (DECSEL).
-      case 'K':
+      case CODEPOINT_K:
         this.#eraseInLine(params);
         break;
 
       // CSI Pm m  Character Attributes (SGR).
-      case 'm':
+      case CODEPOINT_SMALL_M:
         if ( ! params.prefix) {
           this.#charAttributes(params);
         }
         break;
 
       // CSI Ps n  Device Status Report (DSR).
-      case 'n':
+      case CODEPOINT_SMALL_N:
         if ( ! params.prefix) {
           this.#deviceStatus(params);
         }
@@ -1194,7 +1343,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps @
       // Insert Ps (Blank) Character(s) (default = 1) (ICH).
-      case '@':
+      case CODEPOINT_AT:
         if (params.prefix === "") {
           this.#insertChars(params);
         }
@@ -1202,7 +1351,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps E
       // Cursor Next Line Ps Times (default = 1) (CNL).
-      case 'E':
+      case CODEPOINT_E:
         if (params.prefix === "") {
           this.#cursorNextLine(params);
         }
@@ -1210,7 +1359,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps F
       // Cursor Preceding Line Ps Times (default = 1) (CNL).
-      case 'F':
+      case CODEPOINT_F:
         if (params.prefix === "") {
           this.#cursorPrecedingLine(params);
         }
@@ -1218,7 +1367,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps G
       // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
-      case 'G':
+      case CODEPOINT_G:
         if (params.prefix === "") {
           this.#cursorCharAbsolute(params);
         }
@@ -1226,7 +1375,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps L
       // Insert Ps Line(s) (default = 1) (IL).
-      case 'L':
+      case CODEPOINT_L:
         if (params.prefix === "") {
           this.#insertLines(params);
         }
@@ -1234,7 +1383,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps M
       // Delete Ps Line(s) (default = 1) (DL).
-      case 'M':
+      case CODEPOINT_M:
         if (params.prefix === "") {
           this.#deleteLines(params);
         }
@@ -1242,7 +1391,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps P
       // Delete Ps Character(s) (default = 1) (DCH).
-      case 'P':
+      case CODEPOINT_P:
         if (params.prefix === "") {
           this.#deleteChars(params);
         }
@@ -1250,7 +1399,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps X
       // Erase Ps Character(s) (default = 1) (ECH).
-      case 'X':
+      case CODEPOINT_X:
         if (params.prefix === "") {
           this.#eraseChars(params);
         }
@@ -1258,7 +1407,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI Pm `  Character Position Absolute
       //   [column] (default = [row,1]) (HPA).
-      case '`':
+      case CODEPOINT_GRAVE:
         if (params.prefix === "") {
           this.#charPosAbsolute(params);
         }
@@ -1266,7 +1415,7 @@ export class Emulator implements EmulatorApi {
 
       // 141 61 a * HPR -
       // Horizontal Position Relative
-      case 'a':
+      case CODEPOINT_SMALL_A:
         if (params.prefix === "") {
           this.#HPositionRelative(params);
         }
@@ -1276,20 +1425,20 @@ export class Emulator implements EmulatorApi {
       // Send Device Attributes (Primary DA).
       // CSI > P s c
       // Send Device Attributes (Secondary DA)
-      case 'c':
+      case CODEPOINT_SMALL_C:
         this.#sendDeviceAttributes(params);
         break;
 
       // CSI Pm d
       // Line Position Absolute  [row] (default = [1,column]) (VPA).
-      case 'd':
+      case CODEPOINT_SMALL_D:
         if (params.prefix === "") {
           this.#linePosAbsolute(params);
         }
         break;
 
       // 145 65 e * VPR - Vertical Position Relative
-      case 'e':
+      case CODEPOINT_SMALL_E:
         if (params.prefix === "") {
           this.#VPositionRelative(params);
         }
@@ -1298,7 +1447,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps ; Ps f
       //   Horizontal and Vertical Position [row;column] (default =
       //   [1,1]) (HVP).
-      case 'f':
+      case CODEPOINT_SMALL_F:
         if (params.prefix === "") {
           this.#HVPosition(params);
         }
@@ -1306,13 +1455,13 @@ export class Emulator implements EmulatorApi {
 
       // CSI Pm h  Set Mode (SM).
       // CSI ? Pm h - mouse escape codes, cursor escape codes
-      case 'h':
+      case CODEPOINT_SMALL_H:
         this.#setMode(params);
         break;
 
       // CSI Pm l  Reset Mode (RM).
       // CSI ? Pm l
-      case 'l':
+      case CODEPOINT_SMALL_L:
         this.#resetMode(params);
         break;
 
@@ -1320,13 +1469,13 @@ export class Emulator implements EmulatorApi {
       //   Set Scrolling Region [top;bottom] (default = full size of win-
       //   dow) (DECSTBM).
       // CSI ? Pm r
-      case 'r':
+      case CODEPOINT_SMALL_R:
         this.#setScrollRegion(params);
         break;
 
       // CSI s     Save cursor (ANSI.SYS).
       // CSI ? Pm s
-      case 's':
+      case CODEPOINT_SMALL_S:
         if (params.prefix === '?') {
           this.#savePrivateValues(params);
         } else if (params.prefix === '') {
@@ -1405,7 +1554,7 @@ export class Emulator implements EmulatorApi {
       //         up.
       //           Pt; Pl; Pb; Pr denotes the rectangle.
       //           Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
-      case 't':
+      case CODEPOINT_SMALL_T:
         switch (params[0].intValue) {
           case 16:  // Report the pixel size of a cell
             this.#send(`\x1b[6;${this.#cellWidthPixels};${this.#cellHeightPixels}t`);
@@ -1423,7 +1572,7 @@ export class Emulator implements EmulatorApi {
 
       // CSI u
       //   Restore cursor (ANSI.SYS).
-      case 'u':
+      case CODEPOINT_SMALL_U:
         if (params.prefix === '') {
           this.#restoreCursor();
         }
@@ -1435,14 +1584,14 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps I
       // Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
-      case 'I':
+      case CODEPOINT_I:
         if (params.prefix === '') {
           this.#cursorForwardTab(params);
         }
         break;
 
       // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
-      case 'S':
+      case CODEPOINT_S:
         if (params.prefix === '') {
           this.#scrollUp(params);
         }
@@ -1451,7 +1600,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
       // CSI Ps ; Ps ; Ps ; Ps ; Ps T
       // CSI > Ps; Ps T
-      case 'T':
+      case CODEPOINT_T:
         if (params.length < 2 && !params.prefix) {
           this.#scrollDown(params);
         }
@@ -1459,21 +1608,21 @@ export class Emulator implements EmulatorApi {
 
       // CSI Ps Z
       // Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
-      case 'Z':
+      case CODEPOINT_Z:
         if (params.prefix === '') {
           this.#cursorBackwardTab(params);
         }
         break;
 
       // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
-      case 'b':
+      case CODEPOINT_SMALL_B:
         if (params.prefix === '') {
           this.#repeatPrecedingCharacter(params);
         }
         break;
 
       // CSI Ps g  Tab Clear (TBC).
-      case 'g':
+      case CODEPOINT_SMALL_G:
         if (params.prefix === '') {
           this.#tabClear(params);
         }
@@ -1495,7 +1644,7 @@ export class Emulator implements EmulatorApi {
       // CSI ? Ps$ p
       //   Request DEC private mode (DECRQM).
       // CSI Ps ; Ps " p
-      case 'p':
+      case CODEPOINT_SMALL_P:
         switch (params.prefix) {
           case '!':
             this.#softReset(params);
@@ -1546,71 +1695,71 @@ export class Emulator implements EmulatorApi {
       // Delete P s Column(s) (default = 1) (DECDC), VT420 and up
 
       default:
-        this.log(`Unknown CSI code: ${ch} (${"" + ch.charCodeAt(0)}).`);
+        this.log(`Unknown CSI code: ${String.fromCodePoint(codePoint)} (${"" + codePoint}).`);
         break;
     }
   }
 
-  #processDataEscape(ch: string, i: number): number {
-    switch (ch) {
+  #processDataEscape(codePoint: number, i: number): number {
+    switch (codePoint) {
       // ESC [ Control Sequence Introducer ( CSI is 0x9b).
-      case '[':
+      case CODEPOINT_LEFT_SB:
         this.#params = new ControlSequenceParameters();
         this.#state = ParserState.CSI_START;
         break;
 
       // ESC ] Operating System Command ( OSC is 0x9d).
-      case ']':
+      case CODEPOINT_RIGHT_SB:
         this.#params = new ControlSequenceParameters();
         this.#state = ParserState.OSC_CODE;
         break;
 
       // ESC & Application mode
-      case '&':
+      case CODEPOINT_AMP:
         this.#params = new ControlSequenceParameters();
         this.#state = ParserState.APPLICATION_START;
         break;
 
       // ESC P Device Control String ( DCS is 0x90).
-      case 'P':
+      case CODEPOINT_P:
         this.#params = new ControlSequenceParameters();
         this.#state = ParserState.DCS_START;
         break;
 
       // ESC _ Application Program Command ( APC is 0x9f).
-      case '_':
+      case CODEPOINT_LOW_LINE:
         this.#state = ParserState.IGNORE;
         break;
 
       // ESC ^ Privacy Message ( PM is 0x9e).
-      case '^':
+      case CODEPOINT_CIRCUMFLEX:
         this.#state = ParserState.IGNORE;
         break;
 
       // ESC c Full Reset (RIS).
-      case 'c':
+      case CODEPOINT_SMALL_C:
         this.#fullReset();
         break;
 
       // ESC E Next Line ( NEL is 0x85).
-      case 'E':
+      case CODEPOINT_E:
         this.#x = 0;
         this.#index();
         break;
 
       // ESC D Index ( IND is 0x84).
-      case 'D':
+      case CODEPOINT_D:
         this.#index();
         break;
 
       // ESC M Reverse Index ( RI is 0x8d).
-      case 'M':
+      case CODEPOINT_M:
         this.#reverseIndex();
         break;
 
       // ESC % Select default/utf-8 character set.
       // @ = default, G = utf-8
-      case '%':
+      case CODEPOINT_PERCENT:
         //this.charset = null;
         this.#setgLevel(0);
         this.#setgCharset(0, Emulator.charsets.US);
@@ -1619,39 +1768,29 @@ export class Emulator implements EmulatorApi {
         break;
 
       // ESC (,),*,+,-,. Designate G0-G2 Character Set.
-      case '(': // <-- this seems to get all the attention
-      case ')':
-      case '*':
-      case '+':
-      case '-':
-      case '.':
-        switch (ch) {
-          case '(':
-            this.#gcharset = 0;
-            break;
-          case ')':
-            this.#gcharset = 1;
-            break;
-          case '*':
-            this.#gcharset = 2;
-            break;
-          case '+':
-            this.#gcharset = 3;
-            break;
-          case '-':
-            this.#gcharset = 1;
-            break;
-          case '.':
-            this.#gcharset = 2;
-            break;
-        }
+      case CODEPOINT_LEFT_BRACKET: // <-- this seems to get all the attention
+        this.#gcharset = 0;
+        this.#state = ParserState.CHARSET;
+        break;
+      case CODEPOINT_MINUS:
+      case CODEPOINT_RIGHT_BRACKET:
+        this.#gcharset = 1;
+        this.#state = ParserState.CHARSET;
+        break;
+      case CODEPOINT_ASTERISK:
+      case CODEPOINT_PERIOD:
+        this.#gcharset = 2;
+        this.#state = ParserState.CHARSET;
+        break;
+      case CODEPOINT_PLUS:
+        this.#gcharset = 3;
         this.#state = ParserState.CHARSET;
         break;
 
       // Designate G3 Character Set (VT300).
       // A = ISO Latin-1 Supplemental.
       // Not implemented.
-      case '/':
+      case CODEPOINT_SLASH:
         this.#gcharset = 3;
         this.#state = ParserState.CHARSET;
         i--;
@@ -1660,127 +1799,127 @@ export class Emulator implements EmulatorApi {
       // ESC N
       // Single Shift Select of G2 Character Set
       // ( SS2 is 0x8e). This affects next character only.
-      case 'N':
+      case CODEPOINT_N:
         break;
       // ESC O
       // Single Shift Select of G3 Character Set
       // ( SS3 is 0x8f). This affects next character only.
-      case 'O':
+      case CODEPOINT_O:
         break;
       // ESC n
       // Invoke the G2 Character Set as GL (LS2).
-      case 'n':
+      case CODEPOINT_SMALL_N:
         this.#setgLevel(2);
         break;
       // ESC o
       // Invoke the G3 Character Set as GL (LS3).
-      case 'o':
+      case CODEPOINT_SMALL_O:
         this.#setgLevel(3);
         break;
       // ESC |
       // Invoke the G3 Character Set as GR (LS3R).
-      case '|':
+      case CODEPOINT_VERTICAL_BAR:
         this.#setgLevel(3);
         break;
       // ESC }
       // Invoke the G2 Character Set as GR (LS2R).
-      case '}':
+      case CODEPOINT_BRACE_RIGHT:
         this.#setgLevel(2);
         break;
       // ESC ~
       // Invoke the G1 Character Set as GR (LS1R).
-      case '~':
+      case CODEPOINT_TILDE:
         this.#setgLevel(1);
         break;
 
       // ESC 7 Save Cursor (DECSC).
-      case '7':
+      case CODEPOINT_SEVEN:
         this.#saveCursor();
         this.#state = ParserState.NORMAL;
         break;
 
       // ESC 8 Restore Cursor (DECRC).
-      case '8':
+      case CODEPOINT_EIGHT:
         this.#restoreCursor();
         this.#state = ParserState.NORMAL;
         break;
 
       // ESC # 3 DEC line height/width
-      case '#':
+      case CODEPOINT_HASH:
         this.#state = ParserState.DEC_HASH;
         break;
 
       // ESC H Tab Set (HTS is 0x88).
-      case 'H':
+      case CODEPOINT_H:
         this.#tabSet();
         break;
 
       // ESC = Application Keypad (DECPAM).
-      case '=':
+      case CODEPOINT_EQUALS:
         this.#applicationKeypad = true;
         this.#state = ParserState.NORMAL;
         break;
 
       // ESC > Normal Keypad (DECPNM).
-      case '>':
+      case CODEPOINT_GT:
         this.#applicationKeypad = false;
         this.#state = ParserState.NORMAL;
         break;
 
       default:
         this.#state = ParserState.NORMAL;
-        this.#error(`Unknown ESC control: ${ch}.`);
+        this.#error(`Unknown ESC control: ${String.fromCodePoint(codePoint)}.`);
         break;
     }
     return i;
   }
 
-  #processDataCharset(ch: string, i: number): number {
+  #processDataCharset(codePoint: number, i: number): number {
     let cs;
-    switch (ch) {
-      case '0': // DEC Special Character and Line Drawing Set.
+    switch (codePoint) {
+      case CODEPOINT_ZERO: // DEC Special Character and Line Drawing Set.
         cs = Emulator.charsets.SCLD;
         break;
-      case 'A': // UK
+      case CODEPOINT_A: // UK
         cs = Emulator.charsets.UK;
         break;
-      case 'B': // United States (USASCII).
+      case CODEPOINT_B: // United States (USASCII).
         cs = Emulator.charsets.US;
         break;
-      case '4': // Dutch
+      case CODEPOINT_FOUR: // Dutch
         cs = Emulator.charsets.Dutch;
         break;
-      case 'C': // Finnish
-      case '5':
+      case CODEPOINT_C: // Finnish
+      case CODEPOINT_FIVE:
         cs = Emulator.charsets.Finnish;
         break;
-      case 'R': // French
+      case CODEPOINT_R: // French
         cs = Emulator.charsets.French;
         break;
-      case 'Q': // FrenchCanadian
+      case CODEPOINT_Q: // FrenchCanadian
         cs = Emulator.charsets.FrenchCanadian;
         break;
-      case 'K': // German
+      case CODEPOINT_K: // German
         cs = Emulator.charsets.German;
         break;
-      case 'Y': // Italian
+      case CODEPOINT_Y: // Italian
         cs = Emulator.charsets.Italian;
         break;
-      case 'E': // NorwegianDanish
-      case '6':
+      case CODEPOINT_E: // NorwegianDanish
+      case CODEPOINT_SIX:
         cs = Emulator.charsets.NorwegianDanish;
         break;
-      case 'Z': // Spanish
+      case CODEPOINT_Z: // Spanish
         cs = Emulator.charsets.Spanish;
         break;
-      case 'H': // Swedish
-      case '7':
+      case CODEPOINT_H: // Swedish
+      case CODEPOINT_SEVEN:
         cs = Emulator.charsets.Swedish;
         break;
-      case '=': // Swiss
+      case CODEPOINT_EQUALS: // Swiss
         cs = Emulator.charsets.Swiss;
         break;
-      case '/': // ISOLatin (actually /A)
+      case CODEPOINT_SLASH: // ISOLatin (actually /A)
         cs = Emulator.charsets.ISOLatin;
         i++;
         break;
@@ -1794,17 +1933,17 @@ export class Emulator implements EmulatorApi {
     return i;
   }
 
-  #processDataOSC(ch: string, i: number): number {
+  #processDataOSC(codePoint: number, i: number): number {
     // OSC Ps ; Pt ST
     // OSC Ps ; Pt BEL
     //   Set Text Parameters.
-    const isTerminator = ch === '\x1b' || ch === '\x07';
+    const isTerminator = codePoint === CODEPOINT_BEL || codePoint === CODEPOINT_ESC;
 
     switch (this.#state) {
       case ParserState.OSC_CODE:
-        if (ch >= '0' && ch <= '9') {
-          this.#params.appendDigit(ch);
-        } else if (ch === ';') {
+        if (codePoint >= CODEPOINT_ZERO && codePoint <= CODEPOINT_NINE) {
+          this.#params.appendDigit(String.fromCodePoint(codePoint));
+        } else if (codePoint === CODEPOINT_SEMICOLON) {
           this.#params.nextParameter();
           if (this.#params[0].intValue === 1337) {
             this.#state = ParserState.OSC_ITERM_PARMS;
@@ -1822,10 +1961,10 @@ export class Emulator implements EmulatorApi {
         break;
 
       case ParserState.OSC_PARAMS:
-        if (ch === ';') {
+        if (codePoint === CODEPOINT_SEMICOLON) {
           this.#params.nextParameter();
         } else if (! isTerminator) {
-          this.#params.appendString(ch);
+          this.#params.appendString(String.fromCodePoint(codePoint));
         } else {
           this.#params.nextParameter();
           this.#executeOSC();
@@ -1935,6 +2074,11 @@ export class Emulator implements EmulatorApi {
     }
   }
 
+  #executeITerm2(params: ControlSequenceParameters): void {
+    // params.
+    this.log(`#executeITerm2: ${params.getStringList().join(",")}`);
+  }
+
   #processDataDCS(ch: string, i: number): number {
     switch (this.#state) {
       case ParserState.DCS_START:
@@ -2032,10 +2176,10 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  #processDataIgnore(ch: string, i: number): number {
+  #processDataIgnore(codePoint: number, i: number): number {
     // For PM and APC.
-    if (ch === '\x1b' || ch === '\x07') {
-      if (ch === '\x1b') {
+    if (codePoint === CODEPOINT_ESC || codePoint === CODEPOINT_BEL) {
+      if (codePoint === CODEPOINT_ESC) {
         i++;
       }
       this.#state = ParserState.NORMAL;
@@ -2138,11 +2282,11 @@ export class Emulator implements EmulatorApi {
   }
 
   // ESC # variations
-  #processDataDecHash(ch: string): void {
-    switch(ch) {
+  #processDataDecHash(codePoint: number): void {
+    switch(codePoint) {
       // ESC # 8
       // Screen Alignment Display (DECALN)
-      case '8':
+      case CODEPOINT_EIGHT:
         this.#fillScreen('E');
         break;
 
@@ -4076,40 +4220,7 @@ export class Emulator implements EmulatorApi {
     // reference above. xterm seems in line with the reference
     // when running vttest however.
     // The table below now uses xterm's output from vttest.
-    SCLD: { // (0
-      '`': '\u25c6', // '◆'
-      'a': '\u2592', // '▒'
-      'b': '\u0009', // '\t'
-      'c': '\u000c', // '\f'
-      'd': '\u000d', // '\r'
-      'e': '\u000a', // '\n'
-      'f': '\u00b0', // '°'
-      'g': '\u00b1', // '±'
-      'h': '\u2424', // '\u2424' (NL)
-      'i': '\u000b', // '\v'
-      'j': '\u2518', // '┘'
-      'k': '\u2510', // '┐'
-      'l': '\u250c', // '┌'
-      'm': '\u2514', // '└'
-      'n': '\u253c', // '┼'
-      'o': '\u23ba', // '⎺'
-      'p': '\u23bb', // '⎻'
-      'q': '\u2500', // '─'
-      'r': '\u23bc', // '⎼'
-      's': '\u23bd', // '⎽'
-      't': '\u251c', // '├'
-      'u': '\u2524', // '┤'
-      'v': '\u2534', // '┴'
-      'w': '\u252c', // '┬'
-      'x': '\u2502', // '│'
-      'y': '\u2264', // '≤'
-      'z': '\u2265', // '≥'
-      '{': '\u03c0', // 'π'
-      '|': '\u2260', // '≠'
-      '}': '\u00a3', // '£'
-      '~': '\u00b7'  // '·'
-    },
-
+    SCLD: scld(),
     "UK": null, // (A
     "US": null, // (B (USASCII)
     "Dutch": null, // (4
