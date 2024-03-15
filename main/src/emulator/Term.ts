@@ -76,7 +76,7 @@ import {
   setCellBgClutFlag,
 } from "extraterm-char-cell-line";
 import { CellWithHyperlink, LineImpl } from "term-api-lineimpl";
-import { ControlSequenceParameters } from "./ControlSequenceParameters.js";
+import { ControlSequenceParameters, ParameterList } from "./FastControlSequenceParameters.js";
 import { MouseEncoder, MouseProtocol, MouseProtocolEncoding } from "./MouseEncoder.js";
 
 const DEBUG_RESIZE = false;
@@ -133,8 +133,8 @@ const CODEPOINT_EXC = 0x21;
 const CODEPOINT_QUO = 0x22;
 const CODEPOINT_HASH = 0x23;
 const CODEPOINT_DOLLAR = 0x24;
-const CODEPOINT_AMP = 0x24;
 const CODEPOINT_PERCENT = 0x25;
+const CODEPOINT_AMP = 0x26;
 const CODEPOINT_APOS = 0x27;
 const CODEPOINT_LEFT_BRACKET = 0x28;
 const CODEPOINT_RIGHT_BRACKET = 0x29;
@@ -565,7 +565,7 @@ export class Emulator implements EmulatorApi {
 
     copyCell(Emulator.defAttr, this.#curAttr); // Current character style.
 
-    this.#params = new ControlSequenceParameters();
+    this.#params.reset();
     this.#lines = [];
     this.#setupStops();
 
@@ -1042,8 +1042,6 @@ export class Emulator implements EmulatorApi {
 
     let highSurrogate = this.#highSurrogate;
 
-    let ch = "";
-
     let i = 0;
     const dataLength = data.length;
     for (i=0; i < dataLength && ! this.#paused; i++) {
@@ -1182,8 +1180,7 @@ export class Emulator implements EmulatorApi {
 
         case ParserState.DCS_START:
         case ParserState.DCS_STRING:
-          ch = String.fromCodePoint(codePoint);
-          i = this.#processDataDCS(ch, i);
+          i = this.#processDataDCS(codePoint, i);
           break;
 
         case ParserState.IGNORE:
@@ -1191,8 +1188,7 @@ export class Emulator implements EmulatorApi {
           break;
 
         case ParserState.APPLICATION_START:
-          ch = String.fromCodePoint(codePoint);
-          this.#processDataApplicationStart(ch);
+          this.#processDataApplicationStart(codePoint);
           break;
 
         case ParserState.APPLICATION_END:
@@ -1227,7 +1223,7 @@ export class Emulator implements EmulatorApi {
       case ParserState.CSI_START:
         // '?', '>', '!'
         if (codePoint === CODEPOINT_QUESTION || codePoint === CODEPOINT_GT || codePoint === CODEPOINT_EXC) {
-          this.#params.prefix = String.fromCodePoint(codePoint);
+          this.#params.appendPrefix(codePoint);
         } else {
           // Push this char back and try again.
           i--;
@@ -1237,8 +1233,8 @@ export class Emulator implements EmulatorApi {
 
       case ParserState.CSI_PARAMS:
         // 0 - 9
-        if (codePoint >= CODEPOINT_ZERO && codePoint <= CODEPOINT_NINE) {
-          this.#params.appendDigit(String.fromCodePoint(codePoint));
+        if ((codePoint >= CODEPOINT_ZERO && codePoint <= CODEPOINT_NINE) || codePoint === CODEPOINT_COLON) {
+          this.#params.appendParameterCodePoint(codePoint);
           return i;
         }
 
@@ -1247,18 +1243,13 @@ export class Emulator implements EmulatorApi {
           return i;
         }
 
-        this.#params.nextParameter();
-
+        this.#params.endParameter();
         if (codePoint === CODEPOINT_SEMICOLON) {
           return i;
         }
 
-        if (codePoint === CODEPOINT_COLON) {
-          this.#params.startSubparameter();
-          return i;
-        }
-
         this.#executeCSICommand(this.#params, codePoint);
+        this.#params.reset();
         this.#state = ParserState.NORMAL;
         break;
     }
@@ -1270,7 +1261,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps A
       // Cursor Up Ps Times (default = 1) (CUU).
       case CODEPOINT_A:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorUp(params);
         }
         break;
@@ -1278,7 +1269,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps B
       // Cursor Down Ps Times (default = 1) (CUD).
       case CODEPOINT_B:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorDown(params);
         }
         break;
@@ -1286,7 +1277,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps C
       // Cursor Forward Ps Times (default = 1) (CUF).
       case CODEPOINT_C:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorForward(params);
         }
         break;
@@ -1294,7 +1285,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps D
       // Cursor Backward Ps Times (default = 1) (CUB).
       case CODEPOINT_D:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorBackward(params);
         }
         break;
@@ -1302,7 +1293,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps ; Ps H
       // Cursor Position [row;column] (default = [1,1]) (CUP).
       case CODEPOINT_H:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorPos(params);
         }
         break;
@@ -1311,7 +1302,7 @@ export class Emulator implements EmulatorApi {
       // CSI ? Ps J
       //   Erase in Display (DECSED).
       case CODEPOINT_J:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#eraseInDisplay(params);
         }
         break;
@@ -1325,14 +1316,14 @@ export class Emulator implements EmulatorApi {
 
       // CSI Pm m  Character Attributes (SGR).
       case CODEPOINT_SMALL_M:
-        if ( ! params.prefix) {
+        if (! params.hasPrefix()) {
           this.#charAttributes(params);
         }
         break;
 
       // CSI Ps n  Device Status Report (DSR).
       case CODEPOINT_SMALL_N:
-        if ( ! params.prefix) {
+        if (! params.hasPrefix()) {
           this.#deviceStatus(params);
         }
         break;
@@ -1344,7 +1335,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps @
       // Insert Ps (Blank) Character(s) (default = 1) (ICH).
       case CODEPOINT_AT:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#insertChars(params);
         }
         break;
@@ -1352,7 +1343,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps E
       // Cursor Next Line Ps Times (default = 1) (CNL).
       case CODEPOINT_E:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorNextLine(params);
         }
         break;
@@ -1360,7 +1351,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps F
       // Cursor Preceding Line Ps Times (default = 1) (CNL).
       case CODEPOINT_F:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorPrecedingLine(params);
         }
         break;
@@ -1368,7 +1359,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps G
       // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
       case CODEPOINT_G:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#cursorCharAbsolute(params);
         }
         break;
@@ -1376,7 +1367,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps L
       // Insert Ps Line(s) (default = 1) (IL).
       case CODEPOINT_L:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#insertLines(params);
         }
         break;
@@ -1384,7 +1375,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps M
       // Delete Ps Line(s) (default = 1) (DL).
       case CODEPOINT_M:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#deleteLines(params);
         }
         break;
@@ -1392,7 +1383,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps P
       // Delete Ps Character(s) (default = 1) (DCH).
       case CODEPOINT_P:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#deleteChars(params);
         }
         break;
@@ -1400,7 +1391,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps X
       // Erase Ps Character(s) (default = 1) (ECH).
       case CODEPOINT_X:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#eraseChars(params);
         }
         break;
@@ -1408,7 +1399,7 @@ export class Emulator implements EmulatorApi {
       // CSI Pm `  Character Position Absolute
       //   [column] (default = [row,1]) (HPA).
       case CODEPOINT_GRAVE:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#charPosAbsolute(params);
         }
         break;
@@ -1416,7 +1407,7 @@ export class Emulator implements EmulatorApi {
       // 141 61 a * HPR -
       // Horizontal Position Relative
       case CODEPOINT_SMALL_A:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#HPositionRelative(params);
         }
         break;
@@ -1432,14 +1423,14 @@ export class Emulator implements EmulatorApi {
       // CSI Pm d
       // Line Position Absolute  [row] (default = [1,column]) (VPA).
       case CODEPOINT_SMALL_D:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#linePosAbsolute(params);
         }
         break;
 
       // 145 65 e * VPR - Vertical Position Relative
       case CODEPOINT_SMALL_E:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#VPositionRelative(params);
         }
         break;
@@ -1448,7 +1439,7 @@ export class Emulator implements EmulatorApi {
       //   Horizontal and Vertical Position [row;column] (default =
       //   [1,1]) (HVP).
       case CODEPOINT_SMALL_F:
-        if (params.prefix === "") {
+        if (! params.hasPrefix()) {
           this.#HVPosition(params);
         }
         break;
@@ -1476,9 +1467,9 @@ export class Emulator implements EmulatorApi {
       // CSI s     Save cursor (ANSI.SYS).
       // CSI ? Pm s
       case CODEPOINT_SMALL_S:
-        if (params.prefix === '?') {
+        if (params.getPrefixString() === '?') {
           this.#savePrivateValues(params);
-        } else if (params.prefix === '') {
+        } else if (! params.hasPrefix()) {
           this.#saveCursor();
         }
         break;
@@ -1555,7 +1546,7 @@ export class Emulator implements EmulatorApi {
       //           Pt; Pl; Pb; Pr denotes the rectangle.
       //           Ps denotes the attributes to reverse, i.e.,  1, 4, 5, 7.
       case CODEPOINT_SMALL_T:
-        switch (params[0].intValue) {
+        switch (params.getParameterInt(0)) {
           case 16:  // Report the pixel size of a cell
             this.#send(`\x1b[6;${this.#cellWidthPixels};${this.#cellHeightPixels}t`);
             break;
@@ -1573,7 +1564,7 @@ export class Emulator implements EmulatorApi {
       // CSI u
       //   Restore cursor (ANSI.SYS).
       case CODEPOINT_SMALL_U:
-        if (params.prefix === '') {
+        if (! params.hasPrefix()) {
           this.#restoreCursor();
         }
         break;
@@ -1585,14 +1576,14 @@ export class Emulator implements EmulatorApi {
       // CSI Ps I
       // Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
       case CODEPOINT_I:
-        if (params.prefix === '') {
+        if (! params.hasPrefix()) {
           this.#cursorForwardTab(params);
         }
         break;
 
       // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
       case CODEPOINT_S:
-        if (params.prefix === '') {
+        if (! params.hasPrefix()) {
           this.#scrollUp(params);
         }
         break;
@@ -1601,7 +1592,7 @@ export class Emulator implements EmulatorApi {
       // CSI Ps ; Ps ; Ps ; Ps ; Ps T
       // CSI > Ps; Ps T
       case CODEPOINT_T:
-        if (params.length < 2 && !params.prefix) {
+        if (params.getParamCount() < 2 && !params.hasPrefix()) {
           this.#scrollDown(params);
         }
         break;
@@ -1609,21 +1600,21 @@ export class Emulator implements EmulatorApi {
       // CSI Ps Z
       // Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
       case CODEPOINT_Z:
-        if (params.prefix === '') {
+        if (! params.hasPrefix()) {
           this.#cursorBackwardTab(params);
         }
         break;
 
       // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
       case CODEPOINT_SMALL_B:
-        if (params.prefix === '') {
+        if (! params.hasPrefix()) {
           this.#repeatPrecedingCharacter(params);
         }
         break;
 
       // CSI Ps g  Tab Clear (TBC).
       case CODEPOINT_SMALL_G:
-        if (params.prefix === '') {
+        if (! params.hasPrefix()) {
           this.#tabClear(params);
         }
         break;
@@ -1645,7 +1636,7 @@ export class Emulator implements EmulatorApi {
       //   Request DEC private mode (DECRQM).
       // CSI Ps ; Ps " p
       case CODEPOINT_SMALL_P:
-        switch (params.prefix) {
+        switch (params.getPrefixString()) {
           case '!':
             this.#softReset(params);
             break;
@@ -1704,25 +1695,21 @@ export class Emulator implements EmulatorApi {
     switch (codePoint) {
       // ESC [ Control Sequence Introducer ( CSI is 0x9b).
       case CODEPOINT_LEFT_SB:
-        this.#params = new ControlSequenceParameters();
         this.#state = ParserState.CSI_START;
         break;
 
       // ESC ] Operating System Command ( OSC is 0x9d).
       case CODEPOINT_RIGHT_SB:
-        this.#params = new ControlSequenceParameters();
         this.#state = ParserState.OSC_CODE;
         break;
 
       // ESC & Application mode
       case CODEPOINT_AMP:
-        this.#params = new ControlSequenceParameters();
         this.#state = ParserState.APPLICATION_START;
         break;
 
       // ESC P Device Control String ( DCS is 0x90).
       case CODEPOINT_P:
-        this.#params = new ControlSequenceParameters();
         this.#state = ParserState.DCS_START;
         break;
 
@@ -1942,33 +1929,33 @@ export class Emulator implements EmulatorApi {
     switch (this.#state) {
       case ParserState.OSC_CODE:
         if (codePoint >= CODEPOINT_ZERO && codePoint <= CODEPOINT_NINE) {
-          this.#params.appendDigit(String.fromCodePoint(codePoint));
+          this.#params.appendParameterCodePoint(codePoint);
         } else if (codePoint === CODEPOINT_SEMICOLON) {
-          this.#params.nextParameter();
-          if (this.#params[0].intValue === 1337) {
+          this.#params.endParameter();
+          if (this.#params.getParameterInt(0) === 1337) {
             this.#state = ParserState.OSC_ITERM_PARMS;
           } else {
             this.#state = ParserState.OSC_PARAMS;
           }
         } else {
           if (isTerminator) {
-            this.#params.nextParameter();
+            this.#params.endParameter();
             this.#executeOSC();
-            this.#params = new ControlSequenceParameters();
           }
+          this.#params.reset();
           this.#state = ParserState.NORMAL;
         }
         break;
 
       case ParserState.OSC_PARAMS:
         if (codePoint === CODEPOINT_SEMICOLON) {
-          this.#params.nextParameter();
+          this.#params.endParameter();
         } else if (! isTerminator) {
-          this.#params.appendString(String.fromCodePoint(codePoint));
+          this.#params.appendParameterCodePoint(codePoint);
         } else {
-          this.#params.nextParameter();
+          this.#params.endParameter();
           this.#executeOSC();
-          this.#params = new ControlSequenceParameters();
+          this.#params.reset();
           this.#state = ParserState.NORMAL;
         }
         break;
@@ -1981,12 +1968,12 @@ export class Emulator implements EmulatorApi {
   }
 
   #executeOSC(): void {
-    switch (this.#params[0].intValue) {
+    switch (this.#params.getParameterInt(0)) {
       case 0:
       case 1:
       case 2:
-        if (this.#params[1]) {
-          this.#title = this.#params[1].stringValue;
+        if (this.#params.getParamCount() >= 2) {
+          this.#title = this.#params.getParameterString(1);
           this.#handleTitle(this.#title);
         }
         break;
@@ -1996,7 +1983,7 @@ export class Emulator implements EmulatorApi {
         break;
       case 8:
         // Hyperlink
-        let url = this.#params[2].rawStringValue;
+        let url = this.#params.getParameterString(2);
         if (url === "") {
           url = null;
         }
@@ -2036,13 +2023,14 @@ export class Emulator implements EmulatorApi {
   }
 
   #executeShellIntegration(params: ControlSequenceParameters): void {
-    if (params.length === 1) {
+    const len = params.getParamCount();
+    if (len === 1) {
       this.log("No parameters were given to OSC 133 or OSC 633 command.");
       return;
     }
 
     this.#dispatchRenderEvent();  // Flush any rendering and buffers, sync everything up.
-    const command = params[1].stringValue;
+    const command = params.getParameterString(1);
     switch (command) {
       case 'A':
         this.#onPromptStartEventEmitter.fire();
@@ -2057,15 +2045,15 @@ export class Emulator implements EmulatorApi {
         break;
 
       case 'D':
-        this.#onEndExecutionEventEmitter.fire(params.length === 2 ? "" : params[2].stringValue);
+        this.#onEndExecutionEventEmitter.fire(len === 2 ? "" : params.getParameterString(2));
         break;
 
       case 'E':
-        if (params.length !== 3) {
+        if (len !== 3) {
           this.log("Wrong number of parameters were given to OSC 133 E or OSC 633 E command.");
           return;
         }
-        this.#onCommandLineSetEventEmitter.fire(params[2].stringValue);
+        this.#onCommandLineSetEventEmitter.fire(params.getParameterString(2));
         break;
 
       default:
@@ -2079,27 +2067,27 @@ export class Emulator implements EmulatorApi {
     this.log(`#executeITerm2: ${params.getStringList().join(",")}`);
   }
 
-  #processDataDCS(ch: string, i: number): number {
+  #processDataDCS(codePoint: number, i: number): number {
     switch (this.#state) {
       case ParserState.DCS_START:
-        this.#params.appendPrefix(ch);
-        if (this.#params.prefix.length === 2) {
+        this.#params.appendPrefix(codePoint);
+        if (this.#params.getPrefixLength() === 2) {
           this.#state = ParserState.DCS_STRING;
         }
         break;
 
       case ParserState.DCS_STRING:
-        const isStringTerminator = ch === '\x1b' || ch === '\x07';
+        const isStringTerminator = codePoint === CODEPOINT_ESC || codePoint === CODEPOINT_BEL;
         if ( ! isStringTerminator) {
-          this.#params.appendString(ch);
+          this.#params.appendParameterCodePoint(codePoint);
         } else {
-          if (ch === '\x1b') {
+          if (codePoint === CODEPOINT_ESC) {
             i++;
           }
-          this.#params.nextParameter();
+          this.#params.endParameter();
           this.#executeDCSCommand(this.#params);
 
-          this.#params = new ControlSequenceParameters();
+          this.#params.reset();
           this.#state = ParserState.NORMAL;
         }
         break;
@@ -2111,7 +2099,7 @@ export class Emulator implements EmulatorApi {
   }
 
   #executeDCSCommand(params: ControlSequenceParameters): void {
-    switch (this.#params.prefix) {
+    switch (this.#params.getPrefixString()) {
       // User-Defined Keys (DECUDK).
       case '':
         break;
@@ -2119,7 +2107,7 @@ export class Emulator implements EmulatorApi {
       // Request Status String (DECRQSS).
       // test: echo -e '\eP$q"p\e\\'
       case '$q':
-        const pt = params[0].stringValue;
+        const pt = params.getParameterString(0);
         const valid = false;
         let replyPt = "";
 
@@ -2171,7 +2159,7 @@ export class Emulator implements EmulatorApi {
         break;
 
       default:
-        this.#error(`Unknown DCS prefix: ${this.#params.prefix}.`);
+        this.#error(`Unknown DCS prefix: ${this.#params.getPrefixString()}.`);
         break;
     }
   }
@@ -2191,26 +2179,27 @@ export class Emulator implements EmulatorApi {
     this.#applicationModeHandler = handler;
   }
 
-  #processDataApplicationStart(ch: string): void {
-    if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch === '-'
-        || ch === '/') {
+  #processDataApplicationStart(codePoint: number): void {
+    if ((codePoint >= CODEPOINT_SMALL_A && codePoint <= CODEPOINT_SMALL_Z) || (codePoint >= CODEPOINT_A && codePoint <= CODEPOINT_Z) || (codePoint >= CODEPOINT_ZERO && codePoint <= CODEPOINT_NINE) || codePoint === CODEPOINT_MINUS
+        || codePoint === CODEPOINT_SLASH) {
 
       // Add to the current parameter.
-      this.#params.appendString(ch);  // FIXME don't absorb infinite data here.
+      this.#params.appendParameterCodePoint(codePoint);  // FIXME don't absorb infinite data here.
 
-    } else if (ch === ';') {
+    } else if (codePoint === CODEPOINT_SEMICOLON) {
       // Parameter separator.
-      this.#params.nextParameter();
+      this.#params.endParameter();
 
-    } else if (ch === '\x07') {
+    } else if (codePoint === CODEPOINT_BEL) {
       // End of parameters.
-      this.#params.nextParameter();
-      if (this.#params[0].stringValue === this.#applicationModeCookie) {
+      this.#params.endParameter();
+      if (this.#params.getParameterString(0) === this.#applicationModeCookie) {
         this.#state = ParserState.APPLICATION_END;
         this.#dispatchRenderEvent();
         if (this.#applicationModeHandler != null) {
           const response = this.#applicationModeHandler.start(this.#params.getStringList());
           if (response.action === ApplicationModeResponseAction.ABORT) {
+            this.#params.reset();
             this.#state = ParserState.NORMAL;
           } else if (response.action === ApplicationModeResponseAction.PAUSE) {
             this.pauseProcessing();
@@ -2218,10 +2207,12 @@ export class Emulator implements EmulatorApi {
         }
       } else {
         this.log("Invalid application mode cookie.");
+        this.#params.reset();
         this.#state = ParserState.NORMAL;
       }
     } else {
       // Invalid application start.
+      this.#params.reset();
       this.#state = ParserState.NORMAL;
       this.log("Invalid application mode start command.");
     }
@@ -2236,6 +2227,7 @@ export class Emulator implements EmulatorApi {
         const effectiveString = data.slice(i);
         const response = this.#applicationModeHandler.data(effectiveString);
         if (response.action === ApplicationModeResponseAction.ABORT) {
+          this.#params.reset();
           this.#state = ParserState.NORMAL;
 
           if (response.remainingData != null) {
@@ -2258,11 +2250,13 @@ export class Emulator implements EmulatorApi {
         const response = this.#applicationModeHandler.end();
         if (response.action === ApplicationModeResponseAction.ABORT) {
           if (response.remainingData != null) {
+            this.#params.reset();
             this.#state = ParserState.NORMAL;
             return [response.remainingData, 0];
           }
         }
       }
+      this.#params.reset();
       this.#state = ParserState.NORMAL;
 
     } else {
@@ -2271,6 +2265,7 @@ export class Emulator implements EmulatorApi {
       if (this.#applicationModeHandler != null) {
         const response = this.#applicationModeHandler.data(data.slice(i, nextzero));
         if (response.action === ApplicationModeResponseAction.ABORT) {
+          this.#params.reset();
           this.#state = ParserState.NORMAL;
         } else if (response.action === ApplicationModeResponseAction.PAUSE) {
           this.pauseProcessing();
@@ -2294,6 +2289,7 @@ export class Emulator implements EmulatorApi {
         break;
     }
 
+    this.#params.reset();
     this.#state = ParserState.NORMAL;
   }
 
@@ -2869,6 +2865,7 @@ export class Emulator implements EmulatorApi {
     } else {
       this.#setCursorY(this.#y+1);
     }
+    this.#params.reset();
     this.#state = ParserState.NORMAL;
   }
 
@@ -2887,6 +2884,7 @@ export class Emulator implements EmulatorApi {
     } else {
       this.#setCursorY(this.#y-1);
     }
+    this.#params.reset();
     this.#state = ParserState.NORMAL;
   }
 
@@ -2916,7 +2914,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps A
   // Cursor Up Ps Times (default = 1) (CUU).
   #cursorUp(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -2931,7 +2929,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps B
   // Cursor Down Ps Times (default = 1) (CUD).
   #cursorDown(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -2947,7 +2945,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps C
   // Cursor Forward Ps Times (default = 1) (CUF).
   #cursorForward(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -2960,7 +2958,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps D
   // Cursor Backward Ps Times (default = 1) (CUB).
   #cursorBackward(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -2973,8 +2971,8 @@ export class Emulator implements EmulatorApi {
   // CSI Ps ; Ps H
   // Cursor Position [row;column] (default = [1,1]) (CUP).
   #cursorPos(params: ControlSequenceParameters): void {
-    let y = params[0].intValue - 1 + (this.#originMode ? this.#scrollTop : 0);
-    let x = (params.length >= 2) ? params[1].intValue - 1 : 0;
+    let y = params.getParameterInt(0) - 1 + (this.#originMode ? this.#scrollTop : 0);
+    let x = (params.getParamCount() >= 2) ? params.getParameterInt(1) - 1 : 0;
 
     if (y < 0) {
       y = 0;
@@ -3004,7 +3002,7 @@ export class Emulator implements EmulatorApi {
   //     Ps = 2  -> Selective Erase All.
   #eraseInDisplay(params: ControlSequenceParameters): void {
     let j: number;
-    switch (params[0].intValue) {
+    switch (params.getParameterInt(0)) {
       case 0:
         this.#eraseRight(this.#x, this.#y);
         j = this.#y + 1;
@@ -3046,7 +3044,7 @@ export class Emulator implements EmulatorApi {
   //     Ps = 1  -> Selective Erase to Left.
   //     Ps = 2  -> Selective Erase All.
   #eraseInLine(params: ControlSequenceParameters): void {
-    switch (params[0].intValue) {
+    switch (params.getParameterInt(0)) {
       case 0:
         this.#eraseRight(this.#x, this.#y);
         break;
@@ -3126,17 +3124,17 @@ export class Emulator implements EmulatorApi {
   //     Ps.
   #charAttributes(params: ControlSequenceParameters): void {
     // Optimize a single SGR0.
-    if (params.length === 1 && params[0].intValue === 0) {
+    const len = params.getParamCount();
+    if (len === 1 && params.getParameterInt(0) === 0) {
       copyCell(Emulator.defAttr, this.#curAttr);
       return;
     }
 
-    const len = params.length;
     let fg = 0;
     let bg = 0;
 
     for (let i = 0; i < len; i++) {
-      let p = params[i].intValue;
+      let p = params.getParameterInt(i);
       if (p >= 30 && p <= 37) {
         // fg color 8
         fg = p - 30;
@@ -3180,10 +3178,13 @@ export class Emulator implements EmulatorApi {
 
       } else if (p === 4) {
         // underlined text
-        if (params[i].subparameters.length === 0) {
+        const paramString = params.getParameterString(i);
+        if (! paramString.includes(':')) {
           this.#curAttr.style |= UNDERLINE_STYLE_NORMAL;
         } else {
-          switch (params[i].subparameters[0].intValue) {
+          const parts = paramString.split(':');
+          const subInt = Number.parseInt(parts[1], 10);
+          switch (subInt) {
             case 0:
               // not underlined
               this.#curAttr.style &= ~STYLE_MASK_UNDERLINE;
@@ -3270,18 +3271,20 @@ export class Emulator implements EmulatorApi {
 
       } else if (p === 38) {
         // fg color 256
-        if (params[i].subparameters.length === 0) {
+        const paramString = params.getParameterString(i);
+        if (! paramString.includes(':')) {
           i = this.#setForegroundColorFromParams(params, i);
         } else {
-          this.#setForegroundColorFromParams(params[i].subparameters, -1);
+          this.#setForegroundColorFromParams(params.getExpandParameter(i, CODEPOINT_COLON), -1);
         }
 
       } else if (p === 48) {
         // bg color 256
-        if (params[i].subparameters.length === 0) {
+        const paramString = params.getParameterString(i);
+        if (! paramString.includes(':')) {
           i = this.#setBackgroundColorFromParams(params, i);
         } else {
-          this.#setBackgroundColorFromParams(params[i].subparameters, -1);
+          this.#setBackgroundColorFromParams(params.getExpandParameter(i, CODEPOINT_COLON), -1);
         }
 
       } else if (p === 53) {
@@ -3305,7 +3308,7 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  #setForegroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
+  #setForegroundColorFromParams(params: ParameterList, paramIndex: number): number {
     // fg color 256
     if (params.getDefaultInt(paramIndex + 1, -1) === 2) {  // Set to RGB color
       paramIndex += 2;
@@ -3326,7 +3329,7 @@ export class Emulator implements EmulatorApi {
     return paramIndex;
   }
 
-  #setBackgroundColorFromParams(params: ControlSequenceParameters, paramIndex: number): number {
+  #setBackgroundColorFromParams(params: ParameterList, paramIndex: number): number {
     // bg color 256
     if (params.getDefaultInt(paramIndex + 1, -1) === 2) {  // Set to RGB color
       paramIndex += 2;
@@ -3369,7 +3372,7 @@ export class Emulator implements EmulatorApi {
   //   CSI ? 5 3  n  Locator available, if compiled-in, or
   //   CSI ? 5 0  n  No Locator, if not.
   #deviceStatus(params: ControlSequenceParameters): void {
-    if ( ! params.prefix) {
+    if ( ! params.hasPrefix()) {
       switch (params.getDefaultInt(0, 0)) {
         case 5:
           // status report
@@ -3380,7 +3383,7 @@ export class Emulator implements EmulatorApi {
           this.#send('\x1b[' + (this.#y + 1) + ';' + (this.#x + 1) + 'R');
           break;
       }
-    } else if (params.prefix === '?') {
+    } else if (params.getPrefixString() === '?') {
       // modern xterm doesnt seem to
       // respond to any of these except ?6, 6, and 5
       switch (params.getDefaultInt(0, 0)) {
@@ -3415,7 +3418,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps @
   // Insert Ps (Blank) Character(s) (default = 1) (ICH).
   #insertChars(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3437,7 +3440,7 @@ export class Emulator implements EmulatorApi {
   // Cursor Next Line Ps Times (default = 1) (CNL).
   // same as CSI Ps B ?
   #cursorNextLine(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3453,7 +3456,7 @@ export class Emulator implements EmulatorApi {
   // Cursor Preceding Line Ps Times (default = 1) (CNL).
   // reuse CSI Ps A ?
   #cursorPrecedingLine(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3468,7 +3471,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps G
   // Cursor Character Absolute  [column] (default = [row,1]) (CHA).
   #cursorCharAbsolute(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3478,7 +3481,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps L
   // Insert Ps Line(s) (default = 1) (IL).
   #insertLines(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3499,7 +3502,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps M
   // Delete Ps Line(s) (default = 1) (DL).
   #deleteLines(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3521,7 +3524,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps P
   // Delete Ps Character(s) (default = 1) (DCH).
   #deleteChars(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3540,7 +3543,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps X
   // Erase Ps Character(s) (default = 1) (ECH).
   #eraseChars(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3558,7 +3561,7 @@ export class Emulator implements EmulatorApi {
   // CSI Pm `  Character Position Absolute
   //   [column] (default = [row,1]) (HPA).
   #charPosAbsolute(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3572,7 +3575,7 @@ export class Emulator implements EmulatorApi {
   // Horizontal Position Relative
   // reuse CSI Ps C ?
   #HPositionRelative(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3622,10 +3625,10 @@ export class Emulator implements EmulatorApi {
       return;
     }
 
-    if ( ! params.prefix) {
+    if ( ! params.hasPrefix()) {
       // Primary Device Attributes
       this.#send('\x1b[?1;2c');
-    } else if (params.prefix === '>') {
+    } else if (params.getPrefixString() === '>') {
       // Secondary Device Attributes
       this.#send('\x1b[>1;1;0c'); // VT220
     }
@@ -3634,7 +3637,7 @@ export class Emulator implements EmulatorApi {
   // CSI Pm d
   // Line Position Absolute  [row] (default = [1,column]) (VPA).
   #linePosAbsolute(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3648,7 +3651,7 @@ export class Emulator implements EmulatorApi {
   // 145 65 e * VPR - Vertical Position Relative
   // reuse CSI Ps B ?
   #VPositionRelative(params: ControlSequenceParameters): void {
-    let param = params[0].intValue;
+    let param = params.getParameterInt(0);
     if (param < 1) {
       param = 1;
     }
@@ -3751,9 +3754,11 @@ export class Emulator implements EmulatorApi {
   // Modes:
   //   http://vt100.net/docs/vt220-rm/chapter4.html
   #setMode(params: ControlSequenceParameters): void {
-    for (let i=0; i < params.length; i++) {
-      if (params.prefix === '') {
-        switch (params[i].intValue) {
+    const len = params.getParamCount();
+    const prefix = params.getPrefixString();
+    for (let i=0; i < len; i++) {
+      if (prefix === '') {
+        switch (params.getParameterInt(i)) {
           case 4:
             this.#insertMode = true;
             break;
@@ -3761,8 +3766,8 @@ export class Emulator implements EmulatorApi {
             //this.convertEol = true;
             break;
         }
-      } else if (params.prefix === '?') {
-        switch (params[i].intValue) {
+      } else if (prefix === '?') {
+        switch (params.getParameterInt(i)) {
           case 1:
             this.#applicationCursorKeys = true;
             break;
@@ -3969,10 +3974,10 @@ export class Emulator implements EmulatorApi {
   //     Ps = 1 0 6 1  -> Reset keyboard emulation to Sun/PC style.
   //     Ps = 2 0 0 4  -> Reset bracketed paste mode.
   #resetMode(params: ControlSequenceParameters): void {
-    for (let i=0; i < params.length; i++) {
-
-      if ( ! params.prefix) {
-        switch (params[i].intValue) {
+    const len = params.getParamCount();
+    for (let i=0; i < len; i++) {
+      if ( ! params.hasPrefix()) {
+        switch (params.getParameterInt(i)) {
           case 4:
             this.#insertMode = false;
             break;
@@ -3980,8 +3985,8 @@ export class Emulator implements EmulatorApi {
             //this.convertEol = false;
             break;
         }
-      } else if (params.prefix === '?') {
-        switch (params[i].intValue) {
+      } else if (params.getPrefixString() === '?') {
+        switch (params.getParameterInt(i)) {
           case 1:
             this.#applicationCursorKeys = false;
             break;
@@ -4074,7 +4079,7 @@ export class Emulator implements EmulatorApi {
   //   dow) (DECSTBM).
   // CSI ? Pm r
   #setScrollRegion(params: ControlSequenceParameters): void {
-    if (params.prefix === '') {
+    if (! params.hasPrefix()) {
       const top = Math.max(1, params.getDefaultInt(0, 1)) - 1;
       const bottom = Math.max(1, params.getDefaultInt(1, this.#rows)) - 1;
       if ( ! (top >= 0 && bottom < this.#rows && top < bottom)) {
@@ -4113,7 +4118,7 @@ export class Emulator implements EmulatorApi {
   // CSI Ps I
   //   Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
   #cursorForwardTab(params: ControlSequenceParameters): void {
-    let param = params[0].intValue || 1;
+    let param = params.getParameterInt(0) || 1;
     while (param--) {
       this.#x = this.#nextStop();
     }
@@ -4121,7 +4126,7 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps S  Scroll up Ps lines (default = 1) (SU).
   #scrollUp(params: ControlSequenceParameters): void {
-    let param = params[0].intValue || 1;
+    let param = params.getParameterInt(0) || 1;
     while (param--) {
       this.#lines.splice(this.#scrollTop, 1);
       this.#lines.splice(this.#scrollBottom, 0, this.#blankLine());
@@ -4133,7 +4138,7 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps T  Scroll down Ps lines (default = 1) (SD).
   #scrollDown(params: ControlSequenceParameters): void {
-    let param = params[0].intValue || 1;
+    let param = params.getParameterInt(0) || 1;
     while (param--) {
       this.#lines.splice(this.#scrollBottom, 1);
       this.#lines.splice(this.#scrollTop, 0, this.#blankLine());
@@ -4145,7 +4150,7 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
   #cursorBackwardTab(params: ControlSequenceParameters): void {
-    let param = params[0].intValue || 1;
+    let param = params.getParameterInt(0) || 1;
     while (param--) {
       this.#x = this.#prevStop();
     }
@@ -4153,7 +4158,7 @@ export class Emulator implements EmulatorApi {
 
   // CSI Ps b  Repeat the preceding graphic character Ps times (REP).
   #repeatPrecedingCharacter(params: ControlSequenceParameters): void {
-    let param = params[0].intValue || 1;
+    let param = params.getParameterInt(0) || 1;
     const line = this.#getRow(this.#y);
 
     const cell = this.#x === 0 ? Emulator.defAttr : line.getCellAndLink(this.#x-1, 0);
