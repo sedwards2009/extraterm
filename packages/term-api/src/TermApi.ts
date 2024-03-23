@@ -32,6 +32,7 @@
  * Forked again from Christopher Jeffrey's work by Simon Edwards in 2014 and
  * converted over to TypeScript.
  */
+import { QImage } from "@nodegui/nodegui";
 import { CharCellLine } from "extraterm-char-cell-line";
 import { Event } from "extraterm-event-emitter";
 
@@ -105,6 +106,11 @@ export interface TitleChangeEvent {
 export interface WriteBufferSizeEvent {
   instance: EmulatorApi;
   status: WriteBufferStatus;
+}
+
+export interface ImageAddedEvent {
+  id: number;
+  image: QImage;
 }
 
 export interface MouseEventOptions {
@@ -285,6 +291,7 @@ export interface EmulatorApi {
   onData: Event<DataEvent>;
   onTitleChange: Event<TitleChangeEvent>;
   onWriteBufferSize: Event<WriteBufferSizeEvent>;
+  onImageAdded: Event<ImageAddedEvent>;
 
   registerApplicationModeHandler(handler: ApplicationModeHandler): void;
 }

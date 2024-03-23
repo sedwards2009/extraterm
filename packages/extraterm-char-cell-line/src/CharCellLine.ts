@@ -646,6 +646,13 @@ export class CharCellLine {
     return this.#dataView.getUint16(offset + OFFSET_IMAGE_ID);
   }
 
+  setImageIDXY(x: number, imageID: number, imageX: number, imageY: number): void {
+    const offset = x * CELL_SIZE_BYTES;
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_ID, imageID);
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_X, imageX);
+    this.#dataView.setUint16(offset + OFFSET_IMAGE_Y, imageY);
+  }
+
   setImageID(x :number, imageID: number): void {
     const offset = x * CELL_SIZE_BYTES;
     this.#dataView.setUint16(offset + OFFSET_IMAGE_ID, imageID);

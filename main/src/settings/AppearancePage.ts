@@ -22,6 +22,7 @@ import { QtTimeout } from "../utils/QtTimeout.js";
 import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
 import { SettingsPageType } from "./SettingsPageType.js";
+import { TerminalEmbeddedImages } from "../terminal/TerminalEmbeddedImages.js";
 
 
 const uiScalePercentOptions: {id: number, name: string}[] = [
@@ -357,7 +358,7 @@ export class AppearancePage implements SettingsPageType {
       clearTimeout: this.#qtTimeout.clearTimeout.bind(this.#qtTimeout),
     });
 
-    this.#previewTerminalBlock = new TerminalBlock(this.#fontAtlasCache);
+    this.#previewTerminalBlock = new TerminalBlock(this.#fontAtlasCache, new TerminalEmbeddedImages());
     if (this.#terminalVisualConfig != null) {
       this.#previewTerminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
     }

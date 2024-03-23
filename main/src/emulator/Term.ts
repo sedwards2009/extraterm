@@ -38,6 +38,7 @@ import {
   BellEvent,
   DataEvent,
   EmulatorApi,
+  ImageAddedEvent,
   Line,
   MinimalKeyboardEvent,
   MouseEventOptions,
@@ -78,6 +79,8 @@ import {
 import { CellWithHyperlink, LineImpl } from "term-api-lineimpl";
 import { ControlSequenceParameters, ParameterList } from "./FastControlSequenceParameters.js";
 import { MouseEncoder, MouseProtocol, MouseProtocolEncoding } from "./MouseEncoder.js";
+import { ITermParameters } from './ITermParameters.js';
+import { QImage } from '@nodegui/nodegui';
 
 const DEBUG_RESIZE = false;
 
@@ -106,6 +109,7 @@ enum ParserState {
   CSI_PARAMS,
   OSC_CODE,
   OSC_ITERM_PARMS,
+  OSC_ITERM_PAYLOAD,
   OSC_PARAMS,
   CHARSET,
   DCS_START,
@@ -396,6 +400,9 @@ export class Emulator implements EmulatorApi {
 
   #highSurrogate = 0;
   #params = new ControlSequenceParameters();
+  #itermParameters: ITermParameters = null;
+  #imageIDCounter = 1;
+
   #blinkIntervalId: null | number = null;
   #lines: LineImpl[] = [];
   #isCursorBlink: boolean = false;
@@ -473,6 +480,9 @@ export class Emulator implements EmulatorApi {
   onScreenChange: Event<ScreenChangeEvent>;
   #onScreenChangeEventEmitter = new EventEmitter<ScreenChangeEvent>();
 
+  onImageAdded: Event<ImageAddedEvent>;
+  #onImageAddedEventEmitter = new EventEmitter<ImageAddedEvent>();
+
   constructor(options: Options) {
     this._log = getLogger("Emulator", this);
     this.#rows = options.rows === undefined ? 24 : options.rows;
@@ -493,6 +503,7 @@ export class Emulator implements EmulatorApi {
     this.onRender = this.#onRenderEventEmitter.event;
     this.onScreenChange = this.#onScreenChangeEventEmitter.event;
     this.onBell = this.#onBellEventEmitter.event;
+    this.onImageAdded = this.#onImageAddedEventEmitter.event;
 
     this.onPromptStart = this.#onPromptStartEventEmitter.event;
     this.onPromptEnd = this.#onPromptEndEventEmitter.event;
@@ -1169,6 +1180,7 @@ export class Emulator implements EmulatorApi {
 
         case ParserState.OSC_CODE:
         case ParserState.OSC_ITERM_PARMS:
+        case ParserState.OSC_ITERM_PAYLOAD:
         case ParserState.OSC_PARAMS:
           i = this.#processDataOSC(codePoint, i);
           break;
@@ -1961,7 +1973,26 @@ export class Emulator implements EmulatorApi {
         break;
 
       case ParserState.OSC_ITERM_PARMS:
-        // TODO
+        if (codePoint === CODEPOINT_COLON) {
+          this.#itermParameters = new ITermParameters(this.#params);
+          this.#state = ParserState.OSC_ITERM_PAYLOAD;
+        } else if (codePoint === CODEPOINT_SEMICOLON) {
+          this.#params.endParameter();
+        } else {
+          this.#params.appendParameterCodePoint(codePoint);
+        }
+        break;
+
+      case ParserState.OSC_ITERM_PAYLOAD:
+        if (codePoint === CODEPOINT_BEL) {
+          this.#executeITerm(this.#itermParameters);
+        } else if (this.#itermParameters.appendPayloadCodePoint(codePoint)) {
+          break;
+        }
+
+        this.#itermParameters = null;
+        this.#params.reset();
+        this.#state = ParserState.NORMAL;
         break;
     }
     return i;
@@ -2062,9 +2093,37 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  #executeITerm2(params: ControlSequenceParameters): void {
-    // params.
-    this.log(`#executeITerm2: ${params.getStringList().join(",")}`);
+  #executeITerm(itermParameters: ITermParameters): void {
+    const buffer = itermParameters.getPayload();
+    const qimage = new QImage();
+    if ( ! qimage.loadFromData(buffer)) {
+      this._log.warn(`Error occured while loading image from ITerm.`);
+      return;
+    }
+
+    const currentID = this.#imageIDCounter;
+    const imageAddedEvent: ImageAddedEvent = {
+      id: currentID,
+      image: qimage,
+    };
+    this.#imageIDCounter++;
+    this.#onImageAddedEventEmitter.fire(imageAddedEvent);
+
+    const widthInCells = Math.ceil(qimage.width() / this.#cellWidthPixels);
+    const heightInCells = Math.ceil(qimage.height() / this.#cellHeightPixels);
+
+    for (let j=0; j<heightInCells; j++) {
+      const row = this.#getRow(this.#y);
+      for (let i=0; i<widthInCells; i++) {
+        row.setImageIDXY(i, currentID, i, j);
+      }
+      this.#markRowForRefresh(this.#y);
+      if (this.#y+1 > this.#scrollBottom) {
+        this.#scroll();
+      } else {
+        this.#setCursorY(this.#y+1);
+      }
+    }
   }
 
   #processDataDCS(codePoint: number, i: number): number {

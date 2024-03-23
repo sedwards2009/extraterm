@@ -14,7 +14,7 @@ import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
 import { countCells, reverseString } from "extraterm-unicode-utilities";
 import { BlockMetadata, BlockPosture } from "@extraterm/extraterm-extension-api";
-import { Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
+import { ImageAddedEvent, Line, MouseEventOptions, RenderEvent, TerminalCoord } from "term-api";
 import { LineImpl } from "term-api-lineimpl";
 
 import { Block } from "./Block.js";
@@ -57,6 +57,8 @@ export class TerminalBlock implements Block {
   #columns = 0;
 
   #onRenderDispose: Disposable =null;
+  #onImageAddedDispose: Disposable = null;
+
   #terminalVisualConfig: TerminalVisualConfig = null;
   #fontSlices: FontSlice[] = [];
 
@@ -95,10 +97,10 @@ export class TerminalBlock implements Block {
   #returnCode: number = null;
   #commandLine: string = null;
 
-  constructor(fontAtlasCache: FontAtlasCache) {
+  constructor(fontAtlasCache: FontAtlasCache, terminalEmbeddedImages: TerminalEmbeddedImages) {
     this._log = getLogger("TerminalBlock", this);
     this.#fontAtlasCache = fontAtlasCache;
-    this.#terminalEmbeddedImages = new TerminalEmbeddedImages();
+    this.#terminalEmbeddedImages = terminalEmbeddedImages;
 
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
@@ -157,6 +159,10 @@ export class TerminalBlock implements Block {
 
   getEmulator(): Term.Emulator {
     return this.#emulator;
+  }
+
+  getTerminalEmbeddedImages(): TerminalEmbeddedImages {
+    return this.#terminalEmbeddedImages;
   }
 
   hasSelection(): boolean {
@@ -326,11 +332,16 @@ export class TerminalBlock implements Block {
       // Disconnect the last emulator.
       this.#onRenderDispose.dispose();
       this.#onRenderDispose = null;
+
+      this.#onImageAddedDispose.dispose();
+      this.#onImageAddedDispose = null;
+
       this.#emulator = null;
     }
 
     if (emulator !== null) {
       this.#onRenderDispose = emulator.onRender(this.#handleRenderEvent.bind(this));
+      this.#onImageAddedDispose = emulator.onImageAdded(this.#handleImageAddedEvent.bind(this));
     }
 
     this.#emulator = emulator;
@@ -353,6 +364,10 @@ export class TerminalBlock implements Block {
     }
 
     this.#widget.update();
+  }
+
+  #handleImageAddedEvent(event: ImageAddedEvent): void {
+    this.#terminalEmbeddedImages.getMap().set(event.id, {image: event.image});
   }
 
   #stompSelection(startRow: number, endRow: number): void {

@@ -10,7 +10,19 @@ export class TerminalEmbeddedImages {
 
   #embeddedImageMap: EmbeddedImageMap = new Map<number, EmbeddedImage>();
 
+  constructor(original: TerminalEmbeddedImages=null) {
+    if (original == null) {
+      this.#embeddedImageMap = new Map<number, EmbeddedImage>();
+    } else {
+      this.#embeddedImageMap = new Map<number, EmbeddedImage>([...original.getMap()]);
+    }
+  }
+
   getMap(): EmbeddedImageMap {
     return this.#embeddedImageMap;
+  }
+
+  clone(): TerminalEmbeddedImages {
+    return new TerminalEmbeddedImages(this);
   }
 }

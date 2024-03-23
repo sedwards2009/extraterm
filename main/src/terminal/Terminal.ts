@@ -78,6 +78,7 @@ import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
 import { Block } from "./Block.js";
 import { QEvent } from "@nodegui/nodegui/dist/lib/QtGui/QEvent/QEvent.js";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState.js";
+import { TerminalEmbeddedImages } from "./TerminalEmbeddedImages.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -496,8 +497,10 @@ export class Terminal implements Tab, Disposable {
     });
   }
 
-  #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator): TerminalBlock {
-    const terminalBlock = new TerminalBlock(this.#fontAtlasCache);
+  #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator,
+      terminalEmbeddedImages: TerminalEmbeddedImages): TerminalBlock {
+
+    const terminalBlock = new TerminalBlock(this.#fontAtlasCache, terminalEmbeddedImages);
     if (emulator != null) {
       terminalBlock.setEmulator(emulator);
     }
@@ -541,7 +544,8 @@ export class Terminal implements Tab, Disposable {
 
   #createSpacerFramedTerminalBlock(): SpacerFrame {
     const spacerFrame = new SpacerFrame(this.#uiStyle);
-    const terminalBlock = this.#createTerminalBlock(spacerFrame, this.#emulator);
+    const terminalBlock = this.#createTerminalBlock(spacerFrame, this.#emulator,
+      new TerminalEmbeddedImages());
     spacerFrame.setBlock(terminalBlock);
     return spacerFrame;
   }
@@ -1387,7 +1391,9 @@ export class Terminal implements Tab, Disposable {
       this.#disconnectLastTerminalFrameFromEmulator();
 
       const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
-      const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null);
+
+      const terminalEmbeddedImages = terminalBlock.getTerminalEmbeddedImages().clone();
+      const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null, terminalEmbeddedImages);
       decoratedFrame.setBlock(newTerminalBlock);
 
       const scrollbackLines = terminalBlock.takeScrollbackFrom(this.#frameStartBookmark.row);
