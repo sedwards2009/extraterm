@@ -80,7 +80,7 @@ import { CellWithHyperlink, LineImpl } from "term-api-lineimpl";
 import { ControlSequenceParameters, ParameterList } from "./FastControlSequenceParameters.js";
 import { MouseEncoder, MouseProtocol, MouseProtocolEncoding } from "./MouseEncoder.js";
 import { ITermParameters } from './ITermParameters.js';
-import { QImage } from '@nodegui/nodegui';
+import { AspectRatioMode, QImage, QSize, TransformationMode } from '@nodegui/nodegui';
 
 const DEBUG_RESIZE = false;
 
@@ -1974,6 +1974,7 @@ export class Emulator implements EmulatorApi {
 
       case ParserState.OSC_ITERM_PARMS:
         if (codePoint === CODEPOINT_COLON) {
+          this.#params.endParameter();
           this.#itermParameters = new ITermParameters(this.#params);
           this.#state = ParserState.OSC_ITERM_PAYLOAD;
         } else if (codePoint === CODEPOINT_SEMICOLON) {
@@ -2095,11 +2096,31 @@ export class Emulator implements EmulatorApi {
 
   #executeITerm(itermParameters: ITermParameters): void {
     const buffer = itermParameters.getPayload();
-    const qimage = new QImage();
+    let qimage = new QImage();
     if ( ! qimage.loadFromData(buffer)) {
       this._log.warn(`Error occured while loading image from ITerm.`);
       return;
     }
+
+    const isAutoSized = itermParameters.getWidth() === "auto" || itermParameters.getHeight() === "auto";
+    if (! isAutoSized) {
+      const screenWidthPx = this.#cols *this.#cellWidthPixels;
+      const screenHeightPx = this.#rows * this.#cellHeightPixels;
+
+      const targetWidth = this.#convertITermSizeToPx(itermParameters.getWidth(), this.#cellWidthPixels,
+        screenWidthPx, qimage.width());
+      const targetHeight = this.#convertITermSizeToPx(itermParameters.getHeight(), this.#cellHeightPixels,
+        screenHeightPx, qimage.height());
+
+      if (itermParameters.getPreserveAspectRatio()) {
+        qimage = qimage.scaled(new QSize(targetWidth, targetHeight), AspectRatioMode.KeepAspectRatio, TransformationMode.SmoothTransformation);
+      } else {
+        qimage = qimage.scaled(new QSize(targetWidth, targetHeight), AspectRatioMode.IgnoreAspectRatio, TransformationMode.SmoothTransformation);
+      }
+    }
+
+    const widthInCells = Math.ceil(qimage.width() / this.#cellWidthPixels);
+    const heightInCells = Math.ceil(qimage.height() / this.#cellHeightPixels);
 
     const currentID = this.#imageIDCounter;
     const imageAddedEvent: ImageAddedEvent = {
@@ -2108,9 +2129,6 @@ export class Emulator implements EmulatorApi {
     };
     this.#imageIDCounter++;
     this.#onImageAddedEventEmitter.fire(imageAddedEvent);
-
-    const widthInCells = Math.ceil(qimage.width() / this.#cellWidthPixels);
-    const heightInCells = Math.ceil(qimage.height() / this.#cellHeightPixels);
 
     for (let j=0; j<heightInCells; j++) {
       const row = this.#getRow(this.#y);
@@ -2124,6 +2142,34 @@ export class Emulator implements EmulatorApi {
         this.#setCursorY(this.#y+1);
       }
     }
+  }
+
+  #convertITermSizeToPx(itermSize: string, cellSize: number, screenSize: number, imageSize: number): number {
+    if (itermSize.endsWith("%")) {
+      // Percent of screen size
+      const size = Number.parseInt(itermSize.slice(0, itermSize.length-1), 10);
+      if (isNaN(size)) {
+        return imageSize;
+      }
+      return screenSize * Math.min(size, 100) / 100;
+    }
+
+    if (itermSize.endsWith("px")) {
+      // Straight up pixel dimensions
+      const sizePx = Number.parseInt(itermSize.slice(0, itermSize.length-2), 10);
+      if (isNaN(sizePx)) {
+        return imageSize;
+      }
+      return sizePx;
+    }
+
+    // $x cells big
+    const sizeCells = Number.parseInt(itermSize, 10);
+    if (isNaN(sizeCells)) {
+      return imageSize;
+    }
+
+    return sizeCells * cellSize;
   }
 
   #processDataDCS(codePoint: number, i: number): number {
