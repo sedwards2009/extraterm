@@ -2130,21 +2130,33 @@ export class Emulator implements EmulatorApi {
     };
     this.#imageIDCounter++;
 
+    const cursorX = this.#x;
+    const maxX = Math.min(cursorX + widthInCells, this.#cols) - cursorX;
+
+    const endY = this.#y + heightInCells - 1;
+
     for (let j=0; j<heightInCells; j++) {
-      const line = this.#getRow(this.#y);
+      const line = this.#getRow(this.#y + j);
 
       imageAddedEvent.line = line;
       this.#onImageAddedEventEmitter.fire(imageAddedEvent);
 
-      for (let i=0; i<widthInCells; i++) {
-        line.setImageIDXY(i, currentID, i, j);
+      for (let i=0; i<maxX; i++) {
+        line.setImageIDXY(i + cursorX, currentID, i, j);
       }
       this.#markRowForRefresh(this.#y);
       if (this.#y+1 > this.#scrollBottom) {
         this.#scroll();
-      } else {
-        this.#setCursorY(this.#y+1);
       }
+    }
+
+    if (cursorX + widthInCells >= this.#cols) {
+      this.#scroll();
+      this.#setCursorY(endY + 1);
+      this.#x = 0;
+    } else {
+      this.#x = cursorX + widthInCells;
+      this.#setCursorY(endY);
     }
   }
 
