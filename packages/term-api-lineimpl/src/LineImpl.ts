@@ -6,6 +6,7 @@ import { Line, Layer } from "term-api";
 import { PairKeyMap } from "extraterm-data-structures";
 import { isWide, utf16LengthOfCodePoint } from "extraterm-unicode-utilities";
 import { CharCellLine, Cell } from "extraterm-char-cell-line";
+import { EmbeddedImageMap } from "extraterm-char-render-canvas";
 
 export interface CellWithHyperlink extends Cell {
   hyperlinkID: string;
@@ -32,6 +33,8 @@ export class LineImpl extends CharCellLine implements Line {
   _hyperlinkURLToIDMapping: PairKeyMap<string, string, number> = null;
   #cachedString: string = null;
   layers: Layer[] = [];
+
+  embeddedImageMap: EmbeddedImageMap = null;
 
   constructor(width: number, palette: number[]=null, clearCodePoint=32, __bare__=false) {
     super(width, palette, clearCodePoint, __bare__);

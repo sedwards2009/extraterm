@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -8,7 +8,8 @@ import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseBut
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { TextureFontAtlas, RGBAToQColor, FontSlice, CursorStyle, MonospaceFontMetrics,
-  CellPainter } from "extraterm-char-render-canvas";
+  CellPainter,
+  EmbeddedImage} from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-line";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -67,7 +68,6 @@ export class TerminalBlock implements Block {
   #heightPx = 1;
   #fontMetrics: MonospaceFontMetrics = null;
   #extraFontMetrics: MonospaceFontMetrics[] = [];
-  #terminalEmbeddedImages: TerminalEmbeddedImages = null;
 
   #scrollback: Line[] = [];
 
@@ -97,10 +97,9 @@ export class TerminalBlock implements Block {
   #returnCode: number = null;
   #commandLine: string = null;
 
-  constructor(fontAtlasCache: FontAtlasCache, terminalEmbeddedImages: TerminalEmbeddedImages) {
+  constructor(fontAtlasCache: FontAtlasCache) {
     this._log = getLogger("TerminalBlock", this);
     this.#fontAtlasCache = fontAtlasCache;
-    this.#terminalEmbeddedImages = terminalEmbeddedImages;
 
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
@@ -159,10 +158,6 @@ export class TerminalBlock implements Block {
 
   getEmulator(): Term.Emulator {
     return this.#emulator;
-  }
-
-  getTerminalEmbeddedImages(): TerminalEmbeddedImages {
-    return this.#terminalEmbeddedImages;
   }
 
   hasSelection(): boolean {
@@ -367,7 +362,11 @@ export class TerminalBlock implements Block {
   }
 
   #handleImageAddedEvent(event: ImageAddedEvent): void {
-    this.#terminalEmbeddedImages.getMap().set(event.id, {image: event.image});
+    const line = <LineImpl> event.line;
+    if (line.embeddedImageMap == null) {
+      line.embeddedImageMap = new Map<number, EmbeddedImage>();
+    }
+    line.embeddedImageMap.set(event.id, {image: event.image});
   }
 
   #stompSelection(startRow: number, endRow: number): void {
@@ -589,7 +588,7 @@ export class TerminalBlock implements Block {
       hoverLinkID = line.getLinkIDByURL(this.#hoveredURL, this.#hoveredGroup);
     }
 
-    cellPainter.renderLine(line, y, renderCursor, this.#terminalEmbeddedImages.getMap(), hoverLinkID);
+    cellPainter.renderLine(line, y, renderCursor, (<LineImpl> line).embeddedImageMap, hoverLinkID);
   }
 
   getCursorGeometry(): QRect | null {

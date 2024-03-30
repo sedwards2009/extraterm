@@ -497,10 +497,8 @@ export class Terminal implements Tab, Disposable {
     });
   }
 
-  #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator,
-      terminalEmbeddedImages: TerminalEmbeddedImages): TerminalBlock {
-
-    const terminalBlock = new TerminalBlock(this.#fontAtlasCache, terminalEmbeddedImages);
+  #createTerminalBlock(frame: BlockFrame, emulator: Term.Emulator): TerminalBlock {
+    const terminalBlock = new TerminalBlock(this.#fontAtlasCache);
     if (emulator != null) {
       terminalBlock.setEmulator(emulator);
     }
@@ -544,8 +542,7 @@ export class Terminal implements Tab, Disposable {
 
   #createSpacerFramedTerminalBlock(): SpacerFrame {
     const spacerFrame = new SpacerFrame(this.#uiStyle);
-    const terminalBlock = this.#createTerminalBlock(spacerFrame, this.#emulator,
-      new TerminalEmbeddedImages());
+    const terminalBlock = this.#createTerminalBlock(spacerFrame, this.#emulator);
     spacerFrame.setBlock(terminalBlock);
     return spacerFrame;
   }
@@ -1392,8 +1389,7 @@ export class Terminal implements Tab, Disposable {
 
       const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
 
-      const terminalEmbeddedImages = terminalBlock.getTerminalEmbeddedImages().clone();
-      const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null, terminalEmbeddedImages);
+      const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null);
       decoratedFrame.setBlock(newTerminalBlock);
 
       const scrollbackLines = terminalBlock.takeScrollbackFrom(this.#frameStartBookmark.row);

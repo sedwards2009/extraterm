@@ -358,7 +358,7 @@ export class AppearancePage implements SettingsPageType {
       clearTimeout: this.#qtTimeout.clearTimeout.bind(this.#qtTimeout),
     });
 
-    this.#previewTerminalBlock = new TerminalBlock(this.#fontAtlasCache, new TerminalEmbeddedImages());
+    this.#previewTerminalBlock = new TerminalBlock(this.#fontAtlasCache);
     if (this.#terminalVisualConfig != null) {
       this.#previewTerminalBlock.setTerminalVisualConfig(this.#terminalVisualConfig);
     }

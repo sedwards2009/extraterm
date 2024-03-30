@@ -111,6 +111,7 @@ export interface WriteBufferSizeEvent {
 export interface ImageAddedEvent {
   id: number;
   image: QImage;
+  line: Line;
 }
 
 export interface MouseEventOptions {

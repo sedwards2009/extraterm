@@ -2126,14 +2126,18 @@ export class Emulator implements EmulatorApi {
     const imageAddedEvent: ImageAddedEvent = {
       id: currentID,
       image: qimage,
+      line: null,
     };
     this.#imageIDCounter++;
-    this.#onImageAddedEventEmitter.fire(imageAddedEvent);
 
     for (let j=0; j<heightInCells; j++) {
-      const row = this.#getRow(this.#y);
+      const line = this.#getRow(this.#y);
+
+      imageAddedEvent.line = line;
+      this.#onImageAddedEventEmitter.fire(imageAddedEvent);
+
       for (let i=0; i<widthInCells; i++) {
-        row.setImageIDXY(i, currentID, i, j);
+        line.setImageIDXY(i, currentID, i, j);
       }
       this.#markRowForRefresh(this.#y);
       if (this.#y+1 > this.#scrollBottom) {
