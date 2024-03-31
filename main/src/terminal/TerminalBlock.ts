@@ -365,8 +365,36 @@ export class TerminalBlock implements Block {
     const line = <LineImpl> event.line;
     if (line.embeddedImageMap == null) {
       line.embeddedImageMap = new Map<number, EmbeddedImage>();
+    } else {
+      this.#garbageCollectLineImages(line);
+      // Note: Ideally this would happen *after* the line is updated with the
+      // new image. So we might be hanging onto images longer than strictly
+      // necessary. But in the case of an image being constantly overwritten
+      // (i.e. animation or live updates) this is good enough.
     }
     line.embeddedImageMap.set(event.id, {image: event.image});
+  }
+
+  /**
+   * Identify image IDs in a line which are not used and garbage
+   * collect the images.
+   */
+  #garbageCollectLineImages(line: LineImpl): void {
+    const imageMap = line.embeddedImageMap;
+    const ids = Array.from(imageMap.keys());
+    const cols = line.width;
+    for (const id of ids) {
+      let found = false;
+      for (let x=0; x<cols; x++) {
+        if (line.getImageID(x) === id) {
+          found = true;
+          break;
+        }
+      }
+      if (! found) {
+        imageMap.delete(id);
+      }
+    }
   }
 
   #stompSelection(startRow: number, endRow: number): void {
