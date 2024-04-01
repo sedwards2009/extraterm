@@ -13,7 +13,13 @@ import { FontSlice } from "./FontSlice.js";
 
 
 export interface EmbeddedImage {
+  sourceImage: QImage;
+  sourceCellWidthPx: number
+  sourceCellHeightPx: number;
+
   image: QImage;
+  cellWidthPx: number
+  cellHeightPx: number;
 }
 
 export type EmbeddedImageMap = Map<number, EmbeddedImage>;

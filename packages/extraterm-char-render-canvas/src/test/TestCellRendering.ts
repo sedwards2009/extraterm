@@ -68,7 +68,13 @@ function main(): void {
 
   const embeddedImageMap: EmbeddedImageMap = new Map<number, EmbeddedImage>();
   embeddedImageMap.set(1, {
-    image: simeImage
+    sourceImage: simeImage,
+    sourceCellWidthPx: metrics.widthPx,
+    sourceCellHeightPx: metrics.heightPx,
+
+    image: simeImage,
+    cellWidthPx: metrics.widthPx,
+    cellHeightPx: metrics.heightPx,
   });
 
   for (let i=0; i<GRID_HEIGHT; i++) {
