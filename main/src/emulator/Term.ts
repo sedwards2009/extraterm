@@ -1986,7 +1986,7 @@ export class Emulator implements EmulatorApi {
 
       case ParserState.OSC_ITERM_PAYLOAD:
         if (codePoint === CODEPOINT_BEL) {
-          this.#executeITerm(this.#itermParameters);
+          this._executeITerm(this.#itermParameters);
         } else if (this.#itermParameters.appendPayloadCodePoint(codePoint)) {
           break;
         }
@@ -2094,7 +2094,7 @@ export class Emulator implements EmulatorApi {
     }
   }
 
-  #executeITerm(itermParameters: ITermParameters): void {
+  protected _executeITerm(itermParameters: ITermParameters): void {
     const buffer = itermParameters.getPayload();
     let qimage = new QImage();
     if ( ! qimage.loadFromData(buffer)) {
