@@ -263,9 +263,43 @@ describe.each([
   });
 });
 
-function waitOnEmulator(emulator: Emulator): Promise<void> {
+test("markdown file speed", done => {
+  async function testMarkdownRender(): Promise<void> {
+
+    const document = fs.readFileSync('fixtures/markdown_cheatsheet_vt.txt', 'utf8');
+    const startTime = performance.now();
+
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: () => performance.now()});
+    const device = new RenderDevice();
+    emulator.onRender(device.renderEventHandler.bind(device));
+    let endTime = -1;
+    emulator.onWriteBufferSize((e) => {
+      if (e.status.bufferSize === MAX_WRITE_BUFFER_SIZE) {
+        endTime = performance.now();
+      }
+    });
+    emulator.write(document);
+    emulator.write(document);
+    emulator.write(document);
+    emulator.write(document);
+    emulator.write(document);
+
+    while (endTime === -1) {
+      await sleep(100);
+    }
+
+    const duration = endTime - startTime;
+    console.log(`markdown file speed time: ${duration}ms`);
+
+    done();
+  }
+  testMarkdownRender();
+});
+
+function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
-    setTimeout(resolve, 200);
+    setTimeout(resolve, delayMs);
   });
 }
 
