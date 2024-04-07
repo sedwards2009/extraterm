@@ -1,19 +1,19 @@
 
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import "jest";
-import { LineImpl } from "../LineImpl.js";
+import { TextLineImpl } from "../TextLineImpl.js";
 
 const EXTRATERM_URL = "https://extraterm.org/";
 
 test("pasteGridWithLinks()", () => {
   const GRID_WIDTH = 20;
-  const destGrid = new LineImpl(GRID_WIDTH);
+  const destGrid = new TextLineImpl(GRID_WIDTH);
 
-  const sourceLine = new LineImpl(GRID_WIDTH);
+  const sourceLine = new TextLineImpl(GRID_WIDTH);
   sourceLine.setString(0, "extraterm.org");
   setCellsLink(sourceLine, 0, "extraterm.org".length, EXTRATERM_URL);
 
@@ -31,11 +31,11 @@ test("pasteGridWithLinks()", () => {
 
 test("pasteGridWithLinks() over existing links", () => {
   const GRID_WIDTH = 20;
-  const destGrid = new LineImpl(GRID_WIDTH);
+  const destGrid = new TextLineImpl(GRID_WIDTH);
   destGrid.setString(5, "reddit.com");
   setCellsLink(destGrid, 5, "reddit.com".length, "https://reddit.com/");
 
-  const sourceLine = new LineImpl(GRID_WIDTH);
+  const sourceLine = new TextLineImpl(GRID_WIDTH);
   sourceLine.setString(0, "extraterm.org");
   setCellsLink(sourceLine, 0, "extraterm.org".length, EXTRATERM_URL);
 
@@ -49,11 +49,11 @@ test("pasteGridWithLinks() over existing links", () => {
 
 test("pasteGridWithLinks() over existing links, offset", () => {
   const GRID_WIDTH = 20;
-  const destGrid = new LineImpl(GRID_WIDTH);
+  const destGrid = new TextLineImpl(GRID_WIDTH);
   destGrid.setString(5, "reddit.com");
   setCellsLink(destGrid, 5, "reddit.com".length, "https://reddit.com/");
 
-  const sourceLine = new LineImpl(GRID_WIDTH);
+  const sourceLine = new TextLineImpl(GRID_WIDTH);
   sourceLine.setString(0, "extraterm.org");
   setCellsLink(sourceLine, 0, "extraterm.org".length, EXTRATERM_URL);
 
@@ -72,7 +72,7 @@ test("pasteGridWithLinks() over existing links, offset", () => {
 
 test("LinkID overflow", () => {
   const GRID_WIDTH = 300;
-  const grid = new LineImpl(GRID_WIDTH);
+  const grid = new TextLineImpl(GRID_WIDTH);
 
   grid.setString(0, "E");
   for (let i=0; i < 255; i++) {
@@ -87,13 +87,13 @@ test("LinkID overflow", () => {
 
 test("getString()", () => {
   const contents = "extraterm.org";
-  const grid = new LineImpl(contents.length);
+  const grid = new TextLineImpl(contents.length);
   grid.setString(0, contents);
 
   expect(grid.getString(5)).toBe("term.org");
 });
 
-function setCellsLink(grid: LineImpl, x: number, len: number, url: string): void {
+function setCellsLink(grid: TextLineImpl, x: number, len: number, url: string): void {
   const linkID = grid.getOrCreateLinkIDForURL(url);
   for (let i=0; i<len; i++) {
     grid.setLinkID(x + i, linkID);
@@ -108,7 +108,7 @@ function printHorizontalBorder(width: number): string {
   return "+" + chars.join("") + "+";
 }
 
-function printGrid(grid: LineImpl): void {
+function printGrid(grid: TextLineImpl): void {
   const rows = [];
 
   rows.push(printHorizontalBorder(grid.width));
@@ -121,7 +121,7 @@ function printGrid(grid: LineImpl): void {
   console.log(rows.join("\n"));
 }
 
-function printGridLinkID(grid: LineImpl): void {
+function printGridLinkID(grid: TextLineImpl): void {
   const rows = [];
 
   rows.push(printHorizontalBorder(grid.width * 4));

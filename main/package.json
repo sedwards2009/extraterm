@@ -78,6 +78,8 @@
     "source-map-support": "^0.5.21",
     "term-api": "1.0.0",
     "term-api-lineimpl": "1.0.0",
+    "text-term-api": "1.0.0",
+    "text-term-api-lineimpl": "1.0.0",
     "typescript": "5.2.2",
     "utf8": "2.1.2",
     "webfont": "^11.2.26"

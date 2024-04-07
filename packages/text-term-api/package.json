@@ -1,31 +1,24 @@
 {
-  "name": "term-api-lineimpl",
+  "name": "text-term-api",
   "version": "1.0.0",
-  "description": "Implementation of TermAPI's Line interface",
+  "description": "API of Extraterm's internal xterm.js fork",
   "author": "Simon Edwards",
   "license": "MIT",
   "type": "module",
-  "exports": "./dist/main.js",
-  "types": "./dist/main.d.ts",
+  "exports": "./dist/TextTermApi.js",
+  "types": "./dist/TextTermApi.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "extraterm-char-cell-line": "1.0.0",
-    "extraterm-char-render-canvas": "1.0.0",
-    "extraterm-data-structures": "1.0.0",
-    "extraterm-unicode-utilities": "1.0.0",
-    "term-api": "1.0.0",
-    "text-term-api-lineimpl": "1.0.0"
+    "extraterm-char-cell-line": "1.0.0"
   },
   "devDependencies": {
-    "@types/jest": "27.0.1",
-    "@types/node": "^18.15.3",
     "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
-    "jest": "27.5.1",
+    "extraterm-event-emitter": "1.0.0",
     "shx": "^0.3.2",
     "typescript": "5.2.2"
   },

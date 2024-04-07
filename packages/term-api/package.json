@@ -1,7 +1,7 @@
 {
   "name": "term-api",
   "version": "1.0.0",
-  "description": "API of Extraterm's internal xterm.js fork",
+  "description": "API of Extraterm's internal xterm.js fork with iTerm image support",
   "author": "Simon Edwards",
   "license": "MIT",
   "type": "module",
@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@nodegui/nodegui": "0.66.0",
-    "extraterm-char-cell-line": "1.0.0"
+    "extraterm-char-cell-line": "1.0.0",
+    "text-term-api": "1.0.0"
   },
   "devDependencies": {
     "eslint": "8.53.0",

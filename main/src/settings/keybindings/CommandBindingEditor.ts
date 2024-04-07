@@ -14,8 +14,8 @@ import { KeyRecord } from "./KeyRecord.js";
 import { Category } from "../../extension/ExtensionMetadata.js";
 import { createHtmlIcon } from "../../ui/Icons.js";
 import { TermKeyStroke } from "../../keybindings/KeybindingsManager.js";
-import { Emulator, Platform } from "../../emulator/Term.js";
-
+import { Emulator } from "../../emulator/Term.js";
+import { Platform } from "../../emulator/TextTerm.js";
 
 export class CommandBindingEditor {
   #category: Category;

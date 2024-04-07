@@ -7018,6 +7018,8 @@ __metadata:
     source-map-support: ^0.5.21
     term-api: 1.0.0
     term-api-lineimpl: 1.0.0
+    text-term-api: 1.0.0
+    text-term-api-lineimpl: 1.0.0
     typescript: 5.2.2
     utf8: 2.1.2
     webfont: ^11.2.26
@@ -9987,6 +9989,7 @@ __metadata:
     jest: 27.5.1
     shx: ^0.3.2
     term-api: 1.0.0
+    text-term-api-lineimpl: 1.0.0
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -10002,6 +10005,7 @@ __metadata:
     extraterm-char-cell-line: 1.0.0
     extraterm-event-emitter: 1.0.0
     shx: ^0.3.2
+    text-term-api: 1.0.0
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -10052,6 +10056,39 @@ __metadata:
   checksum: b6937a38c80c7f84d9c11dd75e49d5c44f71d95e810a3250bd1f1797fc7117c57698204adf676b71497acc205d769d65c16ae8fa10afad832ae1322630aef10a
   languageName: node
   linkType: hard
+
+"text-term-api-lineimpl@1.0.0, text-term-api-lineimpl@workspace:packages/text-term-api-lineimpl":
+  version: 0.0.0-use.local
+  resolution: "text-term-api-lineimpl@workspace:packages/text-term-api-lineimpl"
+  dependencies:
+    "@types/jest": 27.0.1
+    "@types/node": ^18.15.3
+    eslint: 8.53.0
+    eslint-config-extraterm: 1.0.0
+    eslint-plugin-unicorn: 42.0.0
+    extraterm-char-cell-line: 1.0.0
+    extraterm-data-structures: 1.0.0
+    extraterm-unicode-utilities: 1.0.0
+    jest: 27.5.1
+    shx: ^0.3.2
+    text-term-api: 1.0.0
+    typescript: 5.2.2
+  languageName: unknown
+  linkType: soft
+
+"text-term-api@1.0.0, text-term-api@workspace:packages/text-term-api":
+  version: 0.0.0-use.local
+  resolution: "text-term-api@workspace:packages/text-term-api"
+  dependencies:
+    eslint: 8.53.0
+    eslint-config-extraterm: 1.0.0
+    eslint-plugin-unicorn: 42.0.0
+    extraterm-char-cell-line: 1.0.0
+    extraterm-event-emitter: 1.0.0
+    shx: ^0.3.2
+    typescript: 5.2.2
+  languageName: unknown
+  linkType: soft
 
 "throat@npm:^4.0.0, throat@npm:^4.1.0":
   version: 4.1.0

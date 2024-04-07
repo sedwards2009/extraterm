@@ -47,6 +47,7 @@ import {
 import { performance } from "node:perf_hooks";
 
 import * as Term from "../emulator/Term.js";
+import * as TextTerm from "../emulator/TextTerm.js";
 import { Tab } from "../Tab.js";
 import { AppendScrollbackLinesDetail, TerminalBlock } from "./TerminalBlock.js";
 import { Pty } from "../pty/Pty.js";
@@ -1042,7 +1043,7 @@ export class Terminal implements Tab, Disposable {
 
   #initEmulator(cookie: string): void {
     const emulator = new Term.Emulator({
-      platform: <Term.Platform> process.platform,
+      platform: <TextTerm.Platform> process.platform,
       applicationModeCookie: cookie,
       debug: true,
       performanceNowFunc: () => performance.now(),

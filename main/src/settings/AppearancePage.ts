@@ -3,7 +3,7 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { AlignmentFlag, Direction, QCheckBox, QComboBox, QLabel, QScrollArea, QSizePolicyPolicy, QWidget, TextFormat } from "@nodegui/nodegui";
+import { Direction, QCheckBox, QComboBox, QLabel, QScrollArea, QSizePolicyPolicy, QWidget, TextFormat } from "@nodegui/nodegui";
 import { default as open } from "open";
 import { BoxLayout, CheckBox, ComboBox, ComboBoxItem, GridLayout, Label, PushButton, ScrollArea, SpinBox,
   Widget } from "qt-construct";
@@ -18,11 +18,11 @@ import { ThemeInfo } from "../theme/Theme.js";
 import { ExtensionManager } from "../InternalTypes.js";
 import { TerminalBlock } from "../terminal/TerminalBlock.js";
 import * as Term from "../emulator/Term.js";
+import * as TextTerm from "../emulator/TextTerm.js";
 import { QtTimeout } from "../utils/QtTimeout.js";
 import { TerminalVisualConfig } from "../terminal/TerminalVisualConfig.js";
 import { FontAtlasCache } from "../terminal/FontAtlasCache.js";
 import { SettingsPageType } from "./SettingsPageType.js";
-import { TerminalEmbeddedImages } from "../terminal/TerminalEmbeddedImages.js";
 
 
 const uiScalePercentOptions: {id: number, name: string}[] = [
@@ -349,7 +349,7 @@ export class AppearancePage implements SettingsPageType {
   #initPreview(): void {
     this.#qtTimeout = new QtTimeout();
     this.#previewEmulator = new Term.Emulator({
-      platform: <Term.Platform> process.platform,
+      platform: <TextTerm.Platform> process.platform,
       applicationModeCookie: "",
       debug: true,
       performanceNowFunc: () => performance.now(),
