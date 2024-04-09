@@ -1,6 +1,6 @@
 {
   "name": "extraterm",
-  "version": "0.76.0",
+  "version": "0.76.1",
   "description": "A terminal",
   "author": "Simon Edwards",
   "license": "MIT",
@@ -15,7 +15,7 @@
     "run-theme-test": "qode main/build/ThemeTestUtility.js",
     "build": "wsrun --concurrency 5 --exclude-missing --stages build",
     "clean": "wsrun --concurrency 1 --exclude-missing --stages clean",
-    "download-launcher-executable": "node build_scripts/download_launcher_executables.mjs v18",
+    "download-launcher-executable": "node build_scripts/download_launcher_executables.mjs v19",
     "download-deploy-tool": "node build_scripts/download_deploy_tool.mjs",
     "download-extraterm-commands": "node build_scripts/download_extraterm-commands.mjs v0.9.4",
     "lint": "wsrun --concurrency 2 --exclude-missing --stages lint",
