@@ -11,11 +11,24 @@ import { AspectRatioMode, QImage, QSize, TransformationMode } from "@nodegui/nod
   */
 export class LineImpl extends TextLineImpl {
 
-  #embeddedImageMap: EmbeddedImageMap = null;
+  _embeddedImageMap: EmbeddedImageMap = null;
+
+  clone(): LineImpl {
+    const newInstance = new LineImpl(this.width, this.palette);
+    this.cloneInto(newInstance);
+    return newInstance;
+  }
+
+  cloneInto(target: LineImpl): void {
+    super.cloneInto(target);
+    if (this._embeddedImageMap != null) {
+      target._embeddedImageMap = new Map(this._embeddedImageMap);
+    }
+  }
 
   addImage(imageId: number, image: QImage, cellWidthPx: number, cellHeightPx: number): void {
-    if (this.#embeddedImageMap == null) {
-      this.#embeddedImageMap = new Map<number, EmbeddedImage>();
+    if (this._embeddedImageMap == null) {
+      this._embeddedImageMap = new Map<number, EmbeddedImage>();
     } else {
       this.#garbageCollectLineImages();
       // Note: Ideally this would happen *after* the line is updated with the
@@ -23,7 +36,7 @@ export class LineImpl extends TextLineImpl {
       // necessary. But in the case of an image being constantly overwritten
       // (i.e. animation or live updates) this is good enough.
     }
-    this.#embeddedImageMap.set(imageId, {
+    this._embeddedImageMap.set(imageId, {
       sourceImage: image,
       sourceCellWidthPx: cellWidthPx,
       sourceCellHeightPx: cellHeightPx,
@@ -38,7 +51,7 @@ export class LineImpl extends TextLineImpl {
    * collect the images.
    */
   #garbageCollectLineImages(): void {
-    const imageMap = this.#embeddedImageMap;
+    const imageMap = this._embeddedImageMap;
     const ids = Array.from(imageMap.keys());
     const cols = this.width;
     for (const id of ids) {
@@ -56,11 +69,11 @@ export class LineImpl extends TextLineImpl {
   }
 
   getEmbeddedImageMap(newCellWidthPx: number, newCellHeightPx: number): EmbeddedImageMap {
-    if (this.#embeddedImageMap == null) {
+    if (this._embeddedImageMap == null) {
       return null;
     }
 
-    for (const [_, imageEntry] of this.#embeddedImageMap) {
+    for (const [_, imageEntry] of this._embeddedImageMap) {
       if (imageEntry.cellWidthPx !== newCellWidthPx || imageEntry.cellHeightPx !== newCellHeightPx) {
         if (imageEntry.sourceCellHeightPx === newCellWidthPx && imageEntry.sourceCellHeightPx === newCellHeightPx) {
           imageEntry.image = imageEntry.sourceImage;
@@ -78,6 +91,6 @@ export class LineImpl extends TextLineImpl {
         imageEntry.cellHeightPx =  newCellHeightPx;
       }
     }
-    return this.#embeddedImageMap;
+    return this._embeddedImageMap;
   }
 }

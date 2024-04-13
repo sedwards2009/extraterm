@@ -136,16 +136,18 @@ export class TextLineImpl extends CharCellLine implements Line {
   }
 
   clone(): Line {
-    const grid = new TextLineImpl(this.width, this.palette);
-    this.cloneInto(grid);
+    const newInstance = new TextLineImpl(this.width, this.palette);
+    this.cloneInto(newInstance);
+    return newInstance;
+  }
 
+  cloneInto(target: TextLineImpl): void {
+    super.cloneInto(target);
     if (this._hyperlinkIDToURLMapping != null) {
-      grid._hyperlinkIDCounter = this._hyperlinkIDCounter;
-      grid._hyperlinkIDToURLMapping = new Map(this._hyperlinkIDToURLMapping);
-      grid._hyperlinkURLToIDMapping = this._hyperlinkURLToIDMapping.copy();
+      target._hyperlinkIDCounter = this._hyperlinkIDCounter;
+      target._hyperlinkIDToURLMapping = new Map(this._hyperlinkIDToURLMapping);
+      target._hyperlinkURLToIDMapping = this._hyperlinkURLToIDMapping.copy();
     }
-
-    return grid;
   }
 
   clear(): void {
