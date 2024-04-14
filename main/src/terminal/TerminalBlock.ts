@@ -8,8 +8,7 @@ import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseBut
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { TextureFontAtlas, RGBAToQColor, FontSlice, CursorStyle, MonospaceFontMetrics,
-  CellPainter,
-  EmbeddedImage} from "extraterm-char-render-canvas";
+  CellPainter } from "extraterm-char-render-canvas";
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-line";
 import { Color } from "extraterm-color-utilities";
 import { EventEmitter } from "extraterm-event-emitter";
@@ -25,7 +24,6 @@ import { ConfigCursorStyle } from "../config/Config.js";
 import { FontAtlasCache } from "./FontAtlasCache.js";
 import { BlobBulkFile } from "../bulk_file_handling/BlobBulkFile.js";
 import { BulkFile } from "../bulk_file_handling/BulkFile.js";
-import { TerminalEmbeddedImages } from "./TerminalEmbeddedImages.js";
 
 
 enum SelectionMode {

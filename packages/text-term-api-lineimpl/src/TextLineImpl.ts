@@ -9,7 +9,6 @@ import { CharCellLine, Cell } from "extraterm-char-cell-line";
 
 
 export interface CellWithHyperlink extends Cell {
-  hyperlinkID: string;
   hyperlinkURL: string;
 }
 
@@ -125,14 +124,14 @@ export class TextLineImpl extends CharCellLine implements Line {
 
   getCellAndLink(x: number, y: number): CellWithHyperlink {
     const cellAttrs = this.getCell(x);
-    let hyperlinkURLGroupPair: URLGroupPair = null;
-    const hyperlinkID: string = null; // FIXME needed??
 
+    let hyperlinkURL: string = null;
     if (cellAttrs.linkID !== 0) {
-      hyperlinkURLGroupPair = this._hyperlinkIDToURLMapping.get(cellAttrs.linkID);
+      const pair = this._hyperlinkIDToURLMapping.get(cellAttrs.linkID);
+      hyperlinkURL = pair.url;
     }
 
-    return {hyperlinkURL: hyperlinkURLGroupPair.url, hyperlinkID, ...cellAttrs};
+    return {hyperlinkURL: hyperlinkURL, ...cellAttrs};
   }
 
   clone(): Line {
