@@ -1057,8 +1057,10 @@ export class TextEmulator implements TextEmulatorApi {
         highSurrogate = ((codePoint & 0x03FF) << 10) + 0x10000;
         continue;
       }
-      codePoint = (codePoint & 0x03FF) | highSurrogate;
-      highSurrogate = 0;
+      if (highSurrogate !== 0) {
+        codePoint = (codePoint & 0x03FF) | highSurrogate;
+        highSurrogate = 0;
+      }
 
       switch (this.#state) {
         case ParserState.NORMAL:

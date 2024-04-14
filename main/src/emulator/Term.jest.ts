@@ -142,6 +142,25 @@ describe.each([
   });
 });
 
+test(`16bit code points`, done => {
+  async function testSurrogateHandling(): Promise<void> {
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: () => performance.now()});
+    const device = new RenderDevice();
+    emulator.onRender(device.renderEventHandler.bind(device));
+
+    const data = "───";
+    emulator.write(data);
+    await waitOnEmulator(emulator);
+
+    const row = emulator.lineAtRow(0);
+    expect(row.getCodePoint(0)).toBe(9472);
+
+    done();
+  }
+  testSurrogateHandling();
+});
+
 test("Move rows above cursor to scrollback", done => {
   async function testMoveRowsAboveCursorToScrollback(): Promise<void> {
     const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
