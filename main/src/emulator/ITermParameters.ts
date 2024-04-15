@@ -48,7 +48,6 @@ export class ITermParameters {
 
         case "size":
           const expectedPayloadLength = Number.parseInt(parts[1], 10);
-          this._log.info(`expectedPayloadLength: ${expectedPayloadLength}`);
           if (isNaN(expectedPayloadLength) || expectedPayloadLength < 0 || expectedPayloadLength > MAX_FILE_SIZE) {
             this._log.warn(`Invalid 'size' parameter given. Received '${parts[1]}'`);
             this.#expectedPayloadLength = -1;

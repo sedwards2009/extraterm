@@ -108,6 +108,7 @@ enum ParserState {
   OSC_CODE,
   OSC_ITERM_PARMS,
   OSC_ITERM_PAYLOAD,
+  OSC_ITERM_PAYLOAD_ESC,
   OSC_PARAMS,
   CHARSET,
   DCS_START,
@@ -192,7 +193,7 @@ const CODEPOINT_W = 0x57;
 const CODEPOINT_X = 0x58;
 const CODEPOINT_Y = 0x59;
 const CODEPOINT_Z = 0x5a;
-
+const CODEPOINT_BACKSLASH = 0x5c;
 const CODEPOINT_CIRCUMFLEX = 0x5e;
 const CODEPOINT_LOW_LINE = 0x5f;
 
@@ -1174,6 +1175,7 @@ export class TextEmulator implements TextEmulatorApi {
         case ParserState.OSC_CODE:
         case ParserState.OSC_ITERM_PARMS:
         case ParserState.OSC_ITERM_PAYLOAD:
+        case ParserState.OSC_ITERM_PAYLOAD_ESC:
         case ParserState.OSC_PARAMS:
           i = this.#processDataOSC(codePoint, i);
           break;
@@ -1978,12 +1980,27 @@ export class TextEmulator implements TextEmulatorApi {
         break;
 
       case ParserState.OSC_ITERM_PAYLOAD:
-        if (codePoint === CODEPOINT_BEL) {
-          this._executeITerm(this.#itermParameters);
-        } else if (this.#itermParameters.appendPayloadCodePoint(codePoint)) {
+        if (codePoint === CODEPOINT_ESC) {
+          this.#state = ParserState.OSC_ITERM_PAYLOAD_ESC;
+          break;
+        }
+        if (this.#itermParameters.appendPayloadCodePoint(codePoint)) {
           break;
         }
 
+        if (codePoint === CODEPOINT_BEL) {
+          this._executeITerm(this.#itermParameters);
+        }
+
+        this.#itermParameters = null;
+        this.#params.reset();
+        this.#state = ParserState.NORMAL;
+        break;
+
+      case ParserState.OSC_ITERM_PAYLOAD_ESC:
+        if (codePoint === CODEPOINT_BACKSLASH) {
+          this._executeITerm(this.#itermParameters);
+        }
         this.#itermParameters = null;
         this.#params.reset();
         this.#state = ParserState.NORMAL;
