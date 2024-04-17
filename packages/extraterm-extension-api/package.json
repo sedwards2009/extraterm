@@ -34,6 +34,6 @@
     "typescript": "5.2.2"
   },
   "peerDependencies": {
-    "@nodegui/nodegui": "0.65.0"
+    "@nodegui/nodegui": "0.66.0"
   }
 }

@@ -1,23 +1,24 @@
 {
-  "name": "extraterm-timeoutqt",
+  "name": "text-term-api",
   "version": "1.0.0",
-  "description": "Timeout oriented utilities based on Qt event loop.",
+  "description": "API of Extraterm's internal xterm.js fork",
   "author": "Simon Edwards",
   "license": "MIT",
   "type": "module",
-  "exports": "./dist/Main.js",
-  "types": "./dist/Main.d.ts",
+  "exports": "./dist/TextTermApi.js",
+  "types": "./dist/TextTermApi.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.66.0"
+    "extraterm-char-cell-line": "1.0.0"
   },
   "devDependencies": {
     "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
+    "extraterm-event-emitter": "1.0.0",
     "shx": "^0.3.2",
     "typescript": "5.2.2"
   },
@@ -26,7 +27,6 @@
     "build-fast": "tsc",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
-    "run": "false"
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   }
 }

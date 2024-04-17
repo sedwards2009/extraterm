@@ -15,6 +15,10 @@ export interface NormalizedCell {
   isLigature: boolean;
   ligatureCodePoints: number[];
   linkID: number;
+
+  imageID: number;
+  imageX: number;
+  imageY: number;
 }
 
 /**
@@ -35,6 +39,10 @@ export function* normalizedCellIterator(cellGrid: CharCellLine, result: Normaliz
 
     const widthChars = ((flags & FLAG_MASK_WIDTH) >> FLAG_WIDTH_SHIFT) + 1;
     const isLigature = flags & FLAG_MASK_LIGATURE;
+
+    result.imageID = cellGrid.getImageID(x);
+    result.imageX = cellGrid.getImageX(x);
+    result.imageY = cellGrid.getImageY(x);
 
     if (isLigature) {
       // Ligature case

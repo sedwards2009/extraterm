@@ -47,6 +47,7 @@ import {
 import { performance } from "node:perf_hooks";
 
 import * as Term from "../emulator/Term.js";
+import * as TextTerm from "../emulator/TextTerm.js";
 import { Tab } from "../Tab.js";
 import { AppendScrollbackLinesDetail, TerminalBlock } from "./TerminalBlock.js";
 import { Pty } from "../pty/Pty.js";
@@ -78,6 +79,7 @@ import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
 import { Block } from "./Block.js";
 import { QEvent } from "@nodegui/nodegui/dist/lib/QtGui/QEvent/QEvent.js";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState.js";
+import { TerminalEmbeddedImages } from "./TerminalEmbeddedImages.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -679,7 +681,7 @@ export class Terminal implements Tab, Disposable {
       this.#pty.resize(columns, rows);
     }
 
-    this.#emulator.resize({rows, columns});
+    this.#emulator.resize({rows, columns, cellWidthPixels: size.cellWidthPx, cellHeightPixels: size.cellHeightPx});
 
     const heightPx = size.rows * size.cellHeightPx;
     const widthPx = size.columns * size.cellWidthPx;
@@ -1041,7 +1043,7 @@ export class Terminal implements Tab, Disposable {
 
   #initEmulator(cookie: string): void {
     const emulator = new Term.Emulator({
-      platform: <Term.Platform> process.platform,
+      platform: <TextTerm.Platform> process.platform,
       applicationModeCookie: cookie,
       debug: true,
       performanceNowFunc: () => performance.now(),
@@ -1387,6 +1389,7 @@ export class Terminal implements Tab, Disposable {
       this.#disconnectLastTerminalFrameFromEmulator();
 
       const decoratedFrame = new DecoratedFrame(this.#uiStyle, this.#nextTag());
+
       const newTerminalBlock = this.#createTerminalBlock(decoratedFrame, null);
       decoratedFrame.setBlock(newTerminalBlock);
 

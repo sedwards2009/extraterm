@@ -10,7 +10,7 @@ import {
   Modifier,
   Key,
 } from "@nodegui/nodegui";
-import { Platform } from "../emulator/Term";
+import { Platform } from "../emulator/TextTerm";
 
 
 export function qKeyEventToMinimalKeyboardEvent(event: QKeyEvent): MinimalKeyboardEvent {

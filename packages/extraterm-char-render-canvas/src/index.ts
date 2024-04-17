@@ -10,3 +10,4 @@ export { TextureFontAtlas, TextureCachedGlyph } from "./font_atlas/TextureFontAt
 export { xtermPalette,  } from "./XTermPalette.js";
 export { NormalizedCell, normalizedCellIterator } from "./NormalizedCellIterator.js";
 export { RGBAToQColor } from "./RGBAToQColor.js";
+export { EmbeddedImage, EmbeddedImageMap, CellPainter } from "./CellPainter.js";

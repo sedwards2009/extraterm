@@ -1,23 +1,29 @@
 {
-  "name": "extraterm-timeoutqt",
+  "name": "text-term-api-lineimpl",
   "version": "1.0.0",
-  "description": "Timeout oriented utilities based on Qt event loop.",
+  "description": "Implementation of TermAPI's Line interface",
   "author": "Simon Edwards",
   "license": "MIT",
   "type": "module",
-  "exports": "./dist/Main.js",
-  "types": "./dist/Main.d.ts",
+  "exports": "./dist/main.js",
+  "types": "./dist/main.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/sedwards2009/extraterm.git"
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.66.0"
+    "extraterm-char-cell-line": "1.0.0",
+    "extraterm-data-structures": "1.0.0",
+    "extraterm-unicode-utilities": "1.0.0",
+    "text-term-api": "1.0.0"
   },
   "devDependencies": {
+    "@types/jest": "27.0.1",
+    "@types/node": "^18.15.3",
     "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
+    "jest": "27.5.1",
     "shx": "^0.3.2",
     "typescript": "5.2.2"
   },
@@ -27,6 +33,6 @@
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
-    "run": "false"
+    "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
   }
 }

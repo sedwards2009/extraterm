@@ -1,17 +1,18 @@
 /*
- * Copyright 2017 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { performance } from "node:perf_hooks";
-import {Emulator, Platform} from "./Term.js";
-import {RenderEvent, Line, MinimalKeyboardEvent, DataEvent} from "term-api";
+import {TextEmulator, MAX_WRITE_BUFFER_SIZE, Platform} from "./TextTerm.js";
+import {RenderEvent, Line, MinimalKeyboardEvent, DataEvent} from "text-term-api";
 import { STYLE_MASK_CURSOR } from "extraterm-char-cell-line";
+import fs from "node:fs";
 
 
 test("basic", done => {
   async function testBasic(): Promise<void> {
-    const emulator = new Emulator({platform: <Platform> process.platform,
+    const emulator = new TextEmulator({platform: <Platform> process.platform,
       performanceNowFunc: () => performance.now()});
     emulator.write('Hello');
 
@@ -26,7 +27,7 @@ test("basic", done => {
 
 test("wrap", done => {
   async function testWrap(): Promise<void> {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: () => performance.now()});
     emulator.write('abcdefghijklmnopqrstuvwxyz');
 
@@ -41,7 +42,7 @@ test("wrap", done => {
 
 test("scroll one", done => {
   async function testScrollOne(): Promise<void> {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: () => performance.now()});
 
     emulator.write('1\n');
@@ -66,7 +67,7 @@ test("scroll one", done => {
 
 test("render device", done => {
   async function testRenderDevice(): Promise<void> {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: () => performance.now()});
     const device = new RenderDevice();
     emulator.onRender(device.renderEventHandler.bind(device));
@@ -92,7 +93,7 @@ test("render device", done => {
 
 test("move cursor", done => {
   async function testMoveCursor(): Promise<void> {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: () => performance.now()});
     const device = new RenderDevice();
     emulator.onRender(device.renderEventHandler.bind(device));
@@ -115,9 +116,54 @@ test("move cursor", done => {
   testMoveCursor();
 });
 
+describe.each([
+  ["One write", ['\uD801\uDC37\r\n']],
+  ["Split write", ['\uD801', '\uDC37\r\n']]
+])("UTF-16 surrogate handling", (name, dataList) => {
+
+  test(`UTF-16 surrogate handling: ${name}`, done => {
+    async function testSurrogateHandling(): Promise<void> {
+      const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+        performanceNowFunc: () => performance.now()});
+      const device = new RenderDevice();
+      emulator.onRender(device.renderEventHandler.bind(device));
+
+      for (const data of dataList) {
+        emulator.write(data);
+      }
+      await waitOnEmulator(emulator);
+
+      const row = emulator.lineAtRow(0);
+      expect(row.getCodePoint(0)).toBe(0x10437);
+      expect(lineToString(row).trim()).toBe('\uD801\uDC37');
+      done();
+    }
+    testSurrogateHandling();
+  });
+});
+
+test(`16bit code points`, done => {
+  async function testSurrogateHandling(): Promise<void> {
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: () => performance.now()});
+    const device = new RenderDevice();
+    emulator.onRender(device.renderEventHandler.bind(device));
+
+    const data = "───";
+    emulator.write(data);
+    await waitOnEmulator(emulator);
+
+    const row = emulator.lineAtRow(0);
+    expect(row.getCodePoint(0)).toBe(9472);
+
+    done();
+  }
+  testSurrogateHandling();
+});
+
 test("Move rows above cursor to scrollback", done => {
   async function testMoveRowsAboveCursorToScrollback(): Promise<void> {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: () => performance.now()});
     const device = new RenderDevice();
     emulator.onRender(device.renderEventHandler.bind(device));
@@ -151,12 +197,31 @@ test("Move rows above cursor to scrollback", done => {
   testMoveRowsAboveCursorToScrollback();
 });
 
+test("hyperlink", done => {
+  async function testHyperlink(): Promise<void> {
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: () => performance.now()});
+    const device = new RenderDevice();
+    emulator.onRender(device.renderEventHandler.bind(device));
+    emulator.write('\x1b]8;;https://extraterm.org\x07Extraterm\r\n');
+    await waitOnEmulator(emulator);
+
+    const row = emulator.lineAtRow(0);
+    expect(lineToString(row).trim()).toBe('Extraterm');
+    expect(row.getCell(0).linkID).not.toBe(0);
+    expect(row.getAllLinkIDs("").length).toBe(1);
+
+    done();
+  }
+  testHyperlink();
+});
+
 describe.each([
   [{key: "a", altKey: false, ctrlKey: false, isComposing: false, metaKey: false, shiftKey: false}, "a"],
 ])("Keyboard input keyPress()", (ev: MinimalKeyboardEvent, output: string) => {
 
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: () => performance.now()});
     let collectedData = "";
     emulator.onData( (event: DataEvent): void => {
@@ -203,7 +268,7 @@ describe.each([
 ])("Keyboard input keyDown()", (ev: MinimalKeyboardEvent, output: string) => {
 
   test(`${JSON.stringify(ev)} => ${JSON.stringify(output)}`, done => {
-    const emulator = new Emulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
       performanceNowFunc: () => performance.now() });
     let collectedData = "";
     emulator.onData( (event: DataEvent): void => {
@@ -217,13 +282,63 @@ describe.each([
   });
 });
 
-function waitOnEmulator(emulator: Emulator): Promise<void> {
+test("markdown file speed", done => {
+  async function testMarkdownRender(): Promise<void> {
+
+    const document = fs.readFileSync('fixtures/markdown_cheatsheet_vt.txt', 'utf8');
+    const startTime = performance.now();
+
+    const emulator = new TextEmulator({platform: <Platform> process.platform, rows: 10, columns: 20,
+      performanceNowFunc: () => performance.now()});
+    const device = new RenderDevice();
+    emulator.onRender(device.renderEventHandler.bind(device));
+    let endTime = -1;
+    emulator.onWriteBufferSize((e) => {
+      if (e.status.bufferSize === MAX_WRITE_BUFFER_SIZE) {
+        endTime = performance.now();
+      }
+    });
+    emulator.write(document);
+    emulator.write(document);
+    emulator.write(document);
+    emulator.write(document);
+    emulator.write(document);
+
+    while (endTime === -1) {
+      await sleep(100);
+    }
+
+    const duration = endTime - startTime;
+    console.log(`markdown file speed time: ${duration}ms`);
+
+    done();
+  }
+  testMarkdownRender();
+});
+
+function sleep(delayMs: number): Promise<void> {
   return new Promise((resolve) => {
-    setTimeout(resolve, 200);
+    setTimeout(resolve, delayMs);
   });
 }
 
-function readEmulatorScreenString(emulator: Emulator): string {
+async function waitOnEmulator(emulator: TextEmulator): Promise<void> {
+  let done = false;
+  if (emulator.getWriteBufferStatus().bufferSize === MAX_WRITE_BUFFER_SIZE) {
+    return;
+  }
+  emulator.onWriteBufferSize((e) => {
+    if (e.status.bufferSize === MAX_WRITE_BUFFER_SIZE) {
+      done = true;
+    }
+  });
+
+  while (! done) {
+    await sleep(100);
+  }
+}
+
+function readEmulatorScreenString(emulator: TextEmulator): string {
   let result = lineToString(emulator.lineAtRow(0));
   let row = 1;
 

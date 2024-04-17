@@ -16,7 +16,7 @@
     "test": "yarn run build-code && yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.65.0",
+    "@nodegui/nodegui": "0.66.0",
     "nodegui-plugin-font-icon": "0.3.1",
     "nodegui-plugin-qads": "^0.15.0",
     "nodegui-plugin-qhotkey": "^0.1.1",
@@ -78,6 +78,8 @@
     "source-map-support": "^0.5.21",
     "term-api": "1.0.0",
     "term-api-lineimpl": "1.0.0",
+    "text-term-api": "1.0.0",
+    "text-term-api-lineimpl": "1.0.0",
     "typescript": "5.2.2",
     "utf8": "2.1.2",
     "webfont": "^11.2.26"

@@ -13,9 +13,11 @@
   },
   "dependencies": {
     "extraterm-char-cell-line": "1.0.0",
+    "extraterm-char-render-canvas": "1.0.0",
     "extraterm-data-structures": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0",
-    "term-api": "1.0.0"
+    "term-api": "1.0.0",
+    "text-term-api-lineimpl": "1.0.0"
   },
   "devDependencies": {
     "@types/jest": "27.0.1",
@@ -32,7 +34,6 @@
     "build-fast": "tsc",
     "clean": "shx rm -rf dist",
     "lint": "eslint \"src/**/*.ts\"",
-    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
-    "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   }
 }
