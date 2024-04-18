@@ -58,12 +58,12 @@ export class UnixPty implements Pty {
 
     this.#realPty = pty.spawn(options.exe, options.args, options);
 
-    this.#realPty.on("data", (data: any): void => {
+    this.#realPty.onData((data: any): void => {
       this.#onDataEventEmitter.fire(data);
       this.permittedDataSize(this.#permittedDataSize - data.length);
     });
 
-    this.#realPty.on("exit", (exitCode: number, signal: number) => {
+    this.#realPty.onExit(({exitCode, signal}) => {
       if (exitCode !== 0) {
         this.#state = PtyState.WAIT_EXIT_CONFIRM;
         this.#onDataEventEmitter.fire(`\n\n[Process exited with code ${exitCode}. Press Enter to close this terminal.]`);

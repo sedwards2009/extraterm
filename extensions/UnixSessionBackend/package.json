@@ -15,7 +15,7 @@
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
   "dependencies": {
-    "node-pty": "0.11.0-beta23"
+    "node-pty": "1.0.0"
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",

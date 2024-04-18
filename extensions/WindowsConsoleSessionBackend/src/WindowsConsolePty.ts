@@ -54,12 +54,12 @@ export class WindowsConsolePty implements Pty {
 
     this.realPty = pty.spawn(options.exe, options.args, options);
 
-    this.realPty.on("data", (data: any): void => {
+    this.realPty.onData((data: any): void => {
       this._onDataEventEmitter.fire(data);
       this.permittedDataSize(this._permittedDataSize - data.length);
     });
 
-    this.realPty.on("exit", (exitCode: number, signal: number) => {
+    this.realPty.onExit(({exitCode, signal}) => {
       if (exitCode !== 0) {
         this._state = PtyState.WAIT_EXIT_CONFIRM;
         this._onDataEventEmitter.fire(`\n\n[Process exited with code ${exitCode}. Press Enter to close this terminal.]`);
