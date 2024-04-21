@@ -286,6 +286,8 @@ export interface Options {
   performanceNowFunc?: () => number;
   setTimeout?: (func: () => void, delayMs: number) => any;
   clearTimeout?: (timerId: any) => void;
+  termProgram?: string;
+  termVersion?: string;
 };
 
 type CharSet = Map<number, number>;
@@ -311,6 +313,9 @@ export class TextEmulator implements TextEmulatorApi {
   protected _rows = 24;
   protected _cellWidthPixels = 8;
   protected _cellHeightPixels = 8;
+
+  #termProgram: string;
+  #termVersion: string;
 
   #state = ParserState.NORMAL;
 
@@ -478,9 +483,12 @@ export class TextEmulator implements TextEmulatorApi {
 
   constructor(options: Options) {
     this._log = getLogger("TextEmulator", this);
-    this._rows = options.rows === undefined ? 24 : options.rows;
-    this._cols = options.columns === undefined ? 80 : options.columns;
-    this.debug = options.debug === undefined ? false : options.debug;
+    this._rows = options.rows ?? 24;
+    this._cols = options.columns ?? 80;
+    this.debug = options.debug ?? false;
+    this.#termProgram = options.termProgram ?? "";
+    this.#termVersion = options.termVersion ?? "";
+
     this.#applicationModeCookie = options.applicationModeCookie === undefined ? null : options.applicationModeCookie;
     if (options.performanceNowFunc == null) {
       this.#performanceNow = window.performance.now.bind(window.performance);
@@ -1461,6 +1469,20 @@ export class TextEmulator implements TextEmulatorApi {
       // CSI ? Pm l
       case CODEPOINT_SMALL_L:
         this.#resetMode(params);
+        break;
+
+      // CSI Ps " q
+      // DECSCA Select Character Protection Attribute
+
+      // CSI Ps SP q
+      // DECSCUSR—Set Cursor Style
+
+      // CSI > q
+      // Query terminal name and version
+      case CODEPOINT_SMALL_Q:
+        if (params.getPrefixString() === '>') {
+          this.#send(`>|${this.#termProgram} ${this.#termVersion}\x1b\\`);
+        }
         break;
 
       // CSI Ps ; Ps r

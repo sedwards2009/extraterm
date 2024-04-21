@@ -157,6 +157,7 @@ export class Terminal implements Tab, Disposable {
   #keybindingsIOManager: KeybindingsIOManager = null;
   #extensionManager: ExtensionManager = null;
   #fontAtlasCache: FontAtlasCache = null;
+  #applicationVersion: string = null;
   #parent: any = null;
 
   #blockState = BlockState.START;
@@ -286,7 +287,7 @@ export class Terminal implements Tab, Disposable {
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,
       keybindingsIOManager: KeybindingsIOManager, fontAtlasCache: FontAtlasCache, nextTag: () => number,
-      frameFinder: FrameFinder, bulkFileStorage: BulkFileStorage) {
+      frameFinder: FrameFinder, bulkFileStorage: BulkFileStorage, applicationVersion: string) {
 
     this._log = getLogger("Terminal", this);
 
@@ -309,6 +310,7 @@ export class Terminal implements Tab, Disposable {
     this.#nextTag = nextTag;
     this.#frameFinder = frameFinder;
     this.#bulkFileStorage = bulkFileStorage;
+    this.#applicationVersion = applicationVersion;
 
     this.onDispose = this.#onDisposeEventEmitter.event;
     this.#cookie = crypto.randomBytes(10).toString("hex");
@@ -1050,6 +1052,9 @@ export class Terminal implements Tab, Disposable {
 
       setTimeout: this.#qtTimeout.setTimeout.bind(this.#qtTimeout),
       clearTimeout: this.#qtTimeout.clearTimeout.bind(this.#qtTimeout),
+
+      termProgram: "Extraterm",
+      termVersion: this.#applicationVersion
     });
 
     emulator.debug = true;

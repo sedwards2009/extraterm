@@ -83,6 +83,7 @@ class Main {
   #uiStyle: UiStyle = null;
   #fontAtlasCache: FontAtlasCache = null;
   #bulkFileStorage: BulkFileStorage = null;
+  #applicationVersion: string = null;
 
   #settingsTab: SettingsTab = null;
 
@@ -121,7 +122,8 @@ class Main {
 
     // We have to start up the extension manager before we can scan themes (with the help of extensions)
     // and properly sanitize the config.
-    const extensionManager = await this.setupExtensionManager(configDatabase, this.#themeManager, packageJson.version);
+    this.#applicationVersion = packageJson.version;
+    const extensionManager = await this.setupExtensionManager(configDatabase, this.#themeManager, this.#applicationVersion);
     this.#extensionManager = extensionManager;
     this.#themeManager.init(this.#extensionManager);
 
@@ -561,7 +563,7 @@ class Main {
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
-      this.#bulkFileStorage);
+      this.#bulkFileStorage, this.#applicationVersion);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
@@ -887,7 +889,7 @@ class Main {
 
     const newTerminal = new Terminal(this.#configDatabase, this.#uiStyle, this.#extensionManager,
       this.#keybindingsManager, this.#fontAtlasCache, this.#nextTag.bind(this), this.#frameFinder.bind(this),
-      this.#bulkFileStorage);
+      this.#bulkFileStorage, this.#applicationVersion);
     newTerminal.onSelectionChanged(() => {
       this.#handleTerminalSelectionChanged(newTerminal);
     });
