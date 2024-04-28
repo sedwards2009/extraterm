@@ -1954,6 +1954,9 @@ export class TextEmulator implements TextEmulatorApi {
     // OSC Ps ; Pt BEL
     //   Set Text Parameters.
     const isTerminator = codePoint === CODEPOINT_BEL || codePoint === CODEPOINT_ESC;
+    if (codePoint === CODEPOINT_ESC) {  // ESC \ means ST (string terminator)
+      i++;                              // Assume the next codepoint is \ and skip it.
+    }
 
     switch (this.#state) {
       case ParserState.OSC_CODE:
