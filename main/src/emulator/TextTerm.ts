@@ -2147,7 +2147,7 @@ export class TextEmulator implements TextEmulatorApi {
           this.#params.appendParameterCodePoint(codePoint);
         } else {
           if (codePoint === CODEPOINT_ESC) {
-            i++;
+            i++;  // ESC \ means ST too, skip any following \ char.
           }
           this.#params.endParameter();
           this.#executeDCSCommand(this.#params);
