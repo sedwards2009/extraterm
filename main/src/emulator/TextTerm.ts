@@ -594,7 +594,7 @@ export class TextEmulator implements TextEmulatorApi {
     }
     this.#hasFocus = true;
     this.#showCursor();
-    this.#dispatchRenderEvent();
+    this.#scheduleCursorRefresh();
   }
 
   /**
@@ -614,13 +614,11 @@ export class TextEmulator implements TextEmulatorApi {
     if (!this.#hasFocus) {
       return;
     }
-
-    this.#markRowRangeForRefresh(this._y, this._y);
     if (this.#sendFocus) {
       this.#send('\x1b[O');
     }
     this.#hasFocus = false;
-    this.#dispatchRenderEvent();
+    this.#scheduleCursorRefresh();
   }
 
   mouseDown(ev: MouseEventOptions): boolean {
@@ -859,6 +857,10 @@ export class TextEmulator implements TextEmulatorApi {
     this.#blinkIntervalId = setInterval(this.#blinker, BLINK_INTERVAL_MS);
 
     this.#cursorBlinkState = true;
+    this.#scheduleCursorRefresh();
+  }
+
+  #scheduleCursorRefresh(): void {
     this._getRow(this._y);
     this._markRowForRefresh(this._y);
     this.#scheduleRefresh(true);
@@ -884,9 +886,7 @@ export class TextEmulator implements TextEmulatorApi {
       this.#startBlink();
     } else {
       this.#cursorBlinkState = true;
-      this._getRow(this._y);
-      this._markRowForRefresh(this._y);
-      this.#scheduleRefresh(true);
+      this.#scheduleCursorRefresh();
     }
   }
 

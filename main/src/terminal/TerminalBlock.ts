@@ -415,7 +415,6 @@ export class TerminalBlock implements Block {
       const lines = this.#scrollback.slice(topRenderRow, lastRenderRow);
       const startY = topRenderRow * heightPx;
       this.#renderLines(cellPainter, lines, startY, false);
-      this.#renderCursors(painter, lines, startY);
     }
 
     // Render any lines from the emulator screen
@@ -431,7 +430,7 @@ export class TerminalBlock implements Block {
       }
       const startY = (screenTopRow + scrollbackLength) * heightPx;
 
-      this.#renderLines(cellPainter, lines, startY, cursorStyle === "block");
+      this.#renderLines(cellPainter, lines, startY, cursorStyle === "block" && this.#emulator.hasFocus());
       this.#renderCursors(painter, lines, startY);
       this.#renderPreeditString(cellPainter);
     }
@@ -605,7 +604,7 @@ export class TerminalBlock implements Block {
 
   #renderCursors(painter: QPainter, lines: Line[], startY: number): void {
     const cursorStyle = this.#configCursorStyleToRendererCursorStyle(this.#terminalVisualConfig.cursorStyle);
-    if (cursorStyle === CursorStyle.BLOCK) {
+    if (cursorStyle === CursorStyle.BLOCK && this.#emulator.hasFocus()) {
       return;
     }
 
@@ -625,32 +624,42 @@ export class TerminalBlock implements Block {
       const width = line.width;
       for (let i=0; i<width; i++) {
         if (line.getStyle(i) & STYLE_MASK_CURSOR) {
-          switch (cursorStyle) {
-            case CursorStyle.BLOCK_OUTLINE:
-              painter.drawRectF(i * cellWidthPx + outlinePenWidthPx, y + outlinePenWidthPx,
-                cellWidthPx - 2 * outlinePenWidthPx, cellHeightPx - 2 * outlinePenWidthPx);
-              break;
+          if (this.#emulator.hasFocus()) {
+            switch (cursorStyle) {
+              case CursorStyle.UNDERLINE:
+                painter.fillRectF(i * cellWidthPx, y + cellHeightPx-3, cellWidthPx, 3, cursorColor);
+                break;
 
-            case CursorStyle.UNDERLINE:
-              painter.fillRectF(i * cellWidthPx, y + cellHeightPx-3, cellWidthPx, 3, cursorColor);
-              break;
+              case CursorStyle.BEAM:
+                painter.fillRectF(i * cellWidthPx, y, 2, cellHeightPx, cursorColor);
+                break;
 
-            case CursorStyle.UNDERLINE_OUTLINE:
-              painter.drawRectF(i * cellWidthPx + outlinePenWidthPx, y + cellHeightPx - 2*outlinePenWidthPx,
-                cellWidthPx-outlinePenWidthPx, 2);
-              break;
+              default:
+                break;
+            }
+          } else {
+            switch (cursorStyle) {
+              case CursorStyle.BLOCK:
+              case CursorStyle.BLOCK_OUTLINE:
+                painter.drawRectF(i * cellWidthPx + outlinePenWidthPx, y + outlinePenWidthPx,
+                  cellWidthPx - 2 * outlinePenWidthPx, cellHeightPx - 2 * outlinePenWidthPx);
+                break;
 
-            case CursorStyle.BEAM:
-              painter.fillRectF(i * cellWidthPx, y, 2, cellHeightPx, cursorColor);
-              break;
+              case CursorStyle.UNDERLINE:
+              case CursorStyle.UNDERLINE_OUTLINE:
+                painter.drawRectF(i * cellWidthPx + outlinePenWidthPx, y + cellHeightPx - 2*outlinePenWidthPx,
+                  cellWidthPx-outlinePenWidthPx, 2);
+                break;
 
-            case CursorStyle.BEAM_OUTLINE:
-              painter.drawRectF(i * cellWidthPx + outlinePenWidthPx,
-                y + outlinePenWidthPx, 2, cellHeightPx - outlinePenWidthPx);
-              break;
+              case CursorStyle.BEAM:
+              case CursorStyle.BEAM_OUTLINE:
+                painter.drawRectF(i * cellWidthPx + outlinePenWidthPx,
+                  y + outlinePenWidthPx, 2, cellHeightPx - outlinePenWidthPx);
+                break;
 
-            default:
-              break;
+              default:
+                break;
+            }
           }
         }
       }
@@ -683,17 +692,6 @@ export class TerminalBlock implements Block {
     line.setFgClutIndex(dim.cursorX, 0);  // black
     this.#renderSingleLine(cellPainter, line, y, false);
   }
-
-  // private _configCursorStyleToHollowRendererCursorStyle(configCursorStyle: ConfigCursorStyle): CursorStyle {
-  //   switch (configCursorStyle) {
-  //     case "block":
-  //       return CursorStyle.BLOCK_OUTLINE;
-  //     case "underscore":
-  //       return CursorStyle.UNDERLINE_OUTLINE;
-  //     case "beam":
-  //       return CursorStyle.BEAM_OUTLINE;
-  //   }
-  // }
 
   #handleMouseButtonPress(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);

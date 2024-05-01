@@ -337,6 +337,13 @@ export class Terminal implements Tab, Disposable {
       onMouseButtonPress: (nativeEvent) => {
         this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
       },
+      onFocusOut: () => {
+        this.#emulator.blur();
+      },
+      onFocusIn: () => {
+        this.#emulator.focus();
+      }
+
     });
     this.scrollArea.getContentWidget().setAttribute(WidgetAttribute.WA_InputMethodEnabled, true);
 
