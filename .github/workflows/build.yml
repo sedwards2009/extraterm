@@ -137,7 +137,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-macos:
-    runs-on: macos-latest
+    runs-on: macos-13
     needs: create-release
     steps:
       - uses: actions/checkout@v4
