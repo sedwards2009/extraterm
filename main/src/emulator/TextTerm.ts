@@ -549,11 +549,7 @@ export class TextEmulator implements TextEmulatorApi {
     this.#oldy = 0;
 
     this.#cursorBlinkState = true;       // Cursor blink state.
-
     this.#cursorHidden = false;
-    this.#hasFocus = false;
-
-  //  this.convertEol;
 
     this.#queue = '';
     this.#scrollTop = 0;
@@ -611,10 +607,7 @@ export class TextEmulator implements TextEmulatorApi {
   }
 
   blur(): void {
-    if (!this.#hasFocus) {
-      return;
-    }
-    if (this.#sendFocus) {
+    if (this.#hasFocus && this.#sendFocus) {
       this.#send('\x1b[O');
     }
     this.#hasFocus = false;

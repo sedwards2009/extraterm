@@ -338,10 +338,14 @@ export class Terminal implements Tab, Disposable {
         this.#handleMouseButtonPress(new QMouseEvent(nativeEvent));
       },
       onFocusOut: () => {
-        this.#emulator.blur();
+        if (this.#emulator != null) {
+          this.#emulator.blur();
+        }
       },
       onFocusIn: () => {
-        this.#emulator.focus();
+        if (this.#emulator != null) {
+          this.#emulator.focus();
+        }
       }
 
     });
