@@ -611,6 +611,7 @@ export class TextEmulator implements TextEmulatorApi {
       this.#send('\x1b[O');
     }
     this.#hasFocus = false;
+    this.#cursorBlinkState = true;
     this.#scheduleCursorRefresh();
   }
 

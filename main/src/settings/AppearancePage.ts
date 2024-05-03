@@ -257,6 +257,15 @@ export class AppearancePage implements SettingsPageType {
                   }),
                 ),
 
+                "",
+                CheckBox({
+                  text: "Blink",
+                  checkState: generalConfig.blinkingCursor,
+                  onStateChanged: (state: number) => {
+                    update((c) => c.blinkingCursor = Boolean(state));
+                  }
+                }),
+
                 "Margin:",
                 shrinkWrap(ComboBox({
                   currentIndex: marginSizes.indexOf(generalConfig.terminalMarginStyle),

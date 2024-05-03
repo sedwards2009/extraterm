@@ -914,6 +914,10 @@ export class Terminal implements Tab, Disposable {
     }
     `, false);
 
+    if (this.#emulator != null) {
+      this.#emulator.setCursorBlink(terminalVisualConfig.cursorBlink);
+    }
+
     this.resizeTerminalArea();
   }
 
@@ -1098,9 +1102,10 @@ export class Terminal implements Tab, Disposable {
     });
 
     emulator.onWriteBufferSize(this.#handleWriteBufferSize.bind(this));
-    // if (this._terminalVisualConfig != null) {
-    //   emulator.setCursorBlink(this._terminalVisualConfig.cursorBlink);
-    // }
+
+    if (this.#terminalVisualConfig != null) {
+      emulator.setCursorBlink(this.#terminalVisualConfig.cursorBlink);
+    }
 
     this.#enforceScrollbackSizeLater = new DebouncedDoLater(() => {
       this.#laterEnforceScrollbackSize();

@@ -975,6 +975,7 @@ export class Window implements Disposable {
     if (!(oldConfig.terminalFont === newConfig.terminalFont &&
         oldConfig.terminalFontSize === newConfig.terminalFontSize &&
         oldConfig.cursorStyle === newConfig.cursorStyle &&
+        oldConfig.blinkingCursor === newConfig.blinkingCursor &&
         oldConfig.themeTerminal === newConfig.themeTerminal &&
         oldConfig.terminalDisplayLigatures === newConfig.terminalDisplayLigatures &&
         oldConfig.terminalMarginStyle === newConfig.terminalMarginStyle)) {
