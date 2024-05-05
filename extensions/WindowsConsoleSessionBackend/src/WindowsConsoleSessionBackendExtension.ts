@@ -166,5 +166,5 @@ class WindowsConsoleBackend implements SessionBackend {
 }
 
 export function activate(context: ExtensionContext): any {
-  context.sessions.registerSessionBackend("Windows Console", new WindowsConsoleBackend(context.logger));
+  context.sessions.registerSessionBackend("windows-console", new WindowsConsoleBackend(context.logger));
 }

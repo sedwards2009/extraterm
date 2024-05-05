@@ -9,7 +9,7 @@ import { Style } from "./Style.js";
 
 
 export interface Sessions {
-  registerSessionBackend(name: string, backend: SessionBackend): void;
+  registerSessionBackend(type: string, backend: SessionBackend): void;
   registerSessionEditor(type: string, factory: SessionEditorFactory): void;
   registerSessionSettingsEditor(id: string, factory: SessionSettingsEditorFactory): void;
 }
