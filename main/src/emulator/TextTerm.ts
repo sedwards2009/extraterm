@@ -1993,6 +1993,10 @@ export class TextEmulator implements TextEmulatorApi {
           this.#state = ParserState.OSC_ITERM_PAYLOAD;
         } else if (codePoint === CODEPOINT_SEMICOLON) {
           this.#params.endParameter();
+        } else if (codePoint === CODEPOINT_BEL) {
+          this._executeITerm(new ITermParameters(this.#params));
+          this.#params.reset();
+          this.#state = ParserState.NORMAL;
         } else {
           this.#params.appendParameterCodePoint(codePoint);
         }

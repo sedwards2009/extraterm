@@ -28,6 +28,10 @@ export class ITermParameters {
     this.#parseParameters(params);
   }
 
+  isFile(): boolean {
+    return this.#isFile;
+  }
+
   #parseParameters(params: ControlSequenceParameters): void {
     for (let i=0; i<params.getParamCount(); i++) {
       let paramString = params.getParameterString(i);
@@ -69,6 +73,9 @@ export class ITermParameters {
           break;
 
         case "inline":
+          break;
+
+        case "SetUserVar":
           break;
 
         default:

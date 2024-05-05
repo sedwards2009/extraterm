@@ -42,6 +42,10 @@ export class Emulator extends TextEmulator implements EmulatorApi {
   }
 
   protected _executeITerm(itermParameters: ITermParameters): void {
+    if (!itermParameters.isFile()) {
+      return;
+    }
+
     const buffer = itermParameters.getPayload();
     let qimage = new QImage();
     if ( ! qimage.loadFromData(buffer)) {
