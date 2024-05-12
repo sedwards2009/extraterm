@@ -2007,12 +2007,10 @@ export class TextEmulator implements TextEmulatorApi {
           this.#state = ParserState.OSC_ITERM_PAYLOAD_ESC;
           break;
         }
-        if (this.#itermParameters.appendPayloadCodePoint(codePoint)) {
-          break;
-        }
-
         if (codePoint === CODEPOINT_BEL) {
           this._executeITerm(this.#itermParameters);
+        } else if (this.#itermParameters.appendPayloadCodePoint(codePoint)) {
+          break;
         }
 
         this.#itermParameters = null;
