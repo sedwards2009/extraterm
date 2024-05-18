@@ -129,7 +129,7 @@ export class KnownHosts {
     return hostLine;
   }
 
-  verify(hostname: string, remoteKeys: ssh2.ParsedKey[]): VerifyResult {
+  verify(hostname: string, port: number, remoteKeys: ssh2.ParsedKey[]): VerifyResult {
     const revokeResult = this.#isPublicKeyRevoked(remoteKeys);
     if (revokeResult != null) {
       return revokeResult;
@@ -138,13 +138,13 @@ export class KnownHosts {
     for (let i=0; i<this.lines.length; i++) {
       const line = this.lines[i];
       if (line.type === "host") {
-        if (this.#matchHostPattern(hostname, line)) {
+        if (this.#matchHostPattern(hostname, port, line)) {
           const result = this.#verifyPublicKeys(line, remoteKeys);
           result.line = i;
           return result;
         }
       } else if (line.type === "hash") {
-        if (this.#matchHostHash(hostname, line)) {
+        if (this.#matchHostHash(hostname, port, line)) {
           const result = this.#verifyPublicKeys(line, remoteKeys);
           result.line = i;
           return result;
@@ -155,6 +155,10 @@ export class KnownHosts {
     return {
       result: VerifyResultCode.UNKNOWN
     };
+  }
+
+  #makeHostPort(hostname: string, port: number): string {
+    return port === 22 ? hostname : `[${hostname}]:${port}`;
   }
 
   #isPublicKeyRevoked(remoteKeys: ssh2.ParsedKey[]): VerifyResult {
@@ -176,34 +180,35 @@ export class KnownHosts {
     return null;
   }
 
-  #matchHostPattern(hostname: string, line: KnownHostsLineHost): boolean {
+  #matchHostPattern(hostname: string, port: number, line: KnownHostsLineHost): boolean {
+    const hostport = this.#makeHostPort(hostname, port);
     const hostPatterns = line.hostPattern.split(",").map(hp => new HostPattern(hp));
 
     for (const pattern of hostPatterns) {
-      if (pattern.isNegative() && pattern.match(hostname)) {
+      if (pattern.isNegative() && pattern.match(hostport)) {
         return false;
       }
     }
 
     for (const pattern of hostPatterns) {
-      if (!pattern.isNegative() && pattern.match(hostname)) {
+      if (!pattern.isNegative() && pattern.match(hostport)) {
         return true;
       }
     }
     return false;
   }
 
-  #matchHostHash(hostname: string, line: KnownHostsLineHash): boolean {
+  #matchHostHash(hostname: string, port: number, line: KnownHostsLineHash): boolean {
     const parts = line.hostHash.split("|");
     const salt = Buffer.from(parts[2], "base64");
     const lineHost = Buffer.from(parts[3], "base64");
-    const hostHash = this.#hashHost(hostname, salt);
+    const hostHash = this.#hashHostPort(this.#makeHostPort(hostname, port), salt);
     return lineHost.equals(hostHash);
   }
 
-  #hashHost(hostname: string, salt: Buffer): Buffer {
+  #hashHostPort(hostport: string, salt: Buffer): Buffer {
     const hmac = crypto.createHmac("sha1", salt);
-    hmac.update(Buffer.from(hostname, "utf8"));
+    hmac.update(Buffer.from(hostport, "utf8"));
     const digest = hmac.digest();
     hmac.end();
     return digest;
