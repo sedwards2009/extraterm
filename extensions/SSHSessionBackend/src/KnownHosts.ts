@@ -49,10 +49,16 @@ export enum VerifyResultCode {
   REVOKED
 };
 
+export interface HostAlias {
+  host: string;
+  line: number;
+}
+
 export interface VerifyResult {
   result: VerifyResultCode;
   line?: number;
   publicKey?: Buffer;
+  aliases?: HostAlias[]
 }
 
 export class KnownHosts {
@@ -144,7 +150,7 @@ export class KnownHosts {
           return result;
         }
       } else if (line.type === "hash") {
-        if (this.#matchHostHash(hostname, port, line)) {
+        if (this.#matchHashedHost(hostname, port, line)) {
           const result = this.#verifyPublicKeys(line, remoteKeys);
           result.line = i;
           return result;
@@ -152,8 +158,11 @@ export class KnownHosts {
       }
     }
 
+    const aliases = this.#findMatchingKeys(remoteKeys);
+
     return {
-      result: VerifyResultCode.UNKNOWN
+      result: VerifyResultCode.UNKNOWN,
+      aliases
     };
   }
 
@@ -198,7 +207,7 @@ export class KnownHosts {
     return false;
   }
 
-  #matchHostHash(hostname: string, port: number, line: KnownHostsLineHash): boolean {
+  #matchHashedHost(hostname: string, port: number, line: KnownHostsLineHash): boolean {
     const parts = line.hostHash.split("|");
     const salt = Buffer.from(parts[2], "base64");
     const lineHost = Buffer.from(parts[3], "base64");
@@ -212,6 +221,23 @@ export class KnownHosts {
     const digest = hmac.digest();
     hmac.end();
     return digest;
+  }
+
+  #findMatchingKeys(remoteKeys: ssh2.ParsedKey[]): HostAlias[] {
+    const result: HostAlias[] = [];
+    for (let i=0; i<this.lines.length; i++) {
+      const line = this.lines[i];
+      if (line.type === "host" || line.type === "hash") {
+        const verifyResult = this.#verifyPublicKeys(line, remoteKeys);
+        if (verifyResult.result === VerifyResultCode.OK) {
+          result.push({
+            line: i,
+            host: line.type === "host" ? line.hostPattern : "[hashed host]"
+          });
+        }
+      }
+    }
+    return result;
   }
 
   #verifyPublicKeys(line: KnownHostsLineHost | KnownHostsLineHash, remoteKeys: ssh2.ParsedKey[]): VerifyResult {
