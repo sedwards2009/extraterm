@@ -3,8 +3,9 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
+import { Logger } from "@extraterm/extraterm-extension-api";
 import * as crypto from "node:crypto";
-import * as ssh2 from "ssh2";
+import ssh2 from "ssh2";
 import { HostPattern } from "./HostPattern";
 
 export type KnownHostsLineType = "host" | "hash" | "comment" | "revoked" | "cert-authority";
@@ -63,9 +64,11 @@ export interface VerifyResult {
 
 export class KnownHosts {
 
+  private _log: Logger;
   lines: KnownHostsLine[] = [];
 
-  constructor() {
+  constructor(log: Logger) {
+    this._log = log;
   }
 
   loadString(knownHostsString: string): void {
@@ -166,17 +169,13 @@ export class KnownHosts {
     };
   }
 
-  #makeHostPort(hostname: string, port: number): string {
-    return port === 22 ? hostname : `[${hostname}]:${port}`;
-  }
-
   #isPublicKeyRevoked(remoteKeys: ssh2.ParsedKey[]): VerifyResult {
     for (let i=0; i<this.lines.length; i++) {
       const line = this.lines[i];
       if (line.type === "revoked") {
         const lineKey = Buffer.from(line.publicKeyB64, "base64");
         for (const key of remoteKeys) {
-          if (key.equals(lineKey)) {
+          if (this.#parsedKeyEquals(key, line.algo, lineKey)) {
             return {
               result: VerifyResultCode.REVOKED,
               line: i,
@@ -190,7 +189,7 @@ export class KnownHosts {
   }
 
   #matchHostPattern(hostname: string, port: number, line: KnownHostsLineHost): boolean {
-    const hostport = this.#makeHostPort(hostname, port);
+    const hostport = makeHostPort(hostname, port);
     const hostPatterns = line.hostPattern.split(",").map(hp => new HostPattern(hp));
 
     for (const pattern of hostPatterns) {
@@ -211,7 +210,7 @@ export class KnownHosts {
     const parts = line.hostHash.split("|");
     const salt = Buffer.from(parts[2], "base64");
     const lineHost = Buffer.from(parts[3], "base64");
-    const hostHash = this.#hashHostPort(this.#makeHostPort(hostname, port), salt);
+    const hostHash = this.#hashHostPort(makeHostPort(hostname, port), salt);
     return lineHost.equals(hostHash);
   }
 
@@ -243,7 +242,7 @@ export class KnownHosts {
   #verifyPublicKeys(line: KnownHostsLineHost | KnownHostsLineHash, remoteKeys: ssh2.ParsedKey[]): VerifyResult {
     const lineKey = Buffer.from(line.publicKeyB64, "base64");
     for (const remoteKey of remoteKeys) {
-      if (remoteKey.type === line.algo && remoteKey.equals(lineKey)) {
+      if (this.#parsedKeyEquals(remoteKey, line.algo, lineKey)) {
         return {
           result: VerifyResultCode.OK,
           publicKey: lineKey
@@ -255,4 +254,15 @@ export class KnownHosts {
       publicKey: lineKey
     };
   }
+
+  #parsedKeyEquals(parsedKey: ssh2.ParsedKey, algo: string, key: Buffer): boolean {
+    if (parsedKey.getPublicSSH() == null) {
+      return false;
+    }
+    return parsedKey.type === algo && parsedKey.getPublicSSH().equals(key);
+  }
+}
+
+export function makeHostPort(hostname: string, port: number): string {
+  return port === 22 ? hostname : `[${hostname}]:${port}`;
 }
