@@ -76,6 +76,31 @@ export class KnownHosts {
     this.lines = lines.map(line => this.#parseLine(line));
   }
 
+  appendHost(host: string, port: number, remoteKey: ssh2.ParsedKey): void {
+    const hostHash = this.#makeNewHostHash(host, port);
+    const publicKeyB64 = remoteKey.getPublicSSH().toString("base64");
+    const newLine: KnownHostsLineHash = {
+      type: "hash",
+      algo: remoteKey.type,
+      hostHash,
+      publicKeyB64,
+      rawLine: `${hostHash} ${remoteKey.type} ${publicKeyB64}`
+    };
+    this.lines.push(newLine);
+  }
+
+  dumpString(): string {
+    return this.lines.map(l => l.rawLine).join("\n");
+  }
+
+  #makeNewHostHash(host: string, port: number): string {
+    const salt = crypto.randomBytes(20);
+    const hashBuffer = this.#hashHostPort(makeHostPort(host, port), salt);
+    const hashB64 = hashBuffer.toString("base64");
+    const saltB64 = salt.toString("base64");
+    return `|1|${saltB64}|${hashB64}`;
+  }
+
   #parseLine(line: string): KnownHostsLine {
     if (line.startsWith("#") || line.trim() === "") {
       return {

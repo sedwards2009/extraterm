@@ -164,5 +164,31 @@ test("unknown host with hashed alias", done => {
   expect(result.aliases.length).toBe(1);
   expect(result.aliases[0].host).toBe("[hashed host]");
   expect(result.aliases[0].line).toBe(0);
+
+  done();
+});
+
+test("append line", done => {
+  const knownHosts = new KnownHosts(log);
+
+  const key = parseKey("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5VqOFLlef825wmfC4/yA8KLzg+K8Ay9gXiNw/ygNw+kuRZAD1nk3QXdVObH/tPy78cLjtzRzQxAkXozSsfyz0yguveHJXcG92Y1Dps402AVZsZsQwruzoTjEwcXrzOW+dIQiNw34Sa/kmG0/F6eILGtUtpR3swXGrejb0Lc0iEE=");
+  knownHosts.appendHost("192.168.1.1", 22, key);
+
+  const result = knownHosts.verify("192.168.1.1", 22, [key]);
+  expect(result.result).toBe(VerifyResultCode.OK);
+
+  done();
+});
+
+test("append line round-trip", done => {
+  const knownHosts = new KnownHosts(log);
+  const key = parseKey("ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEA5VqOFLlef825wmfC4/yA8KLzg+K8Ay9gXiNw/ygNw+kuRZAD1nk3QXdVObH/tPy78cLjtzRzQxAkXozSsfyz0yguveHJXcG92Y1Dps402AVZsZsQwruzoTjEwcXrzOW+dIQiNw34Sa/kmG0/F6eILGtUtpR3swXGrejb0Lc0iEE=");
+  knownHosts.appendHost("192.168.1.1", 22, key);
+
+  const knownHost2 = new KnownHosts(log);
+  knownHost2.loadString(knownHosts.dumpString());
+  const result = knownHosts.verify("192.168.1.1", 22, [key]);
+  expect(result.result).toBe(VerifyResultCode.OK);
+
   done();
 });
