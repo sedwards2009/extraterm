@@ -13,6 +13,8 @@ export type KnownHostsLineType = "host" | "hash" | "comment" | "revoked" | "cert
 
 export interface KnownHostsLineBase {
   type: KnownHostsLineType;
+  filename: string;
+  lineNumber: number;   // 1 based line number in the file the line came from.
   rawLine: string;
 }
 
@@ -52,12 +54,14 @@ export enum VerifyResultCode {
 
 export interface HostAlias {
   host: string;
-  line: number;
+  filename: string;
+  lineNumber: number;
 }
 
 export interface VerifyResult {
   result: VerifyResultCode;
-  line?: number;
+  filename?: string;
+  lineNumber?: number;
   publicKey?: Buffer;
   aliases?: HostAlias[]
 }
@@ -71,16 +75,19 @@ export class KnownHosts {
     this._log = log;
   }
 
-  loadString(knownHostsString: string): void {
+  loadString(knownHostsString: string, filename: string=""): void {
     const lines = knownHostsString.split("\n");
-    this.lines = lines.map(line => this.#parseLine(line));
+    this.lines = lines.map((line, index) => this.#parseLine(line, filename, index+1));
   }
 
-  appendHost(host: string, port: number, remoteKey: ssh2.ParsedKey): void {
+  appendHost(host: string, port: number, remoteKey: ssh2.ParsedKey, filename: string=""): void {
     const hostHash = this.#makeNewHostHash(host, port);
     const publicKeyB64 = remoteKey.getPublicSSH().toString("base64");
+    const lineNumber = this.lines.filter(l => l.filename  === filename).length + 1;
     const newLine: KnownHostsLineHash = {
       type: "hash",
+      filename,
+      lineNumber,
       algo: remoteKey.type,
       hostHash,
       publicKeyB64,
@@ -89,8 +96,8 @@ export class KnownHosts {
     this.lines.push(newLine);
   }
 
-  dumpString(): string {
-    return this.lines.map(l => l.rawLine).join("\n");
+  dumpString(filename: string): string {
+    return this.lines.filter(l => l.filename === filename).map(l => l.rawLine).join("\n");
   }
 
   #makeNewHostHash(host: string, port: number): string {
@@ -101,10 +108,12 @@ export class KnownHosts {
     return `|1|${saltB64}|${hashB64}`;
   }
 
-  #parseLine(line: string): KnownHostsLine {
+  #parseLine(line: string, filename: string, lineNumber: number): KnownHostsLine {
     if (line.startsWith("#") || line.trim() === "") {
       return {
         type: "comment",
+        filename,
+        lineNumber,
         rawLine: line
       };
     }
@@ -114,12 +123,16 @@ export class KnownHosts {
       if (parts.length < 4) {
         return {
           type: "comment",
+          filename,
+          lineNumber,
           rawLine: line
         };
       }
 
       const result: KnownHostsLineRevoked ={
         type: "revoked",
+        filename,
+        lineNumber,
         algo: parts[2],
         publicKeyB64: parts[3],
         rawLine: line
@@ -130,6 +143,8 @@ export class KnownHosts {
     if (line.startsWith("@cert-authority")) {
       return {
         type: "cert-authority",
+        filename,
+        lineNumber,
         rawLine: line
       };
     }
@@ -138,6 +153,8 @@ export class KnownHosts {
     if (parts.length < 3) {
       return {
         type: "comment",
+        filename,
+        lineNumber,
         rawLine: line
       };
     }
@@ -145,6 +162,8 @@ export class KnownHosts {
     if (parts[0].startsWith("|")) {
       const hashLine: KnownHostsLineHash = {
         type: "hash",
+        filename,
+        lineNumber,
         hostHash: parts[0],
         algo: parts[1],
         publicKeyB64: parts[2],
@@ -155,6 +174,8 @@ export class KnownHosts {
 
     const hostLine: KnownHostsLineHost = {
       type: "host",
+      filename,
+      lineNumber,
       hostPattern: parts[0],
       algo: parts[1],
       publicKeyB64: parts[2],
@@ -169,19 +190,14 @@ export class KnownHosts {
       return revokeResult;
     }
 
-    for (let i=0; i<this.lines.length; i++) {
-      const line = this.lines[i];
+    for (const line of this.lines) {
       if (line.type === "host") {
         if (this.#matchHostPattern(hostname, port, line)) {
-          const result = this.#verifyPublicKeys(line, remoteKeys);
-          result.line = i;
-          return result;
+          return this.#verifyPublicKeys(line, remoteKeys);
         }
       } else if (line.type === "hash") {
         if (this.#matchHashedHost(hostname, port, line)) {
-          const result = this.#verifyPublicKeys(line, remoteKeys);
-          result.line = i;
-          return result;
+          return this.#verifyPublicKeys(line, remoteKeys);
         }
       }
     }
@@ -195,15 +211,15 @@ export class KnownHosts {
   }
 
   #isPublicKeyRevoked(remoteKeys: ssh2.ParsedKey[]): VerifyResult {
-    for (let i=0; i<this.lines.length; i++) {
-      const line = this.lines[i];
+    for (const line of this.lines) {
       if (line.type === "revoked") {
         const lineKey = Buffer.from(line.publicKeyB64, "base64");
         for (const key of remoteKeys) {
           if (this.#parsedKeyEquals(key, line.algo, lineKey)) {
             return {
               result: VerifyResultCode.REVOKED,
-              line: i,
+              filename: line.filename,
+              lineNumber: line.lineNumber,
               publicKey: lineKey
             };
           }
@@ -249,13 +265,13 @@ export class KnownHosts {
 
   #findMatchingKeys(remoteKeys: ssh2.ParsedKey[]): HostAlias[] {
     const result: HostAlias[] = [];
-    for (let i=0; i<this.lines.length; i++) {
-      const line = this.lines[i];
+    for (const line of this.lines) {
       if (line.type === "host" || line.type === "hash") {
         const verifyResult = this.#verifyPublicKeys(line, remoteKeys);
         if (verifyResult.result === VerifyResultCode.OK) {
           result.push({
-            line: i,
+            lineNumber: line.lineNumber,
+            filename: line.filename,
             host: line.type === "host" ? line.hostPattern : "[hashed host]"
           });
         }
@@ -270,12 +286,16 @@ export class KnownHosts {
       if (this.#parsedKeyEquals(remoteKey, line.algo, lineKey)) {
         return {
           result: VerifyResultCode.OK,
+          filename: line.filename,
+          lineNumber: line.lineNumber,
           publicKey: lineKey
         };
       }
     }
     return {
       result: VerifyResultCode.CHANGED,
+      filename: line.filename,
+      lineNumber: line.lineNumber,
       publicKey: lineKey
     };
   }
