@@ -58,6 +58,8 @@
       "extensions/ProxySessionBackend",
       "extensions/ProxySessionEditor",
       "extensions/OpenLink",
+      "extensions/SSHSessionBackend",
+      "extensions/SSHSessionEditor",
       "extensions/TerminalTitle",
       "extensions/Tips",
       "extensions/TLDRPages",
