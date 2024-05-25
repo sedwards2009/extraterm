@@ -98,7 +98,7 @@ export class SessionTypesPage implements SettingsPageType {
             }),
 
             BoxLayout({
-              direction: Direction.LeftToRight,
+              direction: Direction.TopToBottom,
               children: this.#createNewSessionTypeButtons()
             }),
 
@@ -176,7 +176,8 @@ export class SessionTypesPage implements SettingsPageType {
   }
 
   #createNewSessionTypeButtons(): QPushButton[] {
-    return this.#extensionManager.getAllSessionTypes().map(st =>
+    const sessionTypes = this.#extensionManager.getAllSessionTypes().sort((a, b) => a.name.localeCompare(b.name));
+    return sessionTypes.map(st =>
       PushButton({
         text: `New ${st.name} session type`,
         onClicked: () => {
