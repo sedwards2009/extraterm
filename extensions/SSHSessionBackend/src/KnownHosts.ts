@@ -184,8 +184,8 @@ export class KnownHosts {
     return hostLine;
   }
 
-  verify(hostname: string, port: number, remoteKeys: ssh2.ParsedKey[]): VerifyResult {
-    const revokeResult = this.#isPublicKeyRevoked(remoteKeys);
+  verify(hostname: string, port: number, remoteKey: ssh2.ParsedKey): VerifyResult {
+    const revokeResult = this.#isPublicKeyRevoked(remoteKey);
     if (revokeResult != null) {
       return revokeResult;
     }
@@ -193,16 +193,16 @@ export class KnownHosts {
     for (const line of this.lines) {
       if (line.type === "host") {
         if (this.#matchHostPattern(hostname, port, line)) {
-          return this.#verifyPublicKeys(line, remoteKeys);
+          return this.#verifyPublicKeys(line, remoteKey);
         }
       } else if (line.type === "hash") {
         if (this.#matchHashedHost(hostname, port, line)) {
-          return this.#verifyPublicKeys(line, remoteKeys);
+          return this.#verifyPublicKeys(line, remoteKey);
         }
       }
     }
 
-    const aliases = this.#findMatchingKeys(remoteKeys);
+    const aliases = this.#findMatchingKeys(remoteKey);
 
     return {
       result: VerifyResultCode.UNKNOWN,
@@ -210,19 +210,17 @@ export class KnownHosts {
     };
   }
 
-  #isPublicKeyRevoked(remoteKeys: ssh2.ParsedKey[]): VerifyResult {
+  #isPublicKeyRevoked(remoteKey: ssh2.ParsedKey): VerifyResult {
     for (const line of this.lines) {
       if (line.type === "revoked") {
         const lineKey = Buffer.from(line.publicKeyB64, "base64");
-        for (const key of remoteKeys) {
-          if (this.#parsedKeyEquals(key, line.algo, lineKey)) {
-            return {
-              result: VerifyResultCode.REVOKED,
-              filename: line.filename,
-              lineNumber: line.lineNumber,
-              publicKey: lineKey
-            };
-          }
+        if (this.#parsedKeyEquals(remoteKey, line.algo, lineKey)) {
+          return {
+            result: VerifyResultCode.REVOKED,
+            filename: line.filename,
+            lineNumber: line.lineNumber,
+            publicKey: lineKey
+          };
         }
       }
     }
@@ -263,11 +261,11 @@ export class KnownHosts {
     return digest;
   }
 
-  #findMatchingKeys(remoteKeys: ssh2.ParsedKey[]): HostAlias[] {
+  #findMatchingKeys(remoteKey: ssh2.ParsedKey): HostAlias[] {
     const result: HostAlias[] = [];
     for (const line of this.lines) {
       if (line.type === "host" || line.type === "hash") {
-        const verifyResult = this.#verifyPublicKeys(line, remoteKeys);
+        const verifyResult = this.#verifyPublicKeys(line, remoteKey);
         if (verifyResult.result === VerifyResultCode.OK) {
           result.push({
             lineNumber: line.lineNumber,
@@ -280,17 +278,15 @@ export class KnownHosts {
     return result;
   }
 
-  #verifyPublicKeys(line: KnownHostsLineHost | KnownHostsLineHash, remoteKeys: ssh2.ParsedKey[]): VerifyResult {
+  #verifyPublicKeys(line: KnownHostsLineHost | KnownHostsLineHash, remoteKey: ssh2.ParsedKey): VerifyResult {
     const lineKey = Buffer.from(line.publicKeyB64, "base64");
-    for (const remoteKey of remoteKeys) {
-      if (this.#parsedKeyEquals(remoteKey, line.algo, lineKey)) {
-        return {
-          result: VerifyResultCode.OK,
-          filename: line.filename,
-          lineNumber: line.lineNumber,
-          publicKey: lineKey
-        };
-      }
+    if (this.#parsedKeyEquals(remoteKey, line.algo, lineKey)) {
+      return {
+        result: VerifyResultCode.OK,
+        filename: line.filename,
+        lineNumber: line.lineNumber,
+        publicKey: lineKey
+      };
     }
     return {
       result: VerifyResultCode.CHANGED,

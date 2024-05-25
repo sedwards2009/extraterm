@@ -191,7 +191,7 @@ export class SSHPty implements Pty {
 
     this.#knownHosts = this.#readKnownHostsFiles();
     this.#remoteKey = parsedKey;
-    const result = this.#knownHosts.verify(this.#ptyOptions.host, this.#ptyOptions.port, [parsedKey]);
+    const result = this.#knownHosts.verify(this.#ptyOptions.host, this.#ptyOptions.port, parsedKey);
 
     switch (result.result) {
       case VerifyResultCode.OK:
