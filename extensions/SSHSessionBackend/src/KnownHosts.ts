@@ -192,11 +192,11 @@ export class KnownHosts {
 
     for (const line of this.lines) {
       if (line.type === "host") {
-        if (this.#matchHostPattern(hostname, port, line)) {
+        if (this.#matchHostPattern(hostname, port, line) && line.algo === remoteKey.type) {
           return this.#verifyPublicKeys(line, remoteKey);
         }
       } else if (line.type === "hash") {
-        if (this.#matchHashedHost(hostname, port, line)) {
+        if (this.#matchHashedHost(hostname, port, line) && line.algo === remoteKey.type) {
           return this.#verifyPublicKeys(line, remoteKey);
         }
       }

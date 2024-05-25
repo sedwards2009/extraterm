@@ -169,7 +169,23 @@ test("append line round-trip", done => {
 
   const knownHost2 = new KnownHosts(log);
   knownHost2.loadString(knownHosts.dumpString(""));
-  const result = knownHosts.verify("192.168.1.1", 22, [key]);
+  const result = knownHosts.verify("192.168.1.1", 22, key);
+  expect(result.result).toBe(VerifyResultCode.OK);
+
+  done();
+});
+
+test("host with multiple keys", done => {
+  const knownHosts = new KnownHosts(log);
+
+  const publicKey = parseKey("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDCDODdSGody90CUfpvyJiHiiyHIPR+dsiRPCfwIh1LZ");
+
+  knownHosts.loadString(`ubuntuvm ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBB4qvlOk+E26lklnTmzTi++qVXJz9/lMM8ceHB0XroUo7X5/C5W0VaqWAjNUZQZb0i5QAXxDhVCb/MMPhRlbErQ=
+ubuntuvm ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDAofLs4nIqiybGO7kCJWL/7RmVM6XLSoeLBkfFvH79SilK6+Z6iNlQVeqWkKekx+P41YrY/nvKc4N7CylvWiD/OsRHDkfij2vbVC44QlMr78GE+RHVNfyqYq1jI98SJv0oaMdKE7zQHtfr13ah7XYupmO4ND99pZFX14XbZ6yf8fdE+2bOsrd9dVCPU45jc0fGOVaaocXeK6D3NO9icwVd3mw8KISyMEUY8J6b8dvwUlzmzyvDmyqF11DDcZ2N9cldW0UsiZ/GglxvQELjEW3R5mb8ZLwz5TF42KpqJNUEIyAZvSUmMZ2hialR73vDNLm4yCC++jGt1EOGQzWe8SbCMuuHnnBXu5DHpjAXrw0qehLg/h3BIOIc0qUTvdKapOe1tIO0n5lQ/JeGj8ZqnNxqdXMEX5z4JIJ3s738dbYWGLMu2nrJMvqkKHtU6xUEm/pmBdWGxdnrXvYeeyskLZfSobKb8zvuQHavHllQt/deiHzaf0XaCf6SulOpICrLayk=
+ubuntuvm ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDCDODdSGody90CUfpvyJiHiiyHIPR+dsiRPCfwIh1LZ
+`);
+
+  const result = knownHosts.verify("ubuntuvm", 22, publicKey);
   expect(result.result).toBe(VerifyResultCode.OK);
 
   done();
