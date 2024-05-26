@@ -20,12 +20,14 @@ export interface ComboBoxOptions extends WidgetOptions {
   items: (ComboBoxItem | string)[];
   onActivated?: (index: number) => void;
   onCurrentTextChanged?: (newText: string) => void;
+  onCurrentIndexChanged?: (index: number) => void;
 }
 
 export function ComboBox(options: ComboBoxOptions): QComboBox {
   const comboBox = new QComboBox();
   ApplyWidgetOptions(comboBox, options);
-  const { id, items, currentIndex, currentText, editable, onActivated, onCurrentTextChanged } = options;
+  const { id, items, currentIndex, currentText, editable, onActivated, onCurrentIndexChanged,
+    onCurrentTextChanged } = options;
   if (id !== undefined) {
     comboBox.setObjectName(id);
   }
@@ -55,6 +57,9 @@ export function ComboBox(options: ComboBoxOptions): QComboBox {
   }
   if (onCurrentTextChanged !== undefined) {
     comboBox.addEventListener("currentTextChanged", onCurrentTextChanged);
+  }
+  if (onCurrentIndexChanged !== undefined) {
+    comboBox.addEventListener("currentIndexChanged", onCurrentIndexChanged);
   }
   return comboBox;
 }

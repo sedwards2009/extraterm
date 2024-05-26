@@ -5,17 +5,27 @@
  */
 import * as child_process from "node:child_process";
 import * as os from "node:os";
+import * as path from "node:path";
 
 import { ExtensionContext, Logger, Pty, SessionConfiguration, SessionBackend,
   CreateSessionOptions,
   EnvironmentMap} from "@extraterm/extraterm-extension-api";
 import { PtyOptions, SSHPty } from "./SSHPty";
 
+// Note: This is duplicated in SSHSessionEditorExtension.ts.
+enum AuthenticationMethod {
+  DEFAULT_KEYS_PASSWORD,
+  PASSWORD_ONLY,
+  KEY_FILE_ONLY
+};
 
+// Note: This is duplicated in SSHSessionEditorExtension.ts.
 interface SSHSessionConfiguration extends SessionConfiguration {
   host?: string;
   port?: number;
   username?: string;
+  authenicationMethod?: AuthenticationMethod;
+  keyFilePath?: string;
 }
 
 class SSHBackend implements SessionBackend {
@@ -41,6 +51,24 @@ class SSHBackend implements SessionBackend {
 
     const preMessage = "";
 
+    const privateKeyFilenames: string[] = [];
+    switch (sessionConfig.authenicationMethod) {
+      case AuthenticationMethod.DEFAULT_KEYS_PASSWORD:
+        const homeDir = os.homedir();
+        privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_rsa"));
+        privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_dsa"));
+        privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_ecdsa"));
+        privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_ed25519"));
+        break;
+
+      case AuthenticationMethod.PASSWORD_ONLY:
+        break;
+
+      case AuthenticationMethod.KEY_FILE_ONLY:
+        privateKeyFilenames.push(sessionConfig.keyFilePath);
+        break;
+    }
+
     const options: PtyOptions = {
       env: this.#createEnv(sessionOptions),
       cols: sessionOptions.cols,
@@ -49,6 +77,7 @@ class SSHBackend implements SessionBackend {
       host: sessionConfig.host,
       port: sessionConfig.port,
       username: username,
+      privateKeyFilenames,
     };
 
     return new SSHPty(this._log, options);

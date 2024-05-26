@@ -24,6 +24,7 @@ export interface PtyOptions {
   host: string;
   port: number;
   username: string;
+  privateKeyFilenames?: string[];
 }
 
 enum PtyState {
@@ -40,7 +41,7 @@ export class SSHPty implements Pty {
   private _log: Logger;
   #sshConnection: ssh2.Client = null;
   #stream: ssh2.ClientChannel = null;
-  #possibleAuthTypes: ssh2.AuthenticationType[] = [];
+  #remainingPrivateKeyFilenames: string[] = [];
   #passwordCallback: ssh2.NextAuthHandler = null;
   #password: string = "";
 
@@ -69,6 +70,7 @@ export class SSHPty implements Pty {
   constructor(log: Logger, options: PtyOptions) {
     this._log = log;
     this.#ptyOptions = options;
+    this.#remainingPrivateKeyFilenames = [...(options.privateKeyFilenames ?? [])];
     this.onData = this.#onDataEventEmitter.event;
     this.onExit = this.#onExitEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this.#onAvailableWriteBufferSizeChangeEventEmitter.event;
@@ -354,11 +356,14 @@ export class SSHPty implements Pty {
       partialSuccess: boolean,
       callback: ssh2.NextAuthHandler): void {
 
-    if (this.#possibleAuthTypes.length === 0) {
-      this.#startPasswordInput(callback);
-      return;
+    while (this.#remainingPrivateKeyFilenames.length !== 0) {
+      const keyFilename = this.#remainingPrivateKeyFilenames.pop();
+      if (this.#handlePrivateKeyAuth(keyFilename, callback)) {
+        return;
+      }
     }
-    // const authMethod = this.#possibleAuthTypes.shift();
+
+    this.#startPasswordInput(callback);
   }
 
   #startPasswordInput(callback: ssh2.NextAuthHandler): void {
@@ -386,6 +391,23 @@ export class SSHPty implements Pty {
     if (this.#password.indexOf(String.fromCodePoint(0x03)) !== -1) {
       this.#closeSSHConnection();
     }
+  }
+
+  #handlePrivateKeyAuth(keyFilename: string, callback: ssh2.NextAuthHandler): boolean {
+    try {
+      if (fs.existsSync(keyFilename)) {
+        const fileContents = fs.readFileSync(keyFilename);
+        callback({
+          type: "publickey",
+          username: this.#ptyOptions.username,
+          key: fileContents
+        });
+        return true;
+      }
+    } catch (error) {
+      this._log.warn(`Failed to read private key file '${keyFilename}'. ${error}`);
+    }
+    return false;
   }
 
   #closeSSHConnection(): void {
