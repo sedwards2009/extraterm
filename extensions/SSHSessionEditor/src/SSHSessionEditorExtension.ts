@@ -150,7 +150,7 @@ class EditorUi {
   }
 
   #handleSelectKeyFile(): void {
-    this.#fileDialog = new QFileDialog();
+    this.#fileDialog = new QFileDialog(this.#widget.window());
     this.#fileDialog.setFileMode(FileMode.AnyFile);
     this.#fileDialog.exec();
 
