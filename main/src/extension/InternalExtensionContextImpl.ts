@@ -195,9 +195,9 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     }
   }
 
-  registerSessionBackend(name: string, backend: SessionBackend): void {
+  registerSessionBackend(type: string, backend: SessionBackend): void {
     for (const backendMeta of this.extensionMetadata.contributes.sessionBackends) {
-      if (backendMeta.name === name) {
+      if (backendMeta.type === type) {
         this.#sessionBackends.push({
           metadata: this.extensionMetadata,
           sessionBackendMetadata: backendMeta,
@@ -207,7 +207,7 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
       }
     }
 
-    this._log.warn(`Unable to register session backend '${name}' for extension ` +
+    this._log.warn(`Unable to register session backend '${type}' for extension ` +
       `'${this.extensionMetadata.name}' because the session backend contribution data ` +
       `couldn't be found in the extension's package.json file.`);
   }

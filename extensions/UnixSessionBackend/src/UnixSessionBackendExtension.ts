@@ -185,5 +185,5 @@ class UnixBackend implements SessionBackend {
 }
 
 export function activate(context: ExtensionContext): any {
-  context.sessions.registerSessionBackend("Unix", new UnixBackend(context.logger));
+  context.sessions.registerSessionBackend("unix", new UnixBackend(context.logger));
 }

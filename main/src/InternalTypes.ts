@@ -122,7 +122,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
 
   onDidCreateTerminal: ExtensionApi.Event<ExtensionApi.Terminal>;
 
-  registerSessionBackend(name: string, backend: ExtensionApi.SessionBackend): void;
+  registerSessionBackend(type: string, backend: ExtensionApi.SessionBackend): void;
   registerTerminalThemeProvider(name: string, provider: ExtensionApi.TerminalThemeProvider): void;
 
   setCommandMenu(command: string, menuType: keyof ExtensionMenusContribution, on: boolean): void;

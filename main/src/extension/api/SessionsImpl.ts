@@ -15,8 +15,8 @@ export class SessionsImpl implements ExtensionApi.Sessions {
     this.#internalExtensionContext = internalExtensionContext;
   }
 
-  registerSessionBackend(name: string, backend: ExtensionApi.SessionBackend): void {
-    this.#internalExtensionContext.registerSessionBackend(name, backend);
+  registerSessionBackend(type: string, backend: ExtensionApi.SessionBackend): void {
+    this.#internalExtensionContext.registerSessionBackend(type, backend);
   }
 
   registerSessionEditor(type: string, factory: ExtensionApi.SessionEditorFactory): void {

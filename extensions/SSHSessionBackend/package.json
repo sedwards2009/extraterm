@@ -1,0 +1,49 @@
+{
+  "name": "ssh-session-backend",
+  "description": "SSH Session Backend",
+  "author": "Simon Edwards",
+  "license": "MIT",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": "./dist/SSHSessionBackendExtension.js",
+  "scripts": {
+    "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
+    "build-code": "tsc",
+    "build-bundle": "esbuild build/SSHSessionBackendExtension.js --bundle --outfile=dist/SSHSessionBackendExtension.js --platform=node --format=esm --external:ssh2",
+    "clean": "shx rm -rf build dist",
+    "lint": "eslint \"src/**/*.ts\"",
+    "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
+    "test": "yarn run build && yarn node --experimental-vm-modules $(yarn bin jest)"
+  },
+  "dependencies": {
+    "@types/ssh2": "^1.15.0",
+    "node-pty": "1.0.0"
+  },
+  "devDependencies": {
+    "@extraterm/extraterm-extension-api": "0.15.0",
+    "@types/jest": "27.0.1",
+    "@types/lodash-es": "4.17.10",
+    "@types/node": "^18.15.3",
+    "esbuild": "^0.15.5",
+    "eslint": "8.53.0",
+    "eslint-config-extraterm": "1.0.0",
+    "eslint-plugin-unicorn": "42.0.0",
+    "extraterm-event-emitter": "1.0.0",
+    "extraterm-later": "1.0.0",
+    "jest": "27.5.1",
+    "lodash-es": "4.17.21",
+    "node-gyp": "^8.3.0",
+    "shx": "^0.3.2",
+    "ssh2": "1.15.0",
+    "typescript": "5.2.2"
+  },
+  "isInternal": true,
+  "contributes": {
+    "sessionBackends": [
+      {
+        "name": "SSH",
+        "type": "ssh"
+      }
+    ]
+  }
+}
