@@ -1,9 +1,10 @@
-import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit, TextFormat } from "@nodegui/nodegui";
+import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit, TextFormat, QStylePixelMetric } from "@nodegui/nodegui";
 import { BoxLayout, CheckBox, ComboBox, GridLayout, Label, LineEdit, ProgressBar, PushButton, RadioButton, ScrollArea, SpinBox,
   TabWidget, TextEdit, ToolButton, Widget } from "qt-construct";
 import * as path from "node:path";
-import * as SourceDir from './SourceDir.js';
+import { StyleTweaker } from "nodegui-plugin-style-tweaker";
 
+import * as SourceDir from './SourceDir.js';
 import { createUiStyle } from "./ui/styles/DarkTwo.js";
 import { shrinkWrap } from "./ui/QtConstructExtra.js";
 
@@ -30,7 +31,6 @@ function main(): void {
   for (const key of QStyleFactory.keys()) {
     console.log(`Style key: ${key}`);
   }
-  QApplication.setStyle(QStyleFactory.create("Windows"));
 
   const win = new QMainWindow();
   win.setWindowTitle("Theme Test");
@@ -46,6 +46,19 @@ function main(): void {
     topWidget.setStyleSheet(styleSheet, false);
   }
   uiStyle.getApplicationStyleSheet(guiScale, dpi);  // Force DarkTwo it init internally.
+
+  const tweakerStyle = new StyleTweaker("Windows");
+
+  const iconSize = uiStyle.getMenuIconSize(guiScale, dpi);
+  const buttonIconSize = uiStyle.getButtonIconSize(guiScale, dpi);
+  tweakerStyle.setPixelMetric(QStylePixelMetric.PM_SmallIconSize, iconSize);
+  tweakerStyle.setPixelMetric(QStylePixelMetric.PM_ToolBarIconSize, iconSize);
+  tweakerStyle.setPixelMetric(QStylePixelMetric.PM_ButtonIconSize, buttonIconSize);
+  tweakerStyle.setPixelMetric(QStylePixelMetric.PM_TabCloseIndicatorHeight, iconSize);
+  tweakerStyle.setPixelMetric(QStylePixelMetric.PM_TabCloseIndicatorWidth, iconSize);
+  tweakerStyle.setStyleHint(0 /* QStyle::SH_EtchDisabledText */, 0);
+
+  QApplication.setStyle(tweakerStyle);
 
   let stylesheetEdit: QTextEdit = null;
 
@@ -90,9 +103,10 @@ function main(): void {
           ToolButton({text: "QToolButton Danger", cssClass: ["danger"]}),
 
           LineEdit({text: "Some text input"}),
-
+          LineEdit({text: "Disabled text input", enabled: false}),
 
           ComboBox({items: ["One", "Two"]}),
+          ComboBox({items: ["Disabled One", "Disabled Two"], enabled: false}),
 
           Widget({layout:
             BoxLayout({
@@ -219,6 +233,7 @@ function main(): void {
           ),
 
           SpinBox({suffix: " frames", minimum: 0, maximum: 1000}),
+          SpinBox({suffix: " disabled", minimum: 0, maximum: 1000, enabled: false}),
 
           ProgressBar({
             minimum: 0,

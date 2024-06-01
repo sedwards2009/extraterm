@@ -60,6 +60,7 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     const textSelectedColor = "#ffffff";
     const backgroundHighlightColor = rgba(255, 255, 255, 0.07);
 
+
     const textMatchColor = accentOnlyTextColor;
     styleTextMatchColor = textMatchColor;
 
@@ -74,6 +75,7 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
 
     const textColorSubtle = mix(textColor, backgroundColor, 20);
     const textMutedColor = mix(textColor, backgroundColor, 75);
+    const textDisabledColor = darken(backgroundColor, 6);
 
     const brandPrimary = "hsl(219,  79%, 66%)";
     const brandSuccess = "hsl(140,  44%, 62%)";
@@ -279,11 +281,12 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
   }
 
   QCheckBox::disabled {
-    color: ${textColorSubtle};
+    color: ${textDisabledColor};
+    text-decoration: none;
   }
 
   QCheckBox::indicator::disabled {
-    background-color: ${toHex(componentBackgroundColor)};
+    background-color: ${textDisabledColor};
   }
   `;
     }
@@ -311,6 +314,12 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     border-color: ${accentColor};
   }
 
+  QComboBox:disabled {
+    color: ${textDisabledColor};
+    border-color: ${toHex(componentBackgroundColor)};
+    background-color: ${toHex(componentBackgroundColor)};
+  }
+
   QComboBox::drop-down {
     subcontrol-origin: padding;
     subcontrol-position: top right;
@@ -329,6 +338,10 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
 
   QComboBox::down-arrow {
     image: url(${resourceDirectory}/combobox_arrow.svg);
+  }
+
+  QComboBox::down-arrow:disabled {
+    image: url(${resourceDirectory}/empty.svg);
   }
 
   QComboBox::down-arrow:hover {
@@ -501,9 +514,16 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     border-radius: ${borderRadius};
   }
 
+  QLineEdit:disabled, QSpinBox:disabled {
+    color: ${textDisabledColor};
+    border-color: ${toHex(componentBackgroundColor)};
+    background-color: ${toHex(componentBackgroundColor)};
+  }
+
   QLineEdit[cssClass~="warning"], QSpinBox[cssClass~="warning"] {
     border: ${inputBorderWidth} solid ${brandWarning};
   }
+
   QLineEdit[cssClass~="warning"]:focus, QSpinBox[cssClass~="warning"]:focus {
     border: ${inputBorderWidth} solid ${brandWarning};
   }
@@ -692,8 +712,9 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
   }
 
   ${baseRule}:disabled {
-    color: ${mix(textHighlightColor, backgroundColor, 65)};
-    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 ${toHex(mix(lighten(color, 2), backgroundColor, 65))}, stop: 1 ${toHex(mix(color, backgroundColor, 65))});
+    color: ${textDisabledColor};
+    background-color: ${toHex(componentBackgroundColor)};
+    border-color: ${toHex(componentBackgroundColor)};
   }
 
   ${baseRule}:hover:disabled {
