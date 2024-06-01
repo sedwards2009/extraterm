@@ -4,8 +4,8 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import {ExtensionContext, Logger, SessionConfiguration, SessionEditorBase} from "@extraterm/extraterm-extension-api";
-import { Direction, FileMode, QFileDialog, QLabel, QPushButton, QWidget } from "@nodegui/nodegui";
-import { BoxLayout, ComboBox, GridLayout, LineEdit, SpinBox, Widget, Label, PushButton } from "qt-construct";
+import { Direction, FileMode, QFileDialog, QLineEdit, QPushButton, QWidget } from "@nodegui/nodegui";
+import { BoxLayout, ComboBox, GridLayout, LineEdit, SpinBox, Widget, PushButton } from "qt-construct";
 
 
 let log: Logger = null;
@@ -43,7 +43,7 @@ class EditorUi {
   #sessionEditorBase: SessionEditorBase = null;
 
   #config: SSHSessionConfiguration = null;
-  #selectedKeyFileLabel: QLabel = null;
+  #selectedKeyFileLineEdit: QLineEdit = null;
   #selectKeyFileButton: QPushButton = null;
 
   #fileDialog: QFileDialog = null;
@@ -117,7 +117,12 @@ class EditorUi {
               contentsMargins: [0, 0, 0, 0],
               children: [
                 {
-                  widget: this.#selectedKeyFileLabel = Label({text: ""}),
+                  widget: this.#selectedKeyFileLineEdit = LineEdit({
+                    onTextEdited: (text: string) => {
+                      this.#handleKeyFilePathChanged(text);
+                    },
+                    text: this.#config.keyFilePath ?? ""
+                  }),
                   stretch: 1,
                 },
                 {
@@ -141,16 +146,14 @@ class EditorUi {
   }
 
   #updateKeyFileLabel(): void {
-    if (this.#config.authenicationMethod === AuthenticationMethod.KEY_FILE_ONLY) {
-      this.#selectedKeyFileLabel.setText(this.#config.keyFilePath ?? "");
-    } else {
-      this.#selectedKeyFileLabel.setText("");
-    }
-    this.#selectKeyFileButton.setEnabled(this.#config.authenicationMethod === AuthenticationMethod.KEY_FILE_ONLY);
+    this.#selectedKeyFileLineEdit.setText(this.#config.keyFilePath ?? "");
+    const enabled = this.#config.authenicationMethod === AuthenticationMethod.KEY_FILE_ONLY;
+    this.#selectedKeyFileLineEdit.setEnabled(enabled);
+    this.#selectKeyFileButton.setEnabled(enabled);
   }
 
   #handleSelectKeyFile(): void {
-    this.#fileDialog = new QFileDialog(this.#widget.window());
+    this.#fileDialog = new QFileDialog(this.#widget.window(), "Select private key file");
     this.#fileDialog.setFileMode(FileMode.AnyFile);
     this.#fileDialog.exec();
 
@@ -158,6 +161,11 @@ class EditorUi {
     this.#config.keyFilePath = selectedFiles.length === 0 ? null : selectedFiles[0];
     this.#sessionEditorBase.setSessionConfiguration(this.#config);
     this.#updateKeyFileLabel();
+  }
+
+  #handleKeyFilePathChanged(keyFilePath: string): void {
+    this.#config.keyFilePath = keyFilePath;
+    this.#sessionEditorBase.setSessionConfiguration(this.#config);
   }
 
   getWidget(): QWidget {
