@@ -265,6 +265,14 @@ export abstract class FontAtlasBase<CG extends CachedGlyph> {
     font.setWeight(style & STYLE_MASK_BOLD ? QFontWeight.Bold : QFontWeight.Normal);
     font.setItalic((style & STYLE_MASK_ITALIC) !== 0);
 
+    if ((style & STYLE_MASK_ITALIC) !== 0) {
+      // Make the font slightly smaller when it is italic.
+      // This helps keep the glyphs within the cell.
+      this.#qfont.setPixelSize(Math.floor(this._metrics.fontSizePx * 0.8));
+    } else {
+      this.#qfont.setPixelSize(this._metrics.fontSizePx);
+    }
+
     painter.setFont(font);
 
     let metrics = this._metrics;
