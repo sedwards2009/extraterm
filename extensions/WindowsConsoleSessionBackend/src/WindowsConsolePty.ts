@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Simon Edwards <simon@simonzone.com>
+ * Copyright 2020-2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -52,7 +52,15 @@ export class WindowsConsolePty implements Pty {
     this.onExit = this._onExitEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this._onAvailableWriteBufferSizeChangeEventEmitter.event;
 
-    this.realPty = pty.spawn(options.exe, options.args, options);
+    const nodePtyOptions: pty.IWindowsPtyForkOptions = {
+      rows: options.rows,
+      cols: options.cols,
+      name: options.name,
+      cwd: options.cwd,
+      env: options.env,
+      useConpty: false
+    };
+    this.realPty = pty.spawn(options.exe, options.args, nodePtyOptions);
 
     this.realPty.onData((data: any): void => {
       this._onDataEventEmitter.fire(data);
@@ -125,7 +133,8 @@ export class WindowsConsolePty implements Pty {
 
     this._log.warn("WindowsConsolePty.destroy()");
     this._emitBufferSizeLater.cancel();
-    this.realPty.destroy();
+    this.realPty.kill();
+    this.realPty = null;
     this._state = PtyState.DEAD;
   }
 
