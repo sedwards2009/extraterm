@@ -161,18 +161,6 @@
     "lines": [
       "<h2>",
       {"icon": "fa-lightbulb"},
-      " Tip: Start a Different Terminal Session</h2>",
-      "<p>",
-      "The plus icon in the title bar lets you open a new terminal tab using the default terminal session type. ",
-      "Did you know that you can select a different session type? Just click on the plus icon with the right mouse ",
-      "button to choose a different session type.",
-      "</p>"
-    ]
-  },
-  {
-    "lines": [
-      "<h2>",
-      {"icon": "fa-lightbulb"},
       " Tip: Have More ",
       {"icon": "fa-keyboard"},
       "</h2>",
