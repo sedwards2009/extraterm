@@ -57,6 +57,7 @@
           "node_modules/node-pty/LICENSE",
           "node_modules/node-pty/package.json",
           "node_modules/node-pty/lib/**/*.js",
+          "node_modules/ssh2/**/*.js",
           "node_modules/ssh2/lib/protocol/crypto/build/Release/sshcrypto.node",
           "extensions/**/dist/*.js",
           "extensions/**/dist/*.cjs",
