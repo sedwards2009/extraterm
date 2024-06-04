@@ -9,7 +9,7 @@
   "scripts": {
     "build": "yarn run build-code && yarn run build-bundle && yarn run lint",
     "build-code": "tsc",
-    "build-bundle": "esbuild build/SSHSessionBackendExtension.js --bundle --outfile=dist/SSHSessionBackendExtension.js --platform=node --format=esm --external:ssh2",
+    "build-bundle": "esbuild build/SSHSessionBackendExtension.js --bundle --outfile=dist/SSHSessionBackendExtension.js --platform=node --format=esm --external:ssh2 --external:cpu-features",
     "clean": "shx rm -rf build dist",
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\"",
