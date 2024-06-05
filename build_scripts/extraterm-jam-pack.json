@@ -45,6 +45,7 @@
           "main/resources/terminal_fonts/**/*",
           "main/resources/logo/extraterm_small_logo_*.png",
           "node_modules/asn1/**/*",
+          "node_modules/bcrypt-pbkdf/**/*",
           "node_modules/cpu-features/build/Release/cpufeatures.node",
           "node_modules/cpu-features/**/*.js",
           "node_modules/cpu-features/package.json",
