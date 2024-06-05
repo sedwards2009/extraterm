@@ -65,6 +65,7 @@
           "node_modules/ssh2/package.json",
           "node_modules/ssh2/**/*.js",
           "node_modules/ssh2/lib/protocol/crypto/build/Release/sshcrypto.node",
+          "node_modules/tweetnacl/**/*",
           "extensions/**/dist/*.js",
           "extensions/**/dist/*.cjs",
           "extensions/*/package.json",
