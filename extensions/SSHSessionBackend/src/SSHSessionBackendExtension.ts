@@ -52,6 +52,7 @@ class SSHBackend implements SessionBackend {
     const preMessage = "";
 
     const privateKeyFilenames: string[] = [];
+    let tryPasswordAuth = false;
     switch (sessionConfig.authenicationMethod) {
       case AuthenticationMethod.DEFAULT_KEYS_PASSWORD:
         const homeDir = os.homedir();
@@ -59,9 +60,11 @@ class SSHBackend implements SessionBackend {
         privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_dsa"));
         privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_ecdsa"));
         privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_ed25519"));
+        tryPasswordAuth = true;
         break;
 
       case AuthenticationMethod.PASSWORD_ONLY:
+        tryPasswordAuth = true;
         break;
 
       case AuthenticationMethod.KEY_FILE_ONLY:
@@ -78,6 +81,7 @@ class SSHBackend implements SessionBackend {
       port: sessionConfig.port,
       username: username,
       privateKeyFilenames,
+      tryPasswordAuth,
     };
 
     return new SSHPty(this._log, options);

@@ -25,6 +25,7 @@ export interface PtyOptions {
   port: number;
   username: string;
   privateKeyFilenames?: string[];
+  tryPasswordAuth: boolean;
 }
 
 enum PtyState {
@@ -42,6 +43,7 @@ export class SSHPty implements Pty {
   #sshConnection: ssh2.Client = null;
   #stream: ssh2.ClientChannel = null;
   #remainingPrivateKeyFilenames: string[] = [];
+  #tryPasswordAuth = false;
   #passwordCallback: ssh2.NextAuthHandler = null;
   #password: string = "";
 
@@ -71,6 +73,7 @@ export class SSHPty implements Pty {
     this._log = log;
     this.#ptyOptions = options;
     this.#remainingPrivateKeyFilenames = [...(options.privateKeyFilenames ?? [])];
+    this.#tryPasswordAuth = options.tryPasswordAuth;
     this.onData = this.#onDataEventEmitter.event;
     this.onExit = this.#onExitEventEmitter.event;
     this.onAvailableWriteBufferSizeChange = this.#onAvailableWriteBufferSizeChangeEventEmitter.event;
@@ -363,7 +366,11 @@ export class SSHPty implements Pty {
       }
     }
 
-    this.#startPasswordInput(callback);
+    if (this.#tryPasswordAuth) {
+      this.#startPasswordInput(callback);
+    }
+
+    callback(<any>false);
   }
 
   #startPasswordInput(callback: ssh2.NextAuthHandler): void {
