@@ -5,7 +5,7 @@
  */
 import {ExtensionContext, Logger, SessionConfiguration, SessionEditorBase} from "@extraterm/extraterm-extension-api";
 import { Direction, FileMode, QFileDialog, QLineEdit, QPushButton, QWidget } from "@nodegui/nodegui";
-import { BoxLayout, ComboBox, GridLayout, LineEdit, SpinBox, Widget, PushButton } from "qt-construct";
+import { BoxLayout, ComboBox, GridLayout, LineEdit, SpinBox, Widget, PushButton, CheckBox } from "qt-construct";
 
 
 let log: Logger = null;
@@ -26,6 +26,7 @@ interface SSHSessionConfiguration extends SessionConfiguration {
   username?: string;
   authenicationMethod?: AuthenticationMethod;
   keyFilePath?: string;
+  verboseLogging?: boolean;
 }
 
 export function activate(context: ExtensionContext): any {
@@ -138,7 +139,16 @@ class EditorUi {
                 }
               ]
             })
-          })
+          }),
+
+          "",
+          CheckBox({
+            text: "Verbose logging",
+            checked: this.#config.verboseLogging ?? false,
+            onStateChanged: (enabled: number) => {
+              this.#handleVerboseLoggingChanged(enabled !== 0);
+            }
+          }),
         ]
       })
     });
@@ -165,6 +175,11 @@ class EditorUi {
 
   #handleKeyFilePathChanged(keyFilePath: string): void {
     this.#config.keyFilePath = keyFilePath;
+    this.#sessionEditorBase.setSessionConfiguration(this.#config);
+  }
+
+  #handleVerboseLoggingChanged(enabled: boolean): void {
+    this.#config.verboseLogging = enabled;
     this.#sessionEditorBase.setSessionConfiguration(this.#config);
   }
 

@@ -26,6 +26,7 @@ export interface PtyOptions {
   username: string;
   privateKeyFilenames?: string[];
   tryPasswordAuth: boolean;
+  verboseLogging?: boolean;
 }
 
 enum PtyState {
@@ -154,11 +155,19 @@ export class SSHPty implements Pty {
       });
     });
 
+    let debugFunction: ssh2.DebugFunction = undefined;
+    if (options.verboseLogging) {
+      debugFunction = (message: string): void => {
+        this.#onDataEventEmitter.fire(`ssh logging: ${message}\n\r`);
+      };
+    }
+
     this.#sshConnection.connect({
+      debug: debugFunction,
       host: options.host,
       port: options.port,
       username: options.username,
-      tryKeyboard: true,
+      tryKeyboard: false,
       authHandler: (
           methodsLeft: ssh2.AuthenticationType[],
           partialSuccess: boolean,
