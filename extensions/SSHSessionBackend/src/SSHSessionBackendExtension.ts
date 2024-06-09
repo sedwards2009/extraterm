@@ -16,7 +16,8 @@ import { PtyOptions, SSHPty } from "./SSHPty";
 enum AuthenticationMethod {
   DEFAULT_KEYS_PASSWORD,
   PASSWORD_ONLY,
-  KEY_FILE_ONLY
+  KEY_FILE_ONLY,
+  SSH_AGENT_ONLY,
 };
 
 // Note: This is duplicated in SSHSessionEditorExtension.ts.
@@ -63,12 +64,15 @@ class SSHBackend implements SessionBackend {
         tryPasswordAuth = true;
         break;
 
+      case AuthenticationMethod.KEY_FILE_ONLY:
+        privateKeyFilenames.push(sessionConfig.keyFilePath);
+        break;
+
       case AuthenticationMethod.PASSWORD_ONLY:
         tryPasswordAuth = true;
         break;
 
-      case AuthenticationMethod.KEY_FILE_ONLY:
-        privateKeyFilenames.push(sessionConfig.keyFilePath);
+      default:
         break;
     }
 
@@ -82,9 +86,24 @@ class SSHBackend implements SessionBackend {
       username: username,
       privateKeyFilenames,
       tryPasswordAuth,
+      agentSocketPath: this.#createAgentSocketPath(sessionConfig),
     };
 
     return new SSHPty(this._log, options);
+  }
+
+  #createAgentSocketPath(sessionConfig: SSHSessionConfiguration): string {
+    const needAgent = sessionConfig.authenicationMethod === AuthenticationMethod.DEFAULT_KEYS_PASSWORD ||
+                      sessionConfig.authenicationMethod === AuthenticationMethod.SSH_AGENT_ONLY;
+    if (! needAgent) {
+      return undefined;
+    }
+
+    if (process.platform === "win32") {
+      return undefined;
+    } else {
+      return process.env.SSH_AUTH_SOCK;
+    }
   }
 
   #createEnv(sessionOptions: CreateSessionOptions): EnvironmentMap {

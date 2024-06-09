@@ -14,10 +14,16 @@ let log: Logger = null;
 enum AuthenticationMethod {
   DEFAULT_KEYS_PASSWORD,
   PASSWORD_ONLY,
-  KEY_FILE_ONLY
+  KEY_FILE_ONLY,
+  SSH_AGENT_ONLY,
 };
 
-const AUTHENTICATION_METHOD_LABELS = ["Default OpenSSH keys, Password", "Password only", "Key file only"];
+const AUTHENTICATION_METHOD_LABELS = [
+  "SSH Agent, Default OpenSSH keys, Password",
+  "Password only",
+  "Key file only",
+  "SSH Agent only"
+];
 
 // Note: This is duplicated in SSHSessionBackendExtension.ts.
 interface SSHSessionConfiguration extends SessionConfiguration {

@@ -26,6 +26,7 @@ export interface PtyOptions {
   username: string;
   privateKeyFilenames?: string[];
   tryPasswordAuth: boolean;
+  agentSocketPath?: string;
 }
 
 enum PtyState {
@@ -48,6 +49,7 @@ export class SSHPty implements Pty {
   #password: string = "";
 
   #ptyOptions: PtyOptions = null;
+  #tryAgentAuth = false;
   #verifyCallback: ssh2.VerifyCallback = null;
 
   #permittedDataSize = 0;
@@ -154,11 +156,14 @@ export class SSHPty implements Pty {
       });
     });
 
+    this.#tryAgentAuth = options.agentSocketPath !== undefined;
+
     this.#sshConnection.connect({
       host: options.host,
       port: options.port,
       username: options.username,
       tryKeyboard: true,
+      agent: options.agentSocketPath,
       authHandler: (
           methodsLeft: ssh2.AuthenticationType[],
           partialSuccess: boolean,
@@ -359,6 +364,12 @@ export class SSHPty implements Pty {
       partialSuccess: boolean,
       callback: ssh2.NextAuthHandler): void {
 
+    if (this.#tryAgentAuth) {
+      this.#tryAgentAuth = false;
+      callback({type: "agent", agent: this.#ptyOptions.agentSocketPath, username: this.#ptyOptions.username});
+      return;
+    }
+
     while (this.#remainingPrivateKeyFilenames.length !== 0) {
       const keyFilename = this.#remainingPrivateKeyFilenames.pop();
       if (this.#handlePrivateKeyAuth(keyFilename, callback)) {
@@ -368,6 +379,7 @@ export class SSHPty implements Pty {
 
     if (this.#tryPasswordAuth) {
       this.#startPasswordInput(callback);
+      return;
     }
 
     callback(<any>false);
