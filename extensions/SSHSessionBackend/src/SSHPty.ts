@@ -368,6 +368,7 @@ export class SSHPty implements Pty {
 
     if (this.#tryPasswordAuth) {
       this.#startPasswordInput(callback);
+      return;
     }
 
     callback(<any>false);
