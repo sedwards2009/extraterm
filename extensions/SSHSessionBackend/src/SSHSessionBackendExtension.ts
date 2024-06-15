@@ -27,6 +27,7 @@ interface SSHSessionConfiguration extends SessionConfiguration {
   username?: string;
   authenicationMethod?: AuthenticationMethod;
   keyFilePath?: string;
+  verboseLogging?: boolean;
 }
 
 class SSHBackend implements SessionBackend {
@@ -87,6 +88,7 @@ class SSHBackend implements SessionBackend {
       privateKeyFilenames,
       tryPasswordAuth,
       agentSocketPath: this.#createAgentSocketPath(sessionConfig),
+      verboseLogging: sessionConfig.verboseLogging,
     };
 
     return new SSHPty(this._log, options);
@@ -141,7 +143,10 @@ class SSHBackend implements SessionBackend {
   }
 }
 
+let log: Logger = null;
+
 export function activate(context: ExtensionContext): any {
+  log = context.logger;
   context.sessions.registerSessionBackend("ssh", new SSHBackend(context.logger));
 }
 
