@@ -478,7 +478,7 @@ export class SSHPty implements Pty {
     if (this.#state !== PtyState.LIVE) {
       return;
     }
-    this.#stream.setWindow(cols, rows, 0, 0);
+    this.#stream.setWindow(rows, cols, 0, 0);
   }
 
   destroy(): void {
