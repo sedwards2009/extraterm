@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as child_process from "node:child_process";
+import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
@@ -29,6 +30,8 @@ interface SSHSessionConfiguration extends SessionConfiguration {
   keyFilePath?: string;
   verboseLogging?: boolean;
 }
+
+const WINDOW_SSH_AUTH_SOCK = "\\\\.\\pipe\\openssh-ssh-agent";
 
 class SSHBackend implements SessionBackend {
 
@@ -102,6 +105,9 @@ class SSHBackend implements SessionBackend {
     }
 
     if (process.platform === "win32") {
+      if (fs.existsSync(WINDOW_SSH_AUTH_SOCK)) {
+        return WINDOW_SSH_AUTH_SOCK;
+      }
       return undefined;
     } else {
       return process.env.SSH_AUTH_SOCK;
