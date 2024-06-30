@@ -30,7 +30,7 @@ interface SSHSessionConfiguration extends SessionConfiguration {
   host?: string;
   port?: number;
   username?: string;
-  authenicationMethod?: AuthenticationMethod;
+  authenticationMethod?: AuthenticationMethod;
   keyFilePath?: string;
   verboseLogging?: boolean;
 }
@@ -108,10 +108,10 @@ class EditorUi {
 
           "Authentication:",
           ComboBox({
-            currentIndex: this.#config.authenicationMethod ?? AuthenticationMethod.DEFAULT_KEYS_PASSWORD,
+            currentIndex: this.#config.authenticationMethod ?? AuthenticationMethod.DEFAULT_KEYS_PASSWORD,
             items: AUTHENTICATION_METHOD_LABELS,
             onCurrentIndexChanged: (index: number): void => {
-              this.#config.authenicationMethod = index;
+              this.#config.authenticationMethod = index;
               sessionEditorBase.setSessionConfiguration(this.#config);
               this.#updateKeyFileLabel();
             }
@@ -139,7 +139,7 @@ class EditorUi {
                     onClicked: (): void => {
                       this.#handleSelectKeyFile();
                     },
-                    enabled: this.#config.authenicationMethod === AuthenticationMethod.KEY_FILE_ONLY,
+                    enabled: this.#config.authenticationMethod === AuthenticationMethod.KEY_FILE_ONLY,
                   }),
                   stretch: 0,
                 }
@@ -163,7 +163,7 @@ class EditorUi {
 
   #updateKeyFileLabel(): void {
     this.#selectedKeyFileLineEdit.setText(this.#config.keyFilePath ?? "");
-    const enabled = this.#config.authenicationMethod === AuthenticationMethod.KEY_FILE_ONLY;
+    const enabled = this.#config.authenticationMethod === AuthenticationMethod.KEY_FILE_ONLY;
     this.#selectedKeyFileLineEdit.setEnabled(enabled);
     this.#selectKeyFileButton.setEnabled(enabled);
   }

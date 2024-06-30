@@ -26,7 +26,7 @@ interface SSHSessionConfiguration extends SessionConfiguration {
   host?: string;
   port?: number;
   username?: string;
-  authenicationMethod?: AuthenticationMethod;
+  authenticationMethod?: AuthenticationMethod;
   keyFilePath?: string;
   verboseLogging?: boolean;
 }
@@ -58,7 +58,7 @@ class SSHBackend implements SessionBackend {
 
     const privateKeyFilenames: string[] = [];
     let tryPasswordAuth = false;
-    switch (sessionConfig.authenicationMethod) {
+    switch (sessionConfig.authenticationMethod) {
       case AuthenticationMethod.DEFAULT_KEYS_PASSWORD:
         const homeDir = os.homedir();
         privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_rsa"));
@@ -98,8 +98,8 @@ class SSHBackend implements SessionBackend {
   }
 
   #createAgentSocketPath(sessionConfig: SSHSessionConfiguration): string {
-    const needAgent = sessionConfig.authenicationMethod === AuthenticationMethod.DEFAULT_KEYS_PASSWORD ||
-                      sessionConfig.authenicationMethod === AuthenticationMethod.SSH_AGENT_ONLY;
+    const needAgent = sessionConfig.authenticationMethod === AuthenticationMethod.DEFAULT_KEYS_PASSWORD ||
+                      sessionConfig.authenticationMethod === AuthenticationMethod.SSH_AGENT_ONLY;
     if (! needAgent) {
       return undefined;
     }
