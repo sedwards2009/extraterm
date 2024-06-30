@@ -55,6 +55,16 @@ export interface Tab {
   showListPicker(options: ListPickerOptions): Promise<number | undefined>;
 
   /**
+   * Show a text input box and allow the user to enter some text.
+   *
+   * See `TextInputOptions` for more details about how to configure this.
+   *
+   * @return a promise which resolves to the entered text or undefined if is
+   *          was cancelled.
+   */
+  showTextInput(options: TextInputOptions): Promise<string | undefined>;
+
+  /**
    * True if this terminal is still open.
    *
    * Once the uesr closes a terminal tab and the tab disappears, then this will return `false`.
@@ -105,4 +115,12 @@ export interface DialogOptions {
   message: string;
   isHtml?: boolean;
   buttonOptions: (string | ButtonOptions)[];
+}
+
+export interface TextInputOptions {
+  message: string;
+  isHtml?: boolean;
+  value: string;
+  placeholder?: string;
+  password?: boolean;
 }

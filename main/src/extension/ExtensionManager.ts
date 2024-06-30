@@ -28,6 +28,7 @@ import { InternalExtensionContextImpl } from "./InternalExtensionContextImpl.js"
 import { Tab } from "../Tab.js";
 import { ListPickerPopOver } from "./ListPickerPopOver.js";
 import { DialogPopOver } from "./DialogPopOver.js";
+import { TextInputPopOver } from "./TextInputPopOver.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { BlockFrame } from "../terminal/BlockFrame.js";
 import { TerminalBlock } from "../terminal/TerminalBlock.js";
@@ -91,6 +92,7 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
 
   #listPickerPopOver: ListPickerPopOver = null;
   #dialogPopOver: DialogPopOver = null;
+  #textInputPopOver: TextInputPopOver = null;
 
   constructor(configDatabase: ConfigDatabase, themeManager: ThemeManager, extensionPaths: string[],
       applicationVersion: string) {
@@ -885,6 +887,14 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
     }
     const win = this.getWindowForTab(tab);
     return this.#listPickerPopOver.show(win, {...options, containingRect: win.getTabGlobalGeometry(tab)});
+  }
+
+  async showTextInput(tab: Tab, options: ExtensionApi.TextInputOptions): Promise<string | undefined> {
+    if (this.#textInputPopOver == null) {
+      this.#textInputPopOver = new TextInputPopOver(this.#uiStyle);
+    }
+    const win = this.getWindowForTab(tab);
+    return this.#textInputPopOver.show(win, {...options, containingRect: win.getTabGlobalGeometry(tab)});
   }
 
   async showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number> {

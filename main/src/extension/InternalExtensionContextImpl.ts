@@ -244,6 +244,10 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
     return this.#extensionManager.showListPicker(tab, options);
   }
 
+  async showTextInput(tab: Tab, options: ExtensionApi.TextInputOptions): Promise<string | undefined> {
+    return this.#extensionManager.showTextInput(tab, options);
+  }
+
   async showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number> {
     return this.#extensionManager.showOnCursorListPicker(terminal, options);
   }
