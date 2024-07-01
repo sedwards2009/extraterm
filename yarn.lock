@@ -9570,8 +9570,7 @@ __metadata:
     eslint: 8.53.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
-    fs-extra: ^5.0.0
-    lodash-es: 4.17.21
+    extraterm-uuid: 1.0.0
     qt-construct: 0.1.0
     shx: ^0.3.2
     typescript: 5.2.2
