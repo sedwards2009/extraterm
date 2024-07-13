@@ -17,7 +17,7 @@ export function activate(_context: ExtensionContext): any {
   context.commands.registerCommand("ssh-quick-open:open", quickOpenCommand);
 }
 
-// Note: This is mostlyduplicated in SSHSessionEditorExtension.ts.
+// Note: This is mostly duplicated in SSHSessionEditorExtension.ts.
 interface SSHSessionConfiguration extends SessionConfiguration {
   host?: string;
   port?: number;
@@ -26,7 +26,7 @@ interface SSHSessionConfiguration extends SessionConfiguration {
 }
 
 async function quickOpenCommand(): Promise<void> {
-  const sshConnectionString = await context.activeTerminal.tab.showTextInput({
+  const sshConnectionString = await context.activeTab.showTextInput({
     message: "Enter a SSH connection string:",
     value: "",
   });
