@@ -73,6 +73,10 @@ export class ExtensionContextImpl implements ExtensionApi.ExtensionContext, Exte
     return this.#internalExtensionContext.getActiveWindow();
   }
 
+  get activeTab(): ExtensionApi.Tab {
+    return this.#internalExtensionContext.wrapTab(this.#internalExtensionContext.getActiveInternalTab());
+  }
+
   get application(): ExtensionApi.Application {
     return this.#application;
   }

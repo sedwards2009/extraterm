@@ -4,6 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as child_process from "node:child_process";
+import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
@@ -16,7 +17,8 @@ import { PtyOptions, SSHPty } from "./SSHPty";
 enum AuthenticationMethod {
   DEFAULT_KEYS_PASSWORD,
   PASSWORD_ONLY,
-  KEY_FILE_ONLY
+  KEY_FILE_ONLY,
+  SSH_AGENT_ONLY,
 };
 
 // Note: This is duplicated in SSHSessionEditorExtension.ts.
@@ -24,10 +26,12 @@ interface SSHSessionConfiguration extends SessionConfiguration {
   host?: string;
   port?: number;
   username?: string;
-  authenicationMethod?: AuthenticationMethod;
+  authenticationMethod?: AuthenticationMethod;
   keyFilePath?: string;
   verboseLogging?: boolean;
 }
+
+const WINDOW_SSH_AUTH_SOCK = "\\\\.\\pipe\\openssh-ssh-agent";
 
 class SSHBackend implements SessionBackend {
 
@@ -54,7 +58,7 @@ class SSHBackend implements SessionBackend {
 
     const privateKeyFilenames: string[] = [];
     let tryPasswordAuth = false;
-    switch (sessionConfig.authenicationMethod) {
+    switch (sessionConfig.authenticationMethod) {
       case AuthenticationMethod.DEFAULT_KEYS_PASSWORD:
         const homeDir = os.homedir();
         privateKeyFilenames.push(path.join(homeDir, ".ssh", "id_rsa"));
@@ -64,12 +68,15 @@ class SSHBackend implements SessionBackend {
         tryPasswordAuth = true;
         break;
 
+      case AuthenticationMethod.KEY_FILE_ONLY:
+        privateKeyFilenames.push(sessionConfig.keyFilePath);
+        break;
+
       case AuthenticationMethod.PASSWORD_ONLY:
         tryPasswordAuth = true;
         break;
 
-      case AuthenticationMethod.KEY_FILE_ONLY:
-        privateKeyFilenames.push(sessionConfig.keyFilePath);
+      default:
         break;
     }
 
@@ -83,10 +90,28 @@ class SSHBackend implements SessionBackend {
       username: username,
       privateKeyFilenames,
       tryPasswordAuth,
+      agentSocketPath: this.#createAgentSocketPath(sessionConfig),
       verboseLogging: sessionConfig.verboseLogging,
     };
 
     return new SSHPty(this._log, options);
+  }
+
+  #createAgentSocketPath(sessionConfig: SSHSessionConfiguration): string {
+    const needAgent = sessionConfig.authenticationMethod === AuthenticationMethod.DEFAULT_KEYS_PASSWORD ||
+                      sessionConfig.authenticationMethod === AuthenticationMethod.SSH_AGENT_ONLY;
+    if (! needAgent) {
+      return undefined;
+    }
+
+    if (process.platform === "win32") {
+      if (fs.existsSync(WINDOW_SSH_AUTH_SOCK)) {
+        return WINDOW_SSH_AUTH_SOCK;
+      }
+      return undefined;
+    } else {
+      return process.env.SSH_AUTH_SOCK;
+    }
   }
 
   #createEnv(sessionOptions: CreateSessionOptions): EnvironmentMap {

@@ -533,7 +533,7 @@ class Main {
   }
 
   async commandNewTerminal(state: CommonExtensionWindowState, args: {sessionUuid?: string, sessionName?: string,
-      workingDirectory?: string}): Promise<void> {
+      workingDirectory?: string, sessionConfiguration?: SessionConfiguration}): Promise<void> {
 
     let sessionConfiguration: SessionConfiguration = this.#configDatabase.getSessionConfig()[0];
     if (args.sessionUuid != null) {
@@ -546,6 +546,8 @@ class Main {
       if (sessionConfiguration == null) {
         throw new Error(`Unable to find session with name ${args.sessionName}`);
       }
+    } else if (args.sessionConfiguration != null) {
+      sessionConfiguration = args.sessionConfiguration;
     }
 
     const activeTab = state.activeTab;

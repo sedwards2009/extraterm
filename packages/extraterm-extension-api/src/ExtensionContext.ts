@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -10,6 +10,7 @@ import { Window, Windows } from "./Windows.js";
 import { Terminal, Terminals } from "./Terminal.js";
 import { Block } from "./Block.js";
 import { Settings } from "./Settings.js";
+import { Tab } from "./Tab.js";
 
 
 /**
@@ -112,6 +113,11 @@ export interface ExtensionContext {
   readonly activeHyperlinkURL: string;
 
   readonly activeWindow: Window;
+
+  /**
+   * The currently active/focussed tab.
+   */
+  readonly activeTab: Tab;
 
   readonly application: Application;
 

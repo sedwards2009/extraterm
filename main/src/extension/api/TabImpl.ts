@@ -39,6 +39,10 @@ export class TabImpl implements ExtensionApi.Tab {
     return this.#internalExtensionContext.showListPicker(this.#tab, options);
   }
 
+  showTextInput(options: ExtensionApi.TextInputOptions): Promise<string | undefined> {
+    return this.#internalExtensionContext.showTextInput(this.#tab, options);
+  }
+
   get isAlive(): boolean {
     return true;
   }

@@ -78,6 +78,7 @@ export interface ExtensionManager {
   createSessionSettingsEditors(sessionType: string, sessionConfiguration: ExtensionApi.SessionConfiguration,
     window: Window): InternalSessionSettingsEditor[];
   showDialog(tab: Tab, options: ExtensionApi.DialogOptions): Promise<number | undefined>;
+  showTextInput(tab: Tab, options: ExtensionApi.TextInputOptions): Promise<string | undefined>;
   showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
   showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number>;
   getSettingsTabContributions(): LoadedSettingsTabContribution[];
@@ -131,6 +132,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
   newWindowCreated(window: Window): void;
 
   showDialog(tab: Tab, options: ExtensionApi.DialogOptions): Promise<number | undefined>;
+  showTextInput(tab: Tab, options: ExtensionApi.TextInputOptions): Promise<string | undefined>;
   showListPicker(tab: Tab, options: ExtensionApi.ListPickerOptions): Promise<number>;
   showOnCursorListPicker(terminal: Terminal, options: ExtensionApi.ListPickerOptions): Promise<number>;
 

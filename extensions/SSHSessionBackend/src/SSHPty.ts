@@ -26,6 +26,7 @@ export interface PtyOptions {
   username: string;
   privateKeyFilenames?: string[];
   tryPasswordAuth: boolean;
+  agentSocketPath?: string;
   verboseLogging?: boolean;
 }
 
@@ -49,6 +50,7 @@ export class SSHPty implements Pty {
   #password: string = "";
 
   #ptyOptions: PtyOptions = null;
+  #tryAgentAuth = false;
   #verifyCallback: ssh2.VerifyCallback = null;
 
   #permittedDataSize = 0;
@@ -155,6 +157,7 @@ export class SSHPty implements Pty {
       });
     });
 
+    this.#tryAgentAuth = options.agentSocketPath !== undefined;
     let debugFunction: ssh2.DebugFunction = undefined;
     if (options.verboseLogging) {
       debugFunction = (message: string): void => {
@@ -168,6 +171,7 @@ export class SSHPty implements Pty {
       port: options.port,
       username: options.username,
       tryKeyboard: false,
+      agent: options.agentSocketPath,
       authHandler: (
           methodsLeft: ssh2.AuthenticationType[],
           partialSuccess: boolean,
@@ -367,6 +371,12 @@ export class SSHPty implements Pty {
       methodsLeft: ssh2.AuthenticationType[],
       partialSuccess: boolean,
       callback: ssh2.NextAuthHandler): void {
+
+    if (this.#tryAgentAuth) {
+      this.#tryAgentAuth = false;
+      callback({type: "agent", agent: this.#ptyOptions.agentSocketPath, username: this.#ptyOptions.username});
+      return;
+    }
 
     while (this.#remainingPrivateKeyFilenames.length !== 0) {
       const keyFilename = this.#remainingPrivateKeyFilenames.pop();

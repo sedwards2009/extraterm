@@ -60,6 +60,7 @@
       "extensions/OpenLink",
       "extensions/SSHSessionBackend",
       "extensions/SSHSessionEditor",
+      "extensions/SSHQuickOpen",
       "extensions/TerminalTitle",
       "extensions/Tips",
       "extensions/TLDRPages",
