@@ -923,14 +923,22 @@ export class TerminalBlock implements Block {
           lineText.push(line.getString(start.x, end.x - start.x).trimEnd());
         } else {
           // Top row of the selection.
-          lineText.push(line.getString(start.x, line.width-start.x).trimEnd());
+          let text = line.getString(start.x, line.width-start.x);
+          if ( ! line.isWrapped) {
+            text = text.trimEnd();
+          }
+          lineText.push(text);
         }
       } else {
         if ( ! isLastLineWrapped) {
           lineText.push("\n");
         }
         if (i !== end.y) {
-          lineText.push(line.getString(0, line.width).trimEnd());
+          let text = line.getString(0, line.width);
+          if ( ! line.isWrapped) {
+            text = text.trimEnd();
+          }
+          lineText.push(text);
         } else {
           // The last row of a multi-row selection.
           lineText.push(line.getString(0, end.x));
