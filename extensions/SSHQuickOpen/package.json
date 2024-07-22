@@ -34,8 +34,9 @@
       {
         "command": "ssh-quick-open:open",
         "title": "SSH Quick Open",
-        "category": "terminal",
-        "icon": "fa-plug"
+        "category": "window",
+        "icon": "fa-plug",
+        "order": 1050
       }
     ]
   }
