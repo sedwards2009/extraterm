@@ -9,8 +9,8 @@ import { QAbstractTableModel, Direction, QWidget, QVariant, QKeyEvent, QModelInd
   QAbstractItemViewSelectionBehavior, SelectionMode, QLineEdit, Key, SelectionFlag, FocusReason, AlignmentFlag, QFont, QColor, QRect, QBoxLayout, QSizePolicyPolicy
 } from "@nodegui/nodegui";
 import { stringToCodePointArray, hasEmojiPresentation } from "extraterm-unicode-utilities";
+import { rankList, surround } from "extraterm-fuzzy-rank";
 import { ColorSlot, CommandChar, FontSlot, TurboTextDelegate } from "nodegui-plugin-rich-text-delegate";
-import * as fuzzyjs from "fuzzyjs";
 import { BoxLayout, TableView, Widget, LineEdit } from "qt-construct";
 import { UiStyle } from "./UiStyle.js";
 import { TWEMOJI_FAMILY } from "../TwemojiConstants.js";
@@ -260,15 +260,23 @@ interface EntryMetadata {
   text: string;
   markedupText: string;
   score: number;
+  score2: number;
+  score3: number;
 }
 
 
 function cmpScore(a: EntryMetadata, b: EntryMetadata): number {
   if (a.score === b.score) {
-    return 0;
+    if (a.score2 === b.score2) {
+      if (a.score3 === b.score3) {
+        return 0;
+      }
+      return a.score3 < b.score3 ? -1 : 1;
+    }
+    return a.score2 < b.score2 ? -1 : 1;
   }
   // Note: Higher scores should be shown first.
-  return a.score > b.score ? -1 : 1;
+  return a.score < b.score ? -1 : 1;
 }
 
 function reverseCmpScore(a: EntryMetadata, b: EntryMetadata): number {
@@ -321,28 +329,27 @@ class ContentModel extends QAbstractTableModel {
         return [...entries].reverse();
       }
     } else {
-      for (const entry of entries) {
-        const result = fuzzyjs.match(searchText, entry.text, { withRanges: true, withScore: true });
-        if (result.match) {
-          entry.score = result.score;
-          const ranges = result.ranges;
-          entry.markedupText = this.#encodeEmoji(fuzzyjs.surround(entry.text,
-            {
-              result: {
-                ranges
-              },
-              prefix: SELECTION_START_MARKER,
-              suffix: SELECTION_END_MARKER
-            }
-          ));
-        } else {
-          entry.score = NaN;
-          // entry.markedupLabel = entry;
-        }
+
+      const candidates = entries.map(e => e.text);
+      const results = rankList(searchText, candidates);
+      for (const result of results) {
+        const entry = entries[result.index];
+        entry.score = result.score;
+        entry.score2 = result.score2;
+        entry.score3 = result.score3;
+        const ranges = result.matchRanges;
+        entry.markedupText = this.#encodeEmoji(surround(entry.text,
+          {
+            ranges,
+            prefix: SELECTION_START_MARKER,
+            suffix: SELECTION_END_MARKER
+          }
+        ));
       }
 
-      const resultEntries = entries.filter(e => ! isNaN(e.score));
+      const resultEntries = [...entries];
       resultEntries.sort(this.#isReverse ? reverseCmpScore : cmpScore);
+
       return resultEntries;
     }
   }
@@ -365,6 +372,8 @@ class ContentModel extends QAbstractTableModel {
       text: entry.fields[textFieldIndex],
       markedupText: this.#encodeEmoji(entry.fields[textFieldIndex]),
       score: 0,
+      score2: 0,
+      score3: 0,
     }));
     this.#updateVisibleEntries();
   }
