@@ -30,6 +30,7 @@ interface SSHSessionConfiguration extends SessionConfiguration {
   host?: string;
   port?: number;
   username?: string;
+  authenicationMethod?: AuthenticationMethod; // TODO: remove this it has a typo.
   authenticationMethod?: AuthenticationMethod;
   keyFilePath?: string;
   verboseLogging?: boolean;
@@ -59,6 +60,10 @@ class EditorUi {
     this.#sessionEditorBase = sessionEditorBase;
     this.#config = <SSHSessionConfiguration> sessionEditorBase.sessionConfiguration;
 
+    // Move the typo to the correct field.
+    if (this.#config.authenticationMethod == null) {
+      this.#config.authenticationMethod = this.#config.authenicationMethod;
+    }
     this.#config.port = this.#config.port ?? 22;
     this.#config.host = this.#config.host ?? "";
 
