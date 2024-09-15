@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -73,174 +73,107 @@ interface TestResult {
   matchRanges: MatchRange[];
 }
 
-type TestFunc = (searchText: string, candidate: string) => TestResult;
-
-const testFuncs: TestFunc[] = [
-  exactMatchTest,
-  exactCaseInsensitiveMatchText,
-  firstWordMatchTest,
-  firstWordCaseInsensitiveMatchTest,
-  wordMatchTest,
-  wordCaseInsensitiveMatchTest,
-  substringMatchTest,
-  substringCaseInsensitiveMatchTest
-];
-
 function score(searchText: string, candidate: string): ScoreResult {
-  for (let i=0; i<testFuncs.length; i++) {
-    const score = testFuncs[i](searchText, candidate);
-    if (score != null) {
-      return {
-        score: i,
-        score2: score.score2,
-        matchRanges: score.matchRanges
-      };
-    }
+  const score = bestFitMatchTest(searchText, candidate);
+  if (score != null) {
+    return {
+      score: 0,
+      score2: score.score2,
+      matchRanges: score.matchRanges
+    };
   }
 
   return {
-    score: testFuncs.length,
+    score: 1,
     score2: 0,
     matchRanges: []
   };
 }
 
-function exactMatchTest(searchText: string, candidate: string): TestResult {
-  if (searchText === candidate) {
-    return {
-      score2: 0,
-      matchRanges: [
-        {
-          start: 0,
-          stop: candidate.length
-        }
-      ]
-    };
-  }
-  return null;
-}
+const RANGE_PENALTY = 1000;
+const WORD_START_BONUS = -10;
+const INEXACT_MATCH_PENALTY = 10;
 
-function exactCaseInsensitiveMatchText(searchText: string, candidate: string): TestResult {
-  if (searchText.toLowerCase() === candidate.toLowerCase()) {
-    return {
-      score2: 0,
-      matchRanges: [
-        {
-          start: 0,
-          stop: searchText.length
-        }
-      ]
-    };
-  }
-  return null;
-}
+export function bestFitMatchTest(searchString: string, text: string): TestResult {
+  const searchStringLower = searchString.toLowerCase();
+  const textLower = text.toLowerCase();
 
-const wordSplitRegexp = /[ _-]/g;
+  let searchIndex =0;
+  let textIndex = 0;
+  const searchStringLen = searchString.length;
+  const textLen = textLower.length;
 
-function firstWordMatchTest(searchText: string, candidate: string): TestResult {
-  const words = candidate.split(wordSplitRegexp);
-  if (words[0] === searchText) {
-    return {
-      score2: 0,
-      matchRanges: [
-        {
-          start: 0,
-          stop: words[0].length
-        }
-      ]
-    };
-  }
-  return null;
-}
+  const matchRanges: MatchRange[] = [];
 
-function firstWordCaseInsensitiveMatchTest(searchText: string, candidate: string): TestResult {
-  const words = candidate.split(wordSplitRegexp);
-  if (words[0].toLowerCase() === searchText.toLowerCase()) {
-    return {
-      score2: 0,
-      matchRanges: [
-        {
-          start: 0,
-          stop: words[0].length
-        }
-      ]
-    };
-  }
-  return null;
-}
-
-function wordMatchTest(searchText: string, candidate: string): TestResult {
-  const words = candidate.split(wordSplitRegexp);
-  const index = words.indexOf(searchText);
-  if (index !== -1) {
-    let offset = 0;
-    for (let i=0; i<index; i++) {
-      offset += words[i].length + 1;
+  let matchStart = -1;
+  while (searchIndex < searchStringLen && textIndex < textLen) {
+    if (matchStart === -1) {
+      // We are looking for the start of a match.
+      if (searchStringLower[searchIndex] === textLower[textIndex]) {
+        matchStart = textIndex;
+        searchIndex++;
+      }
+    } else {
+      // We are in the middle of a match.
+      if (searchStringLower[searchIndex] === textLower[textIndex]) {
+        searchIndex++;
+      } else {
+        // We reached the end of the match.
+        matchRanges.push({
+          start: matchStart,
+          stop: textIndex
+        });
+        matchStart = -1;
+      }
     }
-    return {
-      score2: 0,
-      matchRanges: [
-        {
-          start: offset,
-          stop: offset + searchText.length
-        }
-      ]
-    };
+    textIndex++;
   }
-  return null;
-}
 
-function wordCaseInsensitiveMatchTest(searchText: string, candidate: string): TestResult {
-  const words = candidate.toLowerCase().split(wordSplitRegexp);
-  const index = words.indexOf(searchText.toLowerCase());
-  if (index !== -1) {
-    let offset = 0;
-    for (let i=0; i<index; i++) {
-      offset += words[i].length + 1;
+  if (searchIndex < searchStringLen) {
+    return null;
+  }
+
+  if (matchStart !== -1) {
+    matchRanges.push({
+      start: matchStart,
+      stop: textIndex
+    });
+  }
+
+  // Score the result
+  if (matchRanges.length === 0) {
+    return null;
+  }
+
+  let searchIndex2 = 0;
+  let inexactMatchesCount = 0;
+  let wordStartBonus = 0;
+  for (const range of matchRanges) {
+
+    if (range.start === 0) {
+      wordStartBonus++;
+    } else {
+      const prevChar = text[range.start - 1];
+      if (prevChar === ' ' || prevChar === '_' || prevChar === '-') {
+        wordStartBonus++;
+      }
     }
-    return {
-      score2: 0,
-      matchRanges: [
-        {
-          start: offset,
-          stop: offset + searchText.length
-        }
-      ]
-    };
-  }
-  return null;
-}
 
-function substringMatchTest(searchText: string, candidate: string): TestResult {
-  const index = candidate.indexOf(searchText);
-  if (index !== -1) {
-    return {
-      score2: index,
-      matchRanges: [
-        {
-          start: index,
-          stop: index + searchText.length
-        }
-      ]
-    };
+    for (let i=range.start; i<range.stop; i++) {
+      if (text[i] !== searchString[searchIndex2]) {
+        inexactMatchesCount++;
+      }
+      searchIndex2++;
+    }
   }
-  return null;
-}
 
-function substringCaseInsensitiveMatchTest(searchText: string, candidate: string): TestResult {
-  const index = candidate.toLowerCase().indexOf(searchText.toLowerCase());
-  if (index !== -1) {
-    return {
-      score2: index,
-      matchRanges: [
-        {
-          start: index,
-          stop: index + searchText.length
-        }
-      ]
-    };
-  }
-  return null;
+  return {
+    score2: (RANGE_PENALTY * matchRanges.length +
+      matchRanges[0].start +
+      INEXACT_MATCH_PENALTY * inexactMatchesCount +
+      WORD_START_BONUS * wordStartBonus),
+    matchRanges
+  };
 }
 
 export interface SurroundOptions {

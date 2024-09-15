@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 
-import { MatchRange, rankList } from "./main";
+import { bestFitMatchTest, MatchRange, rankList } from "./main";
 
 interface ExpectedResult {
   text: string;
@@ -48,4 +48,15 @@ describe.each(TEST_ITEMS)("Match cases", (searchText: string, candidates: string
     }
     done();
   });
+});
+
+test(`bestFitMatchTest`, done => {
+  const searchText = "strawcream";
+  const text = "strawberry and cream";
+  const result = bestFitMatchTest(searchText, text);
+  console.log(`${searchText}: ${JSON.stringify(result)}`);
+
+
+  expect(result.matchRanges.length).toBe(2);
+  done();
 });
