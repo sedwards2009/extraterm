@@ -4342,6 +4342,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"extraterm-fuzzy-rank@workspace:^, extraterm-fuzzy-rank@workspace:packages/extraterm-fuzzy-rank":
+  version: 0.0.0-use.local
+  resolution: "extraterm-fuzzy-rank@workspace:packages/extraterm-fuzzy-rank"
+  dependencies:
+    "@types/jest": 27.0.1
+    eslint: 8.53.0
+    eslint-config-extraterm: 1.0.0
+    eslint-plugin-unicorn: 42.0.0
+    jest: 27.5.1
+    shx: ^0.3.2
+    typescript: 5.2.2
+  languageName: unknown
+  linkType: soft
+
 "extraterm-later@1.0.0, extraterm-later@workspace:packages/extraterm-later":
   version: 0.0.0-use.local
   resolution: "extraterm-later@workspace:packages/extraterm-later"
@@ -4902,13 +4916,6 @@ __metadata:
   version: 1.1.1
   resolution: "function-bind@npm:1.1.1"
   checksum: b32fbaebb3f8ec4969f033073b43f5c8befbb58f1a79e12f1d7490358150359ebd92f49e72ff0144f65f2c48ea2a605bff2d07965f548f6474fd8efd95bf361a
-  languageName: node
-  linkType: hard
-
-"fuzzyjs@npm:^4.0.4":
-  version: 4.0.4
-  resolution: "fuzzyjs@npm:4.0.4"
-  checksum: ca9a851e4afb78832ae1fb763168bb5e7ab1ff6a2c9fed0b729a9d76925e8c81a4654be1da2973c83b8b1710f846e034eac0b89a3121111a2bc33dcb93028d5f
   languageName: node
   linkType: hard
 
@@ -7028,6 +7035,7 @@ __metadata:
     extraterm-color-utilities: 1.0.0
     extraterm-data-structures: 1.0.0
     extraterm-font-ligatures: 1.0.0
+    extraterm-fuzzy-rank: "workspace:^"
     extraterm-logging: 1.0.0
     extraterm-mimetype-detector: 1.0.0
     extraterm-readonly-toolbox: 0.1.0
@@ -7038,7 +7046,6 @@ __metadata:
     file-type: ^7.6.0
     finalhandler: 0.4.0
     fontinfo: 0.3.0
-    fuzzyjs: ^4.0.4
     get-stream: ^6.0.0
     he: ^1.2.0
     jest: 27.5.1
