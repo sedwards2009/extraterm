@@ -20,7 +20,7 @@ export class Color {
   /**
    * Creates a color object.
    *
-   * @param redOrString CSS color string or the red component (0-255).
+   * @param rgbaOrRedOrString CSS color string or RGBA or the red component (0-255).
    * @param green   Green component (0-255).
    * @param blue    Blue compoennt (0-255).
    * @param opacity Opacity or alpha (0-255). 0 is fully transparent, 255 is fully opaque.

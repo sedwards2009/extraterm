@@ -76,5 +76,16 @@ class PaletteImpl implements ExtensionApi.Palette {
   get linkHover(): string {
     return this.#uiStyle.getLinkHoverColor();
   }
-
+  get running(): string {
+    return this.#uiStyle.getRunningColor();
+  }
+  get neutral(): string {
+    return this.#uiStyle.getNeutralColor();
+  }
+  get success(): string {
+    return this.#uiStyle.getSuccessColor();
+  }
+  get failure(): string {
+    return this.#uiStyle.getFailureColor();
+  }
 }

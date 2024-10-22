@@ -54,6 +54,10 @@ export class BlockImpl implements ExtensionApi.Block, ExtensionApi.Disposable {
     }
   }
 
+  get metadata(): ExtensionApi.BlockMetadata {
+    return this.#blockFrame.getBlock().getMetadata();
+  }
+
   get type(): string {
     this.#init();
     return this.#type;

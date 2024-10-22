@@ -38,4 +38,9 @@ export interface UiStyle {
   getLinkHoverColor(): string;
   getTextMatchSelectedColor(): string;
   getTextMatchColor(): string;
+
+  getRunningColor(): string;
+  getNeutralColor(): string;
+  getSuccessColor(): string;
+  getFailureColor(): string;
 }

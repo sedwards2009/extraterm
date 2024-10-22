@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -38,7 +38,7 @@ export interface Block {
    *
    * For terminal output and current block receiving terminal output, this
    * string will be equal to `TerminalType`, and the `details` field will
-   * contain a `TerminalDetails` object.
+   * contain a `TerminalOutputDetails` object.
    */
   readonly type: string;
 
@@ -53,6 +53,8 @@ export interface Block {
   readonly terminal: Terminal;
 
   readonly geometry: BlockGeometry;
+
+  readonly metadata: BlockMetadata;
 }
 
 export interface BlockGeometry {

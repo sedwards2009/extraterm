@@ -3,16 +3,22 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QIcon } from "@nodegui/nodegui";
+import { QColor, QIcon } from "@nodegui/nodegui";
 import { blue, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate, toHex } from "khroma";
 
 import { createIcon } from "../Icons.js";
 import { IconPair, UiStyle } from "../UiStyle.js";
 import { TitleBarStyle } from "../../config/Config.js";
+import { Color } from "packages/extraterm-color-utilities/dist/ColorUtilities.js";
 
 
 function toRgba(color: string): number {
   return (red(color) << 24) | (green(color) << 16) | (blue(color) << 8) | 0xff;
+}
+
+function hslToRgb(hDegree: number, sPercent: number, lPercent: number): string {
+  const argb32 = QColor.fromHslF(hDegree/360, sPercent/100, lPercent/100).rgba();
+  return new Color((argb32 << 8) | 0xff).toHexString();
 }
 
 export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBarStyle): UiStyle {
@@ -29,6 +35,11 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
   let styleLinkHoverColor = "";
   let styleTextMatchColor = "";
   let styleTextMatchSelectedColor = "";
+  let stylePostureRunningColor = "";
+  let stylePostureNeutralColor = "";
+  let stylePostureSuccessColor = "";
+  let stylePostureFailureColor = "";
+
   const base100PercentFontSize = 10;
 
   function DarkTwoStyleSheet(resourceDirectory: string, guiScale: number, dpi: number): string {
@@ -77,19 +88,19 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     const textMutedColor = mix(textColor, backgroundColor, 75);
     const textDisabledColor = darken(backgroundColor, 6);
 
-    const brandPrimary = "hsl(219,  79%, 66%)";
+    const brandPrimary = hslToRgb(219, 79, 66);
     const brandSuccess = "hsl(140,  44%, 62%)";
     styleBrandSuccess = brandSuccess;
     const brandInfo = "hsl(219,  79%, 66%)";
     const brandWarning = "hsl( 36,  60%, 72%)";
-    const brandDanger = "hsl(  9, 100%, 64%)";
+    const brandDanger = hslToRgb(9, 100, 64);
     styleBrandDanger = brandDanger;
 
     const backgroundPrimaryColor = accentBgColor;
-    const backgroundSuccessColor = "hsl(132, 58%, 40%)";
-    const backgroundInfoColor = "hsl(208, 88%, 48%)";
-    const backgroundWarningColor = "hsl( 42, 88%, 36%)";
-    const backgroundDangerColor = "hsl(  5, 64%, 50%)";
+    const backgroundSuccessColor = hslToRgb(132, 58, 40);
+    const backgroundInfoColor = hslToRgb(208, 88, 48);
+    const backgroundWarningColor = hslToRgb(42, 88, 36);
+    const backgroundDangerColor = hslToRgb(5, 64, 50);
 
     const brandTextPrimary = "#ffffff";
     const brandTextSuccess = "#ffffff";
@@ -1211,6 +1222,10 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     function DecoratedFrameStyleSheet(): string {
       const borderWidth = "1px";
 
+      stylePostureRunningColor = baseBorderColor;
+      stylePostureNeutralColor = baseBorderColor;
+      stylePostureSuccessColor = brandPrimary;
+      stylePostureFailureColor = brandDanger;
       return `
   QWidget[cssClass~="frame"] {
   }
@@ -1624,7 +1639,19 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
     },
     getTextMatchSelectedColor(): string {
       return styleTextMatchSelectedColor;
-    }
+    },
+    getRunningColor(): string {
+      return stylePostureRunningColor;
+    },
+    getNeutralColor(): string {
+      return stylePostureNeutralColor;
+    },
+    getSuccessColor(): string {
+      return stylePostureSuccessColor;
+    },
+    getFailureColor(): string {
+      return stylePostureFailureColor;
+    },
   };
 }
 

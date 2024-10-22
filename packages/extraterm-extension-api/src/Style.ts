@@ -1520,4 +1520,8 @@ export interface Palette {
   backgroundSelected: string;
   link: string;
   linkHover: string;
+  running: string;
+  neutral: string;
+  success: string;
+  failure: string;
 }
