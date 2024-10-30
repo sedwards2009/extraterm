@@ -21,11 +21,12 @@ export function activate(_context: ExtensionContext): any {
   context = _context;
 
   context.terminals.onDidCreateTerminal(handleNewTerminal);
-
+  for (const terminal of context.terminals.terminals) {
+    handleNewTerminal(terminal);
+  }
 }
 
 function handleNewTerminal(terminal: Terminal): void {
-  log.info("New terminal created.");
   const scrollMap = new ScrollMap(terminal);
   terminalToExtensionMap.set(terminal, scrollMap);
 }
@@ -92,17 +93,15 @@ class ScrollMapWidget {
     // this.#log.debug(`Paint event: ${event.rect().left()}, ${event.rect().top()}, ` +
     //   `${event.rect().width()}, ${event.rect().height()}`);
     const paintRect = event.rect();
+    const palette = this.#terminal.tab.window.style.palette;
 
     const painter = new QPainter(this.#rootWidget);
-    painter.fillRectF(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(), new QColor("#000000"));
+    painter.fillRectF(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(),
+      new QColor(palette.background));
 
     const viewport = this.#terminal.viewport;
     const hScale = paintRect.height() / viewport.contentHeight;
 
-    const palette = this.#terminal.tab.window.style.palette;
-    // this.#log.debug(`Palette.success: ${palette.success}`);
-    // this.#log.debug(`Palette.running: ${palette.running}`);
-    // this.#log.debug(`Palette.neutral: ${palette.neutral}`);
     const runningColor = new QColor(palette.running);
     const runningBrush = new QBrush(runningColor);
     const successColor = new QColor(palette.success);
