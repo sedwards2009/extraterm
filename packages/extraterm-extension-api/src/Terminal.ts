@@ -201,7 +201,7 @@ export interface Viewport {
   position: number;
 
   /**
-   * The total height of the content inside the viewport.
+   * The total height of all the content.
    */
   readonly contentHeight: number;
 

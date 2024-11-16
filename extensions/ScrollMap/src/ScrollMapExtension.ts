@@ -13,6 +13,8 @@ const SCROLLBAR_WIDTH = 32;
 const LEFT_PADDING = 8;
 const FRAME_WIDTH = SCROLLBAR_WIDTH - LEFT_PADDING - LEFT_PADDING;
 
+const ZOOM_FACTOR = 16;
+
 let log: Logger = null;
 let context: ExtensionContext = null;
 
@@ -89,6 +91,14 @@ class ScrollMapWidget {
     return this.#rootWidget;
   }
 
+  #getMapOffset(): number {
+    const mapScale = 1 / ZOOM_FACTOR;
+    const viewport = this.#terminal.viewport;
+    const mapOffset = -(mapScale * viewport.position - viewport.position /
+      (viewport.contentHeight - viewport.height) * (this.#rootWidget.height()- mapScale * viewport.height));
+    return Math.min(0, mapOffset);
+  }
+
   #handlePaintEvent(event: QPaintEvent): void {
     // this.#log.debug(`Paint event: ${event.rect().left()}, ${event.rect().top()}, ` +
     //   `${event.rect().width()}, ${event.rect().height()}`);
@@ -99,8 +109,8 @@ class ScrollMapWidget {
     painter.fillRectF(paintRect.left(), paintRect.top(), paintRect.width(), paintRect.height(),
       new QColor(palette.background));
 
+    const mapScale = 1 / ZOOM_FACTOR;
     const viewport = this.#terminal.viewport;
-    const hScale = paintRect.height() / viewport.contentHeight;
 
     const runningColor = new QColor(palette.running);
     const runningBrush = new QBrush(runningColor);
@@ -113,9 +123,11 @@ class ScrollMapWidget {
 
     painter.setRenderHint(RenderHint.Antialiasing);
 
+    const mapOffset = this.#getMapOffset();
+
     for (const block of this.#terminal.blocks) {
-      const y = block.geometry.positionTop * hScale;
-      const h = block.geometry.height * hScale;
+      const y = block.geometry.positionTop * mapScale + mapOffset;
+      const h = block.geometry.height * mapScale;
 
       const path = new QPainterPath();
 
@@ -151,14 +163,13 @@ class ScrollMapWidget {
 
     // Draw the viewport.
     painter.setPen(new QColor(palette.text));
-    painter.drawRectF(paintRect.left(), viewport.position * hScale,
-      paintRect.width(), viewport.height * hScale);
+    painter.drawRectF(paintRect.left(), viewport.position * mapScale + mapOffset,
+      paintRect.width(), viewport.height * mapScale);
 
     painter.end();
   }
 
   #handleMouse(event: QMouseEvent): void {
-    this.#terminal.viewport.position = event.y() / this.#rootWidget.height() * this.#terminal.viewport.contentHeight -
-      this.#terminal.viewport.height / 2;
+    this.#terminal.viewport.position = (event.y() - this.#getMapOffset()) * ZOOM_FACTOR - (this.#terminal.viewport.height / 2);
   }
 }
