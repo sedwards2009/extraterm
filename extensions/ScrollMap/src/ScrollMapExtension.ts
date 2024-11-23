@@ -4,19 +4,31 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { BlockPosture, ExtensionContext, Logger, Terminal, TerminalBorderWidget, TerminalOutputDetails, TerminalOutputType } from "@extraterm/extraterm-extension-api";
-import { QBrush, QColor, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QWidget, RenderHint, WidgetEventTypes } from '@nodegui/nodegui';
+import { mat2d } from "gl-matrix";
+
+import { Block, BlockPosture, ExtensionContext, Logger, RowPositionType, Terminal, TerminalBorderWidget, TerminalOutputDetails, TerminalOutputType } from "@extraterm/extraterm-extension-api";
+import { QBrush, QColor, QImage, QImageFormat, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QWidget, RenderHint, WidgetEventTypes } from '@nodegui/nodegui';
 
 const terminalToExtensionMap = new WeakMap<Terminal, ScrollMap>();
 
-const SCROLLBAR_WIDTH = 32;
+const SCROLLBAR_WIDTH = 80;
 const LEFT_PADDING = 8;
 const FRAME_WIDTH = SCROLLBAR_WIDTH - LEFT_PADDING - LEFT_PADDING;
 
 const ZOOM_FACTOR = 16;
 
+const SCROLLMAP_WIDTH_CELLS = 80;
+const SCROLLMAP_HEIGHT_ROWS = 256;
+
 let log: Logger = null;
 let context: ExtensionContext = null;
+
+interface PixelMap {
+  blocks: QImage[];
+}
+
+const blockToPixelMap = new WeakMap<Block, PixelMap>();
+
 
 export function activate(_context: ExtensionContext): any {
   log = _context.logger;
@@ -159,6 +171,38 @@ class ScrollMapWidget {
 
       path.addRoundedRect(LEFT_PADDING, y, FRAME_WIDTH, h, 4, 4);
       painter.fillPath(path, brush);
+
+
+      if (block.type === TerminalOutputType) {
+
+        let pixelMap = blockToPixelMap.get(block);
+        if (pixelMap == null) {
+          pixelMap = this.#buildPixelMap(block);
+          // blockToPixelMap.set(block, pixelMap);
+        }
+
+        const terminalDetails = <TerminalOutputDetails> block.details;
+        const scrollbackHeight = terminalDetails.scrollback.height;
+        let blockY = 0;
+        for (const qImage of pixelMap.blocks) {
+          terminalDetails.rowHeight * SCROLLMAP_HEIGHT_ROWS;
+
+          painter.save();
+
+          const matrix = mat2d.create();
+          mat2d.translate(matrix, matrix, [LEFT_PADDING, y + blockY]);
+          mat2d.scale(matrix, matrix, [1, terminalDetails.rowHeight / ZOOM_FACTOR]);
+          painter.setTransform(matrix);
+
+          const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, scrollbackHeight - blockY);
+          // const blockHeight = SCROLLMAP_HEIGHT_ROWS;
+          painter.drawImage(0, 0, qImage, 0, 0, SCROLLMAP_WIDTH_CELLS, blockHeight);
+
+          painter.restore();
+
+          blockY += terminalDetails.rowHeight * SCROLLMAP_HEIGHT_ROWS / ZOOM_FACTOR;
+        }
+      }
     }
 
     // Draw the viewport.
@@ -171,5 +215,69 @@ class ScrollMapWidget {
 
   #handleMouse(event: QMouseEvent): void {
     this.#terminal.viewport.position = (event.y() - this.#getMapOffset()) * ZOOM_FACTOR - (this.#terminal.viewport.height / 2);
+  }
+
+  #buildPixelMap(block: Block): PixelMap {
+    log.debug(`Building pixel map for block ${block.metadata.title}`);
+    const pixelMap = {
+      blocks: []
+    };
+
+    if (block.type === TerminalOutputType) {
+      const terminalDetails = <TerminalOutputDetails> block.details;
+      const scrollback = terminalDetails.scrollback;
+
+      const height = scrollback.height;
+
+      scrollback.width;
+      const buffer = Buffer.alloc(4 * SCROLLMAP_WIDTH_CELLS * SCROLLMAP_HEIGHT_ROWS);
+
+      let bufferOffset = 0;
+      let y = 0;
+      while (y < height) {
+        buffer.fill(0);
+        const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, height - y);
+        for (let i=0; i<blockHeight; i++, y++) {
+          bufferOffset = i * SCROLLMAP_WIDTH_CELLS * 4;
+
+          const row = scrollback.getBaseRow(y);
+          const codePoints = row.getRowCodePoints();
+          const maxX = Math.min(SCROLLMAP_WIDTH_CELLS, codePoints.length);
+          for (let x=0; x<maxX; x++) {
+            const codePoint = codePoints[x];
+            const value = codePoint === 32 ? 0 : 255;
+            // const fg = row.getFgRGBA(x);
+            // const bg = row.getBgRGBA(x);
+
+            // const fgColor = palette.getColor(fg);
+            // const bgColor = palette.getColor(bg);
+
+            // const fgColorRgb = fgColor.getRgb();
+            // const bgColorRgb = bgColor.getRgb();
+
+            // const offset = (y * SCROLLMAP_WIDTH_CELLS + x) * 4;
+
+            // buffer[offset] = fgColorRgb.r;
+            // buffer[offset+1] = fgColorRgb.g;
+            // buffer[offset+2] = fgColorRgb.b;
+            // buffer[offset+3] = 255;
+
+            buffer[bufferOffset] = value;
+            bufferOffset++;
+            buffer[bufferOffset] = value;
+            bufferOffset++;
+            buffer[bufferOffset] = value;
+            bufferOffset++;
+            buffer[bufferOffset] = value;
+            bufferOffset++;
+          }
+        }
+
+        const qImage = QImage.fromBuffer(buffer, SCROLLMAP_WIDTH_CELLS, SCROLLMAP_HEIGHT_ROWS, QImageFormat.ARGB32);
+        pixelMap.blocks.push(qImage);
+      }
+    }
+
+    return pixelMap;
   }
 }

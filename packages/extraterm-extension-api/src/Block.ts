@@ -115,6 +115,9 @@ export interface TerminalOutputDetails {
 
   rowToPosition(row: number, where: RowPositionType): number;
 
+  /**
+   * Height of a row in pixels.
+   */
   readonly rowHeight: number;
 }
 

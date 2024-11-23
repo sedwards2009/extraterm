@@ -15,6 +15,10 @@
     "lint": "eslint \"src/**/*.ts\"",
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
+  "dependencies": {
+    "@nodegui/nodegui": "0.69.0",
+    "gl-matrix": "^3.3.0"
+  },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "esbuild": "^0.15.5",
