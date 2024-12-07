@@ -16,7 +16,7 @@
     "test": "yarn run build-code && yarn node --experimental-vm-modules $(yarn bin jest)"
   },
   "dependencies": {
-    "@nodegui/nodegui": "0.69.0",
+    "@nodegui/nodegui": "0.70.0",
     "nodegui-plugin-font-icon": "0.3.1",
     "nodegui-plugin-qads": "^0.15.0",
     "nodegui-plugin-qhotkey": "^0.1.1",
