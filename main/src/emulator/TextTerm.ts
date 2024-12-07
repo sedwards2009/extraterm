@@ -288,6 +288,7 @@ export interface Options {
   clearTimeout?: (timerId: any) => void;
   termProgram?: string;
   termVersion?: string;
+  palette?: number[]; // 258 RGBA values
 };
 
 type CharSet = Map<number, number>;
@@ -316,6 +317,7 @@ export class TextEmulator implements TextEmulatorApi {
 
   #termProgram: string;
   #termVersion: string;
+  #palette: number[];
 
   #state = ParserState.NORMAL;
 
@@ -363,7 +365,7 @@ export class TextEmulator implements TextEmulatorApi {
     fgClutIndex: 257,
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
-    bgRGBA: 0x00000000,
+    bgRGBA: 0x000000ff,
     imageID: 0,
     imageX: 0,
     imageY: 0,
@@ -379,7 +381,7 @@ export class TextEmulator implements TextEmulatorApi {
     fgClutIndex: 257,
     bgClutIndex: 256,
     fgRGBA: 0xffffffff,
-    bgRGBA: 0x00000000,
+    bgRGBA: 0x000000ff,
     imageID: 0,
     imageX: 0,
     imageY: 0,
@@ -500,6 +502,7 @@ export class TextEmulator implements TextEmulatorApi {
     this.#clearTimeout = options.clearTimeout ?? clearTimeout;
 
     this.#platform = options.platform;
+    this.#palette = options.palette ?? this.#defaultPalette();
 
     this.onRender = this.#onRenderEventEmitter.event;
     this.onScreenChange = this.#onScreenChangeEventEmitter.event;
@@ -526,6 +529,37 @@ export class TextEmulator implements TextEmulatorApi {
     this.#refreshTimer = null;  // Timer ID for triggering an on scren refresh.
 
     this.#startBlink();
+  }
+
+  #defaultPalette(): number[] {
+    const palette = new Array(258);
+    for (let i=0; i<258; i++) {
+      palette[i] = 0x000000ff;
+    }
+    return palette;
+  }
+
+  setPalette(palette: number[]): void {
+    for (let i=0; i<palette.length; i++) {
+      this.#palette[i] = palette[i];
+    }
+    TextEmulator.defAttr.fgRGBA = this.#palette[257];
+    TextEmulator.defAttr.fgRGBA = this.#palette[257];
+    if (this.#curAttr.flags & FLAG_MASK_FG_CLUT) {
+      this.#curAttr.fgRGBA = this.#palette[this.#curAttr.fgClutIndex];
+    }
+    if (this.#curAttr.flags & FLAG_MASK_BG_CLUT) {
+      this.#curAttr.bgRGBA = this.#palette[this.#curAttr.bgClutIndex];
+    }
+    if (this.#savedCurAttr.flags & FLAG_MASK_FG_CLUT) {
+      this.#savedCurAttr.fgRGBA = this.#palette[this.#savedCurAttr.fgClutIndex];
+    }
+    if (this.#savedCurAttr.flags & FLAG_MASK_BG_CLUT) {
+      this.#savedCurAttr.bgRGBA = this.#palette[this.#savedCurAttr.bgClutIndex];
+    }
+    for (const line of this.#lines) {
+      line.setPalette(this.#palette);
+    }
   }
 
   destroy(): void {
@@ -2908,7 +2942,9 @@ export class TextEmulator implements TextEmulatorApi {
   }
 
   #blankLine(cur?: boolean): TextLineImpl {
-    return this._newLineImpl(this._cols);
+    const line = this._newLineImpl(this._cols);
+    line.setPalette(this.#palette);
+    return line;
   }
 
   handler(data: string): void {
@@ -3204,11 +3240,13 @@ export class TextEmulator implements TextEmulatorApi {
         // fg color 8
         fg = p - 30;
         this.#curAttr.fgClutIndex = fg;
+        this.#curAttr.fgRGBA = this.#palette[fg];
         setCellFgClutFlag(this.#curAttr, true);
       } else if (p >= 40 && p <= 47) {
         // bg color 8
         bg = p - 40;
         this.#curAttr.bgClutIndex = bg;
+        this.#curAttr.bgRGBA = this.#palette[bg];
         setCellBgClutFlag(this.#curAttr, true);
       } else if (p === 58 || p === 59) {
         // DECO. set/reset the color of character decorations.
@@ -3219,12 +3257,14 @@ export class TextEmulator implements TextEmulatorApi {
         p += 8;
         fg = p - 90;
         this.#curAttr.fgClutIndex = fg;
+        this.#curAttr.fgRGBA = this.#palette[fg];
         setCellFgClutFlag(this.#curAttr, true);
       } else if (p >= 100 && p <= 107) {
         // bg color 16
         p += 8;
         bg = p - 100;
         this.#curAttr.bgClutIndex = bg;
+        this.#curAttr.bgRGBA = this.#palette[bg];
         setCellBgClutFlag(this.#curAttr, true);
       } else if (p === 0) {
         // default

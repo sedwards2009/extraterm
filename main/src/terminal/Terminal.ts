@@ -919,6 +919,7 @@ export class Terminal implements Tab, Disposable {
     }
 
     this.resizeTerminalArea();
+    this.#emulator.setPalette(terminalVisualConfig.palette);
   }
 
   #handleHyperlinkHover(terminalBlock: TerminalBlock, url: string): void {
@@ -1105,6 +1106,7 @@ export class Terminal implements Tab, Disposable {
 
     if (this.#terminalVisualConfig != null) {
       emulator.setCursorBlink(this.#terminalVisualConfig.cursorBlink);
+      emulator.setPalette(this.#terminalVisualConfig.palette);
     }
 
     this.#enforceScrollbackSizeLater = new DebouncedDoLater(() => {
