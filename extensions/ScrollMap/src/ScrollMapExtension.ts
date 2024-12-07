@@ -6,29 +6,22 @@
  */
 import { mat2d } from "gl-matrix";
 
-import { Block, BlockPosture, ExtensionContext, Logger, RowPositionType, Terminal, TerminalBorderWidget, TerminalOutputDetails, TerminalOutputType } from "@extraterm/extraterm-extension-api";
+import { Block, BlockPosture, ExtensionContext, LineRangeChange, Logger, Terminal, TerminalBorderWidget, TerminalOutputDetails, TerminalOutputType } from "@extraterm/extraterm-extension-api";
 import { QBrush, QColor, QImage, QImageFormat, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QWidget, RenderHint, WidgetEventTypes } from '@nodegui/nodegui';
 
 const terminalToExtensionMap = new WeakMap<Terminal, ScrollMap>();
 
-const SCROLLBAR_WIDTH = 80;
+const SCROLLMAP_WIDTH_CELLS = 120;
+const SCROLLMAP_HEIGHT_ROWS = 256;
+
 const LEFT_PADDING = 8;
-const FRAME_WIDTH = SCROLLBAR_WIDTH - LEFT_PADDING - LEFT_PADDING;
+const RIGHT_PADDING = 8;
+const SCROLLBAR_WIDTH = SCROLLMAP_WIDTH_CELLS + LEFT_PADDING + RIGHT_PADDING;
 
 const ZOOM_FACTOR = 16;
 
-const SCROLLMAP_WIDTH_CELLS = 80;
-const SCROLLMAP_HEIGHT_ROWS = 256;
-
 let log: Logger = null;
 let context: ExtensionContext = null;
-
-interface PixelMap {
-  blocks: QImage[];
-}
-
-const blockToPixelMap = new WeakMap<Block, PixelMap>();
-
 
 export function activate(_context: ExtensionContext): any {
   log = _context.logger;
@@ -43,6 +36,12 @@ export function activate(_context: ExtensionContext): any {
 function handleNewTerminal(terminal: Terminal): void {
   const scrollMap = new ScrollMap(terminal);
   terminalToExtensionMap.set(terminal, scrollMap);
+  terminal.onDidAppendScrollbackLines(handleAppendScrollbackLines);
+}
+
+function handleAppendScrollbackLines(event: LineRangeChange): void {
+  const pixelMap = PixelMap.get(event.block);
+  pixelMap.invalidateRange(event.startLine, event.endLine);
 }
 
 class ScrollMap {
@@ -112,8 +111,6 @@ class ScrollMapWidget {
   }
 
   #handlePaintEvent(event: QPaintEvent): void {
-    // this.#log.debug(`Paint event: ${event.rect().left()}, ${event.rect().top()}, ` +
-    //   `${event.rect().width()}, ${event.rect().height()}`);
     const paintRect = event.rect();
     const palette = this.#terminal.tab.window.style.palette;
 
@@ -141,8 +138,6 @@ class ScrollMapWidget {
       const y = block.geometry.positionTop * mapScale + mapOffset;
       const h = block.geometry.height * mapScale;
 
-      const path = new QPainterPath();
-
       let color = neutralColor;
       let brush = neutralBrush;
       switch (block.metadata.posture) {
@@ -165,27 +160,18 @@ class ScrollMapWidget {
           break;
       }
 
-      // painter.fillRectF(LEFT_PADDING, y, FRAME_WIDTH, h, color);
       painter.setPen(color);
-      // painter.drawRoundedRectF(LEFT_PADDING, y, FRAME_WIDTH, h, 4, 4);
-
-      path.addRoundedRect(LEFT_PADDING, y, FRAME_WIDTH, h, 4, 4);
-      painter.fillPath(path, brush);
-
 
       if (block.type === TerminalOutputType) {
+        painter.fillRectF(0, y, LEFT_PADDING, h, color);
+        painter.fillRectF(LEFT_PADDING + SCROLLMAP_WIDTH_CELLS, y, LEFT_PADDING, h, color);
 
-        let pixelMap = blockToPixelMap.get(block);
-        if (pixelMap == null) {
-          pixelMap = this.#buildPixelMap(block);
-          // blockToPixelMap.set(block, pixelMap);
-        }
-
+        const pixelMap = PixelMap.get(block);
         const terminalDetails = <TerminalOutputDetails> block.details;
-        const scrollbackHeight = terminalDetails.scrollback.height;
         let blockY = 0;
-        for (const qImage of pixelMap.blocks) {
-          terminalDetails.rowHeight * SCROLLMAP_HEIGHT_ROWS;
+        const numberOfBlocks = pixelMap.getNumberOfBlocks();
+        for (let i=0; i<numberOfBlocks ; i++) {
+          const { qimage, rows } = pixelMap.getQImageAt(i);
 
           painter.save();
 
@@ -194,14 +180,17 @@ class ScrollMapWidget {
           mat2d.scale(matrix, matrix, [1, terminalDetails.rowHeight / ZOOM_FACTOR]);
           painter.setTransform(matrix);
 
-          const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, scrollbackHeight - blockY);
-          // const blockHeight = SCROLLMAP_HEIGHT_ROWS;
-          painter.drawImage(0, 0, qImage, 0, 0, SCROLLMAP_WIDTH_CELLS, blockHeight);
+          painter.drawImage(0, 0, qimage, 0, 0, SCROLLMAP_WIDTH_CELLS, rows);
 
           painter.restore();
 
           blockY += terminalDetails.rowHeight * SCROLLMAP_HEIGHT_ROWS / ZOOM_FACTOR;
         }
+      } else {
+
+        const path = new QPainterPath();
+        path.addRoundedRect(0, y, SCROLLBAR_WIDTH, h, 4, 4);
+        painter.fillPath(path, brush);
       }
     }
 
@@ -216,68 +205,106 @@ class ScrollMapWidget {
   #handleMouse(event: QMouseEvent): void {
     this.#terminal.viewport.position = (event.y() - this.#getMapOffset()) * ZOOM_FACTOR - (this.#terminal.viewport.height / 2);
   }
+}
 
-  #buildPixelMap(block: Block): PixelMap {
-    log.debug(`Building pixel map for block ${block.metadata.title}`);
-    const pixelMap = {
-      blocks: []
-    };
+interface PixelBlock {
+  isDirty: boolean;
+  qimage: QImage;
+}
 
-    if (block.type === TerminalOutputType) {
-      const terminalDetails = <TerminalOutputDetails> block.details;
-      const scrollback = terminalDetails.scrollback;
+class PixelMap {
+  static tempBuffer = Buffer.alloc(4 * SCROLLMAP_WIDTH_CELLS * SCROLLMAP_HEIGHT_ROWS);
 
-      const height = scrollback.height;
+  static _blockToPixelMap = new WeakMap<Block, PixelMap>();
 
-      scrollback.width;
-      const buffer = Buffer.alloc(4 * SCROLLMAP_WIDTH_CELLS * SCROLLMAP_HEIGHT_ROWS);
+  static get(block: Block): PixelMap {
+    let pixelMap = PixelMap._blockToPixelMap.get(block);
+    if (pixelMap == null) {
+      pixelMap = new PixelMap(block);
+      PixelMap._blockToPixelMap.set(block, pixelMap);
+    }
+    return pixelMap;
+  }
 
-      let bufferOffset = 0;
-      let y = 0;
-      while (y < height) {
-        buffer.fill(0);
-        const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, height - y);
-        for (let i=0; i<blockHeight; i++, y++) {
-          bufferOffset = i * SCROLLMAP_WIDTH_CELLS * 4;
+  #block: Block = null;
+  #pixelBlocks: PixelBlock[] = [];
 
-          const row = scrollback.getBaseRow(y);
-          const codePoints = row.getRowCodePoints();
-          const maxX = Math.min(SCROLLMAP_WIDTH_CELLS, codePoints.length);
-          for (let x=0; x<maxX; x++) {
-            const codePoint = codePoints[x];
-            const value = codePoint === 32 ? 0 : 255;
-            // const fg = row.getFgRGBA(x);
-            // const bg = row.getBgRGBA(x);
 
-            // const fgColor = palette.getColor(fg);
-            // const bgColor = palette.getColor(bg);
+  constructor(block: Block) {
+    this.#block = block;
+  }
 
-            // const fgColorRgb = fgColor.getRgb();
-            // const bgColorRgb = bgColor.getRgb();
+  #getScrollbackHeight(): number {
+    const terminalDetails = <TerminalOutputDetails> this.#block.details;
+    return terminalDetails.scrollback.height;
+  }
 
-            // const offset = (y * SCROLLMAP_WIDTH_CELLS + x) * 4;
+  getNumberOfBlocks(): number {
+    return Math.ceil(this.#getScrollbackHeight() / SCROLLMAP_HEIGHT_ROWS);
+  }
 
-            // buffer[offset] = fgColorRgb.r;
-            // buffer[offset+1] = fgColorRgb.g;
-            // buffer[offset+2] = fgColorRgb.b;
-            // buffer[offset+3] = 255;
+  getQImageAt(blockIndex: number): { qimage: QImage, rows: number} {
+    this.#expandBlocks();
 
-            buffer[bufferOffset] = value;
-            bufferOffset++;
-            buffer[bufferOffset] = value;
-            bufferOffset++;
-            buffer[bufferOffset] = value;
-            bufferOffset++;
-            buffer[bufferOffset] = value;
-            bufferOffset++;
-          }
-        }
+    const scrollbackHeight = this.#getScrollbackHeight();
+    const blockY = blockIndex * SCROLLMAP_HEIGHT_ROWS;
+    const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, scrollbackHeight - blockY);
+    const pixelBlock = this.#pixelBlocks[blockIndex];
+    let qimage = pixelBlock.qimage;
+    if (pixelBlock.isDirty || qimage == null) {
+      qimage = this.#createQImage(blockIndex);
+      pixelBlock.qimage = qimage;
+      pixelBlock.isDirty = false;
+    }
+    return { qimage, rows: blockHeight };
+  }
 
-        const qImage = QImage.fromBuffer(buffer, SCROLLMAP_WIDTH_CELLS, SCROLLMAP_HEIGHT_ROWS, QImageFormat.ARGB32);
-        pixelMap.blocks.push(qImage);
+  #expandBlocks(): void {
+    const numberOfBlocks = this.getNumberOfBlocks();
+    while (numberOfBlocks > this.#pixelBlocks.length) {
+      this.#pixelBlocks.push({ isDirty: true, qimage: null });
+    }
+  }
+
+  #createQImage(blockIndex: number): QImage {
+    const terminalDetails = <TerminalOutputDetails> this.#block.details;
+    const scrollback = terminalDetails.scrollback;
+    const height = scrollback.height;
+    let y = blockIndex * SCROLLMAP_HEIGHT_ROWS;
+    const buffer = PixelMap.tempBuffer;
+
+    buffer.fill(0);
+    const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, height - y);
+    for (let i=0; i<blockHeight; i++, y++) {
+      let bufferOffset = i * SCROLLMAP_WIDTH_CELLS * 4;
+
+      const row = scrollback.getBaseRow(y);
+      const codePoints = row.getRowCodePoints();
+      const maxX = Math.min(SCROLLMAP_WIDTH_CELLS, codePoints.length);
+      for (let x=0; x<maxX; x++) {
+        const codePoint = codePoints[x];
+        const value = codePoint === 32 ? row.getBgRGBA(x) : row.getFgRGBA(x);
+
+        buffer[bufferOffset] = (value >> 24) & 0xff;
+        bufferOffset++;
+        buffer[bufferOffset] = (value >> 16) & 0xff;
+        bufferOffset++;
+        buffer[bufferOffset] = (value >> 8) & 0xff;
+        bufferOffset++;
+        buffer[bufferOffset] = 0xff;
+        bufferOffset++;
       }
     }
 
-    return pixelMap;
+    return QImage.fromBuffer(buffer, SCROLLMAP_WIDTH_CELLS, SCROLLMAP_HEIGHT_ROWS, QImageFormat.RGBA8888);
+  }
+
+  invalidateRange(startLine: number, endLine: number): void {
+    this.#expandBlocks();
+    const startBlock = Math.floor(startLine / SCROLLMAP_HEIGHT_ROWS);
+    const endBlock = Math.floor(endLine / SCROLLMAP_HEIGHT_ROWS);
+    for (let i=startBlock; i<=endBlock; i++) {
+      this.#pixelBlocks[i].isDirty = true;
+    }
   }
 }
