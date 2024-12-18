@@ -138,6 +138,7 @@ export interface InternalExtensionContext extends ExtensionApi.Disposable {
 
   terminalEnvironmentChanged(terminal: Terminal, changeList: string[]): void;
   terminalDidAppendScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
+  terminalDidDeleteScrollbackLines(terminal: Terminal, ev: LineRangeChange): void;
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void;
   wrapTab(tab: Tab): ExtensionApi.Tab;
   wrapTerminal(terminal: Terminal): ExtensionApi.Terminal;

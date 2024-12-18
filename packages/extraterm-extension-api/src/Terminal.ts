@@ -101,6 +101,11 @@ export interface Terminal {
   readonly onDidAppendScrollbackLines: Event<LineRangeChange>;
 
   /**
+   * Fired when lines are deleted from the scrollback area of a block.
+   */
+  readonly onDidDeleteScrollbackLines: Event<LineRangeChange>;
+
+  /**
    * The tab which holds this terminal
    */
   readonly tab: Tab;

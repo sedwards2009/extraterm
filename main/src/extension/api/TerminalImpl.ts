@@ -45,6 +45,9 @@ export class TerminalImpl implements ExtensionApi.Disposable, ExtensionApi.Termi
   onDidAppendScrollbackLines: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
   _onDidAppendScrollbackLinesEventEmitter: ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange> = null;
 
+  onDidDeleteScrollbackLines: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
+  _onDidDeleteScrollbackLinesEventEmitter: ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange> = null;
+
   onDidScreenChange: ExtensionApi.Event<ExtensionApi.LineRangeChange>;
   _onDidScreenChangeEventEmitter: ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange> = null;
 
@@ -69,6 +72,10 @@ export class TerminalImpl implements ExtensionApi.Disposable, ExtensionApi.Termi
     this._onDidAppendScrollbackLinesEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange>(
       "onDidAppendScrollbackLines", this._log);
     this.onDidAppendScrollbackLines = this._onDidAppendScrollbackLinesEventEmitter.event;
+
+    this._onDidDeleteScrollbackLinesEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange>(
+      "onDidDeleteScrollbackLines", this._log);
+    this.onDidDeleteScrollbackLines = this._onDidDeleteScrollbackLinesEventEmitter.event;
 
     this._onDidScreenChangeEventEmitter = new ErrorTolerantEventEmitter<ExtensionApi.LineRangeChange>(
       "onDidScreenChange", this._log);

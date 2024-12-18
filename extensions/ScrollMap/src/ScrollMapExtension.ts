@@ -39,12 +39,18 @@ function handleNewTerminal(terminal: Terminal): void {
   const scrollMap = new ScrollMap(terminal);
   terminalToExtensionMap.set(terminal, scrollMap);
   terminal.onDidAppendScrollbackLines(handleAppendScrollbackLines);
+  terminal.onDidDeleteScrollbackLines(handleDeleteScrollbackLines);
   terminal.onDidScreenChange(handleScreenChange);
 }
 
 function handleAppendScrollbackLines(event: LineRangeChange): void {
   const pixelMap = PixelMap.getByBlock(event.block);
   pixelMap.invalidateRange(event.startLine, event.endLine);
+}
+
+function handleDeleteScrollbackLines(event: LineRangeChange): void {
+  const pixelMap = PixelMap.getByBlock(event.block);
+  pixelMap.deleteTopLines(event.endLine);
 }
 
 function handleScreenChange(event: LineRangeChange): void {
@@ -204,7 +210,7 @@ class ScrollMapWidget {
   }
 
   #drawPixelMap(painter: QPainter, pixelMap: PixelMap, y: number, rowHeight: number): void {
-    let blockY = 0;
+    let blockRowY = 0;
     const numberOfBlocks = pixelMap.getNumberOfBlocks();
     for (let i=0; i<numberOfBlocks ; i++) {
       const { qimage, rows } = pixelMap.getQImageAt(i);
@@ -212,7 +218,7 @@ class ScrollMapWidget {
       painter.save();
 
       const matrix = mat2d.create();
-      mat2d.translate(matrix, matrix, [LEFT_PADDING, y + blockY]);
+      mat2d.translate(matrix, matrix, [LEFT_PADDING, y + blockRowY * rowHeight / ZOOM_FACTOR]);
       mat2d.scale(matrix, matrix, [1, rowHeight / ZOOM_FACTOR]);
       painter.setTransform(matrix);
 
@@ -220,7 +226,7 @@ class ScrollMapWidget {
 
       painter.restore();
 
-      blockY += rowHeight * SCROLLMAP_HEIGHT_ROWS / ZOOM_FACTOR;
+      blockRowY += rows;
     }
   }
 
@@ -230,8 +236,8 @@ class ScrollMapWidget {
 }
 
 interface PixelBlock {
-  isDirty: boolean;
   qimage: QImage;
+  height: number;
 }
 
 class PixelMap<S extends Screen = Screen> {
@@ -248,6 +254,7 @@ class PixelMap<S extends Screen = Screen> {
       pixelMap = new PixelMap(terminalDetails.scrollback);
       PixelMap._blockToPixelMap.set(block, pixelMap);
     }
+    pixelMap.expandBlocks();
     return pixelMap;
   }
 
@@ -257,6 +264,7 @@ class PixelMap<S extends Screen = Screen> {
       pixelMap = new PixelMapWithCursor(terminal.screen);
       PixelMap._terminalToPixelMap.set(terminal, pixelMap);
     }
+    pixelMap.expandBlocks();
     return pixelMap;
   }
 
@@ -272,38 +280,69 @@ class PixelMap<S extends Screen = Screen> {
   }
 
   getNumberOfBlocks(): number {
-    return Math.ceil(this.getScreenHeight() / SCROLLMAP_HEIGHT_ROWS);
+    return this.#pixelBlocks.length;
   }
 
   getQImageAt(blockIndex: number): { qimage: QImage, rows: number} {
-    this.#expandBlocks();
-
-    const scrollbackHeight = this.getScreenHeight();
-    const blockY = blockIndex * SCROLLMAP_HEIGHT_ROWS;
-    const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, scrollbackHeight - blockY);
     const pixelBlock = this.#pixelBlocks[blockIndex];
-    let qimage = pixelBlock.qimage;
-    if (pixelBlock.isDirty || qimage == null) {
-      qimage = this.#createQImage(this.#screen, this.getScreenHeight(), blockIndex * SCROLLMAP_HEIGHT_ROWS);
-      pixelBlock.qimage = qimage;
-      pixelBlock.isDirty = false;
+    if (pixelBlock.qimage == null) {
+      const y = this.#blockIndexToY(blockIndex);
+      const image = this.#createQImage(this.#screen, y, pixelBlock.height);
+      pixelBlock.qimage = image;
     }
-    return { qimage, rows: blockHeight };
+    return { qimage: pixelBlock.qimage, rows: pixelBlock.height };
   }
 
-  #expandBlocks(): void {
-    const numberOfBlocks = this.getNumberOfBlocks();
-    while (numberOfBlocks > this.#pixelBlocks.length) {
-      this.#pixelBlocks.push({ isDirty: true, qimage: null });
+  #blockIndexToY(blockIndex: number): number {
+    if (blockIndex === 0) {
+      return 0;
+    }
+    return this.#pixelBlocks[0].height + (blockIndex-1) * SCROLLMAP_HEIGHT_ROWS;
+  }
+
+  #yToBlockIndex(y: number): number {
+    const blockZeroHeight = this.#pixelBlocks[0].height;
+    if (y < blockZeroHeight) {
+      return 0;
+    }
+    return Math.ceil((y - blockZeroHeight) / SCROLLMAP_HEIGHT_ROWS);
+  }
+
+  #existingRows(): number {
+    // The first and last blocks can have variable heights, but the middle blocks are always SCROLLMAP_HEIGHT_ROWS.
+    const pixelBlocksLength = this.#pixelBlocks.length;
+    switch (pixelBlocksLength) {
+      case 0:
+        return 0;
+      case 1:
+        return this.#pixelBlocks[0].height;
+      default:
+        return (this.#pixelBlocks[0].height + (pixelBlocksLength - 2) * SCROLLMAP_HEIGHT_ROWS +
+          this.#pixelBlocks[pixelBlocksLength-1].height);
     }
   }
 
-  #createQImage(screen: Screen, heightRows: number, y: number): QImage {
+  expandBlocks(): void {
+    const totalScreenRows = this.getScreenHeight();
+    let existingRows = this.#existingRows();
+
+    if (totalScreenRows !== existingRows && this.#pixelBlocks.length !== 0) {
+      this.#pixelBlocks.pop();
+      existingRows = this.#existingRows();
+    }
+
+    while (totalScreenRows > existingRows) {
+      const rows = Math.min(totalScreenRows - existingRows, SCROLLMAP_HEIGHT_ROWS);
+      this.#pixelBlocks.push({ qimage: null, height: rows });
+      existingRows += rows;
+    }
+  }
+
+  #createQImage(screen: Screen, y: number, rows: number): QImage {
     const buffer = PixelMap.tempBuffer;
 
     buffer.fill(0);
-    const blockHeight = Math.min(SCROLLMAP_HEIGHT_ROWS, heightRows - y);
-    for (let i=0; i<blockHeight; i++, y++) {
+    for (let i=0; i<rows; i++, y++) {
       let bufferOffset = i * SCROLLMAP_WIDTH_CELLS * 4;
 
       const row = screen.getBaseRow(y);
@@ -328,12 +367,16 @@ class PixelMap<S extends Screen = Screen> {
   }
 
   invalidateRange(startLine: number, endLine: number): void {
-    this.#expandBlocks();
-    const startBlock = Math.floor(startLine / SCROLLMAP_HEIGHT_ROWS);
-    const endBlock = Math.floor(endLine / SCROLLMAP_HEIGHT_ROWS);
+    const startBlock = this.#yToBlockIndex(startLine);
+    const endBlock = this.#yToBlockIndex(endLine);
     for (let i=startBlock; i<=endBlock; i++) {
-      this.#pixelBlocks[i].isDirty = true;
+      this.#pixelBlocks[i].qimage = null;
     }
+  }
+
+  deleteTopLines(endLine: number): void {
+    // const endBlock = Math.floor(endLine / SCROLLMAP_HEIGHT_ROWS);
+    // this.#pixelBlocks.splice(0, endBlock + 1);
   }
 }
 
