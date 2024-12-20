@@ -380,8 +380,18 @@ class PixelMap<S extends Screen = Screen> {
   }
 
   deleteTopLines(endLine: number): void {
-    // const endBlock = Math.floor(endLine / SCROLLMAP_HEIGHT_ROWS);
-    // this.#pixelBlocks.splice(0, endBlock + 1);
+    let remaining = endLine;
+    while (remaining > 0) {
+      const block = this.#pixelBlocks[0];
+      if (block.height <= remaining) {
+        this.#pixelBlocks.shift();
+        remaining -= block.height;
+      } else {
+        block.height -= remaining;
+        block.qimage = null;
+        remaining = 0;
+      }
+    }
   }
 }
 
