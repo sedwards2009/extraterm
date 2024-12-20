@@ -8,7 +8,7 @@ import { mat2d } from "gl-matrix";
 
 import { Block, BlockPosture, ExtensionContext, LineRangeChange, Logger, Screen, ScreenWithCursor, Terminal, TerminalBorderWidget,
   TerminalOutputDetails, TerminalOutputType } from "@extraterm/extraterm-extension-api";
-import { QBrush, QColor, QImage, QImageFormat, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QWidget, RenderHint,
+import { QBrush, QColor, QImage, QImageFormat, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPen, QWidget, RenderHint,
   WidgetEventTypes } from '@nodegui/nodegui';
 
 const terminalToExtensionMap = new WeakMap<Terminal, ScrollMap>();
@@ -16,9 +16,11 @@ const terminalToExtensionMap = new WeakMap<Terminal, ScrollMap>();
 const SCROLLMAP_WIDTH_CELLS = 120;
 const SCROLLMAP_HEIGHT_ROWS = 256;
 
-const LEFT_PADDING = 8;
-const RIGHT_PADDING = 8;
-const SCROLLBAR_WIDTH = SCROLLMAP_WIDTH_CELLS + LEFT_PADDING + RIGHT_PADDING;
+const LEFT_PADDING = 4;
+const RIGHT_PADDING = 4;
+const FRAME_WIDTH = 4;
+const SCREEN_BORDER_WIDTH = 4;
+const SCROLLBAR_WIDTH = SCROLLMAP_WIDTH_CELLS + LEFT_PADDING + RIGHT_PADDING + 2 * FRAME_WIDTH;
 
 const ZOOM_FACTOR = 16;
 
@@ -179,8 +181,8 @@ class ScrollMapWidget {
       painter.setPen(color);
 
       if (block.type === TerminalOutputType) {
-        painter.fillRectF(0, y, LEFT_PADDING, h, color);
-        painter.fillRectF(LEFT_PADDING + SCROLLMAP_WIDTH_CELLS, y, LEFT_PADDING, h, color);
+        painter.fillRectF(LEFT_PADDING, y, FRAME_WIDTH, h, color);
+        painter.fillRectF(LEFT_PADDING + FRAME_WIDTH + SCROLLMAP_WIDTH_CELLS, y, FRAME_WIDTH, h, color);
 
         const terminalDetails = <TerminalOutputDetails> block.details;
         const rowHeight = terminalDetails.rowHeight;
@@ -202,9 +204,12 @@ class ScrollMapWidget {
     this.#drawPixelMap(painter, PixelMap.getByTerminal(this.#terminal), screenY * mapScale + mapOffset, rowHeight);
 
     // Draw the viewport outline
-    painter.setPen(new QColor(palette.text));
-    painter.drawRectF(paintRect.left(), viewport.position * mapScale + mapOffset,
-      paintRect.width(), viewport.height * mapScale);
+    const widerPen = new QPen();
+    widerPen.setWidth(SCREEN_BORDER_WIDTH);
+    widerPen.setColor(new QColor(palette.text));
+    painter.setPen(widerPen);
+    painter.drawRectF(paintRect.left() + SCREEN_BORDER_WIDTH / 2, viewport.position * mapScale + mapOffset,
+      paintRect.width() - SCREEN_BORDER_WIDTH, viewport.height * mapScale);
 
     painter.end();
   }
@@ -218,7 +223,7 @@ class ScrollMapWidget {
       painter.save();
 
       const matrix = mat2d.create();
-      mat2d.translate(matrix, matrix, [LEFT_PADDING, y + blockRowY * rowHeight / ZOOM_FACTOR]);
+      mat2d.translate(matrix, matrix, [LEFT_PADDING + FRAME_WIDTH, y + blockRowY * rowHeight / ZOOM_FACTOR]);
       mat2d.scale(matrix, matrix, [1, rowHeight / ZOOM_FACTOR]);
       painter.setTransform(matrix);
 
