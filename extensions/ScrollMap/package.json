@@ -25,6 +25,7 @@
     "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
+    "extraterm-timeoutqt": "1.0.0",
     "qt-construct": "0.1.0",
     "shx": "^0.3.2",
     "typescript": "5.2.2"

@@ -8,6 +8,7 @@ import { mat2d } from "gl-matrix";
 
 import { Block, BlockPosture, ExtensionContext, LineRangeChange, Logger, Screen, ScreenWithCursor, Terminal, TerminalBorderWidget,
   TerminalOutputDetails, TerminalOutputType } from "@extraterm/extraterm-extension-api";
+import { DebouncedDoLater } from "extraterm-timeoutqt";
 import { QBrush, QColor, QImage, QImageFormat, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPen, QWidget, RenderHint,
   WidgetEventTypes } from '@nodegui/nodegui';
 
@@ -23,6 +24,8 @@ const SCREEN_BORDER_WIDTH = 4;
 const SCROLLBAR_WIDTH = SCROLLMAP_WIDTH_CELLS + LEFT_PADDING + RIGHT_PADDING + 2 * FRAME_WIDTH;
 
 const ZOOM_FACTOR = 16;
+const REPAINT_DELAY_MS = 200;
+
 
 let log: Logger = null;
 let context: ExtensionContext = null;
@@ -81,13 +84,23 @@ class ScrollMapWidget {
   #log: Logger;
   #terminal: Terminal = null;
   #rootWidget: QWidget = null;
+  #repaintTimeout: DebouncedDoLater = null;
+  #permitMapCreation = true;
 
   constructor(log: Logger, terminal: Terminal) {
     this.#log = log;
     this.#rootWidget = this.#createWidget();
     this.#terminal = terminal;
 
+    this.#repaintTimeout = new DebouncedDoLater(() => {
+      // Quickly check if the widget has been closed or removed.
+      if (this.#rootWidget.window() != null) {
+        this.#permitMapCreation = true;
+        this.#rootWidget.repaint();
+      }
+    }, REPAINT_DELAY_MS);
     const repaint = () => {
+      this.#repaintTimeout.trigger();
       this.#rootWidget.repaint();
     };
     this.#terminal.onDidScreenChange(repaint);
@@ -212,25 +225,27 @@ class ScrollMapWidget {
       paintRect.width() - SCREEN_BORDER_WIDTH, viewport.height * mapScale);
 
     painter.end();
+    this.#permitMapCreation = false;
   }
 
   #drawPixelMap(painter: QPainter, pixelMap: PixelMap, y: number, rowHeight: number): void {
     let blockRowY = 0;
     const numberOfBlocks = pixelMap.getNumberOfBlocks();
     for (let i=0; i<numberOfBlocks ; i++) {
-      const { qimage, rows } = pixelMap.getQImageAt(i);
+      const { qimage, rows } = pixelMap.getQImageAt(i, this.#permitMapCreation);
 
-      painter.save();
+      if (qimage != null) {
+        painter.save();
 
-      const matrix = mat2d.create();
-      mat2d.translate(matrix, matrix, [LEFT_PADDING + FRAME_WIDTH, y + blockRowY * rowHeight / ZOOM_FACTOR]);
-      mat2d.scale(matrix, matrix, [1, rowHeight / ZOOM_FACTOR]);
-      painter.setTransform(matrix);
+        const matrix = mat2d.create();
+        mat2d.translate(matrix, matrix, [LEFT_PADDING + FRAME_WIDTH, y + blockRowY * rowHeight / ZOOM_FACTOR]);
+        mat2d.scale(matrix, matrix, [1, rowHeight / ZOOM_FACTOR]);
+        painter.setTransform(matrix);
 
-      painter.drawImage(0, 0, qimage, 0, 0, SCROLLMAP_WIDTH_CELLS, rows);
+        painter.drawImage(0, 0, qimage, 0, 0, SCROLLMAP_WIDTH_CELLS, rows);
 
-      painter.restore();
-
+        painter.restore();
+      }
       blockRowY += rows;
     }
   }
@@ -288,9 +303,9 @@ class PixelMap<S extends Screen = Screen> {
     return this.#pixelBlocks.length;
   }
 
-  getQImageAt(blockIndex: number): { qimage: QImage, rows: number} {
+  getQImageAt(blockIndex: number, generateImages: boolean): { qimage: QImage, rows: number} {
     const pixelBlock = this.#pixelBlocks[blockIndex];
-    if (pixelBlock.qimage == null) {
+    if (generateImages && pixelBlock.qimage == null) {
       const y = this.#blockIndexToY(blockIndex);
       const image = this.#createQImage(this.#screen, y, pixelBlock.height);
       pixelBlock.qimage = image;
@@ -340,6 +355,21 @@ class PixelMap<S extends Screen = Screen> {
       const rows = Math.min(totalScreenRows - existingRows, SCROLLMAP_HEIGHT_ROWS);
       this.#pixelBlocks.push({ qimage: null, height: rows });
       existingRows += rows;
+    }
+
+    while (totalScreenRows < existingRows) {
+      const difference = existingRows - totalScreenRows;
+      const lastBlock = this.#pixelBlocks[this.#pixelBlocks.length-1];
+      const lastBlockHeight = lastBlock.height;
+
+      if (lastBlockHeight <= difference) {
+        this.#pixelBlocks.pop();
+        existingRows -= lastBlockHeight;
+      } else {
+        lastBlock.height -= difference;
+        lastBlock.qimage = null;
+        existingRows -= difference;
+      }
     }
   }
 
