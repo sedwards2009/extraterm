@@ -9,7 +9,7 @@ import { mat2d } from "gl-matrix";
 import { Block, BlockPosture, ExtensionContext, LineRangeChange, Logger, Screen, ScreenWithCursor, Terminal, TerminalBorderWidget,
   TerminalOutputDetails, TerminalOutputType } from "@extraterm/extraterm-extension-api";
 import { DebouncedDoLater } from "extraterm-timeoutqt";
-import { QBrush, QColor, QImage, QImageFormat, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPen, QWidget, RenderHint,
+import { QBrush, QColor, QImage, QImageFormat, QMouseEvent, QPainter, QPainterPath, QPaintEvent, QPen, QWheelEvent, QWidget, RenderHint,
   WidgetEventTypes } from '@nodegui/nodegui';
 
 const terminalToExtensionMap = new WeakMap<Terminal, ScrollMap>();
@@ -26,6 +26,7 @@ const SCROLLBAR_WIDTH = SCROLLMAP_WIDTH_CELLS + LEFT_PADDING + RIGHT_PADDING + 2
 const ZOOM_FACTOR = 16;
 const REPAINT_DELAY_MS = 200;
 
+const SCROLL_SCALE = 0.5;
 
 let log: Logger = null;
 let context: ExtensionContext = null;
@@ -124,6 +125,11 @@ class ScrollMapWidget {
     };
     widget.addEventListener(WidgetEventTypes.MouseButtonPress, handleMouse);
     widget.addEventListener(WidgetEventTypes.MouseMove, handleMouse);
+
+    const handleWheel = (nativeEvent) => {
+      this.#handleWheel(new QWheelEvent(nativeEvent));
+    };
+    widget.addEventListener(WidgetEventTypes.Wheel, handleWheel);
 
     return widget;
   }
@@ -252,6 +258,19 @@ class ScrollMapWidget {
 
   #handleMouse(event: QMouseEvent): void {
     this.#terminal.viewport.position = (event.y() - this.#getMapOffset()) * ZOOM_FACTOR - (this.#terminal.viewport.height / 2);
+  }
+
+  #handleWheel(event: QWheelEvent): void {
+    let pixelDeltaY = 0;
+    const wheelPixelDelta = event.pixelDelta();
+    if (wheelPixelDelta != null) {
+      pixelDeltaY += wheelPixelDelta.y;
+    }
+    if (wheelPixelDelta == null || wheelPixelDelta.y === 0) {
+      const angleY = event.angleDelta().y;
+      pixelDeltaY = Math.round(SCROLL_SCALE * angleY);
+    }
+    this.#terminal.viewport.position = this.#terminal.viewport.position - pixelDeltaY;
   }
 }
 
