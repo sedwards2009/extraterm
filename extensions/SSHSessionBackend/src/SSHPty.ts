@@ -72,6 +72,9 @@ export class SSHPty implements Pty {
   onExit: Event<void>;
   onAvailableWriteBufferSizeChange: Event<BufferSizeChange>;
 
+  #preliveRows = 0;
+  #preliveCols = 0;
+
   constructor(log: Logger, options: PtyOptions) {
     this._log = log;
     this.#ptyOptions = options;
@@ -154,6 +157,10 @@ export class SSHPty implements Pty {
         });
 
         this.#state = PtyState.LIVE;
+
+        if (this.#preliveRows !== 0) {
+          this.#stream.setWindow(this.#preliveRows, this.#preliveCols, 0, 0);
+        }
       });
     });
 
@@ -486,6 +493,8 @@ export class SSHPty implements Pty {
 
   resize(cols: number, rows: number): void {
     if (this.#state !== PtyState.LIVE) {
+      this.#preliveCols = cols;
+      this.#preliveRows = rows;
       return;
     }
     this.#stream.setWindow(rows, cols, 0, 0);
