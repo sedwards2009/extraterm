@@ -846,6 +846,12 @@ export class ExtensionManager implements InternalTypes.ExtensionManager {
       }
     });
 
+    newTerminal.onDidDeleteScrollbackLines((ev: LineRangeChange) => {
+      for (const activeExtension of this.#activeExtensions) {
+        activeExtension.internalExtensionContext.terminalDidDeleteScrollbackLines(newTerminal, ev);
+      }
+    });
+
     newTerminal.onDidScreenChange((ev: LineRangeChange) => {
       for (const activeExtension of this.#activeExtensions) {
         activeExtension.internalExtensionContext.terminalDidScreenChange(newTerminal, ev);

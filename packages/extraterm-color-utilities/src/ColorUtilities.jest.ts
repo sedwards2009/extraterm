@@ -7,6 +7,7 @@ import { Color } from "./ColorUtilities.js";
 
 describe.each([
   ["#123456", 0x123456ff, "#123456", "rgba(18,52,86,1)"],
+  ["#f03456", 0xf03456ff, "#f03456", "rgba(240,52,86,1)"],
   ["#1234567f", 0x1234567f, "#123456", "rgba(18,52,86,0.4980392156862745)"],
   ["#000001", 0x000001ff, "#000001", "rgba(0,0,1,1)"],
   ["#ffffff", 0xffffffff, "#ffffff", "rgba(255,255,255,1)"],
@@ -18,7 +19,7 @@ describe.each([
     done();
   });
 
-  test("Round trip ${input}", done => {
+  test(`Round trip ${input}`, done => {
     const color = new Color(input);
     expect(color.toHexString()).toBe(hexString);
     done();
@@ -26,6 +27,13 @@ describe.each([
 
   test(`${input} to CSS`, done => {
     const color = new Color(input);
+    expect(color.toRGBAString()).toBe(rgbaString);
+    done();
+  });
+
+  test(`Round trip ${input} RGBA`, done => {
+    const color = new Color(rgba);
+    expect(color.toRGBA()).toBe(rgba);
     expect(color.toRGBAString()).toBe(rgbaString);
     done();
   });

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2024 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -79,7 +79,6 @@ import * as BulkFileUtils from "../bulk_file_handling/BulkFileUtils.js";
 import { Block } from "./Block.js";
 import { QEvent } from "@nodegui/nodegui/dist/lib/QtGui/QEvent/QEvent.js";
 import { CommonExtensionWindowState } from "../extension/CommonExtensionState.js";
-import { TerminalEmbeddedImages } from "./TerminalEmbeddedImages.js";
 
 export const EXTRATERM_COOKIE_ENV = "LC_EXTRATERM_COOKIE";
 
@@ -215,7 +214,11 @@ export class Terminal implements Tab, Disposable {
   #onDidScreenChangeEventEmitter = new EventEmitter<LineRangeChange>();
   onDidScreenChange: Event<LineRangeChange>;
 
+  #onDidDeleteScrollbackLinesEventEmitter = new EventEmitter<LineRangeChange>();
+  onDidDeleteScrollbackLines: Event<LineRangeChange>;
+
   #blockDidAppendScrollbackLinesDisposable: Disposable = null;
+  #blockDidDeleteScrollbackLinesDisposable: Disposable = null;
 
   #sessionConfiguration: SessionConfiguration = null;
   #terminalVisualConfig: TerminalVisualConfig = null;
@@ -297,6 +300,7 @@ export class Terminal implements Tab, Disposable {
     this.onContextMenu = this.#onContextMenuEventEmitter.event;
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
     this.onDidScreenChange = this.#onDidScreenChangeEventEmitter.event;
+    this.onDidDeleteScrollbackLines = this.#onDidDeleteScrollbackLinesEventEmitter.event;
     this.onPopOutClicked = this.#onPopOutClickedEventEmitter.event;
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
     this.onWindowTitleChanged = this.#onWindowTitleChangedEventEmitter.event;
@@ -541,6 +545,15 @@ export class Terminal implements Tab, Disposable {
         this.#enforceScrollbackLinesSize(config.scrollbackMaxLines);
       }
     );
+    this.#blockDidDeleteScrollbackLinesDisposable = terminalBlock.onDidDeleteScrollbackLines((count: number) => {
+      this.#onDidDeleteScrollbackLinesEventEmitter.fire({
+        blockFrame: frame,
+        terminalBlock,
+        startLine: 0,
+        endLine: count
+      });
+    });
+
     return terminalBlock;
   }
 
@@ -919,6 +932,7 @@ export class Terminal implements Tab, Disposable {
     }
 
     this.resizeTerminalArea();
+    this.#emulator.setPalette(terminalVisualConfig.palette);
   }
 
   #handleHyperlinkHover(terminalBlock: TerminalBlock, url: string): void {
@@ -1105,6 +1119,7 @@ export class Terminal implements Tab, Disposable {
 
     if (this.#terminalVisualConfig != null) {
       emulator.setCursorBlink(this.#terminalVisualConfig.cursorBlink);
+      emulator.setPalette(this.#terminalVisualConfig.palette);
     }
 
     this.#enforceScrollbackSizeLater = new DebouncedDoLater(() => {

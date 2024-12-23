@@ -77,6 +77,9 @@ export class TerminalBlock implements Block {
   #onDidAppendScrollbackLinesEventEmitter = new EventEmitter<AppendScrollbackLinesDetail>();
   onDidAppendScrollbackLines: Event<AppendScrollbackLinesDetail>;
 
+  #onDidDeleteScrollbackLinesEventEmitter = new EventEmitter<number>();
+  onDidDeleteScrollbackLines: Event<number>;
+
   #onHyperlinkClickedEventEmitter = new EventEmitter<string>();
   onHyperlinkClicked: Event<string>;
 
@@ -100,6 +103,7 @@ export class TerminalBlock implements Block {
     this.#fontAtlasCache = fontAtlasCache;
 
     this.onDidAppendScrollbackLines = this.#onDidAppendScrollbackLinesEventEmitter.event;
+    this.onDidDeleteScrollbackLines = this.#onDidDeleteScrollbackLinesEventEmitter.event;
     this.onHyperlinkClicked = this.#onHyperlinkClickedEventEmitter.event;
     this.onHyperlinkHover = this.#onHyperlinkHoverEventEmitter.event;
     this.onSelectionChanged = this.#onSelectionChangedEventEmitter.event;
@@ -1067,6 +1071,8 @@ export class TerminalBlock implements Block {
 
     this.#updateWidgetSize();
     this.#widget.update();
+
+    this.#onDidDeleteScrollbackLinesEventEmitter.fire(lineCount);
   }
 
   getBulkFile(): BulkFile {

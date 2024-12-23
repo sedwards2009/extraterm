@@ -273,7 +273,20 @@ export class InternalExtensionContextImpl implements InternalExtensionContext {
         });
       }
     }
+  }
 
+  terminalDidDeleteScrollbackLines(terminal: Terminal, ev: LineRangeChange): void {
+    if (this.hasTerminalWrapper(terminal)) {
+      const wrapper = this.wrapTerminal(terminal);
+      if (wrapper._onDidDeleteScrollbackLinesEventEmitter.hasListeners()) {
+        const block = this.wrapBlock(ev.blockFrame);
+        wrapper._onDidDeleteScrollbackLinesEventEmitter.fire({
+          block,
+          startLine: ev.startLine,
+          endLine: ev.endLine
+        });
+      }
+    }
   }
 
   terminalDidScreenChange(terminal: Terminal, ev: LineRangeChange): void {

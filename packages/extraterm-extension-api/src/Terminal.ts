@@ -101,6 +101,11 @@ export interface Terminal {
   readonly onDidAppendScrollbackLines: Event<LineRangeChange>;
 
   /**
+   * Fired when lines are deleted from the scrollback area of a block.
+   */
+  readonly onDidDeleteScrollbackLines: Event<LineRangeChange>;
+
+  /**
    * The tab which holds this terminal
    */
   readonly tab: Tab;
@@ -201,7 +206,7 @@ export interface Viewport {
   position: number;
 
   /**
-   * The total height of the content inside the viewport.
+   * The total height of all the content.
    */
   readonly contentHeight: number;
 

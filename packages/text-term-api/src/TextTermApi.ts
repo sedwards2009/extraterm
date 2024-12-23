@@ -208,6 +208,7 @@ export interface TextEmulatorApi {
   refreshScreen(): void;
 
   resize(newSize: TerminalSize): void;
+  setPalette(palette: number[]): void;
 
   /**
    * Reset the virtual terminal.
