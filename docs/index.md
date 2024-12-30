@@ -8,6 +8,7 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 ## Features
 
 * Supports Linux and macOS, and on Windows WSL, CMD, and PowerShell
+* Built in SSH client
 * Images in terminal
 * 24 bit color
 * Color emoji on all platforms
@@ -34,7 +35,8 @@ Don't forget to {% include star.ext %} **Star** us on [GitHub](https://github.co
 {% include news_list_short.ext %}
 [More news](news.html)
 
-Follow [{% include twitter_logo.ext %}@ExtratermDev](https://twitter.com/ExtratermDev) or via {% include rss_feed_logo.ext %} <a rel="alternate" type="application/rss+xml" href="feed.xml">RSS feed</a> or even Watch Releases on GitHub to receive news updates as they happen.
+
+Follow [{% include bluesky_logo.ext %} https://bsky.app/profile/extratermdev.bsky.social](https://bsky.app/profile/extratermdev.bsky.social) or via {% include rss_feed_logo.ext %} <a rel="alternate" type="application/rss+xml" href="feed.xml">RSS feed</a> or even Watch Releases on GitHub to receive news updates as they happen.
 
 
 ## Development and Contributing
