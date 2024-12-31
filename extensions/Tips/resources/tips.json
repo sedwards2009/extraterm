@@ -91,11 +91,10 @@
       {"icon": "fa-lightbulb"},
       " Tip: Hear About Extraterm News</h2>",
       "<p>",
-      "Extraterm is up on <a href=\"https://twitter.com/ExtratermDev\">Twitter @ExtratermDev</a>.",
+      "Extraterm is up on <a href=\"https://bsky.app/profile/extratermdev.bsky.social\">Bluesky extratermdev.bsky.social</a>.",
       "</p>",
       "<p>",
-      "Follow us to hear about releases and all Extraterm news. If you are enjoying Extraterm then send us",
-      "a quick tweet!",
+      "Follow us to hear about releases and all Extraterm news.",
       "</p>"
     ]
   },

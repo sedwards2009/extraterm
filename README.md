@@ -69,7 +69,7 @@ Nightly builds of the `master` branch can be [downloaded here](https://storage.g
 
 # Further Information
 
-* :loudspeaker: :bird: Follow development on [Twitter @ ExtratermDev](https://twitter.com/ExtratermDev)
+* :loudspeaker: Follow development on [Bluesky extratermdev.bsky.social](https://bsky.app/profile/extratermdev.bsky.social)
 * [User Guide](https://extraterm.org/guide.html)
 * [Downloads and Releases](https://github.com/sedwards2009/extraterm/releases) (Linux, Windows and OS X supported)
 * [Extending Extraterm with Extensions](https://extraterm.org/developing_extensions.html)
