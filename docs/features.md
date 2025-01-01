@@ -49,7 +49,7 @@ The shell integration makes uploading and downloading files easy without requiri
 ![Download](download.png)
 
 
-## Colorizer
+# Colorizer
 
 Colorizer scans the terminal output for certain patterns and words and colors them. This is useful for highlighting important text in command output such as "error" or "warning".
 
