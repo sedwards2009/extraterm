@@ -8,6 +8,11 @@ It is currently in steady development and although not at a 1.0 release yet, it 
 Note: Many of these features are currently only present in the older Electron based version of Extraterm.
 
 
+# SSH Client
+
+Extraterm can act as an SSH client to connect to remote servers. Yes, even on Windows.
+
+
 # Command Palette
 
 Extraterm is designed for keyboard use first. The Command Palette makes it easy to find and execute any command without leaving the keyboard.
@@ -36,10 +41,6 @@ The “from” command lets you use previous command output as input for termina
 
 ![From command](from_command.gif)
 
-Or you can edit the command output directly in place and execute the selection with `Ctrl+Shift+Enter`.
-
-![Directly edit and execute command output](edit_direct.gif)
-
 
 # Easy Downloads and Uploads
 
@@ -47,6 +48,12 @@ The shell integration makes uploading and downloading files easy without requiri
 
 ![Download](download.png)
 
+
+## Colorizer
+
+Colorizer scans the terminal output for certain patterns and words and colors them. This is useful for highlighting important text in command output such as "error" or "warning".
+
+![colorizer_example.png](colorizer_example.png)
 
 # Compatible
 

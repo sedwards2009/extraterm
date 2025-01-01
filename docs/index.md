@@ -14,14 +14,14 @@ Extraterm is more than just a terminal emulator. It provides a toolbox for worki
 * Color emoji on all platforms
 * Font ligatures
 * Keyboard friendly "Command Palette"
-* Text zoom
 * [Output colorizing](https://extraterm.org/guide.html#colorizer)
 * [Multiple windows and tiling](https://extraterm.org/guide.html#splits-and-panes)
 * [Configurable key bindings](https://extraterm.org/guide.html#keybindings)
-* Global shortcuts
-* Unicode support
-* Search
 * [Easily insert Emoji](https://extraterm.org/guide.html#insert-emoji)
+* Search
+* Unicode support
+* Text zoom
+* Global shortcuts
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
 * Easy uploads and downloads using the shell integration
 * Previous command output can be used as input for new commands
