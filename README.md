@@ -17,6 +17,7 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * Supports Linux and macOS, and on Windows WSL, CMD, and PowerShell
 * Built in SSH client
 * Images in terminal
+* Mini-map
 * 24 bit color
 * Color emoji on all platforms
 * Font ligatures
@@ -32,7 +33,7 @@ The primary developer is [Simon Edwards](mailto:simon@simonzone.com). Extraterm 
 * Shell integration; can isolate and 'frame' command output. (bash, zsh and fish supported)
 * Easy uploads and downloads using the shell integration
 * Previous command output can be used as input for new commands
-* Supports iTerm2 and TextMate themes
+* Supports iTerm2 themes
 * [MIT license](LICENSE.txt)
 
 See the more detailed [features list](https://extraterm.org/features.html).

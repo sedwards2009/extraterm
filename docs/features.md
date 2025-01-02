@@ -27,6 +27,13 @@ Extraterm supports directly viewing richer content than just text. Works across 
 ![Show image](show_image.png)
 
 
+# Mini-map
+
+A mini-map of the terminal session is shown on the right, making it easy to navigate through whatever output your terminal throws at you!
+
+![mini-map](extraterm_minimap.png)
+
+
 # Shell Integration
 
 Use the shell integration to unlock Extraterm’s power.

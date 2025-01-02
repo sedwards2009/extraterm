@@ -61,7 +61,7 @@
     </style>
     <script>
       var selectedSlide = 0;
-      var NUMBER_OF_SLIDES = 4;
+      var NUMBER_OF_SLIDES = 5;
       var run = true;
 
       window.addEventListener("load", function() {
@@ -77,7 +77,7 @@
         for (var i=0; i<NUMBER_OF_SLIDES; i++) {
           var selector = document.getElementById("slide_selector_" + i);
           selector.addEventListener("click", (function(i) {
-            selectSlide(i);  
+            selectSlide(i);
           }).bind(null, i));
         }
 
@@ -117,7 +117,7 @@
     <div id="container">
       <div class="inner">
         {% include navigation.ext %}
-            
+
         <header class="homepage">
           <div id="main-title">
             <h1>Extraterm.</h1>
@@ -134,6 +134,7 @@
           <img id="slide_1" class="slide" src="command_palette_450.png" width="800" height="450" />
           <img id="slide_2" class="slide" src="split_450.png" width="800" height="450" />
           <img id="slide_3" class="slide" src="show_image_450.png" width="800" height="450" />
+          <img id="slide_4" class="slide" src="minimap_450.png" width="800" height="450" />
         </div>
         <div id="slideshow-selector" class="slideshow-selector">
           <div id="slide_selector_0" class="selected"></div>
@@ -145,7 +146,7 @@
         <section id="main_content">
           {{ content }}
         </section>
-  
+
         <footer>
         {% if site.github.is_project_page %}
           {{ site.title | default: site.github.repository_name }} is maintained by <a href="{{ site.github.owner_url }}">{{ site.github.owner_name }}</a><br>
