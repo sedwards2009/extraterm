@@ -123,4 +123,5 @@ export interface TextInputOptions {
   value: string;
   placeholder?: string;
   password?: boolean;
+  suggestions?: string[];
 }

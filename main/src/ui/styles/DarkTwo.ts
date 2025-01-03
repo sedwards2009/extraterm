@@ -9,7 +9,7 @@ import { blue, darken, green, hsl, lighten, lightness, mix, red, rgba, saturate,
 import { createIcon } from "../Icons.js";
 import { IconPair, UiStyle } from "../UiStyle.js";
 import { TitleBarStyle } from "../../config/Config.js";
-import { Color } from "packages/extraterm-color-utilities/dist/ColorUtilities.js";
+import { Color } from "extraterm-color-utilities";
 
 
 function toRgba(color: string): number {

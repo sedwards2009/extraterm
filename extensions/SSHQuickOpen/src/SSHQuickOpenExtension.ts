@@ -1,20 +1,36 @@
 /*
- * Copyright 2024 Simon Edwards <simon@simonzone.com>
+ * Copyright 2025 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import { ExtensionContext, Logger, SessionConfiguration } from '@extraterm/extraterm-extension-api';
 import { createUuid } from "extraterm-uuid";
 
+// Most Recently Used list length.
+const MRU_LENGTH = 10;
+interface Config {
+  mru: string[];
+}
 
 let log: Logger = null;
 let context: ExtensionContext = null;
+let config: Config = null;
 
 
 export function activate(_context: ExtensionContext): any {
   context = _context;
   log = context.logger;
+  loadConfig();
   context.commands.registerCommand("ssh-quick-open:open", quickOpenCommand);
+}
+
+function loadConfig(): void {
+  config = context.configuration.get();
+  if (config == null) {
+    config = {
+      mru: []
+    };
+  }
 }
 
 // Note: This is mostly duplicated in SSHSessionEditorExtension.ts.
@@ -29,13 +45,29 @@ async function quickOpenCommand(): Promise<void> {
   const sshConnectionString = await context.activeTab.showTextInput({
     message: "Enter a SSH connection string:",
     value: "",
+    suggestions: config.mru
   });
   if (sshConnectionString == null) {
     return;
   }
 
+  updateMRU(sshConnectionString);
+
   const sshSessionConfiguration = parseConnectionString(sshConnectionString);
   context.commands.executeCommand("extraterm:window.newTerminal", {sessionConfiguration: sshSessionConfiguration});
+}
+
+function updateMRU(sshConnectionString: string): void {
+  const index = config.mru.indexOf(sshConnectionString);
+  if (index !== -1) {
+    config.mru.splice(index, 1);
+  }
+  config.mru.unshift(sshConnectionString);
+
+  if (config.mru.length > MRU_LENGTH) {
+    config.mru = config.mru.slice(0, MRU_LENGTH);
+  }
+  context.configuration.set(config);
 }
 
 function parseConnectionString(sshConnectionString: string): SSHSessionConfiguration {

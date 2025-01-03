@@ -1,16 +1,16 @@
 /*
- * Copyright 2023 Simon Edwards <simon@simonzone.com>
+ * Copyright 2025 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
 import * as ExtensionApi from "@extraterm/extraterm-extension-api";
-import { Logger, log, getLogger } from "extraterm-logging";
+import { Logger, getLogger } from "extraterm-logging";
 import { doLater } from "extraterm-timeoutqt";
-import { Label, LineEdit } from "qt-construct";
+import { ComboBox, Label, LineEdit } from "qt-construct";
 import { Window } from "../Window.js";
 import { UiStyle } from "../ui/UiStyle.js";
 import { WindowPopOver } from "../ui/WindowPopOver.js";
-import { Direction, Key, QKeyEvent, QLabel, QLineEdit, QPushButton, QRect, TextFormat } from "@nodegui/nodegui";
+import { Direction, Key, QComboBox, QKeyEvent, QLabel, QLineEdit, QRect, TextFormat } from "@nodegui/nodegui";
 import { BoxLayout, Widget } from "qt-construct";
 
 
@@ -19,11 +19,18 @@ export interface TextInputPopOverOptions extends ExtensionApi.TextInputOptions {
   aroundRect?: QRect;
 }
 
+enum TextInputPopOverMode {
+  TEXT,
+  COMBO_BOX
+}
+
 export class TextInputPopOver {
   private _log: Logger = null;
   #uiStyle: UiStyle = null;
   #messageLabel: QLabel = null;
+  #mode = TextInputPopOverMode.TEXT;
   #lineEdit: QLineEdit = null;
+  #comboBox: QComboBox = null;
   #windowPopOver: WindowPopOver = null;
   #containingRect: QRect = null;
 
@@ -47,6 +54,13 @@ export class TextInputPopOver {
               wordWrap: true,
               openExternalLinks: true
             }),
+            this.#comboBox = ComboBox({
+              items: [],
+              editable: true,
+              onKeyPress: (nativeEvent) => {
+                this.#handleKeyPress(new QKeyEvent(nativeEvent));
+              },
+            }),
             this.#lineEdit = LineEdit({
               onKeyPress: (nativeEvent) => {
                 this.#handleKeyPress(new QKeyEvent(nativeEvent));
@@ -67,9 +81,13 @@ export class TextInputPopOver {
     const key = event.key();
     if (key === Key.Key_Enter || key === Key.Key_Return) {
       event.accept();
-      this.#lineEdit.setEventProcessed(true);
-      this.#sendResult(this.#lineEdit.text());
-      return;
+      if (this.#mode === TextInputPopOverMode.COMBO_BOX) {
+        this.#comboBox.setEventProcessed(true);
+        this.#sendResult(this.#comboBox.currentText());
+      } else {
+        this.#lineEdit.setEventProcessed(true);
+        this.#sendResult(this.#lineEdit.text());
+      }
     }
   }
 
@@ -102,7 +120,24 @@ export class TextInputPopOver {
       this.#messageLabel.setTextFormat(TextFormat.RichText);
     }
 
-    this.#lineEdit.setText(options.value ?? "");
+    this.#mode = (options.suggestions ?? []).length === 0 ? TextInputPopOverMode.TEXT :TextInputPopOverMode.COMBO_BOX;
+    const isComboBox = this.#mode === TextInputPopOverMode.COMBO_BOX;
+
+    if (isComboBox) {
+      this.#lineEdit.hide();
+      this.#comboBox.show();
+
+      this.#comboBox.clear();
+      for (const item of options.suggestions) {
+        this.#comboBox.addItem(undefined, item, undefined);
+      }
+      this.#comboBox.setCurrentText(options.value ?? "");
+
+    } else {
+      this.#comboBox.hide();
+      this.#lineEdit.show();
+      this.#lineEdit.setText(options.value ?? "");
+    }
 
     if (options.aroundRect != null) {
       const screenGeometry = window.getWidget().windowHandle().screen().geometry();
@@ -118,7 +153,12 @@ export class TextInputPopOver {
     });
 
     this.#windowPopOver.show();
-    this.#lineEdit.setFocus();
+
+    if (isComboBox) {
+      this.#comboBox.setFocus();
+    } else {
+      this.#lineEdit.setFocus();
+    }
 
     return new Promise<string | undefined>((resolve, reject) => {
       this.#resolveFunc = resolve;

@@ -107,6 +107,7 @@ function main(): void {
 
           ComboBox({items: ["One", "Two"]}),
           ComboBox({items: ["Disabled One", "Disabled Two"], enabled: false}),
+          ComboBox({editable: true, items: []}),
 
           Widget({layout:
             BoxLayout({
