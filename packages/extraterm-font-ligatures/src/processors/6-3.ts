@@ -1,6 +1,5 @@
-import { ChainingContextualSubstitutionTable, Lookup } from '../tables.js';
+import { ChainingContextualSubstitutionTable, CoverageTable, Lookup } from '../tables.js';
 import { LookupTree, LookupTreeEntry } from '../types.js';
-
 import { listGlyphsByIndex } from './coverage.js';
 import { processInputPosition, processLookaheadPosition, processBacktrackPosition, getInputTree,
   EntryMeta } from './helper.js';
@@ -40,16 +39,18 @@ export function buildTree(table: ChainingContextualSubstitutionTable.Format3, lo
       );
     }
 
-    for (const coverage of table.lookaheadCoverage) {
+    if (table.lookaheadCoverage.length > 0) {
+      const glyphsByIndex = coverageTablesToGlyphsByIndex(table.lookaheadCoverage);
       currentEntries = processLookaheadPosition(
-        listGlyphsByIndex(coverage).map(glyph => glyph.glyphId),
+        glyphsByIndex,
         currentEntries
       );
     }
 
-    for (const coverage of table.backtrackCoverage) {
+    if (table.backtrackCoverage.length > 0) {
+      const glyphsByIndex = coverageTablesToGlyphsByIndex(table.backtrackCoverage);
       currentEntries = processBacktrackPosition(
-        listGlyphsByIndex(coverage).map(glyph => glyph.glyphId),
+        glyphsByIndex,
         currentEntries
       );
     }
@@ -69,6 +70,13 @@ export function buildTree(table: ChainingContextualSubstitutionTable.Format3, lo
       };
     }
   }
-
   return result;
+}
+
+function coverageTablesToGlyphsByIndex(tables: CoverageTable[]): (number | [number, number])[] {
+  let glyphsByIndex: (number | [number, number])[] = [];
+  for (const coverage of tables) {
+    glyphsByIndex = glyphsByIndex.concat(listGlyphsByIndex(coverage).map(glyph => glyph.glyphId));
+  }
+  return glyphsByIndex;
 }

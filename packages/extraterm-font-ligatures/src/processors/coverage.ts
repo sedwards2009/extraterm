@@ -25,7 +25,12 @@ export default function getCoverageGlyphIndex(table: CoverageTable, glyphId: num
   }
 }
 
-export function listGlyphsByIndex(table: CoverageTable): { glyphId: number | [number, number]; index: number; }[] {
+export interface GlyphIdIndex {
+  glyphId: number | [number, number];
+  index: number;
+}
+
+export function listGlyphsByIndex(table: CoverageTable): GlyphIdIndex[] {
   switch (table.format) {
     case 1:
       return table.glyphs.map((glyphId, index) => ({ glyphId, index }));

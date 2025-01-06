@@ -21,7 +21,7 @@ export function processInputPosition(
       individual: new Map<number, LookupTreeEntry>(),
       range: []
     };
-    for (const glyph of glyphs) {
+    for (const glyph of dedupGlyphs(glyphs)) {
       nextEntries.push(...getInputTree(
         currentEntry.entry.forward,
         lookupRecords,
@@ -44,7 +44,7 @@ export function processLookaheadPosition(
 ): EntryMeta[] {
   const nextEntries: EntryMeta[] = [];
   for (const currentEntry of currentEntries) {
-    for (const glyph of glyphs) {
+    for (const glyph of dedupGlyphs(glyphs)) {
       const entry: LookupTreeEntry = {};
       if (!currentEntry.entry.forward) {
         currentEntry.entry.forward = {
@@ -76,8 +76,9 @@ export function processBacktrackPosition(
   currentEntries: EntryMeta[]
 ): EntryMeta[] {
   const nextEntries: EntryMeta[] = [];
+
   for (const currentEntry of currentEntries) {
-    for (const glyph of glyphs) {
+    for (const glyph of dedupGlyphs(glyphs)) {
       const entry: LookupTreeEntry = {};
       if (!currentEntry.entry.reverse) {
         currentEntry.entry.reverse = {
@@ -100,8 +101,40 @@ export function processBacktrackPosition(
       }
     }
   }
-
   return nextEntries;
+}
+
+function dedupGlyphs(glyphs: (number | [number, number])[]): (number | [number, number])[] {
+  if (glyphs.length < 2) {
+    return glyphs;
+  }
+
+  const result: (number | [number, number])[] = [];
+  const singleGlyphs = new Set<number>();
+  const pairGlyphs = new Set<[number, number]>();
+
+  for (const glyph of glyphs) {
+    if (Array.isArray(glyph)) {
+      let found = false;
+      for (const pair of pairGlyphs) {
+        if (pair[0] === glyph[0] && pair[1] === glyph[1]) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        result.push(glyph);
+        pairGlyphs.add(glyph);
+      }
+
+    } else {
+      if (!singleGlyphs.has(glyph)) {
+        result.push(glyph);
+        singleGlyphs.add(glyph);
+      }
+    }
+  }
+  return result;
 }
 
 export function getInputTree(tree: LookupTree, substitutions: SubstitutionLookupRecord[], lookups: Lookup[], inputIndex: number, glyphId: number | [number, number]): { entry: LookupTreeEntry; substitution: number | null; }[] {
