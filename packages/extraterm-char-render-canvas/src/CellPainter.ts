@@ -140,13 +140,12 @@ export class CellPainter {
       let isExtra = false;
       for (const fontSlice of fontSlices) {
         if (fontSlice.containsCodePoint(codePoint)) {
-          line.setExtraFontsFlag(i, true);
+          line.setLigature(i, 0);
           isExtra = true;
           break;
         }
       }
       line.setExtraFontsFlag(i, isExtra);
-      line.setLigature(i, 0);
     }
   }
 }

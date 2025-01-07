@@ -579,6 +579,8 @@ export class TerminalBlock implements Block {
     if (ligatureMarker != null) {
       const text = line.getString(0);
       ligatureMarker.markLigaturesCharCellLine(line, text);
+    } else {
+      line.clearAllLigatures();
     }
 
     let hoverLinkID = 0;

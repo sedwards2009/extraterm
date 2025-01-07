@@ -612,6 +612,19 @@ export class CharCellLine {
     this.#dirtyFlag = true;
   }
 
+  clearAllLigatures(): void {
+    const width = this.width;
+    for (let i=0; i<width; i++) {
+      const offset = i * CELL_SIZE_BYTES;
+      const flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
+      if (flags & FLAG_MASK_LIGATURE) {
+        // Clear ligature flag and set width to 1 (normal)
+        this.#dataView.setUint8(offset + OFFSET_FLAGS, flags & ~(FLAG_MASK_LIGATURE|FLAG_MASK_WIDTH));
+      }
+    }
+    this.#dirtyFlag = true;
+  }
+
   getLigature(x: number): number {
     const offset = x * CELL_SIZE_BYTES;
     const flags = this.#dataView.getUint8(offset + OFFSET_FLAGS);
