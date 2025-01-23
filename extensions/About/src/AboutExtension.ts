@@ -49,7 +49,7 @@ async function aboutCommand(): Promise<void> {
   <img id="logo" src="${context.extensionPath}/resources/${imageFilename}" width="${imageWidth}">
   <h1>Extraterm</h1>
   <h3>version ${context.application.version}</h3>
-  <p>Copyright &copy; 2015-2023 Simon Edwards &lt;simon@simonzone.com&gt;</p>
+  <p>Copyright &copy; 2015-2025 Simon Edwards &lt;simon@simonzone.com&gt;</p>
   <p>Published under the MIT license</p>
   <p>See <a href="https://extraterm.org">extraterm.org</a> and <a href="https://github.com/sedwards2009/extraterm">https://github.com/sedwards2009/extraterm</a></p>
   <hr>
