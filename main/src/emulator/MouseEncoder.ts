@@ -99,6 +99,10 @@ export class MouseEncoder {
     this._log = getLogger("MouseEncoder", this);
   }
 
+  supportsMouseDown(): boolean {
+    return ProtocolMouseDownSupport.includes(this.mouseProtocol);
+  }
+
   mouseDown(ev: MouseEventOptions): string {
     if ( ! ProtocolMouseDownSupport.includes(this.mouseProtocol)) {
       return null;

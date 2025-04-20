@@ -226,6 +226,7 @@ export interface TextEmulatorApi {
    */
   getCursorRow(): number;
 
+  supportsMouseDown(): boolean;
   /**
    *
    * @return true if the event has been fully handled.

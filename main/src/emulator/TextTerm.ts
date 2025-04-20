@@ -659,6 +659,10 @@ export class TextEmulator implements TextEmulatorApi {
     }
   }
 
+  supportsMouseDown(): boolean {
+    return this.#mouseEncoder.supportsMouseDown();
+  }
+
   mouseMove(ev: MouseEventOptions): boolean {
     const sequence = this.#mouseEncoder.mouseMove(ev);
     if (sequence != null) {

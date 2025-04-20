@@ -792,9 +792,11 @@ export class TerminalBlock implements Block {
 
   #handleMouseDoubleClick(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
-    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseUp(termEvent)) {
+    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 &&
+        (this.#emulator.mouseUp(termEvent) || this.#emulator.supportsMouseDown())) {
       return;
     }
+
     this.#isWordSelection = true;
 
     this.#selectionStart = { x: this.#extendXWordLeft(termEvent), y: termEvent.row + this.#scrollback.length };
@@ -828,7 +830,8 @@ export class TerminalBlock implements Block {
   #handleMouseMove(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
     // Try to feed the event to the emulator
-    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.mouseMove(termEvent)) {
+    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 &&
+        (this.#emulator.mouseMove(termEvent) || this.#emulator.supportsMouseDown())) {
       return;
     }
 
