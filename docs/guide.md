@@ -56,29 +56,29 @@ Extraterm supports Linux, macOS, and Windows. The [download page](download.md) d
 
 # Basics
 
-When Extraterm starts it opens one tab and runs your default shell sessioninside it. If you have used any other terminal before, then this basic functionality will be familiar.
+When Extraterm starts it opens one tab and runs your default shell session inside it. If you have used any other terminal before, then this basic functionality will be familiar.
 
 New terminal sessions can be opened using the window or "hamburger" menu in the top right on the window. It also provides access to the Settings.
 
 ![Window Menu](window_menu.png)
 
-They open up in different tabs. A tab can be closed using the little cross button on the right side of the tab. The shortcut `Ctrl+Shift+Q` will close a tab immediately.
+Sessions open up in different tabs. A tab can be closed using the little cross button on the right side of the tab. The shortcut `Ctrl+Shift+Q` will close a tab immediately.
 
 Use the `Ctrl+,` and `Ctrl+.` shortcuts to navigate left and right between tabs.
 
 Selections can be made with the mouse and are automatically copied to the system clipboard. `Ctrl+Shift+C` will also copy a selection. `Ctrl+Shift+V`, `Ctrl+Insert` or the middle mouse button pastes the contents of the clipboard into the terminal.
 
-The scrollbar on the right or `Shift+PageUp` and `Shift+PageDown` let you can scroll through and view previous output.
+The scrollbar on the right or `Shift+PageUp` and `Shift+PageDown` let you scroll through previous output.
 
-The right mouse button on different elements in the window opens the context menu. Tabs themselves also have options for customizing the tab in their context menu. Terminal contents also have different options in the context menu.
+The right mouse button on different elements in the window opens the corresponding context menu. Each tab also has options for customizing it in its context menu. Terminal contents also have different options in the context menu.
 
-Files and directories can be dropped onto Extraterm terminals. The path of the dropped file or directory will be typed into the terminal.
+Files and directories can be dragged and dropped onto Extraterm terminals. The path of the dropped file or directory will be typed into the terminal.
 
 All of Extraterm's features and commands can be accessed via the Command Palette.
 
 ![Command palette](command_palette.png)
 
-The Command Palette is a pop up menu of commands which can be easily searched and selected from via the keyboard. It grants direct access to all of Extraterm's commands and actions. Open it using `Ctrl+Shift+P`. Commands which are specific to the current context appear at the top of the menu. Cursor up/down and PageUp/PageDown keys move the selection. The `Enter` key executes the selected command, while the escape key closes the palette. The items in the menu can be filtered by entering search text.
+The Command Palette is a pop up menu of commands which can be easily searched for and selected via the keyboard. It grants direct access to all of Extraterm's commands and actions. Open it using `Ctrl+Shift+P`. Commands which are specific to the current context appear at the top of the menu. Cursor up/down and the PageUp/PageDown keys move the selection. The `Enter` key executes the selected command, while the Escape key closes the palette. The items in the menu can be filtered by entering search text.
 
 -----------
 
