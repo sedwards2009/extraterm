@@ -36,7 +36,7 @@ jobs:
             libxcb-render-util0 libxcb-xinerama0
       - name: Set up pkg2appimage
         run: |
-          wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage--x86_64.AppImage
+          wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage-1eceb30-x86_64.AppImage
           chmod +x ./pkg2appimage-*.AppImage
           mv pkg2appimage-*.AppImage pkg2appimage.AppImage
           sudo mv pkg2appimage.AppImage /usr/local/bin
