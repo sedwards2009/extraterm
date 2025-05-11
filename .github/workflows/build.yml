@@ -39,6 +39,7 @@ jobs:
           wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage-1eceb30-x86_64.AppImage
           chmod +x ./pkg2appimage-*.AppImage
           mv pkg2appimage-*.AppImage pkg2appimage.AppImage
+          ls -alp
           sudo mv pkg2appimage.AppImage /usr/local/bin
       - name: Install Node.js
         uses: actions/setup-node@v4
