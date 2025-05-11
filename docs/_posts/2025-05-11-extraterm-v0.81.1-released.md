@@ -1,6 +1,6 @@
 ---
 title: Extraterm Qt v0.81.1 released
-date: 2025-05-11 21:00:00 +0100
+date: 2025-05-11 21:00:00 +0200
 categories: release
 version: 0.81.1
 ---
