@@ -21,7 +21,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: create-release
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +41,7 @@ jobs:
           mv pkg2appimage-*.AppImage pkg2appimage.AppImage
           ls -alp
           sudo mv pkg2appimage.AppImage /usr/local/bin
+          ls -alp /usr/local/bin/pkg2appimage.AppImage
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
