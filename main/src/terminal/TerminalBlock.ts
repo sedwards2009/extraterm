@@ -792,8 +792,8 @@ export class TerminalBlock implements Block {
 
   #handleMouseDoubleClick(event: QMouseEvent): void {
     const termEvent = this.#qMouseEventToTermApi(event);
-    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 &&
-        (this.#emulator.mouseUp(termEvent) || this.#emulator.supportsMouseDown())) {
+    if ( ! termEvent.ctrlKey && this.#emulator != null && termEvent.row >= 0 && this.#emulator.supportsMouseDown() &&
+        this.#emulator.mouseDown(termEvent)) {
       return;
     }
 
