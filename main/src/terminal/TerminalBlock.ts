@@ -3,8 +3,8 @@
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
-import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, MouseButton, KeyboardModifier, CompositionMode,
-  QPen, ContextMenuPolicy, QRect, QColor} from "@nodegui/nodegui";
+import { QPainter, QWidget, QPaintEvent, WidgetEventTypes, QMouseEvent, QWheelEvent, MouseButton, KeyboardModifier,
+  CompositionMode, QPen, ContextMenuPolicy, QRect, QColor} from "@nodegui/nodegui";
 import { getLogger, log, Logger } from "extraterm-logging";
 import { Disposable, Event } from "extraterm-event-emitter";
 import { TextureFontAtlas, RGBAToQColor, FontSlice, CursorStyle, MonospaceFontMetrics,
@@ -138,7 +138,9 @@ export class TerminalBlock implements Block {
     widget.addEventListener(WidgetEventTypes.MouseMove, (nativeEvent) => {
       this.#handleMouseMove(new QMouseEvent(nativeEvent));
     });
-
+    widget.addEventListener(WidgetEventTypes.Wheel, (nativeEvent) => {
+      this.#handleMouseWheel(new QWheelEvent(nativeEvent));
+    });
     return widget;
   }
 
@@ -744,9 +746,9 @@ export class TerminalBlock implements Block {
     }
   }
 
-  #qMouseEventToTermApi(event: QMouseEvent): ExpandedMouseEventOptions {
-    const pos = this.pixelPointToCell(event.x(), event.y());
-    const columnEdgePos = this.#pixelToRowColumnEdge(event.x(), event.y());
+  #qMouseEventToTermApi(event: { position(): {x: number, y: number}, buttons(): MouseButton, modifiers(): KeyboardModifier }): ExpandedMouseEventOptions {
+    const pos = this.pixelPointToCell(event.position().x, event.position().y);
+    const columnEdgePos = this.#pixelToRowColumnEdge(event.position().x, event.position().y);
 
     const termEvent: ExpandedMouseEventOptions = {
       row: pos.y - this.#scrollback.length,
@@ -840,6 +842,23 @@ export class TerminalBlock implements Block {
       return;
     }
     this.#handleLinkMouseMove(termEvent);
+  }
+
+  #handleMouseWheel(event: QWheelEvent): void {
+    const termEvent = this.#qMouseEventToTermApi(event);
+    if (event.angleDelta().y > 0) {
+      if (this.#emulator != null && this.#emulator.mouseWheelUp(termEvent)) {
+        event.accept();
+        this.#widget.setEventProcessed(true);
+        return;
+      }
+    } else {
+      if (this.#emulator != null && this.#emulator.mouseWheelDown(termEvent)) {
+        event.accept();
+        this.#widget.setEventProcessed(true);
+        return;
+      }
+    }
   }
 
   #handleLinkMouseMove(termEvent: ExpandedMouseEventOptions): void {

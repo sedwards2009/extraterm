@@ -273,7 +273,7 @@ export class MouseEncoder {
       return `\x1b[<${button};${x};${y}${buttonState === ButtonState.Release ? 'm' : 'M'}`;
     }
 
-    const encodedData = [];
+    const encodedData: number[] = [];
     this.#encodeMouseData(encodedData, button + 32);
 
     // xterm sends raw bytes and

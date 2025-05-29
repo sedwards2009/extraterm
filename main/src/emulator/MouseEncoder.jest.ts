@@ -102,6 +102,17 @@ test("sgr mouse wheel", done => {
   done();
 });
 
+test("Normal mouse wheel", done => {
+  const mouseEncoder = new MouseEncoder();
+  mouseEncoder.mouseProtocol = MouseProtocol.DRAG_EVENTS;
+  mouseEncoder.mouseEncoding = MouseProtocolEncoding.NORMAL;
+
+  expect(mouseEncoder.wheelUp( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001b[M\x60\x26\x23");
+  expect(mouseEncoder.wheelDown( {...emptyEvent(), row: 2, column: 5 } )).toBe("\u001b[M\x61\x26\x23");
+
+  done();
+});
+
 test("send wheel cursor keys",  done => {
   const mouseEncoder = new MouseEncoder();
   mouseEncoder.sendCursorKeysForWheel = true;
