@@ -1268,8 +1268,9 @@ export class TextEmulator implements TextEmulatorApi {
   #processDataCSI(codePoint: number, i: number): number {
     switch (this.#state) {
       case ParserState.CSI_START:
-        // '?', '>', '!'
-        if (codePoint === CODEPOINT_QUESTION || codePoint === CODEPOINT_GT || codePoint === CODEPOINT_EXC) {
+        // '?', '>', '!', '='
+        if (codePoint === CODEPOINT_QUESTION || codePoint === CODEPOINT_GT || codePoint === CODEPOINT_EXC ||
+            codePoint === CODEPOINT_EQUALS) {
           this.#params.appendPrefix(codePoint);
         } else {
           // Push this char back and try again.
