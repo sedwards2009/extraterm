@@ -9,6 +9,7 @@ import {
 export interface NormalizedCell {
   x: number;
   segment: number;
+  totalWidthCells: number;
   codePoint: number;
   extraFontFlag: boolean;
 
@@ -43,6 +44,7 @@ export function* normalizedCellIterator(cellGrid: CharCellLine, result: Normaliz
     result.imageID = cellGrid.getImageID(x);
     result.imageX = cellGrid.getImageX(x);
     result.imageY = cellGrid.getImageY(x);
+    result.totalWidthCells = widthChars;
 
     if (isLigature) {
       // Ligature case

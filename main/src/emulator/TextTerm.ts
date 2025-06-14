@@ -233,6 +233,10 @@ const CODEPOINT_VERTICAL_BAR = 0x7c;
 const CODEPOINT_BRACE_RIGHT = 0x7d;
 const CODEPOINT_TILDE = 0x7e;
 
+const CODEPOINT_VARIATION_1 = 0xfe00;
+const CODEPOINT_VARIATION_15 = 0xfe0e;
+const CODEPOINT_VARIATION_16 = 0xfe0f;
+
 function scld(): Map<number, number> {
   const result = new Map<number, number>();
   result.set('`'.codePointAt(0), 0x25c6); // '◆'
@@ -1102,7 +1106,7 @@ export class TextEmulator implements TextEmulatorApi {
 
       switch (this.#state) {
         case ParserState.NORMAL:
-          if (codePoint >= CODEPOINT_SP) {
+          if (codePoint >= CODEPOINT_SP && (codePoint < CODEPOINT_VARIATION_1 || codePoint > CODEPOINT_VARIATION_16)) {
             if (this.#charset && this.#charset.has(codePoint)) {
               codePoint = this.#charset.get(codePoint);
             }
@@ -1118,12 +1122,14 @@ export class TextEmulator implements TextEmulatorApi {
               }
             }
 
+            const codePointIsWide = isWide(codePoint);
+
             const line = this._getRow(this._y);
             if (this.#insertMode) {
               // Push the characters out of the way to make space.
               line.shiftCellsRight(this._x, 1);
               line.setCodePoint(this._x, CODEPOINT_SP);
-              if (isWide(codePoint)) {
+              if (codePointIsWide) {
                 line.shiftCellsRight(this._x, 1);
                 line.setCodePoint(this._x, CODEPOINT_SP);
               }
@@ -1135,7 +1141,7 @@ export class TextEmulator implements TextEmulatorApi {
             this._x++;
             this._markRowForRefresh(this._y);
 
-            if (isWide(codePoint)) {
+            if (codePointIsWide) {
               const j = this._y;
               const line = this._getRow(j);
               if (this._cols < 2 || this._x >= this._cols) {
@@ -1196,6 +1202,25 @@ export class TextEmulator implements TextEmulatorApi {
               // '\e'
               case CODEPOINT_ESC:
                 this.#state = ParserState.ESCAPE;
+                break;
+
+              case CODEPOINT_VARIATION_16:
+                // Emoji variation selector.
+                if (this._x !== 0) {
+                  const line = this._getRow(this._y);
+                  line.setCharExtraWidth(this._x - 1, 1);
+
+                  if (this.#insertMode) {
+                    // Push the characters out of the way to make space.
+                    line.shiftCellsRight(this._x, 1);
+                    line.setCodePoint(this._x, CODEPOINT_SP);
+                  }
+                  line.setCellAndLink(this._x, this.#curAttr);
+                  line.setCodePoint(this._x, CODEPOINT_SP);
+
+                  this._x++;
+                  this._markRowForRefresh(this._y);
+                }
                 break;
 
               default:
