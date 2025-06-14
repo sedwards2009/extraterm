@@ -137,15 +137,27 @@ export class CellPainter {
     const fontSlices = this.#fontSlices;
     for (let i=0; i<width; i++) {
       const codePoint = line.getCodePoint(i);
-      let isExtra = false;
-      for (const fontSlice of fontSlices) {
-        if (fontSlice.containsCodePoint(codePoint)) {
-          line.setLigature(i, 0);
-          isExtra = true;
-          break;
+
+      if (codePoint === 0xFE0F && i !== 0) {
+        // Detected a variation selector. This is used to select the emoji
+        // presentation of a code point. If the last code point was from the
+        // "extra" font, then it is likely to be an emoji. We then treat the
+        // emoji code point and selector as two parts of a ligature. It is
+        // only slightly hacky.
+        if (line.getExtraFontsFlag(i-1)) {
+          line.setLigature(i-1, 2);
         }
+      } else {
+        let isExtra = false;
+        for (const fontSlice of fontSlices) {
+          if (fontSlice.containsCodePoint(codePoint)) {
+            line.setLigature(i, 0);
+            isExtra = true;
+            break;
+          }
+        }
+        line.setExtraFontsFlag(i, isExtra);
       }
-      line.setExtraFontsFlag(i, isExtra);
     }
   }
 }
