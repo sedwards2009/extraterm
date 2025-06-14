@@ -4,8 +4,10 @@ import { StyleCode, STYLE_MASK_BOLD, STYLE_MASK_ITALIC, STYLE_MASK_STRIKETHROUGH
   UNDERLINE_STYLE_DOUBLE, UNDERLINE_STYLE_CURLY } from "extraterm-char-cell-line";
 
 import { TextureFontAtlas } from "../font_atlas/TextureFontAtlas.js";
-import { computeFontMetrics } from "../font_metrics/FontMeasurement.js";
+import { computeEmojiMetrics, computeFontMetrics } from "../font_metrics/FontMeasurement.js";
 import { MonospaceFontMetrics } from "../font_metrics/MonospaceFontMetrics.js";
+import { hasEmojiPresentation } from "extraterm-unicode-utilities";
+import { FontSlice } from "../FontSlice";
 
 const log = console.log.bind(console);
 
@@ -23,7 +25,19 @@ log("Font Metrics Test App");
 const metrics: MonospaceFontMetrics = computeFontMetrics("DejaVu Sans Mono", "book", 20);
 log(JSON.stringify(metrics, null, "  "));
 
-const atlas = new TextureFontAtlas(metrics, [], false, 2560, 1440);
+const extraFonts: FontSlice[] = [
+  {
+    fontFamily: "twemoji",
+    fontSizePx: 16,
+    containsCodePoint: hasEmojiPresentation,
+    sampleChars: ["\u{1f600}"]  // Smile emoji
+  }
+];
+const extraFontMetrics = extraFonts.map(
+  (extraFont) => computeEmojiMetrics(metrics, extraFont.fontFamily, extraFont.fontSizePx));
+
+
+const atlas = new TextureFontAtlas(metrics, extraFontMetrics, false, 2560, 1440);
 
 insertString("Extraterm", 0, 0xffffffff, 0x00000000);
 
