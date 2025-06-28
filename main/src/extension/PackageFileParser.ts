@@ -347,6 +347,7 @@ class PackageParser {
     const knownKeys: (keyof ExtensionSessionBackendContribution)[] = [
       "name",
       "type",
+      "priority",
     ];
     assertKnownJsonObjectKeys(packageJson, knownKeys);
     return {
