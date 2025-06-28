@@ -351,7 +351,8 @@ class PackageParser {
     assertKnownJsonObjectKeys(packageJson, knownKeys);
     return {
       name: getJsonStringField(packageJson, "name"),
-      type: getJsonStringField(packageJson, "type")
+      type: getJsonStringField(packageJson, "type"),
+      priority: getJsonNumberField(packageJson, "priority", 1000000), // Low priority by default.
     };
   }
 

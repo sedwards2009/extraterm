@@ -41,7 +41,8 @@
     "sessionBackends": [
       {
         "name": "Windows Console",
-        "type": "windows-console"
+        "type": "windows-console",
+        "priority": 1
       }
     ]
   }

@@ -8,6 +8,7 @@ import { createUuid } from "extraterm-uuid";
 import { Logger, getLogger, log } from "extraterm-logging";
 import { Pty } from "./Pty.js";
 import { ExtensionManager } from "../extension/ExtensionManager.js";
+import { LoadedSessionBackendContribution } from "../extension/ExtensionManagerTypes.js";
 
 const LOG_FINE = false;
 
@@ -20,8 +21,15 @@ export class PtyManager {
 
   getDefaultSessions(): SessionConfiguration[] {
     const results: SessionConfiguration[] = [];
-    for (const backend of this._extensionManager.getSessionBackendContributions()) {
+    const backends = this._extensionManager.getSessionBackendContributions();
 
+    // Sort the backends by priority.
+    const compareFunc = (a: LoadedSessionBackendContribution, b: LoadedSessionBackendContribution): number => {
+      return a.sessionBackendMetadata.priority - b.sessionBackendMetadata.priority;
+    };
+    backends.sort(compareFunc);
+
+    for (const backend of backends) {
       const defaultSessions = backend.sessionBackend.defaultSessionConfigurations();
       for (const session of defaultSessions) {
         session.uuid = createUuid();

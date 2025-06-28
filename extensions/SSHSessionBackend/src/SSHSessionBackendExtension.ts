@@ -39,15 +39,7 @@ class SSHBackend implements SessionBackend {
   }
 
   defaultSessionConfigurations(): SessionConfiguration[] {
-    const sessionConfig: SSHSessionConfiguration = {
-      uuid: "",
-      name: "SSH",
-      type: "ssh",
-      host: "",
-      port: 22,
-      username: "",
-    };
-    return [sessionConfig];
+    return [];  // There are no safe defaults sessions for SSH. We can't assume that even localhost is available.
   }
 
   createSession(sessionConfiguration: SessionConfiguration, sessionOptions: CreateSessionOptions): Pty {
