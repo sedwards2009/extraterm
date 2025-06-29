@@ -42,7 +42,8 @@
     "sessionBackends": [
       {
         "name": "Unix",
-        "type": "unix"
+        "type": "unix",
+        "priority": 1
       }
     ]
   }

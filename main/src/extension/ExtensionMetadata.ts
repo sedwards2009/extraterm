@@ -93,6 +93,7 @@ export interface ExtensionSessionEditorContribution {
 export interface ExtensionSessionBackendContribution {
   readonly name: string;
   readonly type: string;
+  readonly priority: number;
 }
 
 export interface ExtensionSessionSettingsContribution {
