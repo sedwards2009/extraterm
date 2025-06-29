@@ -24,6 +24,7 @@ export interface EmbeddedImage {
 
 export type EmbeddedImageMap = Map<number, EmbeddedImage>;
 
+const CODEPOINT_VARIATION_16 = 0xfe0f;
 
 export class CellPainter {
   #painter: QPainter = null;
@@ -65,6 +66,7 @@ export class CellPainter {
     const normalizedCell: NormalizedCell = {
       x: 0,
       segment: 0,
+      totalWidthCells: 1,
       codePoint: 0,
       extraFontFlag: false,
       isLigature: false,
@@ -110,7 +112,13 @@ export class CellPainter {
           glyph = this.#fontAtlas.loadCombiningCodePoints(normalizedCell.ligatureCodePoints, style,
             fontIndex, fgRGBA, bgRGBA);
         } else {
-          glyph = this.#fontAtlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
+          if (fontIndex !== 0 && normalizedCell.totalWidthCells !== 1) {
+            // Looks like some kind of emoji.
+            const codePoints: number[] = [codePoint, CODEPOINT_VARIATION_16];
+            glyph = this.#fontAtlas.loadCombiningCodePoints(codePoints, style, fontIndex, fgRGBA, bgRGBA);
+          } else {
+            glyph = this.#fontAtlas.loadCodePoint(codePoint, style, fontIndex, fgRGBA, bgRGBA);
+          }
         }
         qimage.setDevicePixelRatio(dpr);
         const sourceX = glyph.xPixels + normalizedCell.segment * glyph.widthPx;
