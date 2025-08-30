@@ -106,10 +106,12 @@ enum ParserState {
   CSI_START,
   CSI_PARAMS,
   OSC_CODE,
+  OSC_CODE_STRING_ESC_TERMINATOR,
   OSC_ITERM_PARMS,
   OSC_ITERM_PAYLOAD,
   OSC_ITERM_PAYLOAD_ESC,
   OSC_PARAMS,
+  OSC_PARAMS_STRING_ESC_TERMINATOR,
   CHARSET,
   DCS_START,
   DCS_STRING,
@@ -1242,6 +1244,8 @@ export class TextEmulator implements TextEmulatorApi {
         case ParserState.OSC_ITERM_PAYLOAD:
         case ParserState.OSC_ITERM_PAYLOAD_ESC:
         case ParserState.OSC_PARAMS:
+        case ParserState.OSC_CODE_STRING_ESC_TERMINATOR:
+        case ParserState.OSC_PARAMS_STRING_ESC_TERMINATOR:
           i = this.#processDataOSC(codePoint, i);
           break;
 
@@ -2011,11 +2015,7 @@ export class TextEmulator implements TextEmulatorApi {
     // OSC Ps ; Pt ST
     // OSC Ps ; Pt BEL
     //   Set Text Parameters.
-    const isTerminator = codePoint === CODEPOINT_BEL || codePoint === CODEPOINT_ESC;
-    if (codePoint === CODEPOINT_ESC) {  // ESC \ means ST (string terminator)
-      i++;                              // Assume the next codepoint is \ and skip it.
-    }
-
+    const isTerminator = codePoint === CODEPOINT_BEL;
     switch (this.#state) {
       case ParserState.OSC_CODE:
         if (codePoint >= CODEPOINT_ZERO && codePoint <= CODEPOINT_NINE) {
@@ -2027,6 +2027,8 @@ export class TextEmulator implements TextEmulatorApi {
           } else {
             this.#state = ParserState.OSC_PARAMS;
           }
+        } else if (codePoint === CODEPOINT_ESC) {
+          this.#state = ParserState.OSC_CODE_STRING_ESC_TERMINATOR;
         } else {
           if (isTerminator) {
             this.#params.endParameter();
@@ -2037,17 +2039,37 @@ export class TextEmulator implements TextEmulatorApi {
         }
         break;
 
+      case ParserState.OSC_CODE_STRING_ESC_TERMINATOR:
+        if (codePoint === CODEPOINT_BACKSLASH) {  // ESC \ means ST (string terminator)
+          this.#params.endParameter();
+          this.#executeOSC();
+        }
+        this.#params.reset();
+        this.#state = ParserState.NORMAL;
+        return i;
+
       case ParserState.OSC_PARAMS:
         if (codePoint === CODEPOINT_SEMICOLON) {
           this.#params.endParameter();
-        } else if (! isTerminator) {
-          this.#params.appendParameterCodePoint(codePoint);
-        } else {
+        } else if (codePoint === CODEPOINT_ESC) {
+          this.#state = ParserState.OSC_PARAMS_STRING_ESC_TERMINATOR;
+        } else if (isTerminator) {
           this.#params.endParameter();
           this.#executeOSC();
           this.#params.reset();
           this.#state = ParserState.NORMAL;
+        } else {
+          this.#params.appendParameterCodePoint(codePoint);
         }
+        break;
+
+      case ParserState.OSC_PARAMS_STRING_ESC_TERMINATOR:
+        if (codePoint === CODEPOINT_BACKSLASH) {  // ESC \ means ST (string terminator)
+          this.#params.endParameter();
+          this.#executeOSC();
+        }
+        this.#params.reset();
+        this.#state = ParserState.NORMAL;
         break;
 
       case ParserState.OSC_ITERM_PARMS:
