@@ -10,13 +10,13 @@
     {
       "command": "find:findNext",
       "keys": [
-        "F3"
+        "Ctrl-F3"
       ]
     },
     {
       "command": "find:findPrevious",
       "keys": [
-        "Shift-F3"
+        "Ctrl-Shift-F3"
       ]
     }
   ]
