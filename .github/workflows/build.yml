@@ -90,7 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     needs: create-release
     steps:
       - uses: actions/checkout@v4
