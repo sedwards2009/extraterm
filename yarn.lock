@@ -3489,10 +3489,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"easta@npm:6.0.0":
-  version: 6.0.0
-  resolution: "easta@npm:6.0.0"
-  checksum: 62e4ef98241a20b183c17e0e7652f9f09c829e00aae0b1751753c784cf0b59f2c12c141a148a840091f5e23080e396e9dd5ce0b4d69327818ab8c1b91633f617
+"easta@npm:9.0.0":
+  version: 9.0.0
+  resolution: "easta@npm:9.0.0"
+  checksum: 78c90bca0a7ef9099d20c7f87c50acc5567640bb72c233cc2372efe4737eccfac4815d15761f1093de56c08bc9ec62c84fad9b725b444322ec55d4d78c99288a
   languageName: node
   linkType: hard
 
@@ -4453,7 +4453,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "extraterm-unicode-utilities@workspace:packages/extraterm-unicode-utilities"
   dependencies:
-    easta: 6.0.0
+    easta: 9.0.0
     eslint: 8.53.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
