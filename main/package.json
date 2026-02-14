@@ -37,7 +37,7 @@
     "@types/source-map-support": "0.2.28",
     "@types/utf8": "2.1.5",
     "commander": "^7.2.0",
-    "dompurify": "^2.0.17",
+    "dompurify": "^3.2.4",
     "env-paths": "^2.2.1",
     "esbuild": "^0.15.5",
     "eslint": "8.53.0",
