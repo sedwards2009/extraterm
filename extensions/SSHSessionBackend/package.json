@@ -18,7 +18,7 @@
   "dependencies": {
     "@types/ssh2": "^1.15.0",
     "lodash-es": "4.17.21",
-    "node-pty": "1.0.0",
+    "node-pty": "1.1.0",
     "ssh2": "1.15.0"
   },
   "devDependencies": {

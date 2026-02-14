@@ -19,10 +19,10 @@
     "lint-strict": "eslint --max-warnings 1 \"src/**/*.ts\""
   },
   "peerDependencies": {
-    "@nodegui/nodegui": "0.72.0"
+    "@nodegui/nodegui": "0.74.0"
   },
   "devDependencies": {
-    "@nodegui/nodegui": "0.72.0",
+    "@nodegui/nodegui": "0.74.0",
     "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",
