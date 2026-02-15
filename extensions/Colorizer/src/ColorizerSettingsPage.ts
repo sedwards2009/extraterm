@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2026 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -7,7 +7,6 @@ import {
   Event,
   Logger,
   SettingsTab,
-  Style,
   TerminalSettings
 } from "@extraterm/extraterm-extension-api";
 import { BoxLayout, CheckBox, GridLayout, Label, PushButton, Widget } from "qt-construct";
@@ -52,6 +51,7 @@ export class ColorizerSettingsPage {
       const ruleEditor = this.#createRuleEditor(rule);
       this.#ruleEditors.push(ruleEditor);
 
+      children.push(ruleEditor.getEnabledCheckbox());
       children.push(ruleEditor.getPatternEditor());
       children.push(ruleEditor.getForegroundEditor());
       children.push(ruleEditor.getBackgroundEditor());
@@ -79,11 +79,15 @@ export class ColorizerSettingsPage {
             contentsMargins: 0,
             layout: this.#gridLayout = GridLayout({
               contentsMargins: 0,
-              columns: 5,
+              columns: 6,
               // columnsMinimumWidth: [PAGE_WIDTH_PX/2, PAGE_WIDTH_PX/2],
               spacing: 0,
-              columnsStretch: [1, 0, 0, 0, 0],
+              columnsStretch: [0, 1, 0, 0, 0, 0],
               children: [
+                Label({
+                  cssClass: ["table-header"],
+                  text: "Enabled"
+                }),
                 Label({
                   cssClass: ["table-header"],
                   text: "Pattern"
@@ -121,6 +125,7 @@ export class ColorizerSettingsPage {
                     onClicked: () => {
                       const newRule: ColorRule = {
                         uuid: createUuid(),
+                        enabled: true,
                         pattern: "",
                         foreground: 1,
                         background: null,
@@ -128,18 +133,19 @@ export class ColorizerSettingsPage {
                         isRegex: false,
                         isBold: false,
                         isItalic: false,
-                        isUnderline: false
+                        isUnderline: false,
                       };
                       this.#config.rules.push(newRule);
                       const ruleEditor = this.#createRuleEditor(newRule);
                       this.#ruleEditors.push(ruleEditor);
 
                       const lastRow = this.#config.rules.length;  // Row 0 is header
-                      this.#gridLayout.addWidget(ruleEditor.getPatternEditor(), lastRow, 0);
-                      this.#gridLayout.addWidget(ruleEditor.getForegroundEditor(), lastRow, 1);
-                      this.#gridLayout.addWidget(ruleEditor.getBackgroundEditor(), lastRow, 2);
-                      this.#gridLayout.addWidget(ruleEditor.getStyleEditor(), lastRow, 3);
-                      this.#gridLayout.addWidget(ruleEditor.getDeleteButton(), lastRow, 4);
+                      this.#gridLayout.addWidget(ruleEditor.getEnabledCheckbox(), lastRow, 0);
+                      this.#gridLayout.addWidget(ruleEditor.getPatternEditor(), lastRow, 1);
+                      this.#gridLayout.addWidget(ruleEditor.getForegroundEditor(), lastRow, 2);
+                      this.#gridLayout.addWidget(ruleEditor.getBackgroundEditor(), lastRow, 3);
+                      this.#gridLayout.addWidget(ruleEditor.getStyleEditor(), lastRow, 4);
+                      this.#gridLayout.addWidget(ruleEditor.getDeleteButton(), lastRow, 5);
 
                       this.#onConfigChangedEventEmitter.fire(this.#config);
                     },
@@ -167,6 +173,7 @@ export class ColorizerSettingsPage {
     });
 
     ruleEditor.onDeleteClicked((uuid: string) => {
+      ruleEditor.getEnabledCheckbox().setParent(null);
       ruleEditor.getPatternEditor().setParent(null);
       ruleEditor.getForegroundEditor().setParent(null);
       ruleEditor.getBackgroundEditor().setParent(null);
