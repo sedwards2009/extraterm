@@ -1457,6 +1457,7 @@ __metadata:
     eslint: 8.53.0
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -1854,6 +1855,7 @@ __metadata:
     esbuild: ^0.15.5
     jest: 27.5.1
     shelljs: 0.8.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -1867,6 +1869,7 @@ __metadata:
     esbuild: ^0.15.5
     jest: 27.5.1
     shelljs: 0.8.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -2926,6 +2929,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     esbuild: ^0.15.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -2937,6 +2941,7 @@ __metadata:
     "@extraterm/extraterm-extension-api": 0.15.0
     esbuild: ^0.15.5
     shelljs: 0.8.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -3324,6 +3329,7 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     esbuild: ^0.15.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -5608,6 +5614,7 @@ __metadata:
     download-cli: ^1.1.1
     esbuild: ^0.15.5
     shelljs: 0.8.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -8012,6 +8019,7 @@ __metadata:
     "@extraterm/extraterm-extension-api": 0.15.0
     esbuild: ^0.15.5
     shelljs: 0.8.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -10265,6 +10273,7 @@ __metadata:
     esbuild: ^0.15.5
     jest: 27.5.1
     shelljs: 0.8.5
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -10756,6 +10765,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     semver-compare: ^1.0.0
+    shx: ^0.3.4
     typescript: 5.2.2
   languageName: unknown
   linkType: soft

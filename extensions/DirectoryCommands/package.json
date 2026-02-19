@@ -32,6 +32,7 @@
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
     "esbuild": "^0.15.5",
+    "shx": "^0.3.4",
     "typescript": "5.2.2"
   }
 }
