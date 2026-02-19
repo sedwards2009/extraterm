@@ -7,7 +7,7 @@ import sh from 'shelljs';
 
 if ( ! sh.test('-d', 'data')) {
   sh.echo("Downloading TLDR Pages data files...");
-  sh.exec('download --extract --out data http://tldr-pages.github.io/assets/tldr.zip');
+  sh.exec('download --extract --out data https://github.com/tldr-pages/tldr/releases/latest/download/tldr.zip');
   sh.rm('-r', 'data/pages.*');
   sh.mv('data/index.json', 'data/pages/index.json');
   sh.echo("Done downloading TLDR Pages data.");
