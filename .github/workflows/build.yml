@@ -100,8 +100,6 @@ jobs:
         run: choco install nsis -y
       - name: Print the PATH environment variable
         run: echo $Env:PATH
-      - name: Add NSIS to PATH
-        run: echo "C:\Program Files (x86)\NSIS" | Out-File -FilePath $Env:PATH -Encoding utf8 -Append
       - name: Add NSIS to GITHUB_PATH
         run: echo "C:\Program Files (x86)\NSIS" | Out-File -FilePath $Env:GITHUB_PATH -Encoding utf8 -Append
       - name: Print the PATH environment variable again
