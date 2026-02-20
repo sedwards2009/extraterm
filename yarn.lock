@@ -1683,9 +1683,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"appdmg@npm:^0.6.4":
-  version: 0.6.4
-  resolution: "appdmg@npm:0.6.4"
+"appdmg@npm:^0.6.6":
+  version: 0.6.6
+  resolution: "appdmg@npm:0.6.6"
   dependencies:
     async: ^1.4.2
     ds-store: ^0.1.5
@@ -4476,7 +4476,7 @@ __metadata:
     extraterm-uuid: 1.0.0
     fs-extra: ^10.0.0
     git-repo-info: ^1.4.1
-    jam-pack-nodegui: 0.19.0
+    jam-pack-nodegui: 0.20.1
     jest: 27.5.1
     modclean: 3.0.0-beta.1
     node-gyp: ^8.3.0
@@ -6037,12 +6037,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"jam-pack-nodegui@npm:0.19.0":
-  version: 0.19.0
-  resolution: "jam-pack-nodegui@npm:0.19.0"
+"jam-pack-nodegui@npm:0.20.1":
+  version: 0.20.1
+  resolution: "jam-pack-nodegui@npm:0.20.1"
   dependencies:
     "@yarnpkg/shell": ^3.2.4
-    appdmg: ^0.6.4
+    appdmg: ^0.6.6
     commander: ^9.4.0
     minimatch: ^5.1.0
     rcedit: ^3.0.1
@@ -6056,7 +6056,7 @@ __metadata:
       optional: true
   bin:
     jam-pack-nodegui: ./dist/main.js
-  checksum: 7c97f40ede9c12ffb2ddafdc7dc6d6dbc1981d0418439c9f8ca5cea6b50f6084896efa66dddc542e5fb11aac906b34ad0e46661b27194862b02d01a747516199
+  checksum: 90cba58acaee5eacc9ad79477e037983b4fed35574ab89ddcc5730ab358fb0a8b4daebc8f65a13a66c8aefff3faf91280bc70ab776101261fa2cdd6bff23d1f9
   languageName: node
   linkType: hard
 
