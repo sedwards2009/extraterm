@@ -100,6 +100,10 @@ jobs:
         run: choco install nsis -y
       - name: Print the PATH environment variable
         run: echo $Env:PATH
+      - name: Add NSIS to PATH
+        run: echo "C:\Program Files (x86)\NSIS" >> $Env:PATH
+      - name: Print the PATH environment variable again
+        run: echo $Env:PATH
       - name: List the installed nsis version
         run: makensis -VERSION
       - name: Install zip
