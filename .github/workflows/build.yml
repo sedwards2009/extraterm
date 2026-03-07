@@ -33,7 +33,7 @@ jobs:
           sudo apt-get install pkg-config build-essential cmake make fuse \
             xserver-xorg-core mesa-common-dev libglu1-mesa-dev \
             libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
-            libxcb-render-util0 libxcb-xinerama0
+            libxcb-render-util0 libxcb-xinerama0 imagemagick
       - name: Set up pkg2appimage
         run: |
           wget -c https://github.com/AppImageCommunity/pkg2appimage/releases/download/continuous/pkg2appimage-1eceb30-x86_64.AppImage
@@ -98,6 +98,14 @@ jobs:
           fetch-depth: 0
       - name: Install nsis
         run: choco install nsis -y
+      - name: Print the PATH environment variable
+        run: echo $Env:PATH
+      - name: Add NSIS to GITHUB_PATH
+        run: echo "C:\Program Files (x86)\NSIS" | Out-File -FilePath $Env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Print the PATH environment variable again
+        run: echo $Env:PATH
+      - name: List the installed nsis version
+        run: makensis -VERSION
       - name: Install zip
         run: choco install zip -y
       - name: Install Node.js
@@ -136,49 +144,49 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-macos:
-    runs-on: macos-14
-    needs: create-release
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.nodeVersion }}
-      - name: Install dependencies
-        run: yarn install
-      - name: Download launcher executable
-        run: yarn run download-launcher-executable
-      - name: Lint strict
-        run: yarn run lint-strict
-      - name: Build
-        run: yarn run build
-      - name: Test
-        run: yarn run test
-      - name: Package
-        run: yarn run package
-      - name: Copy macOS-build-zip-output
-        uses: actions/upload-artifact@v4
-        with:
-          name: macOS-build-zip-output
-          path: |
-            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
-      - name: Copy macOS-build-dmg-output
-        uses: actions/upload-artifact@v4
-        with:
-          name: macOS-build-dmg-output
-          path: |
-            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
-      - name: Upload to GH release
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-            gh release upload "${{github.ref_name}}" \
-              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip \
-              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # build-macos:
+  #   runs-on: macos-14
+  #   needs: create-release
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.11'
+  #     - name: Install Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.nodeVersion }}
+  #     - name: Install dependencies
+  #       run: yarn install
+  #     - name: Download launcher executable
+  #       run: yarn run download-launcher-executable
+  #     - name: Lint strict
+  #       run: yarn run lint-strict
+  #     - name: Build
+  #       run: yarn run build
+  #     - name: Test
+  #       run: yarn run test
+  #     - name: Package
+  #       run: yarn run package
+  #     - name: Copy macOS-build-zip-output
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: macOS-build-zip-output
+  #         path: |
+  #           ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+  #     - name: Copy macOS-build-dmg-output
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: macOS-build-dmg-output
+  #         path: |
+  #           ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
+  #     - name: Upload to GH release
+  #       if: startsWith(github.ref, 'refs/tags/')
+  #       run: |
+  #           gh release upload "${{github.ref_name}}" \
+  #             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip \
+  #             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

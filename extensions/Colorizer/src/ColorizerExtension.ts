@@ -25,14 +25,11 @@ import { ColorRule, Config } from "./Config.js";
 let log: Logger = null;
 let context: ExtensionContext = null;
 
-
-
 interface LiveColorRule extends ColorRule {
   matchRegexp: RegExp;
 }
 
 let config: Config = null;
-
 let liveRules: LiveColorRule[] = [];
 
 export function activate(_context: ExtensionContext): any {
@@ -98,7 +95,7 @@ function loadConfig(): void {
 }
 
 function compileRules(rules: ColorRule[]): LiveColorRule[] {
-  return rules.map((rule: ColorRule): LiveColorRule => {
+  return rules.filter((rule: ColorRule) => rule.enabled !== false).map((rule: ColorRule): LiveColorRule => {
     const regexString = rule.isRegex ? rule.pattern : escapeStringRegexp(rule.pattern);
 
     try {

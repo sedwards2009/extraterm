@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Simon Edwards <simon@simonzone.com>
+ * Copyright 2026 Simon Edwards <simon@simonzone.com>
  *
  * This source code is licensed under the MIT license which is detailed in the LICENSE.txt file.
  */
@@ -9,13 +9,12 @@ import {
   Style,
   TerminalSettings
 } from "@extraterm/extraterm-extension-api";
-import { BoxLayout, Frame, LineEdit, PushButton, setCssClasses, Widget } from "qt-construct";
+import { BoxLayout, CheckBox, Frame, LineEdit, PushButton, setCssClasses } from "qt-construct";
 import { EventEmitter } from "extraterm-event-emitter";
 import { Direction, QLineEdit, QPushButton, QWidget } from "@nodegui/nodegui";
 import { ColorRule } from "./Config.js";
 import { ColorPatchPopup } from "./ColorPatchPopup.js";
 import { ColorPatchSelector } from "./ColorPatchSelector.js";
-import { Dir } from "fs-extra";
 
 
 export class RuleEditor {
@@ -30,6 +29,7 @@ export class RuleEditor {
   #backgroundEditor: ColorPatchSelector = null;
 
   #styleEditor: QWidget = null;
+  #enabledCheckbox: QWidget = null;
   #deleteButton: QWidget = null;
 
   #onChangedEventEmitter = new EventEmitter<void>();
@@ -64,9 +64,9 @@ export class RuleEditor {
     this.#initPatternEditor();
     this.#initForegroundEditor();
     this.#initBackgroundEditor();
-    this.#initDeleteButton();
-
     this.#initStyleEditor();
+    this.#initEnabledCheckbox();
+    this.#initDeleteButton();
   }
 
   getPatternEditor(): QWidget {
@@ -83,6 +83,10 @@ export class RuleEditor {
 
   getStyleEditor(): QWidget {
     return this.#styleEditor;
+  }
+
+  getEnabledCheckbox(): QWidget {
+    return this.#enabledCheckbox;
   }
 
   getDeleteButton(): QWidget {
@@ -227,6 +231,17 @@ export class RuleEditor {
           })
         ]
       })
+    });
+  }
+
+  #initEnabledCheckbox(): void {
+    this.#enabledCheckbox = CheckBox({
+      text: "",
+      checked: this.#colorRule.enabled !== false, // Default to enabled if not set.
+      onStateChanged: (enabled: number) => {
+        this.#colorRule.enabled = enabled !== 0;
+        this.#onChangedEventEmitter.fire();
+      }
     });
   }
 
