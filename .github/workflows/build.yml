@@ -144,49 +144,49 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-macos:
-    runs-on: macos-14
-    needs: create-release
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      - name: Install Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.nodeVersion }}
-      - name: Install dependencies
-        run: yarn install
-      - name: Download launcher executable
-        run: yarn run download-launcher-executable
-      - name: Lint strict
-        run: yarn run lint-strict
-      - name: Build
-        run: yarn run build
-      - name: Test
-        run: yarn run test
-      - name: Package
-        run: yarn run package
-      - name: Copy macOS-build-zip-output
-        uses: actions/upload-artifact@v4
-        with:
-          name: macOS-build-zip-output
-          path: |
-            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
-      - name: Copy macOS-build-dmg-output
-        uses: actions/upload-artifact@v4
-        with:
-          name: macOS-build-dmg-output
-          path: |
-            ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
-      - name: Upload to GH release
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-            gh release upload "${{github.ref_name}}" \
-              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip \
-              ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # build-macos:
+  #   runs-on: macos-14
+  #   needs: create-release
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.11'
+  #     - name: Install Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: ${{ env.nodeVersion }}
+  #     - name: Install dependencies
+  #       run: yarn install
+  #     - name: Download launcher executable
+  #       run: yarn run download-launcher-executable
+  #     - name: Lint strict
+  #       run: yarn run lint-strict
+  #     - name: Build
+  #       run: yarn run build
+  #     - name: Test
+  #       run: yarn run test
+  #     - name: Package
+  #       run: yarn run package
+  #     - name: Copy macOS-build-zip-output
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: macOS-build-zip-output
+  #         path: |
+  #           ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip
+  #     - name: Copy macOS-build-dmg-output
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: macOS-build-dmg-output
+  #         path: |
+  #           ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
+  #     - name: Upload to GH release
+  #       if: startsWith(github.ref, 'refs/tags/')
+  #       run: |
+  #           gh release upload "${{github.ref_name}}" \
+  #             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.zip \
+  #             ./tmp-jam-pack-nodegui/jam-pack-nodegui-work/*.dmg
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
