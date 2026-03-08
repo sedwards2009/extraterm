@@ -990,15 +990,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/dompurify@npm:^2.0.1":
-  version: 2.4.0
-  resolution: "@types/dompurify@npm:2.4.0"
-  dependencies:
-    "@types/trusted-types": "*"
-  checksum: b48cd81e997794ebc390c7c5bef1a67ec14a6f2f0521973e07e06af186c7583abe114d94d24868c0632b9573f5bd77131a4b76f3fffdf089ba99a4e53dd46c39
-  languageName: node
-  linkType: hard
-
 "@types/emscripten@npm:^1.39.6":
   version: 1.41.5
   resolution: "@types/emscripten@npm:1.41.5"
@@ -1223,13 +1214,6 @@ __metadata:
   version: 2.0.3
   resolution: "@types/stack-utils@npm:2.0.3"
   checksum: 72576cc1522090fe497337c2b99d9838e320659ac57fa5560fcbdcbafcf5d0216c6b3a0a8a4ee4fdb3b1f5e3420aa4f6223ab57b82fef3578bec3206425c6cf5
-  languageName: node
-  linkType: hard
-
-"@types/trusted-types@npm:*":
-  version: 2.0.7
-  resolution: "@types/trusted-types@npm:2.0.7"
-  checksum: 8e4202766a65877efcf5d5a41b7dd458480b36195e580a3b1085ad21e948bc417d55d6f8af1fd2a7ad008015d4117d5fdfe432731157da3c68678487174e4ba3
   languageName: node
   linkType: hard
 
@@ -3001,7 +2985,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cpu-features@npm:~0.0.9":
+"cpu-features@npm:~0.0.10":
   version: 0.0.10
   resolution: "cpu-features@npm:0.0.10"
   dependencies:
@@ -3410,13 +3394,6 @@ __metadata:
   dependencies:
     webidl-conversions: ^5.0.0
   checksum: d638e9cb05c52999f1b2eb87c374b03311ea5b1d69c2f875bc92da73e17db60c12142b45c950228642ff7f845c536b65305483350d080df59003a653da80b691
-  languageName: node
-  linkType: hard
-
-"dompurify@npm:^2.0.17":
-  version: 2.5.9
-  resolution: "dompurify@npm:2.5.9"
-  checksum: 5500ad3fd95784d3b651ba9bfa4ad185c0b0115b377f41d0fa0dc2dbc88f793b492d08f4fc9b48218b3571ea4310e08970b0b93092e3175c963500cb08e7421b
   languageName: node
   linkType: hard
 
@@ -7155,7 +7132,6 @@ __metadata:
   dependencies:
     "@extraterm/extraterm-extension-api": 0.15.0
     "@nodegui/nodegui": 0.74.0
-    "@types/dompurify": ^2.0.1
     "@types/he": ^1.1.1
     "@types/lodash-es": 4.17.10
     "@types/lru-cache": ^4.1.0
@@ -7167,7 +7143,6 @@ __metadata:
     "@types/source-map-support": 0.2.28
     "@types/utf8": 2.1.5
     commander: ^7.2.0
-    dompurify: ^2.0.17
     env-paths: ^2.2.1
     esbuild: ^0.15.5
     eslint: 8.53.0
@@ -7802,7 +7777,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.18.0, nan@npm:^2.19.0, nan@npm:^2.4.0":
+"nan@npm:^2.19.0, nan@npm:^2.23.0, nan@npm:^2.4.0":
   version: 2.25.0
   resolution: "nan@npm:2.25.0"
   dependencies:
@@ -9822,7 +9797,7 @@ __metadata:
     node-gyp: ^8.3.0
     node-pty: 1.1.0
     shx: ^0.3.2
-    ssh2: 1.15.0
+    ssh2: 1.17.0
     typescript: 5.2.2
   languageName: unknown
   linkType: soft
@@ -9847,20 +9822,20 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"ssh2@npm:1.15.0":
-  version: 1.15.0
-  resolution: "ssh2@npm:1.15.0"
+"ssh2@npm:1.17.0":
+  version: 1.17.0
+  resolution: "ssh2@npm:1.17.0"
   dependencies:
     asn1: ^0.2.6
     bcrypt-pbkdf: ^1.0.2
-    cpu-features: ~0.0.9
-    nan: ^2.18.0
+    cpu-features: ~0.0.10
+    nan: ^2.23.0
   dependenciesMeta:
     cpu-features:
       optional: true
     nan:
       optional: true
-  checksum: 56baa07dc0dd8d97aefa05033b8a95d220a34b2f203aa9116173d7adc5e9fd46be22d7cfed99cdd9f5548862ae44abd1ec136e20ea856d5c470a0df0e5aea9d1
+  checksum: 1661b020e367e358603187a1efbb7628cb9b2f75543f60e354ede67be1216d331f2b99a73c57fb01a04be050a1e06fc97d04760d1396ea658ca816ddf80df9a9
   languageName: node
   linkType: hard
 

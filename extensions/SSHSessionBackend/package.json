@@ -19,7 +19,7 @@
     "@types/ssh2": "^1.15.0",
     "lodash-es": "4.17.21",
     "node-pty": "1.1.0",
-    "ssh2": "1.15.0"
+    "ssh2": "1.17.0"
   },
   "devDependencies": {
     "@extraterm/extraterm-extension-api": "0.15.0",
