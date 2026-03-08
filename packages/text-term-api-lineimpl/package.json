@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@types/jest": "27.0.1",
-    "@types/node": "^18.15.3",
+    "@types/node": "^24.12.0",
     "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",

@@ -29,10 +29,10 @@
     "extraterm-logging": "1.0.0",
     "extraterm-unicode-utilities": "1.0.0",
     "floyd-rivest": "1.0.1",
-    "gl-matrix": "^3.3.0"
+    "gl-matrix": "3.4.3"
   },
   "devDependencies": {
-    "@types/node": "^18.15.3",
+    "@types/node": "^24.12.0",
     "eslint": "8.53.0",
     "eslint-config-extraterm": "1.0.0",
     "eslint-plugin-unicorn": "42.0.0",

@@ -30,7 +30,7 @@ export class StoredBulkFile implements BulkFile, Disposable {
   #writeStreamOpen = true;
 
   #wrFile: WriterReaderFile = null;
-  #writeStream: crypto.Cipher = null;
+  #writeStream: crypto.Cipheriv = null;
 
   #cryptoKey: Buffer = null;
   #cryptoIV: Buffer = null;

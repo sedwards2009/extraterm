@@ -28,7 +28,7 @@
     "esversion": 6
   },
   "resolutions": {
-    "@types/node": "18.11.18",
+    "@types/node": "^24.12.0",
     "typescript": "5.2.2",
     "@nodegui/nodegui": "0.74.0",
     "7zip-bin": "5.1.1"
