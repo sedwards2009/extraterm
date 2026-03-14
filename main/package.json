@@ -61,7 +61,7 @@
     "jest": "27.5.1",
     "json-to-ast": "2.1.0",
     "khroma": "^1.4.1",
-    "lodash-es": "4.17.21",
+    "lodash-es": "4.17.23",
     "lru-cache": "^4.1.3",
     "mime-types": "^2.1.21",
     "open": "^8.2.1",
