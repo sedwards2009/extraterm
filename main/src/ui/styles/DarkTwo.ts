@@ -1454,7 +1454,33 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
   QSplitter::handle:hover {
     background-color: ${textColorSubtle};
   }
-    `;
+
+  QDialog {
+    background-color: ${backgroundColor};
+  }
+
+  QListView {
+    background-color: ${backgroundColor};
+    border: 1px solid ${baseBorderColor};
+  }
+
+  QTreeView {
+    background-color: ${backgroundColor};
+    border: 1px solid ${baseBorderColor};
+  }
+
+  QHeaderView::section {
+    background-color: ${backgroundColor};
+    border: 1px solid ${baseBorderColor};
+  }
+
+  QHeaderView::down-arrow {
+    image: url(${resourceDirectory}/spin_up_arrow.svg);
+  }
+  QHeaderView::up-arrow {
+    image: url(${resourceDirectory}/spin_down_arrow.svg);
+  }
+`;
     }
 
     return BodyStyleSheet() +

@@ -1,4 +1,4 @@
-import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit, TextFormat, QStylePixelMetric } from "@nodegui/nodegui";
+import { QApplication, Direction, QMainWindow, QStyleFactory, QWidget, QTextEdit, TextFormat, QStylePixelMetric, QFileDialog } from "@nodegui/nodegui";
 import { BoxLayout, CheckBox, ComboBox, GridLayout, Label, LineEdit, ProgressBar, PushButton, RadioButton, ScrollArea, SpinBox,
   TabWidget, TextEdit, ToolButton, Widget } from "qt-construct";
 import * as path from "node:path";
@@ -312,7 +312,13 @@ function main(): void {
             })
           }),
 
-          { widget: Widget({}), stretch: 1}
+          { widget: Widget({}), stretch: 1},
+
+          PushButton({text: "File dialog", onClicked: () => {
+            const fileDialog = new QFileDialog(win.window(), "Select a file");
+            fileDialog.setStyleSheet(topWidget.styleSheet());
+            fileDialog.exec();
+          }}),
         ]
       })
     })
