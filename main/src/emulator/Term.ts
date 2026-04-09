@@ -11,7 +11,7 @@ import {
 import { Logger, getLogger } from "extraterm-logging";
 import { Event, EventEmitter } from "extraterm-event-emitter";
 
-import { Options, TextEmulator } from "./TextTerm.js";
+import { FEATURE_REPORTING_STRING, Options, TextEmulator } from "./TextTerm.js";
 import { ITermParameters } from "./ITermParameters.js";
 import { AspectRatioMode, QImage, QSize, TransformationMode } from "@nodegui/nodegui";
 import { TextLineImpl } from "text-term-api-lineimpl";
@@ -42,10 +42,17 @@ export class Emulator extends TextEmulator implements EmulatorApi {
   }
 
   protected _executeITerm(itermParameters: ITermParameters): void {
-    if (!itermParameters.isFile()) {
+    if (itermParameters.isFile()) {
+      this.#executeITermFile(itermParameters);
       return;
     }
+    if (itermParameters.isCapabilities()) {
+      this._send('\x1b]1337;Capabilities=' + FEATURE_REPORTING_STRING + '\x1b\x5c');
+      return;
+    }
+  }
 
+  #executeITermFile(itermParameters: ITermParameters): void {
     const buffer = itermParameters.getPayload();
     let qimage = new QImage();
     if ( ! qimage.loadFromData(buffer)) {

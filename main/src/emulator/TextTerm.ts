@@ -82,6 +82,18 @@ import { ITermParameters } from './ITermParameters.js';
 
 const DEBUG_RESIZE = false;
 
+export const FEATURE_REPORTING_STRING =
+  "T3" +    // 24bit color support
+  "M" +     // Mouse reporting support
+  "U" +     // Unicode basic support
+  "Uw16" +  // Unicode width version
+  "B" +     // Bracketed paste support
+  "F" +     // Focus reporting support
+  "Gs" +    // Strike-through support
+  "Go" +    // Overline support
+  "H" +     // Hyperlink support
+  "F";      // ITerm2 file support
+
 const REFRESH_START_NULL = 100000000;
 const REFRESH_END_NULL = -100000000;
 const MAX_BATCH_TIME = 16;  // 16 ms = 60Hz
@@ -626,7 +638,7 @@ export class TextEmulator implements TextEmulatorApi {
 
   focus(): void {
     if (this.#sendFocus) {
-      this.#send('\x1b[I');
+      this._send('\x1b[I');
     }
     this.#hasFocus = true;
     this.#showCursor();
@@ -648,7 +660,7 @@ export class TextEmulator implements TextEmulatorApi {
 
   blur(): void {
     if (this.#hasFocus && this.#sendFocus) {
-      this.#send('\x1b[O');
+      this._send('\x1b[O');
     }
     this.#hasFocus = false;
     this.#cursorBlinkState = true;
@@ -658,7 +670,7 @@ export class TextEmulator implements TextEmulatorApi {
   mouseDown(ev: MouseEventOptions): boolean {
     const sequence = this.#mouseEncoder.mouseDown(ev);
     if (sequence != null) {
-      this.#send(sequence);
+      this._send(sequence);
       return true;
     } else {
       return false;
@@ -672,7 +684,7 @@ export class TextEmulator implements TextEmulatorApi {
   mouseMove(ev: MouseEventOptions): boolean {
     const sequence = this.#mouseEncoder.mouseMove(ev);
     if (sequence != null) {
-      this.#send(sequence);
+      this._send(sequence);
       return true;
     } else {
       return false;
@@ -682,7 +694,7 @@ export class TextEmulator implements TextEmulatorApi {
   mouseUp(ev: MouseEventOptions): boolean {
     const sequence = this.#mouseEncoder.mouseUp(ev);
     if (sequence != null) {
-      this.#send(sequence);
+      this._send(sequence);
       return true;
     } else {
       return false;
@@ -692,7 +704,7 @@ export class TextEmulator implements TextEmulatorApi {
   mouseWheelUp(ev: MouseEventOptions): boolean {
     const sequence = this.#mouseEncoder.wheelUp(ev);
     if (sequence != null) {
-      this.#send(sequence);
+      this._send(sequence);
       return true;
     } else {
       return false;
@@ -702,7 +714,7 @@ export class TextEmulator implements TextEmulatorApi {
   mouseWheelDown(ev: MouseEventOptions): boolean {
     const sequence = this.#mouseEncoder.wheelDown(ev);
     if (sequence != null) {
-      this.#send(sequence);
+      this._send(sequence);
       return true;
     } else {
       return false;
@@ -1543,7 +1555,7 @@ export class TextEmulator implements TextEmulatorApi {
       // Query terminal name and version
       case CODEPOINT_SMALL_Q:
         if (params.getPrefixString() === '>') {
-          this.#send(`>|${this.#termProgram} ${this.#termVersion}\x1b\\`);
+          this._send(`>|${this.#termProgram} ${this.#termVersion}\x1b\\`);
         }
         break;
 
@@ -1639,12 +1651,12 @@ export class TextEmulator implements TextEmulatorApi {
       case CODEPOINT_SMALL_T:
         switch (params.getParameterInt(0)) {
           case 16:  // Report the pixel size of a cell
-            this.#send(`\x1b[6;${this._cellWidthPixels};${this._cellHeightPixels}t`);
+            this._send(`\x1b[6;${this._cellWidthPixels};${this._cellHeightPixels}t`);
             break;
 
           case 14:
           case 18:  // Report the size of the text area in characters.
-            this.#send(`\x1b[8;${this._cols};${this._rows}t`);
+            this._send(`\x1b[8;${this._cols};${this._rows}t`);
             break;
           default:
             // ignore the rest
@@ -2023,6 +2035,7 @@ export class TextEmulator implements TextEmulatorApi {
         } else if (codePoint === CODEPOINT_SEMICOLON) {
           this.#params.endParameter();
           if (this.#params.getParameterInt(0) === 1337) {
+            this.#params.reset();
             this.#state = ParserState.OSC_ITERM_PARMS;
           } else {
             this.#state = ParserState.OSC_PARAMS;
@@ -2080,6 +2093,7 @@ export class TextEmulator implements TextEmulatorApi {
         } else if (codePoint === CODEPOINT_SEMICOLON) {
           this.#params.endParameter();
         } else if (codePoint === CODEPOINT_BEL) {
+          this.#params.endParameter();
           this._executeITerm(new ITermParameters(this.#params));
           this.#params.reset();
           this.#state = ParserState.NORMAL;
@@ -2280,12 +2294,12 @@ export class TextEmulator implements TextEmulatorApi {
             break;
 
           default:
-            this.#error(`Unknown DCS Pt: ${""+pt}.`);
+            this.log(`Unknown DCS Pt: '${""+pt}'`);
             replyPt = '';
             break;
         }
 
-        this.#send('\x1bP' + (valid ? 1 : 0) + '$r' + replyPt + '\x1b\\');
+        this._send('\x1bP' + (valid ? 1 : 0) + '$r' + replyPt + '\x1b\\');
         break;
 
       // Set Termcap/Terminfo Data (xterm, experimental).
@@ -2306,7 +2320,7 @@ export class TextEmulator implements TextEmulatorApi {
         break;
 
       default:
-        this.#error(`Unknown DCS prefix: ${this.#params.getPrefixString()}.`);
+        this.log(`Unknown DCS prefix: '${this.#params.getPrefixString()}'`);
         break;
     }
   }
@@ -2716,7 +2730,7 @@ export class TextEmulator implements TextEmulatorApi {
     return true;
   }
 
-  #send(data: string): void {
+  protected _send(data: string): void {
     if (!this.#queue) {
       this.#setTimeout(() => {
         this.handler(this.#queue);
@@ -2755,12 +2769,12 @@ export class TextEmulator implements TextEmulatorApi {
 
     const fixedEndingText = text.replace(/\x0a/g, "\r");
     if (this.#bracketedPaste) {
-      this.#send("\x1b[200~");
+      this._send("\x1b[200~");
       const cleanText = fixedEndingText.replace(/\x1b[[]201~/g, "");
-      this.#send(cleanText);
-      this.#send("\x1b[201~");
+      this._send(cleanText);
+      this._send("\x1b[201~");
     } else {
-      this.#send(fixedEndingText);
+      this._send(fixedEndingText);
     }
   }
 
@@ -2769,7 +2783,6 @@ export class TextEmulator implements TextEmulatorApi {
       return;
     }
 
-    console.log.apply(console, ["[TERM] ", ...args]);
     console.log.apply(console, ["[TERM] "+ args]);
   }
 
@@ -3533,11 +3546,11 @@ export class TextEmulator implements TextEmulatorApi {
       switch (params.getDefaultInt(0, 0)) {
         case 5:
           // status report
-          this.#send('\x1b[0n');
+          this._send('\x1b[0n');
           break;
         case 6:
           // cursor position
-          this.#send('\x1b[' + (this._y + 1) + ';' + (this._x + 1) + 'R');
+          this._send('\x1b[' + (this._y + 1) + ';' + (this._x + 1) + 'R');
           break;
       }
     } else if (params.getPrefixString() === '?') {
@@ -3546,7 +3559,7 @@ export class TextEmulator implements TextEmulatorApi {
       switch (params.getDefaultInt(0, 0)) {
         case 6:
           // cursor position
-          this.#send('\x1b[?' + (this._y + 1) + ';' + (this._x + 1) + 'R');
+          this._send('\x1b[?' + (this._y + 1) + ';' + (this._x + 1) + 'R');
           break;
         case 15:
           // no printer
@@ -3784,10 +3797,10 @@ export class TextEmulator implements TextEmulatorApi {
 
     if ( ! params.hasPrefix()) {
       // Primary Device Attributes
-      this.#send('\x1b[?1;2c');
+      this._send('\x1b[?1;2c');
     } else if (params.getPrefixString() === '>') {
       // Secondary Device Attributes
-      this.#send('\x1b[>1;1;0c'); // VT220
+      this._send('\x1b[>1;1;0c'); // VT220
     }
   }
 

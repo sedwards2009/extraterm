@@ -47,6 +47,7 @@ import { TerminalBlock } from "./terminal/TerminalBlock.js";
 import { BulkFile } from "./bulk_file_handling/BulkFile.js";
 import { CommandRequestHandler } from "./local_http_server/CommandRequestHandler.js";
 import { CommonExtensionWindowState } from "./extension/CommonExtensionState.js";
+import { FEATURE_REPORTING_STRING } from "./emulator/TextTerm.js";
 
 
 sourceMapSupport.install();
@@ -579,6 +580,7 @@ class Main {
       const extraEnv = {
         [EXTRATERM_COOKIE_ENV]: newTerminal.getExtratermCookieValue(),
         "COLORTERM": "truecolor",   // Advertise that we support 24bit color
+        "TERM_FEATURES": FEATURE_REPORTING_STRING,
       };
       newTerminal.resizeTerminalArea();
 

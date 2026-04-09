@@ -15,6 +15,8 @@ export class ITermParameters {
   private _log: Logger = null;
 
   #isFile = false;
+  #isCapabilities = false;
+
   #expectedPayloadLength = -1;
   #encodedPayloadParts: Uint8Array[] = [];
   #lastPayloadIndex = 0;
@@ -32,6 +34,10 @@ export class ITermParameters {
     return this.#isFile;
   }
 
+  isCapabilities(): boolean {
+    return this.#isCapabilities;
+  }
+
   #parseParameters(params: ControlSequenceParameters): void {
     for (let i=0; i<params.getParamCount(); i++) {
       let paramString = params.getParameterString(i);
@@ -42,6 +48,12 @@ export class ITermParameters {
       }
 
       const parts = paramString.split("=", 2);
+      if (parts.length === 1) {
+        if (parts[0] === "Capabilities") {
+          this.#isCapabilities = true;
+        }
+        continue;
+      }
       if (parts.length !== 2) {
         continue;
       }
