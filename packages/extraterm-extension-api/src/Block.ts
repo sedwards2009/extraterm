@@ -54,6 +54,8 @@ export interface Block {
 
   readonly geometry: BlockGeometry;
 
+  readonly isMinimized: boolean;
+
   readonly metadata: BlockMetadata;
 }
 

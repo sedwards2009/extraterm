@@ -1256,7 +1256,7 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
   }
   QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-failure"] {
     border: ${borderWidth} solid ${brandDanger};
-    border-bottom: 0px solid transparent;
+    border-bottom: 0px solid ${brandDanger};
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
   }
@@ -1265,9 +1265,15 @@ export function createUiStyle(resourceDirectory: string, titleBarStyle: TitleBar
   }
   QWidget[cssClass~="decorated-frame-header"][cssClass~="posture-success"] {
     border: ${borderWidth} solid ${brandPrimary};
-    border-bottom: 0px solid transparent;
+    border-bottom: 0px solid ${brandPrimary};
     border-bottom-left-radius: 0px;
     border-bottom-right-radius: 0px;
+  }
+
+  QWidget[cssClass~="decorated-frame-header"][cssClass~="is-minimized"] {
+    border-bottom-width: ${borderWidth} !important;
+    border-bottom-left-radius: ${borderRadius};
+    border-bottom-right-radius: ${borderRadius};
   }
 
   QWidget[cssClass~="decorated-frame-header"] > QLabel[cssClass~="icon"] {

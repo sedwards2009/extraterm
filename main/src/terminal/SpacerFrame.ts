@@ -75,4 +75,8 @@ export class SpacerFrame implements BlockFrame {
   setViewportTop(relativeTopPx: number): void {
     //no-op
   }
+
+  isMinimized(): boolean {
+    return false;
+  }
 }

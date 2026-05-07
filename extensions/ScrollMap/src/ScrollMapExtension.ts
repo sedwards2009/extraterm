@@ -173,8 +173,7 @@ class ScrollMapWidget {
     const blocks = this.#terminal.blocks;
     for (const block of blocks) {
       const y = block.geometry.positionTop * mapScale + mapOffset;
-      const h = block.geometry.height * mapScale;
-
+      const h = block.isMinimized ? 0 : block.geometry.height * mapScale;
       let color = neutralColor;
       let brush = neutralBrush;
       switch (block.metadata.posture) {
@@ -202,13 +201,13 @@ class ScrollMapWidget {
       if (block.type === TerminalOutputType) {
         painter.fillRectF(LEFT_PADDING, y, FRAME_WIDTH, h, color);
         painter.fillRectF(LEFT_PADDING + FRAME_WIDTH + SCROLLMAP_WIDTH_CELLS, y, FRAME_WIDTH, h, color);
-
-        const terminalDetails = <TerminalOutputDetails> block.details;
-        const rowHeight = terminalDetails.rowHeight;
-        const pixelMap = PixelMap.getByBlock(block);
-        this.#drawPixelMap(painter, pixelMap, y, rowHeight);
+        if (!block.isMinimized) {
+          const terminalDetails = <TerminalOutputDetails> block.details;
+          const rowHeight = terminalDetails.rowHeight;
+          const pixelMap = PixelMap.getByBlock(block);
+          this.#drawPixelMap(painter, pixelMap, y, rowHeight);
+        }
       } else {
-
         const path = new QPainterPath();
         path.addRoundedRect(0, y, SCROLLBAR_WIDTH, h, 4, 4);
         painter.fillPath(path, brush);

@@ -79,6 +79,10 @@ export class BlockImpl implements ExtensionApi.Block, ExtensionApi.Disposable {
   get terminal(): ExtensionApi.Terminal {
     return this.#internalExtensionContext.wrapTerminal(this.#blockFrame.getBlock().getParent());
   }
+
+  get isMinimized(): boolean {
+    return this.#blockFrame.isMinimized();
+  }
 }
 
 class BlockGeometryImpl implements ExtensionApi.BlockGeometry {

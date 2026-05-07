@@ -286,6 +286,8 @@ export class Terminal implements Tab, Disposable {
       async (state: CommonExtensionWindowState, args: any) => state.activeTerminal.commandFontSizeDecrease());
     commands.registerCommand("extraterm:terminal.resetFontSize",
       async (state: CommonExtensionWindowState, args: any) => state.activeTerminal.commandFontSizeReset());
+    commands.registerCommand("extraterm:terminal.toggleLastFrameMinMax",
+      async (state: CommonExtensionWindowState) => state.activeTerminal.commandToggleLastFrameMinMax());
   }
 
   constructor(configDatabase: ConfigDatabase, uiStyle: UiStyle, extensionManager: ExtensionManager,
@@ -1276,6 +1278,16 @@ export class Terminal implements Tab, Disposable {
       const bf = this.#blockFrames[i].frame;
       if (bf instanceof DecoratedFrame) {
         this.destroyFrame(bf);
+        return;
+      }
+    }
+  }
+
+  commandToggleLastFrameMinMax(): void {
+    for (let i = this.#blockFrames.length-1; i >= 0 ; i--) {
+      const bf = this.#blockFrames[i].frame;
+      if (bf instanceof DecoratedFrame) {
+        bf.setIsMinimized(!bf.isMinimized());
         return;
       }
     }

@@ -86,6 +86,14 @@
         "when": "terminalFocus"
       },
       {
+        "command": "extraterm:terminal.toggleLastFrameMinMax",
+        "title": "Toggle Last Frame Min/Max",
+        "category": "terminal",
+        "order": 1602,
+        "icon": "fa-window-minimize",
+        "when": "terminalFocus"
+      },
+      {
         "command": "extraterm:terminal.increaseFontSize",
         "title": "Increase Font Size",
         "category": "terminal",

@@ -93,6 +93,12 @@
       ]
     },
     {
+      "command": "extraterm:terminal.toggleLastFrameMinMax",
+      "keys": [
+        "Ctrl-Shift-M"
+      ]
+    },
+    {
       "command": "extraterm:terminal.openLastFrame",
       "keys": [
         "Ctrl-Shift-O"

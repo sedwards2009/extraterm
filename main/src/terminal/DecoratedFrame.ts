@@ -35,6 +35,7 @@ export class DecoratedFrame implements BlockFrame {
   private _log: Logger = null;
   #uiStyle: UiStyle = null;
   #tag = -1;
+  #isMinimized = false;
 
   #block: Block = null;
   #widget: QWidget = null;
@@ -49,6 +50,8 @@ export class DecoratedFrame implements BlockFrame {
   #viewportTopPx = 0;
   #closeButton: QPushButton = null;
   #popOutButton: QPushButton = null;
+  #minimizeButton: QPushButton = null;
+  #maximizeButton: QPushButton = null;
 
   #onCloseClickedEventEmitter = new EventEmitter<BlockFrame>();
   onCloseClicked: Event<BlockFrame> = null;
@@ -82,7 +85,7 @@ export class DecoratedFrame implements BlockFrame {
     const leftRightMarginPx = this.#uiStyle.getFrameMarginLeftRightPx();
 
     let totalHeight = headerSizeHint.height();
-    if (this.#block != null) {
+    if (this.#block != null && ! this.#isMinimized) {
       const blockWidget = this.#block.getWidget();
 
       let blockSizeHint = blockWidget.sizeHint();
@@ -177,7 +180,7 @@ export class DecoratedFrame implements BlockFrame {
       cssClass: "decorated-frame-header",
       layout: BoxLayout({
         direction: Direction.LeftToRight,
-        contentsMargins: [0, 0, 0, 0],
+        contentsMargins: [0, 0, 0, 1],
         children: [
           {
             widget: this.#iconText = Label({cssClass: ["icon", "small"], text: ""}),
@@ -190,6 +193,27 @@ export class DecoratedFrame implements BlockFrame {
           },
           {
             widget: Label({cssClass: ["small"], text: `${createHtmlIcon("fa-tag")} ${this.#tag} `}),
+            stretch: 0
+          },
+          {
+            widget: this.#minimizeButton = HoverPushButton({
+              cssClass: "small",
+              iconPair: this.#uiStyle.getToolbarButtonIconPair("fa-window-minimize"),
+              onClicked: () => {
+                this.#onMinimizeClicked();
+              },
+            }),
+            stretch: 0
+          },
+          {
+            widget: this.#maximizeButton = HoverPushButton({
+              cssClass: "small",
+              iconPair: this.#uiStyle.getToolbarButtonIconPair("fa-window-maximize"),
+              onClicked: () => {
+                this.#onMaximizeClicked();
+              },
+              visible: false,
+            }),
             stretch: 0
           },
           {
@@ -219,7 +243,11 @@ export class DecoratedFrame implements BlockFrame {
 
   #updateHeaderFromMetadata(metadata: BlockMetadata): void {
     setCssClasses(this.#widget, ["decorated-frame", POSTURE_MAPPING[metadata.posture]]);
-    setCssClasses(this.#headerWidget, ["decorated-frame-header", POSTURE_MAPPING[metadata.posture]]);
+    const headerClasses = ["decorated-frame-header", POSTURE_MAPPING[metadata.posture]];
+    if (this.#isMinimized) {
+      headerClasses.push("is-minimized");
+    }
+    setCssClasses(this.#headerWidget, headerClasses);
 
     this.#titleLabel.setText(metadata.title);
     this.#iconText.setText(createHtmlIcon(metadata.icon));
@@ -230,6 +258,34 @@ export class DecoratedFrame implements BlockFrame {
 
   #handleMetadataChanged(): void {
     this.#updateHeaderFromMetadata(this.#getMetadata());
+  }
+
+  #onMinimizeClicked(): void {
+    this.setIsMinimized(true);
+  }
+
+  #onMaximizeClicked(): void {
+    this.setIsMinimized(false);
+  }
+
+  isMinimized(): boolean {
+    return this.#isMinimized;
+  }
+
+  setIsMinimized(minimize: boolean): void {
+    if (minimize) {
+      this.#isMinimized = true;
+      this.#block.getWidget().hide();
+      this.#minimizeButton.hide();
+      this.#maximizeButton.show();
+    } else {
+      this.#isMinimized = false;
+      this.#block.getWidget().show();
+      this.#maximizeButton.hide();
+      this.#minimizeButton.show();
+    }
+    this.#handleMetadataChanged();
+    this.#layout();
   }
 
   setViewportTop(relativeTopPx: number): void {

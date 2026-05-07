@@ -94,6 +94,12 @@
       ]
     },
     {
+      "command": "extraterm:terminal.toggleLastFrameMinMax",
+      "keys": [
+        "Cmd-m"
+      ]
+    },
+    {
       "command": "extraterm:terminal.openLastFrame",
       "keys": [
         "Cmd-o"

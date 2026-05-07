@@ -22,4 +22,5 @@ export interface BlockFrame {
   setViewportTop(relativeTopPx: number): void;
 
   getTag(): number;
+  isMinimized(): boolean;
 }
