@@ -202,6 +202,7 @@ export class DecoratedFrame implements BlockFrame {
               onClicked: () => {
                 this.#onMinimizeClicked();
               },
+              toolTip: "Collapse"
             }),
             stretch: 0
           },
@@ -213,6 +214,7 @@ export class DecoratedFrame implements BlockFrame {
                 this.#onMaximizeClicked();
               },
               visible: false,
+              toolTip: "Expand",
             }),
             stretch: 0
           },
@@ -223,6 +225,7 @@ export class DecoratedFrame implements BlockFrame {
               onClicked: () => {
                 this.#onPopOutClickedEventEmitter.fire(this);
               },
+              toolTip: "Pop out",
             }),
             stretch: 0
           },
@@ -233,6 +236,7 @@ export class DecoratedFrame implements BlockFrame {
               onClicked: () => {
                 this.#onCloseClickedEventEmitter.fire(this);
               },
+              toolTip: "Delete",
             }),
             stretch: 0
           }
