@@ -7006,10 +7006,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lodash-es@npm:4.17.23, lodash-es@npm:^4.17.0":
-  version: 4.17.23
-  resolution: "lodash-es@npm:4.17.23"
-  checksum: b1bd1d141bbde8ffc72978e34b364065675806b0ca42ab99477d247fb2ae795faeed81db9283bf18ae1f096c2b6611ec0589e0503fa9724bf82e3dce947bad69
+"lodash-es@npm:4.18.1, lodash-es@npm:^4.18.1":
+  version: 4.18.1
+  resolution: "lodash-es@npm:4.18.1"
+  checksum: 578993943cfa779e784aeed96766484ec6ab15cd855e52c79631de6371ac49fadd6dd9f4719f8d1223ab2bcb0dfbece484f548191dd34d3dd8b39e1af712a343
   languageName: node
   linkType: hard
 
@@ -7154,7 +7154,7 @@ __metadata:
     jest: 27.5.1
     json-to-ast: 2.1.0
     khroma: ^1.4.1
-    lodash-es: 4.17.23
+    lodash-es: 4.18.1
     lru-cache: ^4.1.3
     mime-types: ^2.1.21
     nodegui-plugin-font-icon: 0.4.0
@@ -8872,7 +8872,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     extraterm-event-emitter: 1.0.0
-    lodash-es: ^4.17.0
+    lodash-es: ^4.18.1
     shx: ^0.3.2
     typescript: 5.2.2
   languageName: unknown
@@ -8891,7 +8891,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     fs-extra: ^5.0.0
-    lodash-es: ^4.17.0
+    lodash-es: ^4.18.1
     shx: ^0.3.2
     typescript: 5.2.2
   languageName: unknown
@@ -9770,7 +9770,7 @@ __metadata:
     extraterm-event-emitter: 1.0.0
     extraterm-later: 1.0.0
     jest: 27.5.1
-    lodash-es: 4.17.23
+    lodash-es: 4.18.1
     node-gyp: ^8.3.0
     node-pty: 1.1.0
     shx: ^0.3.2
@@ -9792,7 +9792,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     fs-extra: ^5.0.0
-    lodash-es: 4.17.23
+    lodash-es: 4.18.1
     qt-construct: 0.1.0
     shx: ^0.3.2
     typescript: 5.2.2
@@ -10916,7 +10916,7 @@ __metadata:
     eslint-plugin-unicorn: 42.0.0
     extraterm-event-emitter: 1.0.0
     extraterm-later: 1.0.0
-    lodash-es: 4.17.23
+    lodash-es: 4.18.1
     node-gyp: ^8.3.0
     node-pty: 1.1.0
     shx: ^0.3.2
@@ -10937,7 +10937,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     fs-extra: ^5.0.0
-    lodash-es: 4.17.23
+    lodash-es: 4.18.1
     qt-construct: 0.1.0
     shx: ^0.3.2
     typescript: 5.2.2
@@ -11321,7 +11321,7 @@ __metadata:
     eslint-config-extraterm: 1.0.0
     eslint-plugin-unicorn: 42.0.0
     extraterm-event-emitter: 1.0.0
-    lodash-es: 4.17.23
+    lodash-es: 4.18.1
     node-pty: 1.1.0
     pid-cwd: ^1.2.0
     shx: ^0.3.2
